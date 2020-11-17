@@ -1,0 +1,1623 @@
+<html lang="en">
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-158173734-3"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'UA-158173734-3');
+	</script>
+
+
+
+
+
+
+	<title>Troff - Training with music</title>
+	<meta charset="UTF-8">
+	<link rel="manifest" href="manifest.json">
+	<link rel="apple-touch-icon" href="assets/logos/logo-192-non-transparent.png">
+	<link rel="icon" href="assets/logos/favicon.ico">
+
+	<meta
+	name="Description" 
+	content="Author: Slim Sim Apps,
+	Category: Music Player,
+	Type: A music player that let you loop a part of a song, slow it down and create markers on the song timeline.">
+
+	<meta name="theme-color" content="#003366"/>
+
+
+	<!--meta name="viewport"
+				content="width=device-width,
+					initial-scale=1.0,
+					minimum-scale=1.0,
+					user-scalable=no"-->
+
+
+	<link rel="stylesheet" type="text/css" href="assets/external/bootstrap-4.3.1-dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="assets/external/reset.css" />
+
+	<link rel="stylesheet" type="text/css" href="assets/external/DataTables/css/jquery.dataTables.min.css" /> 
+	<link rel="stylesheet" type="text/css" href="assets/external/DataTables/css/dataTables.bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="assets/external/DataTables/css/dataTables.jqueryui.min.css" />
+
+	<link rel="stylesheet" type="text/css" href="assets/external/checkbox.css" />
+
+
+
+	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+	<link id="colorScheme"
+		rel="stylesheet"
+		type="text/css" 
+		href="stylesheets/col1.css" />
+
+
+		<script type="text/javascript" src="assets/external/jquery-3.4.1.min.js"></script>
+	<!--script src="assets/jquery-2.1.3.min.js"></script-->
+
+	<script type="text/javascript" src="assets/external/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js"></script>
+
+
+	<script type="text/javascript" src="assets/external/DataTables/js/jquery.dataTables.min.js"></script>
+
+
+	<script type="text/javascript" src="assets/external/notify-js/notify.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="assets/internal/notify-js/notify.css" />
+	<script type="text/javascript" src="assets/internal/notify-js/notify.config.js"></script>
+
+	<!-- skippar denna helt, kan lägga in google Add senare :) script src="assets/buy.js"></script--> 
+
+
+	<script type="text/javascript" src="pwa.js"></script>
+	<script src="script.js"></script>
+	<script src="assets/internal/st-script.js"></script>
+	<script src="assets/internal/common.js"></script>
+	<script src="assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
+
+
+
+
+
+
+
+
+
+		<!-- TROR INTE JAG BEHÖVER DEN, ANVÄNDER LOCAL STOREAGE ISTÄLLET :) script type="text/javascript" src="assets/internal/indexed_db.js"></script-->
+
+		<script type="text/javascript" src="FileApiImplementation.js"></script>
+		<script type="text/javascript" src="assets/internal/cookie_consent.js"></script>
+</head>
+<!--body>
+
+	<div class="center">
+		<h1>Troff</h1>
+		<h2>Work in progress</h2>
+
+		<input type="file" id="files" name="files[]" multiple />
+		<div id="playerParent"></div>
+		<output id="list"></output>
+
+	</div>
+
+</body-->
+
+<body class="overflow-hidden backgroundColor">
+
+	<div class="extraBorder"></div>
+	<div class="extraBorder bottom-zero"></div>
+	<input id="blur-hack" type="text" />
+
+
+
+	<section id="songsSection" class="flexCol">
+		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
+			<nav class="flexCol center">
+				<span id="buttPlayUiButtonParent" class = "margin roundButt">
+					<input
+						type="button"
+						value="▶"
+						title="Move to selected marker (or start of song) and play song (key: space)"
+						class="important centerRoundButtCommon centerRoundButt1"
+						id="buttPlayUiButtonPlay" />
+					<input
+						type="button"
+						value="II"
+						title="Pause song (key: space or enter)"
+						class="hidden important centerRoundButtCommon centerRoundButt2"
+						id="buttPlayUiButtonPause" />
+				</span>
+			</nav>
+			<div id="mediaInfoBox" class="flexCol halfMarginParent">
+				<!--a href="#" id="readMoreAndroidTroff" class="center padding-bottom">Get Troff for Android</a-->
+
+				<input type="file" id="fileUpploader" class="hidden" name="files[]" multiple />
+
+				<input type="button" id="pwaAddToHomeScreen" class="hidden regularButton special ml-2" value="Install Troff">
+
+				</input>
+
+				<div id="playerParent"></div>
+				<div id="currentArtist">
+					Please select a song or movie from the songs area
+				</div>
+				<div id="currentSong"></div>
+				<div id="currentAlbum"></div>
+				<div id="currentPath" class="hidden"></div>
+				<div class="dataOutput center flexRow">
+					<div class="flexRow marginLR moodColorizedText bold">
+						<div class="secondsLeft marginLR">0</div>
+						<div class="loopTimesLeft marginLR">1</div>
+					</div>
+					<div class="marginLR">
+						<div id="time"><p>0:00</p></div>/<div id="maxTime">0:00</div>
+					</div>
+				</div>
+			</div>
+			<nav class="flexCol center">
+				<button class="svgButt regularButton"
+					type="button"
+					title="Open the global settings dialoug"
+					id="buttSettingsDialog" >
+					<i class="fa fa-cog"></i>
+				</button>
+				<button class="svgButt regularButton cursor-help"
+					type="button"
+					title="Get tips on how to get the most out of Troff"
+					id="buttTip" >
+					<i class="fa fa-question cursor-help"></i>
+				</button>
+				<button class="svgButt shareClass regularButton"
+					type="button"
+					title="Share the link to this app with your freinds via email">
+					<i class="fa fa-share-alt"></i>
+				</button>
+			</nav>
+		</div> <!-- end headArea -->
+		<div id="areaSelector" class="flexRowWrap secondaryColor">
+
+			<input type="button" value="Songs" id="buttSongsDialog"  class="stOnOffButton"/>
+
+			<input type="button" value="States" id="statesTab"  class="stOnOffButton hideOnPicture" section-to-hide="#stateSection"/>
+			<input type="button" value="Settings" id="settingsTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#timeSection"/>
+			<input type="button" value="Info" id="infoTab"  class="active stOnOffButton" section-to-hide="#userNoteSection"/>
+			<input type="button" value="Countdown" id="countTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#infoSection"/>
+		</div>
+		<div id="areaParent" class="flexRow AreaParent" style="flex: 1; margin: 0 -4px">
+			<span class="flexOne"></span>
+			<div id="songPickerAttachedArea" class="flexCol start hidden">
+			</div>
+			<div id="stateSection" class="flexCol hideOnPicture">
+				<h1>State</h1>
+				<input
+					type="button"
+					title="Remember all settings, to be recalled later (key: r)"
+					value="r&#818;emember state"
+					id="buttRememberState"
+					class="regularButton" />
+					
+					<p id="statesHelpText" class="helpText">
+						A "state" is something that saves the selected markers and settings
+						so that they can be recalled later.
+					</p>
+				<div class="vScroll" id="stateList">
+				</div>
+				
+			</div> <!-- stateArea -->
+			
+			<div id="timeSection" class="flexCol end vScroll hideOnPicture">
+<!--        <div id="div_to_calc_height_of_timeSection"> depricated? -->
+					<h1>Settings</h1>
+					<div id="ControlTime" class="flexCol end">
+					</div> <!-- ControlTime -->
+		
+		
+					<div id="ControlMarker" class="flexCol end">
+						<h2>Marker</h2>
+						<div>
+							<input type="button" title="Add a marker to the song timeline (key: m)" class="important" id="buttMarker" value="Add M&#818;arker!" />
+						</div>
+						<input
+							type="button"
+							title="Move, delete, stretch, import or export the markers"
+							class="stOnOffButton"
+							value="advanced"
+							data-st-css-selector-to-toggle="#extraMarkerFunctions"
+							/>
+						<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
+							<input
+								type="button"
+								class="regularButton full-width"
+								title="Import markers to the song or export current markers"
+								id="buttImportExportMarker"
+								value="import / export"
+								/>
+							<input
+								type="button"
+								title="Move more than one marker"
+								class="regularButton full-width"
+								id="buttPromptMoveMarkers"
+								value="move markers"
+								/>
+							<input
+								type="button"
+								title="Delete more than one marker"
+								class="regularButton full-width"
+								data-st-css-selector-to-toggle="#deleteMarkersDialog"
+								value="delete markers"
+								/>
+							<input
+								type="button"
+								title="Stretch the markers"
+								class="regularButton full-width"
+								data-st-css-selector-to-toggle="#stretchMarkersDialog"
+								value="stretch markers"
+								/>
+						</div>
+						<div>
+							<input 
+								type="button" 
+								title="Select first and last markers (key: u)" 
+								class="regularButton" 
+								value="play fu&#818;ll song" 
+								id="buttUnselectMarkers" />
+						</div>
+						<div id="zoomParent" class="flexRow">
+							<input
+								type="button"
+								title="Zoom out to see the whole song" 
+								class="regularButton"
+								value="zoom out"
+								id="buttZoomOut" />
+							<input
+								type="button" 
+								title="Zoom to the selected play region (the purple part of the timeline)" 
+								class="regularButton"
+								value="z&#818;oom"
+								id="buttZoom" />
+							</div>
+								<!--
+						<input
+							type="button"
+							title="add Start and End markers"
+							class="regularButton"
+							value="add Start and End markers"
+							id="buttAddStartAndEndMarkers"
+							style="word-wrap: break-word; width: 98px; padding: 1px 4px;"/>
+							-->
+						<div>
+							<input type="button" title="Toggle; start a few seconds before the start marker (key: b)" value="start b&#818;efore" id="buttStartBefore" class="buttWidthStandard stOnOffButton"/>
+							<input
+								type="number"
+								class="numberWide"
+								title="Set how many seconds before the start marker to start (key: shift/alt b)"
+								value="3"
+								min="0"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
+								id="startBefore" />
+						</div>
+		
+						<div>
+							<input type="button" title="Toggle; stop a few seconds after the stop marker (key: a)" value="stop a&#818;fter" id="buttStopAfter" class="buttWidthStandard stOnOffButton"/>
+							<input
+								type="number"
+								class="numberWide"
+								title="Set how many seconds after the stop marker to stop (key: shift/alt a)"
+								value="2"
+								min="0"
+								id="stopAfter" />
+						</div>
+					</div> <!-- ControlMarker -->
+		
+					<div id="ControlLoop" class="flexCol end">
+						<h2>Loop</h2>
+						<div>
+							<input 
+								type="button" 
+								title="Toggle; wait a few seconds before song starts to play (key: p)" 
+								value="p&#818;ause before" 
+								id="buttPauseBefStart"
+								class="buttWidthMedium-small stOnOffButton active" />
+							<input
+								type="number"
+								class="numberWide"
+								title="Set how many seconds to wait before song starts to play (key: shift/alt p)"
+								value="3"
+								id="pauseBeforeStart"  />
+						</div>
+
+						<div class="XLoopOff">
+							<input type="button" 
+								class="buttWidthMedium-small stOnOffButton active"
+								value="w&#818;ait between"
+								id="buttWaitBetweenLoops"/> 
+							<input type="number" 
+								title="Set how many seconds to wait between each loop"  
+								class="numberWide"
+								value="1" 
+								id="waitBetweenLoops"  /> 
+						</div>
+						<div class="flexRow">
+							<input
+								type="button"
+								title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
+								data-save-on-song-toggle-class="active"
+								data-save-on-song-toggle-class-default-value="false"
+								value="increment until"
+								id="buttIncrementUntil"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
+								class="buttWidthMedium-small stOnOffButton grayout-next-on-non-active">
+							<input
+								type="number"
+								id="incrementUntilValue"
+								class="numberWide"
+								min="50"
+								max="200"
+								data-save-on-song-value="100"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
+								value="100" />
+						</div>
+						
+						<span class="loopSquare" id="loopButtons" >
+							<input type="button" title="Play song only 1 time (key: 1)" class="loopButt" value="1" id="buttLoop1" />
+							<input type="button" title="Loop song 2 times (key: 2)" class="loopButt" value="2" id="buttLoop2" />
+							<input type="button" title="Loop song 3 times (key: 3)" class="loopButt" value="3" id="buttLoop3" />
+							<input type="button" title="Loop song 4 times (key: 4)" class="loopButt" value="4" id="buttLoop4" />
+							<input type="button" title="Loop song 5 times (key: 5)" class="loopButt" value="5" id="buttLoop5" />
+							<input type="button" title="Loop song 6 times (key: 6)" class="loopButt" value="6" id="buttLoop6" />
+							<input type="button" title="Loop song 7 times (key: 7)" class="loopButt" value="7" id="buttLoop7" />
+							<input type="button" title="Loop song 8 times (key: 8)" class="loopButt" value="8" id="buttLoop8" />
+							<input type="button" title="Loop song 9 times (key: 9)" class="loopButt" value="9" id="buttLoop9" />
+							<input type="button" title="Loop song &infin; times (key: 0)" class="loopButt" value="&infin;" id="buttLoopInf" />
+						</span>
+					</div> <!-- ControlLoop -->
+		
+		
+		
+ <!--       </div>  <!- - div_to_calc_height_of_timeSection   depricated ? -->
+		
+		
+		
+		
+		
+		
+				<div class="doubleSliders flexOne">
+					<div class="sliderInfo">
+						<input class="button small regularButton" type="button" title="Set volume to 100% (key: v)" value="V&#818;olume:" id="buttResetVolume" />
+						<div class="plussMinusButton" id="plussMinusButtons">
+							<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
+							<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
+						</div>
+						<div class="dataOutput" id="volumeDataOutput">
+							<div id="volume">100</div><p>%</p>
+						</div>
+						<input
+							class="sliderRange flexOne"
+							orient="vertical"
+							id="volumeBar"
+							type="range"
+							min="0"
+							max="100"
+							value="100"/>
+					</div> <!-- sliderInfo -->
+		
+					<div class="sliderInfo">
+						<input class="button small regularButton" type="button" title="Set speed to 100% (key: s)" value="S&#x332;peed:" id="buttResetSpeed" />
+						<div class="plussMinusButton">
+							<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
+							<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
+						</div>
+						<div class="dataOutput">
+							<div id="speed">100</div><p>%</p>
+						</div>
+						<input
+							class="sliderRange flexOne"
+							orient="vertical"
+							id="speedBar"
+							type="range"
+							min="50"
+							max="200"
+							value="100"/>
+					</div>  <!-- sliderInfo -->
+				</div> <!-- doubleSliders -->
+		
+			</div> <!-- timeArea -->
+
+
+		</div>    
+		
+		<!--div style="display: flex; align-items: center; flex-direction: column;"-->
+		<div class="flexCol">
+			<a href="https://goo.gl/forms/dNLBdinwcnBxOlRu2" target="_blank" style="padding-bottom: 3px; text-align: center;">
+				Please take the user survey!
+			</a>
+		</div>
+		<!--button id="donate" class="regularButton special py-2" title="">
+			Please contribute here.
+		</button-->
+
+	</section> <!--songsSection -->
+
+
+
+
+
+	<section id="markerSection" class="secondaryColor margin noVMargin hideOnPicture">
+		<div id="activePlayRegion" class="accentColor1"></div>
+		<div id="timeBarDiv">
+			<input
+				id="timeBar"
+				orient="vertical"
+				type="range"
+				min="0"
+				max="42"
+				value="0"/>
+		</div>
+		<ul id="markerList" class="onOffParent marker-parent" />
+	</section> <!-- markerSection -->
+
+
+
+	<section id="userNoteSection" 
+		class="flexCol secondaryColor margin maxMinWidth flexOne">
+		<h1>Info</h1>
+		<div id="content"></div>
+		<div>
+			<input type="button" 
+				title="Tap repeatedly to calculate tempo (key: t)" 
+				class="regularButton" 
+				id="buttTappTempo" 
+				value="T&#818;empo:"/>
+			<span id="tappTempo-value">?</span>
+		</div>
+		
+		<!--h2><label class="switch" for="songInfoSwitch">Marker Color info</label></h2>
+			<p>
+				TODO:
+				vore det inte kanon om det fans en color-info sektion här där man kan
+				beskriva vad alla färgerna betyder
+				( och den ska visa färgerna, men bara de som används :) )
+			</p>
+			<p>
+				man ska också kunan välja att visa/inte visa denna, samt sång-info / marker/info
+			</p -->
+		
+		<h2><label class="switch" for="songInfoSwitch">Song info</label></h2>
+		<input id="songInfoSwitch" class="switch_checkbox hidden" type="checkbox" checked="true" />
+		<textArea
+			style="width: inheret"
+			id="songInfoArea" 
+			placeholder="Song specific info here!"
+			class="textareaStandard switch_child"></textArea>
+		<h2 class="hideOnPicture">Current marker info</h2>
+		<textArea  
+			id="markerInfoArea" 
+			style="width: inheret"
+			placeholder="Marker specific notes here!"
+			class="hideOnPicture textareaStandard"></textArea>
+
+	</section> <!-- userNoteSection -->
+
+
+
+	<section id="infoSection" class="secondaryColor margin hideOnPicture">
+		<h1>Countdown</h1>
+		<!--input type="button" value="Countdown" id="countTabOn" class="stOnOffButton active"-->
+		<div id="secondsLeft" class="secondsLeft">0</div>
+		<div id="loopTimesLeft" class="loopTimesLeft">1</div>
+	</section> <!-- infoSection -->
+
+
+
+
+	<section class="flexSection">
+	</section>
+
+
+	<section
+		id="rightButtonSection"
+		class="buttonSection secondaryColor margin hidden"
+		>
+		<div 
+			style="width: 100vh; transform: rotate(90deg); margin-left: -50vh;margin-top: 50vh;"
+			>
+			<button class="stOnOffButton">Song List</button>
+			<button class="stOnOffButton">Songs</button>
+			<button class="stOnOffButton hideOnPicture">States</button>
+			<button class="stOnOffButton hideOnPicture">Settings</button>
+			<button class="stOnOffButton">Info</button>
+			<button class="stOnOffButton hideOnPicture">Countdown</button>
+		</div>
+	</section>
+
+
+
+
+
+
+
+
+
+
+
+<!--
+--------------- POP UP DIALOGS: ----------------
+-->
+
+	<div id="outerInfoAndroidPopUpSquare" class="outerDialog hidden" >
+		<div class="popUpSquare" id="innerInfoAndroidPopUpSquare" >
+			<div class="flexCol">
+				<p>Troff is now avalable as a very early beta app for Android.</p>
+				<p>
+					As of mars 2017, only markers is implemented, but if you want to get
+					it for Android and follow the development, become a beta tester here:
+				</p>
+				<a target="_blank" href="https://play.google.com/apps/testing/slimsimapps.troff">
+					Become beta tester of Troff for Android!
+				</a>
+				<p>
+					Please note that there may be bugs (if you encouter any, please 
+					submit them to slimsimapps@gmail.com).
+				</p>
+				<p>
+					New features will be implemented quite slowly since there is only 
+					one spare time developer. 
+				</p>
+				<p>Have patience.</p>
+				<p>
+					If you want to support the development, 
+					please donate <a href="#" id="infoAndroidDonate">here</a>, 
+					like Troff on <a target="_blank" href="https://www.facebook.com/troffmusic/">Facebook</a> and
+					rate on <a target="_blank" href="https://chrome.google.com/webstore/detail/troff-training-with-music/mebbbmcjdgoipnkpmfjndbolgdnakppl/reviews">Chome Web Store</a> and 
+					<a target="_blank" href="https://play.google.com/store/apps/details?id=slimsimapps.troff&ah=XovIcdxEAyEJCMvQHpPKkKHLdqU&hl=sv#details-reviews">Google Play</a>. 
+				</p>
+			</div>
+			<input id="buttCancelInfoAndroidPopUpSquare" type="button" class="regularButton buttWidthStandard" value="Cancel" />
+		</div>
+	</div>
+
+	<div id="outerImportExportPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog" id="innerImportExportPopUpSquare" >
+			<h2 class="paragraph">Import Export Markers and settings</h2>
+			<p class="paragraph normalSize">
+				Export your markers, states, settings and info, or import new ones, 
+				for the current song!
+			</p>
+			<label class="switch likeLink linkButton" for="importExportMoreInfoSwitch">More info</label>
+			<input id="importExportMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+			<p class="switch_child paragraph normalSize" >
+				Whey you export markers, you will get a long text string ( a so called JSON string ).
+				This text-string can be saved and imported to another Troff-program with the same song.
+				Then that Troff-program will get the same markers, colors, settings and states as you have.
+			</p>
+			<div class="flexRow">
+				<input type="button" id="buttExportMarker" class="regularButton" value="export markers and settings" />
+				<input type="button" id="buttImportMarker" class="regularButton" value="import markers and settings" />
+			</div>
+			<input id="buttCancelImportExportPopUpSquare" type="button" class="regularButton buttWidthStandard" value="Cancel" />
+		</div>
+	</div>
+
+	<div id="donateDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog">
+			<h2 class="paragraph">Donate to Troff</h2>
+			<p class="paragraph normalSize">
+				Troff is free and open source and if you like this app,
+				feel free to donate as much or little as you want!
+				Any contribution is greatly appreciated!
+			</p>
+			<div class="flexScroll flexRow margin">
+				<div id="donateList" class="flexCol leftTextParent">
+				</div>
+				<div class="flex-one"></div>
+			</div>
+			<p class="paragraph normalSize">
+				When you click on a donate button, a Google Wallet confirmation dialog 
+				will appear. This way the donation is run securely through Google.
+			</p>
+			<span class="flexRow">
+				<p class="paragraph smallSize">You can donate more than once.</p>
+				<div class="flex-one"></div>
+				<input id="closeDonateDialog" class="regularButton" type="button" value="Return" />
+			</span>
+		</div>
+	</div>
+	
+	
+
+	<div id="rateDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Do you like using Troff?</h2>
+			
+			<p class="paragraph normalSize">
+				Please rate it at the Chrome Web Store!
+			</p>
+			<span class="flexRow">
+				<input 
+					id="rateDialogNoThanks" 
+					class="regularButton" 
+					type="button" 
+					value="No thanks" />
+				<div class="flex-one"></div>
+				<input 
+					id="rateDialogAskLater" 
+					class="regularButton margin"
+					type="button" 
+					value="Ask me later" />
+				<input 
+					id="rateDialogRateNow"
+					class="regularButton important"
+					type="button"
+					value="Rate now" />
+			</span>
+		</div>
+	</div>
+	
+	<div id="firstTimeUserDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Welcome to Troff v1.0!</h2>
+			<div>
+				<p class="paragraph normalSize">
+					With Troff you can:
+				</p>
+				<ul class="bulletList">
+					<li>zoom on the timeline</li>
+					<li>write markers on the timeline</li>
+					<li>loop a part of the timeline</li>
+					<li>adjust the spead of a song or movie</li>
+					<li>step frame by frame in movies</li>
+				</ul>
+				<p class="paragraph normalSize">and lots more!</p>
+				<p class="paragraph smallSize" style="display: block;">
+					Click the "Help" button in the upper left corner<br />
+					to learn more about the things Troff can offer you.
+				</p>
+			</div>
+
+			<span class="flexRow">
+				<div class="flex-one"></div>
+				<input 
+					id="firstTimeUserDialogTour" 
+					class="regularButton margin"
+					type="button" 
+					value="Take the tour" />
+				<input 
+					id="firstTimeUserDialogOK"
+					class="regularButton"
+					type="button"
+					value="OK" />
+			</span>
+		</div>
+	</div>
+	
+	<div id="zoomInstructionDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">How zoom works</h2>
+			<div>
+				<p class="paragraph normalSize">
+					When you press zoom, or 'Z', Troff will zoom to the active 
+					playing region, or the purple part of the timeline.
+				</p>
+				<p class="paragraph normalSize">
+					If Troff is zoomed to the active playing region, 
+					then it is not pocible to zoom in or out. 
+					Change the active playing region and you will be able to zoom.
+				</p>
+			</div>
+
+			<span class="flexRow">
+				<div class="flex-one"></div>
+				<input 
+					id="zoomInstructionDialogDontShowAgain" 
+					class="regularButton margin"
+					type="button" 
+					value="Don't show again" />
+				<input 
+					id="zoomInstructionDialogOK"
+					class="regularButton"
+					type="button"
+					value="OK" />
+			</span>
+		</div>
+	</div>
+	
+	
+	
+	<div id="moveMarkersDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Move markers</h2>
+			<p class="paragraph normalSize">
+				Move all the markers at the same time, or move only those markers 
+				between the selected markers (including the selected markers).
+				<input type="button" id="buttPromptMoveMarkersMoreInfo" class="likeLink" value="More info" />
+			</p>
+			<p class="paragraph normalSize hidden" id="moveMarkersMoreInfoDialog" >
+				Say you have 4 markers; A, B, C and D, in that order. 
+				If you select A as start-marker and C as stop-marker and move them down
+				by entering 20 seconds and hitting "Move markers down". Only marker
+				A, B and C will be moved down 20 seconds.
+				D will remain where it was.<br />
+				<br />
+				Now, say that the order after you moved the markers is A, B, D, C.
+				If you immediately move the markers again by 20 seconds by hitting 
+				"Move markers up"; only A, B and C will be moved up, 
+				D will still remain where it was, 
+				even though it was between the start and stop marker.<br />
+				In order for D to become part of the selected group, the song must 
+				be reloaded.
+			</p>
+			<span class="flexRow">
+				<input type="number" id="moveMarkersNumber" class="regularButton numberWider" value=0 /> seconds
+			</span>
+			<div class="flexRow">
+				<div class="flexCol">
+					<input id="okMoveSomeMarkersDialogUp" type="button" class="regularButton" value="move markers up" title="Move the markers between the selected markers up"/>
+					<input id="okMoveSomeMarkersDialogDown" type="button" class="regularButton" value="move markers down" title="Move the markers between the selected markers down"/>
+				</div>
+				<div class="flexCol">
+					<input id="okMoveAllMarkersDialogUp" type="button" class="regularButton" value="move all markers up" title="Move all the markers up" />
+					<input id="okMoveAllMarkersDialogDown" type="button" class="regularButton" value="move all markers down" title="Move the markers down" />
+				</div>
+				
+			</div>
+			
+
+			<p class="paragraph smallSize">
+				Note: If this functionality does not work as expected; reload the song.
+			</p>
+			<input id="buttCancelMoveMarkersDialog" type="button" class="regularButton buttWidthStandard" value="Cancel" />
+		</div>
+	</div>
+
+	<div id="deleteMarkersDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Delete markers</h2>
+			<p class="paragraph normalSize">
+				Delete all the markers at the same time, or delete only those markers
+				between the selected markers (including the selected markers).
+			</p>
+			<div class="flexRow">
+				<div class="flexCol">
+					<input
+							id="okDeleteSelectedMarkersDialog"
+							type="button"
+							class="regularButton"
+							value="delete selected markers"
+							title="Delete the markers between and including the selected markers" />
+				</div>
+				<div class="flexCol">
+					<input
+							id="okDeleteAllMarkersDialog"
+							type="button"
+							class="regularButton"
+							value="delete all markers"
+							title="Delete all the markers" />
+				</div>
+
+			</div>
+
+			<input
+					type="button"
+					class="regularButton buttWidthStandard dialogCancelButton"
+					value="Cancel" />
+		</div>
+	</div>
+
+	
+	
+	<div id="stretchMarkersDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Stretch markers</h2>
+			<p class="paragraph normalSize">
+				Stretch all the markers so that the distance between them increases or decreases!
+			</p>
+				<label class="switch likeLink linkButton" for="stretchMarkersMoreInfoSwitch">More info</label>
+				<input id="stretchMarkersMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+				<p class=" switch_child paragraph normalSize" >
+					Say you have 5 markers A, B, C, D and E at 5, 10, 20, 50 and 150 seconds respectively,
+					if you stretch all the markers to 200%, then the markers times will
+					be increased to 200%, and they will be at 
+					10, 20, 40, 100 and 300 selconds respectively.
+					<br />
+					If you want to compress the markers, simply use a value lower than 100%.
+					<br />
+					<br />
+					If you instead select markers B and D and stretch the selected markers to 200%,
+					then the selected markers will be stretched as if there 0-value where at the B marker;
+					<br />
+					the marker B will still be at 10 seconds,
+					<br />
+					the marker C will be at 30 seconds,
+					<br />
+					the marker D will be at 90 seconds.
+					<br />
+					and the other markers will be unaffected. 
+				</p>
+
+			<span class="flexRow">
+				<input type="number" id="stretchMarkersNumber" class="regularButton numberWider" value=100 /> %
+			</span>
+			<div class="flexRow">
+				<input
+					id="okStretchSelectedMarkersDialog"
+					type="button"
+					class="regularButton"
+					value="stretch selected markers"
+					title="Stretch the markers between the selected markers\nwith the base at the selected start marker"/>
+				<input
+					id="okStretchAllMarkersDialog"
+					type="button"
+					class="regularButton"
+					value="stretch all markers"
+					title="Stretch all the markers with the base at 0"/>
+			</div>
+			
+
+			<p class="paragraph smallSize">
+				Note: If this functionality does not work as expected; reload the song.
+			</p>
+			<input
+				type="button"
+				class="regularButton buttWidthStandard dialogCancelButton"
+				value="Cancel" />
+		</div>
+	</div>
+
+
+
+	<div id="outerSettingPopUpSquare" class="outerDialog hidden">
+		<div class="popUpSquare" id="innerSettingPopUpSquare" >
+			<h1>Global settings</h1>
+			<div class="flexCol vScroll">
+				<p class="pt-2">These settings are not unique to a song</p>
+					<!--div class="py-2">
+						<h4 class="pt-3 buttWidthMedium inlineBlock">Export import</h4>
+						<input class="buttWidthMedium regularButton" type="button"
+							title="Export or import the global settings"
+							data-st-css-selector-to-toggle="#outerImportExportGlobalSettingsPopUpSquare"
+							value="Settings" />
+						<input class="buttWidthMedium regularButton" type="button"
+							title="Export or import all data and all song-info that is stored in Troff"
+							data-st-css-selector-to-toggle="#outerImportExportAllDataPopUpSquare"
+							value="All data" />
+					</div-->
+
+
+					<div id="themePickerParent" class="py-2">
+						<h4 class="pt-3 buttWidthMedium inlineBlock">Theme</h4>
+						<input class="buttWidthMedium stOnOffButton" type="button"
+							data-theme="col1"
+							title="Blue and purple"
+							value="standard" />
+						<input class="buttWidthMedium stOnOffButton" type="button"
+							data-theme="col2"
+							title="Green and red"
+							value="forest" />
+						<input class="buttWidthMedium stOnOffButton" type="button"
+							data-theme="col3"
+							title="Black and yellow"
+							value="sunset" />
+						<input class="buttWidthMedium stOnOffButton" type="button"
+							data-theme="col4"
+							title="Gold and white"
+							value="winning" />
+					</div>
+					<div class="py-2">
+						<h4 class="pt-3 buttWidthMedium inlineBlock">Marker color</h4>
+						<!--p class="pt-2">When checked, the colors of the markers will extend down to the next marker:</p-->
+						<input class="buttWidthMedium stOnOffButton" type="button"
+							title="extend the marker-colors down to the next marker"
+							id="toggleExtendedMarkerColor" value="fill markers" />
+						<!--p class="pt-2">When checked, the colors of the markers will extend down to the next marker that has a color:</p-->
+						<input class="buttWidthMedium stOnOffButton" type="button"
+							title="extend the marker-colors down through markers with no color to the next marker with color"
+							id="toggleExtraExtendedMarkerColor" value="fill through" />
+					</div>
+
+					<div class="py-2">
+						<h4 class="buttWidthMedium inlineBlock">Song Lists</h4>
+
+						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
+							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
+							title="If selected, clicking a song list will add those songs to the list, instead of only showing those songs"
+							value="additive select" />
+						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
+							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
+							title="If selected, the songs and the song lists will be shown in a floating window"
+							value="floating" />
+						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
+							id="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
+							title="If selected, the search-window will be cleared when a song is selected"
+							value="clear on select" />
+						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
+							id="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
+							title="If selected, the floating songlist-window will be closed when a song is selected"
+							value="exit on select" />
+					</div>
+
+
+					<div>
+						<h3 class="pt-4 pb-2">Behaviour of keys and buttons</h3>
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Enter</h4>
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" 
+								type="button"
+								id="TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR"
+								data-st-save-value-key="TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR"
+								title="Jump to the start of the Active playing region on play or pause"
+								value="go to marker" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" 
+								type="button"
+								id="TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR"
+								data-st-save-value-key="TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR"
+								title="If the &quot;pause before&quot; is active, use the timer before startign the song"
+								value="use timer" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+								id="TROFF_SETTING_ENTER_RESET_COUNTER"
+								data-st-save-value-key="TROFF_SETTING_ENTER_RESET_COUNTER"
+								title="If looping more than once, reset the loop-counter when pausing the song"
+								value="reset counter" />
+						</div>
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Space</h4>
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+								id="TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR"
+								data-st-save-value-key="TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR"
+								title="Jump to the start of the Active playing region on play or pause"
+								value="go to marker" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+								id="TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR"
+								data-st-save-value-key="TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR"
+								title="If the &quot;pause before&quot; is active, use the timer before startign the song"
+								value="use timer" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+								id="TROFF_SETTING_SPACE_RESET_COUNTER"
+								data-st-save-value-key="TROFF_SETTING_SPACE_RESET_COUNTER"
+								title="If looping more than once, reset the loop-counter when pausing the song"
+								value="reset counter" />
+						</div>
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Play Button</h4>
+							<input class="buttWidthMedium  st-simple-on-off-button stOnOffButton active" 
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR"
+								id="TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR"
+								title="Jump to the start of the Active playing region on play or pause"
+								value="go to marker" />
+							<input class="buttWidthMedium  st-simple-on-off-button stOnOffButton active" 
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR"
+								id="TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR"
+								title="If the &quot;pause before&quot; is active, use the timer before startign the song"
+								value="use timer" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" type="button"
+								id="TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER"
+								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON"
+								title="If looping more than once, reset the loop-counter when pausing the song"
+								value="reset counter" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" 
+								type="button"
+								data-st-css-selector-to-hide="#buttPlayUiButtonParent"
+								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON"
+								id="TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON"
+								title="Show the round play/pause button next to the song name"
+								value="show" />
+						</div>
+
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Select marker</h4>
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" 
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER"
+								id="TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER"
+								title="Jump to the start of the Active playing region on clicking on a marker, deselect this option if you want to be able to click markers without affect the current playback"
+								value="go to marker" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Delete marker</h4>
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" 
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_CONFIRM_DELETE_MARKER"
+								id="TROFF_SETTING_CONFIRM_DELETE_MARKER"
+								title="When deleting marker, a pup-up question will ask you to confirm the delete"
+								value="confirm delete" />
+						</div>
+
+
+						<h3 class="pt-4 pb-2">Toggle visibility of areas</h3>
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Title area</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+								type="button"
+								data-st-css-selector-to-hide="#currentArtist"
+								data-st-save-value-key="TROFF_SETTING_UI_ARTIST_SHOW"
+								id="TROFF_SETTING_UI_ARTIST_SHOW"
+								title="Show the artist name in the Title area"
+								value="artist" />
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+								type="button"
+								data-st-css-selector-to-hide="#currentSong"
+								data-st-save-value-key="TROFF_SETTING_UI_TITLE_SHOW"
+								id="TROFF_SETTING_UI_TITLE_SHOW"
+								title="Show the title name in the Title area"
+								value="title" />
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active" 
+								type="button"
+								data-st-css-selector-to-hide="#currentAlbum"
+								data-st-save-value-key="TROFF_SETTING_UI_ALBUM_SHOW"
+								id="TROFF_SETTING_UI_ALBUM_SHOW"
+								title="Show the album name in the Title area"
+								value="album" />
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton" 
+								type="button"
+								data-st-css-selector-to-hide="#currentPath"
+								data-st-save-value-key="TROFF_SETTING_UI_PATH_SHOW"
+								id="TROFF_SETTING_UI_PATH_SHOW"
+								title="Show the path to the song in the Title area"
+								value="path" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Setting area</h4>
+
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+								type="button"
+								data-st-css-selector-to-hide="#buttUnselectMarkers"
+								data-st-save-value-key="TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW"
+								id="TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW"
+								title="Show the &quot;play full song&quot;-button"
+								value="play full song" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+								type="button"
+								data-st-css-selector-to-hide="#zoomParent"
+								data-st-save-value-key="TROFF_SETTING_UI_ZOOM_SHOW"
+								id="TROFF_SETTING_UI_ZOOM_SHOW"
+								title="Show the zoom-buttons"
+								value="zoom" />
+							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+								type="button"
+								data-st-css-selector-to-hide="#loopButtons"
+								data-st-save-value-key="TROFF_SETTING_UI_LOOP_BUTTONS_SHOW"
+								id="TROFF_SETTING_UI_LOOP_BUTTONS_SHOW"
+								title="Show the nr-of-loops-selector"
+								value="nr of loop" />
+						</div>
+
+
+						<h3 class="pt-4 pb-2">Standard values for songs</h3>
+						<p class="pt-2">
+							When loading a new song, these values will be the ones that the song get.
+						</p>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Start before</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton"
+								type="button"
+								data-troff-default-class="active"
+								data-st-save-value-key="TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON"
+								id="TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON"
+								value="on" />
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
+								data-st-save-current-value="4"
+								value="0" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Stop after</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton"
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON"
+								id="TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON"
+								value="on" />
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE"
+								data-st-save-current-value="2"
+								value="0" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Pause before</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON"
+								id="TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON"
+								value="on" />
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE"
+								data-st-save-current-value="3"
+								value="0" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Wait between</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON"
+								id="TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON"
+								value="on" />
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE"
+								data-st-save-current-value="1"
+								value="0" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Increment until</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton"
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
+								id="TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
+								value="on" />
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
+								data-st-save-current-value="100"
+								value="0" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Nr loops</h4>
+							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton"
+								type="button"
+								data-st-save-value-key="TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON"
+								id="TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON"
+								value="&infin;" />
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE"
+								data-st-save-current-value="1"
+								min=1
+								max=9
+								value="1" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Volume</h4>
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE"
+								data-st-save-current-value="75"
+								min=0
+								max=100
+								value="1" />
+						</div>
+
+						<div class="py-2">
+							<h4 class="buttWidthMedium inlineBlock">Speed</h4>
+							<input class="numberWider"
+								type="number"
+								id="TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE"
+								data-st-save-current-value="100"
+								min=50
+								max=200
+								value="1" />
+						</div>
+
+
+					</div>
+
+
+
+
+				<!--h1>---------------- Not yet implemented ----------------</h1>
+
+
+				<h1>Max-brädd på rubrik-området</h1>
+				<p>(ha 4 olika alternativ (slim, medle, wide, och "infinate"))</p>
+
+				<p>Hur funkar det när man har många areas ("sånglist", "sångs", "states", och "settings") visade?</p>
+				<P>för man vill ju helst att den får vara bred när </P>
+				<p>
+					<b>detta borde ju skötas detta själv:</b>så fort man trycker på någon av "dom fyra" areas'arna,
+					så kollar den "hur bred är dessa 4 areas" och sen lägger den på den max-brädden på 
+					tittel-arean (dock minst 200px tex)
+				</p>
+
+				<H3>borde visa mapp-namnet i song-tabellen också</H3>
+							
+				<h3>standard-values for new songs</h3>
+			-->
+
+			</div>
+			<input id="buttCloseSettingPopUpSquare" type="button" class="regularButton buttWidthStandard flex-none" value="Close" />
+		</div>
+	</div>
+
+
+	<div id="outerImportExportGlobalSettingsPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Import / Export Global Settings</h2>
+			<p class="paragraph normalSize">
+				Import or export your glogal settings.
+			</p>
+			<label class="switch likeLink linkButton" for="importExportGloablSettingsMoreInfoSwitch">More info</label>
+			<input id="importExportGloablSettingsMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+			<p class="switch_child paragraph normalSize" >
+				Whey you export the global settings, you will get a long text string ( a so called JSON string ).
+				This text-string can be saved and imported to another Troff-program.
+				When you import the global settings, the global settings of that Troff-program will be over written
+				with the global settings you import.
+			</p>
+			<div class="flexRow">
+				<div class="flexCol">
+					<input
+							id="openExportGlobalSettingsDialog"
+							type="button"
+							class="regularButton"
+							value="Export"
+							title="export your global settings saved in troff" />
+				</div>
+				<div class="flexCol">
+					<input
+							type="button"
+							class="regularButton"
+							data-st-css-selector-to-toggle="#outerImportGlobalSettingsPopUpSquare"
+							value="Import"
+							title="overwrite your global settings in Troff with new" />
+				</div>
+
+			</div>
+
+			<input
+					type="button"
+					class="regularButton buttWidthStandard dialogCancelButton"
+					value="Cancel" />
+		</div>
+	</div>
+
+	<div id="outerImportGlobalSettingsPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Import Global Settings</h2>
+			<p class="paragraph normalSize">
+				To import new global settings, past the string into the box below, and klick Import.
+			</p>
+			<textarea
+				class="writableField textareaStandard min-height-9"
+				id="importGlobalSettingsTextarea"></textarea>
+
+			<div class="flexRow">
+				<div class="flexCol">
+					<input
+							id="okImportGlobalSettingsDialog"
+							type="button"
+							class="regularButton"
+							value="Import"
+							title="Import global settings to troff" />
+				</div>
+
+				<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Cancel" />
+			</div>
+		</div>
+	</div>
+
+	<div id="outerExportGlobalSettingsPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Export Global Settings</h2>
+			<p class="paragraph normalSize">
+				To export your glogal settings, copy the string into the box below,
+				and paste the text-string in the Troff-program where you want to import it.
+			</p>
+			<textarea
+				class="writableField textareaStandard min-height-9"
+				id="exportGlobalSettingsTextarea"></textarea>
+
+			<div class="flexRow">
+				<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Ok" />
+
+				<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Cancel" />
+			</div>
+		</div>
+	</div>
+
+
+	<div id="outerImportExportAllDataPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Import / Export All Data</h2>
+			<p class="paragraph normalSize">
+				Import or export all the data that is saved in Troff.
+			</p>
+			<label class="switch likeLink linkButton" for="importExportAllDataMoreInfoSwitch">More info</label>
+			<input id="importExportAllDataMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+			<p class="switch_child paragraph normalSize" >
+				Whey you export all data, you will get a long text string ( a so called JSON string ).
+				This text-string can be saved and imported to other Troff-programs.
+				When you import all data, all the data in that Troff-programs will be over written
+				with the data you import.
+				<br />
+				<b>NOTE:</b> All the markers and song-spesiffic info will also be exported and imported,
+				however, if the path to the song is not the same when you import the data, 
+				then the markers will not be added to the song.
+			</p>
+			<div class="flexRow">
+				<div class="flexCol">
+					<input
+							id="openExportAllDataDialog"
+							type="button"
+							class="regularButton"
+							value="Export"
+							title="export all data saved in troff" />
+				</div>
+				<div class="flexCol">
+					<input
+							type="button"
+							class="regularButton"
+							data-st-css-selector-to-toggle="#outerImportAllDataPopUpSquare"
+							value="Import"
+							title="overwrite all data in Troff with new (all your current data will be lost)" />
+				</div>
+
+			</div>
+
+			<input
+					type="button"
+					class="regularButton buttWidthStandard dialogCancelButton"
+					value="Cancel" />
+		</div>
+	</div>
+
+	<div id="outerImportAllDataPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Import All Data</h2>
+			<p class="paragraph normalSize">
+				To import and overwride all the data in Troff, past the string into the box below, and klick Import.
+			</p>
+			<textarea
+				class="writableField textareaStandard min-height-9"
+				placeholder="Paste text here"
+				id="importAllDataTextarea"></textarea>
+
+			<div class="flexRow">
+				<input
+						id="okImportAllDataDialog"
+						type="button"
+						class="regularButton"
+						value="Only Import"
+						title="Import All Data to troff" />
+				<input
+						id="okClearAndImportAllDataDialog"
+						type="button"
+						class="regularButton"
+						value="Clear and Import"
+						title="Remove all data from troff and Import new data" />
+
+				<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Cancel" />
+			</div>
+		</div>
+	</div>
+
+	<div id="outerExportAllDataPopUpSquare" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Export All Data</h2>
+			<p class="paragraph normalSize">
+				To export all data storred in Troff, copy the string into the box below,
+				and paste the text-string in the Troff-program where you want to import it.
+			</p>
+			<textarea
+				class="writableField textareaStandard min-height-9"
+				id="exportAllDataTextarea"></textarea>
+
+			<div class="flexRow">
+				<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Ok" />
+
+				<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Cancel" />
+			</div>
+		</div>
+	</div>
+
+
+	
+	<div id="outerSongListPopUpSquare" class="outerDialog hidden">
+		<div id="innerSongListPopUpSquare" class="popUpSquare almost-full-size" >
+			<div class="flexRow flex-none">
+				<h1> Songs </h1>
+				<div class="flexOne" ></div>
+				<input
+					type="button"
+					title="Show Search"
+					data-st-css-selector-to-hide="#dataSongTable_filter"
+					data-st-save-value-key="TROFF_SETTING_SEARCH_SHOW"
+					class="switch st-simple-on-off-button stOnOffButton active"
+					value="Search"/>
+				<input
+					type="button"
+					id="toggleSonglistsId"
+					title="Show songlists"
+					data-st-css-selector-to-hide="#songListsList"
+					data-st-save-value-key="TROFF_SETTING_SONG_LISTS_LIST_SHOW"
+					class="switch st-simple-on-off-button stOnOffButton"
+					value="Songlists"/>
+				<input
+					type="button"
+					title="Show Column Selector"
+					data-st-css-selector-to-hide="#columnToggleParent"
+					class="switch st-simple-on-off-button stOnOffButton mr-3"
+					value="Column Selector"/>
+
+				<label 
+					title="Add songs, videos or pictures to Troff"
+					class="regularButton mr-3 linkButton cursor-pointer"
+					for="fileUpploader">
+					Add files
+				</label>
+				<!--input
+					type="button"
+					title="Select folders to get songs from"
+					class="regularButton mr-3"
+					id="configure-button"
+					value="Select folders"/-->
+				<button class="regularButton mr-2 buttSetSongsDalogToAttachedState"
+					type="button"
+					title="open the songs dialog in floating window">
+					<i class="fa fa-window-minimize"></i>
+				</button>
+				<button class="regularButton mr-2 buttCloseSongsDialog"
+					type="button"
+					title="open the songs dialog in floating window">
+					<i class="fa fa-window-close"></i>
+				</button>
+			</div>
+			<!--p>
+				TODO:
+				Vore det inte kul om man kunde färglägga varje låt med färgerna? (i menyn kanske?)
+				och så kanske man kan ge låten en egen titel?
+			</p -->
+
+			<div class="flexRow flex-none">
+				<div id="columnToggleParent" class="p-2 primaryColor m-3">
+					<input data-column="1"  data-default="true" type="button" class="stOnOffButton" value="Checkbox" />
+					<input data-column="2"  data-default="true" type="button" class="stOnOffButton" value="Type" />
+					<input data-column="3"  data-default="true" type="button" class="stOnOffButton" value="Duration" />
+					<input data-column="4"  data-default="true" type="button" class="stOnOffButton" value="Title or File" data-show-on-attached-state="true" />
+					<input data-column="5"  data-default="false" type="button" class="stOnOffButton" value="Title" />
+					<input data-column="6"  data-default="true" type="button" class="stOnOffButton" value="Artist" />
+					<input data-column="7"  data-default="true" type="button" class="stOnOffButton" value="Album" />
+					<input data-column="8" data-default="true" type="button" class="stOnOffButton" value="Tempo" />
+					<input data-column="9" data-default="true" type="button" class="stOnOffButton" value="Genre" />
+					<input data-column="10" data-default="false" type="button" class="stOnOffButton" value="File path" />
+					<input data-column="11" data-default="false" type="button" class="stOnOffButton" value="Modified" />
+					<input data-column="12" data-default="false" type="button" class="stOnOffButton" value="Size" />
+					<input data-column="13" data-default="true" type="button" class="stOnOffButton" value="Song info" />
+					<input data-column="14" data-default="false" type="button" class="stOnOffButton" value="File type" />
+				</div>
+				<div class="flexOne"></div>
+			</div>
+			<div id="newSearchParent" class="py-2 flexRow flex-none full-width">
+
+				<div class="pt-1 pl-2">
+					<select id="songListSelector" class="custom-select custom-select-sm hideOnSongsDalogAttachedState">
+						<option value="-" disabled selected>Do with selected rows...</option>
+						<option value="--remove">Remove songs from Troff</option>
+						<option value="+">Create new songlist</option>
+						<optgroup id="songListSelectorAddToSonglist" label="Add songs to songlist"></optgroup>
+						<optgroup id="songListSelectorRemoveFromSonglist" label="Remove songs from"></optgroup>
+					</select>
+				</div>
+				<div class="flexOne"></div>
+				<div class="flexRow hideOnSongsDalogFloatingState">
+
+					<label 
+						title="Add songs, videos or pictures to Troff"
+						class="mr-2 pv-exact-17 regularButton fa-stack fa-1x attached-configure-button cursor-pointer"
+						for="fileUpploader">
+						<i class="fas fa-music fa-stack-1x"></i>
+						<i class="fas fa-plus fa-stack-1x"></i>
+					</label>
+
+					<!--button class="mr-2 pv-exact-17 regularButton fa-stack fa-1x attached-configure-button"
+						type="button"
+						title="Select folders to get songs from"
+						id="attached-configure-button" >
+						<i class="fas fa-music fa-stack-1x"></i>
+						<i class="fas fa-plus fa-stack-1x"></i>
+					</button-->
+					<button class="mr-2 stOnOffButton"
+						type="button"
+						title="show Song Lists"
+						id="buttAttachedSongListToggle" >
+						<i class="fa fa-columns"></i>
+					</button>
+					<button class="regularButton mr-2 buttSetSongsDalogToFloatingState"
+						type="button"
+						title="open the songs dialog in floating window">
+						<i class="fa fa-window-maximize"></i>
+					</button>
+					<button class="regularButton mr-2 buttCloseSongsDialog"
+						type="button"
+						title="close the songs dialog window">
+						<i class="fa fa-window-close"></i>
+					</button>
+				</div>
+			</div>
+			<div id="songPicker" class="flexRow scroll">
+				<div id="songListsList" class="flex-none scroll">
+					<input
+						type="button" 
+						id="songListAll_NEW"
+						class="selected stOnOffButton"
+						value="All songs" />
+					<input
+						type="button"
+						id="buttNewSongList_NEW"
+						class="regularButton"
+						value="New Songlist" />
+					<h2>Song lists</h2>
+					<ul id="songListList" class="flexScroll onOffParent maxWidthParent"></ul>
+
+
+					<!--h2>Gallery Lists</h2>
+					<ul id="galleryList" class="flexScroll onOffParent maxWidthParent"></ul>
+					<h2>Directory Lists</h2>
+					<ul id="directoryList" class="flexScroll onOffParent maxWidthParent"></ul -->
+
+				</div>
+				<div id="superSonglistArea" class="flexCol scroll">
+
+					<div id="pwa-song-list"></div>
+					<table id="dataSongTable" class="super-data-table table-row-selectable">
+						<thead>
+							<tr>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+			<div id="songPickerFloatingBase" class="flex-one"></div>
+			<input type="button" class="regularButton buttWidthStandard flex-none buttCloseSongsDialog" value="Close" />
+		</div>
+	</div>
+	
+	
+	
+	<div id="createSongListDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">New Song List</h2>
+			<p>Create a songlist with <span id="newSonglistNrSongs"></span> songs in it.</p>
+			<p>You can drag and drop new songs on to this songlist from the songs-table.</p>
+			<div id="createSongListNameParent">
+				<p class="pl-3">Song list name:</p>
+				<input type="text" id="createSongListName" class="form-control-sm" />
+				<input type="button" id="createSongListSave" class="regularButton" value="Save" />
+			</div>
+		</div>
+	</div>
+	
+
+</body>
+</html>

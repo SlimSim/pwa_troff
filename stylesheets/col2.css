@@ -1,0 +1,253 @@
+/******************************************************************************)
+(*                        col scheem 2                                        */
+/* The "Anton & Irene" color scheem */
+
+
+/* standard color... */
+::-webkit-input-placeholder {
+	color: dimgray;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p{
+	color: rgb(50, 50, 50);
+}
+
+.table-row-selectable tr:hover{
+	outline-color: dimgray;
+}
+
+.centerRoundButtCommon{
+	background-color: transparent;
+}
+.drop-active {
+	border-color: lightgray;
+}
+.stOnOffButton,
+.loopButt{
+	outline-color: lightgray;
+}
+.stOnOffButton,
+.loopButt{
+	background-color: lightgray;
+}
+
+.grayout-next-on-non-active:not(.active) ~*,
+.grayOut{
+	color: gray;
+	background-color: lightgray;
+}
+
+
+/* oddballs */
+.textareaStandard {
+	background: #DFEDD8;
+	border-color: #DFEDD8;
+}
+
+.textareaEdit{
+	background: white;
+}
+
+.fullscreen{
+	background-color: black;
+}
+
+.likeLink{
+	background-color: transparent;
+	color: blue;
+}
+
+.outerDialog{
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
+.helpText{
+		color: gray;
+}
+
+.colorPicker{
+	border-color: black;
+}
+.colorPickerSelected{
+	border-color: purple;
+}
+
+
+
+
+
+
+
+/* the background */
+.backgroundColor,
+.extraBorder{
+	background-color: #F2F8EF;
+}
+
+
+
+/* regularButton */
+.regularButton:focus,
+.regularButton:hover,
+.regularButton:active{
+	outline-color: #b0bec5; /*regularButton*/
+}
+.regularButton{
+	background-color: #b0bec5; /*regularButton*/
+}
+
+
+
+
+
+
+/* primaryColor 500 */
+.primaryColor,
+.bgEasyRead {
+	background-color: #93C47D;
+	background: #93C47D;
+}
+
+
+
+
+/* secondaryColor 200 */
+.secondaryColor,
+.areaParent > div,
+.popUpSquare,
+.innerDialog {
+	background-color: #C9E2BE;
+}
+
+.marker-parent li {
+	border-top-color: #C9E2BE;
+}
+
+
+
+
+
+/* accentColor1 A700 (men kanske ännu mörkare) */
+.drop-active.selected{
+	border-color: #2DFC00; /* accentColor1 */
+	border-color: #25d200; /* accentColor1 */
+}
+
+.selected:hover, 
+.selected td:hover,
+.currentLoop:hover, 
+.currentMarker:hover, 
+.currentStopMarker:hover,
+.selected:active,
+.selected td:active,
+.currentLoop:active, 
+.currentMarker:active, 
+.currentStopMarker:active {
+	outline-color: #2DFC00;
+	outline-color: #25d200;
+}  /* accentColor1 */
+
+.accentColor1,
+.selected,
+.selected td,
+.currentLoop,
+.currentMarker,
+.currentStopMarker,
+.selected.important {
+	background-color: #2DFC00; /* accentColor1 */
+	background-color: #25d200; /* accentColor1 */
+	color: black;
+}
+.play{
+		color: #2DFC00;
+		color: #25d200; /* accentColor1 - IF GREEN ISH (or works for that... */ 
+}
+
+
+
+
+
+/* accentColor2, 400 */ 
+
+.important:hover,
+.important:active,
+.special:hover,
+.special:active{
+	outline-color: #D42626;
+
+}
+
+.roundButt,
+.roundButt:hover,
+.roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
+.selected.important {
+	border-color: #D42626; /* accentColor2 */
+}
+.importantLeftLine {
+	border-left-color: #D42626; /*accentColor2*/
+}
+
+.accentColor2,
+.important,
+.important td {
+	background-color: #D42626; /* accentColor2 */
+}
+.pause{
+		color: #D42626; /* accentColor2 - IF RED ISH... */ 
+}
+
+
+.important{
+	color:#fff;
+	text-shadow:#C17C3A 0 -1px 0; /* NOTISE: not the same color... */
+}
+
+
+.important td {
+	color: #fff;
+	text-shadow: none;
+}
+
+
+
+
+
+
+/* accentColor3 700 */
+.active:hover,
+.active:active{
+	outline-color: #FFCF53; /* accentColor3 */
+}
+
+.accentColor3,
+.active{
+	background-color: #FFCF53; /* accentColor3 */
+	color: black;
+}
+.wait{
+	color: #FFCF53; /* accentColor3 - IF YELLOW ISH... */ 
+}
+
+
+/* end "Anton & Irene" color scheeme */
+
+
+/* Marker color section */
+.markerColorAqua {	background-color: Aqua;	color: black; }
+.markerColorBisque {	background-color: Bisque;	color: black; }
+.markerColorChartreuse {	background-color: Chartreuse;	color: black; }
+.markerColorCoral {	background-color: Coral;	color: black; }
+.markerColorPink {	background-color: Pink;	color: black; }
+.markerColorBurlywood {	background-color: Burlywood;	color: black; }
+.markerColorDarkcyan {	background-color: Darkcyan;	color: black; }
+.markerColorYellowgreen {	background-color: Yellowgreen;	color: black; }
+.markerColorPeru {	background-color: Peru;	color: black; }
+.markerColorViolet {	background-color: Violet;	color: black; }
+
+

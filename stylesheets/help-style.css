@@ -1,0 +1,89 @@
+
+body{
+	display: flex;
+	flex-direction: row;
+}
+nav{
+	background-color: green;
+	display: flex;
+	flex-direction: column;
+}
+article, nav, footer, header {
+	background-color: #e6e9f0;
+	margin: 8px;
+	padding: 16px;
+	margin-bottom: 0;
+}
+header {
+	display: flex;
+	font-size: 20px;
+	padding: 0px;
+	min-height: 48px;
+}
+footer {
+	/*min-height: 100px;*/
+}
+nav, header {
+	margin-right: 0;
+}
+h1 {
+	align-self: center;
+	margin-left: 24px;
+}
+h2 {
+	font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 4px;
+	color: #003366;
+}
+h3 {
+	font-size: 16px;
+	font-weight: bold;
+	margin-top: 12px;
+	margin-bottom: 4px;
+}
+h1::first-letter, h2::first-letter, h3::first-letter, nav a::first-letter {
+	text-transform: uppercase;
+}
+p, ul, li, table {
+	font-size: 14px;
+	margin-bottom: 8px;
+	margin-top: 0;
+}
+section {
+	margin: 0px !important;
+	padding: 0px !important;
+}
+
+header, footer {
+	background-color: #003366;
+	color: white;
+}
+header h1, footer p {
+	color: white;
+}
+.note {
+	background-color: #c2dde6;
+	margin: 4px 0;
+	margin-bottom: 8px;
+	padding: 12px;
+}
+a {
+	margin: 6px 0;
+	color: #003366;
+}
+.subLink {
+	color: black;
+	margin: 2px;
+	margin-left: 8px;
+	font-size: 14px;
+}
+.selfMaxWidth {
+	max-width: 213px;
+}
+.white {
+	color: white;
+}
+.textCenter {
+	text-align: center;
+}

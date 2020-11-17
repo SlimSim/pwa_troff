@@ -1,0 +1,50 @@
+{
+  "name": "Troff - Training with music",
+  "short_name": "Troff",
+  "version": "1.2.2",
+  "description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
+	"offline_enabled": true,
+	"start_url": "/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#bccbde",
+	"theme_color": "#003366",
+	"icons": [
+		{
+			"src": "assets/logos/logo-016.png",
+			"sizes": "16x16"
+		},
+		{
+			"src": "assets/logos/logo-036.png",
+			"sizes": "36x36"
+		},
+		{
+			"src": "assets/logos/logo-048.png",
+			"sizes": "48x48"
+		},
+		{
+			"src": "assets/logos/logo-078.png",
+			"sizes": "78x78"
+		},
+		{
+			"src": "assets/logos/logo-096.png",
+			"sizes": "96x96"
+		},
+		{
+			"src": "assets/logos/logo-128.png",
+			"sizes": "128x128"
+		},
+		{
+			"src": "assets/logos/logo-192-non-transparent.png",
+			"sizes": "192x192"
+		},
+		{
+			"src": "assets/logos/logo-256.png",
+			"sizes": "256x256"
+		},
+		{
+			"src": "assets/logos/logo-512.png",
+			"sizes": "512x512"
+		}
+	]
+}
