@@ -15,20 +15,19 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+// todo: try to use the strict mode, now that chrome-stuff is removed! :)
+// - what could possibly go wrong?
 // "use strict";
-
 window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-
-
-var gGalleryIndex = 0;     // gallery currently being iterated
-var gGalleryReader = null; // the filesytem reader for the current gallery
-var gDirectories = [];     // used to process subdirectories
-var gGalleryArray = [];    // holds information about all top-level Galleries found - list of DomFileSystem
-var gGalleryData = [];     // hold computed information about each Gallery
-var gCurOptGrp = null;
+//var gGalleryIndex = 0;     // gallery currently being iterated
+//var gGalleryReader = null; // the filesytem reader for the current gallery
+//var gDirectories = [];     // used to process subdirectories
+//var gGalleryArray = [];    // holds information about all top-level Galleries found - list of DomFileSystem
+//var gGalleryData = [];     // hold computed information about each Gallery
+//var gCurOptGrp = null;
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
@@ -61,42 +60,6 @@ var TROFF_SETTING_SONG_LISTS_LIST_SHOW = "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
 var TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
 var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 
-/*
-var TROFF_SETTING_KEYS = [
-	"stroCurrentSongPathAndGalleryId",
-	//"iCurrentSonglist",
-	"zoomDontShowAgain",
-	//"abGeneralAreas",
-	"straoSongLists",
-	TROFF_SETTING_SET_THEME,
-	TROFF_SETTING_EXTENDED_MARKER_COLOR,
-	TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
-	TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR,
-	TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
-	TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR,
-	TROFF_SETTING_ENTER_RESET_COUNTER,
-	TROFF_SETTING_SPACE_RESET_COUNTER,
-	TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
-	TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
-	TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
-	TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
-	TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON,
-	TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER,
-	TROFF_SETTING_CONFIRM_DELETE_MARKER,
-	TROFF_SETTING_UI_ARTIST_SHOW,
-	TROFF_SETTING_UI_TITLE_SHOW,
-	TROFF_SETTING_UI_ALBUM_SHOW,
-	TROFF_SETTING_UI_PATH_SHOW,
-	TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW,
-	TROFF_SETTING_UI_ZOOM_SHOW,
-	TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
-	TROFF_SETTING_SONG_COLUMN_TOGGLE,
-	TROFF_SETTING_SONG_LISTS_LIST_SHOW,
-	TROFF_CURRENT_STATE_OF_SONG_LISTS,
-	TROFF_SETTING_SHOW_SONG_DIALOG,
-];
-*/
-
 
 var MARKER_COLOR_PREFIX = "markerColor";
 
@@ -128,25 +91,6 @@ function errorPrintFactory(custom) {
 			console.error(custom + ': ' + msg);
 	 };
 }
-
-/*
-function JSON_parseOrGetOriginal( jsonString ) {
-  try {
-    var o = JSON.parse(jsonString);
-
-    // Handle non-exception-throwing cases:
-    // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-    // but... JSON.parse(null) returns null, and typeof null === "object", 
-    // so we must check for that, too. Thankfully, null is falsey, so this suffices:
-    if (o && typeof o === "object") {
-        return o;
-    }
-  }
-  catch (e) { }
-
-  return jsonString;
-}
-*/
 
 function GalleryData(id) {
 	this._id = id;
@@ -261,34 +205,12 @@ function clearContentDiv() {
 	 }
 }
 
-/*
-function clearList() {
-	document.getElementById("newSongListPartAllSongs").innerHTML = "";
-	$('#dataSongTable').DataTable().clear().draw();
-}
-*/
-
 function clearGalleryAndDirectoryList() {
 	$("#galleryList").empty();
 	$("#directoryList").empty();
 	$("#dataSongTable").DataTable().clear();
 }
 
-/*
-function checkIfSongExists(fullPath, galleryId){
-	var fsId = galleryId;
-	var fs = null;
-	// get the filesystem that the selected file belongs to
-	for (var i=0; i < gGalleryArray.length; i++) {
-		var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(gGalleryArray[i]);
-		if (mData.galleryId == fsId) {
-			fs = gGalleryArray[i];
-			break;
-		}
-	}
-	if(fs) return true;
-	return false;
-}*/
 function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	Troff.pauseSong();
 
@@ -348,83 +270,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	//});
 }//end setSong2
 
-/*function setSong(fullPath, galleryId){
-	Troff.pauseSong();
 
-	if( $( "#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT" ).hasClass( "active" ) ) {
-		$("#dataSongTable_filter").find( "input" ).val('');
-		$('#dataSongTable').DataTable().search('').draw();
-	}
-
-	var exitOnSelect = $( "#TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT" ).hasClass( "active" ),
-		floatingDialog = $( "#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG" ).hasClass( "active" );
-
-	if( exitOnSelect && floatingDialog ) {
-		closeSongDialog();
-	}
-
-	var fsId = galleryId;
-	var fs = null;
-	// get the filesystem that the selected file belongs to
-	for (var i=0; i < gGalleryArray.length; i++) {
-		var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(gGalleryArray[i]);
-		if (mData.galleryId == fsId) {
-			fs = gGalleryArray[i];
-			break;
-		}
-	}
-
-	if (fs) {
-		var path = fullPath;
-		DB.setCurrentSong(path, galleryId);
-
-		Troff.setWaitForLoad(path, galleryId);
-		fs.root.getFile(path, {create: false}, function(fileEntry) {
-
-			 var newElem = null;
-			 // show the file data
-			 clearContentDiv();
-			 var type = getFileType(path);
-			 if (type == "image")
-					newElem = addImageToContentDiv();
-			 else if (type == "audio")
-					newElem = addAudioToContentDiv();
-			 else if (type == "video")
-					newElem = addVideoToContentDiv();
-
-			 if (newElem) {
-					// Supported in Chrome M37 and later.
-					if (!chrome.mediaGalleries.getMetadata) {
-
-						newElem.setAttribute('src', fileEntry.toURL());
-					} else {
-
-						fileEntry.file(function(file) {
-							chrome.mediaGalleries.getMetadata(file, {}, function(metadata) {
-								$( "#currentPath" ).text( Troff.pathToName( path ) );
-								if(metadata.title){
-									$('#currentSong').text( metadata.title ).show();
-								} else {
-									$('#currentArtist').text(Troff.pathToName(path));
-								}
-								if(metadata.artist)
-									$('#currentArtist').text( metadata.artist );
-								if(metadata.album)
-									$('#currentAlbum').text ( metadata.album ).show();
-		/*                if (metadata.attachedImages.length) {
-									var blob = metadata.attachedImages[0];
-									var posterBlobURL = URL.createObjectURL(blob);
-									newElem.setAttribute('poster', posterBlobURL);
-								} //end if
-		* /
-								newElem.setAttribute('src', fileEntry.toURL());
-							}); // end chrome.mediaGalleries.getMetadata-function
-						});//end fileEntry.file-function
-					}
-			 }//end if(newElem)
-		});
-	 }//end if(fs)
-}//end setSong */
 
 function addGallery(name, id) {
 	var li = document.createElement("li");
@@ -446,55 +292,11 @@ function addGallery(name, id) {
 	return optGrp;
 }
 
-/*
-function addItem(itemEntry) {
-	if (itemEntry.isFile) {
-		var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(itemEntry.filesystem);
-		var li = document.createElement("li");
-		var label = document.createElement("label");
-		var checkbox = document.createElement("input");
-		var div = document.createElement("div");
-		div.setAttribute("class", "flex");
-		div.appendChild(document.createTextNode(Troff.pathToName(itemEntry.fullPath)));
-		checkbox.setAttribute("type", "checkbox");
-		label.setAttribute("class", "flexrow");
-		label.appendChild(checkbox);
-		label.appendChild(div);
-		li.setAttribute("fullPath", itemEntry.fullPath );
-		li.setAttribute("galleryId", mData.galleryId );
-		li.setAttribute("isDirectory", false);
-		li.appendChild(label);
-		document.getElementById("newSongListPartAllSongs").appendChild(li);
-		// Slim sim remove 
-		/*
-			This (the following if) is only to ease the transition between 
-			v0.3 to v0.4,
-			it is not used a single time after they open the app with v0.4 
-		* /
-		if(Troff.iCurrentGalleryId == -1 && itemEntry.fullPath == Troff.strCurrentSong )
-			setSong(itemEntry.fullPath, mData.galleryId);
-		
-	} else {
-		//slim sim, is this else ever used?
-		console.info("\n\n\n********* else! This else is used! itemEntry:", itemEntry,"\n\n");
-		//IO.alert("The else is used! Search for: code_7954");
-		var liHead = document.createElement("li");
-		var group = document.createElement("h3");
-		gruop.appendChild(document.createTextNode(itemEntry.name));
-		liHead.appendChild(group);
-		document.getElementById("newSongListPartAllSongs").appendChild(liHead);
-	 }
-	 
-}
-*/
-
 function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )
 		return "<i class=\"hidden\">" + 0 + "</i>";//<i class=\"fa " + faType + "\"></i>",
 	return "<i class=\"hidden\">" + sortValue + "</i>" + stringValue;//<i class=\"fa " + faType + "\"></i>",
 }
-
-
 
 function addDirectory_NEW(directoryEntry) {
 	var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(directoryEntry.filesystem)
@@ -515,25 +317,6 @@ function addDirectory_NEW(directoryEntry) {
 			)
 		);
 }
-
-/*
-function addGallery_New(name, galleryId) {
-	$( "#galleryList" )
-		.append(
-			$("<ul>")
-				.addClass("py-1")
-				.addClass( "flex-display" )
-				.append( $( "<button>" )
-					.addClass("stOnOffButton")
-					.addClass( "flex-one" )
-					.addClass("text-left")
-					.attr("data-gallery-id", galleryId)
-					.text( Troff.getLastSlashName(name) )
-					.click(clickSongList_NEW)
-			)
-		);
-}
-*/
 
 function clickSongList_NEW( event ) {
 	document.getElementById('blur-hack').focus();
@@ -612,8 +395,7 @@ function escapeRegExp(string) {
 		.replace(/[".*+?^${}()|[\]\\]/g, '\\$&');	// $& means the whole matched string
 }
 
-//Så, fixa så att jag använder addItem_NEW_2, istället för FileApiImplementation.js / createMusicButton
-//och att när man trycker på denna rad, så ska setSong2 köras, hur gör man det??? :) kram
+
 
 async function createSongAudio( path ) {
 	//path = $(event.target).val(),
@@ -626,122 +408,57 @@ async function createSongAudio( path ) {
 };
 
 function addItem_NEW_2( key ) {
-	//itemEntry.file(function(file) {
-		//chrome.mediaGalleries.getMetadata(file, {}, function(metadata) {
-			//var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(itemEntry.filesystem);
-			//var fullPath = itemEntry.fullPath;
-			var galleryId = "pwa-galleryId";
-			var extension = getFileExtension( key );
-			var faType = getFileTypeFaIcon( key );
 
-			var selected_path = Troff.getCurrentSong();
-			var selected_galleryId = Troff.getCurrentGalleryId();
+	var galleryId = "pwa-galleryId";
+	var extension = getFileExtension( key );
+	var faType = getFileTypeFaIcon( key );
 
-			DB.getVal( key, function( song ) {
+	var selected_path = Troff.getCurrentSong();
+	var selected_galleryId = Troff.getCurrentGalleryId();
 
-				var tempo = "?",
-					info = "",
-					//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
-					titleOrFileName = key.substr(0, key.lastIndexOf( '.' ) );//metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
-				if( song != undefined ) {
-					tempo = song.tempo;
-					info = song.info;
-				}
+	DB.getVal( key, function( song ) {
 
-				var dataInfo = {
-					"galleryId" : galleryId,
-					"fullPath" : key
-				};
+		var tempo = "?",
+			info = "",
+			//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
+			titleOrFileName = key.substr(0, key.lastIndexOf( '.' ) );//metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
+		if( song != undefined ) {
+			tempo = song.tempo;
+			info = song.info;
+		}
 
-				var newRow = $('#dataSongTable').DataTable().row.add( [
-					JSON.stringify( dataInfo ),
+		var dataInfo = {
+			"galleryId" : galleryId,
+			"fullPath" : key
+		};
+
+		var newRow = $('#dataSongTable').DataTable().row.add( [
+			JSON.stringify( dataInfo ),
 //					null, // Play
-					null, // Menu ( Hidden TODO: bring forward and implement )
-					sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
-					"?",//sortAndValue( metadata.duration, Troff.secToDisp( metadata.duration ) ),//Duration
-					titleOrFileName,
-					key, //metadata.title || "",
-					"?",//metadata.artist || "",
-					"?",//metadata.album || "",
-					tempo,
-					"?",//metadata.genre || "",
-					"?",//mData.name + itemEntry.fullPath, //File Path
-					"",//Troff.milisToDisp( file.lastModified ),
-					"?",//sortAndValue( file.size, Troff.byteToDisp( file.size ) ), 
-					info,
-					"." + extension
-				] )
-				.draw( false )
-				.node();
+			null, // Menu ( Hidden TODO: bring forward and implement )
+			sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
+			"?",//sortAndValue( metadata.duration, Troff.secToDisp( metadata.duration ) ),//Duration
+			titleOrFileName,
+			key, //metadata.title || "",
+			"?",//metadata.artist || "",
+			"?",//metadata.album || "",
+			tempo,
+			"?",//metadata.genre || "",
+			"?",//mData.name + itemEntry.fullPath, //File Path
+			"",//Troff.milisToDisp( file.lastModified ),
+			"?",//sortAndValue( file.size, Troff.byteToDisp( file.size ) ), 
+			info,
+			"." + extension
+		] )
+		.draw( false )
+		.node();
 
-				if(selected_path == key && selected_galleryId == galleryId){
-					$( newRow ).addClass( "selected" );
-				}
+		if(selected_path == key && selected_galleryId == galleryId){
+			$( newRow ).addClass( "selected" );
+		}
 
-			} ); // end DB.getVal
-		//} ); // end chrome.mediaGalleries.getMetadata-function
-	//} );//end fileEntry.file-function
+	} ); // end DB.getVal
 }
-
-/*
-function addItem_NEW(itemEntry) {
-	itemEntry.file(function(file) {
-		chrome.mediaGalleries.getMetadata(file, {}, function(metadata) {
-			var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(itemEntry.filesystem);
-			var fullPath = itemEntry.fullPath;
-			var galleryId = mData.galleryId;
-			var extension = getFileExtension( fullPath );
-			var faType = getFileTypeFaIcon(fullPath);
-
-				var selected_path = Troff.getCurrentSong();
-				var selected_galleryId = Troff.getCurrentGalleryId();
-
-
-
-			DB.getVal( fullPath, function( song ) {
-
-				var tempo = "?",
-					info = "",
-					titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
-				if( song != undefined ) {
-					tempo = song.tempo;
-					info = song.info;
-				}
-
-				var dataInfo = {
-					"galleryId" : galleryId,
-					"fullPath" : fullPath
-				};
-
-				var newRow = $('#dataSongTable').DataTable().row.add( [
-					JSON.stringify( dataInfo ),
-					//null, // Play
-					null, // Menu ( Hidden TODO: bring forward and implement )
-					sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
-					sortAndValue( metadata.duration, Troff.secToDisp( metadata.duration ) ),//Duration
-					titleOrFileName,
-					metadata.title || "",
-					metadata.artist || "",
-					metadata.album || "",
-					tempo,
-					metadata.genre || "",
-					mData.name + itemEntry.fullPath, //File Path
-					Troff.milisToDisp( file.lastModified ),
-					sortAndValue( file.size, Troff.byteToDisp( file.size ) ), 
-					info,
-					"." + extension
-				] )
-				.draw( false )
-				.node();
-
-				if(selected_path == fullPath && selected_galleryId == galleryId){
-					$( newRow ).addClass( "selected" );
-				}
-
-			} ); // end DB.getVal
-		} ); // end chrome.mediaGalleries.getMetadata-function
-	} );//end fileEntry.file-function
-}*/
 
 function initSongTable() {
 	var dataSongTable,
@@ -830,6 +547,7 @@ function initSongTable() {
 	  event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
 	})
 	.on( 'click', 'tbody tr', function ( event ) {
+
 		if( $( event.target ).closest( "td, th" ) .hasClass( "preventSongLoad" ) ) {
 			return;
 		}
@@ -839,10 +557,6 @@ function initSongTable() {
 		$("#dataSongTable").DataTable().rows(".selected").nodes().to$().removeClass( "selected" );
 		$(this).addClass("selected");
 
-		//setSong(
-		//	dataInfo.fullPath,
-		//	dataInfo.galleryId
-		//);
 		createSongAudio( /*key:*/ dataInfo.fullPath );
 	} );
 
@@ -1230,178 +944,9 @@ function dataTableShowColumnsForFloatingState() {
 }
 
 
-/*
-function scanGallery(entries) {
-	
-	// when the size of the entries array is 0,
-	// we've processed all the directory contents
-	if (entries.length === 0) {
-		if (gDirectories.length > 0) {
-			var dir_entry = gDirectories.shift();
-			gGalleryReader = dir_entry.createReader();
-			gGalleryReader.readEntries(scanGallery, errorPrintFactory('readEntries'));
-		}
-		else {
-			gGalleryIndex++;
-			if (gGalleryIndex < gGalleryArray.length) {
-				scanGalleries(gGalleryArray[gGalleryIndex]);
-			}
-		}
-
-
-		if(Troff.stopTimeout) clearInterval(Troff.stopTimeout);
-		Troff.stopTimeout = setTimeout(function(){
-			//DB.getCurrentSonglist(); // this reloads the current songlist
-			Troff.recallCurrentStateOfSonglists();
-
-			clearInterval(Troff.stopTimeout);
-		}, 100);
-		return;
-	}
-	for (var i = 0; i < entries.length; i++) {
-		if (entries[i].isFile) {
-			//addItem(entries[i]);
-			addItem_NEW( entries[i] );
-			gGalleryData[gGalleryIndex].numFiles++;
-			loopFunktion(entries, gGalleryData[gGalleryIndex], i);
-		}
-		else if (entries[i].isDirectory) {
-			gDirectories.push(entries[i]);
-			addDirectory_NEW( entries[i] );
-		}
-		else {
-			console.info("Got something other than a file or directory.");
-		}
-	}
-
-	// readEntries has to be called until it returns an empty array. According to the spec,
-	// the function might not return all of the directory's contents during a given call.
-	gGalleryReader.readEntries(scanGallery, errorPrintFactory('readMoreEntries'));
-}
-function loopFunktion(entries, galData, i) {
-	entries[i].getMetadata(function(metadata){
-		galData.sizeBytes += metadata.size;
-	});
-}
-*/
-
-/*
-function scanGalleries(fs) {
-	 var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(fs);
-
-	 //gCurOptGrp = addGallery(mData.name, mData.galleryId);
-	 addGallery_New(mData.name, mData.galleryId);
-	 gGalleryData[gGalleryIndex] = new GalleryData(mData.galleryId);
-	 gGalleryReader = fs.root.createReader();
-	 gGalleryReader.readEntries(scanGallery, errorPrintFactory('readEntries'));
-}
-
-function getGalleriesInfo(results) {
-//	Media.getGalleriesInfo( results );
-	//clearList();
-	clearGalleryAndDirectoryList()
-	if (results.length) {
-		gGalleryArray = results; // store the list of gallery directories
-		gGalleryIndex = 0;
-		scanGalleries(gGalleryArray[0]);
-	}
-	else {
-		/* NO GALLERIES FOUND:
-		 * Here i should display a message to the user, urging him or here
-		 * to add a directory, or a directory with a song in it...
-		 * /
-		IO.alert(
-			'No songs or videos found, '+
-			'please add a directory with a song or video in it.'+
-			'(do this under "Songs", and then "Select folders" or the "+"-sign)'
-		);
-	}
-
-}
-*/
-
-	/*
-function FSstartFunc(){
-	chrome.mediaGalleries.getMediaFileSystems({
-		 interactive : 'if_needed'
-	}, getGalleriesInfo);
-
-
-	$( "#configure-button, #attached-configure-button" ).on( "click", function() {
-		chrome.mediaGalleries.getMediaFileSystems({
-			interactive : 'yes'
-		}, getGalleriesInfo);
-	});
-	*/
-
-/*
-	document.getElementById('configure-button').addEventListener("click", function() {
-		chrome.mediaGalleries.getMediaFileSystems({
-			interactive : 'yes'
-		}, getGalleriesInfo);
-	});
-} // end window load
-	*/
-
-
-
 //******************************************************************************
 //* End FS - File System ----------------------------------------------------- *
 //******************************************************************************
-
-
-
-
-
-/*
-var Media = {};
-
-Media.gGalleryArray;
-
-Meida.getGalleriesInfo = function(results){
-	Media.gGalleryArray = results;
-
-	for( var i = 0; i < results.length; i++ ) {
-		Media.scanGalleries( Media.gGalleryArray[i] );
-	}
-}
-Media.scanGalleries = function() {
-	 var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(fs);
-
-	 gCurOptGrp = Media.addGallery(mData.name, mData.galleryId);
-	 Media.addGallery(mData.name, mData.galleryId);
-	 gGalleryData[gGalleryIndex] = new GalleryData(mData.galleryId);
-	 gGalleryReader = fs.root.createReader();
-	 gGalleryReader.readEntries(scanGallery, errorPrintFactory('readEntries'));
-}
-Media.AddGallery(name, id) {
-	var li = document.createElement("li");
-	var label = document.createElement("label");
-	var checkbox = document.createElement("input");
-	var optGrp = document.createElement("h3");
-	optGrp.appendChild(document.createTextNode(Troff.getLastSlashName(name)));
-	optGrp.setAttribute("id", id);
-	optGrp.setAttribute("class", "bold");
-	checkbox.setAttribute("type", "checkbox");
-	label.setAttribute("class", "flexrow");
-	label.appendChild(checkbox);
-	label.appendChild(optGrp);
-	li.appendChild(label);
-	li.setAttribute("galleryid", id);
-	li.setAttribute("fullPath", name);
-	li.setAttribute("isDirectory", true);
-	document.getElementById("newSongListPartAllSongs").appendChild(li);
-	return optGrp;
-}
-*/
-
-
-
-
-
-
-
-
 
 var TroffClass = function(){
 		var strCurrentSong = "";
@@ -1493,42 +1038,10 @@ var TroffClass = function(){
 		$target.addClass( "selected" );
 		$( "#colorScheme" ).attr( "href", "stylesheets/" + theme + ".css" );
 
-
-//slim sim here
-
-// testa att använda chrome.runtime.getManifest().short_name 
-// för att kolla test eller prod :)
-
-/*
-		var o = {};
-		o[ TROFF_SETTING_SET_THEME ] = theme;
-		chrome.storage.local.set( o );
-		*/
 		DB.saveVal( TROFF_SETTING_SET_THEME, theme);
 
-		
 	};
 
-/*
-	this.setButtonActiveValue = function( event ) {
-		var $target = $( event.target ),
-			id = $target.attr( "id" ),
-			idToShow = $target.data( "id-to-show" );
-
-		$target.toggleClass( "active" );
-
-
-		if( idToShow ) {
-			if( $target.hasClass( "active" ) ){
-				$( "#" + idToShow ).removeClass( "hidden" );
-			} else {
-				$( "#" + idToShow ).addClass( "hidden" );
-			}
-		}
-
-		DB.saveVal( id, $target.hasClass( "active" ) );
-	}
-	*/
 
 	/*Troff*/this.enterWritableField = function() {
 		IO.setEnterFunction(function(event){
@@ -1544,7 +1057,6 @@ var TroffClass = function(){
 	}
 	
 	/*Troff*/this.getGlobalSettins = function( callback ) {
-		//chrome.storage.local.get(null, function(items) {
 		nDBc.getAllKeys( function( keys ) {
 			var settingItems = {};
 			for( var key in keys ) {
@@ -1565,7 +1077,6 @@ var TroffClass = function(){
 	}
 
 	/*Troff*/this.openExportAllDataDialog = function() {
-		//chrome.storage.local.get(null, function(items) {
 		nDBc.getAllKeyValuePairs( function(items) {
 			$( "#outerExportAllDataPopUpSquare" ).removeClass( "hidden" );
 			$( "#exportAllDataTextarea" ).val( JSON.stringify( items, null, 2 ) );
@@ -1705,45 +1216,8 @@ var TroffClass = function(){
 		Troff.recallSongColumnToggle( function(){
 			Troff.recallFloatingDialog();
 		});
-		/*
-		Troff.recallButtonActiveValue(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR);
-		Troff.recallButtonActiveValue(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR);
-		Troff.recallButtonActiveValue(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR);
-		Troff.recallButtonActiveValue(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR);
-		Troff.recallButtonActiveValue(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR);
-		Troff.recallButtonActiveValue(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR);
-		Troff.recallButtonActiveValue(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER);
-		Troff.recallButtonActiveValue(TROFF_SETTING_CONFIRM_DELETE_MARKER);
-		Troff.recallButtonActiveValue(TROFF_SETTING_ENTER_RESET_COUNTER);
-		Troff.recallButtonActiveValue(TROFF_SETTING_SPACE_RESET_COUNTER);
-		Troff.recallButtonActiveValue(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_ARTIST_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_TITLE_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_ALBUM_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_PATH_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_ZOOM_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW);
-		Troff.reacllUiValueShow(TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON);
-		*/
 	};
 
-	/*Troff* /this.reacllUiValueShow = function( databaseKey ) {
-		DB.getVal( databaseKey, function( value ) {
-			if( value === undefined ) {
-				return;
-			}
-			var $button = $( "#" + databaseKey ),
-				idToShow = $("#" + databaseKey ).data( "id-to-show" );
-			if( value ) {
-				$button.addClass( "active" );
-				$("#" + idToShow ).removeClass("hidden");
-			} else {
-				$button.removeClass( "active" );
-				$("#" + idToShow ).addClass("hidden");
-			}
-		} );
-	} */
 
 	this.recallTheme = function() {
 		DB.getVal( TROFF_SETTING_SET_THEME, function( theme ) {
@@ -1754,21 +1228,6 @@ var TroffClass = function(){
 			$( "#colorScheme" ).attr( "href", "stylesheets/" + theme + ".css" );
 		} );
 	};
-
-	/*Troff* /this.recallButtonActiveValue = function(databaseKey) {// detta är det jag håller på med nu :)
-		DB.getVal( databaseKey, function( goToMarker ) {
-			if( goToMarker === undefined ) {
-				return;
-			}
-			var $button = $( "#" + databaseKey );
-			if( goToMarker ) {
-				$button.addClass( "active" );
-			} else {
-				$button.removeClass( "active" );
-			}
-		} );
-	};*/
-	
 	
 	this.closeSettingsDialog = function( event ) {
 		$( "#outerSettingPopUpSquare" ).addClass( "hidden" );
@@ -2357,7 +1816,6 @@ var TroffClass = function(){
 
 	this.setCurrentSongInDB = function(){ //slim sim here
 		DB.setCurrentSong(strCurrentSong, iCurrentGalleryId);
-//    $('#infoSection').show();
 	}; // end SetCurrentSong
 
 	this.pathToName_2 = function(filepath){
@@ -2418,7 +1876,7 @@ var TroffClass = function(){
 	}; // end exportStuff
 
 	/*
-		importStuff, promps for a string with markers
+		importStuff, prompts for a string with markers
 	*/
 	/*Troff*/this.importStuff = function(){
 		Troff.toggleImportExport();
@@ -2444,6 +1902,7 @@ var TroffClass = function(){
 				var aMarkersTmp = oImport;
 				importMarker(aMarkersTmp);
 			}
+
 			function importMarker(aMarkers){
 				var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
 
@@ -2461,9 +1920,11 @@ var TroffClass = function(){
 				}
 				Troff.addMarkers(aMarkers); // adds marker to html
 			}
+
 			function importSonginfo(strSongInfo){
 				$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
 			}
+
 			function importStates(aoStates){
 				for(var i = 0; i < aoStates.length; i++){
 					var strTimeStart = aoStates[i].currentMarkerTime;
@@ -2473,6 +1934,7 @@ var TroffClass = function(){
 					aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
 					aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
 				}
+
 				function getMarkerFromTime(strTime){
 					var aCurrMarkers = $('#markerList').children();
 					for(var i=0; i<aCurrMarkers.length; i++){
@@ -2496,8 +1958,8 @@ var TroffClass = function(){
 	};
 
 	/*
-		createMarker, all, tar reda pÃ¥ tiden o namnet,
-		anropar sedan add- och save- Marker
+		createMarker, all, figure out the time and name,
+		will then call the add- and save- Marker
 	 */
 	/*Troff*/this.createMarker = function(){
 		var time = document.querySelector('audio, video').currentTime;
@@ -2580,14 +2042,6 @@ var TroffClass = function(){
 	this.setInfo = function(info){
 		$('#songInfoArea').val(info);
 	};
-	
-	/*
-	this.setSonglists = function(aoSonglists){
-		for(var i=0; i<aoSonglists.length; i++){
-			Troff.addSonglistToHTML(aoSonglists[i]);
-		}
-	};
-	*/
 
 	this.setSonglists_NEW = function( aoSonglists ) {
 		for(var i=0; i<aoSonglists.length; i++){
@@ -2720,160 +2174,15 @@ var TroffClass = function(){
 		IO.clearEnterFunction();
 		document.getElementById('blur-hack').focus();
 	};
-	
-	/*
-	this.editSonglist = function(event){
-		$('#newSongListPart').show();
-		$('#songListPartButtons, #songListPartTheLists').hide();
-		var li = this.parentNode;
-		var oSonglist = JSON.parse(li.getAttribute('stroSonglist'));
-		$('#newSongListName').val(oSonglist.name);
-		$('#newSongListName').attr('iSonglistId', oSonglist.id);
 		
-		var aSongList = [];
-		var aRows = $('#newSongListPartAllSongs li');
-		var aSongs = oSonglist.songs;
-		var rowFP, rowGID, rowH;
-
-		for(var i=0; i<aRows.length; i++){
-			rowFP = aRows[i].getAttribute('fullPath');
-			rowGID = aRows[i].getAttribute('galleryId');
-			rowH = aRows.eq(i).children().children().eq(1).text();
-			for(var j=0; j<aSongs.length; j++){
-				if(rowH && rowH == aSongs[j].header ){
-					// checking headder:
-					aRows[i].children[0].children[0].checked = true;
-					continue;
-				}
-				if(rowFP && rowFP == aSongs[j].fullPath && rowGID == aSongs[j].galleryId){
-					// checking songs:
-					aRows[i].children[0].children[0].checked = true;
-				}
-			}
-			
-		}
-	};
-	*/
-	
-	/*Troff* /this.createNewSonglist = function(){
-		Troff.resetNewSongListPartAllSongs();
-		$('#newSongListPart').show();
-		$('#songListPartButtons, #songListPartTheLists').hide();
-		$('#removeSongList').hide();
-		$('#newSongListName').focus();
-		$('#newSongListName').click();
-	};
-	*/
-	
-	/*
-	this.cancelSongList = function(){
-		document.getElementById('blur-hack').focus();
-		$('#newSongListPart').hide();
-		$( "#searchCreateSongList" ).val( "" ).trigger( "click" );
-		IO.clearEnterFunction();
-		$('#songListPartButtons, #songListPartTheLists').show();
-		Troff.resetNewSongListPartAllSongs();
-	};
-	*/
-	
-	/*Troff* /this.removeSonglist = function(){
-		IO.confirm( 'Remove songlist?',
-								'Don you want to permanently remove this songlist?',
-								function(){
-			$('#newSongListPart').hide();
-			$( "#searchCreateSongList" ).val( "" ).trigger( "click" );
-			IO.clearEnterFunction();
-			$('#songListPartButtons, #songListPartTheLists').show();
-			document.getElementById('blur-hack').focus();
-			var iSonglistId = parseInt($('#newSongListName').attr('iSonglistId'));
-			
-			var aSonglists = $('#songListPartTheLists li');
-			for(var j=0; j<aSonglists.length; j++){
-				var oCurrSonglist = JSON.parse(aSonglists.eq(j).attr('stroSonglist'));
-				if(oCurrSonglist.id === iSonglistId){
-					if(aSonglists.eq(j).children().hasClass('selected')){
-						Troff.setSonglistById(0);
-					}
-					aSonglists.eq(j).remove();
-					break;
-				}
-			}
-			$('#songlistHelpText').toggle($('#songListPartTheLists >').length === 0);
-
-			DB.saveSonglists(); // this saves the current songlists from html to DB
-			Troff.resetNewSongListPartAllSongs();
-		});
-	};//*/
-	
-	/*Troff* /this.saveNewSongList = function(){
-		$('#newSongListPart').hide();
-		$( "#searchCreateSongList" ).val( "" ).trigger( "click" );
-		IO.clearEnterFunction();
-
-
-		$('#songListPartButtons, #songListPartTheLists').show();
-		
-		document.getElementById('blur-hack').focus();
-		var name = $('#newSongListName').val();
-		if(name === "" || name === undefined) {
-			IO.alert("You must give the songlist a name");
-			return -1;
-		}
-		var iSonglistId = parseInt($('#newSongListName').attr('iSonglistId'));
-		
-		var aSonglist = [];
-		var aRows = $('#newSongListPartAllSongs li');
-		for(var i=0; i<aRows.length; i++){
-			if(aRows[i].children[0].children[0] && aRows[i].children[0].children[0].checked){
-				var dfullpath = aRows[i].getAttribute('fullPath');
-				var dfsid = aRows[i].getAttribute('galleryId');
-				var isDirectory = aRows[i].getAttribute('isDirectory') === "true";
-				aSonglist.push({
-					'isDirectory' : isDirectory,
-					'fullPath'    : dfullpath,
-					'galleryId'   : dfsid
-				});
-			}
-		}
-
-		if(iSonglistId === 0){
-			oSongList = {};
-			oSongList.id = Troff.getUniqueSonglistId();
-			oSongList.name = name;
-			oSongList.songs = aSonglist;
-			Troff.addSonglistToHTML(oSongList);
-		} else {
-			var aSonglists = $('#songListPartTheLists li');
-			for(var j=0; j<aSonglists.length; j++){
-				var oCurrSonglist = JSON.parse(aSonglists.eq(j).attr('stroSonglist'));
-				if(oCurrSonglist.id == iSonglistId){
-					oCurrSonglist.name = name;
-					oCurrSonglist.songs = aSonglist;
-					var stroNewSonglist = JSON.stringify(oCurrSonglist);
-					aSonglists.eq(j).attr('stroSonglist', stroNewSonglist);
-					aSonglists.eq(j).children().eq(1).val(name);
-					break;
-				}
-			}
-		}
-
-		Troff.resetNewSongListPartAllSongs();
-		DB.saveSonglists(); // this saves the current songlists from html to DB
-		DB.getCurrentSonglist(); // this reloads the current songlist
-		
-	};//*/
-	
 	/*Troff*/this.getUniqueSonglistId = function(){
 		var iSonglistId = 1;
 		var bFinniched = false;
 
-		//var aSonglists = $('#songListPartTheLists li');
 		var aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
 		while(true){
 			bFinniched = true;
 			for(var i=0; i<aDOMSonglist.length; i++){
-				//var id = aDOMSonglist.eq(i).data('songList').id
-				//var oCurrSonglist = JSON.parse(aSonglists.eq(i).attr('stroSonglist'));
 				if(aDOMSonglist.eq(i).data('songList').id == iSonglistId){
 					iSonglistId++;
 					bFinniched = false;
@@ -2891,35 +2200,6 @@ var TroffClass = function(){
 		$('#removeSongList').show();
 	};
 	
-	/*
-	this.addSonglistToHTML = function(oSonglist){
-		var buttE = $('<button>')
-			.attr('type', 'button')
-			.addClass('small')
-			.addClass('regularButton')
-			.click(Troff.editSonglist)
-			.append(
-				$( "<i>" )
-				.addClass( "fa")
-				.addClass( "fa-pencil-alt")
-			);
-
-		var buttL = $('<input>')
-			.val(oSonglist.name)
-			.attr('type', 'button')
-			.addClass('onOffButton')
-			.click(Troff.selectSonglist);
-
-		var li = $('<li>')
-			.attr('stroSonglist', JSON.stringify(oSonglist))
-			.append(buttE)
-			.append(buttL);
-
-		$('#songListPartTheLists').append(li);
-		$('#songlistHelpText').hide();
-	};
-	*/
-	
 	/*Troff*/this.setSonglistById = function(id){
 		if(id === 0){
 			$('#songlistAll').click();
@@ -2933,72 +2213,6 @@ var TroffClass = function(){
 			}
 		}
 	};
-
-/*
-	this.setSonglistById_NEW = function(id){
-		if(id === 0){
-			$("#songListAll_NEW").click();
-			return;
-		}
-		$( "#songListList" ).find( "input[data-songlist-id=" + id  + "]" ).click();
-	}
-	*/
-	/*
-	this.selectSong = function(){
-		var fullPath = this.getAttribute('fullPath');
-		var galleryId = this.getAttribute('galleryId');
-		setSong(fullPath, galleryId);
-	};
-	*/
-
-	
-	/*Troff* /this.addAllSongsFromGallery = function(galleryIdToAdd){
-		var allSongs = $('#newSongListPartAllSongs')
-			.children().filter('[isDirectory!=true]'); //slim sim, finns det en funktion fÃ¶r detta?
-
-		for(var i=0; i<allSongs.length; i++){
-			if(allSongs.eq(i).attr('galleryid') === galleryIdToAdd )
-				Troff.addSongButtonToSongsList(
-					allSongs.eq(i).attr('fullPath'),
-					allSongs.eq(i).attr('galleryid')
-				);
-		}
-	};*/
-	
-	/*Troff* /this.addSongButtonToSongsList = function(fullPath, galleryId){
-		//check if song is already added to the songsList
-		var aAlreadyAddedSongs = $('#gallery').children().filter('button');
-		for(var i=0; i<aAlreadyAddedSongs.length; i++){
-			if(aAlreadyAddedSongs.eq(i).attr('fullpath') === fullPath &&
-				 aAlreadyAddedSongs.eq(i).attr('galleryid') === galleryId)
-				return;
-		}
-		
-		if(!checkIfSongExists(fullPath, galleryId)) 
-			return;
-		
-		var pap = Troff.getMediaButton(fullPath, galleryId);
-		document.getElementById("gallery").appendChild(pap);
-	};*/
-	
-	/*this.showSongsArea = function(){
-		if(!$('#songsTab').hasClass('active')) 
-			$('#songsTab').click();
-	};*/
-
-	/*Troff* /this.getMediaButton = function(fullPath, galleryId){
-		var pap = document.createElement("button");
-		pap.setAttribute("class", "mediaButton onOffButton");
-		var currGalleryId = Troff.getCurrentGalleryId();
-		var currSong = Troff.getCurrentSong();
-		if(fullPath == currSong && galleryId == currGalleryId)
-			pap.classList.add('selected');
-		pap.appendChild(document.createTextNode(Troff.pathToName(fullPath)));
-		pap.setAttribute("fullPath", fullPath );
-		pap.setAttribute("galleryId", galleryId );
-		pap.addEventListener('click', Troff.selectSong );
-		return pap;
-	};*/
 	
 	this.editCurrentSongInfo = function() {
 		if( $("#songInfoArea").hasClass( "hidden" ) ) return;
