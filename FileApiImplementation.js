@@ -12,7 +12,12 @@ var cacheImplementation = {
 	},
 
 	getSong : async function( songKey ) {
-		return caches.match( songKey ).then( cachedResponse => cachedResponse.json() );
+		return caches.match(songKey).then(cachedResponse => {
+			if (cachedResponse === undefined) {
+				throw new Error(`songKey "${songKey}" does not exist in caches!`);
+			}
+			return cachedResponse.json();
+		});
 	},
 
 	removeSong : async function( songKey ) {
@@ -22,7 +27,7 @@ var cacheImplementation = {
 	},
 
 	getAllKeys : async function() {
-		return caches.open( "songCache-v1.0" ).then( cache => {
+		return caches.open( this.nameOfCache ).then( cache => {
 			return cache.keys().then( keys =>
 				keys.map( key => decodeURIComponent( key.url.split("/").pop() ) )
 			);
