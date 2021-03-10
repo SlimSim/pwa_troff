@@ -36,7 +36,27 @@ var cacheImplementation = {
 },
 
 musicPlayer = {
+	handleFileSelect_new_spring_boot: function(files /*FileList object*/ , callbackFunk) {
+		console.log("****** handleFileSelect ->");
+		var i, f;
+		//	        files = evt.target.files; // FileList object
+
+		// Loop through the FileList and render the files as appropriate.
+		for (i = 0, f; f = files[i]; i++) {
+
+			// Only process image files.
+			if (f.type.match('image.*') || f.type.match('audio.*') || f.type.match('video.*')) {
+				// old: musicPlayer.processFile(f, callbackFunk);
+				fileHandler.saveFile(f, callbackFunk);
+			} else {
+				console.error("handleFileSelect2: unrecognized type! f: ", f);
+			}
+		}
+	},
+	
 	handleFileSelect : function(evt) {
+		console.log( "DEPRECATED handleFileSelect" );
+		console.log( "****** handleFileSelect ->");
     var i, f,
     	files = evt.target.files; // FileList object
 
@@ -53,6 +73,7 @@ musicPlayer = {
   },
 
 	processFile : function( f ) {
+		console.log( "DEPRECATED processFile" );
 		var self = this,
 			reader = new FileReader();
 
@@ -73,6 +94,7 @@ musicPlayer = {
 	},
 
 	loadAllFiles : function() {
+		console.log( "DEPRECATED loadAllFiles" );
 		cacheImplementation.getAllKeys().then( keys => {
 			keys.forEach( key => {
 				this.createMusicButton( key );
@@ -81,6 +103,7 @@ musicPlayer = {
 	},
 
 	createSongAudio : async function( event ) {
+		console.log( "DEPRECATED createSongAudio" );
 		var path = $(event.target).val(),
 			songData = await cacheImplementation.getSong( path );
 
@@ -91,6 +114,7 @@ musicPlayer = {
 	},
 
 	createMusicButton : function( key ) {
+		console.log( "DEPRECATED createMusicButton" );
 		//varför måste denna vänta LITE? kan jag få ett event när det är ok att köra?
 		//setTimeout( function() {
 			addItem_NEW_2( key );
