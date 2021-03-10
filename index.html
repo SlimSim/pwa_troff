@@ -6,7 +6,6 @@
 		window.dataLayer = window.dataLayer || [];
 		function gtag(){dataLayer.push(arguments);}
 		gtag('js', new Date());
-
 		gtag('config', 'UA-158173734-3');
 	</script>
 
@@ -74,6 +73,7 @@
 
 	<script type="text/javascript" src="pwa.js"></script>
 	<script src="script.js"></script>
+	<script src="file.js"></script>
 	<script src="assets/internal/st-script.js"></script>
 	<script src="assets/internal/common.js"></script>
 	<script src="assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
@@ -91,20 +91,6 @@
 		<script type="text/javascript" src="FileApiImplementation.js"></script>
 		<script type="text/javascript" src="assets/internal/cookie_consent.js"></script>
 </head>
-<!--body>
-
-	<div class="center">
-		<h1>Troff</h1>
-		<h2>Work in progress</h2>
-
-		<input type="file" id="files" name="files[]" multiple />
-		<div id="playerParent"></div>
-		<output id="list"></output>
-
-	</div>
-
-</body-->
-
 <body class="overflow-hidden backgroundColor">
 
 	<div class="extraBorder"></div>
@@ -130,6 +116,11 @@
 						class="hidden important centerRoundButtCommon centerRoundButt2"
 						id="buttPlayUiButtonPause" />
 				</span>
+			<button class="svgButt_tmp regularButton jsUploadSongButt"
+							type="button"
+							title="Share this song to friends via link">
+				<i class="fa fa-share"></i>
+			</button>
 			</nav>
 			<div id="mediaInfoBox" class="flexCol halfMarginParent">
 				<!--a href="#" id="readMoreAndroidTroff" class="center padding-bottom">Get Troff for Android</a-->
@@ -177,6 +168,11 @@
 				</button>
 			</nav>
 		</div> <!-- end headArea -->
+	<div class="container-fluid">
+		<div class="row center text-white bg-danger my-2 p-2">
+			environment.getProperty('dev-banner-text')
+		</div>
+	</div>
 		<div id="areaSelector" class="flexRowWrap secondaryColor">
 
 			<input type="button" value="Songs" id="buttSongsDialog"  class="stOnOffButton"/>
@@ -515,24 +511,6 @@
 
 	<section class="flexSection">
 	</section>
-
-
-	<section
-		id="rightButtonSection"
-		class="buttonSection secondaryColor margin hidden"
-		>
-		<div 
-			style="width: 100vh; transform: rotate(90deg); margin-left: -50vh;margin-top: 50vh;"
-			>
-			<button class="stOnOffButton">Song List</button>
-			<button class="stOnOffButton">Songs</button>
-			<button class="stOnOffButton hideOnPicture">States</button>
-			<button class="stOnOffButton hideOnPicture">Settings</button>
-			<button class="stOnOffButton">Info</button>
-			<button class="stOnOffButton hideOnPicture">Countdown</button>
-		</div>
-	</section>
-
 
 
 
