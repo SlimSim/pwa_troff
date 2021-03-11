@@ -3678,6 +3678,9 @@ var DBClass = function(){
 			$("#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON").hasClass( "active" ),
 			songObject.wait
 		]; */
+
+		// this following: migth be nessessary if removed it will mess up loading of new songs...
+		// todo: examine :/
 		if(!songObject.info ) songObject.info = "";
 		if(!songObject.tempo) songObject.tempo = "?";
 		if(songObject.tempo == "NaN") songObject.tempo = "?";
@@ -3762,16 +3765,6 @@ var DBClass = function(){
 				}
 			}
 
-
-			// Slim sim remove 
-			/*
-				This following if is only to ease the transition between v0.5 to v1.0
-				It is not used a single time after they open the app with v1.0 
-				so the standard is without the if...
-			*/
-			ifExistsPrepAndThenRemove( "strCurrentTab" );
-
-
 			ifExistsPrepAndThenRemove( "iCurrentSonglist", function( key, val ) {
 				var o = {};
 				o.songListList = val == 0 ? [] : [ val.toString() ];
@@ -3797,25 +3790,6 @@ var DBClass = function(){
 				}
 			} )
 			
-			// Slim sim remove 
-			/*
-				This following if is only ever used in the test-version
-				It is not used a single time after they open the app with this test 
-				version
-				so the standard is without the if...
-				it is extremely safe to remove....
-			*/
-			/*
-			if( allKeys.indexOf("abCurrentAreas") !== -1 ){
-				chrome.storage.local.remove("abCurrentAreas");
-				delete items.strCurrentTab;
-			}
-			*/
-
-
-
-			//var SETTING_KEYS = $("[data-st-save-value-key]").map(function(){return $(this).data("st-save-value-key");}).get();
-			//for(var key in items) {
 			for(var key in allKeys) {
 				/*
 				if( TROFF_SETTING_KEYS.indexOf( key ) != -1 || SETTING_KEYS.indexOf( key ) != -1 ) {
@@ -3823,6 +3797,8 @@ var DBClass = function(){
 				}
 				*/
 
+
+				// todo: in the new verson, song-keys are NOT always saved with a slash:
 				if( key[0] == "/" ) {
 					//DB.cleanSong(key, items[key]);
 					DB.cleanSong(key, nDB.get( key ) );
@@ -3841,31 +3817,14 @@ var DBClass = function(){
 		}
 
 		var straoSonglists = JSON.stringify(aoSonglists);
-		//chrome.storage.local.set({'straoSongLists': straoSonglists});
 		nDB.set( 'straoSongLists', straoSonglists );
 	}
 
-	/*DB* /this.saveSonglists = function(){
-		var aoSonglists = [];
-		
-		var aDOMSonglist = $('#songListPartTheLists li');
-		for(var i=0; i<aDOMSonglist.length; i++){
-			aoSonglists.push(JSON.parse(aDOMSonglist[i].getAttribute('stroSonglist')));
-		}
-		//$('#songlistHelpText').toggle($('#songListPartTheLists >').length === 0);
-		
-
-		var straoSonglists = JSON.stringify(aoSonglists);
-		chrome.storage.local.set({'straoSongLists': straoSonglists});
-	};*/
-
 	/*DB*/this.setCurrentAreas = function(songId){
-		//chrome.storage.local.get(songId, function(ret) {
 		nDBc.get(songId, function( song ) {
-			//var song = ret[songId];
 			if(!song){
-				console.error('Error "setCurrentAreas, noSong" occurred, songId='
-					+songId);
+				console.error('Error "setCurrentAreas, noSong" occurred, songId=' +
+					songId);
 				return;
 			}
 			song.abAreas = [
@@ -3875,30 +3834,20 @@ var DBClass = function(){
 				$('#countTab').hasClass("active")
 			];
 
-			//var obj = {};
-			//obj[songId] = song;
-			//chrome.storage.local.set(obj);
 			nDB.set( songId, song );
 		});
 	};
-	
-	/*DB* /this.setCurrentSonglist = function(iSonglistId){
-		chrome.storage.local.set({'iCurrentSonglist': iSonglistId});
-	}; */
 
 	/*DB*/this.setCurrentSong = function(path, galleryId){
 		var stroSong = JSON.stringify({"strPath":path, "iGalleryId": galleryId});
-		//chrome.storage.local.set({'stroCurrentSongPathAndGalleryId': stroSong});
 		nDB.set( 'stroCurrentSongPathAndGalleryId', stroSong );
 	};
 	
 	/*DB*/this.setZoomDontShowAgain = function(){
-		//chrome.storage.local.set({"zoomDontShowAgain" : true});
 		nDB.set( "zoomDontShowAgain", true );
 	};
 	
 	/*DB*/this.getZoomDontShowAgain = function(){
-		//chrome.storage.local.get("zoomDontShowAgain", function(ret){
 		nDBc.get("zoomDontShowAgain", function(value){
 			var bZoomDontShowAgain = value || false;
 			Troff.dontShowZoomInstructions = bZoomDontShowAgain;
@@ -3906,9 +3855,7 @@ var DBClass = function(){
 	};
 
 	/*DB*/this.getAllSonglists = function(){
-		//chrome.storage.local.get('straoSongLists', function(ret){
 		nDBc.get( 'straoSongLists' , function( straoSongLists ) {
-			//var straoSongLists = ret['straoSongLists'] || "[]";
 			if( straoSongLists == undefined ) {
 				straoSongLists = [];
 			}
@@ -3916,12 +3863,6 @@ var DBClass = function(){
 			Troff.setSonglists_NEW(JSON.parse(straoSongLists));
 		});
 	};
-	
-	/*DB* /this.getCurrentSonglist = function(){
-		chrome.storage.local.get('iCurrentSonglist', function(ret){
-			Troff.setSonglistById(ret['iCurrentSonglist']);
-		});
-	}; */
 
 	/*DB*/this.getShowSongDialog = function() {
 		DB.getVal( TROFF_SETTING_SHOW_SONG_DIALOG, function( val ) {
@@ -3939,25 +3880,22 @@ var DBClass = function(){
 		} );
 	}
 	
-	/*DB*/this.getCurrentSong = function(){
-		//chrome.storage.local.get('stroCurrentSongPathAndGalleryId', function(ret){
-		nDBc.get('stroCurrentSongPathAndGalleryId', function( stroSong ){
-			//var stroSong = ret['stroCurrentSongPathAndGalleryId'];
+	/*DB*/this.getCurrentSong = function() {
+		nDBc.get('stroCurrentSongPathAndGalleryId', function( stroSong ) {
 			if(!stroSong){
 				Troff.setAreas([false, false, false, false]);
 				return;
 			}
 			var oSong = JSON.parse(stroSong);
 			Troff.setCurrentSongStrings( oSong.strPath, oSong.iGalleryId );
+
 			createSongAudio( oSong.strPath );
 			
 		});
 	};
 
 	/*DB*/this.updateMarker = function(markerId, newName, newInfo, newColor, newTime, songId){
-	//chrome.storage.local.get(songId, function(ret){
 	nDBc.get(songId, function( song ) {
-		//var song = ret[songId];
 		if(!song)
 			console.error('Error "updateMarker, noSong" occurred, songId=' + songId);
 		for(var i=0; i<song.markers.length; i++){
@@ -3970,22 +3908,17 @@ var DBClass = function(){
 			}
 		}
 
-		//var obj = {};
-		//obj[songId] = song;
-		//chrome.storage.local.set(obj);
 		nDB.set( songId, song );
 	});
 	};// end updateMarker
 
-	/*DB*/this.saveStates = function(songId, callback){
-	//chrome.storage.local.get(songId, function(ret){
+	/*DB*/this.saveStates = function(songId, callback) {
 	nDBc.get(songId, function( song ){
 		var aAllStates = Troff.getCurrentStates();
 		var aStates = [];
 		for(var i=0; i<aAllStates.length; i++){
 			aStates[i] = aAllStates.eq(i).attr('strState');
 		}
-		//var song = ret[songId];
 		if(!song){
 			console.error('Error "saveState, noSong" occurred, songId=' + songId);
 			song = {};
@@ -3993,9 +3926,7 @@ var DBClass = function(){
 		}
 
 		song.aStates = aStates;
-		//var obj = {};
-		//obj[songId] = song;
-		//chrome.storage.local.set(obj);
+
 		nDB.set( songId, song );
 		if( callback ) {
 			callback();
@@ -4004,9 +3935,7 @@ var DBClass = function(){
 	};
 	
 	/*DB*/this.saveZoomTimes = function(songId, startTime, endTime) {
-	//chrome.storage.local.get(songId, function(ret){
 	nDBc.get(songId, function( song ){
-		//var song = ret[songId];
 		if(!song){
 			console.error('Error "saveZoomTimes, noSong" occurred, songId=' + songId);
 			song = DB.getStandardSong();
@@ -4015,21 +3944,11 @@ var DBClass = function(){
 		song.zoomStartTime = startTime;
 		song.zoomEndTime = endTime;
 
-		/* Slim sim remove 
-		 * This is only for fixing the zoom to 42 second-bug introduced sometime 
-		 * and fixed for version 1.01?
-		 */
-		if(song.zoomEndTime == 42) song.zoomEndTime = 42.000000001;
-		
-		//var obj = {};
-		//obj[songId] = song;
-		//chrome.storage.local.set(obj);
 		nDB.set( songId, song );
 	});
 	};
 
 	/*DB*/this.saveMarkers = function(songId, callback) {
-	//chrome.storage.local.get(songId, function(ret){
 	nDBc.get( songId, function( song ) {
 		var aAllMarkers = Troff.getCurrentMarkers();
 
@@ -4043,7 +3962,6 @@ var DBClass = function(){
 			oMarker.id    = aAllMarkers[i].id;
 			aMarkers[i] = oMarker;
 		}
-		//var song = ret[songId];
 		if(!song){
 			console.error('Error "saveMarker, noSong" occurred, songId=' + songId);
 			song = {};
@@ -4054,9 +3972,7 @@ var DBClass = function(){
 		song.currentStartMarker = $('.currentMarker')[0].id;
 		song.currentStopMarker = $('.currentStopMarker')[0].id;
 		song.markers = aMarkers;
-		//var obj = {};
-		//obj[songId] = song;
-		//chrome.storage.local.set(obj);
+
 		nDB.set( songId, song );
 		
 		if( callback ) {
@@ -4069,9 +3985,7 @@ var DBClass = function(){
 	// this has nothing to do with "State", it just updates the DB
 	// with the songs current data
 	/*DB*/this.saveSongDataFromState = function(songId, oState){
-	//chrome.storage.local.get(songId, function(ret){
 	nDBc.get(songId, function( song ){
-		//var song = ret[songId];
 		if(!song){
 				console.error('Error "saveSongDataFromState, noSong" occurred,'+
 												' songId=' +songId);
@@ -4089,19 +4003,14 @@ var DBClass = function(){
 			song.currentStopMarker = oState.currentStopMarker;
 		song.wait = [oState.buttWaitBetweenLoops, oState.waitBetweenLoops];
 		
-		//var obj = {};
-		//obj[songId] = song;
-		//chrome.storage.local.set(obj);
 		nDB.set( songId, song );
 	});
 		
 	};
 		
 	/*DB*/this.setCurrentStartAndStopMarker = function(startMarkerId, stopMarkerId,
-																							 songId){
-	//chrome.storage.local.get(songId, function(ret){
+			songId) {
 	nDBc.get(songId, function( song ){
-		//var song = ret[songId];
 		if(!song){
 				console.error('Error "setStartAndStopMarker, noSong" occurred,'+
 												' songId=' +songId);
@@ -4109,9 +4018,6 @@ var DBClass = function(){
 		}
 		song.currentStartMarker = startMarkerId;
 		song.currentStopMarker = stopMarkerId;
-		//var obj = {};
-		//obj[songId] = song;
-		//chrome.storage.local.set(obj);
 		nDB.set( songId, song );
 	});
 	};//end setCurrentStartAndStopMarker
@@ -4148,18 +4054,13 @@ var DBClass = function(){
 	};
 
 	/*DB*/this.setCurrent = function( songId, key, value, callback ) {
-		//chrome.storage.local.get(songId, function(ret){
 		nDBc.get(songId, function( song ){
-			//var song = ret[songId];
 			if(!song){
 					console.error('Error, "noSong" occurred;\n'+
 					'songId=' + songId + ', key=' + key + ', value=' + value);
 					return;
 			}
 			song[key] = value;
-			//var obj = {};
-			//obj[songId] = song;
-			//chrome.storage.local.set(obj);
 			nDB.set( songId, song );
 
 			if( callback ) {
@@ -4169,9 +4070,7 @@ var DBClass = function(){
 	};//end setCurrent
 
 	/*DB*/this.getMarkers = function(songId, funk) {
-	//chrome.storage.local.get(songId, function(ret){
 	nDBc.get(songId, function( song ){
-		//var song = ret[songId];
 		if(!song || !song.markers ){ // new song or no markers
 			return;
 		}
@@ -4180,9 +4079,7 @@ var DBClass = function(){
 	};
 
 	/*DB*/this.getSongMetaDataOf = function(songId) {
-		console.log("getSongMetaDataOf -> songId", songId);
 		var loadSongMetadata = function(song, songId) {
-			console.log("loadSongMetadata -> songId", songId, "; song", song);
 
 			$( "[data-save-on-song-toggle-class]" ).each( function( i, element ){
 				var $target = $( element ),
@@ -4216,10 +4113,6 @@ var DBClass = function(){
 				$target.val( value );
 			});
 
-			console.log("type of song " + ( typeof song) );
-			console.log("song.startBefore", song.startBefore);
-			console.log("song.startBefore[0]", song.startBefore[0]);
-
 			Troff.selectStartBefore(song.startBefore[0], song.startBefore[1]);
 			Troff.selectStopAfter(song.stopAfter[0], song.stopAfter[1]);
 			Troff.addMarkers(song.markers);
@@ -4245,29 +4138,18 @@ var DBClass = function(){
 
 		};// end loadSongMetadata
 		
-		//chrome.storage.local.get(songId, function(ret){
 		nDBc.get(songId, function( song ){
 
-//song som kommer från nDBc är av typen String, borde JSON-parsas(?), men när? borde väll göras i nDB?
-
-//men varför blir sången en sträng när man uppdaterat global settings? och inte annars? (eller?) borde gräva lite i detta!
+			//Fundering från v2-parsningen:
+			//song somkommer från nDBc är av typen String, borde JSON-parsas(?), men när? borde väll göras i nDB?
+			//men varför blir sången en sträng när man uppdaterat global settings? och inte annars? (eller?) borde gräva lite i detta!
 		
-
-			//var song = ret[songId];
-			console.log("nDBc.get -> song{"+ typeof song +"}:", song);
-			
 			if(!song){ // new song:
-				console.log("nDBc.get: in if, A song{"+ typeof song +"}:", song);
 				song = DB.fixSongObject();
-				console.log("nDBc.get: in if, B song{"+ typeof song +"}:", song);
-				//var obj = {};
-				//obj[songId] = song;
-				//chrome.storage.local.set(obj);
 				nDB.set( songId, song );
 				
 				loadSongMetadata(song, songId);
 			} else {
-				console.log("nDBc.get: in else, song{"+ typeof song +"}:", song);
 				loadSongMetadata(song, songId);
 			}
 		});
@@ -4284,15 +4166,10 @@ var DBClass = function(){
 			Troff.setCurrentSongInDB();			
 		};// end loadImageMetadata
 		
-		//chrome.storage.local.get(songId, function(ret){
 		nDBc.get(songId, function( song ){
-			//var song = ret[songId];
 			
 			if(!song){ // new song:
 				song = DB.fixSongObject();
-				//var obj = {};
-				//obj[songId] = song;
-				//chrome.storage.local.set(obj);
 				nDB.set( songId, song );
 				
 				loadImageMetadata(song, songId);
@@ -4302,8 +4179,6 @@ var DBClass = function(){
 		});
 	}; // end getSongMetadata
 };// end DBClass
-
-
 
 
 
@@ -4671,8 +4546,7 @@ var IOClass = function(){
 			if(event.ctrlKey==1){
 				event.preventDefault();
 				Troff.showSearchAndActivate();
-			}
-			else
+			} else
 				Troff.forceFullscreenChange();
 			break;
 		case 71: // G
@@ -4768,7 +4642,7 @@ var IOClass = function(){
 			"display: flex;align-items: center;justify-content: center;";
 		var innerDivStyle = ""+
 			"width: 200px;"+
-			"padding: 10 15px;"+
+			"padding: 10px 15px;"+
 			"font-size: 18px;"+
 			"display: flex;"+
 			"flex-direction: column;";
@@ -4838,6 +4712,7 @@ var IOClass = function(){
 			$("#"+markerColorId).html(this.getAttribute('color'));
 			document.getElementById('blur-hack').focus();
 		}
+
 		function generateColorBut(col){
 			var clas = "colorPicker";
 			if(col === markerColor){
@@ -4985,7 +4860,7 @@ var IOClass = function(){
 				"display: flex;align-items: center;justify-content: center;";
 		var innerDivStyle = ""+
 				"width: 200px;"+
-				"padding: 10 15px;";
+				"padding: 10px 15px;";
 		var pStyle = "" +
 				"font-size: 18px;";
 
@@ -5001,8 +4876,8 @@ var IOClass = function(){
 							 "</p><input type='text' id='"+textId+
 							 "'/> "+strTextareaHTML+
 							 "<input type='button' class='regularButton' id='"+ buttEnterId +
-							 "' value='OK'/><input type='button' class='regularButton' id='"
-							 + buttCancelId + "' value='Cancel'/></div></div>"));
+							 "' value='OK'/><input type='button' class='regularButton' id='" +
+							 buttCancelId + "' value='Cancel'/></div></div>"));
 
 		$("#"+textId).val(textBox);
 		var quickTimeOut = setTimeout(function(){
@@ -5051,7 +4926,7 @@ var IOClass = function(){
 					"display: flex;align-items: center;justify-content: center;";
 			var innerDivStyle = ""+
 					"width: 200px;"+
-					"padding: 10 15px;";
+					"padding: 10px 15px;";
 			var pStyle = "" +
 					"margin: 6px 0;";
 
@@ -5059,10 +4934,10 @@ var IOClass = function(){
 								 "'><div id='"+innerId+"' style='"+innerDivStyle+
 								 "' class='secondaryColor'><h2>" + textHead +
 								 "</h2><p style='"+pStyle+"'>" + textBox +
-								 "</p><div><input type='button' class='regularButton' id='"
-								 + buttEnterId +
-								 "' value='OK'/><input type='button' class='regularButton' id='"
-								 +buttCancelId + "' value='Cancel'/></div></div></div>"));
+								 "</p><div><input type='button' class='regularButton' id='" +
+								 buttEnterId +
+								 "' value='OK'/><input type='button' class='regularButton' id='" +
+								 buttCancelId + "' value='Cancel'/></div></div></div>"));
 
 			IOEnterFunction = function(){
 					if(func) func();
@@ -5095,7 +4970,7 @@ var IOClass = function(){
 					"display: flex;align-items: center;justify-content: center;";
 			var innerDivStyle = ""+
 					"width: 200px;"+
-					"padding: 10 15px;";
+					"padding: 10px 15px;";
 			var hStyle = "" +
 					"font-size: 18px;";
 			var pStyle = "" +
@@ -5139,12 +5014,6 @@ var IOClass = function(){
 	};
 
 	this.openHelpWindow = function() {
-		//    chrome.app.window.create('help.html');
-		
-		//chrome.app.window.create(
-		//	'help.html',
-		//	{bounds: {width:742, height:600}, minWidth:300, minHeight:200,  id:"HelpWin"}
-		//);
 		window.open( "help.html" );
 		document.getElementById('blur-hack').focus();
 	};
@@ -5226,11 +5095,10 @@ $(document).ready( function() {
 	DB.cleanDB();
 	DB.getAllSonglists();
 	DB.getZoomDontShowAgain();
-//	DB.getGeneralAreas();
 	IO.startFunc();
-	//FS.startFunc();
-	//FSstartFunc();
 	//Rate.startFunc(); TODO: fix så att Rate-classen blir typ "lika oss på facebook eller nått..."
+
+
 	DB.getCurrentSong();
 	DB.getShowSongDialog();
 });
