@@ -41,10 +41,11 @@ var cacheImplementation = {
 			);
 		});
 	}
-},
+};
 
+	/*
 musicPlayer = {
-	handleFileSelect_new_spring_boot: function(files /*FileList object*/ , callbackFunk) {
+	handleFileSelect_new_spring_boot: function(files /*FileList object* / , callbackFunk) {
 		console.log("****** handleFileSelect ->");
 		var i, f;
 		//	        files = evt.target.files; // FileList object
@@ -61,7 +62,7 @@ musicPlayer = {
 			}
 		}
 	},
-	
+
 	handleFileSelect : function(evt) {
 		console.log( "DEPRECATED handleFileSelect" );
 		console.log( "****** handleFileSelect ->");
@@ -127,12 +128,13 @@ musicPlayer = {
 		//setTimeout( function() {
 			addItem_NEW_2( key );
 		//}, 50 );
-		//$("#pwa-song-list").append($("<span>").append( 
+		//$("#pwa-song-list").append($("<span>").append(
 		//	$("<input>").attr("type", "button").attr("value", key )
 		//		.on( "click", this.createSongAudio )
 		//));
 	}
 };
+	*/
 
 $( document ).ready( function() {
 	// Check for the various File API support.
@@ -140,8 +142,5 @@ $( document ).ready( function() {
 	  alert('The File APIs are not fully supported in this browser.\nPlease use FireFox, Chrome or another modern browser.');
 	}
 
-  $( "#fileUpploader" ).on( "change", musicPlayer.handleFileSelect );
-
-  musicPlayer.loadAllFiles();
 
 });

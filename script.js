@@ -259,16 +259,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		$('#currentAlbum').text ( metadata.album ).show();
 	*/
 
-
-	//The following if is ONLY to let the program also work with V2-songs,
-	// songData will be undefined for V3-songs, so the standard is WITH the if :)
-	if( songData === undefined ) {
-		songData = path;
-		console.log( "set song, song is V3" );
-	} else {
-		console.log( "set song, song is V2" );
-	}
-
 	newElem.setAttribute('src', songData);
 
 } //end setSong2
@@ -386,14 +376,12 @@ async function createSongAudio( path ) {
 
 			setSong2( path, "audio", songData );
 		} catch (e) {
-			//TODO: why do I have to ahve a try-catch here???
 			console.error("error: No song selected yet: ", e);
 		}
 	} else {
-		setSong2( path, "audio" );
+		let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
+		setSong2( path, "audio", v3SongObjectUrl );
 	}
-	//var audio = $("<audio>").attr( "src", songData ).attr( "controls", true );
-	//$("#playerParent").empty().append( audio );
 
 };
 
@@ -944,6 +932,19 @@ var TroffClass = function(){
 		var nrTapps = 0;
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
+
+	/*Troff*/this.initFileApiImplementation = function() {
+
+		$( "#fileUpploader" ).on("change", event => {
+			fileHandler.handleFiles(event.target.files, addItem_NEW_2);
+		});
+
+		//loadAllFiles:
+		cacheImplementation.getAllKeys().then(keys => {
+			keys.forEach(addItem_NEW_2);
+		});
+
+	}
 
 	this.recallFloatingDialog = function() {
 		DB.getVal( "TROFF_SETTING_SONG_LIST_FLOATING_DIALOG", function( floatingDialog ){
@@ -5088,6 +5089,7 @@ $(document).ready( function() {
 	IO.startFunc();
 	//Rate.startFunc(); TODO: fix så att Rate-classen blir typ "lika oss på facebook eller nått..."
 
+	Troff.initFileApiImplementation();
 
 	DB.getCurrentSong();
 	DB.getShowSongDialog();
