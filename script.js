@@ -523,7 +523,8 @@ function initSongTable() {
 	})
 	.on( 'click', 'tbody tr', function ( event ) {
 
-		if( $( event.target ).closest( "td, th" ) .hasClass( "preventSongLoad" ) ) {
+		let $td = $( event.target ).closest( "td, th" );
+		if( $td.hasClass( "preventSongLoad" ) || $td.hasClass( "dataTables_empty" ) ) {
 			return;
 		}
 
