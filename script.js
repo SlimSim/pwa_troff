@@ -269,7 +269,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	//The following if is ONLY to let the program also work with V2-songs,
 	// songData will be undefined for V3-songs, so the standard is WITH the if :)
-	console.log( "setSong2 songData", songData);
 	if( songData === undefined ) {
 		songData = path;
 		console.log( "set song, song is V3" );
@@ -305,26 +304,6 @@ function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )
 		return "<i class=\"hidden\">" + 0 + "</i>";//<i class=\"fa " + faType + "\"></i>",
 	return "<i class=\"hidden\">" + sortValue + "</i>" + stringValue;//<i class=\"fa " + faType + "\"></i>",
-}
-
-function addDirectory_NEW(directoryEntry) {
-	var mData = chrome.mediaGalleries.getMediaFileSystemMetadata(directoryEntry.filesystem)
-
-	$( "#directoryList" )
-		.append(
-			$("<ul>")
-				.addClass("py-1")
-				.addClass( "flex-display" )
-				.append( $( "<button>" )
-					.addClass("stOnOffButton")
-					.addClass( "flex-one" )
-					.addClass( "text-left" )
-					.attr("data-full-path", directoryEntry.fullPath )
-					.attr("data-gallery-id", mData.galleryId)
-					.text( directoryEntry.name )
-					.click(clickSongList_NEW)
-			)
-		);
 }
 
 function clickSongList_NEW( event ) {
