@@ -232,45 +232,54 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	Troff.setWaitForLoad(path, "pwa-galleryId");
 	//fs.root.getFile(path, {create: false}, function(fileEntry) {
 
-		var newElem = null;
-		// show the file data
-		clearContentDiv();
-		var type = getFileType(path);
+	var newElem = null;
+	// show the file data
+	clearContentDiv();
+	var type = getFileType(path);
 
-		if (type == "image")
-			newElem = addImageToContentDiv();
-		else if (type == "audio")
-			newElem = addAudioToContentDiv();
-		else if (type == "video")
-			newElem = addVideoToContentDiv();
+	if (type == "image")
+		newElem = addImageToContentDiv();
+	else if (type == "audio")
+		newElem = addAudioToContentDiv();
+	else if (type == "video")
+		newElem = addVideoToContentDiv();
 
-		if ( !newElem ) {
-			console.error( "setSong2: newElem is not defined!" );
-			return;
-		}
- 		// TODO: metadata? finns det något sätt jag kan få fram metadata från filerna?
-		$( "#currentPath" ).text( path );
-		
-		$('#currentSong').text( Troff.pathToName_2( path ) ).show();
-		$('#currentArtist').text( "" );
+	if ( !newElem ) {
+		console.error( "setSong2: newElem is not defined!" );
+		return;
+	}
+	// TODO: metadata? finns det något sätt jag kan få fram metadata från filerna?
+	$( "#currentPath" ).text( path );
+	
+	$('#currentSong').text( Troff.pathToName_2( path ) ).show();
+	$('#currentArtist').text( "" );
 
-		// TODO: se om jag kan få till metadata? (att man själv får fylla i det kanske? )
-		/*if(metadata.title){
-			$('#currentSong').text( metadata.title ).show();
-		} else {
-			$('#currentArtist').text(Troff.pathToName(path));
-		}
-		if(metadata.artist)
-			$('#currentArtist').text( metadata.artist );
-		if(metadata.album)
-			$('#currentAlbum').text ( metadata.album ).show();
-		*/
-		newElem.setAttribute('src', songData);
-
-	//});
-}//end setSong2
+	// TODO: se om jag kan få till metadata? (att man själv får fylla i det kanske? )
+	/*if(metadata.title){
+		$('#currentSong').text( metadata.title ).show();
+	} else {
+		$('#currentArtist').text(Troff.pathToName(path));
+	}
+	if(metadata.artist)
+		$('#currentArtist').text( metadata.artist );
+	if(metadata.album)
+		$('#currentAlbum').text ( metadata.album ).show();
+	*/
 
 
+	//The following if is ONLY to let the program also work with V2-songs,
+	// songData will be undefined for V3-songs, so the standard is WITH the if :)
+	console.log( "setSong2 songData", songData);
+	if( songData === undefined ) {
+		songData = path;
+		console.log( "set song, song is V3" );
+	} else {
+		console.log( "set song, song is V2" );
+	}
+
+	newElem.setAttribute('src', songData);
+
+} //end setSong2
 
 function addGallery(name, id) {
 	var li = document.createElement("li");
