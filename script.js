@@ -3433,11 +3433,6 @@ var RateClass = function(){
 	this.RATED_STATUS_ALREADY_RATED = 4;
 	
 	this.startFunc = function(){
-		//chrome.storage.sync.get([
-		//	'millisFirstTimeStartingApp',
-		//	'iRatedStatus',
-		//	'straLastMonthUsage'
-		//], function(oData){
 		var oData = {
 			millisFirstTimeStartingApp : nDB.get( "millisFirstTimeStartingApp" ),
 			iRatedStatus : nDB.get( "iRatedStatus" ),
@@ -3469,7 +3464,6 @@ var RateClass = function(){
 			aLastMonthUsage.shift();
 		}
 
-		//chrome.storage.sync.set(
 		nDB.set( 'straLastMonthUsage', JSON.stringify( aLastMonthUsage ) );
 		
 		// return if no conection
@@ -3497,7 +3491,6 @@ var RateClass = function(){
 			}
 		}
 
-		//});
 	};
 	
 
@@ -3506,11 +3499,6 @@ var RateClass = function(){
 		var millis = d.getTime();
 		var aLastMonthUsage = [millis];
 		var straLastMonthUsage = JSON.stringify(aLastMonthUsage);
-		//chrome.storage.sync.set({
-		//	'millisFirstTimeStartingApp' : millis,
-		//	'iRatedStatus' : Rate.RATED_STATUS_NOT_ASKED,
-		//	'straLastMonthUsage' : straLastMonthUsage
-		//});
 		nDB.set( 'millisFirstTimeStartingApp', millis );
 		nDB.set( 'iRatedStatus', Rate.RATED_STATUS_NOT_ASKED );
 		nDB.set( 'straLastMonthUsage', straLastMonthUsage );
@@ -3530,21 +3518,18 @@ var RateClass = function(){
 		document.getElementById('blur-hack').focus();
 		IO.clearEnterFunction();
 		$('#rateDialog').addClass( "hidden" );
-		//chrome.storage.sync.set({'iRatedStatus' : Rate.RATED_STATUS_NO_THANKS});
 		nDB.set('iRatedStatus', Rate.RATED_STATUS_NO_THANKS );
 	};
 	this.rateDialogAskLater = function(){
 		document.getElementById('blur-hack').focus();
 		IO.clearEnterFunction();
 		$('#rateDialog').addClass("hidden");
-		//chrome.storage.sync.set({'iRatedStatus' : Rate.RATED_STATUS_ASK_LATER});
 		nDB.set('iRatedStatus', Rate.RATED_STATUS_ASK_LATER );
 	};
 	this.rateDialogRateNow = function(){
 		document.getElementById('blur-hack').focus();
 		IO.clearEnterFunction();
 		$('#rateDialog').addClass("hidden");
-		//chrome.storage.sync.set({'iRatedStatus' : Rate.RATED_STATUS_ALREADY_RATED});
 		nDB.set( 'iRatedStatus', Rate.RATED_STATUS_ALREADY_RATED );
 		
 		var strChromeWebStore = 'https://chrome.google.com/webstore/detail/';
@@ -3603,17 +3588,11 @@ var DBClass = function(){
 	// deprecated: use nDB.set( key, value ) 
 	this.saveVal = function( key, value) {
 		nDB.set( key, value );
-		//var o = {};
-		//o[ key ] = value;
-		//chrome.storage.local.set( o );
 	};
 
 	// deprecated: use nDB.get_callback( key, callback )
 	this.getVal = function( key, returnFunction ) {
 		nDBc.get( key, returnFunction );
-		//chrome.storage.local.get( key, function( item ) {
-		//	returnFunction( item[ key ] );
-		//} );
 	};
 	
 	this.cleanSong = function(songId, songObject){
@@ -3622,19 +3601,14 @@ var DBClass = function(){
 			var path = songObject;
 			var galleryId = -1;
 			var stroSong = JSON.stringify({"strPath":path, "iGalleryId": galleryId});
-			//chrome.storage.local.set({'stroCurrentSongPathAndGalleryId': stroSong});
 			db.saveVal( 'stroCurrentSongPathAndGalleryId',  stroSong );
-			//chrome.storage.local.remove("strCurrentSongPath");
 			nDB.delete( "strCurrentSongPath" );
 			return; //It is returning here because songId === strCurrentSongPath is 
 							//not a song to be cleened, this was a attribute used before v0.4
 		}
 		
 		songObject = DB.fixSongObject(songObject, songId);
-		
-		//var obj = {};
-		//obj[songId] = songObject;
-		//chrome.storage.local.set(obj);
+
 		nDB.set( songId, songObject );
 	}; // end cleanSong
 	
@@ -3651,8 +3625,8 @@ var DBClass = function(){
 		try{
 			songLength = Number(document.getElementById('timeBar').max);
 		} catch (e) {
-			console.error("getElementById('timeBar') does not exist."
-				+ " Tryed to call fixSongObject without it....");
+			console.error("getElementById('timeBar') does not exist." +
+			" Tried to call fixSongObject without it....");
 			songLength = "max";
 		}
 
@@ -3699,11 +3673,11 @@ var DBClass = function(){
 
 		/* Slim sim remove
 		 * These below is just to update the database from old structures to new :)
-		 */
+		 * /
 		if(!$.isArray(songObject.wait)) songObject.wait = [
 			$("#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON").hasClass( "active" ),
 			songObject.wait
-		];
+		]; */
 		if(!songObject.info ) songObject.info = "";
 		if(!songObject.tempo) songObject.tempo = "?";
 		if(songObject.tempo == "NaN") songObject.tempo = "?";
@@ -3718,7 +3692,7 @@ var DBClass = function(){
 		 * and fixed for version 1.01?
 		 */
 
-		if(!songObject.zoomEndTime || songObject.zoomEndTime == 42) songObject.zoomEndTime = null;
+		//if(!songObject.zoomEndTime || songObject.zoomEndTime == 42) songObject.zoomEndTime = null;
 		
 		if(!songObject.markers) songObject.markers = [oMarkerStart, oMarkerEnd];
 		if(!songObject.abAreas) 
@@ -3733,9 +3707,6 @@ var DBClass = function(){
 	
 	/*DB*/this.fixDefaultValue = function( allKeys, key, valIsTrue ) {
 		if(allKeys.indexOf( key ) === -1 ) {
-			//var obj = {};
-			//obj[ key ] = valIsTrue;
-			//chrome.storage.local.set( obj );
 			nDB.set( key, valIsTrue );
 
 			if( valIsTrue ) {
@@ -3747,28 +3718,16 @@ var DBClass = function(){
 	}
 
 	/*DB*/this.cleanDB = function(){
-		//chrome.storage.local.get(null, function(items) {
 		nDBc.getAllKeys( function( allKeys ) {
-			//var allKeys = Object.keys(items);
 			if(allKeys.length === 0){ // This is the first time Troff is started:
 				DB.saveSonglists_new();
-				//DB.setCurrentSonglist(0);
 			}
 
 			// These is for the first time Troff is started:
 			if(allKeys.indexOf("straoSongLists")   === -1 ) DB.saveSonglists_new();
-			//if(allKeys.indexOf("iCurrentSonglist") === -1 ) DB.setCurrentSonglist(0);
-			//if(allKeys.indexOf("abCurrentAreas")   === -1 ) DB.setCurrentAreas(); //depricated
 			if(allKeys.indexOf("zoomDontShowAgain")=== -1 ) {
-				//chrome.storage.local.set({"zoomDontShowAgain" : false});
 				nDB.set( "zoomDontShowAgain", false );
 			}
-
-			/*
-			if( allKeys.indexOf("abGeneralAreas") === -1 ) {
-				chrome.storage.local.set({"abGeneralAreas" : JSON.stringify([false, true])});
-			}
-			*/
 
 			DB.fixDefaultValue( allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true );
 
@@ -3798,9 +3757,7 @@ var DBClass = function(){
 					if( prepFunc != null ) {
 						prepFunc( key, nDB.get( key ) );
 					}
-					//chrome.storage.local.remove( key );
 					nDB.delete( key );
-					//delete items[ key ] ;
 					allKeys.splice( keyIndex, 1 );
 				}
 			}
