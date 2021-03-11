@@ -22,13 +22,6 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-//var gGalleryIndex = 0;     // gallery currently being iterated
-//var gGalleryReader = null; // the filesytem reader for the current gallery
-//var gDirectories = [];     // used to process subdirectories
-//var gGalleryArray = [];    // holds information about all top-level Galleries found - list of DomFileSystem
-//var gGalleryData = [];     // hold computed information about each Gallery
-//var gCurOptGrp = null;
-
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['3gp', '3gpp', 'avi', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'ogg', 'webm', 'wmv'];
@@ -447,6 +440,7 @@ function addItem_NEW_2( key ) {
 			info,
 			"." + extension
 		] )
+		//.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
 		.draw( false )
 		.node();
 
@@ -484,8 +478,7 @@ function initSongTable() {
 		.append( $('<th>').addClass("primaryColor").text( "Modified" ) )
 		.append( $('<th>').addClass("primaryColor").text( "Size" ) )
 		.append( $('<th>').addClass("primaryColor").text( "Song info" ) )
-		.append( $('<th>').addClass("primaryColor").text( "File type" ) )
-	;
+		.append( $('<th>').addClass("primaryColor").text( "File type" ) );
 
 
 	dataSongTable = $("#dataSongTable").DataTable({
@@ -514,23 +507,20 @@ function initSongTable() {
 		"createdRow": function( row, data, dataIndex ) {
 			$(row).attr( "draggable", "true");
 		},
-		"columnDefs": [
-			{
-				"targets": [ 0 ],
-				"visible": false,
-				//"searchable": false
-			}, {
-				"targets": 1,
-				"data": null,
-				"className": "preventSongLoad secondaryColor",
-				"orderable": false,
-				"defaultContent": '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>'
-			},
-			{
-				"targets": [ "_all" ],
-				"className": "secondaryColor",
-			}
-		]
+		"columnDefs": [ {
+			"targets": [ 0 ],
+			"visible": false,
+			//"searchable": false
+		}, {
+			"targets": 1,
+			"data": null,
+			"className": "preventSongLoad secondaryColor",
+			"orderable": false,
+			"defaultContent": '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>'
+		}, {
+			"targets": [ "_all" ],
+			"className": "secondaryColor",
+		} ]
 	} )
 	.on( 'dragstart', 'tr', function( event ) { //function dragSongToSonglist(event){
 		if( event.dataTransfer === undefined ) {
@@ -1033,12 +1023,20 @@ var TroffClass = function(){
 			theme = $target.data( "theme" );
 		$target.closest("#themePickerParent").find( ".selected" ).removeClass( "selected" );
 		$target.addClass( "selected" );
-		$( "#colorScheme" ).attr( "href", "stylesheets/" + theme + ".css" );
+		Troff.updateHrefForTheme(theme);
 
 		DB.saveVal( TROFF_SETTING_SET_THEME, theme);
 
 	};
-
+	/*Troff*/this.updateHrefForTheme = function( theme ) {
+		let href = $("#colorScheme").attr("href");
+		let startIndex = href.indexOf("col");
+		let endIndex = href.indexOf(".css");
+		let firstPart = href.substr(0, startIndex);
+		let lastPart = href.substr(endIndex);
+		let finalHref = firstPart + theme + lastPart;
+		$("#colorScheme").attr("href", finalHref);
+	};
 
 	/*Troff*/this.enterWritableField = function() {
 		IO.setEnterFunction(function(event){
@@ -1132,7 +1130,6 @@ var TroffClass = function(){
 						nDB.clearAllStorage();
 					}
 
-					console.log( "okImportAllDataDialog: allDataJson{"+typeof allDataJson+"}:", allDataJson );
 					nDB.set_object( allDataJson );
 					cleanUpAndRestart();
 
@@ -1173,8 +1170,8 @@ var TroffClass = function(){
 				"Unacceptable keys",
 				"You seem to import things which are not settings, " +
 				"the following keys are not acceptable:<br /><span class=\"small\">" +
-				nonAcceptableKeys.map(key => key + "<br />")
-				+ "</span>"
+				nonAcceptableKeys.map(key => key + "<br />") +
+				"</span>"
 			);
 			return;
 		}
@@ -1222,7 +1219,7 @@ var TroffClass = function(){
 			$( "#themePickerParent" )
 				.find( "[data-theme=\"" + theme + "\"]" )
 				.addClass( "selected" );
-			$( "#colorScheme" ).attr( "href", "stylesheets/" + theme + ".css" );
+			Troff.updateHrefForTheme(theme);
 		} );
 	};
 
@@ -1331,9 +1328,9 @@ var TroffClass = function(){
 	}
 
 	this.getStandardMarkerInfo = function(){
-		return "This text is specific for every selected marker. "
-			+"Notes written here will be automatically saved."
-			+"\n\nUse this area for things regarding this marker.";
+		return "This text is specific for every selected marker. " +
+			"Notes written here will be automatically saved." +
+			"\n\nUse this area for things regarding this marker.";
 	};
 
 	this.setWaitBetweenLoops = function(bActive, iWait){
@@ -1473,8 +1470,8 @@ var TroffClass = function(){
 			if(sliderVal < $('#' + lastMarkerId)[0].timeValue )
 				Troff.selectStopMarker(lastMarkerId);
 			else {
-				IO.confirm('Out of range', 'You pressed outside the playing region, '
-					+ 'do you want to add a marker to the end of the song?', function(){
+				IO.confirm('Out of range', 'You pressed outside the playing region, ' +
+					'do you want to add a marker to the end of the song?', function(){
 					var songLength = Number(document.getElementById('timeBar').max);
 
 					var oMarker = {};
@@ -4192,7 +4189,6 @@ var IOClass = function(){
 		document.addEventListener('keydown', IO.keyboardKeydown);
 
 		$( ".outerDialog" ).click( function( event ) {
-			//if( $(event.delegateTarget).attr( "id") == $(event.target).attr( "id") ) {
 			if( $(event.target ).hasClass( "outerDialog" ) ) {
 				$( event.target ).addClass( "hidden" );
 			}
@@ -4225,9 +4221,7 @@ var IOClass = function(){
 		$( "#buttSettingsDialog" ).click ( Troff.openSettingsDialog );
 		$( "#buttCloseSettingPopUpSquare" ).click ( Troff.closeSettingsDialog );
 
-		//$( "#buttSongsDialog" ).click ( Troff.openSongDialog );
 		$( "#buttSetSongsDalogToFloatingState" ).click( moveSongPickerToFloatingState )
-		//$( "#buttCloseSongsPopUpSquare" ).click ( closeSongDialog );
 		$( ".buttCloseSongsDialog" ).click( closeSongDialog );
 		$( "#buttAttachedSongListToggle" ).click( clickAttachedSongListToggle );
 
@@ -4411,8 +4405,7 @@ var IOClass = function(){
 		//if 0 to 9 or bakspace, del, alt, arrows in a input-field, return,
 		//---- site add "numpad"
 		if(
-				$(':input[type="number"]' ).is(":focus")
-				&&
+				$(':input[type="number"]' ).is(":focus") &&
 				(
 					(event.keyCode>=48 && event.keyCode<=57) || //numbers
 					(event.keyCode>=96 && event.keyCode<=105)|| //numpad
