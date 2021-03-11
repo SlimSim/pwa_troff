@@ -1,9 +1,10 @@
 
 if( "serviceWorker" in navigator) {
+	const serviceWorkerPath = "/service-worker.js";
 	window.addEventListener( "load", () => {
-		navigator.serviceWorker.register( "/service-worker.js" )
+		navigator.serviceWorker.register( serviceWorkerPath )
 		.then( reg => {
-			console.log( "service-worker.js registered! :)" );
+			console.info("service-worker.js registered!");
 		}).catch( error => {
 			console.error( "service-worker.js failed to register:", error );
 		});
@@ -44,28 +45,18 @@ PWA.showPrompt = function( e ) {
 			$.notify( "Thank you for installing Troff.\nHave fun!", "success" );
 		}
 	}, function(err){
-		console.log("err", err)
+		console.error("err", err)
 	}); 
 }
 
 
 
 PWA.listenForInstallPrompt(); // should it be in document ready? i cant se why it should be there...
-$( document ).ready(function() {
-
-});
 
 
-
-
-console.log("BroadcastChannel ->");
 const channel = new BroadcastChannel('service-worker-brodcastChanel');
 channel.addEventListener('message', event => {
-	console.log("message A ->");
-	console.log( event.data.notify.message );
-	console.log( event.data.notify.status  );
 	if( event.data.notify !== undefined ) {
-		console.log("message in if");
 		$.notify( event.data.notify.message, event.data.notify.status );
 	}
 
