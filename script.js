@@ -3333,7 +3333,7 @@ var TroffClass = function(){
 						nrTapps++;
 				}
 				tappedTime = time - startTime;
-				$('#tappTempo-value').text( Math.round ( nrTapps * 60 / tappedTime ) );
+				$('#tapTempo-value').text( Math.round ( nrTapps * 60 / tappedTime ) );
 
 				if(Troff.tempoTimeout) clearInterval(Troff.tempoTimeout);
 
@@ -3341,11 +3341,11 @@ var TroffClass = function(){
 		};
 
 		this.saveTempo = function(){
-				DB.setCurrentTempo($('#tappTempo-value').text(), strCurrentSong );
+				DB.setCurrentTempo($('#tapTempo-value').text(), strCurrentSong );
 		};
 
 		this.setTempo = function( tempo ){
-				$('#tappTempo-value').text( tempo );
+				$('#tapTempo-value').text( tempo );
 		};
 
 
