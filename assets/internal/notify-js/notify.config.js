@@ -15,6 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+// notify-js is from http://notifyjs.jpillora.com/
+
 (function(){
 
 	var standardHtmlNodify = "" + 

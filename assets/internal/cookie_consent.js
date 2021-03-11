@@ -2,7 +2,6 @@ $( document ).ready(function() {
 
 	var COOKIE_CONSENT_ACCEPTED = "TROFF_COOKIE_CONSENT_ACCEPTED";
 
-
 	const cookie_consent_DB = {
 		set : function( key, value ) {
 			window.localStorage.setItem( key, JSON.stringify( value ) );
@@ -58,46 +57,21 @@ $( document ).ready(function() {
 	} // end showCookieConsent();
 
 	function checkToShowCookieConsent() {
-		console.log("cc / checkToShowCookieConsent -> ");
 		try {
 			var cookieConsentAccepted = cookie_consent_DB.get( COOKIE_CONSENT_ACCEPTED );//, cookieConsentAccepted => {
-			console.log("cc / checkToShowCookieConsent: cookieConsentAccepted = " + cookieConsentAccepted );
 			if( cookieConsentAccepted === true ){
 				return;
 			}
 			showCookieConsent();
 //			});
 		} catch ( e ) {
-			console.log("cc / checkToShowCookieConsent: in catch, e:", e);
+			console.info("cc / checkToShowCookieConsent: in catch, e:", e);
 			setTimeout( function() {
 				checkToShowCookieConsent();
 			}, 10);
 		}
 	}
 
-	function checkToShowCookieConsent_old() {
-		console.log("cc / checkToShowCookieConsent_old -> ");
-		try {
-			DB.indexedDB.getKeyValue( COOKIE_CONSENT_ACCEPTED, cookieConsentAccepted => {
-				console.log("cc / checkToShowCookieConsent: cookieConsentAccepted = " + cookieConsentAccepted );
-				if( cookieConsentAccepted === true ){
-					return;
-				}
-				showCookieConsent();
-			});
-		} catch ( e ) {
-			setTimeout( function() {
-				checkToShowCookieConsent();
-			}, 10);
-		}
-	}
-
-	/*if( DB === undefined || DB.indexedDB === undefined || DB.indexedDB.setKeyValue === undefined || DB.indexedDB.getKeyValue === undefined ) {
-		console.error( "cookie_consent is missing DB.indexedDB!" );
-		showCookieConsent();
-		return;
-	}*/
-	checkToShowCookieConsent();
-
+		checkToShowCookieConsent();
 
 });

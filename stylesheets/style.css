@@ -550,7 +550,7 @@ li[isdirectory="true"]:not(:first-child) {
 
 .innerDialog{
 	width: 600px;
-	padding: 10 15px;
+	padding: 10px 15px;
 }
 
 .mediumDialog{
