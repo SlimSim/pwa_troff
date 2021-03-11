@@ -2341,52 +2341,6 @@ var TroffClass = function(){
 		DB.saveSongDataFromState(Troff.getCurrentSong(), oState);
 	};
 
-
-	/*this.searchCreateSongList = function( event ) {
-		Troff.searchSongTot(
-			event,
-			"#newSongListPartAllSongs",
-			function( el ){ return el.attr( "isDirectory" ) == "false"; },
-			function( el ){ return el.find( "div" ).text(); }
-		);
-	};*/
-
-	/*Troff* /this.searchSongTot = function( event, selector, test, getText ) {
-		function normalizeText( text ) {
-			return text
-				.toLowerCase()
-				.replace(/[åä]/g, "a")
-				.replace(/[öø]/g, "o")
-				.replace(/[\W_]/g, "");
-		}
-		var addedSelected = false;
-		$( selector ).children().each(function( i, element ){
-			var el = $( element );
-			if( test( el ) ) {
-				if( normalizeText( getText( el ) ).includes( normalizeText( $( event.target ).val() ) ) ){
-					el.removeClass( "hidden" );
-				} else {
-					el.addClass( "hidden" );
-				}
-			}
-		} );
-	};*/
-
-	/*Troff* /this.searchSong = function( event ) {
-		Troff.searchSongTot(
-			event,
-			"#gallery",
-			function( el ){ return el.is( "button" ); },
-			function( el ){ return el.text(); }
-		);
-
-		var importantEl = $('#gallery .important');
-		if( importantEl.length === 0 || importantEl.hasClass('hidden') ){
-			importantEl.removeClass('important');
-			$('#gallery :visible:button').eq(0).addClass('important');
-		}
-	};*/
-
 	/*Troff*/this.onSearchKeyup = function( event ) {
 
 		if( event != undefined && [37, 38, 39, 40].indexOf(event.keyCode) != -1 ) {
@@ -2445,6 +2399,7 @@ var TroffClass = function(){
 		});
 
 	};
+
 	/*Troff*/this.exitSerachDataTableSongList = function( event ) {
 		$("#dataSongTable").DataTable().rows(".important").nodes().to$().removeClass( "important" );
 
@@ -2452,28 +2407,6 @@ var TroffClass = function(){
 		document.getElementById('blur-hack').focus();
 	};
 	
-	/*
-	this.enterSearchCreateSongList = function( event ){
-
-		$input = $( event.target );
-		$input.addClass('textareaEdit');
-
-		if( !$input.is(':focus') ) {
-			$input.focus();
-		}
-		Troff.searchCreateSongList( event );
-
-		IO.setEnterFunction(function(event){
-			if(event.ctrlKey==1){//Ctrl+Enter will exit
-				$('#searchCreateSongList').val('').trigger('click');
-				document.getElementById('blur-hack').focus();
-				return false;
-			}
-			return true;
-		});
-
-	};
-
 	/*Troff*/this.showSearchAndActivate = function( event ) {
 		if( !$('#buttSongsDialog').hasClass( "active" ) ) {
 			$('#buttSongsDialog').trigger( "click" ).select();
@@ -2486,56 +2419,6 @@ var TroffClass = function(){
 		$( "#dataSongTable_filter" ).find( "input" ).trigger( "click" ).select();
 	};
 
-	/*Troff* /this.enterSearch = function( event ){
-		if( $('#songsArea').is(':hidden') ) {
-			$('#songsTab').trigger('click');
-		}
-		$input = $( event.target );
-		$input.addClass('textareaEdit');
-		Troff.searchSong( event );
-		
-		IO.setEnterFunction(function(event){
-			if(event.ctrlKey==1){//Ctrl+Enter will exit
-				$('#searchSong').val('').trigger('click');
-				document.getElementById('blur-hack').focus();
-				return false;
-			}
-			
-			$('#gallery .important').trigger('click');
-			$('#searchSong').val('').trigger('click');
-			return true;
-		}, function(event){
-			var next,
-					element = $('#gallery .important');
-
-			if( event.keyCode == 37 || event.keyCode == 39 ) return;
-			event.preventDefault();
-			
-			if(event.keyCode == 40) {
-				next = element.nextUntil(null,"button:not(.hidden)").eq(0);
-			} else {
-				next = element.prevUntil(null,"button:not(.hidden)").eq(0);
-			}
-
-			if( next.length ) {
-				element.removeClass('important');
-				next.addClass('important');
-			}
-		});
-	};
-	/*Troff* /this.exitSearchCreateSongList = function( event ){
-		Troff.exitSearchTot( event, "#newSongListPartAllSongs .important" );
-	};
-	/*Troff* /this.exitSearch = function( event ){
-		Troff.exitSearchTot( event, "#gallery .important" );
-	};
-
-	/*Troff* /this.exitSearchTot = function( event, selector ) {
-		$( event.target ).removeClass('textareaEdit');
-		$( selector ).removeClass('important');
-		IO.clearEnterFunction();
-	};
-	
 	/*Troff*/this.enterMarkerInfo = function(a, b, c){
 		$('#markerInfoArea').addClass('textareaEdit');
 		IO.setEnterFunction(function(event){
@@ -2551,24 +2434,6 @@ var TroffClass = function(){
 		IO.clearEnterFunction();
 	};
 	
-	/*Troff* /this.enterEditText = function( event ) {
-		$input = $( event.target );
-		
-		$input.addClass('textareaEdit');
-		IO.setEnterFunction(function(event){
-			if(event.ctrlKey==1){//Ctrl+Enter will exit
-				document.getElementById('blur-hack').focus();
-				return false;
-			}
-			return true;
-		});
-	};
-
-	/*Troff* /this.exitEditText = function( event ){
-		$( event.target ).removeClass('textareaEdit');
-		IO.clearEnterFunction();
-	};
-
 	/*Troff*/this.updateMarkerInfo = function(){
 			var strInfo = $('#markerInfoArea')[0].value;
 			var color = $('.currentMarker')[0].color;
@@ -2584,19 +2449,6 @@ var TroffClass = function(){
 		};
 
 		this.addMarkers = function(aMarkers){
-
-			// Slim sim remove!
-			/*
-				denna funktion , nedan, anvÃ¤nds fÃ¶r sista markÃ¶ren om den har tiden "max"
-				det som ska tas bort Ã¤r alltsÃ¥ denna funktion och anropet till den.
-				det Ã¤r tÃ¤mligen sjÃ¤lvfÃ¶rklarande om man sÃ¶ker efter funktionsnamnet...
-				max-check Ã¤r redundant nÃ¤r alla lÃ¥tar (som har db-data sparat) 
-				har Ã¶ppnats i v0.4 eller senare?
-			*/
-			var tmpUpdateMarkerSoonBcMax = function(){
-				DB.updateMarker(nameId, name, info, color, Number(time), song);
-				clearInterval(quickTimeOut);
-			};
 			
 			var startM = function() {
 				Troff.selectMarker(this.id);
@@ -2618,29 +2470,12 @@ var TroffClass = function(){
 				var info = oMarker.info;
 				var color = oMarker.color || "None";
 				var nameId = oMarker.id;
-
-				// slim sim remove!
-				/*
-					this entire if, below is used for debugging in the transition 
-					between v0.3 to v0.4, can be removed before v0.4
-					use for debugging new marker system with ID saved and passed around
-					(instead of using marker-name...)
-				*/
-				if(!nameId){
-					//IO.alert("why is there no nameId (or markerId) with this marker!?");
-					console.error("Why is there no nameId (or markerId) with this marker!?");
-					console.error("i = " + i);
-					console.error("aMarkers[i]:");
-					console.error(aMarkers[i]);
-					return -1;
-				}
 				
 				var maxTime = Number(document.getElementById('timeBar').max);
 				
 				if(time == "max" || time > maxTime){
 					time = maxTime;
 					var song = Troff.getCurrentSong();
-					var quickTimeOut = setTimeout(tmpUpdateMarkerSoonBcMax, 42);
 				}
 
 				var button = document.createElement("input");
@@ -2729,7 +2564,7 @@ var TroffClass = function(){
 
 
 		/*
-		 * returns the id of the earlyest and latest markers.
+		 * returns the id of the earliest and latest markers.
 		 * (note: latest marker without the 'S' for stop-id)
 		 */
 		this.getFirstAndLastMarkers = function(){
@@ -3043,7 +2878,7 @@ var TroffClass = function(){
 			if( stretchProcent == 100 ) {
 				IO.alert(
 					"100% will not change markers",
-					"Stretching the markers to 100% of there orignnal position will not change the marker position.<br /><br />" +
+					"Stretching the markers to 100% of there original position will not change the marker position.<br /><br />" +
 					"<span class=\"small\">Please change the %-value or close the Stretch markers dialog</span>."
 				);
 				return;
@@ -3216,8 +3051,7 @@ var TroffClass = function(){
 			IO.promptEditMarker(markerId, function(newMarkerName, newMarkerInfo, newMarkerColor, newTime){
 
 			if(newMarkerName === null || newMarkerName === "" ||
-				newTime === null || newTime === "" )
-			{
+				newTime === null || newTime === "" ) {
 				return;
 			}
 
@@ -3436,12 +3270,7 @@ var TroffClass = function(){
 			document.getElementById('blur-hack').focus();
 			Troff.zoom(0, Number(document.getElementById('timeBar').max));
 		};
-		/*
-		this.setZoomTimes = function(startTime, endTime){
-			m_zoomStartTime = startTime;
-			m_zoomEndTime = endTime;
-		};
-		*/
+
 		this.zoomToMarker = function(){
 			document.getElementById('blur-hack').focus();
 			var startTime = Troff.getStartTime();
@@ -3506,8 +3335,7 @@ var TroffClass = function(){
 				if(time - previousTime > 3){
 						startTime = previousTime = time;
 						nrTapps = 0;
-				}
-				else {
+				} else {
 						nrTapps++;
 				}
 				tappedTime = time - startTime;
