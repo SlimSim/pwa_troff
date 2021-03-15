@@ -1,122 +1,145 @@
-var appCaches = [
+/*
+ * when updating a file
+ * (or adding files / changing file-names in these lists)
+ * make sure to update the version-number of the appropriate cache!
+ *  - this will make sure that the service-worker is updated at the client.
+ *
+ * You can also select the "Application"-tab in the inspector and
+ * in the Cache area, under "Cache Storage", delete the appropriate cache.
+ *  - but this obviously only works for development!
+ *
+ * When the client shuts down it's browser, and goes to the page again
+ * then the new service-worker will be active
+ * (unless return this.skipWaiting() is active in the install-listener)
+ *
+ * NOTE: if a single url that this script tries to cache fails
+ * (it might not exist, or times out or something)
+ * then it will console.info that url
+ * and continue with the rest of the urls in that cache-block.
+ */
 
+/*
+ * tip: Root-relative Hyperlinks start with a '/'
+ * for instance /pwa.js
+ */
+var newAppCaches = [
 	{
-		name: 'core-v1.3.0',
+		name: 'core',
+		version: "1.3.3",
 		urls: [
 			"/",
-			"index.html",
-			"script.js",
-			"pwa.js",
-			"help.html",
-			"FileApiImplementation.js"
+			"/index.html",
+			"/script.js",
+			"/pwa.js",
+			"/help.html",
+			"/FileApiImplementation.js"
 		]
 	},
 	{
-		name: 'style-assets-v1.0',
+		name: 'style-assets',
+		version: "1.1.0",
 		urls: [
-			"stylesheets/style.css",
-			"stylesheets/col1.css",
-			"stylesheets/col2.css",
-			"stylesheets/col3.css",
-			"stylesheets/col4.css",
-			"stylesheets/help-style.css",
-			"stylesheets/style-standard.css"
+			"/stylesheets/style.css",
+			"/stylesheets/col1.css",
+			"/stylesheets/col2.css",
+			"/stylesheets/col3.css",
+			"/stylesheets/col4.css",
+			"/stylesheets/help-style.css",
+			"/stylesheets/style-standard.css",
 		]
 	},
 	{
-		name: 'app-assets-v1.0',
+		name: 'app-assets',
+		version: "1.1",
 		urls: [
-			"",
-			"assets/logos/favicon.ico",
-			"assets/logos/logo.svg",
-			"assets/logos/logo-016.png",
-			"assets/logos/logo-036.png",
-			"assets/logos/logo-048.png",
-			"assets/logos/logo-078.png",
-			"assets/logos/logo-096.png",
-			"assets/logos/logo-128.png",
-			"assets/logos/logo-192-non-transparent.png",
-			"assets/logos/logo-256.png",
-			"assets/logos/logo-512.png",
-			"manifest.json",
-			"LICENSE.html",
-			"README.md"
+			"/assets/logos/favicon.ico",
+			"/assets/logos/logo.svg",
+			"/assets/logos/logo-016.png",
+			"/assets/logos/logo-036.png",
+			"/assets/logos/logo-048.png",
+			"/assets/logos/logo-078.png",
+			"/assets/logos/logo-096.png",
+			"/assets/logos/logo-128.png",
+			"/assets/logos/logo-192-non-transparent.png",
+			"/assets/logos/logo-256.png",
+			"/assets/logos/logo-512.png",
+			"/manifest.json",
+			"/LICENSE.html",
+			"/README.md",
 		]
 	},
 	{
-		name: 'internal-assets-v1.0.1',
+		name: 'internal-assets',
+		version: "1.0.2",
 		urls: [
-			"assets/internal/common.js",
-			"assets/internal/cookie_consent.js",
-			"assets/internal/st-script.js",
-			"assets/internal/notify-js/notify.css",
-			"assets/internal/notify-js/notify.config.js"
+			"/assets/internal/common.js",
+			"/assets/internal/cookie_consent.js",
+			"/assets/internal/st-script.js",
+			"/assets/internal/notify-js/notify.css",
+			"/assets/internal/notify-js/notify.config.js"
 		]
 	},
 	{
-		name: 'external-assets-v1.1.2',
+		name: 'external-assets',
+		version: "1.1.2",
 		urls: [
-			"assets/external/checkbox.css",
-			"assets/external/jquery-3.4.1.min.js",
-			"assets/external/reset.css",
-			"assets/external/notify-js/notify.min.js",
-			"assets/external/bootstrap-4.3.1-dist/css/bootstrap.min.css",
-			"assets/external/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js",
-			"assets/external/svg-with-js/css/fa-svg-with-js.css",
-			"assets/external/svg-with-js/js/fontawesome-all.min.js",
+			"/assets/external/checkbox.css",
+			"/assets/external/jquery-3.4.1.min.js",
+			"/assets/external/reset.css",
+			"/assets/external/notify-js/notify.min.js",
+			"/assets/external/bootstrap-4.3.1-dist/css/bootstrap.min.css",
+			"/assets/external/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js",
+			"/assets/external/svg-with-js/css/fa-svg-with-js.css",
+			"/assets/external/svg-with-js/js/fontawesome-all.min.js",
 			/*
-			"assets/external/svg-with-js/webfonts/fa-brands-400.svg",
-			"assets/external/svg-with-js/webfonts/fa-regular-400.svg",
-			"assets/external/svg-with-js/webfonts/fa-solid-900.svg",
-			"assets/external/svg-with-js/webfonts/fa-brands-400.ttf",
-			"assets/external/svg-with-js/webfonts/fa-regular-400.ttf",
-			"assets/external/svg-with-js/webfonts/fa-solid-900.ttf",
-			"assets/external/svg-with-js/webfonts/fa-brands-400.eot",
-			"assets/external/svg-with-js/webfonts/fa-regular-400.eot",
-			"assets/external/svg-with-js/webfonts/fa-solid-900.eot",
-			"assets/external/svg-with-js/webfonts/fa-brands-400.woff2",
-			"assets/external/svg-with-js/webfonts/fa-regular-400.woff2",
-			"assets/external/svg-with-js/webfonts/fa-solid-900.woff2",
-			"assets/external/svg-with-js/webfonts/fa-brands-400.woff",
-			"assets/external/svg-with-js/webfonts/fa-regular-400.woff",
-			"assets/external/svg-with-js/webfonts/fa-solid-900.woff",
+			"/assets/external/svg-with-js/webfonts/fa-brands-400.svg",
+			"/assets/external/svg-with-js/webfonts/fa-regular-400.svg",
+			"/assets/external/svg-with-js/webfonts/fa-solid-900.svg",
+			"/assets/external/svg-with-js/webfonts/fa-brands-400.ttf",
+			"/assets/external/svg-with-js/webfonts/fa-regular-400.ttf",
+			"/assets/external/svg-with-js/webfonts/fa-solid-900.ttf",
+			"/assets/external/svg-with-js/webfonts/fa-brands-400.eot",
+			"/assets/external/svg-with-js/webfonts/fa-regular-400.eot",
+			"/assets/external/svg-with-js/webfonts/fa-solid-900.eot",
+			"/assets/external/svg-with-js/webfonts/fa-brands-400.woff2",
+			"/assets/external/svg-with-js/webfonts/fa-regular-400.woff2",
+			"/assets/external/svg-with-js/webfonts/fa-solid-900.woff2",
+			"/assets/external/svg-with-js/webfonts/fa-brands-400.woff",
+			"/assets/external/svg-with-js/webfonts/fa-regular-400.woff",
+			"/assets/external/svg-with-js/webfonts/fa-solid-900.woff",
 			*/
-			"assets/external/DataTables/css/jquery.dataTables.min.css",
-			"assets/external/DataTables/css/dataTables.jqueryui.min.css",
-			"assets/external/DataTables/images/sort_asc.png",
-			"assets/external/DataTables/images/sort_asc_disabled.png",
-			"assets/external/DataTables/images/sort_both.png",
-			"assets/external/DataTables/images/sort_desc.png",
-			"assets/external/DataTables/images/sort_desc_disabled.png",
-			"assets/external/DataTables/js/jquery.dataTables.min.js"
+			"/assets/external/DataTables/css/jquery.dataTables.min.css",
+			"/assets/external/DataTables/css/dataTables.jqueryui.min.css",
+			"/assets/external/DataTables/images/sort_asc.png",
+			"/assets/external/DataTables/images/sort_asc_disabled.png",
+			"/assets/external/DataTables/images/sort_both.png",
+			"/assets/external/DataTables/images/sort_desc.png",
+			"/assets/external/DataTables/images/sort_desc_disabled.png",
+			"/assets/external/DataTables/js/jquery.dataTables.min.js"
 		]
-	}
-	
-];
+}];
 
-console.log( "service-worker-js -> ");
-
-let cacheNames = appCaches.map((cache) => cache.name);
+function createCacheKey(name, version) {
+	return name + "-v" + version;
+}
 
 self.addEventListener( "install", function ( event ) {
-	console.log( "install -> " );
-	event.waitUntil(caches.keys().then(function( keys ) {
-		return Promise.all( appCaches.map( function( appCache ) {
-			if( keys.indexOf( appCache.name ) === -1 ) {
-				return caches.open( appCache.name ).then( function( cache ) {
-					return appCache.urls.map( function(v, i) {
-						fetch( v ).then(function(response) {
-                          if (!response.ok) {
-                            throw new TypeError( response.status + ", " + response.statusText + "; " + response.url );
-                          }
-                          return cache.put(v, response);
-                        });
-					});
 
-					//return cache.addAll( appCache.urls );
-				})
+	function addToCache(cache, url) {
+		cache.add(url).catch(e => {
+			console.info(`Info: cache.add( ${ url } ) fails:`, e);
+		});
+	}
+
+	event.waitUntil(caches.keys().then(function(existingKeys) {
+		return Promise.all(newAppCaches.map(function(appCache) {
+				let appCacheKey = createCacheKey(appCache.name, appCache.version);
+				if (existingKeys.indexOf(appCacheKey) === -1) {
+					return caches.open(appCacheKey).then(function(cache) {
+						appCache.urls.forEach(url => addToCache(cache, url));
+						return Promise.resolve(true);
+                        });
 			} else {
-				console.log(`found ${appCache.name}`);
 				return Promise.resolve(true);
 			}
 		}))
@@ -131,32 +154,38 @@ self.addEventListener( "install", function ( event ) {
 					status : "success"
 				}
 			});
-			return this.skipWaiting();
 
+			//return this.skipWaiting();
+		})
+		.catch(function(e) {
+			console.info("Promise.all catch:", e);
 		});
 	}));
 });
 
 self.addEventListener( "activate", function( event ) {
-	console.log( "activate ->" );
 	event.waitUntil(
-		caches.keys().then( function( keys ) {
-			return Promise.all( keys.map( function( key ) {
-				if( cacheNames.indexOf( key ) === -1) {
-					return caches.delete( key );
-				}
+		caches.keys().then(function(existingKeys) {
+
+			return Promise.all(newAppCaches.map(newCache => {
+
+				return existingKeys.map(existingKey => {
+					if (existingKey.indexOf(newCache.name) !== -1 &&
+						existingKey !== createCacheKey(newCache.name, newCache.version)) {
+						return caches.delete(existingKey);
+					}
+				});
 			}));
 		})
 	);
 });
 
 self.addEventListener( "fetch", event => {
-	console.log("fetch ->");
 	event.respondWith(
 		caches.match( event.request )
 		.then( cachedResponse => {
 			return cachedResponse || fetch( event.request );
-			
+
 			// tror att felet med denna är att den INTE returnerar något i sista elsen?
 			// if( cachedResponse ) {
 			// 	return cachedResponse;
@@ -166,7 +195,7 @@ self.addEventListener( "fetch", event => {
 			// } else {
 			// 	console.error( "fetch.request was not cached:", event.request );
 			// }
-			
+
 		})
 	);
 });
