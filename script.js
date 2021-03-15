@@ -3323,7 +3323,7 @@ var TroffClass = function(){
 			Troff.settAppropriateMarkerDistance();
 		};
 
-		this.tappTime = function(){
+		this.tapTime = function(){
 				previousTime = time;
 				time = new Date().getTime() / 1000;
 				document.getElementById('blur-hack').focus();
@@ -4342,7 +4342,7 @@ var IOClass = function(){
 		$('#startBefore').change(Troff.setCurrentStartBefore);
 		$('#stopAfter').change(Troff.setCurrentStopAfter);
 
-		$('#buttTappTempo').click( Troff.tappTime );
+		$('#buttTapTempo').click( Troff.tapTime );
 
 
 		$('#rateDialogNoThanks').click(Rate.rateDialogNoThanks);
@@ -4529,7 +4529,7 @@ var IOClass = function(){
 				Troff.speed({"data": 100});
 			break;
 		case 84: // T
-			Troff.tappTime();
+			Troff.tapTime();
 			break;
 		case 69: // E
 			Troff.editCurrentMarkerInfo();
