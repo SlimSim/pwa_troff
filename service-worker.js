@@ -25,12 +25,13 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.3.3",
+		version: "1.3.4",
 		urls: [
 			"/",
 			"/index.html",
 			"/script.js",
 			"/pwa.js",
+			"/file.js",
 			"/help.html",
 			"/FileApiImplementation.js"
 		]
@@ -91,23 +92,6 @@ var newAppCaches = [
 			"/assets/external/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js",
 			"/assets/external/svg-with-js/css/fa-svg-with-js.css",
 			"/assets/external/svg-with-js/js/fontawesome-all.min.js",
-			/*
-			"/assets/external/svg-with-js/webfonts/fa-brands-400.svg",
-			"/assets/external/svg-with-js/webfonts/fa-regular-400.svg",
-			"/assets/external/svg-with-js/webfonts/fa-solid-900.svg",
-			"/assets/external/svg-with-js/webfonts/fa-brands-400.ttf",
-			"/assets/external/svg-with-js/webfonts/fa-regular-400.ttf",
-			"/assets/external/svg-with-js/webfonts/fa-solid-900.ttf",
-			"/assets/external/svg-with-js/webfonts/fa-brands-400.eot",
-			"/assets/external/svg-with-js/webfonts/fa-regular-400.eot",
-			"/assets/external/svg-with-js/webfonts/fa-solid-900.eot",
-			"/assets/external/svg-with-js/webfonts/fa-brands-400.woff2",
-			"/assets/external/svg-with-js/webfonts/fa-regular-400.woff2",
-			"/assets/external/svg-with-js/webfonts/fa-solid-900.woff2",
-			"/assets/external/svg-with-js/webfonts/fa-brands-400.woff",
-			"/assets/external/svg-with-js/webfonts/fa-regular-400.woff",
-			"/assets/external/svg-with-js/webfonts/fa-solid-900.woff",
-			*/
 			"/assets/external/DataTables/css/jquery.dataTables.min.css",
 			"/assets/external/DataTables/css/dataTables.jqueryui.min.css",
 			"/assets/external/DataTables/images/sort_asc.png",
