@@ -13,6 +13,9 @@ var cacheImplementation = {
 
 	isSongV2: async function( songKey ) {
 		return caches.match(songKey).then(cachedResponse => {
+			if (cachedResponse === undefined) {
+				throw new Error(`songKey "${songKey}" does not exist in caches!`);
+			}
 			// Note, with the version 2,
 			// every song was cached with the status text "SuperSmashingGreat!"
 			return cachedResponse.statusText == "SuperSmashingGreat!";
