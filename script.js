@@ -5094,9 +5094,17 @@ $(document).ready( function() {
 
 	DB.getCurrentSong();
 	DB.getShowSongDialog();
+	initEnvironment();
 });
 
- $.fn.removeClassStartingWith = function (filter) {
+function initEnvironment() {
+	if( environment.banner.show ) {
+		$( "#banner" ).removeClass( "hidden" );
+		$( "#banner" ).find( "#banner-text" ).text( environment.banner.text );
+	}
+}
+
+$.fn.removeClassStartingWith = function (filter) {
 	$(this).removeClass(function (index, className) {
 		return (className.match(new RegExp("\\S*" + filter + "\\S*", 'g')) || []).join(' ')
 	});

@@ -54,8 +54,7 @@
 		type="text/css"
 		href="stylesheets/col1.css" />
 
-
-		<script type="text/javascript" src="assets/external/jquery-3.4.1.min.js"></script>
+	<script src="assets/external/jquery-3.4.1.min.js"></script>
 	<!--script src="assets/jquery-2.1.3.min.js"></script-->
 
 	<script type="text/javascript" src="assets/external/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js"></script>
@@ -71,12 +70,13 @@
 	<!-- skippar denna helt, kan lägga in google Add senare :) script src="assets/buy.js"></script-->
 
 
-	<script type="text/javascript" src="pwa.js"></script>
-	<script src="script.js"></script>
-	<script src="file.js"></script>
-	<script src="assets/internal/st-script.js"></script>
-	<script src="assets/internal/common.js"></script>
-	<script src="assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
+	<script src="/pwa.js"></script>
+	<script src="/script.js"></script>
+	<script src="/file.js"></script>
+	<script src="/environment.js"></script>
+	<script src="/assets/internal/st-script.js"></script>
+	<script src="/assets/internal/common.js"></script>
+	<script src="/assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
 
 
 
@@ -116,7 +116,7 @@
 						class="hidden important centerRoundButtCommon centerRoundButt2"
 						id="buttPlayUiButtonPause" />
 				</span>
-			<button class="svgButt_tmp regularButton jsUploadSongButt hidden"
+			<button class="svgButt_tmp regularButton jsUploadSongButt"
 							type="button"
 							title="Share this song to friends via link">
 				<i class="fa fa-share"></i>
@@ -166,9 +166,8 @@
 				</button>
 			</nav>
 		</div> <!-- end headArea -->
-		<div class="container-fluid hidden">
-			<div class="row center text-white bg-danger my-2 p-2">
-				environment.getProperty('dev-banner-text')
+		<div id="banner" class="container-fluid hidden">
+			<div id="banner-text" class="row center text-white bg-danger my-2 p-2">
 			</div>
 		</div>
 		<div id="areaSelector" class="flexRowWrap secondaryColor">
