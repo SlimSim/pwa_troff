@@ -947,6 +947,36 @@ var TroffClass = function(){
 
 	}
 
+
+
+	/*Troff*/ this.uploadSongToServer = function( event ) {
+		const songKey = Troff.getCurrentSong();
+		fileHandler.sendFile( environment.uploadFileEndpoint, songKey, nDB.get( songKey ) );
+	};
+
+	/*Troff*/ // TODO: what is this, what does it do? fixa så det funkar med nya servern / nya sättet att cacha låtarna!
+	this.loadSongFromServer = function(songRequestId) {
+		console.log("*** loadSongFromServer ->", songRequestId);
+
+		$.ajax({
+				url: "/songs/" + songRequestId,
+				timeout: 50000,
+			})
+			.done(async function(response) {
+				console.log("*** loadSongFromServer: response:", response);
+
+				var saveSongRessult = await cacheImplementation.saveSong(response.songKey, response.songSrcData)
+				console.log("*** loadSongFromServer: saveSongRessult:", saveSongRessult);
+
+				nDB.set(response.songKey, JSON.parse(response.songMetaData));
+
+			})
+			.fail(error => {
+				console.log("loadSongFromServer: error:", error);
+			});
+
+	}
+
 	this.recallFloatingDialog = function() {
 		DB.getVal( "TROFF_SETTING_SONG_LIST_FLOATING_DIALOG", function( floatingDialog ){
 			if( floatingDialog ) {
@@ -4364,6 +4394,8 @@ var IOClass = function(){
 			document.getElementById('blur-hack').focus();
 		});
 		$('.loopButt').click( Troff.setLoop );
+
+		$(".jsUploadSongButt").on("click", Troff.uploadSongToServer );
 
 
 		window.addEventListener('resize', function(){
