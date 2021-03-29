@@ -297,7 +297,7 @@ body section{
 }
 
 .textareaStandard{
-	flex: 1; 
+	flex: 1;
 	margin: 3px 0;
 	outline: none;
 	resize: none;
@@ -740,20 +740,20 @@ table {
 	padding: 0;
 }
 
-.selected:hover, 
-.currentLoop:hover, 
-.currentMarker:hover, 
+.selected:hover,
+.currentLoop:hover,
+.currentMarker:hover,
 .currentStopMarker:hover {
 	outline-style: solid;
 	outline-width: 2px;
-	
+
 }
 .selected:active,
-.currentLoop:active, 
-.currentMarker:active, 
+.currentLoop:active,
+.currentMarker:active,
 .currentStopMarker:active {
 	outline-style: solid;
-	outline-width: 4px;  
+	outline-width: 4px;
 }
 
 
@@ -765,8 +765,8 @@ table {
 .roundButt{
 	border-width: 21px;
 	border-style: solid;
-	border-radius: 21px; 
-	width: 0; 
+	border-radius: 21px;
+	width: 0;
 	height: 0;
 }
 .roundButt:hover{
@@ -778,7 +778,7 @@ table {
 .roundButt:active{
 	border-width: 25px;
 	border-style: solid;
-	border-radius: 25px; 
+	border-radius: 25px;
 	margin: 0;
 }
 .important:hover {
@@ -954,6 +954,10 @@ table.dataTable .dataTables_empty{
 
 /*------------------------------*/
 .hidden {
+	display: none !important;
+}
+
+.hidden-in-prod {
 	display: none !important;
 }
 

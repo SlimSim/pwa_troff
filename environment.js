@@ -10,6 +10,7 @@ const environment = {};
 			environment.backend = "http://localhost:8080/ternsjo_Troff";
 			environment.banner.show = true;
 			environment.banner.text = "Welcome to development";
+			environment.showHiddenInProd = true;
 			break;
 		case "troff.app":
 		case "troff.slimsim.heliohost.org":
@@ -17,6 +18,7 @@ const environment = {};
 			environment.backend = "https://ternsjo-it.heliohost.us/ternsjo_Troff";
 			environment.banner.show = false;
 			environment.banner.text = "Production";
+			environment.showHiddenInProd = false;
 			break;
 	}
 

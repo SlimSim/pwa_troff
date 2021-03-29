@@ -5098,9 +5098,16 @@ $(document).ready( function() {
 });
 
 function initEnvironment() {
+	"use strict";
 	if( environment.banner.show ) {
 		$( "#banner" ).removeClass( "hidden" );
 		$( "#banner" ).find( "#banner-text" ).text( environment.banner.text );
+	}
+
+	if( environment.showHiddenInProd ) {
+		$( ".hidden-in-prod" )
+				.removeClass( "hidden" )
+				.removeClass( "hidden-in-prod" );
 	}
 }
 
