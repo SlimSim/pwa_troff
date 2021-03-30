@@ -2983,8 +2983,10 @@ var TroffClass = function(){
 
 			var aAllMarkers = Troff.getCurrentMarkers();
 
-			if(bOneMarker){
-				bMoveSelected = true;
+
+
+			if( bOneMarker ) {
+				bMoveSelected = false;
 				aAllMarkers = $('.currentMarker');
 			}
 
