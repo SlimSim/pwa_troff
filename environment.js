@@ -20,6 +20,11 @@ const environment = {};
 			break;
 	}
 
-	environment.uploadFileEndpoint = environment.backend + "/uploadFile";
+	environment.uploadFileEndpoint = function() {
+		return `${environment.backend}/uploadFile`;
+	}
+	environment.getTroffDataEndpoint = function( troffDataId, fileName ) {
+		return `${environment.backend}/getTroffData/${troffDataId}/${fileName}`;
+	};
 
 })();

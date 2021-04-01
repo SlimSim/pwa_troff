@@ -1,4 +1,5 @@
 const fileHandler = {};
+const backendService = {};
 
 $(function () {
 	"use strict";
@@ -15,6 +16,35 @@ $(function () {
 	/************************************************/
 
 
+	backendService.getTroffData = async function( troffDataId, fileName ) {
+
+		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
+
+		return $.ajax({
+			url: url,
+			timeout: 50000,
+		})
+		.then(async function(response) {
+			if( response.status != "OK" ) {
+				throw response;
+			}
+			return response.payload;
+
+		});
+	};
+
+	fileHandler.fetchAndSaveResponse = async function( url, songKey ) {
+
+		return fetch( url )
+			.then( (response) => {
+				if( !response.ok ) {
+					throw response;
+				}
+				return fileHandler.saveResponse( response, songKey );
+			});
+	};
+
+/*
 	fileHandler.dev_fetchAndSaveResponse = function() {
 		/*
 			* Denna fungerar, den laddar låten till cachen och man kan spela den sen!
@@ -39,7 +69,7 @@ $(function () {
 			(och sen så måste jag ju givetvis fixa så att den hämtar meta-datat också, och fixar rätt songKey till låten mm!)
 			(what to do if dom krockar????)
 			jaja, vi tar det när det kommer :D
-		*/
+		* /
 
 
 		/*
@@ -48,7 +78,7 @@ $(function () {
 			en songKey och downloadUrl att köra denna funktion med!
 			Sen så är det bara att dunka in troff_datan, sparad med samma songKey, och sen ladda låten
 			helt enkelt bara köra createSongAudio( songKey )! :)
-		*/
+		* /
 		let songKey = "Hozier - Take Me To Church.mp3"; // <--- note man måste tydligen ha med .mp3.... :)
 		fetch('http://localhost:8080/ternsjo_Troff/downloadFile/3')
 			.then( (response) => {
@@ -59,11 +89,13 @@ $(function () {
 			})
 			.catch(() => alert('oh no!'));
 	};
+	*/
 
+	/*
 	fileHandler.dev_fetchAndLoad = function() {
 		/* ANVÄND EJ!!!
 			Denna fungerar säkert, men använd dev_fetchAndSaveResponse istället!
-			*/
+			* /
 		fetch("http://localhost:8080/ternsjo_Troff/downloadFile/2")
     .then(resp => {
         console.log( "1an" );
@@ -75,10 +107,9 @@ $(function () {
     })
 
 	};
-
-
-
-	fileHandler.saveResponse = async function( response, url, callbackFunk ) {
+	*/
+	/*
+	fileHandler.saveResponse_1 = async function( response, url, callbackFunk ) {
 
 		return caches.open( nameOfCache ).then( cache => {
 			return cache.put(url, response ).then( ( putResp ) => {
@@ -87,10 +118,21 @@ $(function () {
 			});
 		});
 	};
+	*/
+
+
+	fileHandler.saveResponse = async function( response, url ) {
+		return caches.open( nameOfCache ).then( cache => {
+			return cache.put(url, response );
+		});
+	};
+
 
 	fileHandler.saveFile = async function( file, callbackFunk ) {
 		const url = file.name;
 
+		//TODO: Denna borde kunna använda sig av saveResponse, om jag kör en:
+		//TODO: return fileHandler.saveResponse( new Response( file, init ), url ).then( () => {callbackFunk( url ) });
 		return caches.open( nameOfCache ).then( cache => {
 			let init = { "status" : 200 , "statusText" : "version-3", "responseType" : "cors"};
 			return cache.put(url, new Response( file, init ) ).then( () => {
@@ -100,9 +142,6 @@ $(function () {
 	};
 
 	fileHandler.getObjectUrlFromResponse = async function( response ) {
-		console.log( "fileHandler.getObjectUrlFromResponse ->" );
-		console.log( "fileHandler.getObjectUrlFromResponse: response type", typeof response );
-		console.log( "fileHandler.getObjectUrlFromResponse: response", response );
 
 		if (response === undefined) {
 			throw new Error(`songKey "${songKey}" does not exist in caches!`);
@@ -111,7 +150,6 @@ $(function () {
 	}
 
 	fileHandler.getObjectUrlFromFile = async function( songKey ) {
-		console.log( "fileHandler.getObjectUrlFromFile -> NEW! songKey",songKey);
 		return caches.match( songKey ).then(cachedResponse => {
 			return fileHandler.getObjectUrlFromResponse( cachedResponse );
 		});
@@ -122,7 +160,56 @@ $(function () {
 		console.info( "fileHandler.removeFile is not yet implemented :( " );
 	};
 
-	fileHandler.sendFile = async function( uploadFileEndpoint, fileKey, oSongTroffInfo ) {
+	fileHandler.sendFile = async function( fileKey, oSongTroffInfo ) {
+		if( await cacheImplementation.isSongV2( fileKey ) ) {
+			throw new Error(`fileKey "${fileKey}" is version 2, unable to upload!`);
+		}
+
+		const strSongTroffInfo = JSON.stringify( oSongTroffInfo );
+
+		return caches.match( fileKey ).then(cachedResponse => {
+			if ( cachedResponse === undefined ) {
+				throw new Error(`fileKey "${fileKey}" does not exist in caches!`);
+			}
+
+			return cachedResponse.blob().then( myBlob => {
+				// TODO: lastModified (and possibly other meta-data)
+				// from the file somehow. Should possibly save that data in the local-storage
+				// when I first add the file?
+
+				for(var key of cachedResponse.headers.keys()) {
+					 console.log(key);
+				}
+
+				var file = new File(
+					[myBlob],
+					fileKey,
+					{type: myBlob.type}
+				);
+
+				let formData = new FormData();
+				formData.append( "file", file );
+				formData.append( "songTroffInfo", strSongTroffInfo );
+
+				const uploadFileEndpoint =  environment.uploadFileEndpoint();
+
+				return $.ajax({
+					url: uploadFileEndpoint,
+					type: 'POST',
+					data: formData,
+					contentType: false,
+					processData: false,
+					error: function( err ) {
+						console.error( "fileHandler.sendFile, POST to " + uploadFileEndpoint + " gives error", err );
+					}
+				});
+
+			});
+    });
+	};
+
+	/*
+	fileHandler.sendFile_funkar_saftey = async function( uploadFileEndpoint, fileKey, oSongTroffInfo ) {
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
 			throw new Error(`fileKey "${fileKey}" is version 2, unable to upload!`);
 		}
@@ -177,13 +264,12 @@ $(function () {
 				});
 
 			});
-    });
+		});
 	};
+	*/
 
 	fileHandler.handleFiles = async function( files, callbackFunk ) {
-		console.log( "files", files);
 		let i = 0;
-
 
 		// Loop through the FileList and render the files as appropriate.
 		for ( let f; f = files[ i ]; i++) {
@@ -197,11 +283,9 @@ $(function () {
 			try {
 				fileHandler.saveFile( f, callbackFunk );
 			} catch( exception ) {
-				console.log( "exception", exception)
+				console.error( "exception", exception)
 			}
-
 		}
-
 	};
 
 });

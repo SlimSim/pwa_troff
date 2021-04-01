@@ -945,36 +945,65 @@ var TroffClass = function(){
 			keys.forEach(addItem_NEW_2);
 		});
 
-	}
-
-
-
-	/*Troff*/ this.uploadSongToServer = function( event ) {
-		const songKey = Troff.getCurrentSong();
-		fileHandler.sendFile( environment.uploadFileEndpoint, songKey, nDB.get( songKey ) );
 	};
 
-	/*Troff*/ // TODO: what is this, what does it do? fixa så det funkar med nya servern / nya sättet att cacha låtarna!
-	this.loadSongFromServer = function(songRequestId) {
-		console.log("*** loadSongFromServer ->", songRequestId);
+	/*Troff*/ this.setUrlToSong = function( serverId, fileName ) {
+		"use strict";
+		if( serverId === undefined ) {
+			history.pushState("", document.title, window.location.pathname + window.location.search );
+			return;
+		}
+		window.location.hash = serverId + "&" + encodeURI( fileName );
+	};
 
-		$.ajax({
-				url: "/songs/" + songRequestId,
-				timeout: 50000,
-			})
-			.done(async function(response) {
-				console.log("*** loadSongFromServer: response:", response);
+	/*Troff*/ this.uploadSongToServer = async function( event ) {
+		"use strict";
+		const songKey = Troff.getCurrentSong();
 
-				var saveSongRessult = await cacheImplementation.saveSong(response.songKey, response.songSrcData)
-				console.log("*** loadSongFromServer: saveSongRessult:", saveSongRessult);
+		let resp = await fileHandler.sendFile( songKey, nDB.get( songKey ) );
 
-				nDB.set(response.songKey, JSON.parse(response.songMetaData));
+		nDB.setOnSong( songKey, "serverId", resp.id );
 
-			})
-			.fail(error => {
-				console.log("loadSongFromServer: error:", error);
-			});
+		Troff.setUrlToSong( resp.id, resp.fileName );
+	};
 
+	/*Troff*/ this.downloadSongFromServer = async function( hash ) {
+		"use strict";
+		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
+		const fileName = decodeURI( fileNameURI );
+		const songFromCache = nDB.get( fileName );
+
+		if( songFromCache != null && serverId == songFromCache.serverId ) {
+			console.log( "songFromCache", songFromCache );
+			console.log( `song ${fileName} is already cached, using that instead` );
+			// TODO: select song in songList1
+			createSongAudio( fileName );
+			return ;
+		}
+
+		let troffData;
+		try {
+			troffData = await backendService.getTroffData( serverId, fileName );
+		} catch( error ) {
+			return errorHandler.backendService_getTroffData( error );
+		}
+
+		let fetchAndSaveResponse = fileHandler.fetchAndSaveResponse( troffData.fileDownloadUri, troffData.fileName );
+
+		let markers = JSON.parse( troffData.markerJsonString );
+		markers.serverId = serverId;
+		let saveToDBResponse = nDB.set( troffData.fileName, markers );
+
+		try {
+			let doneSaveResponse = await fetchAndSaveResponse;
+			let doneSaveToDB = await saveToDBResponse;
+		} catch ( error ) {
+			return errorHandler.fileHandler_fetchAndSaveResponse( error );
+		}
+
+		await createSongAudio( troffData.fileName );
+
+		addItem_NEW_2( troffData.fileName );
 	}
 
 	this.recallFloatingDialog = function() {
@@ -3567,6 +3596,11 @@ var RateClass = function(){
 
 
 const nDB = { // new data base
+	setOnSong : function( songId, key, value ) {
+		let obj = nDB.get( songId );
+		obj[key] = value;
+		nDB.set( songId, obj );
+	},
 	set : function( key, value ) {
 		window.localStorage.setItem( key, JSON.stringify( value ) );
 	},
@@ -4138,6 +4172,8 @@ var DBClass = function(){
 
 				$target.val( value );
 			});
+
+			Troff.setUrlToSong( song.serverId, songId );
 
 			Troff.selectStartBefore(song.startBefore[0], song.startBefore[1]);
 			Troff.selectStopAfter(song.stopAfter[0], song.stopAfter[1]);
@@ -5103,16 +5139,7 @@ var DB = new DBClass();
 var IO = new IOClass();
 var Rate = new RateClass();
 
-$(document).ready( function() {
-
-	$( "#dismisNewVersionModal" ).on( "click", function() {
-		$( "#newVersionModal" ).remove();
-	});
-
-	var milisAt_2020_06_11 = 1591826400000;
-	if( new Date().getTime() > milisAt_2020_06_11 ) {
-		$( "#newVersionModal" ).removeClass( "hidden" );
-	}
+$(document).ready( async function() {
 
 	initSongTable();
 
@@ -5124,9 +5151,20 @@ $(document).ready( function() {
 
 	Troff.initFileApiImplementation();
 
-	DB.getCurrentSong();
 	DB.getShowSongDialog();
 	initEnvironment();
+
+	if( window.location.hash ) {
+		try {
+			await Troff.downloadSongFromServer( window.location.hash )
+		} catch( e ) {
+			console.log( "error on downloadSongFromServer:", e );
+			DB.getCurrentSong();
+		}
+	} else {
+		DB.getCurrentSong();
+	}
+
 });
 
 function initEnvironment() {
@@ -5142,3 +5180,48 @@ $.fn.removeClassStartingWith = function (filter) {
 	});
 	return this;
 };
+
+
+
+
+const errorHandler = {};
+
+$(function () {
+	"use strict";
+
+	errorHandler.backendService_getTroffData = function( error ) {
+		if( error.status == "NOT_FOUND" ) {
+			$.notify(
+				`Could not find song "${fileName}", with id "${serverId}", on the server,
+				perhaps the URL is wrong or the song has been removed`,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
+		console.error( error );
+		return;
+	};
+
+	errorHandler.fileHandler_fetchAndSaveResponse = function( error ) {
+		if( error.status == 404 ) {
+			$.notify(
+				`The song "${fileName}", could not be found on the server, it has probably been removed
+				but the markers have been loaded, if you have the file named "${fileName}", you can
+				simply import it again and the markers will be connected with the file!`,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
+		console.log( error );
+		return;
+	};
+
+});
