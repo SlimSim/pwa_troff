@@ -967,6 +967,18 @@ var TroffClass = function(){
 		Troff.setUrlToSong( resp.id, resp.fileName );
 	};
 
+	/*Troff*/ this.selectSongInSongList = function( fileName ) {
+		let list = $("#dataSongTable").DataTable().rows().data()
+
+		for( let i = 0; i < list.length; i++ ) {
+			let data = JSON.parse(  list[i][0] );
+			if( data.fullPath == fileName ) {
+				$("#dataSongTable").DataTable().rows().nodes().to$().eq(i).addClass("selected");
+				return;
+			}
+		}
+	};
+
 	/*Troff*/ this.downloadSongFromServer = async function( hash ) {
 		"use strict";
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
@@ -974,11 +986,9 @@ var TroffClass = function(){
 		const songFromCache = nDB.get( fileName );
 
 		if( songFromCache != null && serverId == songFromCache.serverId ) {
-			console.log( "songFromCache", songFromCache );
-			console.log( `song ${fileName} is already cached, using that instead` );
-			// TODO: select song in songList1
 			createSongAudio( fileName );
-			return ;
+			setTimeout( function(){ Troff.selectSongInSongList( fileName ) }, 42 );
+			return;
 		}
 
 		let troffData;
