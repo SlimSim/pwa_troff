@@ -191,7 +191,7 @@ $(function () {
 				formData.append( "file", file );
 				formData.append( "songTroffInfo", strSongTroffInfo );
 
-				const uploadFileEndpoint =  environment.uploadFileEndpoint();
+				const uploadFileEndpoint =  environment.getUploadFileEndpoint();
 
 				return $.ajax({
 					url: uploadFileEndpoint,

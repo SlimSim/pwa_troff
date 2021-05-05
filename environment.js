@@ -22,7 +22,7 @@ const environment = {};
 			break;
 	}
 
-	environment.uploadFileEndpoint = function() {
+	environment.getUploadFileEndpoint = function() {
 		return `${environment.backend}/uploadFile`;
 	}
 	environment.getTroffDataEndpoint = function( troffDataId, fileName ) {
