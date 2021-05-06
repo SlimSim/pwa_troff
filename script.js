@@ -380,12 +380,15 @@ async function createSongAudio( path ) {
 		}
 	} else {
 		let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
+		console.log( "path", path);
+		console.log( "v3songObjectUrl", v3SongObjectUrl)
 		setSong2( path, "audio", v3SongObjectUrl );
 	}
 
 };
 
 function addItem_NEW_2( key ) {
+	console.log( "addItem_NEW_2 -> key = ", key);
 
 	var galleryId = "pwa-galleryId";
 	var extension = getFileExtension( key );
@@ -937,11 +940,14 @@ var TroffClass = function(){
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUpploader" ).on("change", event => {
+			console.log( "fileUpploader change / fileHandler.handleFiles: -> addItem_NEW_2");
 			fileHandler.handleFiles(event.target.files, addItem_NEW_2);
 		});
 
 		//loadAllFiles:
 		cacheImplementation.getAllKeys().then(keys => {
+
+			console.log( "fileUpploader change / cacheImplementation.getAllKeys: -> addItem_NEW_2");
 			keys.forEach(addItem_NEW_2);
 		});
 
@@ -950,6 +956,9 @@ var TroffClass = function(){
 	/*Troff*/ this.setUrlToSong = function( serverId, fileName ) {
 		"use strict";
 		if( serverId === undefined ) {
+			if( !window.location.hash ) {
+				return;
+			}
 			history.pushState("", document.title, window.location.pathname + window.location.search );
 			return;
 		}
@@ -979,15 +988,149 @@ var TroffClass = function(){
 		}
 	};
 
+	/*Troff*/ this.importTroffDataToExistingSong_importNew = async function( event ) {
+		console.log( "importTroffDataToExistingSong_importNew -> " );
+		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
+		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		console.log( "fileName", fileName );
+		console.log( "serverId", serverId );
+
+		let troffData;
+		try {
+			troffData = await backendService.getTroffData( serverId, fileName );
+		} catch( error ) {
+			return errorHandler.backendService_getTroffData( error );
+		}
+
+
+		let markers = JSON.parse( troffData.markerJsonString );
+		markers.serverId = serverId;
+		try {
+			let saveToDBResponse = nDB.set( troffData.fileName, markers );
+			let doneSaveToDB = await saveToDBResponse;
+		}  catch ( error ) {
+			return errorHandler.fileHandler_fetchAndSaveResponse( error );
+		}
+
+
+		await createSongAudio( troffData.fileName );
+		Troff.selectSongInSongList( fileName );
+
+	};
+
+	/*Troff*/ this.importTroffDataToExistingSong_merge = async function( event ) {
+		console.log( "importTroffDataToExistingSong_merge -> " );
+		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
+		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		console.log( "fileName", fileName );
+		console.log( "serverId", serverId );
+
+
+		const markersFromCache = nDB.get( fileName );
+		let markersFromServer;
+		try {
+			console.log( "serverId", serverId );
+			let troffDataFromServer = await backendService.getTroffData( serverId, fileName );
+			markersFromServer = JSON.parse( troffDataFromServer.markerJsonString );
+		} catch( error ) {
+			return errorHandler.backendService_getTroffData( error );
+		}
+
+		console.log( "markersFromCache", markersFromCache );
+
+		//så, vi gör en "keep existing" + en import :
+		await createSongAudio( fileName );
+		Troff.selectSongInSongList( fileName );
+
+		console.log( "markersFromServer", markersFromServer );
+/*
+		//och här kommer importen:
+		markersFromServer
+			.aStates: []
+      .abAreas: (4) [false, true, true, true]
+      .currentStartMarker: "markerNr0"
+      .currentStopMarker: "markerNr1S"
+      .info: ""
+      .loopTimes: "1"
+      .markers: (5) [{…}, {…}, {…}, {…}, {…}]
+      .pauseBefStart: (2) [true, "3"]
+      .serverId: 33
+      .speed: "100"
+      .startBefore: (2) [false, "4"]
+      .stopAfter: (2) [false, "2"]
+      .tempo: "?"
+      .volume: "75"
+      .wait: (2) [true, "1"]
+			.zoomStartTime: 0
+*/
+	let oImport = {};
+	oImport.strSongInfo = markersFromServer.info;
+	oImport.aoStates = markersFromServer.aStates; //????
+	oImport.aoMarkers = markersFromServer.markers;
+/*
+oImport
+ .aoMarkers: (3) [{…}, {…}, {…}]
+ .aoStates: []
+ .strSongInfo: ""
+*/
+
+		setTimeout( function() {
+			Troff.doImportStuff( oImport );
+		}, 42 );
+
+
+	};
+
+	/*Troff*/ this.importTroffDataToExistingSong_keepExisting = async function( event ) {
+		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
+		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		await createSongAudio( fileName );
+		Troff.selectSongInSongList( fileName );
+	};
+
+
 	/*Troff*/ this.downloadSongFromServer = async function( hash ) {
 		"use strict";
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
 		const fileName = decodeURI( fileNameURI );
-		const songFromCache = nDB.get( fileName );
+		const troffDataFromCache = nDB.get( fileName );
+		console.log("Troff.downloadSongFromServer: serverId = ", serverId);
 
-		if( songFromCache != null && serverId == songFromCache.serverId ) {
-			createSongAudio( fileName );
-			setTimeout( function(){ Troff.selectSongInSongList( fileName ) }, 42 );
+		console.log("Troff.downloadSongFromServer: fileName = ", fileName);
+		console.log("Troff.downloadSongFromServer: troffDataFromCache = ", troffDataFromCache);
+
+
+
+		if( troffDataFromCache != null && serverId == troffDataFromCache.serverId ) {
+
+			// här har jag själva filen, men de markörer jag har vill jag kanske ersätta/ slå ihop eller behålla???
+			//slim sim here
+
+			//vad gör createSongAudio???
+			/*
+				den anropar setSong2, som kör:
+					DB.setCurrentSong()
+					Troff.setWaitForLoad
+					addAudioToContentDiv()
+					newElem.setAttribute('src', songData)
+			*/
+			await createSongAudio( fileName );
+
+			//selectSongInSongList markerar endast låten :)
+			Troff.selectSongInSongList( fileName );
+			return;
+		}
+
+		if( troffDataFromCache != null ) {
+			$( "#importTroffDataToExistingSong_songName" ).text( fileName );
+			$( "#importTroffDataToExistingSong_fileName" ).val( fileName );
+			$( "#importTroffDataToExistingSong_serverId" ).val( serverId );
+
+			$("#importTroffDataToExistingSongDialog").removeClass("hidden");
+
 			return;
 		}
 
@@ -1013,6 +1156,7 @@ var TroffClass = function(){
 
 		await createSongAudio( troffData.fileName );
 
+		console.log( "Troff.downloadSongFromServer: -> addItem_NEW_2" );
 		addItem_NEW_2( troffData.fileName );
 	}
 
@@ -1945,82 +2089,93 @@ var TroffClass = function(){
 	*/
 	/*Troff*/this.importStuff = function(){
 		Troff.toggleImportExport();
-		IO.prompt("Please paste the text you recieved to import the markers",
+		IO.prompt("Please paste the text you received to import the markers",
 							"Paste text here",
 							function(sImport){
 			var oImport = JSON.parse(sImport);
 			if( oImport.strSongInfo !== undefined &&
 					oImport.aoStates !== undefined &&
 					oImport.aoMarkers !== undefined ){
-				importMarker(oImport.aoMarkers);
-				importSonginfo(oImport.strSongInfo);
-				importStates(oImport.aoStates);
-
-				DB.saveMarkers( Troff.getCurrentSong(), function() {
-					DB.saveStates( Troff.getCurrentSong(), function() {
-						Troff.updateSongInfo();
-					} );
-				} );
+				Troff.doImportStuff( oImport );
 
 			} else {
-				//This else is here to allow for imports of 0.5 and erlier
+				//This else is here to allow for imports of 0.5 and earlier
 				var aMarkersTmp = oImport;
 				importMarker(aMarkersTmp);
 			}
 
-			function importMarker(aMarkers){
-				var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
-
-				for(var i=0; i<aMarkers.length; i++){
-					// these 5 lines are here to allow for import of markers
-					//from version 0.3.0 and earlier:
-					var tmpName = Object.keys(aMarkers[i])[0];
-					aMarkers[i].name = aMarkers[i].name || tmpName;
-					aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
-					aMarkers[i].info = aMarkers[i].info || "";
-					aMarkers[i].color = aMarkers[i].color || "None";
-					//:allow for version 0.3.0 end here
-
-					aMarkers[i].id = aMarkerId[i];
-				}
-				Troff.addMarkers(aMarkers); // adds marker to html
-			}
-
-			function importSonginfo(strSongInfo){
-				$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
-			}
-
-			function importStates(aoStates){
-				for(var i = 0; i < aoStates.length; i++){
-					var strTimeStart = aoStates[i].currentMarkerTime;
-					var strTimeStop = aoStates[i].currentStopMarkerTime;
-					delete aoStates[i].currentMarkerTime;
-					delete aoStates[i].currentStopMarkerTime;
-					aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
-					aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
-				}
-
-				function getMarkerFromTime(strTime){
-					var aCurrMarkers = $('#markerList').children();
-					for(var i=0; i<aCurrMarkers.length; i++){
-						var currMarker = aCurrMarkers.eq(i).children().eq(2);
-						if(currMarker[0].timeValue == strTime){
-							return currMarker.attr('id');
-						}
-					}
-
-					console.error("returnerar första markören...");
-					return aCurrMarkers.eq(0).children().eq(2).attr('id');
-
-				}
-
-				aoStates.map(function(s){
-					Troff.addButtonsOfStates([JSON.stringify(s)]);
-				});
-//        DB.saveStates(Troff.getCurrentSong()); -- xxx
-			}
 		});
 	};
+
+	/*Troff*/ this.doImportStuff = function( oImport ) {
+
+		console.log( "doImportStuff oImport:", oImport);
+
+		importMarker(oImport.aoMarkers);
+		importSonginfo(oImport.strSongInfo);
+		importStates(oImport.aoStates);
+
+		console.log( "doImportStuff, Troff.getCurrentSong():", Troff.getCurrentSong() );
+
+		DB.saveMarkers( Troff.getCurrentSong(), function() {
+			DB.saveStates( Troff.getCurrentSong(), function() {
+				Troff.updateSongInfo();
+			} );
+		} );
+
+		function importMarker(aMarkers){
+			var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
+
+			for(var i=0; i<aMarkers.length; i++){
+				// these 5 lines are here to allow for import of markers
+				//from version 0.3.0 and earlier:
+				var tmpName = Object.keys(aMarkers[i])[0];
+				aMarkers[i].name = aMarkers[i].name || tmpName;
+				aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
+				aMarkers[i].info = aMarkers[i].info || "";
+				aMarkers[i].color = aMarkers[i].color || "None";
+				//:allow for version 0.3.0 end here
+
+				aMarkers[i].id = aMarkerId[i];
+			}
+			Troff.addMarkers(aMarkers); // adds marker to html
+		}
+
+		function importSonginfo(strSongInfo){
+			$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
+		}
+
+		function importStates(aoStates){
+			for(var i = 0; i < aoStates.length; i++){
+				var strTimeStart = aoStates[i].currentMarkerTime;
+				var strTimeStop = aoStates[i].currentStopMarkerTime;
+				delete aoStates[i].currentMarkerTime;
+				delete aoStates[i].currentStopMarkerTime;
+				aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
+				aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
+			}
+
+			function getMarkerFromTime(strTime){
+				var aCurrMarkers = $('#markerList').children();
+				for(var i=0; i<aCurrMarkers.length; i++){
+					var currMarker = aCurrMarkers.eq(i).children().eq(2);
+					if(currMarker[0].timeValue == strTime){
+						return currMarker.attr('id');
+					}
+				}
+
+				console.error("returnerar första markören...");
+				return aCurrMarkers.eq(0).children().eq(2).attr('id');
+
+			}
+
+			aoStates.map(function(s){
+				Troff.addButtonsOfStates([JSON.stringify(s)]);
+			});
+//        DB.saveStates(Troff.getCurrentSong()); -- xxx
+		}
+	}
+
 
 	/*
 		createMarker, all, figure out the time and name,
@@ -2297,6 +2452,7 @@ var TroffClass = function(){
 	};
 
 	this.enterSongInfo = function(a, b, c){
+		console.log( "this.enterSongInfo ->" );
 		$('#songInfoArea').addClass('textareaEdit');
 		IO.setEnterFunction(function(event){
 			if(event.ctrlKey==1){ //Ctrl+Enter will exit
@@ -2308,11 +2464,13 @@ var TroffClass = function(){
 	};
 
 	this.exitSongInfo = function(){
+		console.log( "this.exitSongInfo ->" );
 		$('#songInfoArea').removeClass('textareaEdit');
 		IO.clearEnterFunction();
 	};
 
 	/*Troff*/this.updateSongInfo = function(){
+		console.log( "this.updateSongInfo ->" );
 		var strInfo = $('#songInfoArea')[0].value;
 		var songId = Troff.getCurrentSong();
 		DB.setCurrentSongInfo(strInfo, songId);
@@ -3978,6 +4136,9 @@ var DBClass = function(){
 			}
 		}
 
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
+
 		nDB.set( songId, song );
 	});
 	};// end updateMarker
@@ -3996,6 +4157,8 @@ var DBClass = function(){
 		}
 
 		song.aStates = aStates;
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
 		if( callback ) {
@@ -4042,6 +4205,8 @@ var DBClass = function(){
 		song.currentStartMarker = $('.currentMarker')[0].id;
 		song.currentStopMarker = $('.currentStopMarker')[0].id;
 		song.markers = aMarkers;
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
 
@@ -4072,6 +4237,9 @@ var DBClass = function(){
 		if($('#'+ oState.currentStopMarker).length)
 			song.currentStopMarker = oState.currentStopMarker;
 		song.wait = [oState.buttWaitBetweenLoops, oState.waitBetweenLoops];
+
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
 	});
@@ -4116,7 +4284,12 @@ var DBClass = function(){
 			DB.setCurrent(songId, 'volume', volume);
 	};
 	this.setCurrentSongInfo = function(info, songId){
-		DB.setCurrent(songId, 'info', info);
+
+
+		DB.setCurrent(songId, 'info', info, function() {
+			nDB.setOnSong( songId, "serverId", undefined );
+			Troff.setUrlToSong( undefined, null );
+		});
 	};
 
 	this.setCurrentTempo = function(tempo, songId){
@@ -4183,6 +4356,7 @@ var DBClass = function(){
 				$target.val( value );
 			});
 
+			console.log( "loadSongMetadata: -> Troff.setUrlToSong, song.serverId ", song.serverId, "songId", songId );
 			Troff.setUrlToSong( song.serverId, songId );
 
 			Troff.selectStartBefore(song.startBefore[0], song.startBefore[1]);
@@ -4430,6 +4604,10 @@ var IOClass = function(){
 
 		$('#zoomInstructionDialogDontShowAgain').click(Troff.zoomDontShowAgain);
 		$('#zoomInstructionDialogOK').click(Troff.zoomDialogOK);
+
+		$('#importTroffDataToExistingSong_importNew').click(Troff.importTroffDataToExistingSong_importNew);
+		$('#importTroffDataToExistingSong_merge').click(Troff.importTroffDataToExistingSong_merge);
+		$('#importTroffDataToExistingSong_keepExisting').click(Troff.importTroffDataToExistingSong_keepExisting);
 
 		$('#infoAndroidDonate').click(function() {
 			$('#donate').click();

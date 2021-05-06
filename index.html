@@ -1394,7 +1394,7 @@
 		<div class="innerDialog flexCol mediumDialog">
 			<h2 class="paragraph">Export All Data</h2>
 			<p class="paragraph normalSize">
-				To export all data storred in Troff, copy the string into the box below,
+				To export all data stored in Troff, copy the string into the box below,
 				and paste the text-string in the Troff-program where you want to import it.
 			</p>
 			<textarea
@@ -1590,6 +1590,37 @@
 				<input type="text" id="createSongListName" class="form-control-sm" />
 				<input type="button" id="createSongListSave" class="regularButton" value="Save" />
 			</div>
+		</div>
+	</div>
+
+
+	<div id="importTroffDataToExistingSongDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Update markers?</h2>
+			<input type="hidden" id="importTroffDataToExistingSong_fileName" value="" />
+			<input type="hidden" id="importTroffDataToExistingSong_serverId" value="" />
+
+			<p class="paragraph normalSize">
+				You seem to already have the song <span id="importTroffDataToExistingSong_songName"></span>.
+				<br />Do you want to update that song with the new markers or merge them or abort?
+			</p>
+			<span class="flexCol">
+				<input
+					id="importTroffDataToExistingSong_importNew"
+					class="regularButton dialogCancelButton"
+					type="button"
+					value="Import new markers" />
+				<input
+					id="importTroffDataToExistingSong_merge"
+					class="regularButton  dialogCancelButton"
+					type="button"
+					value="Merge with existing markers" />
+				<input
+					id="importTroffDataToExistingSong_keepExisting"
+					class="regularButton dialogCancelButton"
+					type="button"
+					value="Keep existing markers" />
+			</span>
 		</div>
 	</div>
 
