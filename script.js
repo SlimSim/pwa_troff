@@ -366,10 +366,8 @@ function escapeRegExp(string) {
 		.replace(/[".*+?^${}()|[\]\\]/g, '\\$&');	// $& means the whole matched string
 }
 
-
-
 async function createSongAudio( path ) {
-	//path = $(event.target).val(),
+
 	if( await cacheImplementation.isSongV2( path ) ) {
 		try {
 			var songData = await cacheImplementation.getSong( path );
@@ -380,15 +378,12 @@ async function createSongAudio( path ) {
 		}
 	} else {
 		let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
-		console.log( "path", path);
-		console.log( "v3songObjectUrl", v3SongObjectUrl)
 		setSong2( path, "audio", v3SongObjectUrl );
 	}
 
 };
 
 function addItem_NEW_2( key ) {
-	console.log( "addItem_NEW_2 -> key = ", key);
 
 	var galleryId = "pwa-galleryId";
 	var extension = getFileExtension( key );
@@ -940,14 +935,11 @@ var TroffClass = function(){
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUpploader" ).on("change", event => {
-			console.log( "fileUpploader change / fileHandler.handleFiles: -> addItem_NEW_2");
 			fileHandler.handleFiles(event.target.files, addItem_NEW_2);
 		});
 
 		//loadAllFiles:
 		cacheImplementation.getAllKeys().then(keys => {
-
-			console.log( "fileUpploader change / cacheImplementation.getAllKeys: -> addItem_NEW_2");
 			keys.forEach(addItem_NEW_2);
 		});
 
@@ -989,12 +981,8 @@ var TroffClass = function(){
 	};
 
 	/*Troff*/ this.importTroffDataToExistingSong_importNew = async function( event ) {
-		console.log( "importTroffDataToExistingSong_importNew -> " );
 		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
 		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
-
-		console.log( "fileName", fileName );
-		console.log( "serverId", serverId );
 
 		let troffData;
 		try {
@@ -1002,7 +990,6 @@ var TroffClass = function(){
 		} catch( error ) {
 			return errorHandler.backendService_getTroffData( error );
 		}
-
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
@@ -1013,112 +1000,43 @@ var TroffClass = function(){
 			return errorHandler.fileHandler_fetchAndSaveResponse( error );
 		}
 
-
 		await createSongAudio( troffData.fileName );
 		Troff.selectSongInSongList( fileName );
 
 	};
 
 	/*Troff*/ this.importTroffDataToExistingSong_merge = async function( event ) {
-		console.log( "importTroffDataToExistingSong_merge -> " );
 		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
 		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
-
-		console.log( "fileName", fileName );
-		console.log( "serverId", serverId );
-
 
 		const markersFromCache = nDB.get( fileName );
 		let markersFromServer;
 		try {
-			console.log( "serverId", serverId );
 			let troffDataFromServer = await backendService.getTroffData( serverId, fileName );
 			markersFromServer = JSON.parse( troffDataFromServer.markerJsonString );
 		} catch( error ) {
 			return errorHandler.backendService_getTroffData( error );
 		}
 
-		console.log( "markersFromCache", markersFromCache );
 
-		//så, vi gör en "keep existing" + en import :
 		await createSongAudio( fileName );
 		Troff.selectSongInSongList( fileName );
 
-		console.log( "markersFromServer", markersFromServer );
-/*
-		//och här kommer importen:
-		markersFromServer
-			.aStates: []
-      .abAreas: (4) [false, true, true, true]
-      .currentStartMarker: "markerNr0"
-      .currentStopMarker: "markerNr1S"
-      .info: ""
-      .loopTimes: "1"
-      .markers: (5) [{…}, {…}, {…}, {…}, {…}]
-      .pauseBefStart: (2) [true, "3"]
-      .serverId: 33
-      .speed: "100"
-      .startBefore: (2) [false, "4"]
-      .stopAfter: (2) [false, "2"]
-      .tempo: "?"
-      .volume: "75"
-      .wait: (2) [true, "1"]
-			.zoomStartTime: 0
-*/
-	let oImport = {};
-	oImport.strSongInfo = markersFromServer.info;
 
-	const aoStates = [];
-	for( let i = 0; i < markersFromServer.aStates.length; i++ ) {
+		const aoStates = [];
+		for( let i = 0; i < markersFromServer.aStates.length; i++ ) {
+			const parsedState = JSON.parse ( markersFromServer.aStates[i] );
+			aoStates.push( Troff.replaceMarkerIdWithMarkerTimeInState( parsedState, markersFromServer.markers ) );
+		}
 
-		const parsedState = JSON.parse ( markersFromServer.aStates[i] );
-
-		aoStates.push( Troff.replaceMarkerIdWithMarkerTimeInState( parsedState, markersFromServer.markers ) );
-
-		//parsedState.currentMarkerTime = ???
-		//parsedState.currentStopMarkerTime = ???
-		/*
-		så!
-				- markörerna som ska användas vid merge är samma fast UTAN markerId! (fast gör inget om den finns med, då den skrivs över i importen)
-				- state ska ha startMarkerTime (och stop) istället för startMarker [id],
-				så bryt ut den koden i en funktion och anropa den från de två ställena som vill ha det :)
-
-
-		detta är inte rätt ställe att fixa detta på, se till att den sträng som sparar staten till servern tas på samam sätt som den som ges vid manuell koppiering!
-		aoStates.push( parsedState );
-
-		MEN, om jag löser det så kommer ju "import new markers" - alternativet inte riktigt fungera längre, utan då behöver den också använda sig av doImportStuff-metoden, tror jag
-		*/
-	}
-	console.log( "aoStates[0].currentMarker", aoStates[0].currentMarker );
-	console.log( "aoStates[0].currentMarkerTime", aoStates[0].currentMarkerTime );
-	console.log( "aoStates", aoStates );
-
-	oImport.aoStates = aoStates;
-	console.log( "oImport", oImport );
-	oImport.aoMarkers = markersFromServer.markers;
-/*
-oImport
- .aoMarkers: (3) [{…}, {…}, {…}]
- .aoStates: []
- .strSongInfo: ""
-*/
-
-
-
-
-
-
+		let oImport = {};
+		oImport.strSongInfo = markersFromServer.info;
+		oImport.aoStates = aoStates;
+		oImport.aoMarkers = markersFromServer.markers;
 
 		setTimeout( function() {
-			console.log( "oImport", oImport );
-			console.log( "oImport.aoStates[0]", oImport.aoStates[0] );
-			console.log( "oImport.aoStates[0].currentMarker", oImport.aoStates[0].currentMarker );
-			console.log( "oImport.aoStates[0].currentMarker", oImport.aoStates[0].currentMarkerTime );
-
 			Troff.doImportStuff( oImport );
 		}, 42 );
-
 
 	};
 
@@ -1136,29 +1054,9 @@ oImport
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
 		const fileName = decodeURI( fileNameURI );
 		const troffDataFromCache = nDB.get( fileName );
-		console.log("Troff.downloadSongFromServer: serverId = ", serverId);
-
-		console.log("Troff.downloadSongFromServer: fileName = ", fileName);
-		console.log("Troff.downloadSongFromServer: troffDataFromCache = ", troffDataFromCache);
-
-
 
 		if( troffDataFromCache != null && serverId == troffDataFromCache.serverId ) {
-
-			// här har jag själva filen, men de markörer jag har vill jag kanske ersätta/ slå ihop eller behålla???
-			//slim sim here
-
-			//vad gör createSongAudio???
-			/*
-				den anropar setSong2, som kör:
-					DB.setCurrentSong()
-					Troff.setWaitForLoad
-					addAudioToContentDiv()
-					newElem.setAttribute('src', songData)
-			*/
 			await createSongAudio( fileName );
-
-			//selectSongInSongList markerar endast låten :)
 			Troff.selectSongInSongList( fileName );
 			return;
 		}
@@ -1167,8 +1065,7 @@ oImport
 			$( "#importTroffDataToExistingSong_songName" ).text( fileName );
 			$( "#importTroffDataToExistingSong_fileName" ).val( fileName );
 			$( "#importTroffDataToExistingSong_serverId" ).val( serverId );
-
-			$("#importTroffDataToExistingSongDialog").removeClass("hidden");
+			$( "#importTroffDataToExistingSongDialog" ).removeClass("hidden");
 
 			return;
 		}
@@ -1194,8 +1091,6 @@ oImport
 		}
 
 		await createSongAudio( troffData.fileName );
-
-		console.log( "Troff.downloadSongFromServer: -> addItem_NEW_2" );
 		addItem_NEW_2( troffData.fileName );
 	}
 
@@ -2108,16 +2003,6 @@ oImport
 			for(i=0; i<aState.length; i++){
 				var oState = JSON.parse(aState.eq(i).attr('strstate'));
 				oExport.aoStates[i] = Troff.replaceMarkerIdWithMarkerTimeInState( oState, aoMarkers );
-
-/*
-				var currMarkerId = "#" + oState.currentMarker;
-				var currStopMarkerId = "#" + oState.currentStopMarker;
-				oState.currentMarkerTime = $( currMarkerId )[0].timeValue;
-				oState.currentStopMarkerTime = $( currStopMarkerId )[0].timeValue;
-				delete oState.currentMarker;
-				delete oState.currentStopMarker;
-				oExport.aoStates[i] = oState;
-				*/
 			}
 			oExport.strSongInfo = $('#songInfoArea').val();
 			var sExport = JSON.stringify(oExport);
@@ -2149,70 +2034,8 @@ oImport
 		});
 	};
 
-/* denna funkar, men vill ju ha array, och inte bara ett object :)
-let getExportState = function( oState, aoMarkers ) {
-    oState.currentMarker
-    oState.currentStopMarker
-    console.log( "aoMarkers", aoMarkers);
-    console.log( "oState.currentMarker", oState.currentMarker);
-    console.log( "oState.currentStopMarker", oState.currentStopMarker);
-
-    for( let i = 0; i < aoMarkers.length; i++) {
-        console.log("aoMarkers[i].id", aoMarkers[i].id )
-        if( oState.currentMarker == aoMarkers[i].id ){
-            oState.currentMarkerTime = aoMarkers[i].time;
-        }
-        if( oState.currentStopMarker == aoMarkers[i].id ){
-            oState.currentStopMarkerTime = aoMarkers[i].time;
-        }
-        if( oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined ) {
-            break;
-        }
-    }
-    delete oState.currentMarker;
-    delete oState.currentStopMarker;
-    return oState;
-};
-DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
-    console.log("aoMarkers", aoMarkers);
-    var oExport = {};
-    var aState = $('#stateList').children();
-    console.log("aState", aState);
-    oExport.aoStatesOld = [];
-    oExport.aoStates = [];
-    for(i=0; i<aState.length; i++){
-        var oState = JSON.parse(aState.eq(i).attr('strstate'));
-        //console.log("oState", oState);
-
-        var currMarkerId = "#" + oState.currentMarker;
-        var currStopMarkerId = "#" + oState.currentStopMarker;
-        oState.currentMarkerTime = $( currMarkerId )[0].timeValue;
-        oState.currentStopMarkerTime = $( currStopMarkerId )[0].timeValue;
-        oExport.aoStates[i] = getExportState( oState, aoMarkers );
-        delete oState.currentMarker;
-        delete oState.currentStopMarker;
-        oExport.aoStatesOld[i] = oState;
-        //console.log("oExport", oExport);
-
-    }
-    oExport.strSongInfo = $('#songInfoArea').val();
-    var sExport = JSON.stringify(oExport);
-
-    IO.prompt("Copy the marked text to export your markers", sExport);
-    console.log( "oExport", oExport);
-});
-
-
-*/
-
-
 	/*Troff*/ this.replaceMarkerIdWithMarkerTimeInState = function( oState, aoMarkers ) {
-    console.log( "aoMarkers", aoMarkers);
-    console.log( "oState.currentMarker", oState.currentMarker);
-    console.log( "oState.currentStopMarker", oState.currentStopMarker);
-
     for( let i = 0; i < aoMarkers.length; i++) {
-        console.log("aoMarkers[i].id", aoMarkers[i].id )
         if( oState.currentMarker == aoMarkers[i].id ){
             oState.currentMarkerTime = aoMarkers[i].time;
         }
@@ -2230,14 +2053,9 @@ DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
 
 	/*Troff*/ this.doImportStuff = function( oImport ) {
 
-		console.log( "doImportStuff oImport:", oImport);
-		console.log( "oImport.aoStates[0].currentMarkerTime", oImport.aoStates[0].currentMarkerTime );
-
 		importMarker(oImport.aoMarkers);
 		importSonginfo(oImport.strSongInfo);
 		importStates(oImport.aoStates);
-
-		console.log( "doImportStuff, Troff.getCurrentSong():", Troff.getCurrentSong() );
 
 		DB.saveMarkers( Troff.getCurrentSong(), function() {
 			DB.saveStates( Troff.getCurrentSong(), function() {
@@ -2269,7 +2087,6 @@ DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
 
 		function importStates(aoStates) {
 
-			console.log( "oImport.aoStates[0].currentMarkerTime", aoStates[0].currentMarkerTime );
 			for(var i = 0; i < aoStates.length; i++){
 				var strTimeStart = aoStates[i].currentMarkerTime;
 
@@ -2290,7 +2107,7 @@ DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
 					}
 				}
 
-				console.error("returnerar första markören...");
+				console.error("Could not find a marker at the time " + strTime + "; returning the first marker");
 				return aCurrMarkers.eq(0).children().eq(2).attr('id');
 
 			}
@@ -2578,7 +2395,6 @@ DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
 	};
 
 	this.enterSongInfo = function(a, b, c){
-		console.log( "this.enterSongInfo ->" );
 		$('#songInfoArea').addClass('textareaEdit');
 		IO.setEnterFunction(function(event){
 			if(event.ctrlKey==1){ //Ctrl+Enter will exit
@@ -2590,13 +2406,11 @@ DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
 	};
 
 	this.exitSongInfo = function(){
-		console.log( "this.exitSongInfo ->" );
 		$('#songInfoArea').removeClass('textareaEdit');
 		IO.clearEnterFunction();
 	};
 
 	/*Troff*/this.updateSongInfo = function(){
-		console.log( "this.updateSongInfo ->" );
 		var strInfo = $('#songInfoArea')[0].value;
 		var songId = Troff.getCurrentSong();
 		DB.setCurrentSongInfo(strInfo, songId);
@@ -4485,7 +4299,6 @@ var DBClass = function(){
 				$target.val( value );
 			});
 
-			console.log( "loadSongMetadata: -> Troff.setUrlToSong, song.serverId ", song.serverId, "songId", songId );
 			Troff.setUrlToSong( song.serverId, songId );
 
 			Troff.selectStartBefore(song.startBefore[0], song.startBefore[1]);
@@ -5475,7 +5288,7 @@ $(document).ready( async function() {
 		try {
 			await Troff.downloadSongFromServer( window.location.hash )
 		} catch( e ) {
-			console.log( "error on downloadSongFromServer:", e );
+			console.error( "error on downloadSongFromServer:", e );
 			DB.getCurrentSong();
 		}
 	} else {
@@ -5544,7 +5357,7 @@ $(function () {
 			);
 			return;
 		}
-		console.log( error );
+		console.error( error );
 		return;
 	};
 
