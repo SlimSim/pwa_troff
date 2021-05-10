@@ -1067,7 +1067,35 @@ var TroffClass = function(){
 */
 	let oImport = {};
 	oImport.strSongInfo = markersFromServer.info;
-	oImport.aoStates = markersFromServer.aStates; //????
+
+	const aoStates = [];
+	for( let i = 0; i < markersFromServer.aStates.length; i++ ) {
+
+		const parsedState = JSON.parse ( markersFromServer.aStates[i] );
+
+		aoStates.push( Troff.replaceMarkerIdWithMarkerTimeInState( parsedState, markersFromServer.markers ) );
+
+		//parsedState.currentMarkerTime = ???
+		//parsedState.currentStopMarkerTime = ???
+		/*
+		så!
+				- markörerna som ska användas vid merge är samma fast UTAN markerId! (fast gör inget om den finns med, då den skrivs över i importen)
+				- state ska ha startMarkerTime (och stop) istället för startMarker [id],
+				så bryt ut den koden i en funktion och anropa den från de två ställena som vill ha det :)
+
+
+		detta är inte rätt ställe att fixa detta på, se till att den sträng som sparar staten till servern tas på samam sätt som den som ges vid manuell koppiering!
+		aoStates.push( parsedState );
+
+		MEN, om jag löser det så kommer ju "import new markers" - alternativet inte riktigt fungera längre, utan då behöver den också använda sig av doImportStuff-metoden, tror jag
+		*/
+	}
+	console.log( "aoStates[0].currentMarker", aoStates[0].currentMarker );
+	console.log( "aoStates[0].currentMarkerTime", aoStates[0].currentMarkerTime );
+	console.log( "aoStates", aoStates );
+
+	oImport.aoStates = aoStates;
+	console.log( "oImport", oImport );
 	oImport.aoMarkers = markersFromServer.markers;
 /*
 oImport
@@ -1076,7 +1104,18 @@ oImport
  .strSongInfo: ""
 */
 
+
+
+
+
+
+
 		setTimeout( function() {
+			console.log( "oImport", oImport );
+			console.log( "oImport.aoStates[0]", oImport.aoStates[0] );
+			console.log( "oImport.aoStates[0].currentMarker", oImport.aoStates[0].currentMarker );
+			console.log( "oImport.aoStates[0].currentMarker", oImport.aoStates[0].currentMarkerTime );
+
 			Troff.doImportStuff( oImport );
 		}, 42 );
 
@@ -2068,7 +2107,9 @@ oImport
 			oExport.aoStates = [];
 			for(i=0; i<aState.length; i++){
 				var oState = JSON.parse(aState.eq(i).attr('strstate'));
+				oExport.aoStates[i] = Troff.replaceMarkerIdWithMarkerTimeInState( oState, aoMarkers );
 
+/*
 				var currMarkerId = "#" + oState.currentMarker;
 				var currStopMarkerId = "#" + oState.currentStopMarker;
 				oState.currentMarkerTime = $( currMarkerId )[0].timeValue;
@@ -2076,6 +2117,7 @@ oImport
 				delete oState.currentMarker;
 				delete oState.currentStopMarker;
 				oExport.aoStates[i] = oState;
+				*/
 			}
 			oExport.strSongInfo = $('#songInfoArea').val();
 			var sExport = JSON.stringify(oExport);
@@ -2107,9 +2149,89 @@ oImport
 		});
 	};
 
+/* denna funkar, men vill ju ha array, och inte bara ett object :)
+let getExportState = function( oState, aoMarkers ) {
+    oState.currentMarker
+    oState.currentStopMarker
+    console.log( "aoMarkers", aoMarkers);
+    console.log( "oState.currentMarker", oState.currentMarker);
+    console.log( "oState.currentStopMarker", oState.currentStopMarker);
+
+    for( let i = 0; i < aoMarkers.length; i++) {
+        console.log("aoMarkers[i].id", aoMarkers[i].id )
+        if( oState.currentMarker == aoMarkers[i].id ){
+            oState.currentMarkerTime = aoMarkers[i].time;
+        }
+        if( oState.currentStopMarker == aoMarkers[i].id ){
+            oState.currentStopMarkerTime = aoMarkers[i].time;
+        }
+        if( oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined ) {
+            break;
+        }
+    }
+    delete oState.currentMarker;
+    delete oState.currentStopMarker;
+    return oState;
+};
+DB.getMarkers( Troff.getCurrentSong(), function(aoMarkers){
+    console.log("aoMarkers", aoMarkers);
+    var oExport = {};
+    var aState = $('#stateList').children();
+    console.log("aState", aState);
+    oExport.aoStatesOld = [];
+    oExport.aoStates = [];
+    for(i=0; i<aState.length; i++){
+        var oState = JSON.parse(aState.eq(i).attr('strstate'));
+        //console.log("oState", oState);
+
+        var currMarkerId = "#" + oState.currentMarker;
+        var currStopMarkerId = "#" + oState.currentStopMarker;
+        oState.currentMarkerTime = $( currMarkerId )[0].timeValue;
+        oState.currentStopMarkerTime = $( currStopMarkerId )[0].timeValue;
+        oExport.aoStates[i] = getExportState( oState, aoMarkers );
+        delete oState.currentMarker;
+        delete oState.currentStopMarker;
+        oExport.aoStatesOld[i] = oState;
+        //console.log("oExport", oExport);
+
+    }
+    oExport.strSongInfo = $('#songInfoArea').val();
+    var sExport = JSON.stringify(oExport);
+
+    IO.prompt("Copy the marked text to export your markers", sExport);
+    console.log( "oExport", oExport);
+});
+
+
+*/
+
+
+	/*Troff*/ this.replaceMarkerIdWithMarkerTimeInState = function( oState, aoMarkers ) {
+    console.log( "aoMarkers", aoMarkers);
+    console.log( "oState.currentMarker", oState.currentMarker);
+    console.log( "oState.currentStopMarker", oState.currentStopMarker);
+
+    for( let i = 0; i < aoMarkers.length; i++) {
+        console.log("aoMarkers[i].id", aoMarkers[i].id )
+        if( oState.currentMarker == aoMarkers[i].id ){
+            oState.currentMarkerTime = aoMarkers[i].time;
+        }
+        if( oState.currentStopMarker == aoMarkers[i].id + "S" ){
+            oState.currentStopMarkerTime = aoMarkers[i].time;
+        }
+        if( oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined ) {
+            break;
+        }
+    }
+    delete oState.currentMarker;
+    delete oState.currentStopMarker;
+    return oState;
+	}
+
 	/*Troff*/ this.doImportStuff = function( oImport ) {
 
 		console.log( "doImportStuff oImport:", oImport);
+		console.log( "oImport.aoStates[0].currentMarkerTime", oImport.aoStates[0].currentMarkerTime );
 
 		importMarker(oImport.aoMarkers);
 		importSonginfo(oImport.strSongInfo);
@@ -2145,14 +2267,18 @@ oImport
 			$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
 		}
 
-		function importStates(aoStates){
+		function importStates(aoStates) {
+
+			console.log( "oImport.aoStates[0].currentMarkerTime", aoStates[0].currentMarkerTime );
 			for(var i = 0; i < aoStates.length; i++){
 				var strTimeStart = aoStates[i].currentMarkerTime;
+
 				var strTimeStop = aoStates[i].currentStopMarkerTime;
 				delete aoStates[i].currentMarkerTime;
 				delete aoStates[i].currentStopMarkerTime;
 				aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
 				aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
+
 			}
 
 			function getMarkerFromTime(strTime){
@@ -4217,8 +4343,13 @@ var DBClass = function(){
 	};// end saveMarkers
 
 
-	// this has nothing to do with "State", it just updates the DB
-	// with the songs current data
+	// This is NOT run when creating a State, but when loading a state
+	// so that when the song is reloaded, the correct markers, nr of loops
+	// mm is selected,
+	// this method should not be used, but rather the existing methods for
+	// saving the volume, speed, slected marker mm, but once I reasoned
+	// that accessing the DB and updating the same song-object that many times
+	// would be bad for preformance.... so now I have this method....
 	/*DB*/this.saveSongDataFromState = function(songId, oState){
 	nDBc.get(songId, function( song ){
 		if(!song){
@@ -4238,8 +4369,6 @@ var DBClass = function(){
 			song.currentStopMarker = oState.currentStopMarker;
 		song.wait = [oState.buttWaitBetweenLoops, oState.waitBetweenLoops];
 
-		song.serverId = undefined;
-		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
 	});
