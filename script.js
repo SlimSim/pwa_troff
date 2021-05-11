@@ -1018,10 +1018,8 @@ var TroffClass = function(){
 			return errorHandler.backendService_getTroffData( error );
 		}
 
-
 		await createSongAudio( fileName );
 		Troff.selectSongInSongList( fileName );
-
 
 		const aoStates = [];
 		for( let i = 0; i < markersFromServer.aStates.length; i++ ) {
@@ -2086,16 +2084,13 @@ var TroffClass = function(){
 		}
 
 		function importStates(aoStates) {
-
 			for(var i = 0; i < aoStates.length; i++){
 				var strTimeStart = aoStates[i].currentMarkerTime;
-
 				var strTimeStop = aoStates[i].currentStopMarkerTime;
 				delete aoStates[i].currentMarkerTime;
 				delete aoStates[i].currentStopMarkerTime;
 				aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
 				aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
-
 			}
 
 			function getMarkerFromTime(strTime){
@@ -2117,8 +2112,7 @@ var TroffClass = function(){
 			});
 //        DB.saveStates(Troff.getCurrentSong()); -- xxx
 		}
-	}
-
+	};
 
 	/*
 		createMarker, all, figure out the time and name,
@@ -4183,7 +4177,6 @@ var DBClass = function(){
 			song.currentStopMarker = oState.currentStopMarker;
 		song.wait = [oState.buttWaitBetweenLoops, oState.waitBetweenLoops];
 
-
 		nDB.set( songId, song );
 	});
 
@@ -4227,8 +4220,6 @@ var DBClass = function(){
 			DB.setCurrent(songId, 'volume', volume);
 	};
 	this.setCurrentSongInfo = function(info, songId){
-
-
 		DB.setCurrent(songId, 'info', info, function() {
 			nDB.setOnSong( songId, "serverId", undefined );
 			Troff.setUrlToSong( undefined, null );
