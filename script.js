@@ -366,10 +366,8 @@ function escapeRegExp(string) {
 		.replace(/[".*+?^${}()|[\]\\]/g, '\\$&');	// $& means the whole matched string
 }
 
-
-
 async function createSongAudio( path ) {
-	//path = $(event.target).val(),
+
 	if( await cacheImplementation.isSongV2( path ) ) {
 		try {
 			var songData = await cacheImplementation.getSong( path );
@@ -950,6 +948,9 @@ var TroffClass = function(){
 	/*Troff*/ this.setUrlToSong = function( serverId, fileName ) {
 		"use strict";
 		if( serverId === undefined ) {
+			if( !window.location.hash ) {
+				return;
+			}
 			history.pushState("", document.title, window.location.pathname + window.location.search );
 			return;
 		}
@@ -979,15 +980,91 @@ var TroffClass = function(){
 		}
 	};
 
+	/*Troff*/ this.importTroffDataToExistingSong_importNew = async function( event ) {
+		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
+		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		let troffData;
+		try {
+			troffData = await backendService.getTroffData( serverId, fileName );
+		} catch( error ) {
+			return errorHandler.backendService_getTroffData( error );
+		}
+
+		let markers = JSON.parse( troffData.markerJsonString );
+		markers.serverId = serverId;
+		try {
+			let saveToDBResponse = nDB.set( troffData.fileName, markers );
+			let doneSaveToDB = await saveToDBResponse;
+		}  catch ( error ) {
+			return errorHandler.fileHandler_fetchAndSaveResponse( error );
+		}
+
+		await createSongAudio( troffData.fileName );
+		Troff.selectSongInSongList( fileName );
+
+	};
+
+	/*Troff*/ this.importTroffDataToExistingSong_merge = async function( event ) {
+		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
+		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		const markersFromCache = nDB.get( fileName );
+		let markersFromServer;
+		try {
+			let troffDataFromServer = await backendService.getTroffData( serverId, fileName );
+			markersFromServer = JSON.parse( troffDataFromServer.markerJsonString );
+		} catch( error ) {
+			return errorHandler.backendService_getTroffData( error );
+		}
+
+		await createSongAudio( fileName );
+		Troff.selectSongInSongList( fileName );
+
+		const aoStates = [];
+		for( let i = 0; i < markersFromServer.aStates.length; i++ ) {
+			const parsedState = JSON.parse ( markersFromServer.aStates[i] );
+			aoStates.push( Troff.replaceMarkerIdWithMarkerTimeInState( parsedState, markersFromServer.markers ) );
+		}
+
+		let oImport = {};
+		oImport.strSongInfo = markersFromServer.info;
+		oImport.aoStates = aoStates;
+		oImport.aoMarkers = markersFromServer.markers;
+
+		setTimeout( function() {
+			Troff.doImportStuff( oImport );
+		}, 42 );
+
+	};
+
+	/*Troff*/ this.importTroffDataToExistingSong_keepExisting = async function( event ) {
+		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
+		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		await createSongAudio( fileName );
+		Troff.selectSongInSongList( fileName );
+	};
+
+
 	/*Troff*/ this.downloadSongFromServer = async function( hash ) {
 		"use strict";
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
 		const fileName = decodeURI( fileNameURI );
-		const songFromCache = nDB.get( fileName );
+		const troffDataFromCache = nDB.get( fileName );
 
-		if( songFromCache != null && serverId == songFromCache.serverId ) {
-			createSongAudio( fileName );
-			setTimeout( function(){ Troff.selectSongInSongList( fileName ) }, 42 );
+		if( troffDataFromCache != null && serverId == troffDataFromCache.serverId ) {
+			await createSongAudio( fileName );
+			Troff.selectSongInSongList( fileName );
+			return;
+		}
+
+		if( troffDataFromCache != null ) {
+			$( "#importTroffDataToExistingSong_songName" ).text( fileName );
+			$( "#importTroffDataToExistingSong_fileName" ).val( fileName );
+			$( "#importTroffDataToExistingSong_serverId" ).val( serverId );
+			$( "#importTroffDataToExistingSongDialog" ).removeClass("hidden");
+
 			return;
 		}
 
@@ -1012,7 +1089,6 @@ var TroffClass = function(){
 		}
 
 		await createSongAudio( troffData.fileName );
-
 		addItem_NEW_2( troffData.fileName );
 	}
 
@@ -1924,14 +2000,7 @@ var TroffClass = function(){
 			oExport.aoStates = [];
 			for(i=0; i<aState.length; i++){
 				var oState = JSON.parse(aState.eq(i).attr('strstate'));
-
-				var currMarkerId = "#" + oState.currentMarker;
-				var currStopMarkerId = "#" + oState.currentStopMarker;
-				oState.currentMarkerTime = $( currMarkerId )[0].timeValue;
-				oState.currentStopMarkerTime = $( currStopMarkerId )[0].timeValue;
-				delete oState.currentMarker;
-				delete oState.currentStopMarker;
-				oExport.aoStates[i] = oState;
+				oExport.aoStates[i] = Troff.replaceMarkerIdWithMarkerTimeInState( oState, aoMarkers );
 			}
 			oExport.strSongInfo = $('#songInfoArea').val();
 			var sExport = JSON.stringify(oExport);
@@ -1945,81 +2014,104 @@ var TroffClass = function(){
 	*/
 	/*Troff*/this.importStuff = function(){
 		Troff.toggleImportExport();
-		IO.prompt("Please paste the text you recieved to import the markers",
+		IO.prompt("Please paste the text you received to import the markers",
 							"Paste text here",
 							function(sImport){
 			var oImport = JSON.parse(sImport);
 			if( oImport.strSongInfo !== undefined &&
 					oImport.aoStates !== undefined &&
 					oImport.aoMarkers !== undefined ){
-				importMarker(oImport.aoMarkers);
-				importSonginfo(oImport.strSongInfo);
-				importStates(oImport.aoStates);
-
-				DB.saveMarkers( Troff.getCurrentSong(), function() {
-					DB.saveStates( Troff.getCurrentSong(), function() {
-						Troff.updateSongInfo();
-					} );
-				} );
+				Troff.doImportStuff( oImport );
 
 			} else {
-				//This else is here to allow for imports of 0.5 and erlier
+				//This else is here to allow for imports of 0.5 and earlier
 				var aMarkersTmp = oImport;
 				importMarker(aMarkersTmp);
 			}
 
-			function importMarker(aMarkers){
-				var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
-
-				for(var i=0; i<aMarkers.length; i++){
-					// these 5 lines are here to allow for import of markers
-					//from version 0.3.0 and earlier:
-					var tmpName = Object.keys(aMarkers[i])[0];
-					aMarkers[i].name = aMarkers[i].name || tmpName;
-					aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
-					aMarkers[i].info = aMarkers[i].info || "";
-					aMarkers[i].color = aMarkers[i].color || "None";
-					//:allow for version 0.3.0 end here
-
-					aMarkers[i].id = aMarkerId[i];
-				}
-				Troff.addMarkers(aMarkers); // adds marker to html
-			}
-
-			function importSonginfo(strSongInfo){
-				$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
-			}
-
-			function importStates(aoStates){
-				for(var i = 0; i < aoStates.length; i++){
-					var strTimeStart = aoStates[i].currentMarkerTime;
-					var strTimeStop = aoStates[i].currentStopMarkerTime;
-					delete aoStates[i].currentMarkerTime;
-					delete aoStates[i].currentStopMarkerTime;
-					aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
-					aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
-				}
-
-				function getMarkerFromTime(strTime){
-					var aCurrMarkers = $('#markerList').children();
-					for(var i=0; i<aCurrMarkers.length; i++){
-						var currMarker = aCurrMarkers.eq(i).children().eq(2);
-						if(currMarker[0].timeValue == strTime){
-							return currMarker.attr('id');
-						}
-					}
-
-					console.error("returnerar första markören...");
-					return aCurrMarkers.eq(0).children().eq(2).attr('id');
-
-				}
-
-				aoStates.map(function(s){
-					Troff.addButtonsOfStates([JSON.stringify(s)]);
-				});
-//        DB.saveStates(Troff.getCurrentSong()); -- xxx
-			}
 		});
+	};
+
+	/*Troff*/ this.replaceMarkerIdWithMarkerTimeInState = function( oState, aoMarkers ) {
+    for( let i = 0; i < aoMarkers.length; i++) {
+        if( oState.currentMarker == aoMarkers[i].id ){
+            oState.currentMarkerTime = aoMarkers[i].time;
+        }
+        if( oState.currentStopMarker == aoMarkers[i].id + "S" ){
+            oState.currentStopMarkerTime = aoMarkers[i].time;
+        }
+        if( oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined ) {
+            break;
+        }
+    }
+    delete oState.currentMarker;
+    delete oState.currentStopMarker;
+    return oState;
+	}
+
+	/*Troff*/ this.doImportStuff = function( oImport ) {
+
+		importMarker(oImport.aoMarkers);
+		importSonginfo(oImport.strSongInfo);
+		importStates(oImport.aoStates);
+
+		DB.saveMarkers( Troff.getCurrentSong(), function() {
+			DB.saveStates( Troff.getCurrentSong(), function() {
+				Troff.updateSongInfo();
+			} );
+		} );
+
+		function importMarker(aMarkers){
+			var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
+
+			for(var i=0; i<aMarkers.length; i++){
+				// these 5 lines are here to allow for import of markers
+				//from version 0.3.0 and earlier:
+				var tmpName = Object.keys(aMarkers[i])[0];
+				aMarkers[i].name = aMarkers[i].name || tmpName;
+				aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
+				aMarkers[i].info = aMarkers[i].info || "";
+				aMarkers[i].color = aMarkers[i].color || "None";
+				//:allow for version 0.3.0 end here
+
+				aMarkers[i].id = aMarkerId[i];
+			}
+			Troff.addMarkers(aMarkers); // adds marker to html
+		}
+
+		function importSonginfo(strSongInfo){
+			$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
+		}
+
+		function importStates(aoStates) {
+			for(var i = 0; i < aoStates.length; i++){
+				var strTimeStart = aoStates[i].currentMarkerTime;
+				var strTimeStop = aoStates[i].currentStopMarkerTime;
+				delete aoStates[i].currentMarkerTime;
+				delete aoStates[i].currentStopMarkerTime;
+				aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
+				aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
+			}
+
+			function getMarkerFromTime(strTime){
+				var aCurrMarkers = $('#markerList').children();
+				for(var i=0; i<aCurrMarkers.length; i++){
+					var currMarker = aCurrMarkers.eq(i).children().eq(2);
+					if(currMarker[0].timeValue == strTime){
+						return currMarker.attr('id');
+					}
+				}
+
+				console.error("Could not find a marker at the time " + strTime + "; returning the first marker");
+				return aCurrMarkers.eq(0).children().eq(2).attr('id');
+
+			}
+
+			aoStates.map(function(s){
+				Troff.addButtonsOfStates([JSON.stringify(s)]);
+			});
+//        DB.saveStates(Troff.getCurrentSong()); -- xxx
+		}
 	};
 
 	/*
@@ -3978,6 +4070,9 @@ var DBClass = function(){
 			}
 		}
 
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
+
 		nDB.set( songId, song );
 	});
 	};// end updateMarker
@@ -3996,6 +4091,8 @@ var DBClass = function(){
 		}
 
 		song.aStates = aStates;
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
 		if( callback ) {
@@ -4042,6 +4139,8 @@ var DBClass = function(){
 		song.currentStartMarker = $('.currentMarker')[0].id;
 		song.currentStopMarker = $('.currentStopMarker')[0].id;
 		song.markers = aMarkers;
+		song.serverId = undefined;
+		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
 
@@ -4052,8 +4151,13 @@ var DBClass = function(){
 	};// end saveMarkers
 
 
-	// this has nothing to do with "State", it just updates the DB
-	// with the songs current data
+	// This is NOT run when creating a State, but when loading a state
+	// so that when the song is reloaded, the correct markers, nr of loops
+	// mm is selected,
+	// this method should not be used, but rather the existing methods for
+	// saving the volume, speed, slected marker mm, but once I reasoned
+	// that accessing the DB and updating the same song-object that many times
+	// would be bad for preformance.... so now I have this method....
 	/*DB*/this.saveSongDataFromState = function(songId, oState){
 	nDBc.get(songId, function( song ){
 		if(!song){
@@ -4116,7 +4220,10 @@ var DBClass = function(){
 			DB.setCurrent(songId, 'volume', volume);
 	};
 	this.setCurrentSongInfo = function(info, songId){
-		DB.setCurrent(songId, 'info', info);
+		DB.setCurrent(songId, 'info', info, function() {
+			nDB.setOnSong( songId, "serverId", undefined );
+			Troff.setUrlToSong( undefined, null );
+		});
 	};
 
 	this.setCurrentTempo = function(tempo, songId){
@@ -4430,6 +4537,10 @@ var IOClass = function(){
 
 		$('#zoomInstructionDialogDontShowAgain').click(Troff.zoomDontShowAgain);
 		$('#zoomInstructionDialogOK').click(Troff.zoomDialogOK);
+
+		$('#importTroffDataToExistingSong_importNew').click(Troff.importTroffDataToExistingSong_importNew);
+		$('#importTroffDataToExistingSong_merge').click(Troff.importTroffDataToExistingSong_merge);
+		$('#importTroffDataToExistingSong_keepExisting').click(Troff.importTroffDataToExistingSong_keepExisting);
 
 		$('#infoAndroidDonate').click(function() {
 			$('#donate').click();
@@ -5168,7 +5279,7 @@ $(document).ready( async function() {
 		try {
 			await Troff.downloadSongFromServer( window.location.hash )
 		} catch( e ) {
-			console.log( "error on downloadSongFromServer:", e );
+			console.error( "error on downloadSongFromServer:", e );
 			DB.getCurrentSong();
 		}
 	} else {
@@ -5237,7 +5348,7 @@ $(function () {
 			);
 			return;
 		}
-		console.log( error );
+		console.error( error );
 		return;
 	};
 
