@@ -556,6 +556,15 @@ li[isdirectory="true"]:not(:first-child) {
 .mediumDialog{
 	width: 400px;
 }
+.mediumDialog-1{
+	width: 410px;
+}
+.mediumDialog-2{
+	width: 420px;
+}
+.mediumDialog-3{
+	width: 440px;
+}
 
 
 table {
