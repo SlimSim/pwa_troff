@@ -15,6 +15,13 @@ $(function () {
 	/*           Public methods:
 	/************************************************/
 
+	backendService.calCurl = async function() {
+		const url = environment.getCurlEndpoint();
+		return $.ajax({
+			url: url,
+			timeout: 50000,
+		});
+	};
 
 	backendService.getTroffData = async function( troffDataId, fileName ) {
 

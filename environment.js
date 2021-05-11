@@ -28,5 +28,8 @@ const environment = {};
 	environment.getTroffDataEndpoint = function( troffDataId, fileName ) {
 		return `${environment.backend}/getTroffData/${troffDataId}/${fileName}`;
 	};
+	environment.getCurlEndpoint = function() {
+		return `${environment.backend}/curl`;
+	};
 
 })();

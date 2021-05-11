@@ -5286,6 +5286,8 @@ $(document).ready( async function() {
 		DB.getCurrentSong();
 	}
 
+	backendService.calCurl();
+
 });
 
 function initEnvironment() {
