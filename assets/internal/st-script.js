@@ -44,12 +44,13 @@ $( document ).ready( function() {
 
 /**
  * Hide and Save
- * functionality for letting a button hide another div or such 
+ * functionality for letting a button hide another div or such
  * also functionality for saving that value in the DB :)
 */
 
 $( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
-	jQueryToggle( $( event.target ).data( "st-css-selector-to-toggle" ) );
+	let $target = $( event.target ).closest( "[data-st-css-selector-to-toggle]" );
+	jQueryToggle( $target.data( "st-css-selector-to-toggle" ) );
 } );
 
 $("[data-st-save-current-value]").change( dataSaveValue );
@@ -107,7 +108,7 @@ $( ".st-simple-on-off-button" ).click( function( event ) {
 		cssSelectorToHide = $target.data( "st-css-selector-to-hide" ),
 		setActive = !$target.hasClass( "active" );
 
-	
+
 	if( setActive ) {
 		$target.addClass( "active" );
 	} else {
