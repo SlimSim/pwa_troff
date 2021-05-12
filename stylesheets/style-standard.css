@@ -169,3 +169,12 @@ auto - for classes that set the margin to auto
 .list-style-type-decimal {
 	list-style-type: decimal;
 }
+
+/* Display */
+.d-none{		display:none!important		}
+.d-flex{		display:flex!important		}
+
+@media (min-width:576px){
+	.d-sm-none{display:none!important}
+	.d-sm-flex{display:-ms-flexbox!important;display:flex!important}
+}
