@@ -81,6 +81,12 @@ a {
 .selfMaxWidth {
 	max-width: 213px;
 }
+.max-width-170 {
+	max-width: 170px;
+}
+.fill-height-minus-58 {
+	max-height: calc(100vh - 58px);
+}
 .white {
 	color: white;
 }

@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.3.4",
+		version: "1.3.6",
 		urls: [
 			"/",
 			"/index.html",
@@ -38,7 +38,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.1.0",
+		version: "1.1.1",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -66,6 +66,7 @@ var newAppCaches = [
 			"/assets/logos/logo-512.png",
 			"/manifest.json",
 			"/LICENSE.html",
+			//"/terms.html", <-- should not be cached, but loaded every time to get the latest version.
 			"/README.md",
 		]
 	},
