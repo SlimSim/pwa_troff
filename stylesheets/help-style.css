@@ -68,6 +68,9 @@ header h1, footer p {
 	margin-bottom: 8px;
 	padding: 12px;
 }
+.min-width-155 {
+	min-width: 155px;
+}
 a {
 	margin: 6px 0;
 	color: #003366;
