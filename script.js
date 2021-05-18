@@ -5419,7 +5419,6 @@ $(function () {
 
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
 		if( error.status == "NOT_FOUND" ) {
-
 			$.notify(
 				`Could not find song "${fileName}", with id "${serverId}", on the server,
 				perhaps the URL is wrong or the song has been removed`,
