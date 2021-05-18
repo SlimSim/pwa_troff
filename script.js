@@ -3167,7 +3167,7 @@ var TroffClass = function(){
 
 			var aAllMarkers = Troff.getCurrentMarkers();
 
-			if(bOneMarker){
+			if( bOneMarker ) {
 				bMoveSelected = true;
 				aAllMarkers = $('.currentMarker');
 			}
@@ -4671,6 +4671,10 @@ var IOClass = function(){
 
 
 	/*IO*/this.keyboardKeydown  = function(event) {
+		if( event.altKey ) {
+			event.preventDefault();
+		}
+
 		if(IOEnterFunction){
 			if(event.keyCode == 13){
 				IOEnterFunction(event);
@@ -4683,8 +4687,9 @@ var IOClass = function(){
 			return;
 		}
 
-		if(event.keyCode == 229) // wierd thing but ok...
-				return;
+		if(event.keyCode == 229) { // weird thing but ok...
+			return;
+		}
 
 		//if 0 to 9 or bakspace, del, alt, arrows in a input-field, return,
 		//---- site add "numpad"
