@@ -1011,7 +1011,7 @@ var TroffClass = function(){
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
-			return errorHandler.backendService_getTroffData( error );
+			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
 		let markers = JSON.parse( troffData.markerJsonString );
@@ -1020,7 +1020,7 @@ var TroffClass = function(){
 			let saveToDBResponse = nDB.set( troffData.fileName, markers );
 			let doneSaveToDB = await saveToDBResponse;
 		}  catch ( error ) {
-			return errorHandler.fileHandler_fetchAndSaveResponse( error );
+			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 
 		await createSongAudio( troffData.fileName );
@@ -1038,7 +1038,7 @@ var TroffClass = function(){
 			let troffDataFromServer = await backendService.getTroffData( serverId, fileName );
 			markersFromServer = JSON.parse( troffDataFromServer.markerJsonString );
 		} catch( error ) {
-			return errorHandler.backendService_getTroffData( error );
+			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
 		await createSongAudio( fileName );
@@ -1095,7 +1095,7 @@ var TroffClass = function(){
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
-			return errorHandler.backendService_getTroffData( error );
+			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
 		let fetchAndSaveResponse = fileHandler.fetchAndSaveResponse( troffData.fileDownloadUri, troffData.fileName );
@@ -1108,7 +1108,7 @@ var TroffClass = function(){
 			let doneSaveResponse = await fetchAndSaveResponse;
 			let doneSaveToDB = await saveToDBResponse;
 		} catch ( error ) {
-			return errorHandler.fileHandler_fetchAndSaveResponse( error );
+			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 
 		await createSongAudio( troffData.fileName );
@@ -5417,8 +5417,9 @@ const errorHandler = {};
 $(function () {
 	"use strict";
 
-	errorHandler.backendService_getTroffData = function( error ) {
+	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
 		if( error.status == "NOT_FOUND" ) {
+
 			$.notify(
 				`Could not find song "${fileName}", with id "${serverId}", on the server,
 				perhaps the URL is wrong or the song has been removed`,
@@ -5434,7 +5435,7 @@ $(function () {
 		return;
 	};
 
-	errorHandler.fileHandler_fetchAndSaveResponse = function( error ) {
+	errorHandler.fileHandler_fetchAndSaveResponse = function( error, fileName ) {
 		if( error.status == 404 ) {
 			$.notify(
 				`The song "${fileName}", could not be found on the server, it has probably been removed
