@@ -159,6 +159,7 @@ auto - for classes that set the margin to auto
 .border-4 {	border: solid	15px;	}
 .border-5 {	border: solid	20px;	}
 
+.border-right-0 { border-right: solid 0;  }
 
 .cursor-pointer { cursor: pointer; }
 .cursor-help { cursor: help; }

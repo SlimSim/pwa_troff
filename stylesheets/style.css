@@ -970,7 +970,13 @@ table.dataTable .dataTables_empty{
 	display: none !important;
 }
 
+.click-to-select-text {
+	cursor: pointer;
+}
 
+.cursor-copy {
+	cursor: copy !important;
+}
 
 /* Marker styles :) */
 

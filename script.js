@@ -966,7 +966,30 @@ var TroffClass = function(){
 		nDB.setOnSong( songKey, "serverId", resp.id );
 
 		Troff.setUrlToSong( resp.id, resp.fileName );
+		$( "#shareSongUrl").val( window.location.href );
+		$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
+
 	};
+
+	/*Troff*/ this.buttCopyUrlToClipboard = function() {
+		let url = $( "#doneUploadingSongToServerDialog" ).find( "#shareSongUrl").val();
+
+		IO.copyTextToClipboard( url );
+
+	};
+
+	/*Troff*/ this.showUploadSongToServerDialog = function() {
+		if( window.location.hash ) {
+			$( "#shareSongUrl").val( window.location.href );
+			$( ".showOnUploadComplete" ).addClass( "hidden" );
+			$( ".showOnSongAlreadyUploaded" ).removeClass( "hidden" );
+			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
+		} else {
+			$( ".showOnUploadComplete" ).removeClass( "hidden" );
+			$( ".showOnSongAlreadyUploaded" ).addClass( "hidden" );
+			$( "#uploadSongToServerDialog" ).removeClass( "hidden" );
+		}
+	}
 
 	/*Troff*/ this.selectSongInSongList = function( fileName ) {
 		let list = $("#dataSongTable").DataTable().rows().data()
@@ -4399,6 +4422,8 @@ var IOClass = function(){
 			$( event.target ).closest(".outerDialog").addClass("hidden")
 		} );
 
+		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
+		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( "#buttNewSongList_NEW" ).on( "click", clickButtNewSongList_NEW );
 		$( "#songListAll_NEW" ).click( clickSongList_NEW );
 		$( "#songListSelector" ).change( onChangeSongListSelector );
@@ -4542,6 +4567,10 @@ var IOClass = function(){
 		$('#importTroffDataToExistingSong_merge').click(Troff.importTroffDataToExistingSong_merge);
 		$('#importTroffDataToExistingSong_keepExisting').click(Troff.importTroffDataToExistingSong_keepExisting);
 
+		$( ".click-to-select-text" ).click(function () {
+				this.select();
+		});
+
 		$('#infoAndroidDonate').click(function() {
 			$('#donate').click();
 		});
@@ -4576,6 +4605,70 @@ var IOClass = function(){
 		$('html').removeClass();
 		$('html').addClass( colClass );
 	};
+
+  /*IO*/ this.copyTextToClipboard = async function( text ) {
+    if( !navigator.clipboard ) {
+      IO.fallbackCopyTextToClipboard( text );
+      return;
+    }
+
+		navigator.clipboard.writeText( text ).then(
+			() => { IO.copyToClipboardSuccessful( text ) },
+			() => { IO.copyToClipboardFailed( text ) }
+		);
+  };
+
+	/*IO*/ this.fallbackCopyTextToClipboard = function( text ) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      var successful = document.execCommand('copy');
+      var msg = successful ? 'successful' : 'unsuccessful';
+
+      if( successful ) {
+      	IO.copyToClipboardSuccessful( text );
+      } else {
+      	IO.copyToClipboardFailed( text )
+      }
+    } catch (err) {
+			IO.copyToClipboardFailed( text );
+    }
+
+    document.body.removeChild( textArea );
+  };
+
+  /*IO*/ this.copyToClipboardSuccessful = function( text ) {
+		$.notify(
+			`Copied "${text}" to clipboard!`,
+			{
+				className: 'success',
+				autoHide: true,
+				clickToHide: true
+			}
+		);
+  };
+
+  /*IO*/ this.copyToClipboardFailed = function( text ) {
+		$.notify(
+			`Could not copy "${text}" to clipboard, please copy the text manually`,
+			{
+				className: 'error',
+				autoHide: false,
+				clickToHide: true
+			}
+		);
+  };
+
 
 	/*IO*/this.keyboardKeydown  = function(event) {
 		if(IOEnterFunction){

@@ -102,6 +102,11 @@
 	<section id="songsSection" class="flexCol">
 		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
 			<nav class="flexCol center">
+				<button class="svgButt special regularButton showUploadSongToServerDialog"
+								type="button"
+								title="Share this song to friends via link">
+					<i class="fa fa-share" ></i>
+				</button>
 				<span id="buttPlayUiButtonParent" class = "margin roundButt">
 					<input
 						type="button"
@@ -158,11 +163,6 @@
 					type="button"
 					title="Share the link to this app with your friends via email">
 					<i class="fa fa-share-alt"></i>
-				</button>
-				<button class="svgButt_tmp regularButton jsUploadSongButt"
-								type="button"
-								title="Share this song to friends via link">
-					<i class="fa fa-share"></i>
 				</button>
 			</nav>
 		</div> <!-- end headArea -->
@@ -555,7 +555,7 @@
 	</div>
 
 	<div id="outerImportExportPopUpSquare" class="outerDialog hidden">
-		<div class="innerDialog mediumDialog" id="innerImportExportPopUpSquare" >
+		<div class="innerDialog mediumDialog-2" id="innerImportExportPopUpSquare" >
 			<h2 class="paragraph">Import Export Markers and settings</h2>
 			<p class="paragraph normalSize">
 				Export your markers, states, settings and info, or import new ones,
@@ -569,10 +569,17 @@
 				Then that Troff-program will get the same markers, colors, settings and states as you have.
 			</p>
 			<div class="flexRow">
-				<input type="button" id="buttExportMarker" class="regularButton" value="export markers and settings" />
-				<input type="button" id="buttImportMarker" class="regularButton" value="import markers and settings" />
+				<input type="button" id="buttExportMarker" class="regularButton flex-one m-0 mr-2" value="export markers and settings" />
+				<input type="button" id="buttImportMarker" class="regularButton flex-one m-0 " value="import markers and settings" />
 			</div>
-			<input id="buttCancelImportExportPopUpSquare" type="button" class="regularButton buttWidthStandard" value="Cancel" />
+
+			<p class="paragraph normalSize pt-5 pb-2">
+				Or, upload the song, markers and settings to the server and get a link to this song that you can
+				share with your friends:
+			</p>
+			<input type="button" class="regularButton m-0 mb-2 w-100 dialogCancelButton showUploadSongToServerDialog"
+						 value="create a link to this song with all the markers and settings" />
+			<input id="buttCancelImportExportPopUpSquare" type="button" class="regularButton ml-0 mt-2 buttWidthStandard" value="Cancel" />
 		</div>
 	</div>
 
@@ -1623,6 +1630,76 @@
 			</span>
 		</div>
 	</div>
+
+	<div id="uploadSongToServerDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Upload Song</h2>
+
+			<p class="mt-3 mb-0">
+				By uploading this content you verify that:
+			</p>
+			<ul class="bulletList small mt-1">
+				<li>The content does not violate any law</li>
+				<li>You have the right to submit the content to Troff</li>
+				<li>You agree to, and the content does not violates, our <a target="_blank" href="/terms.html">terms and conditions</a></li>
+			</ul>
+
+			<span class="flexRow">
+				<input type="button" class="regularButton flex-none jsUploadSongButt dialogCancelButton mr-2" value="Upload song" />
+				<input type="button" class="regularButton flex-none dialogCancelButton" value="Cancel" />
+			</span>
+		</div>
+	</div>
+
+	<div id="doneUploadingSongToServerDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph showOnUploadComplete">Upload complete</h2>
+
+			<h2 class="paragraph hidden showOnSongAlreadyUploaded">Song already uploaded</h2>
+			<p class="mt-3 mb-0 hidden showOnSongAlreadyUploaded">
+				The song with its current markers, states and song info is already uploaded!
+			</p>
+
+			<p class="mt-3 mb-0">
+				The song can be found at
+			</p>
+
+			<div class="input-group ">
+				<input
+						id="shareSongUrl"
+						type="text"
+						class="click-to-select-text form-control mr-0 border-right-0"
+						aria-label="URL to share the song with"
+						aria-describedby="basic-addon2">
+				<div class="input-group-append">
+					<button id="buttCopyUrlToClipboard" class="btn btn-outline-secondary m-0 cursor-copy" title="Click to copy to clipboard" type="button"><i class="fa fa-copy" ></i></button>
+				</div>
+			</div>
+			<p class="mb-0">
+				Share the link with your friends and they will get the song or movie along with the markers, settings and song info!
+			</p>
+
+			<label class="pl-0 small switch likeLink linkButton" for="shareUrlMoreInfoSwitch">More info</label>
+			<input id="shareUrlMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+			<div class="switch_child mt-0" >
+				<p class="mt-1 small">
+					The url of this song will also be shown in the address bar.
+				</p>
+				<p class="mb-0 small">
+					If you continue to edit the markers, states or song info,
+					the changes will not be uploaded to the server,
+					and the url in the address bar will be reset.
+					If you want to share the updated info, you can upload the song again!
+				</p>
+
+			</div>
+
+			<span class="flexRow">
+				<input type="button" class="regularButton flex-none dialogCancelButton" value="OK" />
+			</span>
+		</div>
+	</div>
+
 
 
 </body>
