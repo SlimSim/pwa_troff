@@ -16,7 +16,7 @@
 */
 
 (function(){
-	
+
 document.addEventListener("DOMContentLoaded", function(event){
 	var shareButtons = document.querySelectorAll(".shareClass");
 	for (var i = 0; i < shareButtons.length; i++){
@@ -37,20 +37,6 @@ document.addEventListener("DOMContentLoaded", function(event){
 		var link = "mailto:?&subject="+subject+"&body=" + escape(body);
 		window.open(link);
 	}
-	
-	var license = document.querySelector( "#licenseLink" );
-	if(license){
-		license.addEventListener('click', function(){
-			chrome.app.window.create(
-				'LICENSE.html',
-				{
-					bounds: {width:600, height:700}, 
-					minWidth:300, 
-					minHeight:200,  
-					id:"LicenseWin"
-				}
-			);
-		});
-	}
+
 });
 })();
