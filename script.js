@@ -5418,6 +5418,19 @@ $(function () {
 	"use strict";
 
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
+		if( error.status == 0 ) {
+			$.notify(
+				`Could not connect to server. Please check your internet connection.
+					If your internet is working, please try again later.
+					If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.`,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
 		if( error.status == "NOT_FOUND" ) {
 			$.notify(
 				`Could not find song "${fileName}", with id "${serverId}", on the server,
