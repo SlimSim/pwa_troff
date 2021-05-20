@@ -15,7 +15,7 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
-// todo: try to use the strict mode, now that chrome-stuff is removed! :)
+// todo: try to use the strict mode! :)
 // - what could possibly go wrong?
 // "use strict";
 window.alert = function( alert){
