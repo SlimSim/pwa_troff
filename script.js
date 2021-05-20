@@ -4542,10 +4542,6 @@ var IOClass = function(){
 				this.select();
 		});
 
-		$('#infoAndroidDonate').click(function() {
-			$('#donate').click();
-		});
-
 		$('#donate').click(function(){
 			IO.alert("Waiting for Google Wallet");
 			document.getElementById('blur-hack').focus();
