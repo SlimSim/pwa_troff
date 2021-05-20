@@ -56,46 +56,6 @@ var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 
 var MARKER_COLOR_PREFIX = "markerColor";
 
-/*
-function errorPrintFactory(custom) {
-	 return function(e) {
-			var msg = '';
-
-			switch (e.code) {
-				 case FileError.QUOTA_EXCEEDED_ERR:
-						msg = 'QUOTA_EXCEEDED_ERR';
-						break;
-				 case FileError.NOT_FOUND_ERR:
-						msg = 'NOT_FOUND_ERR';
-						break;
-				 case FileError.SECURITY_ERR:
-						msg = 'SECURITY_ERR';
-						break;
-				 case FileError.INVALID_MODIFICATION_ERR:
-						msg = 'INVALID_MODIFICATION_ERR';
-						break;
-				 case FileError.INVALID_STATE_ERR:
-						msg = 'INVALID_STATE_ERR';
-						break;
-				 default:
-						msg = 'Unknown Error';
-						break;
-			}
-
-			console.error(custom + ': ' + msg);
-	 };
-}
-*/
-
-/*
-function GalleryData(id) {
-	this._id = id;
-	this.path = "";
-	this.sizeBytes = 0;
-	this.numFiles = 0;
-	this.numDirs = 0;
-}
-*/
 
 function addImageToContentDiv() {
 	var content_div = document.getElementById('content');
@@ -202,14 +162,6 @@ function clearContentDiv() {
 	 }
 }
 
-/*
-function clearGalleryAndDirectoryList() {
-	$("#galleryList").empty();
-	$("#directoryList").empty();
-	$("#dataSongTable").DataTable().clear();
-}
-*/
-
 function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	Troff.pauseSong();
 
@@ -268,28 +220,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	newElem.setAttribute('src', songData);
 
 } //end setSong2
-
-/*
-function addGallery(name, id) {
-	var li = document.createElement("li");
-	var label = document.createElement("label");
-	var checkbox = document.createElement("input");
-	var optGrp = document.createElement("h3");
-	optGrp.appendChild(document.createTextNode(Troff.getLastSlashName(name)));
-	optGrp.setAttribute("id", id);
-	optGrp.setAttribute("class", "bold");
-	checkbox.setAttribute("type", "checkbox");
-	label.setAttribute("class", "flexrow");
-	label.appendChild(checkbox);
-	label.appendChild(optGrp);
-	li.appendChild(label);
-	li.setAttribute("galleryid", id);
-	li.setAttribute("fullPath", name);
-	li.setAttribute("isDirectory", true);
-	document.getElementById("newSongListPartAllSongs").appendChild(li);
-	return optGrp;
-}
-*/
 
 function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )

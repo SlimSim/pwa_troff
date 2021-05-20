@@ -120,12 +120,12 @@ self.addEventListener( "install", function ( event ) {
 
 	event.waitUntil(caches.keys().then(function(existingKeys) {
 		return Promise.all(newAppCaches.map(function(appCache) {
-				let appCacheKey = createCacheKey(appCache.name, appCache.version);
-				if (existingKeys.indexOf(appCacheKey) === -1) {
-					return caches.open(appCacheKey).then(function(cache) {
-						appCache.urls.forEach(url => addToCache(cache, url));
-						return Promise.resolve(true);
-                        });
+			let appCacheKey = createCacheKey(appCache.name, appCache.version);
+			if (existingKeys.indexOf(appCacheKey) === -1) {
+				return caches.open(appCacheKey).then(function(cache) {
+					appCache.urls.forEach(url => addToCache(cache, url));
+					return Promise.resolve(true);
+				});
 			} else {
 				return Promise.resolve(true);
 			}
