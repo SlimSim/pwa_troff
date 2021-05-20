@@ -4542,10 +4542,6 @@ var IOClass = function(){
 				this.select();
 		});
 
-		$('#donate').click(function(){
-			IO.alert("Waiting for Google Wallet");
-			document.getElementById('blur-hack').focus();
-		});
 		$('.loopButt').click( Troff.setLoop );
 
 		$(".jsUploadSongButt").on("click", Troff.uploadSongToServer );

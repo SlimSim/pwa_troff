@@ -131,7 +131,6 @@ p{
 .secondaryColor,
 .areaParent > div,
 .popUpSquare,
-#donate, /* only for this one */
 .innerDialog {
 	background-color: #616161;
 	color: white;
@@ -154,15 +153,15 @@ li[isdirectory="true"]:not(:first-child) {
 	border-color: #FFEB3B; /* accentColor1 */
 }
 
-.selected:hover, 
+.selected:hover,
 .selected td:hover,
-.currentLoop:hover, 
-.currentMarker:hover, 
+.currentLoop:hover,
+.currentMarker:hover,
 .currentStopMarker:hover,
 .selected:active,
 .selected td:active,
-.currentLoop:active, 
-.currentMarker:active, 
+.currentLoop:active,
+.currentMarker:active,
 .currentStopMarker:active {  outline-color: #FFEB3B;}  /* accentColor1 */
 
 .accentColor1,
@@ -177,16 +176,11 @@ li[isdirectory="true"]:not(:first-child) {
 }
 .play .secondsLeft,
 .play .loopTimesLeft{
-		color: #FFEB3B; /* accentColor1 - IF GREEN ISH (or works for that... */ 
+		color: #FFEB3B; /* accentColor1 - IF GREEN ISH (or works for that... */
 }
 
 
-#donate:hover,
-#donate:active [
-	outline-color: #fff;
-]
-
-/* accentColor2 */ 
+/* accentColor2 */
 .important:hover,
 .important:active,
 .special:hover,
@@ -212,7 +206,7 @@ li[isdirectory="true"]:not(:first-child) {
 }
 .pause .secondsLeft,
 .pause .loopTimesLeft{
-		color: #000; /* accentColor2 - IF RED ISH... */ 
+		color: #000; /* accentColor2 - IF RED ISH... */
 }
 
 
@@ -248,7 +242,7 @@ li[isdirectory="true"]:not(:first-child) {
 
 .wait .secondsLeft,
 .wait .loopTimesLeft{
-	color: #F5F5F5; /* accentColor3 - IF YELLOW ISH... */ 
+	color: #F5F5F5; /* accentColor3 - IF YELLOW ISH... */
 }
 
 
@@ -268,8 +262,8 @@ li[isdirectory="true"]:not(:first-child) {
 .markerColorViolet {	background-color: Violet;	color: black; }
 
 
-/* only for this one */ 
+/* only for this one */
 #markerSection {
-	padding-left: 4px; 	
+	padding-left: 4px;
 }
 
