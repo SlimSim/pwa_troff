@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.3.8",
+		version: "1.3.9",
 		urls: [
 			"/",
 			"/index.html",
@@ -38,7 +38,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.1.3",
+		version: "1.1.4",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -65,18 +65,20 @@ var newAppCaches = [
 			"/assets/logos/logo-256.png",
 			"/assets/logos/logo-512.png",
 			"/manifest.json",
-			"/LICENSE.html",
+			//"privacy_policy.html"
+			//"/LICENSE.html",
 			//"/terms.html", <-- should not be cached, but loaded every time to get the latest version.
 			"/README.md",
 		]
 	},
 	{
 		name: 'internal-assets',
-		version: "1.0.2",
+		version: "1.0.3",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
 			"/assets/internal/st-script.js",
+			"/assets/internal/environment.js",
 			"/assets/internal/notify-js/notify.css",
 			"/assets/internal/notify-js/notify.config.js"
 		]
