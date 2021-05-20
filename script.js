@@ -534,13 +534,13 @@ function initSongTable() {
 		createSongAudio( /*key:*/ dataInfo.fullPath );
 	} );
 
-																	/*
-																	//något att titta på: ???????? slim sim :)  (för att ordna kolumnerna :) (fixa DB sparning, o interface...x ) )
-																	var table = $('#table').DataTable({ colReorder: true });
-																	$('button#newOrder').click(function() {
-																	    table.colReorder.order([3,4,2,0,1], true);
-																	});
-																	*/
+	/*
+	//något att titta på: ???????? slim sim :)  (för att ordna kolumnerna :) (fixa DB sparning, o interface...x ) )
+	var table = $('#table').DataTable({ colReorder: true });
+	$('button#newOrder').click(function() {
+			table.colReorder.order([3,4,2,0,1], true);
+	});
+	*/
 
 	//to make header primaryColor:
 	$( "#dataSongTable thead th" ).removeClass( "secondaryColor" );
@@ -2179,12 +2179,6 @@ var TroffClass = function(){
 		//$('#outerImportExportPopUpSquare').toggle();
 		document.getElementById('blur-hack').focus();
 	};
-
-	/*Troff*/this.toggleInfoAndroid = function(){
-		IO.jQueryToggle('#outerInfoAndroidPopUpSquare');
-		document.getElementById('blur-hack').focus();
-	};
-
 
 	/*Troff*/this.getLastSlashName = function(strUrl){
 		var aUrl = strUrl.split("/");
@@ -3853,18 +3847,7 @@ var DBClass = function(){
 		];
 
 
-
-
-
-		/* Slim sim remove
-		 * These below is just to update the database from old structures to new :)
-		 * /
-		if(!$.isArray(songObject.wait)) songObject.wait = [
-			$("#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON").hasClass( "active" ),
-			songObject.wait
-		]; */
-
-		// this following: migth be nessessary if removed it will mess up loading of new songs...
+		// this following: might be nessessary if removed it will mess up loading of new songs...
 		// todo: examine :/
 		if(!songObject.info ) songObject.info = "";
 		if(!songObject.tempo) songObject.tempo = "?";
@@ -3872,16 +3855,6 @@ var DBClass = function(){
 		if(songObject.loopTimes > 9) songObject.loopTimes = "inf";
 		if(songObject.aStates === undefined) songObject.aStates = [];
 		if(!songObject.zoomStartTime) songObject.zoomStartTime = 0;
-
-
-		/* Slim sim remove
-		 * remove the zoomEndTime == 42, I will continue on null instead.....
-		 * This is only for fixing the zoom to 42 second-bug introduced sometime
-		 * and fixed for version 1.01?
-		 */
-
-		//if(!songObject.zoomEndTime || songObject.zoomEndTime == 42) songObject.zoomEndTime = null;
-
 		if(!songObject.markers) songObject.markers = [oMarkerStart, oMarkerEnd];
 		if(!songObject.abAreas)
 			songObject.abAreas = [false, true, true, true];
@@ -4484,8 +4457,6 @@ var IOClass = function(){
 		$('#buttPromptMoveMarkersMoreInfo').click(Troff.toggleMoveMarkersMoreInfo);
 		$('#buttImportExportMarker').click(Troff.toggleImportExport);
 		$('#buttCancelImportExportPopUpSquare').click(Troff.toggleImportExport);
-		$('#readMoreAndroidTroff').click(Troff.toggleInfoAndroid);
-		$('#buttCancelInfoAndroidPopUpSquare').click(Troff.toggleInfoAndroid);
 		$('#buttExportMarker').click(Troff.exportStuff);
 		$('#buttImportMarker').click(Troff.importStuff);
 		$('#buttPauseBefStart').click(Troff.togglePauseBefStart);
