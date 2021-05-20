@@ -49,6 +49,7 @@ p, ul, li, table {
 	font-size: 14px;
 	margin-bottom: 8px;
 	margin-top: 0;
+	line-height: normal;
 }
 section {
 	margin: 0px !important;

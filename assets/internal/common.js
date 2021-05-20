@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function(event){
 			+ "and create markers on the song timeline.\n"
 			+ "It even supports movies!\n\n"
 			+ "It is free to use and download here:\n"
-			+ "https://troff.slimsim.heliohost.org/\n\n"
+			+ "https://troff.app/\n\n"
 			+ "Best regards!";
 		var link = "mailto:?&subject="+subject+"&body=" + escape(body);
 		window.open(link);

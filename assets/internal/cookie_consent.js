@@ -14,7 +14,7 @@ $( document ).ready(function() {
 			// todo, add print if "key" do not exist
 		},
 		getAllKeys : function() {
-			return Object.keys(localStorage) 
+			return Object.keys(localStorage)
 		},
 		getAllKeyValuePairs : function() {
 			return localStorage;
@@ -31,7 +31,6 @@ $( document ).ready(function() {
 	};
 
 	function showCookieConsent() {
-		console.log("cc / showCookieConsent -> ");
 		$.notify(
 			{
 				title: $("<span class=\"d-flex flex-column\">")
@@ -43,11 +42,10 @@ $( document ).ready(function() {
 							$( this ).trigger( 'notify-hide' );
 							cookie_consent_DB.set( COOKIE_CONSENT_ACCEPTED, true );
 						} ) )
-						.append($( "<a>" ).attr( "class", "small" ).text( "Learn More" ).attr("href", "https://slimsim.heliohost.org/privacy_policy.html").attr( "target", "_blank" ))
+						.append($( "<a>" ).attr( "class", "small" ).text( "Learn More" ).attr("href", "privacy_policy.html").attr( "target", "_blank" ))
 					)
-					
 			},
-			{ 
+			{
 				style: 'html-info',
 				autoHide: false,
 				clickToHide: false

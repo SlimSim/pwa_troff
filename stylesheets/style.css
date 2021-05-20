@@ -583,7 +583,8 @@ table {
 }
 
 .bulletList{
-	list-style: disc inside;
+	list-style: disc;
+  margin-left: 15px;
 }
 
 .paragraph{
