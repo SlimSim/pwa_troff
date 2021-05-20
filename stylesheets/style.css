@@ -449,7 +449,7 @@ input[type=number].numberWider{
 	font-size: 12px
 }
 
-
+.negative-my-4px { margin: 0 -4px; }
 
 .negative-my-0 {	margin-right: -0; margin-left: -0;	}
 .negative-my-1 {	margin-right: -2px; margin-left: -2px; }
@@ -621,10 +621,6 @@ table {
 	flex: none;
 }
 
-.flexOne, .flex-one {
-	flex: 1;
-}
-
 .center{
 	justify-content: center;
 	align-items: center;
@@ -643,7 +639,7 @@ table {
 	flex-direction: row;
 	flex-wrap: wrap;
 }
-.flex{
+.flex, .flexOne, .flex-one {
 	flex: 1;
 }
 
