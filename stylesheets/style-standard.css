@@ -162,7 +162,7 @@ auto - for classes that set the margin to auto
 .border-right-0 { border-right: solid 0;  }
 
 .cursor-pointer { cursor: pointer; }
-.cursor-help { cursor: help; }
+.cursor-help { cursor: help !important; }
 .cursor-alias { cursor: alias; }
 .cursor-progress { cursor: progress; }
 

@@ -153,12 +153,13 @@
 					id="buttSettingsDialog" >
 					<i class="fa fa-cog"></i>
 				</button>
-				<button class="svgButt regularButton cursor-help"
-					type="button"
-					title="Get tips on how to get the most out of Troff"
-					id="buttTip" >
-					<i class="fa fa-question cursor-help"></i>
-				</button>
+				<a href="help.html" target="_blank">
+					<button class="svgButt regularButton cursor-help"
+						type="button"
+						title="Get tips on how to get the most out of Troff">
+						<i class="fa fa-question cursor-help"></i>
+					</button>
+				</a>
 				<button class="svgButt shareClass regularButton"
 					type="button"
 					title="Share the link to this app with your friends via email">
@@ -552,25 +553,27 @@
 			<h2 class="paragraph">Do you like using Troff?</h2>
 
 			<p class="paragraph normalSize">
-				Please rate it at the Chrome Web Store!
+				Please like us on <a class="white" target=_blank
+									href="https://www.facebook.com/troffmusic">facebook</a>!
+				It really helps a lot!
 			</p>
 			<span class="flexRow">
 				<input
-					id="rateDialogNoThanks"
-					class="regularButton"
+					id="rateDialogRateNow"
+					class="regularButton important"
 					type="button"
-					value="No thanks" />
-				<div class="flex-one"></div>
+					value="Like now!" />
 				<input
 					id="rateDialogAskLater"
 					class="regularButton margin"
 					type="button"
 					value="Ask me later" />
+				<div class="flex-one"></div>
 				<input
-					id="rateDialogRateNow"
-					class="regularButton important"
+					id="rateDialogNoThanks"
+					class="regularButton"
 					type="button"
-					value="Rate now" />
+					value="No thanks" />
 			</span>
 		</div>
 	</div>
@@ -598,14 +601,9 @@
 
 			<span class="flexRow">
 				<div class="flex-one"></div>
+				<a href="help.html" target="_blank" class="m-2 mr-3">Take the tour</a>
 				<input
-					id="firstTimeUserDialogTour"
-					class="regularButton margin"
-					type="button"
-					value="Take the tour" />
-				<input
-					id="firstTimeUserDialogOK"
-					class="regularButton"
+					class="regularButton dialogCancelButton"
 					type="button"
 					value="OK" />
 			</span>

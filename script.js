@@ -1407,15 +1407,6 @@ var TroffClass = function(){
 		$('#firstTimeUserDialog').removeClass( "hidden" );
 	};
 
-	this.firstTimeUserDialogTour = function(){
-		$('#firstTimeUserDialog').addClass("hidden");
-		IO.openHelpWindow();
-	};
-
-	this.firstTimeUserDialogOK = function(){
-		$('#firstTimeUserDialog').addClass( "hidden");
-	};
-
 	// this is regarding the "play in fullscreen" - button
 	this.setPlayInFullscreen = function(bPlayInFullscreen){
 		if(bPlayInFullscreen){
@@ -3706,10 +3697,7 @@ var RateClass = function(){
 		$('#rateDialog').addClass("hidden");
 		nDB.set( 'iRatedStatus', Rate.RATED_STATUS_ALREADY_RATED );
 
-		var strChromeWebStore = 'https://chrome.google.com/webstore/detail/';
-		var strTroffName = 'troff-training-with-music/';
-		var strTroffIdReview = 'mebbbmcjdgoipnkpmfjndbolgdnakppl/reviews';
-		window.open(strChromeWebStore + strTroffName + strTroffIdReview);
+		window.open( "https://www.facebook.com/troffmusic/" );
 	};
 }; //End RateClass
 
@@ -4426,7 +4414,6 @@ var IOClass = function(){
 
 
 		$('#buttPlayUiButtonParent').click( Troff.playUiButton );
-		$('#buttTip').click(IO.openHelpWindow);
 
 		$('#timeBar')[0].addEventListener('change', Troff.timeUpdate );
 		$('#volumeBar')[0].addEventListener('change', Troff.volumeUpdate );
@@ -4527,9 +4514,6 @@ var IOClass = function(){
 		$('#rateDialogNoThanks').click(Rate.rateDialogNoThanks);
 		$('#rateDialogAskLater').click(Rate.rateDialogAskLater);
 		$('#rateDialogRateNow').click(Rate.rateDialogRateNow);
-
-		$('#firstTimeUserDialogTour').click(Troff.firstTimeUserDialogTour);
-		$('#firstTimeUserDialogOK').click(Troff.firstTimeUserDialogOK);
 
 		$('#zoomInstructionDialogDontShowAgain').click(Troff.zoomDontShowAgain);
 		$('#zoomInstructionDialogOK').click(Troff.zoomDialogOK);
@@ -5255,11 +5239,6 @@ var IOClass = function(){
 		if(IOEnterFunction) IOEnterFunction();
 	};
 
-	this.openHelpWindow = function() {
-		window.open( "help.html" );
-		document.getElementById('blur-hack').focus();
-	};
-
 	this.loopTimesLeft = function(input){
 		if(!input)
 				return $('.loopTimesLeft').eq(0).text();
@@ -5329,7 +5308,7 @@ $(document).ready( async function() {
 	DB.getAllSonglists();
 	DB.getZoomDontShowAgain();
 	IO.startFunc();
-	//Rate.startFunc(); TODO: fix så att Rate-classen blir typ "lika oss på facebook eller nått..."
+	Rate.startFunc();
 
 	Troff.initFileApiImplementation();
 
