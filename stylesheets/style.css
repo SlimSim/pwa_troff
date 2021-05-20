@@ -263,7 +263,7 @@ body section{
 	height: 90vh;
 }
 
-.plussMinusButton, .flex-display{
+.plusMinusButton, .flex-display{
 		display: flex;
 }
 

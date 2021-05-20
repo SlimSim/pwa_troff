@@ -55,7 +55,6 @@
 		href="stylesheets/col1.css" />
 
 	<script src="assets/external/jquery-3.4.1.min.js"></script>
-	<!--script src="assets/jquery-2.1.3.min.js"></script-->
 
 	<script type="text/javascript" src="assets/external/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js"></script>
 
@@ -67,7 +66,7 @@
 	<link rel="stylesheet" type="text/css" href="assets/internal/notify-js/notify.css" />
 	<script type="text/javascript" src="assets/internal/notify-js/notify.config.js"></script>
 
-	<!-- skippar denna helt, kan lägga in google Add senare :) script src="assets/buy.js"></script-->
+	<!-- skipping for now, add Google Add later :) script src="assets/buy.js"></script-->
 
 
 	<script src="/pwa.js"></script>
@@ -78,18 +77,8 @@
 	<script src="/assets/internal/common.js"></script>
 	<script src="/assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
 
-
-
-
-
-
-
-
-
-		<!-- TROR INTE JAG BEHÖVER DEN, ANVÄNDER LOCAL STOREAGE ISTÄLLET :) script type="text/javascript" src="assets/internal/indexed_db.js"></script-->
-
-		<script type="text/javascript" src="FileApiImplementation.js"></script>
-		<script type="text/javascript" src="assets/internal/cookie_consent.js"></script>
+	<script type="text/javascript" src="FileApiImplementation.js"></script>
+	<script type="text/javascript" src="assets/internal/cookie_consent.js"></script>
 </head>
 <body class="overflow-hidden backgroundColor">
 
@@ -125,7 +114,7 @@
 			<div id="mediaInfoBox" class="flexCol halfMarginParent">
 				<!--a href="#" id="readMoreAndroidTroff" class="center padding-bottom">Get Troff for Android</a-->
 
-				<input type="file" id="fileUpploader" class="hidden" name="files[]" multiple />
+				<input type="file" id="fileUploader" class="hidden" name="files[]" multiple />
 
 				<input type="button" id="pwaAddToHomeScreen" class="hidden regularButton special ml-2" value="Install Troff" />
 
@@ -149,7 +138,7 @@
 			<nav class="flexCol center">
 				<button class="svgButt regularButton"
 					type="button"
-					title="Open the global settings dialoug"
+					title="Open the global settings dialogue"
 					id="buttSettingsDialog" >
 					<i class="fa fa-cog"></i>
 				</button>
@@ -203,185 +192,167 @@
 			</div> <!-- stateArea -->
 
 			<div id="timeSection" class="flexCol end vScroll hideOnPicture">
-<!--        <div id="div_to_calc_height_of_timeSection"> depricated? -->
-					<h1>Settings</h1>
-					<div id="ControlTime" class="flexCol end">
-					</div> <!-- ControlTime -->
+				<h1>Settings</h1>
+				<div id="ControlTime" class="flexCol end">
+				</div> <!-- ControlTime -->
 
 
-					<div id="ControlMarker" class="flexCol end">
-						<h2>Marker</h2>
-						<div>
-							<input type="button" title="Add a marker to the song timeline (key: m)" class="important" id="buttMarker" value="Add M&#818;arker!" />
-						</div>
+				<div id="ControlMarker" class="flexCol end">
+					<h2>Marker</h2>
+					<div>
+						<input type="button" title="Add a marker to the song timeline (key: m)" class="important" id="buttMarker" value="Add M&#818;arker!" />
+					</div>
+					<input
+						type="button"
+						title="Move, delete, stretch, import or export the markers"
+						class="stOnOffButton"
+						value="advanced"
+						data-st-css-selector-to-toggle="#extraMarkerFunctions"
+						/>
+					<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
 						<input
 							type="button"
-							title="Move, delete, stretch, import or export the markers"
-							class="stOnOffButton"
-							value="advanced"
-							data-st-css-selector-to-toggle="#extraMarkerFunctions"
+							class="regularButton full-width"
+							title="Import markers to the song or export current markers"
+							id="buttImportExportMarker"
+							value="import / export"
 							/>
-						<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
-							<input
-								type="button"
-								class="regularButton full-width"
-								title="Import markers to the song or export current markers"
-								id="buttImportExportMarker"
-								value="import / export"
-								/>
-							<input
-								type="button"
-								title="Move more than one marker"
-								class="regularButton full-width"
-								id="buttPromptMoveMarkers"
-								value="move markers"
-								/>
-							<input
-								type="button"
-								title="Delete more than one marker"
-								class="regularButton full-width"
-								data-st-css-selector-to-toggle="#deleteMarkersDialog"
-								value="delete markers"
-								/>
-							<input
-								type="button"
-								title="Stretch the markers"
-								class="regularButton full-width"
-								data-st-css-selector-to-toggle="#stretchMarkersDialog"
-								value="stretch markers"
-								/>
-						</div>
-						<div>
-							<input
-								type="button"
-								title="Select first and last markers (key: u)"
-								class="regularButton"
-								value="play fu&#818;ll song"
-								id="buttUnselectMarkers" />
-						</div>
-						<div id="zoomParent" class="flexRow">
-							<input
-								type="button"
-								title="Zoom out to see the whole song"
-								class="regularButton"
-								value="zoom out"
-								id="buttZoomOut" />
-							<input
-								type="button"
-								title="Zoom to the selected play region (the purple part of the timeline)"
-								class="regularButton"
-								value="z&#818;oom"
-								id="buttZoom" />
-							</div>
-								<!--
 						<input
 							type="button"
-							title="add Start and End markers"
+							title="Move more than one marker"
+							class="regularButton full-width"
+							id="buttPromptMoveMarkers"
+							value="move markers"
+							/>
+						<input
+							type="button"
+							title="Delete more than one marker"
+							class="regularButton full-width"
+							data-st-css-selector-to-toggle="#deleteMarkersDialog"
+							value="delete markers"
+							/>
+						<input
+							type="button"
+							title="Stretch the markers"
+							class="regularButton full-width"
+							data-st-css-selector-to-toggle="#stretchMarkersDialog"
+							value="stretch markers"
+							/>
+					</div>
+					<div>
+						<input
+							type="button"
+							title="Select first and last markers (key: u)"
 							class="regularButton"
-							value="add Start and End markers"
-							id="buttAddStartAndEndMarkers"
-							style="word-wrap: break-word; width: 98px; padding: 1px 4px;"/>
-							-->
-						<div>
-							<input type="button" title="Toggle; start a few seconds before the start marker (key: b)" value="start b&#818;efore" id="buttStartBefore" class="buttWidthStandard stOnOffButton"/>
-							<input
-								type="number"
-								class="numberWide"
-								title="Set how many seconds before the start marker to start (key: shift/alt b)"
-								value="3"
-								min="0"
-								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
-								id="startBefore" />
+							value="play fu&#818;ll song"
+							id="buttUnselectMarkers" />
+					</div>
+					<div id="zoomParent" class="flexRow">
+						<input
+							type="button"
+							title="Zoom out to see the whole song"
+							class="regularButton"
+							value="zoom out"
+							id="buttZoomOut" />
+						<input
+							type="button"
+							title="Zoom to the selected play region (the purple part of the timeline)"
+							class="regularButton"
+							value="z&#818;oom"
+							id="buttZoom" />
 						</div>
+					<div>
+						<input type="button" title="Toggle; start a few seconds before the start marker (key: b)" value="start b&#818;efore" id="buttStartBefore" class="buttWidthStandard stOnOffButton"/>
+						<input
+							type="number"
+							class="numberWide"
+							title="Set how many seconds before the start marker to start (key: shift/alt b)"
+							value="3"
+							min="0"
+							data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
+							id="startBefore" />
+					</div>
 
-						<div>
-							<input type="button" title="Toggle; stop a few seconds after the stop marker (key: a)" value="stop a&#818;fter" id="buttStopAfter" class="buttWidthStandard stOnOffButton"/>
-							<input
-								type="number"
-								class="numberWide"
-								title="Set how many seconds after the stop marker to stop (key: shift/alt a)"
-								value="2"
-								min="0"
-								id="stopAfter" />
-						</div>
-					</div> <!-- ControlMarker -->
+					<div>
+						<input type="button" title="Toggle; stop a few seconds after the stop marker (key: a)" value="stop a&#818;fter" id="buttStopAfter" class="buttWidthStandard stOnOffButton"/>
+						<input
+							type="number"
+							class="numberWide"
+							title="Set how many seconds after the stop marker to stop (key: shift/alt a)"
+							value="2"
+							min="0"
+							id="stopAfter" />
+					</div>
+				</div> <!-- ControlMarker -->
 
-					<div id="ControlLoop" class="flexCol end">
-						<h2>Loop</h2>
-						<div>
-							<input
-								type="button"
-								title="Toggle; wait a few seconds before song starts to play (key: p)"
-								value="p&#818;ause before"
-								id="buttPauseBefStart"
-								class="buttWidthMedium-small stOnOffButton active" />
-							<input
-								type="number"
-								class="numberWide"
-								title="Set how many seconds to wait before song starts to play (key: shift/alt p)"
-								value="3"
-								id="pauseBeforeStart"  />
-						</div>
+				<div id="ControlLoop" class="flexCol end">
+					<h2>Loop</h2>
+					<div>
+						<input
+							type="button"
+							title="Toggle; wait a few seconds before song starts to play (key: p)"
+							value="p&#818;ause before"
+							id="buttPauseBefStart"
+							class="buttWidthMedium-small stOnOffButton active" />
+						<input
+							type="number"
+							class="numberWide"
+							title="Set how many seconds to wait before song starts to play (key: shift/alt p)"
+							value="3"
+							id="pauseBeforeStart"  />
+					</div>
 
-						<div class="XLoopOff">
-							<input type="button"
-								class="buttWidthMedium-small stOnOffButton active"
-								value="w&#818;ait between"
-								id="buttWaitBetweenLoops"/>
-							<input type="number"
-								title="Set how many seconds to wait between each loop"
-								class="numberWide"
-								value="1"
-								id="waitBetweenLoops"  />
-						</div>
-						<div class="flexRow">
-							<input
-								type="button"
-								title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
-								data-save-on-song-toggle-class="active"
-								data-save-on-song-toggle-class-default-value="false"
-								value="increment until"
-								id="buttIncrementUntil"
-								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
-								class="buttWidthMedium-small stOnOffButton grayout-next-on-non-active">
-							<input
-								type="number"
-								id="incrementUntilValue"
-								class="numberWide"
-								min="50"
-								max="200"
-								data-save-on-song-value="100"
-								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
-								value="100" />
-						</div>
+					<div class="XLoopOff">
+						<input type="button"
+							class="buttWidthMedium-small stOnOffButton active"
+							value="w&#818;ait between"
+							id="buttWaitBetweenLoops"/>
+						<input type="number"
+							title="Set how many seconds to wait between each loop"
+							class="numberWide"
+							value="1"
+							id="waitBetweenLoops"  />
+					</div>
+					<div class="flexRow">
+						<input
+							type="button"
+							title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
+							data-save-on-song-toggle-class="active"
+							data-save-on-song-toggle-class-default-value="false"
+							value="increment until"
+							id="buttIncrementUntil"
+							data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
+							class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active">
+						<input
+							type="number"
+							id="incrementUntilValue"
+							class="numberWide"
+							min="50"
+							max="200"
+							data-save-on-song-value="100"
+							data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
+							value="100" />
+					</div>
 
-						<span class="loopSquare" id="loopButtons" >
-							<input type="button" title="Play song only 1 time (key: 1)" class="loopButt" value="1" id="buttLoop1" />
-							<input type="button" title="Loop song 2 times (key: 2)" class="loopButt" value="2" id="buttLoop2" />
-							<input type="button" title="Loop song 3 times (key: 3)" class="loopButt" value="3" id="buttLoop3" />
-							<input type="button" title="Loop song 4 times (key: 4)" class="loopButt" value="4" id="buttLoop4" />
-							<input type="button" title="Loop song 5 times (key: 5)" class="loopButt" value="5" id="buttLoop5" />
-							<input type="button" title="Loop song 6 times (key: 6)" class="loopButt" value="6" id="buttLoop6" />
-							<input type="button" title="Loop song 7 times (key: 7)" class="loopButt" value="7" id="buttLoop7" />
-							<input type="button" title="Loop song 8 times (key: 8)" class="loopButt" value="8" id="buttLoop8" />
-							<input type="button" title="Loop song 9 times (key: 9)" class="loopButt" value="9" id="buttLoop9" />
-							<input type="button" title="Loop song &infin; times (key: 0)" class="loopButt" value="&infin;" id="buttLoopInf" />
-						</span>
-					</div> <!-- ControlLoop -->
-
-
-
- <!--       </div>  <!- - div_to_calc_height_of_timeSection   depricated ? -->
-
-
-
-
+					<span class="loopSquare" id="loopButtons" >
+						<input type="button" title="Play song only 1 time (key: 1)" class="loopButt" value="1" id="buttLoop1" />
+						<input type="button" title="Loop song 2 times (key: 2)" class="loopButt" value="2" id="buttLoop2" />
+						<input type="button" title="Loop song 3 times (key: 3)" class="loopButt" value="3" id="buttLoop3" />
+						<input type="button" title="Loop song 4 times (key: 4)" class="loopButt" value="4" id="buttLoop4" />
+						<input type="button" title="Loop song 5 times (key: 5)" class="loopButt" value="5" id="buttLoop5" />
+						<input type="button" title="Loop song 6 times (key: 6)" class="loopButt" value="6" id="buttLoop6" />
+						<input type="button" title="Loop song 7 times (key: 7)" class="loopButt" value="7" id="buttLoop7" />
+						<input type="button" title="Loop song 8 times (key: 8)" class="loopButt" value="8" id="buttLoop8" />
+						<input type="button" title="Loop song 9 times (key: 9)" class="loopButt" value="9" id="buttLoop9" />
+						<input type="button" title="Loop song &infin; times (key: 0)" class="loopButt" value="&infin;" id="buttLoopInf" />
+					</span>
+				</div> <!-- ControlLoop -->
 
 
 				<div class="doubleSliders flexOne">
 					<div class="sliderInfo">
 						<input class="button small regularButton" type="button" title="Set volume to 100% (key: v)" value="V&#818;olume:" id="buttResetVolume" />
-						<div class="plussMinusButton" id="plussMinusButtons">
+						<div class="plusMinusButton" id="plusMinusButtons">
 							<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
 							<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
 						</div>
@@ -400,7 +371,7 @@
 
 					<div class="sliderInfo">
 						<input class="button small regularButton" type="button" title="Set speed to 100% (key: s)" value="S&#x332;peed:" id="buttResetSpeed" />
-						<div class="plussMinusButton">
+						<div class="plusMinusButton">
 							<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
 							<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
 						</div>
@@ -466,26 +437,22 @@
 
 		<!--h2><label class="switch" for="songInfoSwitch">Marker Color info</label></h2>
 			<p>
-				TODO:
-				vore det inte kanon om det fans en color-info sektion här där man kan
-				beskriva vad alla färgerna betyder
-				( och den ska visa färgerna, men bara de som används :) )
-			</p>
-			<p>
-				man ska också kunan välja att visa/inte visa denna, samt sång-info / marker/info
-			</p -->
+				TODO: color-info-section
+				Would it not be nice if there was a color-info section here where you cold
+				 describe what all teh colors meant?
+				 (and it should show the colors, but only the ones that are used :)
+				 Should also be optional to show this. as it should be with song-info / marker-info
+			</p-->
 
 		<h2><label class="switch" for="songInfoSwitch">Song info</label></h2>
 		<input id="songInfoSwitch" class="switch_checkbox hidden" type="checkbox" checked="checked" />
 		<textArea
-			style="width: inheret"
 			id="songInfoArea"
 			placeholder="Song specific info here!"
 			class="textareaStandard switch_child"></textArea>
 		<h2 class="hideOnPicture">Current marker info</h2>
 		<textArea
 			id="markerInfoArea"
-			style="width: inheret"
 			placeholder="Marker specific notes here!"
 			class="hideOnPicture textareaStandard"></textArea>
 
@@ -589,7 +556,7 @@
 					<li>zoom on the timeline</li>
 					<li>write markers on the timeline</li>
 					<li>loop a part of the timeline</li>
-					<li>adjust the spead of a song or movie</li>
+					<li>adjust the speed of a song or movie</li>
 					<li>step frame by frame in movies</li>
 				</ul>
 				<p class="paragraph normalSize">and lots more!</p>
@@ -623,7 +590,7 @@
 				</p>
 				<p class="paragraph normalSize">
 					If Troff is zoomed to the active playing region,
-					then it is not pocible to zoom in or out.
+					then it is not possible to zoom in or out.
 					Change the active playing region and you will be able to zoom.
 				</p>
 			</div>
@@ -739,7 +706,7 @@
 					Say you have 5 markers A, B, C, D and E at 5, 10, 20, 50 and 150 seconds respectively,
 					if you stretch all the markers to 200%, then the markers times will
 					be increased to 200%, and they will be at
-					10, 20, 40, 100 and 300 selconds respectively.
+					10, 20, 40, 100 and 300 seconds respectively.
 					<br />
 					If you want to compress the markers, simply use a value lower than 100%.
 					<br />
@@ -765,7 +732,7 @@
 					type="button"
 					class="regularButton"
 					value="stretch selected markers"
-					title="Stretch the markers between the selected markers\nwith the base at the selected start marker"/>
+					title="Stretch the markers between the selected markers, with the base at the selected start marker"/>
 				<input
 					id="okStretchAllMarkersDialog"
 					type="button"
@@ -861,7 +828,7 @@
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
 							id="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
-							title="If selected, the floating songlist-window will be closed when a song is selected"
+							title="If selected, the floating song-list-window will be closed when a song is selected"
 							value="exit on select" />
 					</div>
 
@@ -880,7 +847,7 @@
 								type="button"
 								id="TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR"
 								data-st-save-value-key="TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR"
-								title="If the &quot;pause before&quot; is active, use the timer before startign the song"
+								title="If the &quot;pause before&quot; is active, use the timer before starting the song"
 								value="use timer" />
 							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_ENTER_RESET_COUNTER"
@@ -898,7 +865,7 @@
 							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR"
 								data-st-save-value-key="TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR"
-								title="If the &quot;pause before&quot; is active, use the timer before startign the song"
+								title="If the &quot;pause before&quot; is active, use the timer before starting the song"
 								value="use timer" />
 							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_SPACE_RESET_COUNTER"
@@ -918,7 +885,7 @@
 								type="button"
 								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR"
 								id="TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR"
-								title="If the &quot;pause before&quot; is active, use the timer before startign the song"
+								title="If the &quot;pause before&quot; is active, use the timer before starting the song"
 								value="use timer" />
 							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" type="button"
 								id="TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER"
@@ -1130,45 +1097,23 @@
 								value="1" />
 						</div>
 
-
 					</div>
-
-
-
-
-				<!--h1>---------------- Not yet implemented ----------------</h1>
-
-
-				<h1>Max-brädd på rubrik-området</h1>
-				<p>(ha 4 olika alternativ (slim, medle, wide, och "infinate"))</p>
-
-				<p>Hur funkar det när man har många areas ("sånglist", "sångs", "states", och "settings") visade?</p>
-				<P>för man vill ju helst att den får vara bred när </P>
-				<p>
-					<b>detta borde ju skötas detta själv:</b>så fort man trycker på någon av "dom fyra" areas'arna,
-					så kollar den "hur bred är dessa 4 areas" och sen lägger den på den max-brädden på
-					tittel-arean (dock minst 200px tex)
-				</p>
-
-				<H3>borde visa mapp-namnet i song-tabellen också</H3>
-
-				<h3>standard-values for new songs</h3>
-			-->
-
 			</div>
 			<input id="buttCloseSettingPopUpSquare" type="button" class="regularButton buttWidthStandard flex-none" value="Close" />
 		</div>
 	</div>
 
 
-	<div id="outerImportExportGlobalSettingsPopUpSquare" class="outerDialog hidden">
+	<!-- todo: bring forth this and make sure it works :) right now, there is a bug,
+		and the button to show it is hidden -->
+	<!--div id="outerImportExportGlobalSettingsPopUpSquare" class="outerDialog hidden">
 		<div class="innerDialog flexCol mediumDialog">
 			<h2 class="paragraph">Import / Export Global Settings</h2>
 			<p class="paragraph normalSize">
-				Import or export your glogal settings.
+				Import or export your global settings.
 			</p>
-			<label class="switch likeLink linkButton" for="importExportGloablSettingsMoreInfoSwitch">More info</label>
-			<input id="importExportGloablSettingsMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+			<label class="switch likeLink linkButton" for="importExportGlobalSettingsMoreInfoSwitch">More info</label>
+			<input id="importExportGlobalSettingsMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
 			<p class="switch_child paragraph normalSize" >
 				Whey you export the global settings, you will get a long text string ( a so called JSON string ).
 				This text-string can be saved and imported to another Troff-program.
@@ -1206,7 +1151,7 @@
 		<div class="innerDialog flexCol mediumDialog">
 			<h2 class="paragraph">Import Global Settings</h2>
 			<p class="paragraph normalSize">
-				To import new global settings, past the string into the box below, and klick Import.
+				To import new global settings, past the string into the box below, and click Import.
 			</p>
 			<textarea
 				class="writableField textareaStandard min-height-9"
@@ -1234,7 +1179,7 @@
 		<div class="innerDialog flexCol mediumDialog">
 			<h2 class="paragraph">Export Global Settings</h2>
 			<p class="paragraph normalSize">
-				To export your glogal settings, copy the string into the box below,
+				To export your global settings, copy the string into the box below,
 				and paste the text-string in the Troff-program where you want to import it.
 			</p>
 			<textarea
@@ -1270,7 +1215,7 @@
 				When you import all data, all the data in that Troff-programs will be over written
 				with the data you import.
 				<br />
-				<b>NOTE:</b> All the markers and song-spesiffic info will also be exported and imported,
+				<b>NOTE:</b> All the markers and song-specific info will also be exported and imported,
 				however, if the path to the song is not the same when you import the data,
 				then the markers will not be added to the song.
 			</p>
@@ -1305,7 +1250,7 @@
 		<div class="innerDialog flexCol mediumDialog">
 			<h2 class="paragraph">Import All Data</h2>
 			<p class="paragraph normalSize">
-				To import and overwride all the data in Troff, past the string into the box below, and klick Import.
+				To import and override all the data in Troff, past the string into the box below, and click Import.
 			</p>
 			<textarea
 				class="writableField textareaStandard min-height-9"
@@ -1357,7 +1302,7 @@
 						value="Cancel" />
 			</div>
 		</div>
-	</div>
+	</div-->
 
 
 
@@ -1391,7 +1336,7 @@
 				<label
 					title="Add songs, videos or pictures to Troff"
 					class="regularButton mr-3 linkButton cursor-pointer"
-					for="fileUpploader">
+					for="fileUploader">
 					Add files
 				</label>
 				<!--input
@@ -1400,7 +1345,7 @@
 					class="regularButton mr-3"
 					id="configure-button"
 					value="Select folders"/-->
-				<button class="regularButton mr-2 buttSetSongsDalogToAttachedState"
+				<button class="regularButton mr-2 buttSetSongsDialogToAttachedState"
 					type="button"
 					title="open the songs dialog in floating window">
 					<i class="fa fa-window-minimize"></i>
@@ -1412,9 +1357,8 @@
 				</button>
 			</div>
 			<!--p>
-				TODO:
-				Vore det inte kul om man kunde färglägga varje låt med färgerna? (i menyn kanske?)
-				och så kanske man kan ge låten en egen titel?
+				TODO: Would it not be great if you could color every song with the colors (in menu maybe?)
+				and perhaps give the song it's onw title?
 			</p -->
 
 			<div class="flexRow flex-none">
@@ -1439,7 +1383,7 @@
 			<div id="newSearchParent" class="py-2 flexRow flex-none full-width">
 
 				<div class="pt-1 pl-2">
-					<select id="songListSelector" class="custom-select custom-select-sm hideOnSongsDalogAttachedState">
+					<select id="songListSelector" class="custom-select custom-select-sm hideOnSongsDialogAttachedState">
 						<option value="-" disabled selected>Do with selected rows...</option>
 						<option value="--remove">Remove songs from Troff</option>
 						<option value="+">Create new songlist</option>
@@ -1448,12 +1392,12 @@
 					</select>
 				</div>
 				<div class="flexOne"></div>
-				<div class="flexRow hideOnSongsDalogFloatingState">
+				<div class="flexRow hideOnSongsDialogFloatingState">
 
 					<label
 						title="Add songs, videos or pictures to Troff"
 						class="mr-2 pv-exact-17 regularButton fa-stack fa-1x attached-configure-button cursor-pointer"
-						for="fileUpploader">
+						for="fileUploader">
 						<i class="fas fa-music fa-stack-1x"></i>
 						<i class="fas fa-plus fa-stack-1x"></i>
 					</label>
@@ -1471,7 +1415,7 @@
 						id="buttAttachedSongListToggle" >
 						<i class="fa fa-columns"></i>
 					</button>
-					<button class="regularButton mr-2 buttSetSongsDalogToFloatingState"
+					<button class="regularButton mr-2 buttSetSongsDialogToFloatingState"
 						type="button"
 						title="open the songs dialog in floating window">
 						<i class="fa fa-window-maximize"></i>

@@ -37,7 +37,7 @@ p{
 	background-color: lightgray;
 }
 
-.grayout-next-on-non-active:not(.active) ~*,
+.gray-out-next-on-non-active:not(.active) ~*,
 .grayOut{
 	color: gray;
 	background-color: lightgray;
@@ -139,15 +139,15 @@ p{
 	border-color: #25d200; /* accentColor1 */
 }
 
-.selected:hover, 
+.selected:hover,
 .selected td:hover,
-.currentLoop:hover, 
-.currentMarker:hover, 
+.currentLoop:hover,
+.currentMarker:hover,
 .currentStopMarker:hover,
 .selected:active,
 .selected td:active,
-.currentLoop:active, 
-.currentMarker:active, 
+.currentLoop:active,
+.currentMarker:active,
 .currentStopMarker:active {
 	outline-color: #2DFC00;
 	outline-color: #25d200;
@@ -166,14 +166,14 @@ p{
 }
 .play{
 		color: #2DFC00;
-		color: #25d200; /* accentColor1 - IF GREEN ISH (or works for that... */ 
+		color: #25d200; /* accentColor1 - IF GREEN ISH (or works for that... */
 }
 
 
 
 
 
-/* accentColor2, 400 */ 
+/* accentColor2, 400 */
 
 .important:hover,
 .important:active,
@@ -199,7 +199,7 @@ p{
 	background-color: #D42626; /* accentColor2 */
 }
 .pause{
-		color: #D42626; /* accentColor2 - IF RED ISH... */ 
+		color: #D42626; /* accentColor2 - IF RED ISH... */
 }
 
 
@@ -231,7 +231,7 @@ p{
 	color: black;
 }
 .wait{
-	color: #FFCF53; /* accentColor3 - IF YELLOW ISH... */ 
+	color: #FFCF53; /* accentColor3 - IF YELLOW ISH... */
 }
 
 

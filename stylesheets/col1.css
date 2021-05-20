@@ -37,7 +37,7 @@ p{
 	background-color: lightgray;
 }
 
-.grayout-next-on-non-active:not(.active) ~*,
+.gray-out-next-on-non-active:not(.active) ~*,
 .grayOut{
 	color: gray;
 	background-color: lightgray;
@@ -136,16 +136,16 @@ p{
 .drop-active.selected{
 	border-color: #431c5d; /* accentColor1 */
 }
-	
-.selected:hover, 
+
+.selected:hover,
 .selected td:hover,
-.currentLoop:hover, 
-.currentMarker:hover, 
+.currentLoop:hover,
+.currentMarker:hover,
 .currentStopMarker:hover,
 .selected:active,
 .selected td:active,
-.currentLoop:active, 
-.currentMarker:active, 
+.currentLoop:active,
+.currentMarker:active,
 .currentStopMarker:active {  outline-color: #431c5d;}  /* accentColor1 */
 
 .accentColor1,
@@ -161,14 +161,14 @@ p{
 }
 .play .secondsLeft,
 .play .loopTimesLeft{
-		color: #431c5d; /* accentColor1 - IF GREEN ISH (or works for that... */ 
+		color: #431c5d; /* accentColor1 - IF GREEN ISH (or works for that... */
 }
 
 
 
 
 
-/* accentColor2 */ 
+/* accentColor2 */
 
 .important:hover,
 .important:active,
@@ -194,7 +194,7 @@ p{
 }
 .pause .secondsLeft,
 .pause .loopTimesLeft{
-		color: #e05915; /* accentColor2 - IF RED ISH... */ 
+		color: #e05915; /* accentColor2 - IF RED ISH... */
 }
 
 
@@ -227,7 +227,7 @@ p{
 }
 .wait .secondsLeft,
 .wait .loopTimesLeft{
-	color: #AAAF2B; /* accentColor3 - IF YELLOW ISH... */ 
+	color: #AAAF2B; /* accentColor3 - IF YELLOW ISH... */
 }
 
 

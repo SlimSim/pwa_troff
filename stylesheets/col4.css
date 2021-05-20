@@ -38,7 +38,7 @@ p{
 	background-color: #BDBDBD;
 }
 
-.grayout-next-on-non-active:not(.active) ~*,
+.gray-out-next-on-non-active:not(.active) ~*,
 .grayOut{
 	color: gray;
 	background-color: lightgray;

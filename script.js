@@ -474,7 +474,7 @@ function initSongTable() {
 			"<label " +
 				"title=\"Add songs, videos or pictures to Troff\"" +
 				"class=\"regularButton linkButton cursor-pointer\"" +
-				"for=\"fileUpploader\">" +
+				"for=\"fileUploader\">" +
 					"Add files" +
 			"</label>" +
       "-button at the top<br />in the floating song-dialog "+
@@ -482,7 +482,7 @@ function initSongTable() {
 			"<label " +
 				"title=\"Add songs, videos or pictures to Troff\"" +
 				"class=\"pv-exact-17 regularButton fa-stack fa-1x attached-configure-button cursor-pointer\"" +
-				"for=\"fileUpploader\">" +
+				"for=\"fileUploader\">" +
 					"<i class=\"fas fa-music fa-stack-1x\"></i>" +
 					"<i class=\"fas fa-plus fa-stack-1x\"></i>" +
 			"</label>" +
@@ -867,15 +867,15 @@ function clickToggleFloatingSonglists( event ) {
 function moveSongPickerToAttachedState() {
 	dataTableShowOnlyColumnsForAttachedState();
 	$("#newSearchParent, #songPicker").detach().appendTo( $("#songPickerAttachedArea") );
-	$( ".hideOnSongsDalogFloatingState" ).removeClass( "hidden" );
-	$( ".hideOnSongsDalogAttachedState" ).addClass( "hidden" );
+	$( ".hideOnSongsDialogFloatingState" ).removeClass( "hidden" );
+	$( ".hideOnSongsDialogAttachedState" ).addClass( "hidden" );
 };
 
 function moveSongPickerToFloatingState() {
 	$("#newSearchParent, #songPicker").detach().insertBefore( "#songPickerFloatingBase" );
 	dataTableShowColumnsForFloatingState();
-	$( "#songPickerAttachedArea, .hideOnSongsDalogFloatingState" ).addClass( "hidden" );
-	$( ".hideOnSongsDalogAttachedState" ).removeClass( "hidden" );
+	$( "#songPickerAttachedArea, .hideOnSongsDialogFloatingState" ).addClass( "hidden" );
+	$( ".hideOnSongsDialogAttachedState" ).removeClass( "hidden" );
 };
 
 function dataTableColumnPicker( event ) {
@@ -934,7 +934,7 @@ var TroffClass = function(){
 
 	/*Troff*/this.initFileApiImplementation = function() {
 
-		$( "#fileUpploader" ).on("change", event => {
+		$( "#fileUploader" ).on("change", event => {
 			fileHandler.handleFiles(event.target.files, addItem_NEW_2);
 		});
 
@@ -4392,19 +4392,19 @@ var IOClass = function(){
 		$( "#buttSettingsDialog" ).click ( Troff.openSettingsDialog );
 		$( "#buttCloseSettingPopUpSquare" ).click ( Troff.closeSettingsDialog );
 
-		$( "#buttSetSongsDalogToFloatingState" ).click( moveSongPickerToFloatingState )
+		$( "#buttSetSongsDialogToFloatingState" ).click( moveSongPickerToFloatingState )
 		$( ".buttCloseSongsDialog" ).click( closeSongDialog );
 		$( "#buttAttachedSongListToggle" ).click( clickAttachedSongListToggle );
 
 
 		$( "#buttSongsDialog" ).click( clickSongsDialog );
-		$( ".buttSetSongsDalogToAttachedState" ).click( minimizeSongPicker );
-		$( ".buttSetSongsDalogToFloatingState" ).click( maximizeSongPicker );
+		$( ".buttSetSongsDialogToAttachedState" ).click( minimizeSongPicker );
+		$( ".buttSetSongsDialogToFloatingState" ).click( maximizeSongPicker );
 		$( "#outerSongListPopUpSquare" ).click( reloadSongsButtonActive );
 
 		$( "#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG" ).click( clickToggleFloatingSonglists );
 
-//		$( "#buttSetSongsDalogToFloatingState" ).click( clickSetSongsDalogToFloatingState );
+//		$( "#buttSetSongsDialogToFloatingState" ).click( clickSetSongsDalogToFloatingState );
 
 		$( "#toggleExtendedMarkerColor" ).click ( Troff.toggleExtendedMarkerColor );
 		$( "#toggleExtraExtendedMarkerColor" ).click ( Troff.toggleExtraExtendedMarkerColor );
