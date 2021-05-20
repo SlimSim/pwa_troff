@@ -56,6 +56,7 @@ var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 
 var MARKER_COLOR_PREFIX = "markerColor";
 
+/*
 function errorPrintFactory(custom) {
 	 return function(e) {
 			var msg = '';
@@ -84,7 +85,9 @@ function errorPrintFactory(custom) {
 			console.error(custom + ': ' + msg);
 	 };
 }
+*/
 
+/*
 function GalleryData(id) {
 	this._id = id;
 	this.path = "";
@@ -92,6 +95,7 @@ function GalleryData(id) {
 	this.numFiles = 0;
 	this.numDirs = 0;
 }
+*/
 
 function addImageToContentDiv() {
 	var content_div = document.getElementById('content');
@@ -101,7 +105,7 @@ function addImageToContentDiv() {
 	videoBox.setAttribute('id', "videoBox");
 	image.classList.add( "contain-object" );
 	image.classList.add( "full-width" );
-	Troff.setMedatadaImage(image);
+	Troff.setMetadataImage(image);
 	Troff.setImageLayout();
 
 	var fsButton = document.createElement('button');
@@ -198,11 +202,13 @@ function clearContentDiv() {
 	 }
 }
 
+/*
 function clearGalleryAndDirectoryList() {
 	$("#galleryList").empty();
 	$("#directoryList").empty();
 	$("#dataSongTable").DataTable().clear();
 }
+*/
 
 function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	Troff.pauseSong();
@@ -263,6 +269,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 } //end setSong2
 
+/*
 function addGallery(name, id) {
 	var li = document.createElement("li");
 	var label = document.createElement("label");
@@ -282,6 +289,7 @@ function addGallery(name, id) {
 	document.getElementById("newSongListPartAllSongs").appendChild(li);
 	return optGrp;
 }
+*/
 
 function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )
@@ -1484,7 +1492,7 @@ var TroffClass = function(){
 		media.addEventListener("timeupdate", Troff.timeupdateAudio );
 	};
 
-	this.setMedatadaImage = function( media ) {
+	this.setMetadataImage = function( media ) {
 		DB.getImageMetaDataOf(Troff.getCurrentSong());
 	}
 
