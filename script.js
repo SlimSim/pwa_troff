@@ -4296,7 +4296,7 @@ var IOClass = function(){
 		document.addEventListener('keydown', IO.keyboardKeydown);
 
 		$( ".outerDialog" ).click( function( event ) {
-			if( $(event.target ).hasClass( "outerDialog" ) ) {
+			if( $(event.target ).hasClass( "outerDialog" ) && !$(event.target ).hasClass( "noCloseOnClick" ) ) {
 				$( event.target ).addClass( "hidden" );
 			}
 		} );
