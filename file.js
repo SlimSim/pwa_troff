@@ -17,9 +17,11 @@ $(function () {
 
 	backendService.calCurl = async function() {
 		const url = environment.getCurlEndpoint();
-		return $.ajax({
+		$.ajax({
 			url: url,
 			timeout: 50000,
+		}).fail(function( xhr ) {
+			console.log( `backendService.calCurl: Could not cal "${url}", no big deal. Status: ${xhr.status}, ${xhr.statusText}` );
 		});
 	};
 
