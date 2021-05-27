@@ -1557,13 +1557,27 @@
 		</div>
 	</div>
 
+	<div id="uploadSongToServerInProgressDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Upload in progress</h2>
+			<p class="mt-3 mb-0">
+				We will let you know when it is done.
+				You can continue to use Troff while the song is uploading,
+				but don't close the browser window while you wait!
+			</p>
+			<span class="flexRow">
+				<input type="button" class="regularButton flex-none dialogCancelButton" value="OK" />
+			</span>
+		</div>
+	</div>
+
 	<div id="doneUploadingSongToServerDialog" class="outerDialog hidden">
 		<div class="innerDialog mediumDialog marginDialog flexCol">
 			<h2 class="paragraph showOnUploadComplete">Upload complete</h2>
 			<h2 class="paragraph hidden showOnSongAlreadyUploaded">Song already uploaded</h2>
 
 			<p class="mt-3 mb-0">
-				The song can be found at
+				<span id="doneUploadingSongToServerDialog_songName"></span> can be found at
 			</p>
 
 			<div class="input-group ">
@@ -1574,7 +1588,7 @@
 						aria-label="URL to share the song with"
 						aria-describedby="basic-addon2">
 				<div class="input-group-append">
-					<button id="buttCopyUrlToClipboard" class="btn btn-outline-secondary m-0 cursor-copy" title="Click to copy to clipboard" type="button"><i class="fa fa-copy" ></i></button>
+					<button id="buttCopyUrlToClipboard" class="btn btn-outline-secondary m-0 pv-exact-3_5 cursor-copy" title="Click to copy to clipboard" type="button"><i class="fa fa-copy" ></i></button>
 				</div>
 			</div>
 			<p class="mb-0">
@@ -1599,6 +1613,34 @@
 			<span class="flexRow">
 				<input type="button" class="regularButton flex-none dialogCancelButton" value="OK" />
 			</span>
+		</div>
+	</div>
+
+	<div id="downloadSongFromServerInProgressDialog" class="outerDialog noCloseOnClick hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Download in progress</h2>
+			<p class="mt-3 mb-0">
+				The song <span id="downloadSongFromServerInProgressDialog_songName" class="bold"></span>, with all its markers,
+				is being downloaded.
+			</p>
+			<p class="py-4">Please wait a moment!</p>
+			<p class="m-0">
+				If you want to use Troff while you wait for this song to download
+				open it in another tab or window:
+				<a href="https://troff.app" target="_blank">troff.app</a>
+			</p>
+			<p class="m-0">
+				Fell free to check out the help-page while you wait:
+				<a href="help.html" target="_blank">
+					<button class="svgButt regularButton cursor-help"
+						type="button"
+						title="Get tips on how to get the most out of Troff">
+						<i class="fa fa-question cursor-help m-0"></i>
+					</button>
+				</a>
+			</p>
+			<p class="m-0">This pop-up will close when the song is ready.</p>
+
 		</div>
 	</div>
 

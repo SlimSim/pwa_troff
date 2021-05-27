@@ -150,17 +150,18 @@ $(function () {
 		});
 	};
 
-	fileHandler.getObjectUrlFromResponse = async function( response ) {
+	fileHandler.getObjectUrlFromResponse = async function( response, songKey ) {
 
 		if (response === undefined) {
-			throw new Error(`songKey "${songKey}" does not exist in caches!`);
+			throw new ShowUserException(`Can not upload the song "${songKey}" because it appears to not exist in the app.
+                 Please add the song to Troff and try to upload it again.` );
 		}
 		return response.blob().then( URL.createObjectURL );
 	}
 
 	fileHandler.getObjectUrlFromFile = async function( songKey ) {
 		return caches.match( songKey ).then(cachedResponse => {
-			return fileHandler.getObjectUrlFromResponse( cachedResponse );
+			return fileHandler.getObjectUrlFromResponse( cachedResponse, songKey );
 		});
 	};
 
@@ -171,24 +172,20 @@ $(function () {
 
 	fileHandler.sendFile = async function( fileKey, oSongTroffInfo ) {
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
-			throw new Error(`fileKey "${fileKey}" is version 2, unable to upload!`);
+			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
+      we apologize for the inconvenience.
+      Please contact slimsimapps@gmail.com so that we can help you fix this problem` );
 		}
 
 		const strSongTroffInfo = JSON.stringify( oSongTroffInfo );
 
 		return caches.match( fileKey ).then(cachedResponse => {
 			if ( cachedResponse === undefined ) {
-				throw new Error(`fileKey "${fileKey}" does not exist in caches!`);
+				throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
+           Please add the song to Troff and try to upload it again.` );
 			}
 
 			return cachedResponse.blob().then( myBlob => {
-				// TODO: lastModified (and possibly other meta-data)
-				// from the file somehow. Should possibly save that data in the local-storage
-				// when I first add the file?
-
-				for(var key of cachedResponse.headers.keys()) {
-					 console.log(key);
-				}
 
 				var file = new File(
 					[myBlob],
@@ -208,9 +205,6 @@ $(function () {
 					data: formData,
 					contentType: false,
 					processData: false,
-					error: function( err ) {
-						console.error( "fileHandler.sendFile, POST to " + uploadFileEndpoint + " gives error", err );
-					}
 				});
 
 			});

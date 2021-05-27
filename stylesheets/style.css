@@ -993,6 +993,11 @@ extend_ -> fill_
 	padding-bottom: 17px;
 }
 
+.pv-exact-3_5 {
+	padding-top: 3.5px !important;
+	padding-bottom: 3.5px !important;
+}
+
 /* Marker color section */
 #markerList .markerColorAqua,
 #markerList.extra-extended .extend_markerColorAqua {	background-color: Aqua;	color: black; }

@@ -205,6 +205,8 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	$('#currentSong').text( Troff.pathToName_2( path ) ).show();
 	$('#currentArtist').text( "" );
 
+	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
+
 	// TODO: se om jag kan få till metadata? (att man själv får fylla i det kanske? )
 	/*if(metadata.title){
 		$('#currentSong').text( metadata.title ).show();
@@ -315,8 +317,12 @@ async function createSongAudio( path ) {
 			console.error("error: No song selected yet: ", e);
 		}
 	} else {
-		let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
-		setSong2( path, "audio", v3SongObjectUrl );
+		try {
+			let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
+			setSong2( path, "audio", v3SongObjectUrl );
+		} catch ( e ) {
+			errorHandler.fileHandler_sendFile( e );
+		}
 	}
 
 };
@@ -889,24 +895,44 @@ var TroffClass = function(){
 			if( !window.location.hash ) {
 				return;
 			}
+			// remove url-hash completely:
 			history.pushState("", document.title, window.location.pathname + window.location.search );
 			return;
 		}
-		window.location.hash = serverId + "&" + encodeURI( fileName );
+		window.location.hash = Troff.createHash( serverId, fileName );
 	};
+
+	/*Troff*/ this.createHash = function( serverId, fileName ) {
+		return "#" + serverId + "&" + encodeURI( fileName )
+	}
 
 	/*Troff*/ this.uploadSongToServer = async function( event ) {
 		"use strict";
+
+		// show a pop-up that says song is being uploaded, will let you know when it is done
+		// alt 1, please do not close this app in the mean time
+		// alt 2, please do not switch song in the mean time....
+
 		const songKey = Troff.getCurrentSong();
 
-		let resp = await fileHandler.sendFile( songKey, nDB.get( songKey ) );
+		$( "#uploadSongToServerInProgressDialog" ).removeClass( "hidden" );
+		try {
+			let resp = await fileHandler.sendFile( songKey, nDB.get( songKey ) );
 
-		nDB.setOnSong( songKey, "serverId", resp.id );
+			nDB.setOnSong( songKey, "serverId", resp.id );
 
-		Troff.setUrlToSong( resp.id, resp.fileName );
-		$( "#shareSongUrl").val( window.location.href );
-		$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
+			if( songKey == Troff.getCurrentSong() ) {
+				Troff.setUrlToSong( resp.id, resp.fileName );
+			}
 
+			$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
+			$( "#shareSongUrl").val( window.location.origin + Troff.createHash( resp.id, resp.fileName ) );
+			$( "doneUploadingSongToServerDialog_songName" ).text( songKey );
+			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
+
+		} catch ( error ) {
+			return errorHandler.fileHandler_sendFile( error, songKey );
+		}
 	};
 
 	/*Troff*/ this.buttCopyUrlToClipboard = function() {
@@ -921,6 +947,8 @@ var TroffClass = function(){
 			$( "#shareSongUrl").val( window.location.href );
 			$( ".showOnUploadComplete" ).addClass( "hidden" );
 			$( ".showOnSongAlreadyUploaded" ).removeClass( "hidden" );
+
+			$( "#doneUploadingSongToServerDialog_songName" ).text( Troff.getCurrentSong() );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 		} else {
 			$( ".showOnUploadComplete" ).removeClass( "hidden" );
@@ -1028,6 +1056,9 @@ var TroffClass = function(){
 
 			return;
 		}
+		$( "#downloadSongFromServerInProgressDialog_songName" ).text( fileName );
+		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
+
 
 		let troffData;
 		try {
@@ -5294,10 +5325,22 @@ $.fn.removeClassStartingWith = function (filter) {
 
 const errorHandler = {};
 
+// Create an object type UserException
+function ShowUserException(message) {
+	this.message = message;
+	this.stack = (new Error()).stack;
+}
+ShowUserException.prototype = new Error;
+ShowUserException.prototype.name = 'ShowUserException';
+
 $(function () {
 	"use strict";
 
+	errorHandler.messages = {};
+	errorHandler.messages.fileIsNotInCache = function( file ) { return }
+
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
+		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 0 ) {
 			$.notify(
 				`Could not connect to server. Please check your internet connection.
@@ -5323,7 +5366,30 @@ $(function () {
 			);
 			return;
 		}
-		console.error( error );
+
+		if( error instanceof ShowUserException ) {
+			$.notify( error.message,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
+		$.notify(
+			`An unknown error occurred when trying to download the song "${fileName}", with id "${serverId}", from the server,
+			please try again later.
+			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.
+			and include the following:
+			Status: ${error.status}, ${error.statusText}`,
+			{
+				className: 'error',
+				autoHide: false,
+				clickToHide: true
+			}
+		);
+		console.error( `errorHandler.backendService_getTroffData: Status: ${error.status}, ${error.statusText}\nFull Error`, error );
 		return;
 	};
 
@@ -5341,8 +5407,73 @@ $(function () {
 			);
 			return;
 		}
-		console.error( error );
+
+		if( error instanceof ShowUserException ) {
+			$.notify( error.message,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
+
+		$.notify(
+			`An unknown error occurred with the song "${fileName}",
+			please try again later.
+			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.
+			and include the following:
+			Status: ${error.status}, ${error.statusText}`,
+			{
+				className: 'error',
+				autoHide: false,
+				clickToHide: true
+			}
+		);
+		console.error( `errorHandler.backendService_getTroffData: Status: ${error.status}, ${error.statusText}\nFull Error`, error );
 		return;
 	};
+
+	errorHandler.fileHandler_sendFile = function( error, fileName ) {
+		console.log( "error", error) ;
+		$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
+		if( error.status == 0 ) {
+			$.notify(
+				`Could not upload the song "${fileName}": could not connect to server. Please check your internet connection.
+					If your internet is working, please try again later.
+					If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com`,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
+
+		if( error instanceof ShowUserException ) {
+			$.notify( error.message,
+				{
+					className: 'error',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+			return;
+		}
+
+		$.notify(
+			`An unknown error occurred, please try again later.
+			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
+			explaining what happened`,
+			{
+				className: 'error',
+				autoHide: false,
+				clickToHide: true
+			}
+		);
+		console.error( `errorHandler.backendService_getTroffData: Status: ${error.status}, ${error.statusText}\nFull Error`, error );
+	}
 
 });
