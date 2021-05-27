@@ -5277,7 +5277,7 @@ $(document).ready( async function() {
 	DB.getAllSonglists();
 	DB.getZoomDontShowAgain();
 	IO.startFunc();
-	Rate.startFunc();
+	//Rate.startFunc();
 
 	Troff.initFileApiImplementation();
 
