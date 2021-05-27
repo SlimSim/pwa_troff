@@ -1067,7 +1067,8 @@ var TroffClass = function(){
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
-		let fetchAndSaveResponse = fileHandler.fetchAndSaveResponse( troffData.fileDownloadUri, troffData.fileName );
+		const downloadUrl =  environment.getDownloadFileEndpoint( troffData.id )
+		let fetchAndSaveResponse = fileHandler.fetchAndSaveResponse( downloadUrl, troffData.fileName );
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
