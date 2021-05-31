@@ -5395,6 +5395,7 @@ $(function () {
 	};
 
 	errorHandler.fileHandler_fetchAndSaveResponse = function( error, fileName ) {
+		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 404 ) {
 			$.notify(
 				`The song "${fileName}", could not be found on the server, it has probably been removed
