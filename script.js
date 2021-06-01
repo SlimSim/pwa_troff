@@ -1035,55 +1035,88 @@ var TroffClass = function(){
 		Troff.selectSongInSongList( fileName );
 	};
 
+	/*Troff*/ this.showImportData = function( fileName, serverId ) {
+		"use strict";
+		$( "#importTroffDataToExistingSong_songName" ).text( fileName );
+		$( "#importTroffDataToExistingSong_fileName" ).val( fileName );
+		$( "#importTroffDataToExistingSong_serverId" ).val( serverId );
+		$( "#downloadSongFromServerInProgressDialog" ).addClass("hidden");
+		$( "#importTroffDataToExistingSongDialog" ).removeClass("hidden");
+	};
+
+	/*Troff*/ this.showDownloadSongFromServerInProgress = function( fileName ) {
+		"use strict";
+		$( "#downloadSongFromServerInProgressDialog_songName" ).text( fileName );
+		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
+	}
+
+	/*Troff*/ this.downloadSongFromServerButDataFromCacheExists = async function(fileName, serverId, troffDataFromCache ) {
+		"use strict";
+
+		let fileDoesExists = await fileHandler.doesFileExistInCache( fileName );
+
+		if( fileDoesExists ) {
+			if( serverId == troffDataFromCache.serverId ) {
+				await createSongAudio( fileName );
+				Troff.selectSongInSongList( fileName );
+			} else {
+				Troff.showImportData( fileName, serverId );
+			}
+			return;
+		}
+
+		Troff.showDownloadSongFromServerInProgress( fileName );
+
+		try {
+			const downloadUrl =  environment.getDownloadFileEndpoint( serverId );
+			await fileHandler.fetchAndSaveResponse( downloadUrl, fileName );
+		} catch ( error ) {
+			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
+		}
+
+		if( serverId == troffDataFromCache.serverId ) {
+			await createSongAudio( fileName );
+			addItem_NEW_2( fileName );
+		} else {
+			Troff.showImportData( fileName, serverId );
+		}
+
+	};
 
 	/*Troff*/ this.downloadSongFromServer = async function( hash ) {
 		"use strict";
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
 		const fileName = decodeURI( fileNameURI );
 		const troffDataFromCache = nDB.get( fileName );
-
-		if( troffDataFromCache != null && serverId == troffDataFromCache.serverId ) {
-			await createSongAudio( fileName );
-			Troff.selectSongInSongList( fileName );
-			return;
-		}
+		let troffData;
 
 		if( troffDataFromCache != null ) {
-			$( "#importTroffDataToExistingSong_songName" ).text( fileName );
-			$( "#importTroffDataToExistingSong_fileName" ).val( fileName );
-			$( "#importTroffDataToExistingSong_serverId" ).val( serverId );
-			$( "#importTroffDataToExistingSongDialog" ).removeClass("hidden");
-
-			return;
+			return Troff.downloadSongFromServerButDataFromCacheExists(fileName, serverId, troffDataFromCache);
 		}
-		$( "#downloadSongFromServerInProgressDialog_songName" ).text( fileName );
-		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
+		Troff.showDownloadSongFromServerInProgress( fileName );
 
-
-		let troffData;
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
-		const downloadUrl =  environment.getDownloadFileEndpoint( troffData.id )
-		let fetchAndSaveResponse = fileHandler.fetchAndSaveResponse( downloadUrl, troffData.fileName );
-
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
-		let saveToDBResponse = nDB.set( troffData.fileName, markers );
 
 		try {
-			let doneSaveResponse = await fetchAndSaveResponse;
-			let doneSaveToDB = await saveToDBResponse;
+			const downloadUrl = environment.getDownloadFileEndpoint( troffData.id );
+			await Promise.all([
+				fileHandler.fetchAndSaveResponse( downloadUrl, troffData.fileName ),
+				nDB.set( troffData.fileName, markers )]
+			);
 		} catch ( error ) {
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 
 		await createSongAudio( troffData.fileName );
 		addItem_NEW_2( troffData.fileName );
-	}
+	};
 
 	this.recallFloatingDialog = function() {
 		DB.getVal( "TROFF_SETTING_SONG_LIST_FLOATING_DIALOG", function( floatingDialog ){
@@ -5438,7 +5471,6 @@ $(function () {
 	};
 
 	errorHandler.fileHandler_sendFile = function( error, fileName ) {
-		console.log( "error", error) ;
 		$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 0 ) {
 			$.notify(
