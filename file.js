@@ -165,6 +165,12 @@ $(function () {
 		});
 	};
 
+	fileHandler.doesFileExistInCache = async function( url ) {
+		let response = await caches.match( url );
+		return response !== undefined;
+
+	};
+
 	fileHandler.removeFile = async function( url ) {
 		//TODO: implement removeFile :)
 		console.info( "fileHandler.removeFile is not yet implemented :( " );
