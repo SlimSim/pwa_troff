@@ -1619,9 +1619,13 @@
 	<div id="downloadSongFromServerInProgressDialog" class="outerDialog noCloseOnClick hidden">
 		<div class="innerDialog mediumDialog marginDialog flexCol">
 			<h2 class="paragraph">Download in progress</h2>
-			<p class="mt-3 mb-0">
-				The song <span id="downloadSongFromServerInProgressDialog_songName" class="bold"></span>, with all its markers,
-				is being downloaded.
+			<p class="mt-3 mb-0 downloadSongFromServerInProgressDialog_song">
+				The song <span class="downloadSongFromServerInProgressDialog_songName bold"></span>,
+				with all its markers, is being downloaded.
+			</p>
+			<p class="mt-3 mb-0 downloadSongFromServerInProgressDialog_markers">
+				The markers for the song <span class="downloadMarkersFromServerInProgressDialog_songName bold"></span>
+				are being downloaded.
 			</p>
 			<p class="py-4">
 				<span class="pr-5">Please wait a moment!</span>
@@ -1629,7 +1633,7 @@
 			</p>
 
 			<p class="m-0">
-				If you want to use Troff while you wait for this song to download
+				If you want to use Troff while you wait for the download,
 				open it in another tab or window:
 				<a href="https://troff.app" target="_blank">troff.app</a>
 			</p>

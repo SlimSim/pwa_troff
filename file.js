@@ -42,8 +42,8 @@ $(function () {
 		});
 	};
 
-	fileHandler.fetchAndSaveResponse = async function( url, songKey ) {
-
+	fileHandler.fetchAndSaveResponse = async function( fileId, songKey ) {
+		const url = environment.getDownloadFileEndpoint( fileId );
 		return fetch( url )
 			.then( (response) => {
 				if( !response.ok ) {

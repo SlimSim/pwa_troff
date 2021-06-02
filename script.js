@@ -927,7 +927,7 @@ var TroffClass = function(){
 
 			$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
 			$( "#shareSongUrl").val( window.location.origin + Troff.createHash( resp.id, resp.fileName ) );
-			$( "doneUploadingSongToServerDialog_songName" ).text( songKey );
+			$( "#doneUploadingSongToServerDialog_songName" ).text( songKey );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 
 		} catch ( error ) {
@@ -973,6 +973,8 @@ var TroffClass = function(){
 		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
 		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
 
+		Troff.showMarkersDownloadInProgressDialog( fileName );
+
 		let troffData;
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
@@ -997,6 +999,8 @@ var TroffClass = function(){
 	/*Troff*/ this.importTroffDataToExistingSong_merge = async function( event ) {
 		const fileName = $( "#importTroffDataToExistingSong_fileName" ).val();
 		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
+
+		Troff.showMarkersDownloadInProgressDialog( fileName );
 
 		const markersFromCache = nDB.get( fileName );
 		let markersFromServer;
@@ -1044,10 +1048,19 @@ var TroffClass = function(){
 		$( "#importTroffDataToExistingSongDialog" ).removeClass("hidden");
 	};
 
-	/*Troff*/ this.showDownloadSongFromServerInProgress = function( fileName ) {
+	/*Troff*/ this.showMarkersDownloadInProgressDialog = function( songName ) {
+		$( ".downloadSongFromServerInProgressDialog_songName" ).text( songName );
+		$( "#downloadSongFromServerInProgressDialog" ).removeClass( "hidden" );
+		$( ".downloadSongFromServerInProgressDialog_song" ).addClass( "hidden" );
+		$( ".downloadSongFromServerInProgressDialog_markers" ).removeClass( "hidden" );
+	};
+
+	/*Troff*/ this.showDownloadSongFromServerInProgress = function( songName ) {
 		"use strict";
-		$( "#downloadSongFromServerInProgressDialog_songName" ).text( fileName );
+		$( ".downloadSongFromServerInProgressDialog_songName" ).text( songName );
 		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
+		$( ".downloadSongFromServerInProgressDialog_song" ).removeClass( "hidden" );
+		$( ".downloadSongFromServerInProgressDialog_markers" ).addClass( "hidden" );
 	}
 
 	/*Troff*/ this.downloadSongFromServerButDataFromCacheExists = async function(fileName, serverId, troffDataFromCache ) {
@@ -1067,9 +1080,15 @@ var TroffClass = function(){
 
 		Troff.showDownloadSongFromServerInProgress( fileName );
 
+		let troffData;
 		try {
-			const downloadUrl =  environment.getDownloadFileEndpoint( serverId );
-			await fileHandler.fetchAndSaveResponse( downloadUrl, fileName );
+			troffData = await backendService.getTroffData( serverId, fileName );
+		} catch( error ) {
+			return errorHandler.backendService_getTroffData( error, serverId, fileName );
+		}
+
+		try {
+			await fileHandler.fetchAndSaveResponse( troffData.fileId, fileName );
 		} catch ( error ) {
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
@@ -1105,9 +1124,8 @@ var TroffClass = function(){
 		markers.serverId = serverId;
 
 		try {
-			const downloadUrl = environment.getDownloadFileEndpoint( troffData.id );
 			await Promise.all([
-				fileHandler.fetchAndSaveResponse( downloadUrl, troffData.fileName ),
+				fileHandler.fetchAndSaveResponse( troffData.fileId, troffData.fileName ),
 				nDB.set( troffData.fileName, markers )]
 			);
 		} catch ( error ) {
@@ -5375,6 +5393,7 @@ $(function () {
 
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
 		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
+		$( "#downloadMarkersFromServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 0 ) {
 			$.notify(
 				`Could not connect to server. Please check your internet connection.
@@ -5429,6 +5448,7 @@ $(function () {
 
 	errorHandler.fileHandler_fetchAndSaveResponse = function( error, fileName ) {
 		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
+		$( "#downloadMarkersFromServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 404 ) {
 			$.notify(
 				`The song "${fileName}", could not be found on the server, it has probably been removed
