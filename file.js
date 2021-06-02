@@ -180,7 +180,8 @@ $(function () {
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
 			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
       we apologize for the inconvenience.
-      Please contact slimsimapps@gmail.com so that we can help you fix this problem` );
+      Please add the file "${fileKey}" to troff again,
+      reload the page and try to upload it again` );
 		}
 
 		const strSongTroffInfo = JSON.stringify( oSongTroffInfo );
