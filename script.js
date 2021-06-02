@@ -4406,6 +4406,7 @@ var IOClass = function(){
 
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
+		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
 		$( "#buttNewSongList_NEW" ).on( "click", clickButtNewSongList_NEW );
 		$( "#songListAll_NEW" ).click( clickSongList_NEW );
 		$( "#songListSelector" ).change( onChangeSongListSelector );
@@ -4572,6 +4573,10 @@ var IOClass = function(){
 	/*IO*/this.setColor = function( colClass ) {
 		$('html').removeClass();
 		$('html').addClass( colClass );
+	};
+
+	/*IO*/ this.onClickCopyTextToClipboard = function( event ) {
+		IO.copyTextToClipboard( $( event.target ).val() );
 	};
 
   /*IO*/ this.copyTextToClipboard = async function( text ) {
