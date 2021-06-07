@@ -74,9 +74,19 @@ body{
 	display: flex;
 	font-family: Arial, "Open Sans", sans-serif;
 	height: 100vh;
+	overflow: hidden !important;
 }
 
-
+@media screen and (max-width: 480px) {
+	body{
+		/* max-height: 100vh; */
+		/* overflow-y: hidden; */
+		overflow-x: auto !important;
+	}
+	#userNoteSection {
+		min-width: 300px;
+	}
+}
 
 
 
