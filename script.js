@@ -1201,7 +1201,7 @@ var TroffClass = function(){
 
 	this.recallExtraExtendedMarkerColor = function() {
 		DB.getVal( TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR, function( extend ) {
-			if( extend ) {
+			if( extend || extend === null ) {
 				$( "#markerList").addClass( "extra-extended" );
 				$( "#toggleExtraExtendedMarkerColor").addClass( "active" );
 			}
