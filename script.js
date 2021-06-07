@@ -4571,7 +4571,6 @@ var IOClass = function(){
 	};
 
 	/*IO*/ this.blurHack = function() {
-		console.log( "blurHack -> ");
 		document.getElementById( "blur-hack" ).focus({ preventScroll: true });
 	};
 
