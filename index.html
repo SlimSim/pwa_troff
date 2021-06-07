@@ -1556,20 +1556,33 @@
 		</div>
 	</div>
 
-	<div id="uploadSongToServerInProgressDialog" class="outerDialog hidden">
+	<div id="uploadSongToServerInProgressDialog" class="outerDialog noCloseOnClick hidden">
 		<div class="innerDialog mediumDialog marginDialog flexCol">
 			<h2 class="paragraph">Upload in progress</h2>
-			<div class="mt-2 flexRow">
-				<p class="pr-2">
-					We will let you know when it is done.
-					You can continue to use Troff while the song is uploading,
-					but don't close the browser window while you wait!
-				</p>
+			<p class="pr-2">
+				We will let you know when it is done.<br />
+				<span class="bold">Please allow up to 15 minutes</span> before you assume anything has gone wrong.
+				If you want to use Troff while you wait for the download,
+				open it in another tab or window:
+				<a href="https://troff.app" target="_blank">troff.app</a>
+			</p>
+
+			<p class="py-4 pb-2">
+				<span class="pr-5">Please wait a moment!</span>
 				<i class="fas fa-circle-notch fa-2x fa-spin align-middle"></i>
-			</div>
-			<span class="flexRow">
-				<input type="button" class="regularButton flex-none dialogCancelButton" value="OK" />
-			</span>
+			</p>
+
+			<p class="m-0">
+				Fell free to check out the help-page while you wait:
+				<a href="help.html" class="pl-2" target="_blank">
+					<button class="svgButt regularButton cursor-help"
+						type="button"
+						title="Get tips on how to get the most out of Troff">
+						<i class="fa fa-question cursor-help m-0"></i>
+					</button>
+				</a>
+			</p>
+			<p class="m-0">This pop-up will close when the song is uploaded.</p>
 		</div>
 	</div>
 
@@ -1642,7 +1655,7 @@
 			</p>
 			<p class="m-0">
 				Fell free to check out the help-page while you wait:
-				<a href="help.html" target="_blank">
+				<a href="help.html" target="_blank" class="pl-2">
 					<button class="svgButt regularButton cursor-help"
 						type="button"
 						title="Get tips on how to get the most out of Troff">
