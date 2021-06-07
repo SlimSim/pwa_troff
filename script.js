@@ -230,7 +230,7 @@ function sortAndValue(sortValue, stringValue) {
 }
 
 function clickSongList_NEW( event ) {
-	document.getElementById('blur-hack').focus();
+	IO.blurHack();
 	var $target = $(event.target),
 		data = $target.data("songList"),
 		galleryId = $target.attr("data-gallery-id"),
@@ -603,7 +603,7 @@ function createSongList_NEW( songDataList ) {
 
 	var saveSongList = function( event ) {
 		var clearCreateSongList = function(){
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			$("#createSongListName").val("");
 			$("#createSongListDialog").addClass("hidden");
 			$('#createSongListSave').off( "click.saveSongList" );
@@ -1232,7 +1232,7 @@ var TroffClass = function(){
 	/*Troff*/this.enterWritableField = function() {
 		IO.setEnterFunction(function(event){
 			if(event.ctrlKey==1){ //Ctrl+Enter will exit
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 				return false;
 			}
 			return true;
@@ -1455,7 +1455,7 @@ var TroffClass = function(){
 		var bFullScreen = butt.classList.contains('active');
 		DB.setCurrent(strCurrentSong, 'bPlayInFullscreen', bFullScreen );
 
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	};
 
 	this.mirrorImageChanged = function( event ) {
@@ -1463,7 +1463,7 @@ var TroffClass = function(){
 		DB.setCurrent(strCurrentSong, 'bMirrorImage', bMirrorImage );
 		Troff.setMirrorImage( bMirrorImage );
 
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	}
 
 	this.setImageLayout = function(){
@@ -1547,7 +1547,7 @@ var TroffClass = function(){
 		$('#stopAfter').toggleClass('grayOut');
 		Troff.setCurrentStopAfter();
 		Troff.settAppropriateActivePlayRegion();
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	};
 
 	this.setCurrentStopAfter = function() {
@@ -1603,7 +1603,7 @@ var TroffClass = function(){
 		$('#buttPauseBefStart').toggleClass('active');
 		$('#pauseBeforeStart').toggleClass('grayOut');
 		Troff.updateSecondsLeft();
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		Troff.setCurrentPauseBefStart();
 	};
 
@@ -1618,7 +1618,7 @@ var TroffClass = function(){
 		if(speed == 1 || speed == -1)
 				speed = $('audio, video')[0].playbackRate * 100 + (5*speed);
 		$('#speedBar').val( speed );
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		Troff.speedUpdate();
 	};
 
@@ -1633,7 +1633,7 @@ var TroffClass = function(){
 		if(volume == 1 || volume == -1)
 				volume = $('audio, video')[0].volume * 100 + (5*volume);
 		$('#volumeBar').val( volume );
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		Troff.volumeUpdate();
 	};
 
@@ -1722,7 +1722,7 @@ var TroffClass = function(){
 		$(this).addClass('currentLoop');
 
 		Troff.updateLoopTimes();
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	};
 
 	this.updateLoopTimes = function(){
@@ -1871,7 +1871,7 @@ var TroffClass = function(){
 		} else {
 				Troff.pauseSong(updateLoopTimes);
 		}
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	}; // end spaceOrEnter()
 
 	/*Troff*/this.playSong = function(wait){
@@ -2189,7 +2189,7 @@ var TroffClass = function(){
 	/*Troff*/this.toggleImportExport = function(){
 		IO.jQueryToggle( '#outerImportExportPopUpSquare');
 		//$('#outerImportExportPopUpSquare').toggle();
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	};
 
 	/*Troff*/this.getLastSlashName = function(strUrl){
@@ -2203,7 +2203,7 @@ var TroffClass = function(){
 
 
 	/*Troff*/this.toggleArea = function(event) {
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 
 		var sectionToHide = $( event.target ).attr( "section-to-hide" );
 
@@ -2351,14 +2351,14 @@ var TroffClass = function(){
 
 	this.enterSongListName = function(){
 		IO.setEnterFunction(function(event){
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			Troff.saveNewSongList();
 			return false;
 		});
 	};
 	this.exitSongListName = function(){
 		IO.clearEnterFunction();
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	};
 
 	/*Troff*/this.getUniqueSonglistId = function(){
@@ -2421,7 +2421,7 @@ var TroffClass = function(){
 		$('#songInfoArea').addClass('textareaEdit');
 		IO.setEnterFunction(function(event){
 			if(event.ctrlKey==1){ //Ctrl+Enter will exit
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 				return false;
 			}
 			return true;
@@ -2442,7 +2442,7 @@ var TroffClass = function(){
 	/*Troff*/this.rememberCurrentState = function(){
 		if( $("#statesTab").hasClass( "hidden" ) ) return;
 
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		var nrStates = $('#stateList').children().length + 1;
 		IO.prompt(
 			"Remember state of settings to be recalled later",
@@ -2556,14 +2556,14 @@ var TroffClass = function(){
 		IO.setEnterFunction(function(event){
 			if(event.ctrlKey==1){//Ctrl+Enter will exit
 				$input.val('').trigger('click');
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 				return false;
 			}
 
 			$("#dataSongTable").DataTable().rows(".important").nodes().to$().trigger( "click" );
 			$("#dataSongTable").DataTable().rows(".important").nodes().to$().removeClass( "important" );
 
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			return true;
 		}, function(event){
 			var element = $("#dataSongTable").find("tbody").find( "tr" ).filter( ".important" ),
@@ -2590,7 +2590,7 @@ var TroffClass = function(){
 		$("#dataSongTable").DataTable().rows(".important").nodes().to$().removeClass( "important" );
 
 		IO.clearEnterFunction();
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 	};
 
 	/*Troff*/this.showSearchAndActivate = function( event ) {
@@ -2609,7 +2609,7 @@ var TroffClass = function(){
 		$('#markerInfoArea').addClass('textareaEdit');
 		IO.setEnterFunction(function(event){
 			if(event.ctrlKey==1){//Ctrl+Enter will exit
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 				return false;
 			}
 			return true;
@@ -2638,15 +2638,15 @@ var TroffClass = function(){
 
 			var startM = function() {
 				Troff.selectMarker(this.id);
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 			};
 			var stopM = function() {
 				Troff.selectStopMarker(this.id);
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 			};
 			var editM = function() {
 				Troff.editMarker(this.id.slice(0,-1));
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 			};
 
 			for(var i=0; i<aMarkers.length; i++) {
@@ -2793,7 +2793,7 @@ var TroffClass = function(){
 			$('#' + stopMarkerId).addClass('currentStopMarker');
 
 			Troff.settAppropriateActivePlayRegion();
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 
 			DB.setCurrentStartAndStopMarker(startMarkerId, stopMarkerId, strCurrentSong);
 		};
@@ -2808,7 +2808,7 @@ var TroffClass = function(){
 			$('#markerInfoArea').val($('#'+startMarkerId)[0].info);
 
 			Troff.settAppropriateActivePlayRegion();
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			DB.setCurrentStartMarker(startMarkerId, strCurrentSong );
 		};
 
@@ -2821,7 +2821,7 @@ var TroffClass = function(){
 			$('#' + stopMarkerId).addClass('currentStopMarker');
 
 			Troff.settAppropriateActivePlayRegion();
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			DB.setCurrentStopMarker(stopMarkerId, strCurrentSong );
 		};
 
@@ -2907,7 +2907,7 @@ var TroffClass = function(){
 			Troff.setCurrentStartBefore();
 
 			Troff.settAppropriateActivePlayRegion();
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 		};
 
 		this.selectStartBefore = function(bActive, iStartBefore){
@@ -2974,7 +2974,7 @@ var TroffClass = function(){
 		this.toggleMoveMarkersMoreInfo = function(){
 			//$('#moveMarkersMoreInfoDialog').toggle();
 			IO.jQueryToggle( "#moveMarkersMoreInfoDialog" );
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 		};
 
 		/*
@@ -3453,12 +3453,12 @@ var TroffClass = function(){
 		};
 
 		this.zoomOut = function(){
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			Troff.zoom(0, Number(document.getElementById('timeBar').max));
 		};
 
 		this.zoomToMarker = function(){
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 			var startTime = Troff.getStartTime();
 			var endTime = Troff.getStopTime();
 			if(startTime === m_zoomStartTime && endTime == m_zoomEndTime){
@@ -3516,7 +3516,7 @@ var TroffClass = function(){
 		this.tapTime = function(){
 				previousTime = time;
 				time = new Date().getTime() / 1000;
-				document.getElementById('blur-hack').focus();
+				IO.blurHack();
 
 				if(time - previousTime > 3){
 						startTime = previousTime = time;
@@ -3701,19 +3701,19 @@ var RateClass = function(){
 	};
 
 	this.rateDialogNoThanks = function(){
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		IO.clearEnterFunction();
 		$('#rateDialog').addClass( "hidden" );
 		nDB.set('iRatedStatus', Rate.RATED_STATUS_NO_THANKS );
 	};
 	this.rateDialogAskLater = function(){
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		IO.clearEnterFunction();
 		$('#rateDialog').addClass("hidden");
 		nDB.set('iRatedStatus', Rate.RATED_STATUS_ASK_LATER );
 	};
 	this.rateDialogRateNow = function(){
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		IO.clearEnterFunction();
 		$('#rateDialog').addClass("hidden");
 		nDB.set( 'iRatedStatus', Rate.RATED_STATUS_ALREADY_RATED );
@@ -4502,7 +4502,7 @@ var IOClass = function(){
 		$('#songInfoArea').change(Troff.updateSongInfo);
 		$('#songInfoArea').blur(Troff.exitSongInfo);
 		$('#songInfoArea').click(Troff.enterSongInfo);
-		$('#buttNewSongList').click(Troff.createNewSonglist);
+		//$('#buttNewSongList').click(Troff.createNewSonglist);
 		$('#newSongListName').click(Troff.enterSongListName);
 		$('#newSongListName').blur(Troff.exitSongListName);
 		$('#saveNewSongList').click(Troff.saveNewSongList);
@@ -4568,7 +4568,12 @@ var IOClass = function(){
 		} else {
 			$(idString).addClass("hidden");
 		}
-	}
+	};
+
+	/*IO*/ this.blurHack = function() {
+		console.log( "blurHack -> ");
+		document.getElementById( "blur-hack" ).focus({ preventScroll: true });
+	};
 
 	/*IO*/this.setColor = function( colClass ) {
 		$('html').removeClass();
@@ -4680,7 +4685,7 @@ var IOClass = function(){
 			){
 			return;
 		}
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 
 
 		if(event.keyCode>=48 && event.keyCode<=57) {
@@ -4962,7 +4967,7 @@ var IOClass = function(){
 			$('.colorPickerSelected').removeClass('colorPickerSelected');
 			this.classList.add('colorPickerSelected');
 			$("#"+markerColorId).html(this.getAttribute('color'));
-			document.getElementById('blur-hack').focus();
+			IO.blurHack();
 		}
 
 		function generateColorBut(col){
@@ -5275,7 +5280,7 @@ var IOClass = function(){
 	};
 
 	/*IO*/this.saveOnSongValue = function( event ) {
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 
 		var $target = $( event.target ),
 			id = $target.attr( "id" ),
@@ -5293,7 +5298,7 @@ var IOClass = function(){
 	}
 
 	/*IO*/this.saveOnSongToggleClass = function( event ) {
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 
 		var $target = $( event.target ),
 			targetHasClass,

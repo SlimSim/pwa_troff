@@ -17,7 +17,7 @@ $( document ).ready( function() {
 	},
 
 	dataSaveValue = function() {
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		var $target = $( event.target ),
 			id = $target.attr( "id" ),
 			value = $target.val();

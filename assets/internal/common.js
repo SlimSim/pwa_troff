@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function(event){
 		shareButtons[i].addEventListener('click', sendMail);
 	}
 	function sendMail(){
-		document.getElementById('blur-hack').focus();
+		IO.blurHack();
 		var subject = "Troff is a great music player for practicing";
 		var body = "Hello\n\n"
 			+ "I found this great app that is perfect for practicing dancing or "
