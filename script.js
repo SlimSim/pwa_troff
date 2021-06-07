@@ -2061,7 +2061,7 @@ var TroffClass = function(){
 			} else {
 				//This else is here to allow for imports of 0.5 and earlier
 				var aMarkersTmp = oImport;
-				importMarker(aMarkersTmp);
+				Troff.importMarker(aMarkersTmp);
 			}
 
 		});
@@ -2082,11 +2082,29 @@ var TroffClass = function(){
     delete oState.currentMarker;
     delete oState.currentStopMarker;
     return oState;
+	};
+
+	/*Troff*/ this.importMarker = function(aMarkers){
+		var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
+
+		for(var i=0; i<aMarkers.length; i++){
+			// these 5 lines are here to allow for import of markers
+			//from version 0.3.0 and earlier:
+			var tmpName = Object.keys(aMarkers[i])[0];
+			aMarkers[i].name = aMarkers[i].name || tmpName;
+			aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
+			aMarkers[i].info = aMarkers[i].info || "";
+			aMarkers[i].color = aMarkers[i].color || "None";
+			//:allow for version 0.3.0 end here
+
+			aMarkers[i].id = aMarkerId[i];
+		}
+		Troff.addMarkers(aMarkers); // adds marker to html
 	}
 
 	/*Troff*/ this.doImportStuff = function( oImport ) {
 
-		importMarker(oImport.aoMarkers);
+		Troff.importMarker(oImport.aoMarkers);
 		importSonginfo(oImport.strSongInfo);
 		importStates(oImport.aoStates);
 
@@ -2095,24 +2113,6 @@ var TroffClass = function(){
 				Troff.updateSongInfo();
 			} );
 		} );
-
-		function importMarker(aMarkers){
-			var aMarkerId = Troff.getNewMarkerIds(aMarkers.length);
-
-			for(var i=0; i<aMarkers.length; i++){
-				// these 5 lines are here to allow for import of markers
-				//from version 0.3.0 and earlier:
-				var tmpName = Object.keys(aMarkers[i])[0];
-				aMarkers[i].name = aMarkers[i].name || tmpName;
-				aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
-				aMarkers[i].info = aMarkers[i].info || "";
-				aMarkers[i].color = aMarkers[i].color || "None";
-				//:allow for version 0.3.0 end here
-
-				aMarkers[i].id = aMarkerId[i];
-			}
-			Troff.addMarkers(aMarkers); // adds marker to html
-		}
 
 		function importSonginfo(strSongInfo){
 			$('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
