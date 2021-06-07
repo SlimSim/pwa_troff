@@ -38,5 +38,13 @@ document.addEventListener("DOMContentLoaded", function(event){
 		window.open(link);
 	}
 
+	let toggleNavigation = document.querySelectorAll(".toggle-navigation");
+
+	toggleNavigation.forEach( function( item, index ) {
+		item.addEventListener( "click", function(){
+  		document.getElementById("navigation").classList.toggle( "d-none" );
+  	});
+	});
+
 });
 })();

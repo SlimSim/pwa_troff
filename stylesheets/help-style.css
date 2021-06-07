@@ -98,3 +98,10 @@ a {
 	text-align: center;
 }
 .overflow-hidden{overflow:hidden!important}
+
+.w-48{
+	width: 48px;
+}
+.h-48{
+	height: 48px;
+}
