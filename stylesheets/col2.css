@@ -183,7 +183,7 @@ p{
 
 }
 
-.roundButt,
+.roundButt, .roundButt2,
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
 .selected.important {

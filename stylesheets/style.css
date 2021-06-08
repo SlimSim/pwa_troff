@@ -88,8 +88,9 @@ body{
 	}
 }
 
-
-
+.no-outline-on-focus:focus {
+	outline: none;
+}
 
 h1 {
 /*  font-weight: 200;
@@ -831,6 +832,35 @@ table {
 .centerRoundButt2{
 	right: 9.5px;
 	bottom: 14.5px;
+}
+.centerRoundButt3 {
+	right: 8px;
+	bottom: 16px;
+}
+
+.roundButt2 {
+	border-width: 21px;
+	border-style: solid;
+	border-radius: 21px;
+	width: 0;
+	height: 0;
+}
+.height-15 {
+	height: 15px
+}
+
+.font-size-relative-65 {
+	font-size: 0.65em;
+}
+.font-size-relative-1 {
+	font-size: 1em;
+}
+
+.m-relative-7 {
+	margin: 0.7em;
+}
+.m-relative-4 {
+	margin: 0.4em;
 }
 
 .st-simple-on-off-button{
