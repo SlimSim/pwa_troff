@@ -993,6 +993,7 @@ table.dataTable thead .sorting_desc_disabled:after{
 
 table.dataTable .dataTables_empty{
 	width: 100vw; /*It maxes out at max-width of distant parent*/
+	cursor: auto;
 }
 
 
