@@ -34,6 +34,9 @@
 
 	<link rel="icon" href="assets/logos/favicon.ico">
 
+	<meta name="theme-color" content="#003366"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
 	<link rel="stylesheet" type="text/css" href="assets/external/reset.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
@@ -46,20 +49,27 @@
 
 </head>
 
-<body class="backgroundColor">
-	<input id="blur-hack" type="text"/>
-
-	<section class="flexCol flexScroll selfMaxWidth">
-	<header>
-		<img src="assets/logos/logo-048.png" alt="logo"/>
+<body class="backgroundColor flexCol">
+	<input id="blur-hack" type="button"/>
+	<header class="m-2">
+		<span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation"
+					data-toggle="collapse" data-target="#navigation">
+			<i class="fa fa-bars"></i>
+		</span>
+		<img src="assets/logos/logo.svg" width="48" alt="logo"/>
 		<h1>Troff - Help</h1>
 	</header>
-	<nav class="flexCol flexScroll">
+
+<div class="flexRow fill-height-minus-58">
+	<section id="navigation" class="flexCol flexScroll selfMaxWidth d-sm-flex d-none">
+	<nav class="flexCol flexScroll mt-0">
 		<a href="#whatIsTroff">What is Troff</a>
 			<a href="#about" class="subLink">About this guide</a>
 		<a href="#howToAddMedia">Add and play music or movies</a>
 			<a href="#howToRemoveMedia" class="subLink">Remove music or movies</a>
 			<a href="#howToPlayMedia" class="subLink">Play music or movies</a>
+		<a href="#shareViaLink">Share the song</a>
+		<a href="#theUrlInTheAddressBar" class="subLink">The Url in the address bar</a>
 		<a href="#globalSettings">Global settings</a>
 		<a href="#settings">The settings area</a>
 			<a href="#markers" class="subLink">Markers, what are those?</a>
@@ -80,7 +90,7 @@
 			<a href="#markerInfo" class="subLink">Marker info</a>
 		<a href="#countdown">The countdown area</a>
 		<a href="#songsArea">The songs area</a>
-		<a href="#songLists">The song lists area</a>
+		<a href="#songLists">The songlists area</a>
 			<a href="#addSongsToSonglists" class="subLink">Add songs to songlists</a>
 		<a href="#states">The states area</a>
 			<a href="#whatIsStates" class="subLink">What is states</a>
@@ -97,7 +107,7 @@
 	</section>
 	<section class="flexCol flexScroll">
 
-	<article id="whatIsTroff">
+	<article id="whatIsTroff" class="mt-0">
 		<h2>What is Troff</h2>
 		<p>
 			Troff is a media player that let you loop a part of a song,
@@ -152,7 +162,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			<p>Note: The files you add will be copied into your web browsers memory.
 			This means that</p>
 			<ol class="smallSize list-style-type-decimal ml-4">
-				<li class="small">No data will be sent to the server; your files will not leave your computer</li>
+				<li class="small">No data will be sent to the server (unless you <a href="#shareViaLink">share the song</a>); your files will not leave your computer</li>
 				<li class="small">
 					If you remove or change the original files, your songs in Troff will still be intact
 					(as long as the file-name is the same, you can import the file again to make the changes apply)
@@ -167,7 +177,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		<h3 id="howToRemoveMedia">Remove music or movies</h3>
 		<p>
 			In order to remove songs or movies,
-			open the song list in floating state.
+			open the songlist in floating state.
 			Select the files you want to remove,
 			click the drop-down and select "Remove songs from Troff".
 			After you confirm your selection, the songs will be removed.
@@ -191,6 +201,46 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			or continue to read this guide.
 		</p>
 	</article> <!-- add and play music -->
+	<article id="shareViaLink">
+		<h2>Share the song!</h2>
+		<p>
+			You can upload your song along with all the markers and info to our servers,
+			and then share a link to the song with anybody who needs to practice to the song!
+			When people go to the link, they will get the song, all the markers and info
+			so that they can start practising right a way!
+		</p>
+		<p>
+			This is great if you have team where everybody needs to work on the same song.
+			Then only one needs to prepare the markers!
+		</p>
+		<p class="note">
+			Note: Downloading the songs via a link might take some time, a minute is not uncommon.
+			So please let the people you share the songs with know to wait for the download at least 15 minutes before
+			thinking something is wrong
+			(unless an error message pops up).
+		</p>
+		<p>
+			You upload and share the song via the <i class="fa fa-share"></i>-button
+			above the play-button.
+		</p>
+		<h3 id="theUrlInTheAddressBar">The Url in the address bar</h3>
+		<p>
+			Songs that are uploaded to the server will display the sharable address in the url-bar.
+			However, if the markers, song info or states are changed, the url will be reset to troff.app.<br />
+			If you want to share the newly edited markers, simply click the share button again,
+			and you will get a new link to the new markers.
+		</p>
+		<p>
+			In the same way, if the people who have downloaded your song edit the markers,
+			their url will be reset to troff.app.
+			And in order for you to get their new markers, they will have to click the share button
+			and you will have to go to their link.
+		</p>
+		<p>
+			You will then get a choice if you want to import the new markers, keep your existing markers or
+			merge the markers.
+		</p>
+	</article> <!-- shareViaLink -->
 	<article id="globalSettings">
 	<h2>Global settings</h2>
 		<p>
@@ -305,7 +355,12 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		<h3 id="exportImport">Export and import</h3>
 			<p>
 				If you want to share your markers to someone,
-				the members of your show-team or band for instance, press "advanced" followed by "import / export" and
+				the members of your show-team or band for instance,
+				use the share-button explained in the <a href="#shareViaLink">"Share the song"</a>-section.
+			</p>
+			<p>
+				However, there is a manuel way to share everything except the song itself.
+				If you want to share the markers manually, press "advanced" followed by "import / export" and
 				the import export dialog appears.
 			</p>
 			<p class="note">
@@ -500,7 +555,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		<p>
 			The song area is where you can select which song to play.
 			The selected song is purple. If you can't find the song you want,
-			it might be in another song list, or it has been removed from the computer.
+			it might be in another songlist, or it has been removed from the computer.
 		</p>
 		<p>
 			The song area can either be in the attached state, then it will be next to the
@@ -518,10 +573,10 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		</p>
 	</article> <!-- songs Area -->
 	<article id="songLists">
-		<h2>The song lists area</h2>
+		<h2>The songlists area</h2>
 		<!--explain new songlist - how it works with folders / directories and how to create own songlists :) -->
 		<p>
-			You can create song lists to only show a few songs in the songs area.
+			You can create songlists to only show a few songs in the songs area.
 			There is also the "Gallery List" and "Directory List" which is
 			automatically created based on the folders you have selected and
 			the folders that they contain.
@@ -531,7 +586,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			or by clicking the "songlist"-button in the floating state.
 		</p>
 		<p>
-			To create a new song list, click "New song list", give it a name.
+			To create a new songlist, click "New songlist", give it a name.
 		</p>
 		<h3 id="addSongsToSonglists">Add songs to songlists</h3>
 		<p>
@@ -595,7 +650,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 	<article id="howToPlayMovies">
 		<h2>Play movies</h2>
 		<p>
-			If you select a movie in the song list that Troff is able to show,
+			If you select a movie in the songlist that Troff is able to show,
 			the movie will be shown in the info area.
 		</p>
 		<h3 id="fullscreen">Fullscreen</h3>
@@ -728,5 +783,6 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		</div>
 	</footer>
 	</section>
+</div>
 </body>
 </html>
