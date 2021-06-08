@@ -104,7 +104,7 @@
 	<section id="songsSection" class="flexCol">
 		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
 			<nav class="flexCol center">
-				<button class="svgButt special regularButton showUploadSongToServerDialog hidden"
+				<button class="svgButt special regularButton showUploadSongToServerDialog"
 								type="button"
 								title="Share this song to friends via link">
 					<i class="fa fa-share" ></i>
@@ -516,11 +516,11 @@
 				<input type="button" id="buttImportMarker" class="regularButton flex-one m-0 " value="import markers and settings" />
 			</div>
 
-			<p class="paragraph normalSize pt-5 pb-2 hidden">
+			<p class="paragraph normalSize pt-5 pb-2">
 				Or, upload the song, markers and settings to the server and get a link to this song that you can
 				share with your friends:
 			</p>
-			<input type="button" class="regularButton m-0 mb-2 w-100 dialogCancelButton showUploadSongToServerDialog hidden"
+			<input type="button" class="regularButton m-0 mb-2 w-100 dialogCancelButton showUploadSongToServerDialog"
 						 value="create a link to this song with all the markers and settings" />
 			<input id="buttCancelImportExportPopUpSquare" type="button" class="regularButton ml-0 mt-2 buttWidthStandard" value="Cancel" />
 		</div>
@@ -552,54 +552,6 @@
 					class="regularButton"
 					type="button"
 					value="No thanks" />
-			</span>
-		</div>
-	</div>
-
-	<div id="firstTimeUserDialog" class="outerDialog hidden">
-		<div class="innerDialog mediumDialog marginDialog flexCol">
-			<h2 class="paragraph">Welcome to Troff v1.2!</h2>
-			<div>
-				<div class="my-3">
-					<h3 class="bold">Latest feature:</h3>
-					<div class="d-flex flex-col">
-						<div class="svgButt special regularButton p-1 pl-3 pr-3">
-							<i class="fa fa-share"></i>
-						</div>
-						<p class="paragraph normalSize pl-3">
-							Share a link to your songs with your friends,
-							and they will get all your markers, states and song info!
-						</p>
-					</div>
-				</div>
-
-				<p class="paragraph normalSize">
-					With Troff you can:
-				</p>
-				<ul class="bulletList ml-4 normalSize">
-					<li>zoom on the timeline</li>
-					<li>write markers on the timeline</li>
-					<li>loop a part of the timeline</li>
-					<li>adjust the speed of a song or movie</li>
-					<li>step frame by frame in movies</li>
-				</ul>
-				<p class="paragraph normalSize">and lots more!</p>
-				<p class="paragraph smallSize pt-3 d-block">
-					Click the "Help" button in the upper left corner<br />
-					to learn more about the things Troff can offer you.
-				</p>
-			</div>
-
-			<span class="flexRow">
-				<input
-					class="regularButton dialogCancelButton"
-					type="button"
-					value="OK" />
-				<a href="help.html" target="_blank" class="ml-3 normalSize">
-					<button type="button" class="regularButton m-0">
-						Take the tour
-					</button>
-				</a>
 			</span>
 		</div>
 	</div>
@@ -828,19 +780,19 @@
 					</div>
 
 					<div class="py-2">
-						<h4 class="buttWidthMedium inlineBlock">Song Lists</h4>
+						<h4 class="buttWidthMedium inlineBlock">Songlists</h4>
 
 						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
 							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
-							title="If selected, clicking a song list will add those songs to the list, instead of only showing those songs"
+							title="If selected, clicking a songlist will add those songs to the list, instead of only showing those songs"
 							value="additive select" />
 						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
 							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
-							title="If selected, the songs and the song lists will be shown in a floating window"
+							title="If selected, the songs and the songlists will be shown in a floating window"
 							value="floating" />
 						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
 							type="button"
@@ -1340,35 +1292,30 @@
 					title="Show Search"
 					data-st-css-selector-to-hide="#dataSongTable_filter"
 					data-st-save-value-key="TROFF_SETTING_SEARCH_SHOW"
-					class="switch st-simple-on-off-button stOnOffButton active"
+					class="switch st-simple-on-off-button stOnOffButton active mr-2"
 					value="Search"/>
-				<input
-					type="button"
-					id="toggleSonglistsId"
-					title="Show songlists"
-					data-st-css-selector-to-hide="#songListsList"
-					data-st-save-value-key="TROFF_SETTING_SONG_LISTS_LIST_SHOW"
-					class="switch st-simple-on-off-button stOnOffButton"
-					value="Songlists"/>
 				<input
 					type="button"
 					title="Show Column Selector"
 					data-st-css-selector-to-hide="#columnToggleParent"
-					class="switch st-simple-on-off-button stOnOffButton mr-3"
+					class="switch st-simple-on-off-button stOnOffButton mr-2"
 					value="Column Selector"/>
 
+				<button
+					id="toggleSonglistsId"
+					title="Show songlists"
+					data-st-css-selector-to-hide="#songListsList"
+					data-st-save-value-key="TROFF_SETTING_SONG_LISTS_LIST_SHOW"
+					class="switch mr-2 st-simple-on-off-button stOnOffButton">
+					<i class="fa fa-columns"></i>
+				</button>
 				<label
 					title="Add songs, videos or pictures to Troff"
-					class="regularButton mr-3 linkButton cursor-pointer"
+					class="cursor-pointer mr-2 regularButton fa-stack fa-1x Small"
 					for="fileUploader">
-					Add files
+						<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
+						<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65 "></i>
 				</label>
-				<!--input
-					type="button"
-					title="Select folders to get songs from"
-					class="regularButton mr-3"
-					id="configure-button"
-					value="Select folders"/-->
 				<button class="regularButton mr-2 buttSetSongsDialogToAttachedState"
 					type="button"
 					title="open the songs dialog in floating window">
@@ -1420,10 +1367,10 @@
 
 					<label
 						title="Add songs, videos or pictures to Troff"
-						class="mr-2 pv-exact-17 regularButton fa-stack fa-1x attached-configure-button cursor-pointer"
+						class="mr-2 pv-exact-17 cursor-pointer regularButton fa-stack fa-1x"
 						for="fileUploader">
-						<i class="fas fa-music fa-stack-1x"></i>
-						<i class="fas fa-plus fa-stack-1x"></i>
+							<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
+							<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65 "></i>
 					</label>
 
 					<!--button class="mr-2 pv-exact-17 regularButton fa-stack fa-1x attached-configure-button"
@@ -1435,7 +1382,7 @@
 					</button-->
 					<button class="mr-2 stOnOffButton"
 						type="button"
-						title="show Song Lists"
+						title="show Songlists"
 						id="buttAttachedSongListToggle" >
 						<i class="fa fa-columns"></i>
 					</button>
@@ -1463,7 +1410,7 @@
 						id="buttNewSongList_NEW"
 						class="regularButton"
 						value="New Songlist" />
-					<h2>Song lists</h2>
+					<h2>Songlists</h2>
 					<ul id="songListList" class="flexScroll onOffParent maxWidthParent"></ul>
 
 
@@ -1494,11 +1441,11 @@
 
 	<div id="createSongListDialog" class="outerDialog hidden">
 		<div class="innerDialog mediumDialog marginDialog flexCol">
-			<h2 class="paragraph">New Song List</h2>
+			<h2 class="paragraph">New Songlist</h2>
 			<p>Create a songlist with <span id="newSonglistNrSongs"></span> songs in it.</p>
 			<p>You can drag and drop new songs on to this songlist from the songs-table.</p>
 			<div id="createSongListNameParent">
-				<p class="pl-3">Song list name:</p>
+				<p class="pl-3">Songlist name:</p>
 				<input type="text" id="createSongListName" class="form-control-sm" />
 				<input type="button" id="createSongListSave" class="regularButton" value="Save" />
 			</div>
@@ -1670,5 +1617,138 @@
 
 
 
+
+
+	<!-- Welcome - dialogen ska vara underst! -->
+	<div id="firstTimeUserDialog" class="outerDialog noCloseOnClick p-3 hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol scroll mh-100">
+			<h2 class="paragraph">Welcome to Troff v1.2!</h2>
+			<div>
+				<div class="my-3">
+					<h3 class="bold">Latest feature:</h3>
+					<div class="d-flex flex-col">
+						<div class="svgButt special regularButton p-1 pl-3 pr-3">
+							<i class="fa fa-share"></i>
+						</div>
+						<p class="paragraph normalSize pl-3">
+							Share a link to your songs with your friends,
+							and they will get all your markers, states and song info!
+						</p>
+					</div>
+				</div>
+
+				<p class="paragraph normalSize">
+					With Troff you can:
+				</p>
+				<ul class="bulletList ml-4 normalSize">
+					<li>zoom on the timeline</li>
+					<li>write markers on the timeline</li>
+					<li>loop a part of the timeline</li>
+					<li>adjust the speed of a song or movie</li>
+					<li>step frame by frame in movies</li>
+				</ul>
+				<p class="paragraph normalSize">and lots more!</p>
+			</div>
+
+			<button class="likeLink blurOnClick no-outline-on-focus" data-st-css-selector-to-toggle="#getStartedInfo">Get started with quick tips:</button>
+			<div id="getStartedInfo" class="hidden">
+
+				<div class="flexCol">
+					<p class="paragraph normalSize bold">To play the song, press: </p>
+					<span class="flexRow center">
+						<span class="margin roundButt2 center" >
+							<input type="button" value="▶" class="important centerRoundButtCommon centerRoundButt3">
+						</span>
+					</span>
+				</div>
+
+				<div class="section mb-0">
+					<p class="paragraph normalSize bold">To add a song, press:</p>
+					<div class="center">
+						<label
+							title="Add songs, videos or pictures to Troff"
+							class="mr-2 pv-exact-17 cursor-pointer regularButton fa-stack fa-1x"
+							for="fileUploader">
+								<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
+								<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65"></i>
+						</label>
+					</div>
+				</div>
+
+				<div class="section">
+					<p class="paragraph normalSize bold">The timeline is vertical</p>
+					<ul class="bulletList ml-4 normalSize">
+						<li class="paragraph normalSize">
+							you can put markers on the timeline.
+						</li>
+						<li class="paragraph normalSize">
+							the purple part of the timeline indicates what part of the song that will be played.
+						</li>
+					</ul>
+				</div>
+
+				<div class="section mt-4">
+					<p class="paragraph normalSize bold">This is a marker: </p>
+					<span class="flexRow center">
+						<button class="small regularButton height-15" ><i class="fa fa-pencil-alt m-0" ></i></button>
+						<b class="ml-1">0:42</b><input class="mx-1" type="button" value="marker nr 3" /><input type="button" value="Stop" />
+					</span>
+					<ul class="bulletList ml-4 normalSize">
+						<li class="paragraph normalSize">
+							click the marker name (<input class="mx-1" type="button" value="marker nr 3" />) to make the song start at that time
+							(42 seconds)
+						</li>
+						<li class="paragraph normalSize">
+							click the stop button (<input type="button" value="Stop">) to make the song stop at that time
+						</li>
+					</ul>
+				</div>
+
+				<div class="section mt-4">
+					<p class="paragraph normalSize bold  mt-0">Change the speed</p>
+					<ul class="bulletList ml-4 normalSize">
+						<li class="paragraph normalSize">
+							click the speed button
+							(<input class="button small regularButton my-0" type="button" title="Set speed to 100% (key: s)" value="S̲peed:" >)
+							to make the song play at regular speed
+						</li>
+						<li class="paragraph normalSize">
+							click the buttons under the speed button to adjust the speed in 5% increments.
+							<input class="button small regularButton my-0" type="button" title="Decrease speed (key: alt s)" value="-">
+							<input class="button small regularButton my-0" type="button" title="Increase speed (key: shift s)" value="+">
+						</li>
+						<li>or adjust the slider under the speed button</li>
+					</ul>
+				</div>
+
+				<div class="section mt-4">
+					<p class="paragraph normalSize bold">To learn what Troff can offer, press:</p>
+					<div class="center">
+						<a href="help.html" target="_blank">
+							<button class="svgButt regularButton cursor-help" type="button" title="Get tips on how to get the most out of Troff">
+								<i class="fa fa-question cursor-help"></i>
+							</button>
+						</a>
+					</div>
+				</div>
+
+
+
+
+			</div> <!-- end getStartedInfo -->
+
+			<span class="flexRow">
+				<input
+					class="regularButton dialogCancelButton"
+					type="button"
+					value="OK" />
+				<a href="help.html" target="_blank" class="ml-3 normalSize">
+					<button type="button" class="regularButton m-0">
+						Open Help-page
+					</button>
+				</a>
+			</span>
+		</div>
+	</div>
 </body>
 </html>

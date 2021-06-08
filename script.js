@@ -417,20 +417,12 @@ function initSongTable() {
       "<br />Try adding songs by clicking the <br / >" +
 			"<label " +
 				"title=\"Add songs, videos or pictures to Troff\"" +
-				"class=\"regularButton linkButton cursor-pointer\"" +
+				"class=\"cursor-pointer regularButton small fa-stack fa-1x\"" +
 				"for=\"fileUploader\">" +
-					"Add files" +
+					"<i class=\"fas fa-music fa-stack-1x m-relative-7 font-size-relative-1\"></i>" +
+					"<i class=\"fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65\"></i>" +
 			"</label>" +
-      "-button at the top<br />in the floating song-dialog "+
-      "<br / ><br / >or by clicking the <br / ><br / >" +
-			"<label " +
-				"title=\"Add songs, videos or pictures to Troff\"" +
-				"class=\"pv-exact-17 regularButton fa-stack fa-1x attached-configure-button cursor-pointer\"" +
-				"for=\"fileUploader\">" +
-					"<i class=\"fas fa-music fa-stack-1x\"></i>" +
-					"<i class=\"fas fa-plus fa-stack-1x\"></i>" +
-			"</label>" +
-			"-button at the top<br />in the attached song-dialog"
+			"-button at the top<br />of the song-dialog"
     },
 		"fixedHeader": true,
 		"paging": false,
@@ -4404,6 +4396,7 @@ var IOClass = function(){
 			$( event.target ).closest(".outerDialog").addClass("hidden")
 		} );
 
+		$( ".blurOnClick" ).on( "click", IO.blurHack );
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
@@ -5338,7 +5331,7 @@ $(document).ready( async function() {
 	DB.getAllSonglists();
 	DB.getZoomDontShowAgain();
 	IO.startFunc();
-	//Rate.startFunc();
+	Rate.startFunc();
 
 	Troff.initFileApiImplementation();
 
