@@ -104,10 +104,9 @@ $( ".st-simple-on-off-button" ).each( function( i, v ) {
 } );
 
 $( ".st-simple-on-off-button" ).click( function( event ) {
-	var $target = $( event.target ),
+	var $target = $( event.target ).closest( ".st-simple-on-off-button" ),
 		cssSelectorToHide = $target.data( "st-css-selector-to-hide" ),
 		setActive = !$target.hasClass( "active" );
-
 
 	if( setActive ) {
 		$target.addClass( "active" );
