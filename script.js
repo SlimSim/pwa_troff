@@ -1599,9 +1599,14 @@ var TroffClass = function(){
 		Troff.setCurrentPauseBefStart();
 	};
 
+	this.speedUpdateDemo = function() {
+		$( "#speedBar" ).val( $("#speedBarDemo").val() );
+		Troff.speedUpdate();
+	};
+
 	this.speedUpdate = function() {
 		var sliderVal = document.getElementById("speedBar").value;
-		$('#speed').html(sliderVal);
+		$('#speed, #speedDemo').html(sliderVal);
 		$('audio, video')[0].playbackRate = sliderVal/100;
 		DB.setCurrentSpeed(strCurrentSong, sliderVal);
 	};
@@ -1609,7 +1614,7 @@ var TroffClass = function(){
 		var speed = inpObj.data;
 		if(speed == 1 || speed == -1)
 				speed = $('audio, video')[0].playbackRate * 100 + (5*speed);
-		$('#speedBar').val( speed );
+		$('#speedBar, #speedBarDemo').val( speed );
 		IO.blurHack();
 		Troff.speedUpdate();
 	};
@@ -1806,13 +1811,13 @@ var TroffClass = function(){
 				incrementSpeedBy = speedDiffLeft > 0 ? 1 : -1;
 			}
 
-			$('#speedBar').val( currentSpeed + incrementSpeedBy );
+			$('#speedBar, #speedBarDemo').val( currentSpeed + incrementSpeedBy );
 
 		} else {
 			loopTimesLeft = parseInt( IO.loopTimesLeft() );
 			incrementSpeedBy = speedDiffLeft / loopTimesLeft;
 
-			$('#speedBar').val( currentSpeed + incrementSpeedBy );
+			$('#speedBar, ##speedBarDemo').val( currentSpeed + incrementSpeedBy );
 		}
 
 		Troff.speedUpdate();
@@ -2510,7 +2515,7 @@ var TroffClass = function(){
 		var iWaitBetweenLoops = oState.waitBetweenLoops;
 		Troff.setWaitBetweenLoops(bActiveWaitBetweenLoops, iWaitBetweenLoops);
 		$('#volumeBar').val(oState.volumeBar);
-		$('#speedBar').val(oState.speedBar);
+		$('#speedBar, #speedBarDemo').val(oState.speedBar);
 		Troff.speedUpdate();
 		Troff.volumeUpdate();
 		$('#' + oState.currentMarker).click();
@@ -4433,6 +4438,7 @@ var IOClass = function(){
 		$('#timeBar')[0].addEventListener('change', Troff.timeUpdate );
 		$('#volumeBar')[0].addEventListener('change', Troff.volumeUpdate );
 		$('#speedBar')[0].addEventListener('change', Troff.speedUpdate );
+		$('#speedBarDemo')[0].addEventListener('change', Troff.speedUpdateDemo );
 
 		$('#buttRememberState').click(Troff.rememberCurrentState);
 		$('#buttMarker').click(Troff.createMarker);
@@ -4515,9 +4521,9 @@ var IOClass = function(){
 		$('#buttResetVolume').click(100, Troff.volume );
 		$('#volumeMinus').click(-1, Troff.volume );
 		$('#volumePlus').click(1, Troff.volume );
-		$('#buttResetSpeed').click(100, Troff.speed );
-		$('#speedMinus').click(-1, Troff.speed );
-		$('#speedPlus').click(1, Troff.speed );
+		$('#buttResetSpeed, #buttResetSpeedDemo').click(100, Troff.speed );
+		$('#speedMinus, #speedMinusDemo').click(-1, Troff.speed );
+		$('#speedPlus, #speedPlusDemo').click(1, Troff.speed );
 
 		$('#pauseBeforeStart').change(Troff.setCurrentPauseBefStart);
 		$('#startBefore').change(Troff.setCurrentStartBefore);

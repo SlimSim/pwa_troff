@@ -166,7 +166,7 @@ body section{
 	top:-100px;
 }
 
-#markerSection{
+#markerSection, .markerSection{
 		display: flex;
 		padding: 0 5px 0 0;
 }
@@ -255,6 +255,11 @@ body section{
 		flex-direction: column;
 }
 
+.sliderInfoDemo {
+	height: 124px;
+	padding-right: 7px;
+}
+
 .popUpSquare{
 	display: flex;
 	flex-direction: column;
@@ -322,15 +327,20 @@ body section{
 
 
 /* the style for the time ***************************************/
-#activePlayRegion{
+#activePlayRegion, .activePlayRegionDemo{
 		width: 21px;
 		position: absolute;
 		margin-top: 16px;
 		height: calc(100vh - 32px);
 }
 
+.activePlayRegionDemo {
+	height: 42px;
+	margin-top: 24px;
+}
 
-#timeBar{
+
+#timeBar, .timeBarDemo{
 		-webkit-appearance: slider-vertical;
 		-moz-appearance: slider-vertical;
 		appearance: slider-vertical;
@@ -345,12 +355,15 @@ body section{
 		-webkit-transform: rotate(180deg);
 		transform: rotate(180deg);
 }
-#timeBarDiv{
+#timeBarDiv, .timeBarDiv{
 		width: 20px;
 		margin-right: 4px;
 		margin-left: 3px;
 }
 
+.timeBarDemo {
+	height: 98px;
+}
 
 
 
@@ -575,6 +588,18 @@ li[isdirectory="true"]:not(:first-child) {
 }
 .mediumDialog-3{
 	width: 440px;
+}
+
+.largeDialog {
+	width: 800px;
+}
+
+.my-bs-container {
+	width: 100%;
+	padding-right: 0px;
+	padding-left: 0px;
+	margin-right: auto;
+	margin-left: auto;
 }
 
 
@@ -834,8 +859,8 @@ table {
 	bottom: 14.5px;
 }
 .centerRoundButt3 {
-	right: 8px;
-	bottom: 16px;
+	right: 10px;
+	bottom: 15px;
 }
 
 .roundButt2 {
@@ -1038,6 +1063,34 @@ extend_ -> fill_
 	padding-top: 3.5px !important;
 	padding-bottom: 3.5px !important;
 }
+
+.px-exact-13 {
+	padding-right: 13px !important;
+	padding-left: 13px !important;
+}
+.w-exact-38-5 {
+	width: 38.5px;
+}
+
+.h-exact-37 {
+	height: 37px;
+}
+.mw-exact-239{
+	max-width: 239px;
+}
+
+.font-size-exact-19 {
+	font-size: 19px;
+}
+
+.margin-auto {
+	margin: auto;
+}
+
+.bg-Bisque {
+	background-color: Bisque;
+}
+
 
 /* Marker color section */
 #markerList .markerColorAqua,
