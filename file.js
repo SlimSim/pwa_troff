@@ -37,6 +37,11 @@ $(function () {
 				console.error( status );
 				console.error( error );
 
+				if( nr <= 0 ) {
+					throw error;
+				} else {
+					return getTroffDataHelper( troffDataId, fileName, nr-1 );
+				}
 		});
 	};
 
@@ -60,6 +65,11 @@ $(function () {
 			.catch(function( e ) {
 				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr );
 				console.error( e );
+				if( nr <= 0 ) {
+					throw e;
+				} else {
+					return fetchAndSaveResponseHelper( troffDataId, fileName, nr-1 );
+				}
 			});
 	};
 
