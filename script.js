@@ -5396,9 +5396,6 @@ ShowUserException.prototype.name = 'ShowUserException';
 $(function () {
 	"use strict";
 
-	errorHandler.messages = {};
-	errorHandler.messages.fileIsNotInCache = function( file ) { return }
-
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
 		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 		$( "#downloadMarkersFromServerInProgressDialog" ).addClass( "hidden" );
@@ -5441,16 +5438,15 @@ $(function () {
 		$.notify(
 			`An unknown error occurred when trying to download the song "${fileName}", with id "${serverId}", from the server,
 			please try again later.
-			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.
-			and include the following:
-			Status: ${error.status}, ${error.statusText}`,
+			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
+			explaining what happened`,
 			{
 				className: 'error',
 				autoHide: false,
 				clickToHide: true
 			}
 		);
-		console.error( `errorHandler.backendService_getTroffData: Status: ${error.status}, ${error.statusText}\nFull Error`, error );
+		console.error( `errorHandler.backendService_getTroffData: Full Error:\n`, error );
 		return;
 	};
 
@@ -5485,16 +5481,15 @@ $(function () {
 		$.notify(
 			`An unknown error occurred with the song "${fileName}",
 			please try again later.
-			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.
-			and include the following:
-			Status: ${error.status}, ${error.statusText}`,
+			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
+			explaining what happened`,
 			{
 				className: 'error',
 				autoHide: false,
 				clickToHide: true
 			}
 		);
-		console.error( `errorHandler.backendService_getTroffData: Status: ${error.status}, ${error.statusText}\nFull Error`, error );
+		console.error( `errorHandler.fileHandler_fetchAndSaveResponse: Full Error:\n`, error );
 		return;
 	};
 
@@ -5535,7 +5530,7 @@ $(function () {
 				clickToHide: true
 			}
 		);
-		console.error( `errorHandler.backendService_getTroffData: Status: ${error.status}, ${error.statusText}\nFull Error`, error );
+		console.error( `errorHandler.fileHandler_sendFile: Full Error:\n`, error );
 	}
 
 });

@@ -11,6 +11,58 @@ $(function () {
 
 	const nameOfCache = "songCache-v1.0";
 
+	const getTroffDataHelper = async function( troffDataId, fileName, nr ) {
+		console.log( "getTroffDataHelper -> " + nr);
+		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
+
+		return $.ajax({
+			url: url,
+			timeout: 60000,
+		})
+		.then(async function(response) {
+			if( response.status != "OK" ) {
+				console.error( "getTroffDataHelper, response is NOT ok, url = " + url + ", nr = " + nr );
+				console.error( response );
+				if( nr <= 0 ) {
+					throw response;
+				} else {
+					return getTroffDataHelper( troffDataId, fileName, nr-1 );
+				}
+			}
+			return response.payload;
+		})
+		.fail(function(xhr, status, error) {
+				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr );
+				console.error( xhr );
+				console.error( status );
+				console.error( error );
+
+		});
+	};
+
+
+	const fetchAndSaveResponseHelper = async function( fileId, songKey, nr ) {
+		console.log( "fetchAndSaveResponseHelper -> " + nr);
+		const url = environment.getDownloadFileEndpoint( fileId );
+		return fetch( url )
+			.then( (response) => {
+				if( !response.ok ) {
+					console.error( "fetchAndSaveResponseHelper, response is NOT ok, url = " + url + ", nr = " + nr );
+					console.error( response );
+					if( nr <= 0 ) {
+						throw response;
+					} else {
+						return fetchAndSaveResponseHelper( troffDataId, fileName, nr-1 );
+					}
+				}
+				return fileHandler.saveResponse( response, songKey );
+			})
+			.catch(function( e ) {
+				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr );
+				console.error( e );
+			});
+	};
+
 	/************************************************
 	/*           Public methods:
 	/************************************************/
@@ -19,38 +71,19 @@ $(function () {
 		const url = environment.getCurlEndpoint();
 		$.ajax({
 			url: url,
-			timeout: 50000,
+			timeout: 60000,
 		}).fail(function( xhr ) {
 			console.log( `backendService.calCurl: Could not cal "${url}", no big deal. Status: ${xhr.status}, ${xhr.statusText}` );
 		});
 	};
 
 	backendService.getTroffData = async function( troffDataId, fileName ) {
-
-		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
-
-		return $.ajax({
-			url: url,
-			timeout: 50000,
-		})
-		.then(async function(response) {
-			if( response.status != "OK" ) {
-				throw response;
-			}
-			return response.payload;
-
-		});
+		console.log( "backendService.getTroffData -> ");
+		return getTroffDataHelper( troffDataId, fileName, 3 );
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileId, songKey ) {
-		const url = environment.getDownloadFileEndpoint( fileId );
-		return fetch( url )
-			.then( (response) => {
-				if( !response.ok ) {
-					throw response;
-				}
-				return fileHandler.saveResponse( response, songKey );
-			});
+		return fetchAndSaveResponseHelper( fileId, songKey, 3 );
 	};
 
 /*

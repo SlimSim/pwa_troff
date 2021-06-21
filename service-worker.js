@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.5.1",
+		version: "1.5.2",
 		urls: [
 			"/",
 			"/index.html",
@@ -167,11 +167,38 @@ self.addEventListener( "activate", function( event ) {
 	);
 });
 
+console.log( "service-worker.js -> ");
+self.console.log( "service-worker.js -> ");
+
+
 self.addEventListener( "fetch", event => {
+	console.log( "fetch: " + event.request.method + " " + event.request.url );
 	event.respondWith(
 		caches.match( event.request )
 		.then( cachedResponse => {
-			return cachedResponse || fetch( event.request );
+			//return cachedResponse || fetch( event.request );
+
+			if( cachedResponse ) {
+				return cachedResponse;
+			//} else if( event.request.url.indexOf( "google" ) =! -1 ) {
+      //	console.info( "fetching googletagmanager" );
+      //	return fetch( event.request );
+      } else {
+      	console.log( "fetch.request was not cached:", event.request );
+      	return fetch( event.request )
+      	.then( response => {
+      		console.log( "fetch.then  -> " );
+      		console.log( response );
+      		return response;
+      	})
+      	.catch( error => {
+      		console.log( "fetch.catch -> " );
+      		console.log( error );
+      		console.log( "Response.error():" );
+      		console.log( Response.error() );
+      		return Response.error();
+      	});
+      }
 
 			// tror att felet med denna är att den INTE returnerar något i sista elsen?
 			// if( cachedResponse ) {
