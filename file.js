@@ -9,10 +9,12 @@ $(function () {
 	/*           Private methods and variables:
 	/************************************************/
 
+	const nrOfTriesToCallBackend = 3;
+
 	const nameOfCache = "songCache-v1.0";
 
 	const getTroffDataHelper = async function( troffDataId, fileName, nr ) {
-		console.log( "getTroffDataHelper -> " + nr + "/3, " + fileName);
+		console.log( "getTroffDataHelper -> " + nr + " of " + nrOfTriesToCallBackend + " tries , " + fileName);
 		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
 
 		try {
@@ -23,56 +25,56 @@ $(function () {
 			.then(async function(response) {
 				if( response.status != "OK" ) {
 					console.error( "getTroffDataHelper, response is NOT ok, url = " + url + ", nr = " + nr, response );
-					if( nr <= 0 ) {
+					if( nr >= nrOfTriesToCallBackend ) {
 						throw response;
 					} else {
-						return await getTroffDataHelper( troffDataId, fileName, nr-1 );
+						return await getTroffDataHelper( troffDataId, fileName, nr+1 );
 					}
 				}
 				return response.payload;
 			});
 		} catch(XMLHttpRequest) {
 			if (XMLHttpRequest.readyState == 4) {
-				console.log( "getTroffDataHelper: HTTP error url = " + url + ", nr = " + nr, XMLHttpRequest );
+				console.error( "getTroffDataHelper: HTTP error url = " + url + ", nr = " + nr, XMLHttpRequest );
 				// HTTP error (can be checked by XMLHttpRequest.status and XMLHttpRequest.statusText)
 			}
 			else if (XMLHttpRequest.readyState == 0) {
-				console.log( "getTroffDataHelper: Network error (i.e. connection refused, access denied due to CORS, etc.) url = " + url + ", nr = " + nr, XMLHttpRequest );
+				console.error( "getTroffDataHelper: Network error (i.e. connection refused, access denied due to CORS, etc.) url = " + url + ", nr = " + nr, XMLHttpRequest );
 			}
 			else {
 				console.error( "getTroffDataHelper: Something weird is happening: url = " + url + ", nr = " + nr, XMLHttpRequest );
 			}
 
-			if( nr <= 0 ) {
+			if( nr >= nrOfTriesToCallBackend ) {
 				throw XMLHttpRequest;
 			} else {
-				return await getTroffDataHelper( troffDataId, fileName, nr-1 );
+				return await getTroffDataHelper( troffDataId, fileName, nr+1 );
 			}
 		}
 	};
 
 
 	const fetchAndSaveResponseHelper = async function( fileId, songKey, nr ) {
-		console.log( "fetchAndSaveResponseHelper -> " + nr + "/3, " + songKey);
+		console.log( "fetchAndSaveResponseHelper -> " + nr + " of " + nrOfTriesToCallBackend + " tries, " + songKey);
 		const url = environment.getDownloadFileEndpoint( fileId );
 			return await fetch( url )
 			.then( async (response) => {
 				if( !response.ok ) {
 					console.error( "fetchAndSaveResponseHelper, response is NOT ok, url = " + url + ", nr = " + nr, response );
-					if( nr <= 0 ) {
+					if( nr >= nrOfTriesToCallBackend ) {
 						throw response;
 					} else {
-						return await fetchAndSaveResponseHelper( fileId, songKey, nr-1 );
+						return await fetchAndSaveResponseHelper( fileId, songKey, nr+1 );
 					}
 				}
 				return fileHandler.saveResponse( response, songKey );
 			})
 			.catch(async function( e ) {
 				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr, e );
-				if( nr <= 0 ) {
+				if( nr >= nrOfTriesToCallBackend ) {
 					throw e;
 				} else {
-					return await fetchAndSaveResponseHelper( fileId, songKey, nr-1 );
+					return await fetchAndSaveResponseHelper( fileId, songKey, nr+1 );
 				}
 			});
 	};
@@ -92,11 +94,11 @@ $(function () {
 	};
 
 	backendService.getTroffData = async function( troffDataId, fileName ) {
-		return await getTroffDataHelper( troffDataId, fileName, 2 );
+		return await getTroffDataHelper( troffDataId, fileName, 1 );
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileId, songKey ) {
-		return await fetchAndSaveResponseHelper( fileId, songKey, 2 );
+		return await fetchAndSaveResponseHelper( fileId, songKey, 1 );
 	};
 
 /*
