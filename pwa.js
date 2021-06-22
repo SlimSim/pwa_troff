@@ -4,7 +4,7 @@ if( "serviceWorker" in navigator) {
 	window.addEventListener( "load", () => {
 		navigator.serviceWorker.register( serviceWorkerPath )
 		.then( reg => {
-			console.info("service-worker.js registered!");
+			//console.info("service-worker.js registered!");
 		}).catch( error => {
 			console.error( "service-worker.js failed to register:", error );
 		});
@@ -39,14 +39,14 @@ PWA.listenForInstallPrompt = function() {
 PWA.showPrompt = function( e ) {
 	e.prompt(); // Throws if called more than once or default not prevented
 
-	e.userChoice.then(function(choiceResult) { 
+	e.userChoice.then(function(choiceResult) {
 		if( choiceResult.outcome === "accepted" ){
 			$("#pwaAddToHomeScreen").addClass( "hidden" );
 			$.notify( "Thank you for installing Troff.\nHave fun!", "success" );
 		}
 	}, function(err){
 		console.error("err", err)
-	}); 
+	});
 }
 
 

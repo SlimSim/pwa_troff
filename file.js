@@ -12,63 +12,67 @@ $(function () {
 	const nameOfCache = "songCache-v1.0";
 
 	const getTroffDataHelper = async function( troffDataId, fileName, nr ) {
-		console.log( "getTroffDataHelper -> " + nr);
+		console.log( "getTroffDataHelper -> " + nr + "/3, " + fileName);
 		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
 
-		return $.ajax({
-			url: url,
-			timeout: 60000,
-		})
-		.then(async function(response) {
-			if( response.status != "OK" ) {
-				console.error( "getTroffDataHelper, response is NOT ok, url = " + url + ", nr = " + nr );
-				console.error( response );
-				if( nr <= 0 ) {
-					throw response;
-				} else {
-					return await getTroffDataHelper( troffDataId, fileName, nr-1 );
+		try {
+			return await $.ajax({
+				url: url,
+				timeout: 60000,
+			})
+			.then(async function(response) {
+				if( response.status != "OK" ) {
+					console.error( "getTroffDataHelper, response is NOT ok, url = " + url + ", nr = " + nr, response );
+					if( nr <= 0 ) {
+						throw response;
+					} else {
+						return await getTroffDataHelper( troffDataId, fileName, nr-1 );
+					}
 				}
+				return response.payload;
+			});
+		} catch(XMLHttpRequest) {
+			if (XMLHttpRequest.readyState == 4) {
+				console.log( "getTroffDataHelper: HTTP error url = " + url + ", nr = " + nr, XMLHttpRequest );
+				// HTTP error (can be checked by XMLHttpRequest.status and XMLHttpRequest.statusText)
 			}
-			return response.payload;
-		})
-		.fail(async function(xhr, status, error) {
-				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr );
-				console.error( xhr );
-				console.error( status );
-				console.error( error );
+			else if (XMLHttpRequest.readyState == 0) {
+				console.log( "getTroffDataHelper: Network error (i.e. connection refused, access denied due to CORS, etc.) url = " + url + ", nr = " + nr, XMLHttpRequest );
+			}
+			else {
+				console.error( "getTroffDataHelper: Something weird is happening: url = " + url + ", nr = " + nr, XMLHttpRequest );
+			}
 
-				if( nr <= 0 ) {
-					throw error;
-				} else {
-					return await getTroffDataHelper( troffDataId, fileName, nr-1 );
-				}
-		});
+			if( nr <= 0 ) {
+				throw XMLHttpRequest;
+			} else {
+				return await getTroffDataHelper( troffDataId, fileName, nr-1 );
+			}
+		}
 	};
 
 
 	const fetchAndSaveResponseHelper = async function( fileId, songKey, nr ) {
-		console.log( "fetchAndSaveResponseHelper -> " + nr);
+		console.log( "fetchAndSaveResponseHelper -> " + nr + "/3, " + songKey);
 		const url = environment.getDownloadFileEndpoint( fileId );
-		return fetch( url )
+			return await fetch( url )
 			.then( async (response) => {
 				if( !response.ok ) {
-					console.error( "fetchAndSaveResponseHelper, response is NOT ok, url = " + url + ", nr = " + nr );
-					console.error( response );
+					console.error( "fetchAndSaveResponseHelper, response is NOT ok, url = " + url + ", nr = " + nr, response );
 					if( nr <= 0 ) {
 						throw response;
 					} else {
-						return await fetchAndSaveResponseHelper( troffDataId, fileName, nr-1 );
+						return await fetchAndSaveResponseHelper( fileId, songKey, nr-1 );
 					}
 				}
 				return fileHandler.saveResponse( response, songKey );
 			})
 			.catch(async function( e ) {
-				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr );
-				console.error( e );
+				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr, e );
 				if( nr <= 0 ) {
 					throw e;
 				} else {
-					return await fetchAndSaveResponseHelper( troffDataId, fileName, nr-1 );
+					return await fetchAndSaveResponseHelper( fileId, songKey, nr-1 );
 				}
 			});
 	};
@@ -88,12 +92,11 @@ $(function () {
 	};
 
 	backendService.getTroffData = async function( troffDataId, fileName ) {
-		console.log( "backendService.getTroffData -> ");
-		return await getTroffDataHelper( troffDataId, fileName, 3 );
+		return await getTroffDataHelper( troffDataId, fileName, 2 );
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileId, songKey ) {
-		return await fetchAndSaveResponseHelper( fileId, songKey, 3 );
+		return await fetchAndSaveResponseHelper( fileId, songKey, 2 );
 	};
 
 /*
