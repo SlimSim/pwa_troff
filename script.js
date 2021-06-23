@@ -1613,7 +1613,7 @@ var TroffClass = function(){
 	this.speed = function(inpObj) {
 		var speed = inpObj.data;
 		if(speed == 1 || speed == -1)
-				speed = $('audio, video')[0].playbackRate * 100 + (5*speed);
+				speed = parseInt( $("#speed").text() ) + (5*speed);
 		$('#speedBar, #speedBarDemo').val( speed );
 		IO.blurHack();
 		Troff.speedUpdate();
