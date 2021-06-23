@@ -41,6 +41,7 @@ auto - for classes that set the margin to auto
 
 */
 
+.h-0	{	height: 0 		!important }
 
 
 .m-0 {	margin: 0			!important;	}
