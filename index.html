@@ -1620,38 +1620,24 @@
 
 
 	<!-- Welcome - dialogen ska vara underst! -->
-	<div id="firstTimeUserDialog" class="outerDialog noCloseOnClick p-3 hidden">
+	<div id="firstTimeUserDialog" class="outerDialog noCloseOnClick p-3 hidden2
+">
 		<div class="innerDialog largeDialog flexCol scroll mh-100">
 			<h2 class="paragraph ">
 				<b class="bold">Welcome to the music player Troff - training with music</b><span class="normalSize">, version 1.2!</span>
 			</h2>
 			<div class="my-bs-container">
 				<div class="row ">
-					<div class="mt-3 col-sm">
-						<h3 class="bold">Latest feature:</h3>
-						<div class="d-flex">
-							<div class="svgButt special regularButton p-3 pl-3 pr-3 h-exact-37">
-								<i class="fa fa-share"></i>
-							</div>
-							<p class="paragraph normalSize pl-3">
-								Share a link to your songs with your friends,
-								and they will get all your markers, states and song info!
-							</p>
-						</div>
-					</div>
-
-					<div class="mt-3 col-sm d-flex">
-						<span class="margin roundButt2 center" >
-							<input type="button" value="▶" class="important centerRoundButtCommon centerRoundButt3">
-						</span>
-						<p class="paragraph normalSize pl-2 pt-4">
-							Play the song or movie!
-						</p>
-					</div>
-				</div><!-- end row -->
-				<div class="row ">
 
 					<div class="col-sm d-flex flexCol justify-content-center">
+						<div class="mt-3 d-flex">
+							<span class="roundButt2 center" >
+								<input type="button" value="▶" class="important centerRoundButtCommon centerRoundButt3">
+							</span>
+							<p class="paragraph normalSize pl-2 pt-4">
+								Play the song or movie!
+							</p>
+						</div>
 						<div class="mt-3 d-flex">
 							<label
 								title="Add songs, videos or pictures to Troff"
@@ -1673,7 +1659,7 @@
 							<p class="paragraph normalSize pl-2 pt-4">Learn more about what Troff can offer</p>
 						</div>
 					</div>
-					<div class="mt-3 col-sm d-flex">
+					<div class="mt-3 col-sm d-flex align-items-center">
 						<section class="markerSection secondaryColor margin noVMargin px-exact-13 hideOnPicture">
 							<div class="activePlayRegionDemo accentColor1"></div>
 							<div  class="timeBarDiv">
@@ -1684,7 +1670,7 @@
 							<p class="paragraph normalSize bold">The timeline is vertical</p>
 							<ul class="bulletList ml-4 normalSize">
 								<li class="paragraph normalSize">
-									The blue dot indicates where in the song the player is currently at.
+									The dot indicates where in the song the player is currently at.
 								</li>
 								<li class="paragraph normalSize">
 									The purple part of the timeline indicates what part of the song that will be played.
@@ -1752,6 +1738,20 @@
 					</div>
 
 				</div><!-- end row -->
+
+
+				<div class="mt-3 col-sm">
+					<h3 class="bold">Latest feature:</h3>
+					<div class="d-flex align-items-center">
+						<div class="svgButt special regularButton p-3 pl-3 pr-3 h-exact-37">
+							<i class="fa fa-share"></i>
+						</div>
+						<p class="paragraph normalSize pl-3">
+							Share a link to your songs with your friends,
+							and they will get all your markers, states and song info!
+						</p>
+					</div>
+				</div>
 				<div class="row ">
 
 					<div class="my-3 col-sm">
