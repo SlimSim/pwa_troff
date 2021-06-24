@@ -176,6 +176,8 @@ auto - for classes that set the margin to auto
 .d-none{		display:none!important		}
 .d-flex{		display:flex!important		}
 
+.position-relative	{		position: relative !important;	}
+
 .flex-wrap {
 	flex-wrap: wrap;
 }

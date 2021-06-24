@@ -42,10 +42,36 @@
 	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
+	<link rel="stylesheet" type="text/css" href="assets/external/bootstrap-4.3.1-dist/css/bootstrap.min .css" />
 
 	<script src="assets/internal/common.js"></script>
 
 	<script src="assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
+
+	<script src="assets/external/jquery-3.4.1.min.js"></script>
+	<script>
+
+		$(function () {
+			loadExternalHtml = function(includes, callback) {
+				if( includes.length == 0 ) {
+					return callback();
+				}
+				const currentElement = includes.eq(-1);
+				includes.splice( includes.length-1, 1);
+
+				const file = $( currentElement ).data('include');
+				$( currentElement ).load( file, function(){
+					loadExternalHtml( includes, callback );
+				} );
+			}
+
+			const includes = $('[data-include]');
+			loadExternalHtml(includes, function() {
+				$( ".pv-exact-17" ).removeClass( "pv-exact-17" );
+			});
+		});
+
+	</script>
 
 </head>
 
@@ -107,7 +133,14 @@
 	</section>
 	<section class="flexCol flexScroll">
 
-	<article id="whatIsTroff" class="mt-0">
+	<article  class="mt-0" >
+		<h2 class="paragraph ">
+				<b class="bold">Quick Help for Troff - training with music</b>
+			</h2>
+		<div data-include="quick-help.html" ></div>
+
+	</article>
+	<article id="whatIsTroff">
 		<h2>What is Troff</h2>
 		<p>
 			Troff is a media player that let you loop a part of a song,

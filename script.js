@@ -5329,34 +5329,52 @@ var DB = new DBClass();
 var IO = new IOClass();
 var Rate = new RateClass();
 
+loadExternalHtml = function(includes, callback) {
+	if( includes.length == 0 ) {
+		return callback();
+	}
+	const currentElement = includes.eq(-1);
+	includes.splice( includes.length-1, 1);
+
+	const file = $( currentElement ).data('include');
+	$( currentElement ).load( file, function(){
+		loadExternalHtml( includes, callback );
+	} );
+}
+
 $(document).ready( async function() {
 
-	initSongTable();
+	// include external HTML-files:
 
-	DB.cleanDB();
-	DB.getAllSonglists();
-	DB.getZoomDontShowAgain();
-	IO.startFunc();
-	Rate.startFunc();
+	const includes = $('[data-include]');
+	loadExternalHtml(includes, async function() {
+		initSongTable();
 
-	Troff.initFileApiImplementation();
+		DB.cleanDB();
+		DB.getAllSonglists();
+		DB.getZoomDontShowAgain();
+		IO.startFunc();
+		Rate.startFunc();
 
-	DB.getShowSongDialog();
-	initEnvironment();
+		Troff.initFileApiImplementation();
 
-	if( window.location.hash ) {
-		try {
-			await Troff.downloadSongFromServer( window.location.hash )
-		} catch( e ) {
-			console.error( "error on downloadSongFromServer:", e );
+		DB.getShowSongDialog();
+		initEnvironment();
+
+		if( window.location.hash ) {
+			try {
+				await Troff.downloadSongFromServer( window.location.hash )
+			} catch( e ) {
+				console.error( "error on downloadSongFromServer:", e );
+				DB.getCurrentSong();
+			}
+		} else {
 			DB.getCurrentSong();
 		}
-	} else {
-		DB.getCurrentSong();
-	}
 
-	backendService.calCurl();
+		backendService.calCurl();
 
+	});
 });
 
 function initEnvironment() {

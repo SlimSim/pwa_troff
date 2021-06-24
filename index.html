@@ -1619,139 +1619,29 @@
 
 
 
-	<!-- Welcome - dialogen ska vara underst! -->
-	<div id="firstTimeUserDialog" class="outerDialog noCloseOnClick p-3 hidden">
+	<!-- The Welcome - dialog should be at the bottom! -->
+	<div  id="firstTimeUserDialog" class="outerDialog noCloseOnClick p-3 hidden">
 		<div class="innerDialog largeDialog flexCol scroll mh-100">
 			<h2 class="paragraph ">
 				<b class="bold">Welcome to the music player Troff - training with music</b><span class="normalSize">, version 1.2!</span>
 			</h2>
+			<div data-include="quick-help.html" class="my-bs-container"></div>
 			<div class="my-bs-container">
-				<div class="row ">
-
-					<div class="col-sm d-flex flexCol justify-content-center">
-						<div class="mt-3 d-flex">
-							<span class="roundButt2 center" >
-								<input type="button" value="▶" class="important centerRoundButtCommon centerRoundButt3">
-							</span>
-							<p class="paragraph normalSize pl-2 pt-4">
-								Play the song or movie!
+				<div class="row hideOnQuickHelp">
+					<div class="mt-3 col-sm">
+						<h3 class="bold">Latest feature:</h3>
+						<div class="d-flex align-items-center">
+							<div class="svgButt special regularButton p-3 pl-3 pr-3 h-exact-37">
+								<i class="fa fa-share"></i>
+							</div>
+							<p class="paragraph normalSize pl-3">
+								Share a link to your songs with your friends,
+								and they will get all your markers, states and song info!
 							</p>
 						</div>
-						<div class="mt-3 d-flex">
-							<label
-								title="Add songs, videos or pictures to Troff"
-								class="mr-2 pv-exact-17 font-size-exact-19 cursor-pointer regularButton fa-stack fa-1x"
-								for="fileUploader">
-									<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1"></i>
-									<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65"></i>
-							</label>
-							<p class="paragraph normalSize pl-2 pt-4">
-								Add a song or movie!
-							</p>
-						</div>
-						<div class="mt-3 d-flex">
-							<a href="help.html" target="_blank">
-								<button class="h-exact-37 mr-2 w-exact-38-5 svgButt regularButton cursor-help" type="button" title="Get tips on how to get the most out of Troff">
-									<i class="fa fa-question cursor-help"></i>
-								</button>
-							</a>
-							<p class="paragraph normalSize pl-2 pt-4">Learn more about what Troff can offer</p>
-						</div>
-					</div>
-					<div class="mt-3 col-sm d-flex align-items-center">
-						<section class="markerSection secondaryColor margin noVMargin px-exact-13 hideOnPicture">
-							<div class="activePlayRegionDemo accentColor1"></div>
-							<div  class="timeBarDiv">
-								<input class="timeBarDemo pt-0 my-0" orient="vertical" type="range" min="0" max="42" value="8">
-							</div>
-						</section>
-						<div class="d-flex flexCol">
-							<p class="paragraph normalSize bold">The timeline is vertical</p>
-							<ul class="bulletList ml-4 normalSize">
-								<li class="paragraph normalSize">
-									The dot indicates where in the song the player is currently at.
-								</li>
-								<li class="paragraph normalSize">
-									The purple part of the timeline indicates what part of the song that will be played.
-								</li>
-								<li class="paragraph normalSize">
-									You can put markers next to the timeline.
-								</li>
-							</ul>
-						</div>
-					</div>
-
-				</div><!-- end row -->
-				<div class="row ">
-
-					<div class="mt-4 col-sm d-flex flexCol">
-						<div class="d-flex flexRow flex-wrap">
-						<p class="paragraph normalSize bold mr-3">This is a marker: </p>
-						<span class="flexRow center bg-Bisque">
-							<button class="small regularButton height-15" ><i class="fa fa-pencil-alt m-0" ></i></button>
-							<b class="ml-1">0:42</b><input class="mx-1" type="button" value="marker nr 3" /><input type="button" value="Stop" />
-						</span>
-						</div>
-						<ul class="bulletList ml-4 normalSize">
-							<li class="paragraph normalSize">
-								Clicking the marker name (<input class="mx-1" type="button" value="marker nr 3" />) makes the song start at that time
-								(42 seconds)
-							</li>
-							<li class="paragraph normalSize">
-								The <input type="button" value="Stop">-button makes the song stop at that time
-							</li>
-							<li class="paragraph normalSize">
-								The markers can have different colors, or no color at all.
-							</li>
-						</ul>
-					</div>
-
-					<div class="mt-4 col-sm d-flex">
-						<div class="sliderInfo sliderInfoDemo">
-							<input class="button small regularButton" type="button" title="Set speed to 100% (key: s)" value="S̲peed:" id="buttResetSpeedDemo">
-							<div class="plusMinusButton">
-								<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinusDemo">
-								<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlusDemo">
-							</div>
-							<div class="dataOutput">
-								<div id="speedDemo">100</div><p>%</p>
-							</div>
-							<input class="sliderRange flexOne" orient="vertical" id="speedBarDemo" type="range" min="50" max="200" value="100">
-						</div>
-						<div class="d-flex flexCol">
-							<p class="paragraph normalSize bold  mt-0">Change the speed</p>
-							<ul class="bulletList ml-4 normalSize">
-								<li class="paragraph normalSize">
-									The
-									<input class="button small regularButton my-0" type="button" title="Set speed to 100% (key: s)" value="S̲peed:" >-button
-									makes the song play at regular speed
-								</li>
-								<li class="paragraph normalSize">
-									The buttons under the speed button adjusts the speed in 5% increments.
-									(<input class="button small regularButton my-0" type="button" title="Decrease speed (key: alt s)" value="-">
-									<input class="button small regularButton my-0" type="button" title="Increase speed (key: shift s)" value="+">)
-								</li>
-								<li>The slider also adjust the speed</li>
-							</ul>
-						</div>
-					</div>
-
-				</div><!-- end row -->
-
-
-				<div class="mt-3 col-sm">
-					<h3 class="bold">Latest feature:</h3>
-					<div class="d-flex align-items-center">
-						<div class="svgButt special regularButton p-3 pl-3 pr-3 h-exact-37">
-							<i class="fa fa-share"></i>
-						</div>
-						<p class="paragraph normalSize pl-3">
-							Share a link to your songs with your friends,
-							and they will get all your markers, states and song info!
-						</p>
 					</div>
 				</div>
-				<div class="row ">
+				<div class="row hideOnQuickHelp">
 
 					<div class="my-3 col-sm">
 						<div class="mw-exact-239 margin-auto">
