@@ -23,8 +23,8 @@ window.alert = function( alert){
 }
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
-var audFormats = ['wav', 'mp3', 'm4a'];
-var vidFormats = ['3gp', '3gpp', 'avi', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'ogg', 'webm', 'wmv'];
+var audFormats = ['wav', 'mp3', 'm4a', 'ogg'];
+var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv'];
 
 var TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
 var TROFF_SETTING_EXTENDED_MARKER_COLOR = "TROFF_SETTING_EXTENDED_MARKER_COLOR";
@@ -202,7 +202,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	// TODO: metadata? finns det något sätt jag kan få fram metadata från filerna?
 	$( "#currentPath" ).text( path );
 
-	$('#currentSong').text( Troff.pathToName_2( path ) ).show();
+	$('#currentSong').text( Troff.pathToName( path ) ).show();
 	$('#currentArtist').text( "" );
 
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
@@ -341,7 +341,7 @@ function addItem_NEW_2( key ) {
 		var tempo = "?",
 			info = "",
 			//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
-			titleOrFileName = key.substr(0, key.lastIndexOf( '.' ) );//metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
+			titleOrFileName = Troff.pathToName( key );
 		if( song != undefined ) {
 			tempo = song.tempo;
 			info = song.info;
@@ -1991,14 +1991,12 @@ var TroffClass = function(){
 		DB.setCurrentSong(strCurrentSong, iCurrentGalleryId);
 	}; // end SetCurrentSong
 
-	this.pathToName_2 = function(filepath){
-		// ska jag ha 1 eller filepath.lastIndexOf('/') ???
-		return filepath.substr( 0, filepath.lastIndexOf( '.' ) );
-	};
-
 	this.pathToName = function(filepath){
-		// ska jag ha 1 eller filepath.lastIndexOf('/') ???
-		return filepath.substr(1,filepath.lastIndexOf('.') - 1);
+		let lastIndex = filepath.lastIndexOf( '.' );
+		if( lastIndex == -1 ) {
+		    return filepath;
+		}
+		return filepath.substr( 0, lastIndex );
 	};
 
 	this.getCurrentStates = function(){
