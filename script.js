@@ -3316,7 +3316,7 @@ var TroffClass = function(){
 			clearAllMarkers - HTML, clears markers
 		*/
 		this.clearAllMarkers = function(){
-			$('#markerSection').css("height", (window.innerHeight + "px"));
+			$('#markerSection').css("height", ($( "#markerSectionParent" ).height() + "px"));
 			$('#markerSection').css("margin-top", (0 + "px"));
 			var docMarkerList = document.getElementById('markerList');
 			if (docMarkerList) {
@@ -3467,22 +3467,14 @@ var TroffClass = function(){
 
 		this.zoom = function(startTime, endTime){
 
-			//NOTE all distances is in vh, unless otherwise specified
-/*
-			var w = window;
-			var d = document;
-			var e = d.documentElement;
-			var g = d.getElementsByTagName('body')[0];
-			//var winWidth = w.innerWidth || e.clientWidth || g.clientWidth,
-//      var winHeightPX = w.innerHeight|| e.clientHeight || g.clientHeight;
-*/
+			//NOTE all distances is in %, unless otherwise specified
 
 			m_zoomStartTime = startTime;
 			m_zoomEndTime = endTime;
 
 			DB.saveZoomTimes(strCurrentSong, startTime, endTime);
 
-			var winHeightPX = window.innerHeight;
+			var winHeightPX = $( "#markerSectionParent" ).height();
 
 			var mPX = parseInt($('#timeBar').css('marginTop'));
 
@@ -3503,8 +3495,12 @@ var TroffClass = function(){
 
 			var height = 100 * zd;
 			var marginTop = -mt;
-			$('#markerSection').css("height", (height + "vh"));
-			$('#markerSection').css("margin-top", (marginTop + "vh"));
+
+            let marginTopPX = winHeightPX * marginTop / 100;
+
+			$('#markerSection').css("height", (height + "%"));
+			$('#markerSection').css("margin-top", (marginTopPX + "px"));
+
 			Troff.settAppropriateMarkerDistance();
 		};
 
@@ -5126,7 +5122,7 @@ var IOClass = function(){
 		$("body").append($("<div id='"+outerId+"' style='"+outerDivStyle+
 							 "'><div id='"+innerId+"' style='"+innerDivStyle+
 							 "' class='secondaryColor'><p style='"+pStyle+"'>" + textHead +
-							 "</p><input type='text' id='"+textId+
+							 "</p><input type='text' class=\"full-width\" id='"+textId+
 							 "'/> "+strTextareaHTML+
 							 "<input type='button' class='regularButton' id='"+ buttEnterId +
 							 "' value='OK'/><input type='button' class='regularButton' id='" +

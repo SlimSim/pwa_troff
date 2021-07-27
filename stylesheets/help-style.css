@@ -89,7 +89,7 @@ a {
 	max-width: 170px;
 }
 .fill-height-minus-58 {
-	max-height: calc(100vh - 58px);
+	max-height: calc(100% - 58px);
 }
 .white {
 	color: white;

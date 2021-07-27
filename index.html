@@ -416,21 +416,21 @@
 
 
 
-
-	<section id="markerSection" class="secondaryColor margin noVMargin hideOnPicture">
-		<div id="activePlayRegion" class="accentColor1"></div>
-		<div id="timeBarDiv">
-			<input
-				id="timeBar"
-				orient="vertical"
-				type="range"
-				min="0"
-				max="42"
-				value="0"/>
-		</div>
-		<ul id="markerList" class="onOffParent marker-parent" ></ul>
-	</section> <!-- markerSection -->
-
+	<section id="markerSectionParent">
+		<div id="markerSection" class="secondaryColor full-height margin noVMargin hideOnPicture">
+			<div id="activePlayRegion" class="accentColor1"></div>
+			<div id="timeBarDiv">
+				<input
+					id="timeBar"
+					orient="vertical"
+					type="range"
+					min="0"
+					max="42"
+					value="0"/>
+			</div>
+			<ul id="markerList" class="onOffParent marker-parent" ></ul>
+		</div> <!-- markerSection -->
+	</section> <!-- markerSectionParent -->
 
 
 	<section id="userNoteSection"
@@ -511,16 +511,16 @@
 				This text-string can be saved and imported to another Troff-program with the same song.
 				Then that Troff-program will get the same markers, colors, settings and states as you have.
 			</p>
-			<div class="flexRow">
-				<input type="button" id="buttExportMarker" class="regularButton flex-one m-0 mr-2" value="export markers and settings" />
-				<input type="button" id="buttImportMarker" class="regularButton flex-one m-0 " value="import markers and settings" />
+			<div class="flexRow flex-wrap">
+				<input type="button" id="buttExportMarker" class="regularButton flex-one m-1" value="export markers and settings" />
+				<input type="button" id="buttImportMarker" class="regularButton flex-one m-1 " value="import markers and settings" />
 			</div>
 
 			<p class="paragraph normalSize pt-5 pb-2">
 				Or, upload the song, markers and settings to the server and get a link to this song that you can
 				share with your friends:
 			</p>
-			<input type="button" class="regularButton m-0 mb-2 w-100 dialogCancelButton showUploadSongToServerDialog"
+			<input type="button" class="regularButton m-0 mr-1 ml-1 mb-2 w-100 dialogCancelButton showUploadSongToServerDialog text-normal"
 						 value="create a link to this song with all the markers and settings" />
 			<input id="buttCancelImportExportPopUpSquare" type="button" class="regularButton ml-0 mt-2 buttWidthStandard" value="Cancel" />
 		</div>
@@ -614,7 +614,7 @@
 			<span class="flexRow">
 				<input type="number" id="moveMarkersNumber" class="regularButton numberWider" value=0 /> seconds
 			</span>
-			<div class="flexRow">
+			<div class="flexRow flex-wrap">
 				<div class="flexCol">
 					<input id="okMoveSomeMarkersDialogUp" type="button" class="regularButton" value="move markers up" title="Move the markers between the selected markers up"/>
 					<input id="okMoveSomeMarkersDialogDown" type="button" class="regularButton" value="move markers down" title="Move the markers between the selected markers down"/>
@@ -641,23 +641,19 @@
 				Delete all the markers at the same time, or delete only those markers
 				between the selected markers (including the selected markers).
 			</p>
-			<div class="flexRow">
-				<div class="flexCol">
-					<input
-							id="okDeleteSelectedMarkersDialog"
-							type="button"
-							class="regularButton"
-							value="delete selected markers"
-							title="Delete the markers between and including the selected markers" />
-				</div>
-				<div class="flexCol">
-					<input
-							id="okDeleteAllMarkersDialog"
-							type="button"
-							class="regularButton"
-							value="delete all markers"
-							title="Delete all the markers" />
-				</div>
+			<div class="flexRow flex-wrap">
+				<input
+						id="okDeleteSelectedMarkersDialog"
+						type="button"
+						class="regularButton"
+						value="delete selected markers"
+						title="Delete the markers between and including the selected markers" />
+				<input
+						id="okDeleteAllMarkersDialog"
+						type="button"
+						class="regularButton"
+						value="delete all markers"
+						title="Delete all the markers" />
 
 			</div>
 
@@ -702,7 +698,7 @@
 			<span class="flexRow">
 				<input type="number" id="stretchMarkersNumber" class="regularButton numberWider" value=100 /> %
 			</span>
-			<div class="flexRow">
+			<div class="flexRow flex-wrap">
 				<input
 					id="okStretchSelectedMarkersDialog"
 					type="button"

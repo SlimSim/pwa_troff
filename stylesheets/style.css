@@ -29,17 +29,21 @@ video, .full-width{
 	width: 100%;
 }
 
+.full-height {
+    height: 100%;
+}
+
 .contain-object{
 	object-fit: contain;
 }
 
 .fullscreen{
-	width: 100vw;
-	height: 100vh;
+	width: 100%;
+	height: 100%;
 	position: absolute;
 	right: 0;
 	top: 0;
-  z-index: 2;
+	z-index: 2;
 	display: flex;
 }
 
@@ -70,16 +74,20 @@ video, .full-width{
 }
 */
 
+html {
+    height: 100%;
+}
+
 body{
 	display: flex;
 	font-family: Arial, "Open Sans", sans-serif;
-	height: 100vh;
+	height: 100%;
 	overflow: hidden !important;
 }
 
 @media screen and (max-width: 480px) {
 	body{
-		/* max-height: 100vh; */
+		/* max-height: 100%; */
 		/* overflow-y: hidden; */
 		overflow-x: auto !important;
 	}
@@ -265,8 +273,8 @@ body section{
 	flex-direction: column;
 	z-index: 2;
 	margin: 5px;
-	max-width: 90vw;
-	max-height: 90vh;
+	max-width: 90%;
+	max-height: 90%;
 	padding: 5px;
 }
 
@@ -275,8 +283,8 @@ body section{
 }
 
 .almost-full-size{
-	width: 90vw;
-	height: 90vh;
+	width: 90%;
+	height: 90%;
 }
 
 .plusMinusButton, .flex-display{
@@ -331,7 +339,7 @@ body section{
 		width: 21px;
 		position: absolute;
 		margin-top: 16px;
-		height: calc(100vh - 32px);
+		height: calc(100% - 32px);
 }
 
 .activePlayRegionDemo {
@@ -344,7 +352,7 @@ body section{
 		-webkit-appearance: slider-vertical;
 		-moz-appearance: slider-vertical;
 		appearance: slider-vertical;
-		height: 98vh;
+		height: 98%;
 		height: calc(100% - 20px);
 		margin: 10px 0;
 		/*
@@ -401,17 +409,9 @@ input[type=number].numberWider{
 
 
 #infoSection div{
-	font-size: 50vh;
+	font-size: 50vh;    /*Exeption to the "always use %"-rule, allowed to use vh!*/
   margin-bottom: -55px;
 }
-/*
-#secondsLeft{
-	margin-left: 3vh;
-	font-size: 48vh;
-}
-*/
-
-
 
 .loopSquare{
 		padding-top: 5px;
@@ -565,7 +565,7 @@ li[isdirectory="true"]:not(:first-child) {
 	top: 0px;
 	left: 0px;
 	width: 100vw;
-	height: 100vh;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -579,15 +579,19 @@ li[isdirectory="true"]:not(:first-child) {
 
 .mediumDialog{
 	width: 400px;
+	max-width: 100vw;
 }
 .mediumDialog-1{
 	width: 410px;
+	max-width: 100vw;
 }
 .mediumDialog-2{
 	width: 420px;
+	max-width: 100vw;
 }
 .mediumDialog-3{
 	width: 440px;
+	max-width: 100vw;
 }
 
 .largeDialog {
@@ -677,10 +681,6 @@ table {
 }
 .flex, .flexOne, .flex-one {
 	flex: 1;
-}
-
-.almostFullHeight{
-	height: 90vh;
 }
 
 .rowBreak{
