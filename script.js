@@ -4873,6 +4873,8 @@ var IOClass = function(){
 
 		var time = Date.now();
 
+		console.log( "*** First change" );
+
 		var textId = "textId" + time;
 		var markerNameId = "markerNameId" + time;
 		var markerTimeId = "markerTimeId" + time;
@@ -4884,7 +4886,7 @@ var IOClass = function(){
 			"position: fixed; "+
 			"top: 0px;left: 0px; "+
 			"width: 100vw; "+
-			"height: 100vh; "+
+			"height: 100%; "+
 			"background-color: "+
 			"rgba(0, 0, 0, 0.5);"+
 			"z-index: 99;"+
@@ -5094,6 +5096,8 @@ var IOClass = function(){
 		var time = Date.now();
 		var buttEnterId = "buttOkId" + time;
 
+
+        console.log( "*** second change" );
 		var textId = "textId" + time;
 		var textareaId = "textareaId" + time;
 		var buttCancelId = "buttCancelId" + time;
@@ -5103,7 +5107,7 @@ var IOClass = function(){
 				"position: fixed; "+
 				"top: 0px;left: 0px; "+
 				"width: 100vw; "+
-				"height: 100vh; "+
+				"height: 100%; "+
 				"background-color: rgba(0, 0, 0, 0.5);"+
 				"z-index: 99;"+
 				"display: flex;align-items: center;justify-content: center;";
@@ -5161,6 +5165,8 @@ var IOClass = function(){
 			var time = Date.now();
 			var buttEnterId = "buttOkId" + time;
 
+		    console.log( "*** third change");
+
 			var textId = "textId" + time;
 			var buttCancelId = "buttCancelId" + time;
 			var innerId = "innerId" + time;
@@ -5169,7 +5175,7 @@ var IOClass = function(){
 					"position: fixed; "+
 					"top: 0px;left: 0px; "+
 					"width: 100vw; "+
-					"height: 100vh; "+
+					"height: 100%; "+
 					"background-color: rgba(0, 0, 0, 0.5);"+
 					"z-index: 99;"+
 					"display: flex;align-items: center;justify-content: center;";
@@ -5206,6 +5212,8 @@ var IOClass = function(){
 			var time = Date.now();
 			var buttEnterId = "buttOkId" + time;
 
+            console.log( "*** fourth change" ) ;
+
 			var textId = "textId" + time;
 			var innerId = "innerId" + time;
 			var outerId = "outerId" + time;
@@ -5213,7 +5221,7 @@ var IOClass = function(){
 					"position: fixed; "+
 					"top: 0px;left: 0px; "+
 					"width: 100vw; "+
-					"height: 100vh; "+
+					"height: 100%; "+
 					"background-color: rgba(0, 0, 0, 0.5);"+
 					"z-index: 99;"+
 					"display: flex;align-items: center;justify-content: center;";
