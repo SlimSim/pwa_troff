@@ -174,8 +174,9 @@ auto - for classes that set the margin to auto
 }
 
 /* Display */
-.d-none{		display:none!important		}
-.d-flex{		display:flex!important		}
+.d-none{		display:none!important;		}
+.d-flex{		display:flex!important;		}
+.d-block{		display:block!important;	}
 
 .position-relative	{		position: relative !important;	}
 

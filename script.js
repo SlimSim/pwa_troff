@@ -412,18 +412,18 @@ function initSongTable() {
 
 
 	dataSongTable = $("#dataSongTable").DataTable({
-    "language": {
-      "emptyTable": "<h1 class=\"lead\">No files added!</h1>" +
-      "<br />Try adding songs by clicking the <br / >" +
-			"<label " +
-				"title=\"Add songs, videos or pictures to Troff\"" +
-				"class=\"cursor-pointer regularButton small fa-stack fa-1x\"" +
-				"for=\"fileUploader\">" +
-					"<i class=\"fas fa-music fa-stack-1x m-relative-7 font-size-relative-1\"></i>" +
-					"<i class=\"fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65\"></i>" +
-			"</label>" +
-			"-button at the top<br />of the song-dialog"
-    },
+		"language": {
+			"emptyTable": "<h1 class=\"lead\">No files added!</h1>" +
+			"<br />Try adding songs by clicking the <br / >" +
+				"<label " +
+					"title=\"Add songs, videos or pictures to Troff\"" +
+					"class=\"cursor-pointer regularButton small fa-stack fa-1x\"" +
+					"for=\"fileUploader\">" +
+						"<i class=\"fas fa-music fa-stack-1x m-relative-7 font-size-relative-1\"></i>" +
+						"<i class=\"fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65\"></i>" +
+				"</label>" +
+				"-button at the top<br />of the song-dialog"
+		},
 		"fixedHeader": true,
 		"paging": false,
 		"createdRow": function( row, data, dataIndex ) {
@@ -453,7 +453,7 @@ function initSongTable() {
 			data : JSON.parse( dataSongTable.row( $(this) ).data()[0] )
 		});
 
-	  event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
+		event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
 	})
 	.on( 'click', 'tbody tr', function ( event ) {
 
@@ -502,9 +502,9 @@ function initSongTable() {
 
 	// Options for the observer (which mutations to observe)
 	const songListsObserverConfig = {
-	  attributes: true,
-	  childList: false,
-	  subtree: false
+		attributes: true,
+		childList: false,
+		subtree: false
 	};
 
 	// Callback function to execute when mutations are observed
@@ -1994,7 +1994,7 @@ var TroffClass = function(){
 	this.pathToName = function(filepath){
 		let lastIndex = filepath.lastIndexOf( '.' );
 		if( lastIndex == -1 ) {
-		    return filepath;
+			return filepath;
 		}
 		return filepath.substr( 0, lastIndex );
 	};
@@ -2063,20 +2063,20 @@ var TroffClass = function(){
 	};
 
 	/*Troff*/ this.replaceMarkerIdWithMarkerTimeInState = function( oState, aoMarkers ) {
-    for( let i = 0; i < aoMarkers.length; i++) {
-        if( oState.currentMarker == aoMarkers[i].id ){
-            oState.currentMarkerTime = aoMarkers[i].time;
-        }
-        if( oState.currentStopMarker == aoMarkers[i].id + "S" ){
-            oState.currentStopMarkerTime = aoMarkers[i].time;
-        }
-        if( oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined ) {
-            break;
-        }
-    }
-    delete oState.currentMarker;
-    delete oState.currentStopMarker;
-    return oState;
+		for( let i = 0; i < aoMarkers.length; i++) {
+			if( oState.currentMarker == aoMarkers[i].id ){
+				oState.currentMarkerTime = aoMarkers[i].time;
+			}
+			if( oState.currentStopMarker == aoMarkers[i].id + "S" ){
+				oState.currentStopMarkerTime = aoMarkers[i].time;
+			}
+			if( oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined ) {
+				break;
+			}
+		}
+		delete oState.currentMarker;
+		delete oState.currentStopMarker;
+		return oState;
 	};
 
 	/*Troff*/ this.importMarker = function(aMarkers){
@@ -3496,7 +3496,7 @@ var TroffClass = function(){
 			var height = 100 * zd;
 			var marginTop = -mt;
 
-            let marginTopPX = winHeightPX * marginTop / 100;
+			let marginTopPX = winHeightPX * marginTop / 100;
 
 			$('#markerSection').css("height", (height + "%"));
 			$('#markerSection').css("margin-top", (marginTopPX + "px"));
@@ -4365,9 +4365,35 @@ var IOClass = function(){
 	var IOEnterFunction = false;
 	var IOArrowFunction = false;
 
+	/*IO*/this.toggleFullScreen = function() {
+		var doc = window.document;
+		var docEl = doc.documentElement;
+
+		var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+		var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+		if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+			requestFullScreen.call(docEl);
+		}
+		else {
+			cancelFullScreen.call(doc);
+		}
+	}
+
+	/*IO*/this.fullScreenChange = function(event) {
+		if( document.fullscreenElement ) {
+			$( ".toggleFullScreenExpandIcon" ).addClass( "hidden" );
+			$( ".toggleFullScreenCompressIcon" ).removeClass( "hidden" );
+		} else {
+			$( ".toggleFullScreenExpandIcon" ).removeClass( "hidden" );
+			$( ".toggleFullScreenCompressIcon" ).addClass( "hidden" );
+		}
+	}
+
 	/*IO*/this.startFunc = function() {
 
 		document.addEventListener('keydown', IO.keyboardKeydown);
+		document.addEventListener('fullscreenchange', IO.fullScreenChange );
 
 		$( ".outerDialog" ).click( function( event ) {
 			if( $(event.target ).hasClass( "outerDialog" ) && !$(event.target ).hasClass( "noCloseOnClick" ) ) {
@@ -4395,6 +4421,7 @@ var IOClass = function(){
 			$( event.target ).closest(".outerDialog").addClass("hidden")
 		} );
 
+		$( ".onClickToggleFullScreen" ).on( "click", IO.toggleFullScreen );
 		$( ".blurOnClick" ).on( "click", IO.blurHack );
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
@@ -4576,48 +4603,48 @@ var IOClass = function(){
 		IO.copyTextToClipboard( $( event.target ).val() );
 	};
 
-  /*IO*/ this.copyTextToClipboard = async function( text ) {
-    if( !navigator.clipboard ) {
-      IO.fallbackCopyTextToClipboard( text );
-      return;
-    }
+	/*IO*/ this.copyTextToClipboard = async function( text ) {
+		if( !navigator.clipboard ) {
+			IO.fallbackCopyTextToClipboard( text );
+			return;
+		}
 
 		navigator.clipboard.writeText( text ).then(
 			() => { IO.copyToClipboardSuccessful( text ) },
 			() => { IO.copyToClipboardFailed( text ) }
 		);
-  };
+	};
 
 	/*IO*/ this.fallbackCopyTextToClipboard = function( text ) {
-    var textArea = document.createElement("textarea");
-    textArea.value = text;
+		var textArea = document.createElement("textarea");
+		textArea.value = text;
 
-    // Avoid scrolling to bottom
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.position = "fixed";
+		// Avoid scrolling to bottom
+		textArea.style.top = "0";
+		textArea.style.left = "0";
+		textArea.style.position = "fixed";
 
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
+		document.body.appendChild(textArea);
+		textArea.focus();
+		textArea.select();
 
-    try {
-      var successful = document.execCommand('copy');
-      var msg = successful ? 'successful' : 'unsuccessful';
+		try {
+			var successful = document.execCommand('copy');
+			var msg = successful ? 'successful' : 'unsuccessful';
 
-      if( successful ) {
-      	IO.copyToClipboardSuccessful( text );
-      } else {
-      	IO.copyToClipboardFailed( text )
-      }
-    } catch (err) {
-			IO.copyToClipboardFailed( text );
-    }
+			if( successful ) {
+			IO.copyToClipboardSuccessful( text );
+			} else {
+			IO.copyToClipboardFailed( text )
+			}
+		} catch (err) {
+				IO.copyToClipboardFailed( text );
+		}
 
-    document.body.removeChild( textArea );
-  };
+		document.body.removeChild( textArea );
+	};
 
-  /*IO*/ this.copyToClipboardSuccessful = function( text ) {
+	/*IO*/ this.copyToClipboardSuccessful = function( text ) {
 		$.notify(
 			`Copied "${text}" to clipboard!`,
 			{
@@ -4626,9 +4653,9 @@ var IOClass = function(){
 				clickToHide: true
 			}
 		);
-  };
+	};
 
-  /*IO*/ this.copyToClipboardFailed = function( text ) {
+	/*IO*/ this.copyToClipboardFailed = function( text ) {
 		$.notify(
 			`Could not copy "${text}" to clipboard, please copy the text manually`,
 			{
@@ -4637,7 +4664,7 @@ var IOClass = function(){
 				clickToHide: true
 			}
 		);
-  };
+	};
 
 
 	/*IO*/this.keyboardKeydown  = function(event) {
@@ -5097,7 +5124,6 @@ var IOClass = function(){
 		var buttEnterId = "buttOkId" + time;
 
 
-        console.log( "*** second change" );
 		var textId = "textId" + time;
 		var textareaId = "textareaId" + time;
 		var buttCancelId = "buttCancelId" + time;
@@ -5165,8 +5191,6 @@ var IOClass = function(){
 			var time = Date.now();
 			var buttEnterId = "buttOkId" + time;
 
-		    console.log( "*** third change");
-
 			var textId = "textId" + time;
 			var buttCancelId = "buttCancelId" + time;
 			var innerId = "innerId" + time;
@@ -5211,8 +5235,6 @@ var IOClass = function(){
 	this.alert = function(textHead, textBox, func){
 			var time = Date.now();
 			var buttEnterId = "buttOkId" + time;
-
-            console.log( "*** fourth change" ) ;
 
 			var textId = "textId" + time;
 			var innerId = "innerId" + time;
