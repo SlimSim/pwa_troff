@@ -115,7 +115,7 @@
 					<i class="fa fa-expand toggleFullScreenExpandIcon" ></i>
 					<i class="fa fa-compress toggleFullScreenCompressIcon hidden" ></i>
 				</button>
-				<span id="buttPlayUiButtonParent" class = "margin roundButt">
+				<span id="buttPlayUiButtonParent" class="fixToBottomRightOnMobile margin roundButt">
 					<input
 						type="button"
 						value="▶"
@@ -210,163 +210,164 @@
 			</div> <!-- stateArea -->
 
 			<div id="timeSection" class="flexCol end vScroll hideOnPicture">
-				<h1>Settings</h1>
-				<div id="ControlTime" class="flexCol end">
-				</div> <!-- ControlTime -->
+				<div>
+					<h1>Settings</h1>
+					<div id="ControlTime" class="flexCol end">
+					</div> <!-- ControlTime -->
 
 
-				<div id="ControlMarker" class="flexCol end">
-					<h2>Marker</h2>
-					<div>
-						<input type="button" title="Add a marker to the song timeline (key: m)" class="important" id="buttMarker" value="Add M&#818;arker!" />
-					</div>
-					<input
-						type="button"
-						title="Move, delete, stretch, import or export the markers"
-						class="stOnOffButton"
-						value="advanced"
-						data-st-css-selector-to-toggle="#extraMarkerFunctions"
-						/>
-					<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
-						<input
-							type="button"
-							class="regularButton full-width"
-							title="Import markers to the song or export current markers"
-							id="buttImportExportMarker"
-							value="import / export"
-							/>
-						<input
-							type="button"
-							title="Move more than one marker"
-							class="regularButton full-width"
-							id="buttPromptMoveMarkers"
-							value="move markers"
-							/>
-						<input
-							type="button"
-							title="Delete more than one marker"
-							class="regularButton full-width"
-							data-st-css-selector-to-toggle="#deleteMarkersDialog"
-							value="delete markers"
-							/>
-						<input
-							type="button"
-							title="Stretch the markers"
-							class="regularButton full-width"
-							data-st-css-selector-to-toggle="#stretchMarkersDialog"
-							value="stretch markers"
-							/>
-					</div>
-					<div>
-						<input
-							type="button"
-							title="Select first and last markers (key: u)"
-							class="regularButton"
-							value="play fu&#818;ll song"
-							id="buttUnselectMarkers" />
-					</div>
-					<div id="zoomParent" class="flexRow">
-						<input
-							type="button"
-							title="Zoom out to see the whole song"
-							class="regularButton"
-							value="zoom out"
-							id="buttZoomOut" />
-						<input
-							type="button"
-							title="Zoom to the selected play region (the purple part of the timeline)"
-							class="regularButton"
-							value="z&#818;oom"
-							id="buttZoom" />
+					<div id="ControlMarker" class="flexCol end">
+						<h2>Marker</h2>
+						<div>
+							<input type="button" title="Add a marker to the song timeline (key: m)" class="important" id="buttMarker" value="Add M&#818;arker!" />
 						</div>
-					<div>
-						<input type="button" title="Toggle; start a few seconds before the start marker (key: b)" value="start b&#818;efore" id="buttStartBefore" class="buttWidthStandard stOnOffButton"/>
-						<input
-							type="number"
-							class="numberWide"
-							title="Set how many seconds before the start marker to start (key: shift/alt b)"
-							value="3"
-							min="0"
-							data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
-							id="startBefore" />
-					</div>
-
-					<div>
-						<input type="button" title="Toggle; stop a few seconds after the stop marker (key: a)" value="stop a&#818;fter" id="buttStopAfter" class="buttWidthStandard stOnOffButton"/>
-						<input
-							type="number"
-							class="numberWide"
-							title="Set how many seconds after the stop marker to stop (key: shift/alt a)"
-							value="2"
-							min="0"
-							id="stopAfter" />
-					</div>
-				</div> <!-- ControlMarker -->
-
-				<div id="ControlLoop" class="flexCol end">
-					<h2>Loop</h2>
-					<div>
 						<input
 							type="button"
-							title="Toggle; wait a few seconds before song starts to play (key: p)"
-							value="p&#818;ause before"
-							id="buttPauseBefStart"
-							class="buttWidthMedium-small stOnOffButton active" />
-						<input
-							type="number"
-							class="numberWide"
-							title="Set how many seconds to wait before song starts to play (key: shift/alt p)"
-							value="3"
-							id="pauseBeforeStart"  />
-					</div>
+							title="Move, delete, stretch, import or export the markers"
+							class="stOnOffButton"
+							value="advanced"
+							data-st-css-selector-to-toggle="#extraMarkerFunctions"
+							/>
+						<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
+							<input
+								type="button"
+								class="regularButton full-width"
+								title="Import markers to the song or export current markers"
+								id="buttImportExportMarker"
+								value="import / export"
+								/>
+							<input
+								type="button"
+								title="Move more than one marker"
+								class="regularButton full-width"
+								id="buttPromptMoveMarkers"
+								value="move markers"
+								/>
+							<input
+								type="button"
+								title="Delete more than one marker"
+								class="regularButton full-width"
+								data-st-css-selector-to-toggle="#deleteMarkersDialog"
+								value="delete markers"
+								/>
+							<input
+								type="button"
+								title="Stretch the markers"
+								class="regularButton full-width"
+								data-st-css-selector-to-toggle="#stretchMarkersDialog"
+								value="stretch markers"
+								/>
+						</div>
+						<div>
+							<input
+								type="button"
+								title="Select first and last markers (key: u)"
+								class="regularButton"
+								value="play fu&#818;ll song"
+								id="buttUnselectMarkers" />
+						</div>
+						<div id="zoomParent" class="flexRow">
+							<input
+								type="button"
+								title="Zoom out to see the whole song"
+								class="regularButton"
+								value="zoom out"
+								id="buttZoomOut" />
+							<input
+								type="button"
+								title="Zoom to the selected play region (the purple part of the timeline)"
+								class="regularButton"
+								value="z&#818;oom"
+								id="buttZoom" />
+							</div>
+						<div>
+							<input type="button" title="Toggle; start a few seconds before the start marker (key: b)" value="start b&#818;efore" id="buttStartBefore" class="buttWidthStandard stOnOffButton"/>
+							<input
+								type="number"
+								class="numberWide"
+								title="Set how many seconds before the start marker to start (key: shift/alt b)"
+								value="3"
+								min="0"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
+								id="startBefore" />
+						</div>
 
-					<div class="XLoopOff">
-						<input type="button"
-							class="buttWidthMedium-small stOnOffButton active"
-							value="w&#818;ait between"
-							id="buttWaitBetweenLoops"/>
-						<input type="number"
-							title="Set how many seconds to wait between each loop"
-							class="numberWide"
-							value="1"
-							id="waitBetweenLoops"  />
-					</div>
-					<div class="flexRow">
-						<input
-							type="button"
-							title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
-							data-save-on-song-toggle-class="active"
-							data-save-on-song-toggle-class-default-value="false"
-							value="increment until"
-							id="buttIncrementUntil"
-							data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
-							class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active">
-						<input
-							type="number"
-							id="incrementUntilValue"
-							class="numberWide"
-							min="50"
-							max="200"
-							data-save-on-song-value="100"
-							data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
-							value="100" />
-					</div>
+						<div>
+							<input type="button" title="Toggle; stop a few seconds after the stop marker (key: a)" value="stop a&#818;fter" id="buttStopAfter" class="buttWidthStandard stOnOffButton"/>
+							<input
+								type="number"
+								class="numberWide"
+								title="Set how many seconds after the stop marker to stop (key: shift/alt a)"
+								value="2"
+								min="0"
+								id="stopAfter" />
+						</div>
+					</div> <!-- ControlMarker -->
 
-					<span class="loopSquare" id="loopButtons" >
-						<input type="button" title="Play song only 1 time (key: 1)" class="loopButt" value="1" id="buttLoop1" />
-						<input type="button" title="Loop song 2 times (key: 2)" class="loopButt" value="2" id="buttLoop2" />
-						<input type="button" title="Loop song 3 times (key: 3)" class="loopButt" value="3" id="buttLoop3" />
-						<input type="button" title="Loop song 4 times (key: 4)" class="loopButt" value="4" id="buttLoop4" />
-						<input type="button" title="Loop song 5 times (key: 5)" class="loopButt" value="5" id="buttLoop5" />
-						<input type="button" title="Loop song 6 times (key: 6)" class="loopButt" value="6" id="buttLoop6" />
-						<input type="button" title="Loop song 7 times (key: 7)" class="loopButt" value="7" id="buttLoop7" />
-						<input type="button" title="Loop song 8 times (key: 8)" class="loopButt" value="8" id="buttLoop8" />
-						<input type="button" title="Loop song 9 times (key: 9)" class="loopButt" value="9" id="buttLoop9" />
-						<input type="button" title="Loop song &infin; times (key: 0)" class="loopButt" value="&infin;" id="buttLoopInf" />
-					</span>
-				</div> <!-- ControlLoop -->
+					<div id="ControlLoop" class="flexCol end">
+						<h2>Loop</h2>
+						<div>
+							<input
+								type="button"
+								title="Toggle; wait a few seconds before song starts to play (key: p)"
+								value="p&#818;ause before"
+								id="buttPauseBefStart"
+								class="buttWidthMedium-small stOnOffButton active" />
+							<input
+								type="number"
+								class="numberWide"
+								title="Set how many seconds to wait before song starts to play (key: shift/alt p)"
+								value="3"
+								id="pauseBeforeStart"  />
+						</div>
 
+						<div class="XLoopOff">
+							<input type="button"
+								class="buttWidthMedium-small stOnOffButton active"
+								value="w&#818;ait between"
+								id="buttWaitBetweenLoops"/>
+							<input type="number"
+								title="Set how many seconds to wait between each loop"
+								class="numberWide"
+								value="1"
+								id="waitBetweenLoops"  />
+						</div>
+						<div class="flexRow">
+							<input
+								type="button"
+								title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
+								data-save-on-song-toggle-class="active"
+								data-save-on-song-toggle-class-default-value="false"
+								value="increment until"
+								id="buttIncrementUntil"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active">
+							<input
+								type="number"
+								id="incrementUntilValue"
+								class="numberWide"
+								min="50"
+								max="200"
+								data-save-on-song-value="100"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
+								value="100" />
+						</div>
 
+						<span class="loopSquare" id="loopButtons" >
+							<input type="button" title="Play song only 1 time (key: 1)" class="loopButt" value="1" id="buttLoop1" />
+							<input type="button" title="Loop song 2 times (key: 2)" class="loopButt" value="2" id="buttLoop2" />
+							<input type="button" title="Loop song 3 times (key: 3)" class="loopButt" value="3" id="buttLoop3" />
+							<input type="button" title="Loop song 4 times (key: 4)" class="loopButt" value="4" id="buttLoop4" />
+							<input type="button" title="Loop song 5 times (key: 5)" class="loopButt" value="5" id="buttLoop5" />
+							<input type="button" title="Loop song 6 times (key: 6)" class="loopButt" value="6" id="buttLoop6" />
+							<input type="button" title="Loop song 7 times (key: 7)" class="loopButt" value="7" id="buttLoop7" />
+							<input type="button" title="Loop song 8 times (key: 8)" class="loopButt" value="8" id="buttLoop8" />
+							<input type="button" title="Loop song 9 times (key: 9)" class="loopButt" value="9" id="buttLoop9" />
+							<input type="button" title="Loop song &infin; times (key: 0)" class="loopButt" value="&infin;" id="buttLoopInf" />
+						</span>
+					</div> <!-- ControlLoop -->
+
+				</div>
 				<div class="doubleSliders flexOne">
 					<div class="sliderInfo">
 						<input class="button small regularButton" type="button" title="Set volume to 100% (key: v)" value="V&#818;olume:" id="buttResetVolume" />

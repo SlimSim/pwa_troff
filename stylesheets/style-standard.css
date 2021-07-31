@@ -185,6 +185,9 @@ auto - for classes that set the margin to auto
 }
 
 @media (min-width:576px){
+	/* NOT ON MOBILE-PHONES */
+
+	/* sm is the size just above mobile phones */
 	.d-sm-none{display:none!important}
 	.d-sm-flex{display:-ms-flexbox!important;display:flex!important}
 }

@@ -86,6 +86,7 @@ body{
 }
 
 @media screen and (max-width: 576px) {
+	/* This is only for mobile phones: */
 	body{
 		/* max-height: 100%; */
 		/* overflow-y: hidden; */
@@ -93,6 +94,22 @@ body{
 	}
 	#userNoteSection {
 		min-width: 300px;
+	}
+
+	.fixToBottomRightOnMobile {
+		position: fixed;
+		right: 42px;
+		bottom: 42px;
+		z-index: 99;
+	}
+
+	.doubleSliders{
+		height: 99%;
+	}
+
+	#timeSection{
+		flex-direction: row-reverse;
+		align-items: baseline;
 	}
 }
 
