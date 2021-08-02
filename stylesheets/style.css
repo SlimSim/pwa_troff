@@ -1246,6 +1246,19 @@ extend_ -> fill_
 		font-size: 16px;
 	}
 
+	.play.hidden-on-mobile-on-play,
+	.pause.hidden-on-mobile-on-pause {
+		display: none !important;
+	}
+
+	#infoSection.wait {
+		position: fixed;
+		background: transparent;
+		text-align: center;
+		width: 100%;
+	}
+
+
 	/* special for songList*/
   #songPickerAttachedArea #superSonglistArea,
   #songPickerAttachedArea #songListsList {
