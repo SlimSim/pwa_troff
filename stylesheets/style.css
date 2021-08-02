@@ -85,34 +85,6 @@ body{
 	overflow: hidden !important;
 }
 
-@media screen and (max-width: 576px) {
-	/* This is only for mobile phones: */
-	body{
-		/* max-height: 100%; */
-		/* overflow-y: hidden; */
-		overflow-x: auto !important;
-	}
-	#userNoteSection {
-		min-width: 300px;
-	}
-
-	.fixToBottomRightOnMobile {
-		position: fixed;
-		right: 42px;
-		bottom: 42px;
-		z-index: 99;
-	}
-
-	.doubleSliders{
-		height: 99%;
-	}
-
-	#timeSection{
-		flex-direction: row-reverse;
-		align-items: baseline;
-	}
-}
-
 .no-outline-on-focus:focus {
 	outline: none;
 }
@@ -824,20 +796,20 @@ table {
 .roundButt{
 	border-width: 21px;
 	border-style: solid;
-	border-radius: 21px;
+	border-radius: 98px;
 	width: 0;
 	height: 0;
 }
+.roundButt input[type="button"]{
+	min-width: 0;
+	min-height: 0;
+}
 .roundButt:hover{
 	border-width: 23px;
-	border-style: solid;
-	border-radius: 23px;
 	margin: 2px;
 }
 .roundButt:active{
 	border-width: 25px;
-	border-style: solid;
-	border-radius: 25px;
 	margin: 0;
 }
 .important:hover {
@@ -1193,4 +1165,84 @@ extend_ -> fill_
 	border-left: 0px;
 	border-right: 0px;
 
+}
+
+
+
+@media screen and (max-width: 576px) {
+	/* This is only for mobile phones: */
+	body{
+		overflow-x: auto !important;
+	}
+
+
+	.centerRoundButt1{
+		bottom: 16px;
+		right: 10px;
+	}
+	.centerRoundButt2{
+		bottom: 14px;
+		right: 10px;
+	}
+
+
+	.full-height-on-mobile {
+		height: 100%;
+	}
+	.normalSize-on-mobile {
+		font-size: 14px;
+	}
+
+	[for=fileUploader] {
+		font-size: 15px;
+	}
+	.svg-inline--fa.fa-stack-1x {
+		height: 1em;
+		width: 1em;
+		left: 0.5em;
+		top: 0.3em;
+	}
+
+	input[type="button"],
+	input[type="text"],
+	input[type="number"],
+	button, [for=fileUploader] {
+		min-width: 42px;
+		min-height: 35px;
+	}
+	#userNoteSection {
+		min-width: 300px;
+	}
+
+	.fixToBottomRightOnMobile {
+		position: fixed;
+		right: 15px;
+		bottom: 21px;
+		z-index: 11; /*TODO: kolla att denna blir bra med filmer :) */
+	}
+
+	.doubleSliders{
+		height: 99%;
+	}
+
+	#timeSection{
+		flex-direction: row-reverse;
+		align-items: baseline;
+	}
+
+	.roundButt {
+		border-width: 27px;
+	}
+	.roundButt:hover{
+		border-width: 29px;
+		margin: 2px;
+	}
+	.roundButt:active{
+		border-width: 31px;
+		margin: 0;
+	}
+
+	.big-on-mobile {
+		font-size: 16px;
+	}
 }
