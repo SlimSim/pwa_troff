@@ -189,7 +189,7 @@
 		</div>
 		<div id="areaParent" class="flexRow areaParent negative-my-4px flex-one h-0" >
 			<span class="flexOne"></span>
-			<div id="songPickerAttachedArea" class="flexCol start hidden">
+			<div id="songPickerAttachedArea" class="flexCol start width-min-content hidden">
 			</div>
 			<div id="stateSection" class="flexCol hideOnPicture">
 				<h1>State</h1>
@@ -936,48 +936,51 @@
 
 	<div id="outerSongListPopUpSquare" class="outerDialog hidden">
 		<div id="innerSongListPopUpSquare" class="popUpSquare almost-full-size" >
-			<div class="flexRow flex-none">
+			<div class="flexRow flex-none flex-wrap">
 				<h1> Songs </h1>
 				<div class="flexOne" ></div>
-				<input
-					type="button"
-					title="Show Search"
-					data-st-css-selector-to-hide="#dataSongTable_filter"
-					data-st-save-value-key="TROFF_SETTING_SEARCH_SHOW"
-					class="switch st-simple-on-off-button stOnOffButton active mr-2"
-					value="Search"/>
-				<input
-					type="button"
-					title="Show Column Selector"
-					data-st-css-selector-to-hide="#columnToggleParent"
-					class="switch st-simple-on-off-button stOnOffButton mr-2"
-					value="Column Selector"/>
+				<div class="flexRow">
+					<button
+						type="button"
+						title="Show Search"
+						data-st-css-selector-to-hide="#dataSongTable_filter"
+						data-st-save-value-key="TROFF_SETTING_SEARCH_SHOW"
+						class="switch st-simple-on-off-button stOnOffButton active mr-2"
+						><i class="fa fa-search"></i>
+					</button>
+					<button
+						type="button"
+						title="Show Column Selector"
+						data-st-css-selector-to-hide="#columnToggleParent"
+						class="switch st-simple-on-off-button stOnOffButton mr-2 small"
+						>Column Selector</button>
 
-				<button
-					id="toggleSonglistsId"
-					title="Show songlists"
-					data-st-css-selector-to-hide="#songListsList"
-					data-st-save-value-key="TROFF_SETTING_SONG_LISTS_LIST_SHOW"
-					class="switch mr-2 st-simple-on-off-button stOnOffButton">
-					<i class="fa fa-columns"></i>
-				</button>
-				<label
-					title="Add songs, videos or pictures to Troff"
-					class="cursor-pointer mr-2 regularButton fa-stack fa-1x Small normalSize-on-mobile full-height-on-mobile"
-					for="fileUploader">
-						<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
-						<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65 "></i>
-				</label>
-				<button class="regularButton mr-2 buttSetSongsDialogToAttachedState"
-					type="button"
-					title="open the songs dialog in floating window">
-					<i class="fa fa-window-minimize"></i>
-				</button>
-				<button class="regularButton mr-2 buttCloseSongsDialog"
-					type="button"
-					title="open the songs dialog in floating window">
-					<i class="fa fa-window-close"></i>
-				</button>
+					<button
+						id="toggleSonglistsId"
+						title="Show songlists"
+						data-st-css-selector-to-hide="#songListsList"
+						data-st-save-value-key="TROFF_SETTING_SONG_LISTS_LIST_SHOW"
+						class="switch mr-2 st-simple-on-off-button stOnOffButton">
+						<i class="fa fa-columns"></i>
+					</button>
+					<label
+						title="Add songs, videos or pictures to Troff"
+						class="cursor-pointer mr-2 regularButton fa-stack fa-1x Small normalSize-on-mobile full-height-on-mobile"
+						for="fileUploader">
+							<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
+							<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65 "></i>
+					</label>
+					<button class="regularButton mr-2 buttSetSongsDialogToAttachedState"
+						type="button"
+						title="put the songs dialog next to the setting-area">
+						<i class="fa fa-window-minimize"></i>
+					</button>
+					<button class="regularButton mr-2 buttCloseSongsDialog"
+						type="button"
+						title="close the songs dialog">
+						<i class="fa fa-window-close"></i>
+					</button>
+				</div>
 			</div>
 			<!--p>
 				TODO: Would it not be great if you could color every song with the colors (in menu maybe?)
@@ -1003,7 +1006,7 @@
 				</div>
 				<div class="flexOne"></div>
 			</div>
-			<div id="newSearchParent" class="py-2 flexRow flex-none full-width">
+			<div id="newSearchParent" class="py-2 flexRow flex-none full-width flex-wrap">
 
 				<div class="pt-1 pl-2">
 					<select id="songListSelector" class="custom-select custom-select-sm hideOnSongsDialogAttachedState">
@@ -1015,7 +1018,7 @@
 					</select>
 				</div>
 				<div class="flexOne"></div>
-				<div class="flexRow hideOnSongsDialogFloatingState">
+				<div class="flexRow hideOnSongsDialogFloatingState pl-1">
 
 					<label
 						title="Add songs, videos or pictures to Troff"

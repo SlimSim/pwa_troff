@@ -173,6 +173,8 @@ auto - for classes that set the margin to auto
 	list-style-type: decimal;
 }
 
+.width-min-content { width: min-content !important; }
+
 /* Display */
 .d-none{		display:none!important;		}
 .d-flex{		display:flex!important;		}

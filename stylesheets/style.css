@@ -450,7 +450,7 @@ input[type=number].numberWider{
 }
 
 #songPickerAttachedArea #dataSongTable_filter input[type=search]{
-	max-width: 177px;
+	max-width: 173px;
 }
 .attached-configure-button .fa-music {
 	left: 5px;
@@ -1245,4 +1245,10 @@ extend_ -> fill_
 	.big-on-mobile {
 		font-size: 16px;
 	}
+
+	/* special for songList*/
+  #songPickerAttachedArea #superSonglistArea,
+  #songPickerAttachedArea #songListsList {
+  	max-width: calc(100vw - 10px);
+  }
 }
