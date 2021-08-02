@@ -780,23 +780,23 @@ function clickSongsDialog( event ) {
 }
 
 function minimizeSongPicker(){
-	closeSongDialog();
 	$( "#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG" ).click();
-	openSongDialog();
 }
 
 function maximizeSongPicker(){
-	closeSongDialog();
 	$( "#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG" ).click();
-	openSongDialog();
 }
 
 function clickToggleFloatingSonglists( event ) {
+	let shouldOpenSongDialog = $( "#buttSongsDialog" ).hasClass( "active" );
+	closeSongDialog();
 	if( $( "#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG" ).hasClass( "active" ) ) {
-		//Note: the class will be removed by another eventlistener soon.
-		moveSongPickerToAttachedState();
-	} else {
 		moveSongPickerToFloatingState();
+	} else {
+		moveSongPickerToAttachedState();
+	}
+	if( shouldOpenSongDialog ) {
+		openSongDialog();
 	}
 }
 
@@ -4433,7 +4433,6 @@ var IOClass = function(){
 		$( "#buttSettingsDialog" ).click ( Troff.openSettingsDialog );
 		$( "#buttCloseSettingPopUpSquare" ).click ( Troff.closeSettingsDialog );
 
-		$( "#buttSetSongsDialogToFloatingState" ).click( moveSongPickerToFloatingState )
 		$( ".buttCloseSongsDialog" ).click( closeSongDialog );
 		$( "#buttAttachedSongListToggle" ).click( clickAttachedSongListToggle );
 
