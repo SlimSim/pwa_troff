@@ -3316,8 +3316,8 @@ var TroffClass = function(){
 			clearAllMarkers - HTML, clears markers
 		*/
 		this.clearAllMarkers = function(){
-			$('#markerSection').css("height", ($( "#markerSectionParent" ).height() + "px"));
-			$('#markerSection').css("margin-top", (0 + "px"));
+			$('#markerSection').css("height", "100%");
+			$('#markerSection').css("margin-top", 0);
 			var docMarkerList = document.getElementById('markerList');
 			if (docMarkerList) {
 				while (docMarkerList.firstChild) {
@@ -3468,6 +3468,8 @@ var TroffClass = function(){
 		this.zoom = function(startTime, endTime){
 
 			//NOTE all distances is in %, unless otherwise specified
+
+			if( endTime === undefined ) { return; }
 
 			m_zoomStartTime = startTime;
 			m_zoomEndTime = endTime;
