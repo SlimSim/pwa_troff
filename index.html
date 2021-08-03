@@ -210,8 +210,8 @@
 			</div> <!-- stateArea -->
 
 			<div id="timeSection" class="flexCol end vScroll hideOnPicture">
-				<div>
-					<h1>Settings</h1>
+				<div class="h-100 overflow-y-auto-on-mobile">
+					<h1 class="hidden-on-mobile">Settings</h1>
 					<div id="ControlTime" class="flexCol end">
 					</div> <!-- ControlTime -->
 
@@ -368,45 +368,48 @@
 					</div> <!-- ControlLoop -->
 
 				</div>
-				<div class="doubleSliders flexOne">
-					<div class="sliderInfo">
-						<input class="button small regularButton" type="button" title="Set volume to 100% (key: v)" value="V&#818;olume:" id="buttResetVolume" />
-						<div class="plusMinusButton" id="plusMinusButtons">
-							<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
-							<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
-						</div>
-						<div class="dataOutput" id="volumeDataOutput">
-							<div id="volume">100</div><p>%</p>
-						</div>
-						<input
-							class="sliderRange flexOne"
-							orient="vertical"
-							id="volumeBar"
-							type="range"
-							min="0"
-							max="100"
-							value="100"/>
-					</div> <!-- sliderInfo -->
+				<div class="full-height">
+					<h1 class="d-sm-none">Settings</h1>
+					<div class="doubleSliders flexOne">
+						<div class="sliderInfo">
+							<input class="button small regularButton" type="button" title="Set volume to 100% (key: v)" value="V&#818;olume:" id="buttResetVolume" />
+							<div class="plusMinusButton" id="plusMinusButtons">
+								<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
+								<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
+							</div>
+							<div class="dataOutput" id="volumeDataOutput">
+								<div id="volume">100</div><p>%</p>
+							</div>
+							<input
+								class="sliderRange flexOne"
+								orient="vertical"
+								id="volumeBar"
+								type="range"
+								min="0"
+								max="100"
+								value="100"/>
+						</div> <!-- sliderInfo -->
 
-					<div class="sliderInfo">
-						<input class="button small regularButton" type="button" title="Set speed to 100% (key: s)" value="S&#x332;peed:" id="buttResetSpeed" />
-						<div class="plusMinusButton">
-							<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
-							<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
-						</div>
-						<div class="dataOutput">
-							<div id="speed">100</div><p>%</p>
-						</div>
-						<input
-							class="sliderRange flexOne"
-							orient="vertical"
-							id="speedBar"
-							type="range"
-							min="50"
-							max="200"
-							value="100"/>
-					</div>  <!-- sliderInfo -->
-				</div> <!-- doubleSliders -->
+						<div class="sliderInfo">
+							<input class="button small regularButton" type="button" title="Set speed to 100% (key: s)" value="S&#x332;peed:" id="buttResetSpeed" />
+							<div class="plusMinusButton">
+								<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
+								<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
+							</div>
+							<div class="dataOutput">
+								<div id="speed">100</div><p>%</p>
+							</div>
+							<input
+								class="sliderRange flexOne"
+								orient="vertical"
+								id="speedBar"
+								type="range"
+								min="50"
+								max="200"
+								value="100"/>
+						</div>  <!-- sliderInfo -->
+					</div> <!-- doubleSliders -->
+				</div>
 
 			</div> <!-- timeArea -->
 
@@ -478,7 +481,7 @@
 
 
 
-	<section id="infoSection" class="secondaryColor margin hideOnPicture hidden-on-mobile-on-play hidden-on-mobile-on-pause">
+	<section id="infoSection" class="secondaryColor margin hideOnPicture overFilm hidden-on-mobile-on-play hidden-on-mobile-on-pause">
 		<h1 class="text-left">Countdown</h1>
 		<!--input type="button" value="Countdown" id="countTabOn" class="stOnOffButton active"-->
 		<div id="secondsLeft" class="secondsLeft">0</div>

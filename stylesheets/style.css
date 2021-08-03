@@ -242,8 +242,9 @@ body section{
 .min-height-10{	min-height:	640px	!important;	}
 
 
-.doubleSliders{
-		display: flex;
+.doubleSliders {
+	display: flex;
+	height: 100%;
 }
 
 .sliderInfo{
@@ -1218,16 +1219,20 @@ extend_ -> fill_
 		position: fixed;
 		right: 15px;
 		bottom: 21px;
-		z-index: 11; /*TODO: kolla att denna blir bra med filmer :) */
+		z-index: 11;
 	}
 
 	.doubleSliders{
-		height: 99%;
+		height: 95%;
 	}
 
 	#timeSection{
 		flex-direction: row-reverse;
 		align-items: baseline;
+	}
+
+	.overflow-y-auto-on-mobile {
+		overflow-y: auto !important;
 	}
 
 	.roundButt {
@@ -1260,6 +1265,10 @@ extend_ -> fill_
 
 	#loopButtons {
 		width: 155px;
+	}
+
+	.hidden-on-mobile {
+		display: none !important;
 	}
 
 	/* special for songList*/
