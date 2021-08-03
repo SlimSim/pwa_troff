@@ -4876,6 +4876,8 @@ var IOClass = function(){
 	};
 
 	/*IO*/this.promptEditMarker = function(markerId, func, funcCancle){
+		"use strict";
+
 		var markerName;
 		var markerInfo;
 		var markerColor;
@@ -4897,101 +4899,33 @@ var IOClass = function(){
 		}
 
 
-		var time = Date.now();
-
-		console.log( "*** First change" );
-
-		var textId = "textId" + time;
-		var markerNameId = "markerNameId" + time;
-		var markerTimeId = "markerTimeId" + time;
-		var markerInfoId = "markerInfoId" + time;
-		var markerColorId = "markerColorId" + time;
-		var outerId = "outerId" + time;
-		var innerId = "innerId" + time;
-		var outerDivStyle = ""+
-			"position: fixed; "+
-			"top: 0px;left: 0px; "+
-			"width: 100vw; "+
-			"height: 100%; "+
-			"background-color: "+
-			"rgba(0, 0, 0, 0.5);"+
-			"z-index: 99;"+
-			"display: flex;align-items: center;justify-content: center;";
-		var innerDivStyle = ""+
-			"width: 200px;"+
-			"padding: 10px 15px;"+
-			"font-size: 18px;"+
-			"display: flex;"+
-			"flex-direction: column;";
-
-
-		IOEnterFunction = function() {
-			if(func) func(
-				$("#"+markerNameId).val(),
-				$("#"+markerInfoId).val(),
-				$(".colorPickerSelected").attr("color"),
-				$("#"+markerTimeId).val()
-			);
-			$('#'+outerId).remove();
-			IOEnterFunction = false;
-		};
-
-
 		var buttOK = $("<input>", {
 			"type":"button",
 			"class":"regularButton",
 			"value": "OK"
-		}).click(IOEnterFunction);
+		});
 
 		var buttCancel = $("<input>", {
 			"type":"button",
 			"class": "regularButton",
 			"value": "Cancel"
-		}).click(function(){
-			if(funcCancle) funcCancle();
-			$('#'+outerId).remove();
-			IOEnterFunction = false;
 		});
 
 		var buttRemove = $("<input>", {
 			"type":"button",
 			"class":"regularButton",
 			"value": "Remove"
-		}).click(function(){
-
-			var confirmDelete = $( "#" + TROFF_SETTING_CONFIRM_DELETE_MARKER ).hasClass( "active" );
-			$('#'+outerId).remove();
-			IOEnterFunction = false;
-
-			if( $('#markerList li').length <= 2 ) {
-				IO.alert(
-					"Minimum number of markers",
-					"You can not remove this marker at the moment, "+
-					"you can not have fewer than 2 markers"
-				);
-				return;
-			}
-
-			if( markerId ) {
-				if( confirmDelete ) {
-					IO.confirm( "Remove marker", "Are you sure?", function() {
-						Troff.removeMarker( markerId );
-					} );
-				} else {
-					Troff.removeMarker( markerId );
-				}
-			}
 		});
 
 		function setColor(){
 			$('.colorPickerSelected').removeClass('colorPickerSelected');
 			this.classList.add('colorPickerSelected');
-			$("#"+markerColorId).html(this.getAttribute('color'));
+			$colorText.find( "span" ).html(this.getAttribute('color'));
 			IO.blurHack();
 		}
 
 		function generateColorBut(col){
-			var clas = "colorPicker";
+			var clas = "colorPicker backgroundColor" + col;
 			if(col === markerColor){
 				clas += " colorPickerSelected";
 			}
@@ -5000,7 +4934,6 @@ var IOClass = function(){
 								"value":"",
 								"color":col,
 								"class":clas,
-								"style":"background: " + col
 							}).click(setColor);
 		}
 		var butColor0 = generateColorBut("None");
@@ -5019,46 +4952,48 @@ var IOClass = function(){
 
 
 		var row0 = $("<span>", {"class": "oneRow"})
-							 .append($("<h2>", {"id": "p1"}).append(strHeader));
+							 .append( $( "<h2>" ).append( strHeader ) );
 
+		let $markerName = $( "<input>", {
+				"type":"text",
+				"value": markerName,
+				"class":"ml-2"
+			});
 
 		var row1 = $("<span>", {"class": "oneRow"})
-							 .append($("<p>", {"id": "p1"}).append("Name:"))
-							 .append($("<input>", {
-									 "id": markerNameId,
-									 "type":"text",
-									 "value": markerName,
-									 "style":"margin-left:7px; width:100%; "
-									 })
-							 );
+							 .append( $( "<p>" ).append( "Name:" ))
+							 .append( $markerName );
 
+
+		let $markerTime = $("<input>", {
+			"type":"number",
+			"value":markerTime,
+			"class": "w-auto p-2 ml-3 text-left"
+		});
 
 		var row2 = $("<span>", {"class": "oneRow"})
 									.append($("<p>").append("Time:"))
-									.append($("<input>", {
-											"id": markerTimeId,
-											"type":"number",
-											"value":markerTime,
-											"style":"width: 84px; text-align: left; "+
-														"margin-left:8px; padding: 4px;"
-									}))
+									.append( $markerTime )
 									.append($("<p>").append("seconds"));
+
+		let $markerInfo = $("<textarea>", {
+			"placeholder": "Put extra marker info here",
+			"text": markerInfo,
+			"rows": 6,
+			"class":"ml-4 p-2"
+		});
 
 		var row3 = $("<span>", {"class": "oneRow"})
 										.append($("<p>").append("Info:"))
-										.append($("<textarea>", {
-												"id": markerInfoId,
-												"placeholder":"Put extra marker info here",
-												"text": markerInfo,
-												"rows": 6,
-												"style":"margin-left:13px; padding: 4px; width:100%;"
-										}));
+										.append( $markerInfo );
+
+		let $colorText = $("<div>", {"class": "flexCol flex"})
+			.append($("<p>").append("Color:"))
+			.append($("<span>").append(""))
 
 		var row4 = $("<span>", {"class": "oneRow"})
 									.append(
-										$("<div>", {"class": "flexCol flex"})
-										.append($("<p>").append("Color:"))
-										.append($("<p>", {"id":markerColorId}).append("red"))
+										$colorText
 									)
 									.append(
 										$("<div>", {"class":"flexRowWrap"})
@@ -5088,25 +5023,73 @@ var IOClass = function(){
 										.append(buttOK)
 										.append(buttCancel);
 
-		$('body')
-			.append(
-				$("<div>", {"id": outerId, "style": outerDivStyle})
+		let $outerDialog =
+				$("<div>", {"class": "outerDialog"})
 					.append(
-						$("<div>", {"id": innerId,"style": innerDivStyle})
-							.addClass('secondaryColor')
+						$("<div>", {"class": "innerDialog secondaryColor w-auto mw-100 vScroll mh-100"} )
 							.append(row0)
-							.append(row1)
-							.append(row2)
-							.append(row3)
-							.append(row4)
-							.append(row5)
+							.append(
+								$( "<div>" )
+									.append(row1)
+									.append(row2)
+									.append(row3)
+									.append(row4)
+									.append(row5)
+								)
 							.append(row6)
-					)// end inner div
-			);// end outer div
+					);
+
+		$('body').append( $outerDialog );
+
+
+		IOEnterFunction = function() {
+			if(func) func(
+				$markerName.val(),
+				$markerInfo.val(),
+				$(".colorPickerSelected").attr("color"),
+				$markerTime.val()
+			);
+			$outerDialog.remove();
+			IOEnterFunction = false;
+		};
+
+		buttOK.click(IOEnterFunction)
+		buttCancel.on( "click", function(){
+			if(funcCancle) funcCancle();
+			$outerDialog.remove();
+			IOEnterFunction = false;
+		});
+
+
+		buttRemove.click(function(){
+
+			var confirmDelete = $( "#" + TROFF_SETTING_CONFIRM_DELETE_MARKER ).hasClass( "active" );
+			$outerDialog.remove();
+			IOEnterFunction = false;
+
+			if( $('#markerList li').length <= 2 ) {
+				IO.alert(
+					"Minimum number of markers",
+					"You can not remove this marker at the moment, "+
+					"you can not have fewer than 2 markers"
+				);
+				return;
+			}
+
+			if( markerId ) {
+				if( confirmDelete ) {
+					IO.confirm( "Remove marker", "Are you sure?", function() {
+						Troff.removeMarker( markerId );
+					} );
+				} else {
+					Troff.removeMarker( markerId );
+				}
+			}
+		});
 
 		var quickTimeOut = setTimeout(function(){
-			$("#"+markerNameId).select();
-			$("#"+markerColorId).html(markerColor);
+			$markerName.select();
+			$colorText.find( "span" ).html(markerColor);
 			clearInterval(quickTimeOut);
 		}, 0);
 
@@ -5218,7 +5201,7 @@ var IOClass = function(){
 
 		innerDiv
 			.append( $( "<h2>" ).html( textHead ) )
-			.append( $( "<p>" ).addClass( "py-2 text-break width-auto" ).html( textBox ) )
+			.append( $( "<p>" ).addClass( "py-2 text-break w-auto" ).html( textBox ) )
 			.append( buttRow );
 
 		$( "body" ).append( outerDiv.append( innerDiv ) );

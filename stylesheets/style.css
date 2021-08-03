@@ -1077,6 +1077,7 @@ extend_ -> fill_
 
 
 /* Marker color section */
+.backgroundColorAqua,
 #markerList .markerColorAqua,
 #markerList.extra-extended .extend_markerColorAqua {	background-color: Aqua;	color: black; }
 #markerList.extended-color .markerColorAqua+li,
@@ -1084,6 +1085,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorAqua,
 #markerList.extra-extended .extend_markerColorAqua+li {	border-top-color: Aqua; }
 
+.backgroundColorBisque,
 #markerList .markerColorBisque,
 #markerList.extra-extended .extend_markerColorBisque {	background-color: Bisque;	color: black; }
 #markerList.extended-color .markerColorBisque+li,
@@ -1091,6 +1093,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorBisque,
 #markerList.extra-extended .extend_markerColorBisque+li {	border-top-color: Bisque; }
 
+.backgroundColorChartreuse,
 #markerList .markerColorChartreuse,
 #markerList.extra-extended .extend_markerColorChartreuse {	background-color: Chartreuse;	color: black; }
 #markerList.extended-color .markerColorChartreuse+li,
@@ -1098,6 +1101,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorChartreuse,
 #markerList.extra-extended .extend_markerColorChartreuse+li {	border-top-color: Chartreuse; }
 
+.backgroundColorCoral,
 #markerList .markerColorCoral,
 #markerList.extra-extended .extend_markerColorCoral {	background-color: Coral;	color: black; }
 #markerList.extended-color .markerColorCoral+li,
@@ -1105,6 +1109,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorCoral,
 #markerList.extra-extended .extend_markerColorCoral+li {	border-top-color: Coral; }
 
+.backgroundColorPink,
 #markerList .markerColorPink,
 #markerList.extra-extended .extend_markerColorPink {	background-color: Pink;	color: black; }
 #markerList.extended-color .markerColorPink+li,
@@ -1112,6 +1117,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorPink,
 #markerList.extra-extended .extend_markerColorPink+li {	border-top-color: Pink; }
 
+.backgroundColorBurlywood,
 #markerList .markerColorBurlywood,
 #markerList.extra-extended .extend_markerColorBurlywood {	background-color: Burlywood;	color: black; }
 #markerList.extended-color .markerColorBurlywood+li,
@@ -1119,6 +1125,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorBurlywood,
 #markerList.extra-extended .extend_markerColorBurlywood+li {	border-top-color: Burlywood; }
 
+.backgroundColorDarkcyan,
 #markerList .markerColorDarkcyan,
 #markerList.extra-extended .extend_markerColorDarkcyan {	background-color: Darkcyan;	color: black; }
 #markerList.extended-color .markerColorDarkcyan+li,
@@ -1126,6 +1133,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorDarkcyan,
 #markerList.extra-extended .extend_markerColorDarkcyan+li {	border-top-color: Darkcyan; }
 
+.backgroundColorYellowgreen,
 #markerList .markerColorYellowgreen,
 #markerList.extra-extended .extend_markerColorYellowgreen {	background-color: Yellowgreen;	color: black; }
 #markerList.extended-color .markerColorYellowgreen+li,
@@ -1133,6 +1141,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorYellowgreen,
 #markerList.extra-extended .extend_markerColorYellowgreen+li {	border-top-color: Yellowgreen; }
 
+.backgroundColorPeru,
 #markerList .markerColorPeru,
 #markerList.extra-extended .extend_markerColorPeru {	background-color: Peru;	color: black; }
 #markerList.extended-color .markerColorPeru+li,
@@ -1140,6 +1149,7 @@ extend_ -> fill_
 #markerList.extra-extended .extend_markerColorPeru,
 #markerList.extra-extended .extend_markerColorPeru+li {	border-top-color: Peru; }
 
+.backgroundColorViolet,
 #markerList .markerColorViolet,
 #markerList.extra-extended .extend_markerColorViolet {	background-color: Violet;	color: black; }
 #markerList.extended-color .markerColorViolet+li,
@@ -1171,12 +1181,23 @@ extend_ -> fill_
 }
 
 
-@media screen and (max-width: 576px) {
+@media (min-width:576px){ /* ie width is GREATER than 576px */
+	/* NOT ON MOBILE-PHONES */
+
+	.h-fit-content-on-not-mobile {
+		height: fit-content !important;
+	}
+}
+
+
+@media screen and (max-width: 576px) { /* ie width is LESS than 576px */
 	/* This is only for mobile phones: */
 	body{
 		overflow-x: auto !important;
 	}
 
+
+	.mw-fit-content-on-mobile	{	min-width: fit-content		!important;	}
 
 	.centerRoundButt1{
 		bottom: 16px;
@@ -1266,6 +1287,10 @@ extend_ -> fill_
 
 	#loopButtons {
 		width: 155px;
+	}
+
+	.colorPickerWidth {
+		width: 170px;
 	}
 
 	.hidden-on-mobile {
