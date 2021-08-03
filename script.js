@@ -5187,47 +5187,41 @@ var IOClass = function(){
 	}; // end prompt
 
 	this.confirm = function(textHead, textBox, func, funcCancle){
-			var time = Date.now();
-			var buttEnterId = "buttOkId" + time;
+		let outerDiv = $( "<div>" ).addClass("outerDialog onTop");
+		let innerDiv = $( "<div>" ).addClass("innerDialog m-4");
 
-			var textId = "textId" + time;
-			var buttCancelId = "buttCancelId" + time;
-			var innerId = "innerId" + time;
-			var outerId = "outerId" + time;
-			var outerDivStyle = ""+
-					"position: fixed; "+
-					"top: 0px;left: 0px; "+
-					"width: 100vw; "+
-					"height: 100%; "+
-					"background-color: rgba(0, 0, 0, 0.5);"+
-					"z-index: 99;"+
-					"display: flex;align-items: center;justify-content: center;";
-			var innerDivStyle = ""+
-					"width: 200px;"+
-					"padding: 10px 15px;";
-			var pStyle = "" +
-					"margin: 6px 0;";
+		let clickCancel = function(){
+			if(funcCancle) funcCancle();
+			outerDiv.remove();
+			IOEnterFunction = false;
+		};
 
-			$("body").append($("<div id='"+outerId+"' style='"+outerDivStyle+
-								 "'><div id='"+innerId+"' style='"+innerDivStyle+
-								 "' class='secondaryColor'><h2>" + textHead +
-								 "</h2><p style='"+pStyle+"'>" + textBox +
-								 "</p><div><input type='button' class='regularButton' id='" +
-								 buttEnterId +
-								 "' value='OK'/><input type='button' class='regularButton' id='" +
-								 buttCancelId + "' value='Cancel'/></div></div></div>"));
+		IOEnterFunction = function(){
+			if(func) func();
+			outerDiv.remove();
+			IOEnterFunction = false;
+		};
 
-			IOEnterFunction = function(){
-					if(func) func();
-					$('#'+outerId).remove();
-					IOEnterFunction = false;
-			};
-			$("#"+buttEnterId).click( IOEnterFunction );
-			$("#"+buttCancelId).click( function(){
-					if(funcCancle) funcCancle();
-					$('#'+outerId).remove();
-					IOEnterFunction = false;
-			});
+		let buttRow = $( "<div>" )
+			.append(
+				$("<input>" )
+					.addClass( "regularButton" )
+					.attr( "type", "button" ).attr( "value", "OK" )
+					.on( "click", IOEnterFunction )
+			)
+			.append(
+				$("<input>" )
+					.addClass( "regularButton" )
+					.attr( "type", "button" ).attr( "value", "Cancel" )
+					.on( "click", clickCancel )
+			);
+
+		innerDiv
+			.append( $( "<h2>" ).html( textHead ) )
+			.append( $( "<p>" ).addClass( "py-2 text-break width-auto" ).html( textBox ) )
+			.append( buttRow );
+
+		$( "body" ).append( outerDiv.append( innerDiv ) );
 	}; // end confirm
 
 

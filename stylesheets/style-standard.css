@@ -175,6 +175,7 @@ auto - for classes that set the margin to auto
 }
 
 .width-min-content { width: min-content !important; }
+.width-auto { width: auto !important; }
 
 /* Display */
 .d-none{		display:none!important;		}

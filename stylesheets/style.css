@@ -47,13 +47,6 @@ video, .full-width{
 	display: flex;
 }
 
-.overFilm{
-	z-index: 10;
-}
-
-.onTop{
-	z-index: 99;
-}
 
 .mediaButton{
 /*  width: 97%; */
@@ -1168,6 +1161,14 @@ extend_ -> fill_
 
 }
 
+
+.overFilm{
+	z-index: 10;
+}
+
+.onTop{
+	z-index: 99;
+}
 
 
 @media screen and (max-width: 576px) {
