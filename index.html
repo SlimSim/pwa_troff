@@ -1279,7 +1279,7 @@
 	<div id="outerSettingPopUpSquare" class="outerDialog hidden">
 		<div class="popUpSquare" id="innerSettingPopUpSquare" >
 			<h1>Global settings</h1>
-			<div class="flexCol vScroll">
+			<div class="flexCol vScroll pb-3">
 				<p class="pt-2">These settings are not unique to a song</p>
 					<!--div class="py-2">
 						<h4 class="pt-3 buttWidthMedium inlineBlock">Export import</h4>
@@ -1294,59 +1294,60 @@
 					</div-->
 
 
-					<div id="themePickerParent" class="py-2">
-						<h4 class="pt-3 buttWidthMedium inlineBlock">Theme</h4>
-						<input class="buttWidthMedium stOnOffButton" type="button"
+					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3 " data-st-css-selector-to-toggle="#themePickerParent">Theme</h3>
+					<div id="themePickerParent" class="py-2 d-sm-block d-flex flex-column hidden">
+						<input class="buttWidthMedium w-auto-on-mobile stOnOffButton" type="button"
 							data-theme="col1"
 							title="Blue and purple"
 							value="standard" />
-						<input class="buttWidthMedium stOnOffButton" type="button"
+						<input class="buttWidthMedium w-auto-on-mobile stOnOffButton" type="button"
 							data-theme="col2"
 							title="Green and red"
 							value="forest" />
-						<input class="buttWidthMedium stOnOffButton" type="button"
+						<input class="buttWidthMedium w-auto-on-mobile stOnOffButton" type="button"
 							data-theme="col3"
 							title="Black and yellow"
 							value="sunset" />
-						<input class="buttWidthMedium stOnOffButton" type="button"
+						<input class="buttWidthMedium w-auto-on-mobile stOnOffButton" type="button"
 							data-theme="col4"
 							title="Gold and white"
 							value="winning" />
 					</div>
-					<div class="py-2">
-						<h4 class="pt-3 buttWidthMedium inlineBlock">Marker color</h4>
+
+					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#markerColorSetting">Marker color</h3>
+					<div id="markerColorSetting" class="py-2 d-sm-block d-flex flex-column hidden ">
 						<!--p class="pt-2">When checked, the colors of the markers will extend down to the next marker:</p-->
-						<input class="buttWidthMedium stOnOffButton" type="button"
+						<input class="buttWidthMedium w-auto-on-mobile stOnOffButton" type="button"
 							title="extend the marker-colors down to the next marker"
 							id="toggleExtendedMarkerColor" value="fill markers" />
 						<!--p class="pt-2">When checked, the colors of the markers will extend down to the next marker that has a color:</p-->
-						<input class="buttWidthMedium stOnOffButton" type="button"
+						<input class="buttWidthMedium w-auto-on-mobile stOnOffButton" type="button"
 							title="extend the marker-colors down through markers with no color to the next marker with color"
 							id="toggleExtraExtendedMarkerColor" value="fill through" />
 					</div>
 
-					<div class="py-2">
-						<h4 class="buttWidthMedium inlineBlock">Songlists</h4>
+					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#songlistsSettings" >Songlists</h3>
+					<div class="py-2 hidden d-sm-block d-flex flex-column" id="songlistsSettings">
 
-						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
+						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
 							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
 							title="If selected, clicking a songlist will add those songs to the list, instead of only showing those songs"
 							value="additive select" />
-						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
+						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
 							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
 							title="If selected, the songs and the songlists will be shown in a floating window"
 							value="floating" />
-						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
 							id="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
 							title="If selected, the search-window will be cleared when a song is selected"
 							value="clear on select" />
-						<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
+						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
 							id="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
@@ -1354,67 +1355,66 @@
 							value="exit on select" />
 					</div>
 
-
-					<div>
-						<h3 class="pt-4 pb-2">Behaviour of keys and buttons</h3>
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Enter</h4>
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#keysAndButtons">Behaviour of keys and buttons</h3>
+					<div id="keysAndButtons" class="hidden">
+						<h4 class="pt-4 normal">When pressing the Enter-key</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 								type="button"
 								id="TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR"
 								data-st-save-value-key="TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR"
 								title="Jump to the start of the Active playing region on play or pause"
 								value="go to marker" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 								type="button"
 								id="TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR"
 								data-st-save-value-key="TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR"
 								title="If the &quot;pause before&quot; is active, use the timer before starting the song"
 								value="use timer" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_ENTER_RESET_COUNTER"
 								data-st-save-value-key="TROFF_SETTING_ENTER_RESET_COUNTER"
 								title="If looping more than once, reset the loop-counter when pausing the song"
 								value="reset counter" />
 						</div>
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Space</h4>
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+						<h4 class="pt-4 normal">When pressing the Space-key</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR"
 								data-st-save-value-key="TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR"
 								title="Jump to the start of the Active playing region on play or pause"
 								value="go to marker" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR"
 								data-st-save-value-key="TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR"
 								title="If the &quot;pause before&quot; is active, use the timer before starting the song"
 								value="use timer" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton" type="button"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton" type="button"
 								id="TROFF_SETTING_SPACE_RESET_COUNTER"
 								data-st-save-value-key="TROFF_SETTING_SPACE_RESET_COUNTER"
 								title="If looping more than once, reset the loop-counter when pausing the song"
 								value="reset counter" />
 						</div>
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Play Button</h4>
-							<input class="buttWidthMedium  st-simple-on-off-button stOnOffButton active"
+						<h4 class="pt-4 normal">When pressing the Play Button</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR"
 								id="TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR"
 								title="Jump to the start of the Active playing region on play or pause"
 								value="go to marker" />
-							<input class="buttWidthMedium  st-simple-on-off-button stOnOffButton active"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR"
 								id="TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR"
 								title="If the &quot;pause before&quot; is active, use the timer before starting the song"
 								value="use timer" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active" type="button"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active" type="button"
 								id="TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER"
 								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON"
 								title="If looping more than once, reset the loop-counter when pausing the song"
 								value="reset counter" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+							<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-css-selector-to-hide="#buttPlayUiButtonParent"
 								data-st-save-value-key="TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON"
@@ -1424,8 +1424,8 @@
 						</div>
 
 
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Select marker</h4>
+						<h4 class="pt-4 normal">When selectign a marker</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
 							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-save-value-key="TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER"
@@ -1434,8 +1434,8 @@
 								value="go to marker" />
 						</div>
 
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Delete marker</h4>
+						<h4 class="pt-4 normal">When deleting a marker</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
 							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton"
 								type="button"
 								data-st-save-value-key="TROFF_SETTING_CONFIRM_DELETE_MARKER"
@@ -1445,31 +1445,34 @@
 						</div>
 
 
-						<h3 class="pt-4 pb-2">Toggle visibility of areas</h3>
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Title area</h4>
-							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+					</div>
+
+					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#visibilityOfAreas">Toggle visibility</h3>
+					<div id="visibilityOfAreas" class="hidden">
+						<h4 class="pt-4 normal">Title area</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
+							<input class="w-auto-on-mobile st-simple-on-off-button buttWidthMedium stOnOffButton"
 								type="button"
 								data-st-css-selector-to-hide="#currentArtist"
 								data-st-save-value-key="TROFF_SETTING_UI_ARTIST_SHOW"
 								id="TROFF_SETTING_UI_ARTIST_SHOW"
 								title="Show the artist name in the Title area"
 								value="artist" />
-							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+							<input class="w-auto-on-mobile st-simple-on-off-button buttWidthMedium stOnOffButton active"
 								type="button"
 								data-st-css-selector-to-hide="#currentSong"
 								data-st-save-value-key="TROFF_SETTING_UI_TITLE_SHOW"
 								id="TROFF_SETTING_UI_TITLE_SHOW"
 								title="Show the title name in the Title area"
 								value="title" />
-							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton active"
+							<input class="w-auto-on-mobile st-simple-on-off-button buttWidthMedium stOnOffButton"
 								type="button"
 								data-st-css-selector-to-hide="#currentAlbum"
 								data-st-save-value-key="TROFF_SETTING_UI_ALBUM_SHOW"
 								id="TROFF_SETTING_UI_ALBUM_SHOW"
 								title="Show the album name in the Title area"
 								value="album" />
-							<input class="st-simple-on-off-button buttWidthMedium stOnOffButton"
+							<input class="w-auto-on-mobile st-simple-on-off-button buttWidthMedium stOnOffButton"
 								type="button"
 								data-st-css-selector-to-hide="#currentPath"
 								data-st-save-value-key="TROFF_SETTING_UI_PATH_SHOW"
@@ -1478,24 +1481,24 @@
 								value="path" />
 						</div>
 
-						<div class="py-2">
-							<h4 class="buttWidthMedium inlineBlock">Setting area</h4>
+						<h4 class="pt-4 normal">Setting area</h4>
+						<div class="py-2 d-sm-block d-flex flex-column">
 
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+							<input class="w-auto-on-mobile buttWidthMedium st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-css-selector-to-hide="#buttUnselectMarkers"
 								data-st-save-value-key="TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW"
 								id="TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW"
 								title="Show the &quot;play full song&quot;-button"
 								value="play full song" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+							<input class="w-auto-on-mobile buttWidthMedium st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-css-selector-to-hide="#zoomParent"
 								data-st-save-value-key="TROFF_SETTING_UI_ZOOM_SHOW"
 								id="TROFF_SETTING_UI_ZOOM_SHOW"
 								title="Show the zoom-buttons"
 								value="zoom" />
-							<input class="buttWidthMedium st-simple-on-off-button stOnOffButton active"
+							<input class="w-auto-on-mobile buttWidthMedium st-simple-on-off-button stOnOffButton active"
 								type="button"
 								data-st-css-selector-to-hide="#loopButtons"
 								data-st-save-value-key="TROFF_SETTING_UI_LOOP_BUTTONS_SHOW"
@@ -1503,9 +1506,11 @@
 								title="Show the nr-of-loops-selector"
 								value="nr of loop" />
 						</div>
+					</div>
 
+					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#standardValues">Standard values for songs</h3>
+					<div id="standardValues" class="hidden">
 
-						<h3 class="pt-4 pb-2">Standard values for songs</h3>
 						<p class="pt-2">
 							When loading a new song, these values will be the ones that the song get.
 						</p>
@@ -1621,7 +1626,7 @@
 
 					</div>
 			</div>
-			<input id="buttCloseSettingPopUpSquare" type="button" class="regularButton buttWidthStandard flex-none" value="Close" />
+			<input id="buttCloseSettingPopUpSquare" type="button" class="mt-3 regularButton buttWidthStandard flex-none" value="Close" />
 		</div>
 	</div>
 

@@ -1180,6 +1180,10 @@ extend_ -> fill_
 	z-index: 99;
 }
 
+.thinLineTop {
+	border-top: 1px solid lightgray;
+}
+
 
 @media (min-width:576px){ /* ie width is GREATER than 576px */
 	/* NOT ON MOBILE-PHONES */
@@ -1211,6 +1215,9 @@ extend_ -> fill_
 
 	.full-height-on-mobile {
 		height: 100%;
+	}
+	.w-auto-on-mobile {
+		width: auto;
 	}
 	.normalSize-on-mobile {
 		font-size: 14px;
