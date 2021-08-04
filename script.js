@@ -4691,19 +4691,24 @@ var IOClass = function(){
 
 		//if 0 to 9 or bakspace, del, alt, arrows in a input-field, return,
 		//---- site add "numpad"
-		if(
-				$(':input[type="number"]' ).is(":focus") &&
-				(
-					(event.keyCode>=48 && event.keyCode<=57) || //numbers
-					(event.keyCode>=96 && event.keyCode<=105)|| //numpad
-					event.keyCode==8  || //backspace
-					event.keyCode==18 || //alt
-					event.keyCode==37 || //left arrow
-					event.keyCode==39 || //right arrow
-					event.keyCode==46    //del
-				)
-			){
-			return;
+		if( $(':input[type="number"]' ).is(":focus") ) {
+			if (
+				(event.keyCode>=48 && event.keyCode<=57) || //numbers
+				(event.keyCode>=96 && event.keyCode<=105)|| //numpad
+				event.keyCode==8  || //backspace
+				event.keyCode==18 || //alt
+				event.keyCode==37 || //left arrow
+				event.keyCode==39 || //right arrow
+				event.keyCode==46    //del
+			) {
+				return;
+			} else if (
+				event.keyCode == 13 // Enter
+			) {
+				$(':input[type="number"]' ).blur();
+				IO.blurHack();
+				return;
+			}
 		}
 		IO.blurHack();
 
