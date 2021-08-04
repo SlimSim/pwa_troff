@@ -177,6 +177,7 @@ li[isdirectory="true"]:not(:first-child) {
 	color: white;
 }
 .play .secondsLeft,
+.importantInverse,
 .play .loopTimesLeft{
 		color: #AD974F; /* accentColor1 - IF GREEN ISH (or works for that... */
 }

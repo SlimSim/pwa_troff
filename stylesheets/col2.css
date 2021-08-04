@@ -198,6 +198,7 @@ p{
 .important td {
 	background-color: #D42626; /* accentColor2 */
 }
+.importantInverse,
 .pause{
 		color: #D42626; /* accentColor2 - IF RED ISH... */
 }

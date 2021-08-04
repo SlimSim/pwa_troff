@@ -829,21 +829,10 @@ table {
 
 .centerRoundButtCommon{
 	position: relative;
+	font-size: 42px;
 }
 .centerRoundButtCommon:hover {
 	outline-width: 0;
-}
-.centerRoundButt1{
-	right: 11px;
-	bottom: 14px;
-}
-.centerRoundButt2{
-	right: 9.5px;
-	bottom: 14.5px;
-}
-.centerRoundButt3 {
-	right: 10px;
-	bottom: 15px;
 }
 
 .roundButt2 {
@@ -1277,7 +1266,7 @@ extend_ -> fill_
 	}
 
 	.big-on-mobile {
-		font-size: 16px;
+		font-size: 52px;
 	}
 
 	.play.hidden-on-mobile-on-play,

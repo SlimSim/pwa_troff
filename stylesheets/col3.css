@@ -106,6 +106,7 @@ p{
 }
 .regularButton{
 	background-color: #E0E0E0; /*regularButton*/
+	color: black;
 }
 
 
@@ -175,6 +176,7 @@ li[isdirectory="true"]:not(:first-child) {
 	color: black;
 }
 .play .secondsLeft,
+.importantInverse,
 .play .loopTimesLeft{
 		color: #FFEB3B; /* accentColor1 - IF GREEN ISH (or works for that... */
 }

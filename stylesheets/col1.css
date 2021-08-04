@@ -193,6 +193,7 @@ p{
 	background-color: #e05915; /* accentColor2 */
 }
 .pause .secondsLeft,
+.importantInverse,
 .pause .loopTimesLeft{
 		color: #e05915; /* accentColor2 - IF RED ISH... */
 }
