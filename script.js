@@ -4404,6 +4404,17 @@ var IOClass = function(){
 		} );
 
 
+		// this is to not change volume or speed when scrolling horizontally on mobile (require https://j11y.io/javascript/special-scroll-events-for-jquery/)
+		$( document ).on( "scrollStart", function (e) {
+			$( ".sliderRange, #timeBar" ).prop( "disabled", true );
+		} );
+		$( document ).on( "scrollStop", function (e) {
+			$( ".sliderRange, #timeBar" ).prop( "disabled", false );
+			$( "#volumeBar" ).val( Number( $( "#volume" ).text() ) );
+			$( "#speedBar" ).val( Number( $( "#speed" ).text() ) );
+		} );
+
+
 		$( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
 			var $target = $( event.target ),
 				$value = $( $target.data( "st-css-selector-to-toggle" ) );
