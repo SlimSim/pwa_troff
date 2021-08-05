@@ -533,7 +533,7 @@ li[isdirectory="true"]:not(:first-child) {
 	border: 0;
 }
 
-
+.BIGGEST{font-size: 30px;}
 .Big{font-size: 18px;}
 .big{font-size: 16px;}
 .normal{font-size: 14px;}
@@ -542,6 +542,13 @@ li[isdirectory="true"]:not(:first-child) {
 	margin: 1px;
 }
 .Small{font-size: 10px;}
+
+.left-0{
+	left: 0 !important;
+}
+.top-0{
+	top: 0 !important;
+}
 
 .outerDialog{
 	position: fixed;
@@ -831,6 +838,8 @@ a { color: #0051A8; }
 .centerRoundButtCommon{
 	position: relative;
 	font-size: 42px;
+	width: 45px;
+	height: 45px;
 }
 .centerRoundButtCommon:hover {
 	outline-width: 0;
@@ -1193,16 +1202,6 @@ extend_ -> fill_
 
 	.mw-fit-content-on-mobile	{	min-width: fit-content		!important;	}
 
-	.centerRoundButt1{
-		bottom: 16px;
-		right: 10px;
-	}
-	.centerRoundButt2{
-		bottom: 14px;
-		right: 10px;
-	}
-
-
 	.full-height-on-mobile {
 		height: 100%;
 	}
@@ -1266,8 +1265,17 @@ extend_ -> fill_
 		margin: 0;
 	}
 
+	.centerRoundButtCommon {
+		width: 52px;
+		height: 52px;
+	}
+
 	.big-on-mobile {
 		font-size: 52px;
+	}
+
+	.big-on-mobile .BIGGEST {
+		font-size: 42px;
 	}
 
 	.play.hidden-on-mobile-on-play,
