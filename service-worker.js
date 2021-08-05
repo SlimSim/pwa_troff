@@ -58,7 +58,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'app-assets',
-		version: "1.1",
+		version: "1.2",
 		urls: [
 			"/assets/logos/favicon.ico",
 			"/assets/logos/logo.svg",
@@ -71,6 +71,7 @@ var newAppCaches = [
 			"/assets/logos/logo-192-non-transparent.png",
 			"/assets/logos/logo-256.png",
 			"/assets/logos/logo-512.png",
+			"/assets/logos/logo-512-maskable.png",
 			"/manifest.json",
 			//"privacy_policy.html"
 			//"/LICENSE.html",
