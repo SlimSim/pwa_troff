@@ -171,13 +171,14 @@
 					id="buttSettingsDialog" >
 					<i class="fa fa-cog"></i>
 				</button>
-				<a href="help.html" target="_blank" rel="noopener">
-					<button class="svgButt regularButton cursor-help"
-						type="button"
-						title="Get tips on how to get the most out of Troff">
-						<i class="fa fa-question cursor-help"></i>
-					</button>
-				</a>
+				<!--a href="help.html" target="_blank" rel="noopener"-->
+				<button class="svgButt regularButton cursor-help"
+					data-href="help.html"
+					type="button"
+					title="Get tips on how to get the most out of Troff">
+					<i class="fa fa-question cursor-help"></i>
+				</button>
+				<!--/a-->
 				<button class="svgButt shareClass regularButton"
 					type="button"
 					title="Share the link to this app with your friends via email">
@@ -343,7 +344,7 @@
 								value="1"
 								id="waitBetweenLoops"  />
 						</div>
-						<div class="flexRow">
+						<label class="flexRow">
 							<input
 								type="button"
 								title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
@@ -353,6 +354,7 @@
 								id="buttIncrementUntil"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
 								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active">
+
 							<input
 								type="number"
 								id="incrementUntilValue"
@@ -362,7 +364,7 @@
 								data-save-on-song-value="100"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE"
 								value="100" />
-						</div>
+						</label>
 
 						<span class="loopSquare" id="loopButtons" >
 							<input type="button" title="Play song only 1 time (key: 1)" class="loopButt" value="1" id="buttLoop1" />
@@ -388,9 +390,9 @@
 								<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
 								<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
 							</div>
-							<div class="dataOutput" id="volumeDataOutput">
+							<label for="volumeBar" class="dataOutput" id="volumeDataOutput">
 								<div id="volume">100</div><p>%</p>
-							</div>
+							</label>
 							<input
 								class="sliderRange flexOne"
 								orient="vertical"
@@ -407,9 +409,9 @@
 								<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
 								<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
 							</div>
-							<div class="dataOutput">
+							<label for="speedBar" class="dataOutput">
 								<div id="speed">100</div><p>%</p>
-							</div>
+							</label>
 							<input
 								class="sliderRange flexOne"
 								orient="vertical"
@@ -440,7 +442,7 @@
 	<section id="markerSectionParent">
 		<div id="markerSection" class="secondaryColor full-height margin noVMargin hideOnPicture">
 			<div id="activePlayRegion" class="accentColor1"></div>
-			<div id="timeBarDiv">
+			<label id="timeBarDiv">
 				<input
 					id="timeBar"
 					orient="vertical"
@@ -448,7 +450,7 @@
 					min="0"
 					max="42"
 					value="0"/>
-			</div>
+			</label>
 			<ul id="markerList" class="onOffParent marker-parent" ></ul>
 		</div> <!-- markerSection -->
 	</section> <!-- markerSectionParent -->
@@ -1193,6 +1195,7 @@
 				<a href="help.html" class="pl-2" target="_blank" rel="noopener">
 					<button class="svgButt regularButton cursor-help"
 						type="button"
+						aria-label="Open help page"
 						title="Get tips on how to get the most out of Troff">
 						<i class="fa fa-question cursor-help m-0"></i>
 					</button>

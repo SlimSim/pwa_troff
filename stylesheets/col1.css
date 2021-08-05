@@ -39,7 +39,7 @@ p{
 
 .gray-out-next-on-non-active:not(.active) ~*,
 .grayOut{
-	color: gray;
+	color: #595959;
 	background-color: lightgray;
 }
 
@@ -68,7 +68,7 @@ p{
 }
 
 .helpText{
-		color: gray;
+		color: #696969;
 }
 
 .colorPicker{
@@ -181,27 +181,26 @@ p{
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
 .selected.important {
-	border-color: #e05915; /* accentColor2 */
+	border-color: #dd2c00; /* accentColor2 */
 }
 .importantLeftLine {
-	border-left-color: #e05915; /*accentColor2*/
+	border-left-color: #dd2c00; /*accentColor2*/
 }
 
 .accentColor2,
 .important,
 .important td {
-	background-color: #e05915; /* accentColor2 */
+	background-color: #dd2c00; /* accentColor2 */
 }
 .pause .secondsLeft,
 .importantInverse,
 .pause .loopTimesLeft{
-		color: #e05915; /* accentColor2 - IF RED ISH... */
+		color: #dd2c00; /* accentColor2 - IF RED ISH... */
 }
 
 
 .important{
-	color:#fff;
-	text-shadow:#C17C3A 0 -1px 0; /* NOTISE: not the same color... */
+	color: #fff;
 }
 
 
@@ -218,17 +217,17 @@ p{
 /* accentColor3 */
 .active:hover,
 .active:active{
-	outline-color: #AAAF2B; /* accentColor3 */
+	outline-color: #787B1E; /* accentColor3 */
 }
 
 .accentColor3,
 .active{
-	background-color: #AAAF2B; /* accentColor3 */
+	background-color: #787B1E; /* accentColor3 */
 	color: white;
 }
 .wait .secondsLeft,
 .wait .loopTimesLeft{
-	color: #AAAF2B; /* accentColor3 - IF YELLOW ISH... */
+	color: #787B1E; /* accentColor3 - IF YELLOW ISH... */
 }
 
 

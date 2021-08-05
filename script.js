@@ -4392,6 +4392,11 @@ var IOClass = function(){
 		}
 	}
 
+	/*IO*/this.openWindow = function( event ) {
+		let $button = $( event.target ).closest( "[data-href]" );
+		window.open( $button.data( "href" ), $button.data( "target" ) );
+	};
+
 	/*IO*/this.startFunc = function() {
 
 		document.addEventListener('keydown', IO.keyboardKeydown);
@@ -4434,6 +4439,7 @@ var IOClass = function(){
 			$( event.target ).closest(".outerDialog").addClass("hidden")
 		} );
 
+		$( "[data-href]" ).on( "click", IO.openWindow );
 		$( ".onClickToggleFullScreen" ).on( "click", IO.toggleFullScreen );
 		$( ".blurOnClick" ).on( "click", IO.blurHack );
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )

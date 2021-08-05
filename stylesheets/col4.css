@@ -40,7 +40,7 @@ p{
 
 .gray-out-next-on-non-active:not(.active) ~*,
 .grayOut{
-	color: gray;
+	color: #595959;
 	background-color: lightgray;
 }
 
@@ -75,7 +75,7 @@ p{
 }
 
 .helpText{
-		color: gray;
+		color: #696969;
 }
 
 .colorPicker{
