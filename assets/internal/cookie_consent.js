@@ -42,7 +42,10 @@ $( document ).ready(function() {
 							$( this ).trigger( 'notify-hide' );
 							cookie_consent_DB.set( COOKIE_CONSENT_ACCEPTED, true );
 						} ) )
-						.append($( "<a>" ).attr( "class", "small" ).text( "Learn More" ).attr("href", "privacy_policy.html").attr( "target", "_blank" ))
+						.append(
+							$( "<a>" ).text( "Full privacy policy" ).attr( "class", "small" )
+							.attr({"href": "privacy_policy.html", "target": "_blank", "rel": "noopener"})
+						)
 					)
 			},
 			{
