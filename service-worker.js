@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.5.13",
+		version: "1.5.14",
 		urls: [
 			"/",
 			"/index.html",
@@ -94,14 +94,13 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.2.0",
+		version: "1.2.1",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
 			"/assets/external/reset.css",
 			"/assets/external/notify-js/notify.min.js",
-			"/assets/external/svg-with-js/css/fa-svg-with-js.css",
-			"/assets/external/svg-with-js/js/fontawesome-all.min.js",
+			"/assets/external/fontawesome-5.0.8/js/fontawesome-all.min.js",
 			"/assets/external/DataTables/css/dataTables.needed.min.css",
 			"/assets/external/DataTables/images/sort_asc.png",
 			"/assets/external/DataTables/images/sort_asc_disabled.png",
