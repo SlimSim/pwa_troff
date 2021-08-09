@@ -1221,170 +1221,6 @@ var TroffClass = function(){
 		$("#colorScheme").attr("href", finalHref);
 	};
 
-	/*Troff*/this.enterWritableField = function() {
-		IO.setEnterFunction(function(event){
-			if(event.ctrlKey==1){ //Ctrl+Enter will exit
-				IO.blurHack();
-				return false;
-			}
-			return true;
-		});
-	}
-	/*Troff*/this.exitWritableField = function() {
-		IO.clearEnterFunction();
-	}
-
-	/*Troff*/this.getGlobalSettins = function( callback ) {
-		nDBc.getAllKeys( function( keys ) {
-			var settingItems = {};
-			for( var key in keys ) {
-				if( key.startsWith( "TROFF_SETTING" ) ) {
-					settingItems[ key ] = nDB.get( key );
-				}
-			}
-			callback( settingItems );
-		} );
-
-	}
-
-	/*Troff*/this.openExportGlobalSettingsDialog = function() {
-		Troff.getGlobalSettins( function( settingItems ) {
-			$( "#outerExportGlobalSettingsPopUpSquare" ).removeClass( "hidden" );
-			$( "#exportGlobalSettingsTextarea" ).val( JSON.stringify( settingItems, null, 2 ) );
-		});
-	}
-
-	/*Troff*/this.openExportAllDataDialog = function() {
-		nDBc.getAllKeyValuePairs( function(items) {
-			$( "#outerExportAllDataPopUpSquare" ).removeClass( "hidden" );
-			$( "#exportAllDataTextarea" ).val( JSON.stringify( items, null, 2 ) );
-		} );
-	}
-
-	/*Troff*/this.okClearAndImportAllDataDialog = function() {
-		Troff.okImportAllDataDialog( null, true );
-	}
-
-	/* TODO: Troff*/this.okImportAllDataDialog = function( event, bClearData = false ) {
-		try {
-			var allDataJson = JSON.parse( $( "#importAllDataTextarea" ).val() );
-		} catch(e) {
-			IO.alert(
-				"Corrupt data string",
-				"Troff can not import the data string you have pasted.<br /><br />" +
-				"<span class=\"small\">Please make sure that the entire string " +
-				"from the export is pasted in this box.</span>"
-			);
-			return;
-		}
-
-		var header = "Import all data in Troff",
-			body = "Are you sure you want to import this data to troff?";
-
-		if( bClearData ) {
-			header = "Override all data in Troff";
-			body = "Are you sure you want to import this data and override all data in Troff? <br />" +
-						"All your songlists, markers and settings will be overwitten with this new data";
-		}
-
-		IO.confirm(
-			header,
-			body,
-			function() {
-				nDBc.getAllKeyValuePairs( function( originalAllData ) {
-					const persistentOriginalAllData = JSON.stringify( originalAllData );
-
-					var cleanUpAndRestart = function(){
-						$( "#importAllDataTextarea" ).val( "" );
-						$( ".outerDialog" ).addClass( "hidden" );
-						var stickyMessage = IO.stickyMessage(
-							"Restart required",
-							"Please restart Troff in order for the import to take effect."
-						);
-
-						notifyUndo( "All data was uppdated", function() {
-							nDB.clearAllStorage();
-							nDB.set_object( JSON.parse( persistentOriginalAllData ) );
-							stickyMessage.remove();
-						}, true );
-					}
-
-					if( bClearData ) {
-						nDB.clearAllStorage();
-					}
-
-					nDB.set_object( allDataJson );
-					cleanUpAndRestart();
-
-				} );
-			},
-			function() {
-				$( "#importAllDataTextarea" ).val( "" );
-				$( "#outerImportAllDataPopUpSquare" ).addClass( "hidden" );
-			}
-		);
-	} // */
-
-	/* TODO: Troff*/this.okImportGlobalSettingsDialog = function() {
-		try {
-			var globalSettingsJson = JSON.parse( $( "#importGlobalSettingsTextarea" ).val() );
-		} catch(e) {
-			IO.alert(
-				"Corrupt data string",
-				"Troff can not import the data string you have pasted.<br /><br />" +
-				"<span class=\"small\">Please make sure that the entire string " +
-				"from the export is pasted in this box.</span>"
-			);
-			return;
-		}
-
-		var allKeys = Object.keys( globalSettingsJson );
-
-		nonAcceptableKeys = [];
-		allKeys.forEach(key => {
-			if( !key.startsWith( "TROFF_SETTING" ) ) {
-				nonAcceptableKeys.push( key );
-			}
-		});
-
-		if( nonAcceptableKeys.length > 0 ){
-
-			IO.alert(
-				"Unacceptable keys",
-				"You seem to import things which are not settings, " +
-				"the following keys are not acceptable:<br /><span class=\"small\">" +
-				nonAcceptableKeys.map(key => key + "<br />") +
-				"</span>"
-			);
-			return;
-		}
-
-
-		IO.confirm(
-			"Override global settings in Troff",
-			"Are you sure you want to import these global settings and override them in Troff?",
-			function() {
-				Troff.getGlobalSettins( function( originalSettingItems ) {
-					nDB.set_object( globalSettingsJson );
-					$( "#importGlobalSettingsTextarea" ).val( "" );
-					$( ".outerDialog" ).addClass( "hidden" );
-					var stickyMessage = IO.stickyMessage(
-						"Restart required",
-						"Please restart Troff in order for the import to take effect."
-					);
-
-					notifyUndo( "Your global settings was uppdated", function() {
-						nDB.set_object( originalSettingItems );
-						stickyMessage.remove();
-					}, true );
-				} );
-			},
-			function() {
-				$( "#importGlobalSettingsTextarea" ).val( "" );
-				$( "#outerImportGlobalSettingsPopUpSquare" ).addClass( "hidden" );
-			}
-		);
-	} // */
 
 	this.recallGlobalSettings = function(){
 		Troff.recallTheme();
@@ -2187,15 +2023,6 @@ var TroffClass = function(){
 		IO.blurHack();
 	};
 
-	/*Troff*/this.getLastSlashName = function(strUrl){
-		var aUrl = strUrl.split("/");
-		return aUrl[aUrl.length-1];
-	};
-
-	/*Troff*/this.addSpacesBetweenSlash = function(strUrl){
-		return strUrl.replace(/\//g, " / ");
-	};
-
 
 	/*Troff*/this.toggleArea = function(event) {
 		IO.blurHack();
@@ -2371,27 +2198,6 @@ var TroffClass = function(){
 			}
 			if(bFinniched)
 				return iSonglistId;
-		}
-	};
-
-	this.resetNewSongListPartAllSongs = function(){
-		$('#newSongListName').attr('iSonglistId', 0);
-		$('#newSongListName').val('');
-		$('#newSongListPartAllSongs li label input').attr('checked', false);
-		$('#removeSongList').show();
-	};
-
-	/*Troff*/this.setSonglistById = function(id){
-		if(id === 0){
-			$('#songlistAll').click();
-			return;
-		}
-		var aSonglists = $('#songListPartTheLists li');
-		for(var i=0; i<aSonglists.length; i++){
-			if(JSON.parse(aSonglists.eq(i).attr('stroSonglist')).id === id){
-				aSonglists.eq(i).children().eq(1).click();
-				break;
-			}
 		}
 	};
 
@@ -2984,14 +2790,6 @@ var TroffClass = function(){
 		};
 
 		/*
-			show the delete markers pop up dialog.
-		*/
-		/*Troff*/this.showDeleteMarkers = function( bDeleteSelected ) {
-			IO.setEnterFunction(Troff.deleteSelectedMarkers);
-			$( "#deleteMarkersDialog" ).removeClass( "hidden" );
-		}
-
-		/*
 			hide the delete markers pop up dialog.
 		*/
 		/*Troff*/this.hideDeleteMarkersDialog = function(){
@@ -3564,33 +3362,6 @@ var TroffClass = function(){
 				return min + ':' + sec;
 		};
 
-		this.milisToDisp = function( milis ) {
-			var date = new Date( milis );
-
-			var d = date.getDate();
-			var m = date.getMonth() + 1;
-
-			var dd = d < 10 ? "0"+d : d;
-			var mm = m < 10 ? "0"+m : m;
-			var year = "" + date.getFullYear();
-
-			return year + "-" +  mm + "-" + dd;
-		}
-
-		this.byteToDisp= function( byte ) {
-			var nrTimes = 0;
-				units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-
-			while( byte >= 1000 ) {
-				nrTimes++;
-				byte = byte / 1000;
-				if(nrTimes > units.length)
-					return byte;
-			}
-
-			return Math.round( byte * 10 ) / 10 + units[nrTimes];
-		}
-
 		this.incrementInput = function(identifyer, amount, cbFunk){
 				$(identifyer ).val( parseInt($(identifyer).val()) + amount );
 				$(identifyer).trigger("change");
@@ -3735,15 +3506,6 @@ const nDB = { // new data base
 	getAllKeys : function() {
 		return Object.keys(localStorage)
 	},
-	getAllKeyValuePairs : function() {
-		return localStorage;
-	},
-	set_object : function( object ) {
-		Object.entries( object ).forEach((v) => {
-			const key =  v[0], val = JSON.parse( v[1] );
-			nDB.set( key, val );
-		});
-	},
 	clearAllStorage : function() {
 		localStorage.clear();
 	},
@@ -3777,16 +3539,6 @@ var DBClass = function(){
 	};
 
 	this.cleanSong = function(songId, songObject){
-
-		if(songId === "strCurrentSongPath"){
-			var path = songObject;
-			var galleryId = -1;
-			var stroSong = JSON.stringify({"strPath":path, "iGalleryId": galleryId});
-			db.saveVal( 'stroCurrentSongPathAndGalleryId',  stroSong );
-			nDB.delete( "strCurrentSongPath" );
-			return; //It is returning here because songId === strCurrentSongPath is
-							//not a song to be cleened, this was a attribute used before v0.4
-		}
 
 		songObject = DB.fixSongObject(songObject, songId);
 
@@ -4612,11 +4364,6 @@ var IOClass = function(){
 		document.getElementById( "blur-hack" ).focus({ preventScroll: true });
 	};
 
-	/*IO*/this.setColor = function( colClass ) {
-		$('html').removeClass();
-		$('html').addClass( colClass );
-	};
-
 	/*IO*/ this.onClickCopyTextToClipboard = function( event ) {
 		IO.copyTextToClipboard( $( event.target ).val() );
 	};
@@ -5277,20 +5024,6 @@ var IOClass = function(){
 			};
 			$("#"+buttEnterId).click( IOEnterFunction );
 	}; // end alert
-
-	/*IO*/this.stickyMessage = function( textHead, textBox, innerDialogClass ) {
-		innerDialogClass = innerDialogClass !== undefined ? innerDialogClass : "flexCol mediumDialog";
-		return $("<div>").addClass("outerDialog").append(
-			$("<div>").addClass("innerDialog " + innerDialogClass )
-				.append( $( "<h2>" ).text( textHead ) )
-				.append( $( "<p>" ).addClass( "paragraph normalSize" ).text( textBox ) )
-		)
-		.appendTo( "body" );
-	}
-
-	this.pressEnter = function() {
-		if(IOEnterFunction) IOEnterFunction();
-	};
 
 	this.loopTimesLeft = function(input){
 		if(!input)

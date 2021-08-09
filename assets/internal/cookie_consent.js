@@ -9,25 +9,6 @@ $( document ).ready(function() {
 		get : function( key ) {
 			return JSON.parse( window.localStorage.getItem( key ) );
 		},
-		delete : function( key ) {
-			window.localStorage.removeItem( key );
-			// todo, add print if "key" do not exist
-		},
-		getAllKeys : function() {
-			return Object.keys(localStorage)
-		},
-		getAllKeyValuePairs : function() {
-			return localStorage;
-		},
-		set_object : function( object ) {
-			Object.entries( object ).forEach((v) => {
-				const key =  v[0], val = JSON.parse( v[1] );
-				nDB.set( key, val );
-			});
-		},
-		clearAllStorage : function() {
-			localStorage.clear();
-		},
 	};
 
 	function showCookieConsent() {

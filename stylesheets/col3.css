@@ -197,9 +197,6 @@ li[isdirectory="true"]:not(:first-child) {
 .selected.important {
 	border-color: #000; /* accentColor2 */
 }
-.importantLeftLine {
-	border-left-color: #000; /*accentColor2*/
-}
 
 .accentColor2,
 .important,

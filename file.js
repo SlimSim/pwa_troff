@@ -222,11 +222,6 @@ $(function () {
 
 	};
 
-	fileHandler.removeFile = async function( url ) {
-		//TODO: implement removeFile :)
-		console.info( "fileHandler.removeFile is not yet implemented :( " );
-	};
-
 	fileHandler.sendFile = async function( fileKey, oSongTroffInfo ) {
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
 			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,

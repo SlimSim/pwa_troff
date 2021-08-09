@@ -183,9 +183,6 @@ p{
 .selected.important {
 	border-color: #dd2c00; /* accentColor2 */
 }
-.importantLeftLine {
-	border-left-color: #dd2c00; /*accentColor2*/
-}
 
 .accentColor2,
 .important,

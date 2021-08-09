@@ -522,11 +522,6 @@ li[isdirectory="true"]:not(:first-child) {
 	margin-bottom: 2px;
 }
 
-
-.importantLeftLine{
-	padding-left: 4px;
-}
-
 .important{
 	font-family:'Helvetica Neue',sans-serif;
 	padding: 4px;
@@ -914,14 +909,6 @@ a { color: #0051A8; }
 .textareaStandard{
 	border-style: solid;
 	border-width: 4px;
-}
-
-
-
-
-.importantLeftLine {
-	border-left-width: 2px;
-	border-left-style: solid;
 }
 
 
