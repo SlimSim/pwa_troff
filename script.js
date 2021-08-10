@@ -1211,16 +1211,19 @@ var TroffClass = function(){
 		DB.saveVal( TROFF_SETTING_SET_THEME, theme);
 
 	};
-	/*Troff*/this.updateHrefForTheme = function( theme ) {
-		let href = $("#colorScheme").attr("href");
-		let startIndex = href.indexOf("col");
-		let endIndex = href.indexOf(".css");
-		let firstPart = href.substr(0, startIndex);
-		let lastPart = href.substr(endIndex);
-		let finalHref = firstPart + theme + lastPart;
-		$("#colorScheme").attr("href", finalHref);
-	};
 
+	/*Troff*/this.updateHrefForTheme = function( theme ) {
+		"use strict";
+		const href = $("#colorScheme").attr("href"),
+			startIndex = href.indexOf("col"),
+			endIndex = href.indexOf(".css"),
+			firstPart = href.substr(0, startIndex),
+			lastPart = href.substr(endIndex),
+			finalHref = firstPart + theme + lastPart;
+		if( finalHref != href ) {
+			$("#colorScheme").attr("href", finalHref);
+		}
+	};
 
 	this.recallGlobalSettings = function(){
 		Troff.recallTheme();
