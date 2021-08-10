@@ -5113,6 +5113,7 @@ $(document).ready( async function() {
 		Rate.startFunc();
 
 		Troff.initFileApiImplementation();
+		Troff.recallCurrentStateOfSonglists();
 
 		DB.getShowSongDialog();
 		initEnvironment();
