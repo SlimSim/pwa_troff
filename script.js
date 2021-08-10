@@ -23,8 +23,8 @@ window.alert = function( alert){
 }
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
-var audFormats = ['wav', 'mp3', 'm4a', 'ogg'];
-var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv'];
+var audFormats = ['wav', 'mp3', 'm4a'];
+var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
 
 var TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
 var TROFF_SETTING_EXTENDED_MARKER_COLOR = "TROFF_SETTING_EXTENDED_MARKER_COLOR";
