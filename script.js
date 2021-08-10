@@ -2969,15 +2969,13 @@ var TroffClass = function(){
 
 			var aAllMarkers = Troff.getCurrentMarkers();
 
-			if( bOneMarker ) {
-				bMoveSelected = true;
-				aAllMarkers = $('.currentMarker');
-			}
-
 			var startNumber = 0;
 			var endNumber = aAllMarkers.length;
 
-			if(bMoveSelected){
+			if( bOneMarker ) {
+				aAllMarkers = $('.currentMarker');
+				endNumber = 1;
+			} else if(bMoveSelected){
 				[startNumber, endNumber] = Troff.getStartAndEndMarkerNr( 0, 1 );
 			}
 
