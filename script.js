@@ -1377,7 +1377,7 @@ var TroffClass = function(){
 		$('#buttStopAfter').toggleClass('active');
 		$('#stopAfter').toggleClass('grayOut');
 		Troff.setCurrentStopAfter();
-		Troff.settAppropriateActivePlayRegion();
+		Troff.setAppropriateActivePlayRegion();
 		IO.blurHack();
 	};
 
@@ -1419,7 +1419,7 @@ var TroffClass = function(){
 		var goToMarker = $("#" + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER ).hasClass( "active" );
 		if( $('audio, video')[0].paused && goToMarker )
 			Troff.goToStartMarker();
-		Troff.settAppropriateActivePlayRegion();
+		Troff.setAppropriateActivePlayRegion();
 	};
 
 	this.setCurrentPauseBefStart = function(){
@@ -2548,7 +2548,7 @@ var TroffClass = function(){
 				document.getElementById(nameId + 'S').addEventListener('click', stopM);
 				document.getElementById(nameId + 'E').addEventListener('click', editM);
 			}//end for-loop
-			Troff.settAppropriateMarkerDistance();
+			Troff.setAppropriateMarkerDistance();
 			Troff.fixMarkerExtraExtendedColor();
 		}; // end addMarker ****************/
 
@@ -2596,7 +2596,7 @@ var TroffClass = function(){
 			$('.currentStopMarker').removeClass('currentStopMarker');
 			$('#' + stopMarkerId).addClass('currentStopMarker');
 
-			Troff.settAppropriateActivePlayRegion();
+			Troff.setAppropriateActivePlayRegion();
 			IO.blurHack();
 
 			DB.setCurrentStartAndStopMarker(startMarkerId, stopMarkerId, strCurrentSong);
@@ -2611,7 +2611,7 @@ var TroffClass = function(){
 			$('#' + startMarkerId).addClass('currentMarker');
 			$('#markerInfoArea').val($('#'+startMarkerId)[0].info);
 
-			Troff.settAppropriateActivePlayRegion();
+			Troff.setAppropriateActivePlayRegion();
 			IO.blurHack();
 			DB.setCurrentStartMarker(startMarkerId, strCurrentSong );
 		};
@@ -2624,7 +2624,7 @@ var TroffClass = function(){
 			$('.currentStopMarker').removeClass('currentStopMarker');
 			$('#' + stopMarkerId).addClass('currentStopMarker');
 
-			Troff.settAppropriateActivePlayRegion();
+			Troff.setAppropriateActivePlayRegion();
 			IO.blurHack();
 			DB.setCurrentStopMarker(stopMarkerId, strCurrentSong );
 		};
@@ -2657,7 +2657,7 @@ var TroffClass = function(){
 				Troff.goToStartMarker();
 			}
 
-			Troff.settAppropriateActivePlayRegion();
+			Troff.setAppropriateActivePlayRegion();
 
 			DB.setCurrentStartAndStopMarker(markerId, stopMarker, strCurrentSong);
 		}; // end selectMarker
@@ -2687,7 +2687,7 @@ var TroffClass = function(){
 			$('.currentStopMarker').removeClass('currentStopMarker');
 			$('#'+markerId).addClass('currentStopMarker');
 
-			Troff.settAppropriateActivePlayRegion();
+			Troff.setAppropriateActivePlayRegion();
 			DB.setCurrentStartAndStopMarker(startMarker, markerId, strCurrentSong);
 
 		}; // end selectStopMarker
@@ -2710,7 +2710,7 @@ var TroffClass = function(){
 			Troff.updateStartBefore();
 			Troff.setCurrentStartBefore();
 
-			Troff.settAppropriateActivePlayRegion();
+			Troff.setAppropriateActivePlayRegion();
 			IO.blurHack();
 		};
 
@@ -2768,7 +2768,7 @@ var TroffClass = function(){
 
 			// Remove Marker from HTML
 			$( markerId ).closest('li').remove();
-			Troff.settAppropriateMarkerDistance();
+			Troff.setAppropriateMarkerDistance();
 
 			// remove from DB
 			DB.saveMarkers(Troff.getCurrentSong());
@@ -2880,7 +2880,7 @@ var TroffClass = function(){
 				$('#'+markerId).prev().html( Troff.secToDisp(newTime) );
 			}
 
-			Troff.settAppropriateMarkerDistance();
+			Troff.setAppropriateMarkerDistance();
 			DB.saveMarkers(Troff.getCurrentSong() );
 			$( "#stretchMarkersDialog" ).addClass( "hidden" );
 			$( "#stretchMarkersNumber" ).val( 100 );
@@ -2993,7 +2993,7 @@ var TroffClass = function(){
 				$('#'+markerId).prev().html( Troff.secToDisp(newTime) );
 			}
 
-			Troff.settAppropriateMarkerDistance();
+			Troff.setAppropriateMarkerDistance();
 			DB.saveMarkers(Troff.getCurrentSong() );
 		};
 
@@ -3071,14 +3071,14 @@ var TroffClass = function(){
 
 				$('#'+markerId)[0].timeValue = newTime;
 				$('#'+markerId + 'S')[0].timeValue = newTime;
-				Troff.settAppropriateMarkerDistance();
+				Troff.setAppropriateMarkerDistance();
 
 				var startTime = Number($('.currentMarker')[0].timeValue);
 				var stopTime = Number($('.currentStopMarker')[0].timeValue);
 
 				if( startTime >= stopTime ){
 					$('.currentStopMarker').removeClass('currentStopMarker');
-					Troff.settAppropriateActivePlayRegion();
+					Troff.setAppropriateActivePlayRegion();
 				}
 				$('#'+markerId).prev().html( Troff.secToDisp(newTime) );
 			}
@@ -3125,11 +3125,11 @@ var TroffClass = function(){
 			}
 		}; // end clearAllMarkers
 
-		/*Troff*/this.settAppropriateActivePlayRegion = function () {
+		/*Troff*/this.setAppropriateActivePlayRegion = function () {
 			var aFirstAndLast = Troff.getFirstAndLastMarkers();
 
 			if( aFirstAndLast === null || aFirstAndLast === undefined ) {
-				setTimeout( Troff.settAppropriateActivePlayRegion, 200 );
+				setTimeout( Troff.setAppropriateActivePlayRegion, 200 );
 				return;
 			}
 
@@ -3155,43 +3155,44 @@ var TroffClass = function(){
 
 			$('#activePlayRegion').height(height);
 			$('#activePlayRegion').css("margin-top", top + "px");
-		}; // end setAppropriateActivaePlayRegion
+		}; // end setAppropriateActivePlayRegion
 
-		this.settAppropriateMarkerDistance = function () {
-				var child = $('#markerList li:first-child')[0];
+		this.setAppropriateMarkerDistance = function () {
+			$( "#markerSection" ).removeClass( "hidden" );
+			var child = $('#markerList li:first-child')[0];
 
-				var timeBarHeight = $('#timeBar').height() - 10;
-				var totalDistanceTop = 4;
+			var timeBarHeight = $('#timeBar').height() - 10;
+			var totalDistanceTop = 4;
 
-				var barMarginTop = parseInt($('#timeBar').css('margin-top'));
-				while(child){
-						var audioVideo =  document.querySelector('audio, video');
-						if( audioVideo == null ) {
-							console.error("there is no audio or video tag");
-							return;
-						}
-						var songTime = audioVideo.duration;
-						var markerTime = Number(child.childNodes[2].timeValue);
-						var myRowHeight = child.clientHeight;
-
-						var freeDistanceToTop = timeBarHeight * markerTime / songTime;
-
-						var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
-						totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-
-						if( marginTop > 0 ){
-							$( child ).css( "border-top-width", marginTop + "px" );
-							$( child ).css( "border-top-style", "solid" );
-							$( child ).css( "margin-top", "" );
-						} else {
-							$( child ).css( "border-top-width", "" );
-							$( child ).css( "border-top-style", "" );
-							$( child ).css( "margin-top", marginTop + "px" );
-						}
-						child = child.nextSibling;
+			var barMarginTop = parseInt($('#timeBar').css('margin-top'));
+			while(child){
+				var audioVideo =  document.querySelector('audio, video');
+				if( audioVideo == null ) {
+					console.error("there is no audio or video tag");
+					return;
 				}
-				Troff.settAppropriateActivePlayRegion();
-		}; // end settAppropriateMarkerDistance
+				var songTime = audioVideo.duration;
+				var markerTime = Number(child.childNodes[2].timeValue);
+				var myRowHeight = child.clientHeight;
+
+				var freeDistanceToTop = timeBarHeight * markerTime / songTime;
+
+				var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
+				totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
+
+				if( marginTop > 0 ){
+					$( child ).css( "border-top-width", marginTop + "px" );
+					$( child ).css( "border-top-style", "solid" );
+					$( child ).css( "margin-top", "" );
+				} else {
+					$( child ).css( "border-top-width", "" );
+					$( child ).css( "border-top-style", "" );
+					$( child ).css( "margin-top", marginTop + "px" );
+				}
+				child = child.nextSibling;
+			}
+			Troff.setAppropriateActivePlayRegion();
+		}; // end setAppropriateMarkerDistance
 
 		this.selectNext = function(reverse){
 			var markers = $('#markerList').children();
@@ -3302,7 +3303,7 @@ var TroffClass = function(){
 			$('#markerSection').css("height", (height + "%"));
 			$('#markerSection').css("margin-top", (marginTopPX + "px"));
 
-			Troff.settAppropriateMarkerDistance();
+			Troff.setAppropriateMarkerDistance();
 		};
 
 		this.tapTime = function(){
@@ -4303,7 +4304,7 @@ var IOClass = function(){
 		//$('#songlistAll').click(Troff.selectAllSongsSonglist);
 
 		$('#stopAfter')[0].addEventListener(
-			'input', Troff.settAppropriateActivePlayRegion
+			'input', Troff.setAppropriateActivePlayRegion
 		);
 		$('#buttWaitBetweenLoops').click(Troff.toggleWaitBetweenLoops);
 		$('#waitBetweenLoops').change(Troff.setCurrentWaitBetweenLoops);
@@ -4345,7 +4346,7 @@ var IOClass = function(){
 
 
 		window.addEventListener('resize', function(){
-			Troff.settAppropriateMarkerDistance();
+			Troff.setAppropriateMarkerDistance();
 		});
 
 		Troff.recallGlobalSettings();
@@ -4564,10 +4565,10 @@ var IOClass = function(){
 		case 65: // A
 			if(event.shiftKey==1)
 				Troff.incrementInput('#stopAfter', 1,
-														 Troff.settAppropriateActivePlayRegion);
+														 Troff.setAppropriateActivePlayRegion);
 			else if(event.altKey==1)
 				Troff.incrementInput('#stopAfter',-1,
-														 Troff.settAppropriateActivePlayRegion);
+														 Troff.setAppropriateActivePlayRegion);
 			else
 				Troff.toggleStopAfter();
 			break;
