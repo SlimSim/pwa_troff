@@ -2041,13 +2041,13 @@ var TroffClass = function(){
 
 	this.setAreas = function(abAreas) {
 		$('#statesTab').toggleClass("active", abAreas[0]);
-		$('#stateSection').toggle(abAreas[0]);
+		$('#stateSection').toggleClass("hidden", !abAreas[0]);
 		$('#settingsTab').toggleClass("active", abAreas[1]);
-		$('#timeSection').toggle(abAreas[1]);
+		$('#timeSection').toggleClass("hidden", !abAreas[1]);
 		$('#infoTab').toggleClass("active", abAreas[2]);
-		$('#userNoteSection').toggle(abAreas[2]);
+		$('#userNoteSection').toggleClass("hidden", !abAreas[2]);
 		$('#countTab').toggleClass("active", abAreas[3]);
-		$('#infoSection').toggle(abAreas[3]);
+		$('#infoSection').toggleClass("hidden", !abAreas[3]);
 	};
 
 	this.setInfo = function(info){
@@ -4356,11 +4356,7 @@ var IOClass = function(){
 
 
 	/*IO*/this.jQueryToggle = function( idString ){
-		if( $(idString).hasClass("hidden") ) {
-			$(idString).removeClass("hidden");
-		} else {
-			$(idString).addClass("hidden");
-		}
+		$( idString ).toggleClass( "hidden" );
 	};
 
 	/*IO*/ this.blurHack = function() {
