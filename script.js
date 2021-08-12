@@ -2034,7 +2034,7 @@ var TroffClass = function(){
 
 		if( sectionToHide ) {
 			event.target.classList.toggle('active');
-			$( sectionToHide ).toggle();
+			$( sectionToHide ).toggleClass( "hidden" );
 			DB.setCurrentAreas(Troff.getCurrentSong());
 		}
 	};
