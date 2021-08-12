@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.5.15",
+		version: "1.5.17",
 		urls: [
 			"/",
 			"/index.html",
@@ -38,7 +38,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.3.7",
+		version: "1.3.9",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -51,7 +51,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'include-assets',
-		version: "1.0.1",
+		version: "1.0.3",
 		urls: [
 			"/includes/quick-help.html",
 		]
@@ -81,26 +81,32 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.2.2",
+		version: "1.2.3",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
 			"/assets/internal/st-script.js",
 			"/assets/internal/environment.js",
 			"/assets/internal/extend-jquery.js",
+			"/assets/internal/fontello-extra.css",
 			"/assets/internal/notify-js/notify.css",
 			"/assets/internal/notify-js/notify.config.js"
 		]
 	},
 	{
 		name: 'external-assets',
-		version: "1.2.1",
+		version: "1.2.2",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
 			"/assets/external/reset.css",
 			"/assets/external/notify-js/notify.min.js",
-			"/assets/external/fontawesome-5.0.8/js/fontawesome-all.min.js",
+			"/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css",
+			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.eot?2742147",
+			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.svg?2742147",
+			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.ttf?2742147",
+			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff?2742147",
+			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff2?2742147",
 			"/assets/external/DataTables/css/dataTables.needed.min.css",
 			"/assets/external/DataTables/images/sort_asc.png",
 			"/assets/external/DataTables/images/sort_asc_disabled.png",

@@ -2,8 +2,9 @@
 
 	<div class="col-sm d-flex flexCol justify-content-center">
 		<div class="mt-3 d-flex">
-			<button class="importantInverse centerRoundButtCommon p-0" aria-label="Play" title="Move to selected marker and play song (key: enter or space)">
-				<i class="fa fa-play-circle"></i>
+			<button id="buttPlayUiButtonPlay" class="importantInverse centerRoundButtCommon fa-stack" title="Move to selected marker and play song (key: enter or space)">
+				<i class="fa-circle fa-stack-10x"></i>
+				<i class="fa-play fa-stack-05x text-white"></i>
 			</button>
 			<p class="paragraph normalSize pl-2 pt-4">
 				Play the song or movie!
@@ -13,10 +14,10 @@
 			<!--suppress XmlInvalidId -->
 			<label
 				title="Add songs, videos or pictures to Troff"
-				class="mr-2 pv-exact-17 font-size-exact-19 cursor-pointer regularButton fa-stack fa-1x"
+				class="cursor-pointer mr-2 regularButton fa-stack"
 				for="fileUploader">
-					<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1"></i>
-					<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65"></i>
+					<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1" ></i>
+					<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65 "></i>
 			</label>
 			<p class="paragraph normalSize pl-2 pt-4">
 				Add a song or movie!
@@ -24,7 +25,7 @@
 		</div>
 		<div class="mt-3 d-flex">
 			<a href="help.html" target="_blank" rel="noopener">
-				<button class="h-exact-37 mr-2 w-exact-38-5 svgButt regularButton cursor-help" type="button" aria-label="Open help page" title="Get tips on how to get the most out of Troff">
+				<button class="h-exact-35 mr-2 w-exact-38-5 svgButt regularButton cursor-help" type="button" aria-label="Open help page" title="Get tips on how to get the most out of Troff">
 					<i class="fa fa-question cursor-help"></i>
 				</button>
 			</a>
@@ -61,7 +62,7 @@
 		<div class="d-flex flexRow flex-wrap">
 		<p class="paragraph normalSize bold mr-3">This is a marker: </p>
 		<span class="flexRow center bg-Burlywood px-2">
-			<button class="small regularButton height-15" aria-label="Edit marker"><i class="fa fa-pencil-alt m-0" ></i></button>
+			<button class="small regularButton height-15" aria-label="Edit marker"><i class="fa fa-pencil m-0" ></i></button>
 			<b class="ml-1">0:42</b><input class="mx-1" type="button" value="marker nr 3" /><input type="button" value="Stop" />
 		</span>
 		</div>

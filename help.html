@@ -45,7 +45,8 @@
 
 	<script src="assets/internal/common.js"></script>
 
-	<script src="assets/external/svg-with-js/js/fontawesome-all.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css" />
+	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
 
 	<script src="assets/external/jquery-3.6.0.min.js"></script>
 	<script>
@@ -65,9 +66,7 @@
 			}
 
 			const includes = $('[data-include]');
-			loadExternalHtml(includes, function() {
-				$( ".pv-exact-17" ).removeClass( "pv-exact-17" );
-			});
+			loadExternalHtml(includes);
 		});
 
 	</script>
@@ -77,9 +76,9 @@
 <body class="backgroundColor flexCol">
 	<input id="blur-hack" type="button"/>
 	<header class="m-2">
-		<span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation"
+		<span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
 					data-toggle="collapse" data-target="#navigation">
-			<i class="fa fa-bars"></i>
+			<i class="fa-menu"></i>
 		</span>
 		<img src="assets/logos/logo.svg" width="48" alt="logo"/>
 		<h1>Troff - Help</h1>
@@ -185,10 +184,12 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		<p>
 			When you start Troff, you must add songs from your computer.
 			Do this by clicking the
-				<i class="negative-mx-2 fa-stack fa-1x attached-configure-button">
-					<i class="fas fa-music fa-stack-1x"></i>
-					<i class="fas fa-plus fa-stack-1x"></i>
-				</i>-button (in the attached state) or the "Add files" button
+			<label
+				title="Add songs, videos or pictures to Troff"
+				class="cursor-pointer mr-2 regularButton fa-stack">
+					<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1" ></i>
+					<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65 "></i>
+			</label>-button (in the attached state) or the "Add files" button
 			(in the floating state) in the Songs area,
 			select one or more songs or movies and click "Open".
 			Then the songs and movies will be saved in Troff
@@ -256,7 +257,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			(unless an error message pops up).
 		</p>
 		<p>
-			You upload and share the song via the <i class="fa fa-share"></i>-button
+			You upload and share the song via the <i class="fa-share"></i>-button
 			above the play-button.
 		</p>
 		<h3 id="theUrlInTheAddressBar">The Url in the address bar</h3>
@@ -288,7 +289,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			song is selected.
 		</p>
 		<p>
-			You access the global settings via the <i class="fa fa-cog"></i>-button
+			You access the global settings via the <i class="fa-cog"></i>-button
 			in the top left corner.
 		</p>
 		<p>
@@ -331,7 +332,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			This dialog also lets you decide the color of the marker.
 		</p>
 		<p>
-			You can always press the edit button (<i class="fa fa-pencil-alt"></i>) next
+			You can always press the edit button (<i class="fa-pencil"></i>) next
 			to a marker to bring up the same dialog to edit the marker.
 		</p>
 		<h3 id="playPartOfSong">Play only part of a song</h3>
@@ -600,8 +601,8 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		</p>
 		<p>
 			You can change between the two states in the settings,
-			or with the maximize (<i class="fa fa-window-maximize"></i>)
-			and minimize (<i class="fa fa-window-minimize"></i>) buttons.
+			or with the maximize (<i class="fa-window-maximize"></i>)
+			and minimize (<i class="fa-window-minimize"></i>) buttons.
 		</p>
 		<p>
 			When the song is in the floating state,
@@ -618,7 +619,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			the folders that they contain.
 		</p>
 		<p>
-			Open the songlist by clicking <i class="fa fa-columns"></i> in the attached state
+			Open the songlist by clicking <i class="fa-columns"></i> in the attached state
 			or by clicking the "songlist"-button in the floating state.
 		</p>
 		<p>
@@ -732,7 +733,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		<button class="svgButt shareClass regularButton"
 			type="button"
 			title="Share the link to this app with your friends via email">
-			<i class="fa fa-share-alt"></i>
+			<i class="fa-share-alt"></i>
 		</button>
 		<p>
 			... or share this link via your social networks:
@@ -767,6 +768,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			<tr>  <td>Esc</td><td>Stop song</td></tr>
 			<tr>  <td>M</td><td>  Set marker</td> </tr>
 			<tr>  <td>G</td><td>  Go to marker</td> </tr>
+			<tr>  <td>N</td><td>  Move to next pair of markers (use shift + N to move to previous)</td> </tr>
 			<tr>  <td>E</td><td>  Edit the marker info text</td> </tr>
 			<tr>  <td>I</td><td>  Edit the song info text</td> </tr>
 			<tr>  <td>1-9</td><td>Set number of times to loop song</td> </tr>
@@ -785,7 +787,6 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			<tr>  <td>Z</td><td>  Zoom in to only see the active playing region (the purple part of the timeline), use shift+Z to zoom out to see the whole timeline</td> </tr>
 			<tr>  <td>Left/Right Arrows</td><td> Use right and left arrows to step 1 sec forward/backward in song/movie, use shift or alt to move 10 seconds / one frame respectively</td> </tr>
 			<tr>  <td>Up/Down Arrows   </td><td> Move the selected marker up or down, 1 sec, 1 frame or 10 seconds with alt/shift/(alt+shift) + Upp/down respectively.</td> </tr>
-			<tr>  <td>N</td><td>  Move to next pair of markers (use shift + N to move to previous)</td> </tr>
 		</table>
 	</article> <!-- Keyboard shortcuts -->
 	<footer id="footer" class="white flexRow">

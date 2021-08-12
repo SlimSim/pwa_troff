@@ -104,7 +104,7 @@ function addVideoToContentDiv() {
 	fsButton.addEventListener('click', Troff.playInFullscreenChanged);
 	fsButton.appendChild( document.createTextNode('Play in Fullscreen') );
 	fsButton.setAttribute('id', "playInFullscreenButt");
-	fsButton.setAttribute('class', "onOffButton mt-2 mr-2");
+	fsButton.setAttribute('class', "stOnOffButton mt-2 mr-2");
 
 	videoBox.setAttribute('id', "videoBox");
 
@@ -119,7 +119,7 @@ function addVideoToContentDiv() {
 		.text("Mirror Image")
 		.attr( "id", "mirrorImageButt")
 		.click( Troff.mirrorImageChanged )
-		.addClass("onOffButton mt-2 mr-2")[0] )
+		.addClass("stOnOffButton mt-2 mr-2")[0] )
 
 	videoBox.appendChild(video);
 	content_div.appendChild(videoBox);
@@ -383,7 +383,7 @@ function addItem_NEW_2( key ) {
 
 function initSongTable() {
 	var dataSongTable,
-		selectAllCheckbox = $( '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>' );
+		selectAllCheckbox = $( '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>' );
 
 	selectAllCheckbox.click( function( event ) {
 		var headerCheckbox = $( "#dataSongTable" ).find( "th" ).find( "input[type=checkbox]" ),
@@ -417,10 +417,10 @@ function initSongTable() {
 			"<br />Try adding songs by clicking the <br / >" +
 				"<label " +
 					"title=\"Add songs, videos or pictures to Troff\"" +
-					"class=\"cursor-pointer regularButton small fa-stack fa-1x\"" +
+					"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
 					"for=\"fileUploader\">" +
-						"<i class=\"fas fa-music fa-stack-1x m-relative-7 font-size-relative-1\"></i>" +
-						"<i class=\"fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65\"></i>" +
+						"<i class=\"fa-music fa-stack-10x m-relative-7 font-size-relative-1\"></i>" +
+						"<i class=\"fa-plus fa-stack-10x m-relative-4 font-size-relative-65\"></i>" +
 				"</label>" +
 				"-button at the top<br />of the song-dialog"
 		},
@@ -2087,7 +2087,7 @@ var TroffClass = function(){
 							.append(
 								$( "<i>" )
 								.addClass( "fa")
-								.addClass( "fa-trash-alt")
+								.addClass( "fa-trash")
 							).on("click", removeSonglist_NEW )
 						)
 						.append( $( "<button>" )
@@ -2490,8 +2490,7 @@ var TroffClass = function(){
 					.attr( "id", nameId + 'E')
 					.append(
 						$( "<i>" )
-						.addClass( "fa")
-						.addClass( "fa-pencil-alt")
+						.addClass( "fa-pencil")
 					);
 
 				var p = document.createElement("b");

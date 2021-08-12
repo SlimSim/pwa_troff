@@ -97,6 +97,15 @@ a {
 .textCenter {
 	text-align: center;
 }
+.centerRoundButtCommon {
+	width: 45px !important;
+	height: 45px !important;
+}
+
+.text-15 {
+	font-size: 1.5em;
+}
+
 .overflow-hidden{overflow:hidden!important}
 
 .w-48{
@@ -104,10 +113,6 @@ a {
 }
 .h-48{
 	height: 48px;
-}
-
-.timeBarDiv{
-	margin-left: -3px;
 }
 
 @media (min-width:750px){

@@ -528,7 +528,6 @@ li[isdirectory="true"]:not(:first-child) {
 	border: 0;
 }
 
-.BIGGEST{font-size: 30px;}
 .Big{font-size: 18px;}
 .big{font-size: 16px;}
 .normal{font-size: 14px;}
@@ -537,13 +536,6 @@ li[isdirectory="true"]:not(:first-child) {
 	margin: 1px;
 }
 .Small{font-size: 10px;}
-
-.left-0{
-	left: 0 !important;
-}
-.top-0{
-	top: 0 !important;
-}
 
 .outerDialog{
 	position: fixed;
@@ -859,10 +851,10 @@ a { color: #0051A8; }
 }
 
 .m-relative-7 {
-	margin: 0.7em;
+	margin: 0.7em !important;
 }
 .m-relative-4 {
-	margin: 0.4em;
+	margin: 0.4em !important;
 }
 
 .st-simple-on-off-button{
@@ -1017,22 +1009,6 @@ table.dataTable .dataTables_empty{
 }
 
 
-/*
-extra_-_extended -> fill-threw
-extended_-_color -> color-fill
-extend_ -> fill_
-*/
-
-.pv-exact-17 {
-	padding-top: 17px;
-	padding-bottom: 17px;
-}
-
-.pv-exact-3_5 {
-	padding-top: 3.5px !important;
-	padding-bottom: 3.5px !important;
-}
-
 .px-exact-13 {
 	padding-right: 13px !important;
 	padding-left: 13px !important;
@@ -1041,8 +1017,8 @@ extend_ -> fill_
 	width: 38.5px;
 }
 
-.h-exact-37 {
-	height: 37px;
+.h-exact-35 {
+	height: 35px;
 }
 .mw-exact-239{
 	max-width: 239px;
@@ -1200,7 +1176,7 @@ extend_ -> fill_
 	}
 
 	[for=fileUploader] {
-		font-size: 15px;
+		font-size: 1.1em;
 	}
 	.svg-inline--fa.fa-stack-1x {
 		height: 1em;
@@ -1222,8 +1198,8 @@ extend_ -> fill_
 
 	.fixToBottomRightOnMobile {
 		position: fixed;
-		right: 15px;
-		bottom: 21px;
+		right: 13px;
+		bottom: 18px;
 		z-index: 11;
 	}
 
@@ -1258,11 +1234,7 @@ extend_ -> fill_
 	}
 
 	.big-on-mobile {
-		font-size: 52px;
-	}
-
-	.big-on-mobile .BIGGEST {
-		font-size: 42px;
+		font-size: 58px;
 	}
 
 	.play.hidden-on-mobile-on-play,

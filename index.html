@@ -66,22 +66,22 @@
 				<button class="svgButt special regularButton showUploadSongToServerDialog"
 								type="button"
 								title="Share this song to friends via link">
-					<i class="fa fa-share" ></i>
+					<i class="fa-share" ></i>
 				</button>
 				<button class="svgButt d-block d-sm-none special regularButton onClickToggleFullScreen"
 								type="button"
 								title="Go to full screen!">
-					<i class="fa fa-expand toggleFullScreenExpandIcon" ></i>
-					<i class="fa fa-compress toggleFullScreenCompressIcon hidden" ></i>
+					<i class="fa-resize-full toggleFullScreenExpandIcon"></i>
+					<i class="fa-resize-small toggleFullScreenCompressIcon hidden"></i>
 				</button>
 				<span id="buttPlayUiButtonParent" class="fixToBottomRightOnMobile">
 					<button id="buttPlayUiButtonPlay" class="importantInverse centerRoundButtCommon big-on-mobile fa-stack" title="Move to selected marker and play song (key: enter or space)">
-						<i class="fa fa-circle fa-stack-1x text-white BIGGEST left-0 top-0"></i>
-						<i class="fa fa-play-circle fa-stack-1x left-0 top-0"></i>
+						<i class="fa-circle fa-stack-10x"></i>
+						<i class="fa-play fa-stack-05x text-white"></i>
 					</button>
-					<button id="buttPlayUiButtonPause" class="importantInverse centerRoundButtCommon big-on-mobile fa-stack hidden" title="Pause song (key: enter or space)">
-						<i class="fa fa-circle fa-stack-1x text-white BIGGEST left-0 top-0"></i>
-						<i class="fa fa-pause-circle fa-stack-1x left-0 top-0"></i>
+					<button id="buttPlayUiButtonPause" class="importantInverse centerRoundButtCommon big-on-mobile fa-stack hidden" title="Move to selected marker and play song (key: enter or space)">
+						<i class="fa-circle fa-stack-10x"></i>
+						<i class="fa-pause fa-stack-05x text-white"></i>
 					</button>
 				</span>
 			</nav>
@@ -113,19 +113,19 @@
 					type="button"
 					title="Open the global settings dialogue"
 					id="buttSettingsDialog" >
-					<i class="fa fa-cog"></i>
+					<i class="fa-cog"></i>
 				</button>
 				<button class="svgButt regularButton cursor-help"
 					data-href="help.html"
 					type="button"
 					title="Get tips on how to get the most out of Troff">
-					<i class="fa fa-question cursor-help"></i>
+					<i class="fa-question cursor-help"></i>
 				</button>
 				<!--/a-->
 				<button class="svgButt shareClass regularButton"
 					type="button"
 					title="Share the link to this app with your friends via email">
-					<i class="fa fa-share-alt"></i>
+					<i class="fa-share-alt"></i>
 				</button>
 			</nav>
 		</div> <!-- end headArea -->
@@ -706,7 +706,7 @@
 						data-st-css-selector-to-hide="#dataSongTable_filter"
 						data-st-save-value-key="TROFF_SETTING_SEARCH_SHOW"
 						class="switch st-simple-on-off-button stOnOffButton active mr-2"
-						><i class="fa fa-search"></i>
+						><i class="fa-search"></i>
 					</button>
 					<button
 						type="button"
@@ -721,24 +721,24 @@
 						data-st-css-selector-to-hide="#songListsList"
 						data-st-save-value-key="TROFF_SETTING_SONG_LISTS_LIST_SHOW"
 						class="switch mr-2 st-simple-on-off-button stOnOffButton">
-						<i class="fa fa-columns"></i>
+						<i class="fa-columns"></i>
 					</button>
 					<label
 						title="Add songs, videos or pictures to Troff"
-						class="cursor-pointer mr-2 regularButton fa-stack fa-1x Small normalSize-on-mobile full-height-on-mobile"
+						class="cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile"
 						for="fileUploader">
-							<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
-							<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65 "></i>
+							<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1" ></i>
+							<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65 "></i>
 					</label>
 					<button class="regularButton mr-2 buttSetSongsDialogToAttachedState"
 						type="button"
 						title="put the songs dialog next to the setting-area">
-						<i class="fa fa-window-minimize"></i>
+						<i class="fa-window-minimize"></i>
 					</button>
 					<button class="regularButton mr-2 buttCloseSongsDialog"
 						type="button"
 						title="close the songs dialog">
-						<i class="fa fa-window-close"></i>
+						<i class="fa-window-close"></i>
 					</button>
 				</div>
 			</div>
@@ -780,36 +780,28 @@
 				<div class="flexOne"></div>
 				<div class="flexRow hideOnSongsDialogFloatingState pl-1">
 
-					<label
-						title="Add songs, videos or pictures to Troff"
-						class="mr-2 pv-exact-17 cursor-pointer regularButton fa-stack fa-1x"
-						for="fileUploader">
-							<i class="fas fa-music fa-stack-1x m-relative-7 font-size-relative-1" ></i>
-							<i class="fas fa-plus fa-stack-1x m-relative-4 font-size-relative-65 "></i>
-					</label>
-
-					<!--button class="mr-2 pv-exact-17 regularButton fa-stack fa-1x attached-configure-button"
-						type="button"
-						title="Select folders to get songs from"
-						id="attached-configure-button" >
-						<i class="fas fa-music fa-stack-1x"></i>
-						<i class="fas fa-plus fa-stack-1x"></i>
-					</button-->
 					<button class="mr-2 stOnOffButton"
 						type="button"
 						title="show Songlists"
 						id="buttAttachedSongListToggle" >
-						<i class="fa fa-columns"></i>
+						<i class="fa-columns"></i>
 					</button>
+					<label
+						title="Add songs, videos or pictures to Troff"
+						class="h-exact-35 mr-2 cursor-pointer regularButton fa-stack"
+						for="fileUploader">
+							<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1" ></i>
+							<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65 "></i>
+					</label>
 					<button class="regularButton mr-2 buttSetSongsDialogToFloatingState"
 						type="button"
 						title="open the songs dialog in floating window">
-						<i class="fa fa-window-maximize"></i>
+						<i class="fa-window-maximize"></i>
 					</button>
 					<button class="regularButton mr-2 buttCloseSongsDialog"
 						type="button"
 						title="close the songs dialog window">
-						<i class="fa fa-window-close"></i>
+						<i class="fa-window-close"></i>
 					</button>
 				</div>
 			</div>
@@ -941,7 +933,7 @@
 						type="button"
 						aria-label="Open help page"
 						title="Get tips on how to get the most out of Troff">
-						<i class="fa fa-question cursor-help m-0"></i>
+						<i class="fa-question cursor-help m-0"></i>
 					</button>
 				</a>
 			</p>
@@ -966,7 +958,9 @@
 						aria-label="URL to share the song with"
 						aria-describedby="basic-addon2">
 				<div class="input-group-append">
-					<button id="buttCopyUrlToClipboard" class="btn btn-outline-secondary m-0 pv-exact-3_5 cursor-copy" title="Click to copy to clipboard" type="button"><i class="fa fa-copy" ></i></button>
+					<button id="buttCopyUrlToClipboard" class="btn btn-outline-secondary m-0 cursor-copy" title="Click to copy to clipboard" type="button">
+						<span class="flip-horizontal m-0"><i class="fa-docs" ></i></span>
+					</button>
 				</div>
 			</div>
 			<p class="mb-0">
@@ -1022,7 +1016,7 @@
 					<button class="svgButt regularButton cursor-help"
 						type="button"
 						title="Get tips on how to get the most out of Troff">
-						<i class="fa fa-question cursor-help m-0"></i>
+						<i class="fa-question cursor-help m-0"></i>
 					</button>
 				</a>
 			</p>
@@ -1400,8 +1394,8 @@
 					<div class="mt-3 col-sm">
 						<h3 class="bold">Latest feature:</h3>
 						<div class="d-flex align-items-center">
-							<div class="svgButt special regularButton p-3 pl-3 pr-3 h-exact-37">
-								<i class="fa fa-share"></i>
+							<div class="svgButt special regularButton p-3 pl-3 pr-3 h-exact-35">
+								<i class="fa-share"></i>
 							</div>
 							<p class="paragraph normalSize pl-3">
 								Share a link to your songs with your friends,
@@ -1465,9 +1459,10 @@
 
 	<link rel="stylesheet" type="text/css" href="assets/external/checkbox.css" />
 
+	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css" />
+	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
 
 
-	<!--link rel="stylesheet" type="text/css" href="assets/external/bootstrap-4.3.1-dist/css/bootstrap.css" /-->
 	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
 	<link id="colorScheme"
@@ -1494,7 +1489,6 @@
 	<script src="/script.js"></script>
 	<script src="/assets/internal/st-script.js"></script>
 	<script src="/assets/internal/common.js"></script>
-	<script src="/assets/external/fontawesome-5.0.8/js/fontawesome-all.min.js"></script>
 
 	<script type="text/javascript" src="FileApiImplementation.js"></script>
 	<script type="text/javascript" src="assets/internal/cookie_consent.js"></script>
