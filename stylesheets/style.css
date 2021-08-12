@@ -1146,6 +1146,10 @@ table.dataTable .dataTables_empty{
 	border-top: 1px solid lightgray;
 }
 
+.pictureActive .hideOnPicture {
+	display: none !important;
+}
+
 
 @media (min-width:576px){ /* ie width is GREATER than 576px */
 	/* NOT ON MOBILE-PHONES */

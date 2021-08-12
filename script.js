@@ -1298,10 +1298,10 @@ var TroffClass = function(){
 	}
 
 	this.setImageLayout = function(){
-		$( ".hideOnPicture" ).addClass( "hidden" );
+		$( "body" ).addClass( "pictureActive" );
 	};
 	this.setAudioVideoLayout = function(){
-		$( ".hideOnPicture" ).removeClass( "hidden" );
+		$( "body" ).removeClass( "pictureActive" );
 	};
 
 
