@@ -153,6 +153,7 @@
 					title="Remember all settings, to be recalled later (key: r)"
 					value="r&#818;emember state"
 					id="buttRememberState"
+					data-hot-key="R"
 					class="regularButton" />
 
 					<p id="statesHelpText" class="helpText">
@@ -174,7 +175,13 @@
 					<div id="ControlMarker" class="flexCol end">
 						<h2>Marker</h2>
 						<div>
-							<input type="button" title="Add a marker to the song timeline (key: m)" class="important" id="buttMarker" value="Add M&#818;arker!" />
+							<input
+									type="button"
+									title="Add a marker to the song timeline (key: m)"
+									class="important"
+									id="buttMarker"
+									data-hot-key="M"
+									value="Add M&#818;arker!" />
 						</div>
 						<input
 							type="button"
@@ -236,24 +243,47 @@
 								id="buttZoom" />
 							</div>
 						<div>
-							<input type="button" title="Toggle; start a few seconds before the start marker (key: b)" value="start b&#818;efore" id="buttStartBefore" class="buttWidthStandard stOnOffButton"/>
+							<input
+								type="button"
+								title="Toggle; start a few seconds before the start marker (key: b)"
+								value="start b&#818;efore"
+								data-save-on-song-toggle-class="active"
+								data-save-on-song-toggle-class-default-value="false"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON"
+								data-hot-key="B"
+								data-hot-key-increments="#startBefore"
+								id="buttStartBefore"
+								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active"/>
 							<input
 								type="number"
 								class="numberWide"
 								title="Set how many seconds before the start marker to start (key: shift/alt b)"
 								value="3"
+								data-save-on-song-value="3"
 								min="0"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE"
 								id="startBefore" />
 						</div>
 
 						<div>
-							<input type="button" title="Toggle; stop a few seconds after the stop marker (key: a)" value="stop a&#818;fter" id="buttStopAfter" class="buttWidthStandard stOnOffButton"/>
+							<input
+								type="button"
+								title="Toggle; stop a few seconds after the stop marker (key: a)"
+								value="stop a&#818;fter"
+								data-save-on-song-toggle-class="active"
+								data-save-on-song-toggle-class-default-value="false"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON"
+								data-hot-key="A"
+								data-hot-key-increments="#stopAfter"
+								id="buttStopAfter"
+								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active" />
 							<input
 								type="number"
 								class="numberWide"
 								title="Set how many seconds after the stop marker to stop (key: shift/alt a)"
 								value="2"
+								data-save-on-song-value="2"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE"
 								min="0"
 								id="stopAfter" />
 						</div>
@@ -266,25 +296,39 @@
 								type="button"
 								title="Toggle; wait a few seconds before song starts to play (key: p)"
 								value="p&#818;ause before"
+								data-save-on-song-toggle-class="active"
+								data-save-on-song-toggle-class-default-value="true"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON"
+								data-hot-key="P"
+								data-hot-key-increments="#pauseBeforeStart"
 								id="buttPauseBefStart"
-								class="buttWidthMedium-small stOnOffButton active" />
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active" />
 							<input
 								type="number"
 								class="numberWide"
 								title="Set how many seconds to wait before song starts to play (key: shift/alt p)"
 								value="3"
-								id="pauseBeforeStart"  />
+								data-save-on-song-value="3"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE"
+								id="pauseBeforeStart" />
 						</div>
 
 						<div class="XLoopOff">
 							<input type="button"
-								class="buttWidthMedium-small stOnOffButton active"
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active"
 								value="w&#818;ait between"
+								data-save-on-song-toggle-class="active"
+								data-save-on-song-toggle-class-default-value="true"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON"
+								data-hot-key="W"
+								data-hot-key-increments="#waitBetweenLoops"
 								id="buttWaitBetweenLoops"/>
 							<input type="number"
 								title="Set how many seconds to wait between each loop"
 								class="numberWide"
 								value="1"
+								data-save-on-song-value="1"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE"
 								id="waitBetweenLoops"  />
 						</div>
 						<label class="flexRow">
@@ -328,13 +372,21 @@
 					<h1 class="d-sm-none">Settings</h1>
 					<div class="doubleSliders flexOne">
 						<div class="sliderInfo">
-							<input class="button small regularButton" type="button" title="Set volume to 100% (key: v)" value="V&#818;olume:" id="buttResetVolume" />
+							<input
+									class="button small regularButton"
+									type="button"
+									title="Set volume to 100% (key: v)"
+									value="V&#818;olume:"
+									data-hot-key="V"
+									data-hot-key-increments="#volumeBar"
+									data-hot-key-increment-amount="5"
+									id="buttResetVolume" />
 							<div class="plusMinusButton" id="plusMinusButtons">
 								<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
 								<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
 							</div>
 							<label for="volumeBar" class="dataOutput" id="volumeDataOutput">
-								<div id="volume">100</div><p>%</p>
+								<div id="volume">75</div><p>%</p>
 							</label>
 							<input
 								class="sliderRange flexOne"
@@ -343,11 +395,21 @@
 								type="range"
 								min="0"
 								max="100"
-								value="100"/>
+								data-save-on-song-value="75"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE"
+								value="75"/>
 						</div> <!-- sliderInfo -->
 
 						<div class="sliderInfo">
-							<input class="button small regularButton" type="button" title="Set speed to 100% (key: s)" value="S&#x332;peed:" id="buttResetSpeed" />
+							<input
+									class="button small regularButton"
+									type="button"
+									title="Set speed to 100% (key: s)"
+									value="S&#x332;peed:"
+									data-hot-key="S"
+									data-hot-key-increments="#speedBar"
+									data-hot-key-increment-amount="5"
+									id="buttResetSpeed" />
 							<div class="plusMinusButton">
 								<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
 								<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
@@ -362,6 +424,8 @@
 								type="range"
 								min="50"
 								max="200"
+								data-save-on-song-value="100"
+								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE"
 								value="100"/>
 						</div>  <!-- sliderInfo -->
 					</div> <!-- doubleSliders -->
@@ -408,8 +472,15 @@
 				title="Tap repeatedly to calculate tempo (key: t)"
 				class="regularButton"
 				id="buttTapTempo"
+				data-hot-key="T"
 				value="T&#818;empo:"/>
-			<span id="tapTempo-value">?</span>
+			<input
+				type="number"
+				id="tapTempo"
+				class="form-control-plaintext numberWide d-inline"
+				placeholder="?"
+				data-save-on-song-value=""
+				value="" />
 		</div>
 
 		<!--h2><label class="switch" for="songInfoSwitch">Marker Color info</label></h2>
@@ -421,15 +492,17 @@
 				 Should also be optional to show this. as it should be with song-info / marker-info
 			</p-->
 
-		<h2><label class="switch" for="songInfoSwitch">Song info</label></h2>
+		<h2><label class="switch cursor-pointer" for="songInfoSwitch">Song info</label></h2>
 		<input id="songInfoSwitch" class="switch_checkbox hidden" type="checkbox" checked="checked" />
 		<textArea
 			id="songInfoArea"
+			data-hot-key="I"
 			placeholder="Song specific info here!"
 			class="textareaStandard switch_child"></textArea>
 		<h2 class="hideOnPicture">Current marker info</h2>
 		<textArea
 			id="markerInfoArea"
+			data-hot-key="E"
 			placeholder="Marker specific notes here!"
 			class="hideOnPicture textareaStandard"></textArea>
 
@@ -819,12 +892,6 @@
 						value="New Songlist" />
 					<h2>Songlists</h2>
 					<ul id="songListList" class="flexScroll onOffParent maxWidthParent"></ul>
-
-
-					<!--h2>Gallery Lists</h2>
-					<ul id="galleryList" class="flexScroll onOffParent maxWidthParent"></ul>
-					<h2>Directory Lists</h2>
-					<ul id="directoryList" class="flexScroll onOffParent maxWidthParent"></ul -->
 
 				</div>
 				<div id="superSonglistArea" class="flexCol scroll">
