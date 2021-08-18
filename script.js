@@ -871,7 +871,13 @@ var TroffClass = function(){
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
-			fileHandler.handleFiles(event.target.files, addItem_NEW_2);
+			fileHandler.handleFiles(event.target.files, (key) =>{
+				addItem_NEW_2( key );
+				if( !$( "#dataSongTable_wrapper" ).find( "tr").hasClass( "selected" ) ) {
+					Troff.selectSongInSongList( key );
+					createSongAudio( key );
+				}
+			} );
 		});
 
 		//loadAllFiles:
