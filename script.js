@@ -1394,11 +1394,6 @@ var TroffClass = function(){
 		Troff.setAppropriateActivePlayRegion();
 	};
 
-	this.speedUpdateDemo = function() {
-		$( "#speedBar" ).val( $("#speedBarDemo").val() );
-		Troff.speedUpdate();
-	};
-
 	this.speedUpdate = function() {
 		var sliderVal = document.getElementById("speedBar").value;
 		$('#speed, #speedDemo').html(sliderVal);
@@ -1406,7 +1401,7 @@ var TroffClass = function(){
 	};
 
 	/*Troff*/this.setSpeed = function( speed ) {
-		$('#speedBar, #speedBarDemo').val( speed )
+		$('#speedBar').val( speed )
 		$('#speedBar')[0].dispatchEvent(new Event('input'));
 	};
 
@@ -1598,13 +1593,13 @@ var TroffClass = function(){
 				incrementSpeedBy = speedDiffLeft > 0 ? 1 : -1;
 			}
 
-			$('#speedBar, #speedBarDemo').val( currentSpeed + incrementSpeedBy );
+			$('#speedBar').val( currentSpeed + incrementSpeedBy );
 
 		} else {
 			loopTimesLeft = parseInt( IO.loopTimesLeft() );
 			incrementSpeedBy = speedDiffLeft / loopTimesLeft;
 
-			$('#speedBar, #speedBarDemo').val( currentSpeed + incrementSpeedBy );
+			$('#speedBar').val( currentSpeed + incrementSpeedBy );
 		}
 
 		Troff.speedUpdate();
@@ -4110,7 +4105,6 @@ var IOClass = function(){
 		$('#timeBar')[0].addEventListener('input', Troff.timeUpdate );
 		$('#volumeBar')[0].addEventListener('input', Troff.volumeUpdate );
 		$('#speedBar')[0].addEventListener('input', Troff.speedUpdate );
-		$('#speedBarDemo')[0].addEventListener('input', Troff.speedUpdateDemo );
 
 		$('#buttRememberState').click(Troff.rememberCurrentState);
 		$('#buttMarker').click(Troff.createMarker);
