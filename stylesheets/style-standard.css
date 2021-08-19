@@ -456,13 +456,3 @@ textarea {
 .flex-column{-ms-flex-direction:column!important;flex-direction:column!important}
 .flex-row{-ms-flex-direction: row!important;flex-direction: row!important;}
 
-@media (min-width:576px){  /* ie width is GREATER than 576px */
-	/* NOT ON MOBILE-PHONES */
-
-	.col-sm {-ms-flex-preferred-size: 0;flex-basis: 0;-ms-flex-positive: 1;flex-grow: 1;max-width: 100%;}
-
-	/* sm is the size just above mobile phones */
-	.d-sm-none{display:none!important}
-	.d-sm-flex{display:-ms-flexbox!important;display:flex!important}
-	.d-sm-block{display:block!important;}
-}

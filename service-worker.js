@@ -38,15 +38,17 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.3.9",
+		version: "1.3.10",
 		urls: [
 			"/stylesheets/style.css",
+			"/stylesheets/style-max-width-576.css",
 			"/stylesheets/col1.css",
 			"/stylesheets/col2.css",
 			"/stylesheets/col3.css",
 			"/stylesheets/col4.css",
 			"/stylesheets/help-style.css",
 			"/stylesheets/style-standard.css",
+			"/stylesheets/style-standard-min-width-576.css",
 		]
 	},
 	{
