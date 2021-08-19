@@ -30,15 +30,6 @@ $( document ).ready( function() {
 		key = "TROFF_SAVE_VALUE_" + id;
 
 		ST_DB.set( key, value );
-	},
-
-
-	jQueryToggle = function( idString ){
-		if( $(idString).hasClass("hidden") ) {
-			$(idString).removeClass("hidden");
-		} else {
-			$(idString).addClass("hidden");
-		}
 	};
 
 
@@ -50,7 +41,7 @@ $( document ).ready( function() {
 
 $( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
 	let $target = $( event.target ).closest( "[data-st-css-selector-to-toggle]" );
-	jQueryToggle( $target.data( "st-css-selector-to-toggle" ) );
+	$( $target.data( "st-css-selector-to-toggle" ) ).toggleClass( "hidden" );
 } );
 
 $("[data-st-save-current-value]").change( dataSaveValue );

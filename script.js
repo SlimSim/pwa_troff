@@ -1970,8 +1970,7 @@ var TroffClass = function(){
 	}; // end createMarker   ********/
 
 	/*Troff*/this.toggleImportExport = function(){
-		IO.jQueryToggle( '#outerImportExportPopUpSquare');
-		//$('#outerImportExportPopUpSquare').toggle();
+		$( '#outerImportExportPopUpSquare').toggleClass( "hidden" );
 		IO.blurHack();
 	};
 
@@ -2689,8 +2688,7 @@ var TroffClass = function(){
 
 
 		this.toggleMoveMarkersMoreInfo = function(){
-			//$('#moveMarkersMoreInfoDialog').toggle();
-			IO.jQueryToggle( "#moveMarkersMoreInfoDialog" );
+			$( "#moveMarkersMoreInfoDialog" ).toggleClass( "hidden" );
 			IO.blurHack();
 		};
 
@@ -4218,11 +4216,6 @@ var IOClass = function(){
 		Troff.recallGlobalSettings();
 
 	};//end startFunc
-
-
-	/*IO*/this.jQueryToggle = function( idString ){
-		$( idString ).toggleClass( "hidden" );
-	};
 
 	/*IO*/ this.blurHack = function() {
 		document.getElementById( "blur-hack" ).focus({ preventScroll: true });
