@@ -307,13 +307,13 @@ function escapeRegExp(string) {
 }
 
 async function createSongAudio( path ) {
-
+	let songIsV2;
 	try {
-		const songIsV2 = await cacheImplementation.isSongV2( path )
+		songIsV2 = await cacheImplementation.isSongV2( path )
 	} catch ( e ) {
 		return errorHandler.fileHandler_fetchAndSaveResponse( new ShowUserException(`The song "${path}" does not exist.
-		if you have the file named "${path}", you can
-    simply import it again and the markers will be connected with the file!` ) );
+			if you have the file named "${path}", you can
+			simply import it again and the markers will be connected with the file!` ) );
 	}
 
 	if( songIsV2 ) {
