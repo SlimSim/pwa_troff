@@ -220,7 +220,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	*/
 
 	newElem.setAttribute('src', songData);
-	IO.removeLoadScreen();
 
 } //end setSong2
 
@@ -3949,7 +3948,7 @@ var DBClass = function(){
 			Troff.setAreas(song.abAreas);
 			Troff.setCurrentSongInDB();
 			Troff.zoom(song.zoomStartTime, song.zoomEndTime);
-
+			IO.removeLoadScreen();
 		};// end loadSongMetadata
 
 		nDBc.get(songId, function( song ){
@@ -5003,6 +5002,7 @@ $(function () {
 	"use strict";
 
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
+		IO.removeLoadScreen();
 		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 		$( "#downloadMarkersFromServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 0 ) {
@@ -5057,6 +5057,7 @@ $(function () {
 	};
 
 	errorHandler.fileHandler_fetchAndSaveResponse = function( error, fileName ) {
+		IO.removeLoadScreen();
 		$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 		$( "#downloadMarkersFromServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 404 ) {
@@ -5100,6 +5101,7 @@ $(function () {
 	};
 
 	errorHandler.fileHandler_sendFile = function( error, fileName ) {
+		IO.removeLoadScreen();
 		$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
 		if( error.status == 0 ) {
 			$.notify(
