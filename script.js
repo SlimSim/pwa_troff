@@ -220,6 +220,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	*/
 
 	newElem.setAttribute('src', songData);
+	IO.removeLoadScreen();
 
 } //end setSong2
 
@@ -3689,6 +3690,7 @@ var DBClass = function(){
 		nDBc.get('stroCurrentSongPathAndGalleryId', function( stroSong ) {
 			if(!stroSong){
 				Troff.setAreas([false, false, false, false]);
+				IO.removeLoadScreen();
 				return;
 			}
 			var oSong = JSON.parse(stroSong);
@@ -4025,6 +4027,12 @@ var IOClass = function(){
 	/*IO*/this.openWindow = function( event ) {
 		let $button = $( event.target ).closest( "[data-href]" );
 		window.open( $button.data( "href" ), $button.data( "target" ) );
+	};
+
+	/*IO*/this.removeLoadScreen = function() {
+		setTimeout( () => {
+			$( "#loadScreen, #loadScreenStyle" ).remove();
+		}, 0);
 	};
 
 	/*IO*/this.startFunc = function() {
