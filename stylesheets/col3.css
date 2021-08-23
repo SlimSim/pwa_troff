@@ -116,6 +116,7 @@ p{
 
 /* primaryColor */
 .primaryColor,
+.dataTables_empty,
 .bgEasyRead {
 	background-color: #9E9E9E;
 	background: #9E9E9E;
