@@ -1,8 +1,8 @@
 {
-  "name": "Troff - Training with music",
-  "short_name": "Troff",
-  "version": "1.2.4",
-  "description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
+	"name": "Troff - Training with music",
+	"short_name": "Troff",
+	"version": "1.2.4",
+	"description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
 	"offline_enabled": true,
 	"start_url": "/",
 	"display": "standalone",
@@ -51,6 +51,36 @@
 			"sizes": "512x512",
 			"type": "image/png",
 			"purpose": "maskable"
+		}
+	],
+	"shortcuts" : [
+		{
+			"name": "Troff",
+			"url": "/",
+			"description": "Start the music player and begin your training!"
+		},
+		{
+			"name": "Demo song",
+			"url": "/#26&demo.mp4 ",
+			"description": "Download the demo-song with markers, colors and see what you can do with Troff!"
+		},
+		{
+			"name": "Help",
+			"url": "/help.html",
+			"description": "Get tips on how to get the most out of Troff.",
+			"icons": [{ "src": "/assets/logos/question-mark-192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Privacy policy",
+			"url": "/privacy_policy.html",
+			"description": "Read our privacy policy to find out how we uses your data.",
+			"icons": [{ "src": "/assets/logos/shield-192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Terms and conditions",
+			"url": "/terms.html",
+			"description": "Read our Terms and conditions to find out what content you can submit.",
+			"icons": [{ "src": "/assets/logos/gavel-192.png", "sizes": "192x192" }]
 		}
 	]
 }
