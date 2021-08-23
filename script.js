@@ -4542,13 +4542,11 @@ var IOClass = function(){
 							}).click(setColor);
 		}
 		var butColor0 = generateColorBut("None");
-
 		var butColor1 = generateColorBut("Bisque");
 		var butColor2 = generateColorBut("Aqua");
 		var butColor3 = generateColorBut("Chartreuse");
 		var butColor4 = generateColorBut("Coral");
 		var butColor5 = generateColorBut("Pink");
-
 		var butColor6 = generateColorBut("Burlywood");
 		var butColor7 = generateColorBut("Darkcyan");
 		var butColor8 = generateColorBut("Yellowgreen");
@@ -4930,6 +4928,11 @@ loadExternalHtml = function(includes, callback) {
 }
 
 $(document).ready( async function() {
+	setTimeout( () => {
+		// don't show tha load-schreen for more than 10-seconds
+		// (so that it will be removed even if something breaks)
+		IO.removeLoadScreen();
+	}, 10000 );
 
 	// include external HTML-files:
 
