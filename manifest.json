@@ -83,5 +83,32 @@
 			"description": "Read our Terms and conditions to find out what content you can submit.",
 			"icons": [{ "src": "/assets/logos/gavel-192.png", "sizes": "192x192" }]
 		}
+	],
+	"screenshots" : [
+	  {
+	    "src": "/assets/screenshots/1_settings.webp",
+	    "sizes": "452x930",
+	    "type": "image/webp"
+	  },
+	  {
+	    "src": "/assets/screenshots/3_time_bar_markers.webp",
+	    "sizes": "452x930",
+	    "type": "image/webp"
+	  },
+	  {
+	    "src": "/assets/screenshots/4_time_bar_colors.webp",
+	    "sizes": "452x930",
+	    "type": "image/webp"
+	  },
+	  {
+	    "src": "/assets/screenshots/5_video.webp",
+	    "sizes": "452x930",
+	    "type": "image/webp"
+	  },
+	  {
+	    "src": "/assets/screenshots/hand_held_1.webp",
+	    "sizes": "2000x1300",
+	    "type": "image/webp"
+	  }
 	]
 }
