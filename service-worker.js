@@ -60,7 +60,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'app-assets',
-		version: "1.3.2",
+		version: "1.3.7",
 		urls: [
 			"/assets/logos/favicon.ico",
 			"/assets/logos/logo.svg",
@@ -71,13 +71,17 @@ var newAppCaches = [
 			"/assets/logos/logo-096.png",
 			"/assets/logos/logo-128.png",
 			"/assets/logos/logo-192-non-transparent.png",
+			"/assets/logos/logo-demo-192-maskable.png",
+			"/assets/logos/question-mark-192-maskable.png",
+			"/assets/logos/shield-192-maskable.png",
+			"/assets/logos/gavel-192-maskable.png",
 			"/assets/logos/logo-256.png",
 			"/assets/logos/logo-512.png",
 			"/assets/logos/logo-512-maskable.png",
 			"/manifest.json",
-			//"privacy_policy.html"
-			//"/LICENSE.html",
-			//"/terms.html", <-- should not be cached, but loaded every time to get the latest version.
+			"/privacy_policy.html",
+			"/LICENSE.html",
+			"/terms.html", //<-- should not be cached, but loaded every time to get the latest version.
 			"/README.md",
 		]
 	},
