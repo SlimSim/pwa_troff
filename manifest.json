@@ -1,7 +1,7 @@
 {
 	"name": "Troff - Training with music",
 	"short_name": "Troff",
-	"version": "1.2.4",
+	"version": "1.2.5",
 	"description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
 	"categories": ["music", "productivity"],
 	"offline_enabled": true,
@@ -56,32 +56,28 @@
 	],
 	"shortcuts" : [
 		{
-			"name": "Troff",
-			"url": "/",
-			"description": "Start the music player and begin your training!"
-		},
-		{
 			"name": "Demo song",
 			"url": "/#26&demo.mp4 ",
-			"description": "Download the demo-song with markers, colors and see what you can do with Troff!"
+			"description": "Download the demo-song with markers, colors and see what you can do with Troff!",
+			"icons": [{ "src": "/assets/logos/logo-demo-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
 		},
 		{
 			"name": "Help",
 			"url": "/help.html",
 			"description": "Get tips on how to get the most out of Troff.",
-			"icons": [{ "src": "/assets/logos/question-mark-192.png", "sizes": "192x192" }]
+			"icons": [{ "src": "/assets/logos/question-mark-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
 		},
 		{
 			"name": "Privacy policy",
 			"url": "/privacy_policy.html",
 			"description": "Read our privacy policy to find out how we uses your data.",
-			"icons": [{ "src": "/assets/logos/shield-192.png", "sizes": "192x192" }]
+			"icons": [{ "src": "/assets/logos/shield-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
 		},
 		{
 			"name": "Terms and conditions",
 			"url": "/terms.html",
 			"description": "Read our Terms and conditions to find out what content you can submit.",
-			"icons": [{ "src": "/assets/logos/gavel-192.png", "sizes": "192x192" }]
+			"icons": [{ "src": "/assets/logos/gavel-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
 		}
 	],
 	"screenshots" : [
@@ -110,5 +106,13 @@
 	    "sizes": "2000x1300",
 	    "type": "image/webp"
 	  }
-	]
+	],
+	"related_applications": [
+	  {
+	    "platform": "chrome_web_store",
+	    "url": "https://chrome.google.com/webstore/detail/troff-training-with-music/mebbbmcjdgoipnkpmfjndbolgdnakppl",
+	    "id": "mebbbmcjdgoipnkpmfjndbolgdnakppl"
+	  }
+	],
+	"prefer_related_applications": false
 }

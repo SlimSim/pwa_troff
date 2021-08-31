@@ -4,9 +4,9 @@
    height="1000"
    version="1.1"
    id="svg4"
-   sodipodi:docname="shield.svg"
+   sodipodi:docname="shield-maskable.svg"
    inkscape:version="1.1 (c4e8f9ed74, 2021-05-24)"
-   inkscape:export-filename="/home/simon/Dropbox/prog/Troff collection/pwa_Troff/assets/logos/shield-192.png"
+   inkscape:export-filename="/home/simon/Dropbox/prog/Troff collection/pwa_Troff/assets/logos/shield-192-maskable.png"
    inkscape:export-xdpi="18.431999"
    inkscape:export-ydpi="18.431999"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -24,12 +24,12 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="0"
      showgrid="false"
-     inkscape:zoom="0.4365"
-     inkscape:cx="256.58648"
-     inkscape:cy="693.0126"
-     inkscape:window-width="478"
+     inkscape:zoom="0.873"
+     inkscape:cx="431.84422"
+     inkscape:cy="522.90951"
+     inkscape:window-width="958"
      inkscape:window-height="1172"
-     inkscape:window-x="480"
+     inkscape:window-x="960"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg4" />
@@ -46,7 +46,7 @@
      inkscape:export-xdpi="90.037552"
      inkscape:export-ydpi="90.037552" />
   <path
-     d="m 806.97916,248.72922 -280,-116.66668 a 70.21875,70.21875 0 0 0 -53.81249,0 L 193.16666,248.72922 C 167.06249,259.52087 150,285.04171 150,313.33337 c 0,289.47918 166.97917,489.56251 323.02084,554.60419 17.20832,7.14582 36.60416,7.14582 53.81248,0 C 651.81251,815.87504 850,636.06255 850,313.33337 c 0,-28.29166 -17.06249,-53.8125 -43.02084,-64.60415 z M 500.14583,777.52088 500,221.89588 756.52083,328.79171 c -4.8125,220.79167 -119.72916,380.77084 -256.375,448.72917 z"
+     d="M 737.51869,323.01751 521.57686,233.04173 a 54.154161,54.154161 0 0 0 -41.50132,0 l -215.94182,89.97578 c -20.13209,8.32274 -33.29103,28.00495 -33.29103,49.82406 0,223.25237 128.77781,377.56079 249.12039,427.72229 13.27141,5.51101 28.22989,5.51101 41.50131,0 96.38655,-40.1517 249.23286,-178.82683 249.23286,-427.72229 0,-21.81911 -13.15894,-41.50132 -33.17856,-49.82406 z m -236.63626,407.81513 -0.11246,-428.50957 197.8342,82.44029 c -3.7115,170.27913 -92.33762,293.6584 -197.72174,346.06928 z"
      id="path2"
-     style="fill:#f2f2f2;fill-opacity:1;stroke-width:1.45833" />
+     style="fill:#f2f2f2;fill-opacity:1;stroke-width:1.12469" />
 </svg>
