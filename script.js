@@ -1493,6 +1493,13 @@ var TroffClass = function(){
 	};
 
 	/*Troff*/this.setLoopTo = function(number){
+		if( number === undefined ) {
+			number =
+					$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON").hasClass( "active" ) ?
+					"Inf" :
+					$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE").val();
+		}
+
 		if(number===0) number = "Inf";
 
 		$('.currentLoop').removeClass('currentLoop');
@@ -3506,11 +3513,6 @@ var DBClass = function(){
 		updateAttr( "iWaitBetweenLoops", "buttWaitBetweenLoops", "waitBetweenLoops" );
 		updateAttr( "wait", "buttWaitBetweenLoops", "waitBetweenLoops" );
 		updateAttr( "tempo", "tapTempo" );
-
-		if(!songObject.loopTimes) songObject.loopTimes =
-				$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON").hasClass( "active" ) ?
-				"inf" :
-				$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE").val();
 
 		if(!songObject.info ) songObject.info = "";
 		if(songObject.loopTimes > 9) songObject.loopTimes = "inf";
