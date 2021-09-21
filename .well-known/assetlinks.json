@@ -1,6 +1,6 @@
 [{
         "relation": ["delegate_permission/common.handle_all_urls"],
-        "target" : { "namespace": "android_app", "package_name": "com.slimsimapps.troff",
+        "target" : { "namespace": "android_app", "package_name": "slimsimapps.troff",
                      "sha256_cert_fingerprints": ["EC:0E:CF:9C:A3:92:E5:53:B0:34:CF:83:B0:EF:FB:F1:2B:70:48:74:17:95:41:F4:99:E2:B1:FF:BD:AF:2E:BE"] }
       }
 ]
