@@ -9,75 +9,7 @@ $(function () {
 	/*           Private methods and variables:
 	/************************************************/
 
-	const nrOfTriesToCallBackend = 3;
-
 	const nameOfCache = "songCache-v1.0";
-
-	const getTroffDataHelper = async function( troffDataId, fileName, nr ) {
-		console.log( "getTroffDataHelper -> " + nr + " of " + nrOfTriesToCallBackend + " tries , " + fileName);
-		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
-
-		try {
-			return await $.ajax({
-				url: url,
-				timeout: 60000,
-			})
-			.then(async function(response) {
-				if( response.status != "OK" ) {
-					console.error( "getTroffDataHelper, response is NOT ok, url = " + url + ", nr = " + nr, response );
-					if( nr >= nrOfTriesToCallBackend ) {
-						throw response;
-					} else {
-						return await getTroffDataHelper( troffDataId, fileName, nr+1 );
-					}
-				}
-				return response.payload;
-			});
-		} catch(XMLHttpRequest) {
-			if (XMLHttpRequest.readyState == 4) {
-				console.error( "getTroffDataHelper: HTTP error url = " + url + ", nr = " + nr, XMLHttpRequest );
-				// HTTP error (can be checked by XMLHttpRequest.status and XMLHttpRequest.statusText)
-			}
-			else if (XMLHttpRequest.readyState == 0) {
-				console.error( "getTroffDataHelper: Network error (i.e. connection refused, access denied due to CORS, etc.) url = " + url + ", nr = " + nr, XMLHttpRequest );
-			}
-			else {
-				console.error( "getTroffDataHelper: Something weird is happening: url = " + url + ", nr = " + nr, XMLHttpRequest );
-			}
-
-			if( nr >= nrOfTriesToCallBackend ) {
-				throw XMLHttpRequest;
-			} else {
-				return await getTroffDataHelper( troffDataId, fileName, nr+1 );
-			}
-		}
-	};
-
-
-	const fetchAndSaveResponseHelper = async function( fileId, songKey, nr ) {
-		console.log( "fetchAndSaveResponseHelper -> " + nr + " of " + nrOfTriesToCallBackend + " tries, " + songKey);
-		const url = environment.getDownloadFileEndpoint( fileId );
-			return await fetch( url )
-			.then( async (response) => {
-				if( !response.ok ) {
-					console.error( "fetchAndSaveResponseHelper, response is NOT ok, url = " + url + ", nr = " + nr, response );
-					if( nr >= nrOfTriesToCallBackend ) {
-						throw response;
-					} else {
-						return await fetchAndSaveResponseHelper( fileId, songKey, nr+1 );
-					}
-				}
-				return fileHandler.saveResponse( response, songKey );
-			})
-			.catch(async function( e ) {
-				console.error( "fetchAndSaveResponseHelper, catch! url = " + url + ", nr = " + nr, e );
-				if( nr >= nrOfTriesToCallBackend ) {
-					throw e;
-				} else {
-					return await fetchAndSaveResponseHelper( fileId, songKey, nr+1 );
-				}
-			});
-	};
 
 	const readFileTypeAndExtension = function( file, callbackFunk ) {
 		var reader = new FileReader();
@@ -163,44 +95,49 @@ $(function () {
 	};
 
 	backendService.getTroffData = async function( troffDataId, fileName ) {
-		return await getTroffDataHelper( troffDataId, fileName, 1 );
+		const url = environment.getTroffDataEndpoint(troffDataId, fileName);
+
+		return $.ajax({
+			url: url,
+			timeout: 50000,
+		})
+		.then( async function(response) {
+			if( response.status != "OK" ) {
+				throw response;
+			}
+			return response.payload;
+		});
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileId, songKey ) {
-		return await fetchAndSaveResponseHelper( fileId, songKey, 1 );
+		const url = environment.getDownloadFileEndpoint( fileId );
+		return await fetch( url )
+			.then( (response) => {
+			 if( !response.ok ) {
+				throw response;
+			 }
+			 return fileHandler.saveResponse( response, songKey );
+			});
 	};
 
+//private?
 	fileHandler.saveResponse = async function( response, url ) {
 		return caches.open( nameOfCache ).then( cache => {
 			return cache.put(url, response );
 		});
 	};
 
-
-    fileHandler.saveFile = async function( file, callbackFunk ) {
-        const url = file.name;
-        let init = { "status" : 200 , "statusText" : "version-3", "responseType" : "cors"};
-        return fileHandler.saveResponse( new Response( file, init ), url ).then( () => {
-            callbackFunk( url );
-        } );
-
-    };
-
-    /*
-	fileHandler.saveFile_old_and_working = async function( file, callbackFunk ) {
-		const url = file.name;
-
-		//TODO: Denna borde kunna använda sig av saveResponse, om jag kör en:
-		//TODO: return fileHandler.saveResponse( new Response( file, init ), url ).then( () => {callbackFunk( url ) });
-		return caches.open( nameOfCache ).then( cache => {
+//private?
+	fileHandler.saveFile = async function( file, callbackFunk ) {
+			const url = file.name;
 			let init = { "status" : 200 , "statusText" : "version-3", "responseType" : "cors"};
-			return cache.put(url, new Response( file, init ) ).then( () => {
-				callbackFunk( url );
-			});
-		});
-	};
-	*/
+			return fileHandler.saveResponse( new Response( file, init ), url ).then( () => {
+					callbackFunk( url );
+			} );
 
+	};
+
+//private?
 	fileHandler.getObjectUrlFromResponse = async function( response, songKey ) {
 
 		if (response === undefined) {
@@ -261,7 +198,7 @@ $(function () {
 				});
 
 			});
-        });
+    });
 	};
 
 	fileHandler.handleFiles = async function( files, callbackFunk ) {
