@@ -257,19 +257,12 @@ $(function () {
 					// Observe state change events such as progress, pause, and resume
 					// Get task progress, including the number of bytes uploaded
 					// and the total number of bytes to be uploaded
-					var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-					console.log("firebase.uploadFile: " + fileName + ' upload is ' + progress + '% done');
-					switch (snapshot.state) {
-						case firebase.storage.TaskState.PAUSED: // or 'paused'
-							console.log('firebase.uploadFile: Upload is paused');
-							break;
-						case firebase.storage.TaskState.RUNNING: // or 'running'
-							//console.log('firebase.uploadFile: Upload is running');
-							break;
+					if( typeof firebaseWrapper.onProgressUpdate == "function" ) {
+						const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+						firebaseWrapper.onProgressUpdate( Math.floor( progress ) );
 					}
 				},
 				(error) => {
-					// Handle unsuccessful uploads
 					console.error( error );
 					reject( error );
 				},
