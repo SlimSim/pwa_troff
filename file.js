@@ -312,68 +312,11 @@ $(function () {
 
 	};
 
+
+	// Initialize Firebase:
+	const app = firebase.initializeApp(environment.firebaseConfig);
+	//const analytics = getAnalytics(app);
+
 });
 
 
-
-try {
-	console.log( "initializing firebase:")
-	console.log( "firebase", firebase);
-
-	isProd = false;
-
-
-	  // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-	let firebaseConfig;
-
-	if( isProd ) {
-		firebaseConfig = {
-			apiKey: "prof-value-for-apiKey",
-			authDomain: "prof-value-for-authDomain",
-			projectId: "prof-value-for-projectId",
-			storageBucket: "prof-value-for-storageBucket",
-			messagingSenderId: "prof-value-for-messagingSenderId",
-			appId: "prof-value-for-appId",
-			measurementId: "prof-value-for-measurementId"
-		};
-	} else {
-		firebaseConfig = {
-			apiKey: "AIzaSyCIq1Uky8LifZS_t9mlnaEyFwyekP6UAwo",
-			authDomain: "firebasics-b1c61.firebaseapp.com",
-			projectId: "firebasics-b1c61",
-			storageBucket: "firebasics-b1c61.appspot.com",
-			messagingSenderId: "323604704297",
-			appId: "1:323604704297:web:5390b5bc5b5e6247b40038",
-			measurementId: "G-DJ4WWV7H1T"
-		};
-	}
-
-
-	// Initialize Firebase
-	const app = firebase.initializeApp(firebaseConfig);
-	//const analytics = getAnalytics(app);
-
-
-
-	//firebase.initializeApp();
-
-
-
-	//let app = firebase.app();
-	let features = [
-		'auth',
-		'database',
-		'firestore',
-		'functions',
-		'messaging',
-		'storage',
-		'analytics',
-		'remoteConfig',
-		'performance',
-	].filter(feature => typeof app[feature] === 'function');
-	console.log( `Firebase SDK loaded with ${features.join(', ')}` );
-} catch (e) {
-	console.error(e);
-	console.log('Error loading the Firebase SDK, check the console.' );
-}
