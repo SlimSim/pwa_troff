@@ -1601,30 +1601,5 @@
 
 
 
-
-
-	<script>
-		try {
-
-			firebase.initializeApp();
-			let app = firebase.app();
-			let features = [
-				'auth',
-				'database',
-				'firestore',
-				'functions',
-				'messaging',
-				'storage',
-				'analytics',
-				'remoteConfig',
-				'performance',
-			].filter(feature => typeof app[feature] === 'function');
-			console.log( `Firebase SDK loaded with ${features.join(', ')}` );
-		} catch (e) {
-			console.error(e);
-			console.log('Error loading the Firebase SDK, check the console.' );
-		}
-
-	</script>
 </body>
 </html>
