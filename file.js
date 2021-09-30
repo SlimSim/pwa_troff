@@ -312,7 +312,7 @@ $(function () {
 
 	};
 
-
+	console.log( "initializing firebase with ", environment.firebaseConfig );
 	// Initialize Firebase:
 	const app = firebase.initializeApp(environment.firebaseConfig);
 	//const analytics = getAnalytics(app);
