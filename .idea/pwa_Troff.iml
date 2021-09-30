@@ -2,7 +2,13 @@
 <module type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/assets/screenshots/extra" />
+      <excludeFolder url="file://$MODULE_DIR$/assets/screenshots/gimp" />
+      <excludeFolder url="file://$MODULE_DIR$/assets/screenshots/InkScape" />
+      <excludeFolder url="file://$MODULE_DIR$/assets/screenshots/Mockups" />
+      <excludeFolder url="file://$MODULE_DIR$/assets/screenshots/unfinished screengrabs" />
+    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
