@@ -44,6 +44,16 @@ const environment = {};
 			environment.banner.show = false;
 			environment.banner.text = "Production";
 			environment.showHiddenInProd = false;
+
+			environment.firebaseConfig = {
+				apiKey: "AIzaSyCuXb4zPlM50HMJGilbgM9DxvZuMGxG7yw",
+				authDomain: "troff-prod.firebaseapp.com",
+				projectId: "troff-prod",
+				storageBucket: "troff-prod.appspot.com",
+				messagingSenderId: "681700603804",
+				appId: "1:681700603804:web:94fe1e2ec88590ed147a59",
+				measurementId: "G-8XLWPKBFL1"
+			};
 			break;
 	}
 
