@@ -1131,7 +1131,7 @@ var TroffClass = function(){
 
 		try {
 			await Promise.all([
-				fileHandler.fetchAndSaveResponse( troffData.fileId, troffData.fileName ),
+				fileHandler.fetchAndSaveResponse( troffData.fileUrl, troffData.fileName ),
 				nDB.set( troffData.fileName, markers )]
 			);
 		} catch ( error ) {

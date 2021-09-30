@@ -32,6 +32,36 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 -->
 
+	<script defer src="assets/external/jquery-3.6.0.min.js"></script>
+
+
+	<!--
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+	-->
+
+<!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script-->
+   <!-- update the version number as needed -->
+<!--script defer src="/__/firebase/9.0.2/firebase-app-compat.js"></script-->
+   <!-- include only the Firebase features as you need -->
+<!--script defer src="/__/firebase/9.0.2/firebase-auth-compat.js"></script-->
+   <!--script defer src="/__/firebase/9.0.2/firebase-database-compat.js"></script-->
+<!--script defer src="/__/firebase/9.0.2/firebase-firestore-compat.js"></script-->
+   <!--script defer src="/__/firebase/9.0.2/firebase-functions-compat.js"></script-->
+   <!--script defer src="/__/firebase/9.0.2/firebase-messaging-compat.js"></script-->
+<!--script defer src="/__/firebase/9.0.2/firebase-storage-compat.js"></script-->
+   <!--script defer src="/__/firebase/9.0.2/firebase-analytics-compat.js"></script-->
+   <!--script defer src="/__/firebase/9.0.2/firebase-remote-config-compat.js"></script-->
+   <!--script defer src="/__/firebase/9.0.2/firebase-performance-compat.js"></script-->
+   <!--
+     initialize the SDK after all desired features are loaded, set useEmulator to false
+     to avoid connecting the SDK to running emulators.
+   -->
+<!--script defer src="/__/firebase/init.js?useEmulator=true"></script-->
 
 	<link
 			rel="preload"
@@ -974,7 +1004,7 @@
 			<ul class="bulletList small mt-1 ml-4">
 				<li>The content does not violate any law</li>
 				<li>You have the right to submit the content to Troff</li>
-				<li>You agree to, and the content does not violates, our <a target="_blank" rel="noopener" href="terms.html">terms and conditions</a></li>
+				<li>You agree to, and the content does not violate, our <a target="_blank" rel="noopener" href="terms.html">terms and conditions</a></li>
 			</ul>
 
 			<span class="flexRow">
@@ -1546,7 +1576,6 @@
 				type="text/css"
 				href="stylesheets/col1.css" />
 
-	<script defer src="assets/external/jquery-3.6.0.min.js"></script>
 
 	<script defer type="text/javascript" src="assets/external/DataTables/js/jquery.dataTables.min.js"></script>
 
@@ -1569,5 +1598,33 @@
 
 	<script defer type="text/javascript" src="FileApiImplementation.js"></script>
 	<script defer type="text/javascript" src="assets/internal/cookie_consent.js"></script>
+
+
+
+
+
+	<!--script>
+		try {
+
+			firebase.initializeApp();
+			let app = firebase.app();
+			let features = [
+				'auth',
+				'database',
+				'firestore',
+				'functions',
+				'messaging',
+				'storage',
+				'analytics',
+				'remoteConfig',
+				'performance',
+			].filter(feature => typeof app[feature] === 'function');
+			console.log( `Firebase SDK loaded with ${features.join(', ')}` );
+		} catch (e) {
+			console.error(e);
+			console.log('Error loading the Firebase SDK, check the console.' );
+		}
+
+	</script-->
 </body>
 </html>
