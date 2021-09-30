@@ -114,34 +114,17 @@ $(function () {
 	/*           Public methods:
 	/************************************************/
 
-	backendService.calCurl = async function() {
-		const url = environment.getCurlEndpoint();
-		$.ajax({
-			url: url,
-			timeout: 60000,
-		}).fail(function( xhr ) {
-			console.info( `backendService.calCurl: Could not cal "${url}", no big deal. Status: ${xhr.status}, ${xhr.statusText}` );
-		});
-	};
-
 	backendService.getTroffData = async function( troffDataId, fileName ) {
-		console.log( "backendService.getTroffData: troffDataId", troffDataId, "fileName", fileName);
-		//const url = environment.getTroffDataEndpoint(troffDataId, fileName);
 
 		const db = firebase.firestore();
-		console.log( "db", db);
 		const troffDataReference = db.collection( 'TroffData' ).doc( troffDataId );
 
 		return troffDataReference.get().then( doc => {
-			console.log( "doc", doc );
-			console.log( "doc.data()", doc.data() );
-
 			return doc.data();
 		});
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileUrl, songKey ) {
-		console.log( "fileUrl", fileUrl );
 		return await fetch( fileUrl )
 			.then( (response) => {
 				if( !response.ok ) {
@@ -312,7 +295,6 @@ $(function () {
 
 	};
 
-	console.log( "initializing firebase with ", environment.firebaseConfig );
 	// Initialize Firebase:
 	const app = firebase.initializeApp(environment.firebaseConfig);
 	//const analytics = getAnalytics(app);

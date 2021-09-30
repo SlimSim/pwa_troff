@@ -4965,8 +4965,6 @@ $(document).ready( async function() {
 			DB.getCurrentSong();
 		}
 
-		backendService.calCurl();
-
 	});
 });
 
