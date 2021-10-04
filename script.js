@@ -4972,7 +4972,7 @@ $(document).ready( async function() {
 		}
 
 		firebaseWrapper.onProgressUpdate = function( progress ) {
-			$( "#uploadPercentDone" ).text( Math.truncate( progress ) );
+			$( "#uploadPercentDone" ).text( Math.trunc( progress ) );
 		};
 
 	});
