@@ -957,6 +957,12 @@ var TroffClass = function(){
 			$( "#doneUploadingSongToServerDialog_songName" ).text( Troff.getCurrentSong() );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 		} else {
+
+			if( !window.navigator.onLine ) {
+				IO.alert( "Offline", "You appear to be offline, please wait until you have an internet connection and try again then.");
+				return;
+			}
+
 			$( ".showOnUploadComplete" ).removeClass( "hidden" );
 			$( ".showOnSongAlreadyUploaded" ).addClass( "hidden" );
 			$( "#uploadSongToServerDialog" ).removeClass( "hidden" );
@@ -4840,7 +4846,7 @@ var IOClass = function(){
 					$("body").append($("<div id='"+outerId+"' class='outerDialog'>"+
 						"<div id='"+innerId+"' style='"+innerDivStyle+
 										 "' class='secondaryColor'><h2 style='"+hStyle+"'>" + textHead +
-										 "</h2><p class=\"full-width\" style='"+pStyle+"' type='text' id='"+textId+
+										 "</h2><p class=\"full-width my-3\" style='"+pStyle+"' type='text' id='"+textId+
 										 "'>"+textBox+"</p> <input type='button' id='"+buttEnterId+
 										 "'class='regularButton' value='OK'/></div></div>"));
 					$("#"+textId).val(textBox).select();
