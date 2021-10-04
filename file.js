@@ -199,7 +199,12 @@ $(function () {
 
         let fileHash = await hashFile( file );
 
-				const fileUrl = await firebaseWrapper.uploadFile( fileHash, file );
+				const fileUrl = await firebaseWrapper.uploadFile( fileHash, file )
+					.catch( error => {
+						if( error instanceof ShowUserException ) {
+							throw error;
+						}
+					});
 
 				const troffData = {
 					//id: - to be added after hashing
@@ -248,30 +253,30 @@ $(function () {
     const storageRef = firebase.storage().ref( "TroffFiles" );
     const fileRef = storageRef.child( fileId );
     const task = fileRef.put( file );
-    const fileName = file.name;
 
 		return new Promise((resolve, reject) => {
 
-			task.on('state_changed',
-				(snapshot) => {
-					// Observe state change events such as progress, pause, and resume
-					// Get task progress, including the number of bytes uploaded
-					// and the total number of bytes to be uploaded
-					if( typeof firebaseWrapper.onProgressUpdate == "function" ) {
-						const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-						firebaseWrapper.onProgressUpdate( Math.floor( progress ) );
-					}
-				},
-				(error) => {
-					console.error( error );
-					reject( error );
-				},
-				() => {
-					task.snapshot.ref.getDownloadURL().then((downloadURL) => {
-						resolve( downloadURL );
-					});
+			task.on('state_changed', (snapshot) => {
+				// Observe state change events such as progress, pause, and resume
+				// Get task progress, including the number of bytes uploaded
+				// and the total number of bytes to be uploaded
+				if( typeof firebaseWrapper.onProgressUpdate == "function" ) {
+					const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+					firebaseWrapper.onProgressUpdate( Math.floor( progress ) );
 				}
-			);
+			}, error => {
+				task.snapshot.ref.getDownloadURL().then( downloadURL => {
+					resolve( downloadURL );
+				})
+				.catch( x => {
+					reject( new ShowUserException(`Can not upload the file to the server.
+								The server says: "${error.code}"` ) );
+				});
+			}, () => {
+				task.snapshot.ref.getDownloadURL().then( downloadURL => {
+					resolve( downloadURL );
+				});
+			});
 		});
 
 	};
@@ -281,11 +286,18 @@ $(function () {
 		const db = firebase.firestore();
 
 		return db.collection( "TroffData" ).doc( String( troffData.id ) ).set(troffData)
-			.then( ( x ) => {
+			.then( x => {
 				return troffData;
 			})
-			.catch(console.error);
-
+			.catch( (error) => {
+				return backendService.getTroffData( "" + troffData.id, troffData.fileName ).then( troffDataInFirebase => {
+					if( troffDataInFirebase ) {
+						return troffDataInFirebase;
+					}
+					throw new ShowUserException(`Can not upload the markers and settings to the server.
+								The server says: "${error.message}"` );
+				});
+			});
 	};
 
 	// Initialize Firebase:
