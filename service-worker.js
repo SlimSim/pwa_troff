@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.6.1",
+		version: "1.6.2",
 		urls: [
 			"/",
 			"/index.html",
@@ -159,7 +159,7 @@ self.addEventListener( "install", function ( event ) {
 				}
 			});
 
-			//return this.skipWaiting();
+			return this.skipWaiting();
 		})
 		.catch(function(e) {
 			console.info("Promise.all catch:", e);

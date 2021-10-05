@@ -589,7 +589,7 @@ function getSelectedSongs() {
 
 }
 
-function clickButtNewSongList_NEW( event ) {
+function clickButtNewSongList( event ) {
 	var songs = getSelectedSongs();
 	createSongList_NEW( songs );
 }
@@ -4096,7 +4096,7 @@ var IOClass = function(){
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
-		$( "#buttNewSongList_NEW" ).on( "click", clickButtNewSongList_NEW );
+		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
 		$( "#songListAll_NEW" ).click( clickSongList_NEW );
 		$( "#songListSelector" ).change( onChangeSongListSelector );
 
