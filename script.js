@@ -1004,7 +1004,7 @@ var TroffClass = function(){
 		}
 
 		await createSongAudio( troffData.fileName );
-		Troff.selectSongInSongList( fileName );
+		Troff.selectSongInSongList( troffData.fileName );
 
 	};
 

@@ -120,6 +120,10 @@ $(function () {
 		const troffDataReference = db.collection( 'TroffData' ).doc( troffDataId );
 
 		return troffDataReference.get().then( doc => {
+			if( !doc.exists ){
+				throw new ShowUserException(`Could not find song "${fileName}", with id "${troffDataId}", on the server,
+          perhaps the URL is wrong or the song has been removed` )
+			}
 			return doc.data();
 		});
 	};
