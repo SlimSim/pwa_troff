@@ -150,7 +150,7 @@ $(function () {
 			const url = file.name;
 			let init = { "status" : 200 , "statusText" : "version-3", "responseType" : "cors"};
 			return fileHandler.saveResponse( new Response( file, init ), url ).then( () => {
-					callbackFunk( url );
+					callbackFunk( url, file );
 			} );
 
 	};

@@ -56,6 +56,24 @@ var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 
 var MARKER_COLOR_PREFIX = "markerColor";
 
+const DATA_TABLE_COLUMNS = {
+	DATA_INFO : 0,
+	MENU : 1,
+	TYPE : 2,
+	DURATION : 3,
+	TITLE_OR_FILE_NAME : 4,
+	TITLE : 5,
+	ARTIST : 6,
+	ALBUM : 7,
+	TEMPO : 8,
+	GENRE : 9,
+	FILE_PATH : 10,
+	LAST_MODIFIED : 11,
+	FILE_SIZE : 12,
+	INFO : 13,
+	EXTENSION : 14,
+};
+
 
 function addImageToContentDiv() {
 	var content_div = document.getElementById('content');
@@ -226,7 +244,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )
 		return "<i class=\"hidden\">" + 0 + "</i>";//<i class=\"fa " + faType + "\"></i>",
-	return "<i class=\"hidden\">" + sortValue + "</i>" + stringValue;//<i class=\"fa " + faType + "\"></i>",
+	return "<i class=\"hidden\">" + ( "" + sortValue ).padStart( 16, "0" ) + "</i>" + stringValue;//<i class=\"fa " + faType + "\"></i>",
 }
 
 function clickSongList_NEW( event ) {
@@ -348,6 +366,9 @@ function addItem_NEW_2( key ) {
 
 		var tempo = "?",
 			info = "",
+			duration =  sortAndValue( 0, "" ),
+			lastModified = "",
+			size = "?",
 			//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
 			titleOrFileName = Troff.pathToName( key );
 		if( song != undefined ) {
@@ -360,25 +381,48 @@ function addItem_NEW_2( key ) {
 			"fullPath" : key
 		};
 
-		var newRow = $('#dataSongTable').DataTable().row.add( [
-			JSON.stringify( dataInfo ),
-//					null, // Play
-			null, // Menu ( Hidden TODO: bring forward and implement )
-			sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
-			"?",//sortAndValue( metadata.duration, Troff.secToDisp( metadata.duration ) ),//Duration
-			titleOrFileName,
-			key, //metadata.title || "",
-			"?",//metadata.artist || "",
-			"?",//metadata.album || "",
-			tempo,
-			"?",//metadata.genre || "",
-			"?",//mData.name + itemEntry.fullPath, //File Path
-			"",//Troff.milisToDisp( file.lastModified ),
-			"?",//sortAndValue( file.size, Troff.byteToDisp( file.size ) ),
-			info,
-			"." + extension
-		] )
+		if( song && song.fileData ){
+			if( song.fileData.duration ) {
+				duration = sortAndValue( song.fileData.duration, Troff.secToDisp( song.fileData.duration ) )
+			}
+			if( song.fileData.lastModified ) {
+				console.log( "song.fileData.lastModified", song.fileData.lastModified );
+				lastModified = Troff.milisToDisp( song.fileData.lastModified );
+			}
+			if( song.fileData.size ) {
+				console.log( "song.fileData.size", song.fileData.size, " vs ", Troff.byteToDisp( song.fileData.size ) );
+				size = sortAndValue( song.fileData.size, Troff.byteToDisp( song.fileData.size ) );
+			}
+		}
+
+/*
+		implementera:
+				newSongObject.fileData.lastModified = file.lastModified;
+				newSongObject.fileData.size = file.size;
+*/
+
+		let columns = [];
+
+		columns[ DATA_TABLE_COLUMNS.PLAY ]
+
+		columns[ DATA_TABLE_COLUMNS.DATA_INFO ] = JSON.stringify( dataInfo ),
+    columns[ DATA_TABLE_COLUMNS.MENU ] = null, // Menu ( Hidden TODO: bring forward and implement )
+    columns[ DATA_TABLE_COLUMNS.TYPE ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
+    columns[ DATA_TABLE_COLUMNS.DURATION ] = duration,//Duration
+    columns[ DATA_TABLE_COLUMNS.TITLE_OR_FILE_NAME ] = titleOrFileName,
+    columns[ DATA_TABLE_COLUMNS.TITLE ] = key, //metadata.title || "",
+    columns[ DATA_TABLE_COLUMNS.ARTIST ] = "?",//metadata.artist || "",
+    columns[ DATA_TABLE_COLUMNS.ALBUM ] = "?",//metadata.album || "",
+    columns[ DATA_TABLE_COLUMNS.TEMPO ] = tempo,
+    columns[ DATA_TABLE_COLUMNS.GENRE ] = "?",//metadata.genre || "",
+    columns[ DATA_TABLE_COLUMNS.FILE_PATH ] = "?",//mData.name + itemEntry.fullPath, //File Path
+    columns[ DATA_TABLE_COLUMNS.LAST_MODIFIED ] = lastModified,
+    columns[ DATA_TABLE_COLUMNS.FILE_SIZE ] = size,
+    columns[ DATA_TABLE_COLUMNS.INFO ] = info,
+    columns[ DATA_TABLE_COLUMNS.EXTENSION ] = "." + extension
+		var newRow = $('#dataSongTable').DataTable().row.add( columns )
 		//.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
+		//						onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
 		.draw( false )
 		.node();
 
@@ -498,8 +542,6 @@ function initSongTable() {
 		.on( "click", Troff.enterSerachDataTableSongList )
 		.on( "keyup", Troff.onSearchKeyup )
 		.on( "blur", Troff.exitSerachDataTableSongList );
-
-	//när man tar enter så rensas inte filtret (kanske en setting om den ska ränsas?)
 
 	$( "#dataSongTable_filter" ).find( "label" ).remove();
 
@@ -879,7 +921,15 @@ var TroffClass = function(){
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
-			fileHandler.handleFiles(event.target.files, (key) =>{
+			fileHandler.handleFiles(event.target.files, (key, file) =>{
+
+				let newSongObject = DB.fixSongObject();
+				newSongObject.fileData = {
+					lastModified : file.lastModified,
+					size : file.size
+				};
+				nDB.set( key, newSongObject );
+
 				addItem_NEW_2( key );
 				if( !$( "#dataSongTable_wrapper" ).find( "tr").hasClass( "selected" ) ) {
 					Troff.selectSongInSongList( key );
@@ -940,6 +990,33 @@ var TroffClass = function(){
 			return errorHandler.fileHandler_sendFile( error, songKey );
 		}
 	};
+
+	/*Troff*/this.milisToDisp = function( milis ) {
+		var date = new Date( milis );
+
+		var d = date.getDate();
+		var m = date.getMonth() + 1;
+
+		var dd = d < 10 ? "0"+d : d;
+		var mm = m < 10 ? "0"+m : m;
+		var year = "" + date.getFullYear();
+
+		return year + "-" +  mm + "-" + dd;
+	}
+
+	/*Troff*/this.byteToDisp = function( byte ) {
+		var nrTimes = 0;
+			units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+		while( byte >= 1000 ) {
+			nrTimes++;
+			byte = byte / 1000;
+			if(nrTimes > units.length)
+				return byte;
+		}
+
+		return Math.round( byte * 10 ) / 10 + units[nrTimes];
+	}
 
 	/*Troff*/ this.buttCopyUrlToClipboard = function() {
 		let url = $( "#doneUploadingSongToServerDialog" ).find( "#shareSongUrl").val();
@@ -1348,6 +1425,24 @@ var TroffClass = function(){
 	 * it should thus do the things that conect player to Troff...
 	 */
 	this.setMetadata = function(media){
+
+		let key = Troff.getCurrentSong();
+
+		let songObject = nDB.get( key );
+
+		if( songObject == null ) {
+			songObject = DB.fixSongObject( undefined, true );
+		}
+		if( songObject.fileData == null ) {
+			songObject.fileData = {};
+		}
+		if( songObject.fileData.duration == null ) {
+			songObject.fileData.duration = media.duration;
+			nDB.set( key, songObject );
+			$("#dataSongTable").DataTable().cells(".selected", DATA_TABLE_COLUMNS.DURATION).nodes()
+			.to$().html( sortAndValue( media.duration, Troff.secToDisp( media.duration ) ) );
+		}
+
 		var songLength = media.duration;
 		document.getElementById('timeBar').max = media.duration;
 		$('#maxTime')[0].innerHTML = Troff.secToDisp(media.duration);
@@ -3466,12 +3561,12 @@ var DBClass = function(){
 
 	this.cleanSong = function(songId, songObject){
 
-		songObject = DB.fixSongObject(songObject, songId);
+		songObject = DB.fixSongObject( songObject );
 
 		nDB.set( songId, songObject );
 	}; // end cleanSong
 
-	this.fixSongObject = function(songObject, songId){
+	this.fixSongObject = function(songObject, setMaxSongLength){
 
 		if (songObject === undefined) songObject = {};
 
@@ -3481,6 +3576,9 @@ var DBClass = function(){
 		} catch (e) {
 			console.error("getElementById('timeBar') does not exist." +
 			" Tried to call fixSongObject without it....");
+			songLength = "max";
+		}
+		if( setMaxSongLength ) {
 			songLength = "max";
 		}
 
