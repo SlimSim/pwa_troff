@@ -375,8 +375,8 @@ function addItem_NEW_2( key ) {
 			//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
 			titleOrFileName = Troff.pathToName( key );
 		if( song != undefined ) {
-			tempo = song.TROFF_VALUE_tapTempo;
-			info = song.info;
+			if( song.TROFF_VALUE_tapTempo != undefined ) tempo = song.TROFF_VALUE_tapTempo;
+			if( song.info != undefined ) info = song.info;
 		}
 
 		var dataInfo = {
