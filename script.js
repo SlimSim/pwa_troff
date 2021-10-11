@@ -1432,8 +1432,7 @@ var TroffClass = function(){
 		if( songObject.fileData.duration == null ) {
 			songObject.fileData.duration = media.duration;
 			nDB.set( key, songObject );
-			$("#dataSongTable").DataTable().cells(".selected", DATA_TABLE_COLUMNS.getPos( "DURATION" ) ).nodes()
-			.to$().html( sortAndValue( media.duration, Troff.secToDisp( media.duration ) ) );
+			IO.updateCellInDataTable( "DURATION", sortAndValue( media.duration, Troff.secToDisp( media.duration ) ) );
 		}
 
 		var songLength = media.duration;
@@ -3333,6 +3332,7 @@ var TroffClass = function(){
 
 				if( Number.isInteger( currTempo ) ){
 					$('#tapTempo').val( currTempo );
+					IO.updateCellInDataTable( "TEMPO", currTempo );
 				} else {
 					$('#tapTempo').val( "" );
 				}
@@ -4139,6 +4139,11 @@ var IOClass = function(){
 			cancelFullScreen.call(doc);
 		}
 	}
+
+	/*IO*/this.updateCellInDataTable = ( column, value ) => {
+		$("#dataSongTable").DataTable().cells(".selected", DATA_TABLE_COLUMNS.getPos( column ) ).nodes()
+    			.to$().html( value );
+	};
 
 	/*IO*/this.fullScreenChange = function(event) {
 		if( document.fullscreenElement ) {
