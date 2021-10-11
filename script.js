@@ -1432,7 +1432,7 @@ var TroffClass = function(){
 		if( songObject.fileData.duration == null ) {
 			songObject.fileData.duration = media.duration;
 			nDB.set( key, songObject );
-			$("#dataSongTable").DataTable().cells(".selected", DATA_TABLE_COLUMNS.DURATION).nodes()
+			$("#dataSongTable").DataTable().cells(".selected", DATA_TABLE_COLUMNS.getPos( "DURATION" ) ).nodes()
 			.to$().html( sortAndValue( media.duration, Troff.secToDisp( media.duration ) ) );
 		}
 
