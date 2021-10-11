@@ -57,23 +57,33 @@ var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 var MARKER_COLOR_PREFIX = "markerColor";
 
 const DATA_TABLE_COLUMNS = {
-	DATA_INFO : 0,
-	MENU : 1,
-	TYPE : 2,
-	DURATION : 3,
-	TITLE_OR_FILE_NAME : 4,
-	TITLE : 5,
-	ARTIST : 6,
-	ALBUM : 7,
-	TEMPO : 8,
-	GENRE : 9,
-	FILE_PATH : 10,
-	LAST_MODIFIED : 11,
-	FILE_SIZE : 12,
-	INFO : 13,
-	EXTENSION : 14,
-};
-
+	list : [
+		{id:"CHECKBOX", header : "Checkbox", default: "true"}, // 1, visible
+		//{id:"EDIT", header : "Edit", default: false"},
+		{id:"TYPE", header : "Type", default: "true"}, // 2 visible
+		{id:"DURATION", header : "Duration", default: "true"}, // 3 hidden
+		{id:"TITLE_OR_FILE_NAME", header : "Title Or File", default: "true", showOnAttachedState : true}, // 4 visible
+		{id:"TITLE", header : "Title", default: "false"},//5 visible ?
+		{id:"ARTIST", header : "Artist", default: "true"}, // 6 visible
+		{id:"ALBUM", header : "Album", default: "true"}, // 7, visible
+		{id:"TEMPO", header : "Tempo", default: "true"}, // 8 hidden
+		{id:"GENRE", header : "Genre", default: "true"}, // 9 hidden
+		{id:"FILE_PATH", header : "File path", default: "false"}, // 10 hidden
+		{id:"LAST_MODIFIED", header : "Modified", default: "false"}, // 11 visible
+		{id:"FILE_SIZE", header : "Size", default: "false"}, // 12 hidden
+		{id:"INFO", header : "Song info", default: "false"}, // 13 hidden
+		{id:"EXTENSION", header : "File type", default: "false"}, // 14 hidden
+		{id:"DATA_INFO", header : "dataInfo", default: "false", hideFromUser : true},
+	],
+  getPos : function( id ) {
+  	for( let i = 0; i < this.list.length; i++ ) {
+  		if( id == this.list[i].id ) {
+  			return i;
+  		}
+  	}
+  	return -1;
+  }
+}
 
 function addImageToContentDiv() {
 	var content_div = document.getElementById('content');
@@ -244,7 +254,10 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )
 		return "<i class=\"hidden\">" + 0 + "</i>";//<i class=\"fa " + faType + "\"></i>",
-	return "<i class=\"hidden\">" + ( "" + sortValue ).padStart( 16, "0" ) + "</i>" + stringValue;//<i class=\"fa " + faType + "\"></i>",
+	if( typeof String.prototype.padStart == "function" ) {
+		sortValue = sortValue.toString().padStart( 16, 0 );
+	}
+	return "<i class=\"hidden\">" + sortValue + "</i>" + stringValue;
 }
 
 function clickSongList_NEW( event ) {
@@ -284,23 +297,13 @@ function filterSongTable( list ) {
 		regex = "";
 	}
 	$('#dataSongTable').DataTable()
-		.columns( 0 )
+		.columns( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
 		.search( regex, true, false )
 		.draw();
 }
 
 function getFilterDataList(){
 	var list = [];
-	$( "#directoryList, #galleryList").find("button").filter( ".active, .selected" ).each(function(i, v){
-		var fullPath = $(v).attr("data-full-path");
-		var galleryId = $(v).attr("data-gallery-id");
-
-		if( fullPath ) {
-			list.push( "^{\"galleryId\":\"" + galleryId + "\",\"fullPath\":\"" + escapeRegExp( fullPath ) );
-		} else {
-			list.push( "^{\"galleryId\":\"" + galleryId + "\"" );
-		}
-	} );
 
 	$( "#songListsList").find("button").filter( ".active, .selected" ).each(function(i, v){
 		var innerData = $(v).data("songList");
@@ -386,40 +389,31 @@ function addItem_NEW_2( key ) {
 				duration = sortAndValue( song.fileData.duration, Troff.secToDisp( song.fileData.duration ) )
 			}
 			if( song.fileData.lastModified ) {
-				console.log( "song.fileData.lastModified", song.fileData.lastModified );
 				lastModified = Troff.milisToDisp( song.fileData.lastModified );
 			}
 			if( song.fileData.size ) {
-				console.log( "song.fileData.size", song.fileData.size, " vs ", Troff.byteToDisp( song.fileData.size ) );
 				size = sortAndValue( song.fileData.size, Troff.byteToDisp( song.fileData.size ) );
 			}
 		}
 
-/*
-		implementera:
-				newSongObject.fileData.lastModified = file.lastModified;
-				newSongObject.fileData.size = file.size;
-*/
-
 		let columns = [];
 
-		columns[ DATA_TABLE_COLUMNS.PLAY ]
-
-		columns[ DATA_TABLE_COLUMNS.DATA_INFO ] = JSON.stringify( dataInfo ),
-    columns[ DATA_TABLE_COLUMNS.MENU ] = null, // Menu ( Hidden TODO: bring forward and implement )
-    columns[ DATA_TABLE_COLUMNS.TYPE ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
-    columns[ DATA_TABLE_COLUMNS.DURATION ] = duration,//Duration
-    columns[ DATA_TABLE_COLUMNS.TITLE_OR_FILE_NAME ] = titleOrFileName,
-    columns[ DATA_TABLE_COLUMNS.TITLE ] = key, //metadata.title || "",
-    columns[ DATA_TABLE_COLUMNS.ARTIST ] = "?",//metadata.artist || "",
-    columns[ DATA_TABLE_COLUMNS.ALBUM ] = "?",//metadata.album || "",
-    columns[ DATA_TABLE_COLUMNS.TEMPO ] = tempo,
-    columns[ DATA_TABLE_COLUMNS.GENRE ] = "?",//metadata.genre || "",
-    columns[ DATA_TABLE_COLUMNS.FILE_PATH ] = "?",//mData.name + itemEntry.fullPath, //File Path
-    columns[ DATA_TABLE_COLUMNS.LAST_MODIFIED ] = lastModified,
-    columns[ DATA_TABLE_COLUMNS.FILE_SIZE ] = size,
-    columns[ DATA_TABLE_COLUMNS.INFO ] = info,
-    columns[ DATA_TABLE_COLUMNS.EXTENSION ] = "." + extension
+		columns[ DATA_TABLE_COLUMNS.getPos( "PLAY" ) ] = "play";
+		columns[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] = JSON.stringify( dataInfo ),
+    //columns[ DATA_TABLE_COLUMNS.getPos( "MENU" ) ] =  "null", // Menu ( Hidden TODO: bring forward and implement )
+    columns[ DATA_TABLE_COLUMNS.getPos( "TYPE" ) ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
+    columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,//Duration
+    columns[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" ) ] = titleOrFileName,
+    columns[ DATA_TABLE_COLUMNS.getPos( "TITLE" ) ] = key, //metadata.title || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "ARTIST" ) ] = "?",//metadata.artist || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "ALBUM" ) ] = "?",//metadata.album || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "TEMPO" ) ] = tempo,
+    columns[ DATA_TABLE_COLUMNS.getPos( "GENRE" ) ] = "?",//metadata.genre || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "FILE_PATH" ) ] = "?",//mData.name + itemEntry.fullPath, //File Path
+    columns[ DATA_TABLE_COLUMNS.getPos( "LAST_MODIFIED" ) ] = lastModified,
+    columns[ DATA_TABLE_COLUMNS.getPos( "FILE_SIZE" ) ] = size,
+    columns[ DATA_TABLE_COLUMNS.getPos( "INFO" ) ] = info,
+    columns[ DATA_TABLE_COLUMNS.getPos( "EXTENSION" ) ] = "." + extension
 		var newRow = $('#dataSongTable').DataTable().row.add( columns )
 		//.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
 		//						onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
@@ -444,24 +438,14 @@ function initSongTable() {
 
 	} );
 
-	$( "#dataSongTable" ).find( "thead" ).find( "tr" )
-		.append( $('<th>').text( "dataInfo" ) )
-//		.append( $('<th>').addClass("primaryColor").text( "Play" ) )
-		.append( $('<th>').addClass("primaryColor").append( selectAllCheckbox ) )
-		.append( $('<th>').addClass("primaryColor").text( "Type" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Duration" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Title Or File" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Title" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Artist" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Album" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Tempo" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Genre" ) )
-		.append( $('<th>').addClass("primaryColor").text( "File path" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Modified" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Size" ) )
-		.append( $('<th>').addClass("primaryColor").text( "Song info" ) )
-		.append( $('<th>').addClass("primaryColor").text( "File type" ) );
+	for( let i = 0; i < DATA_TABLE_COLUMNS.list.length; i++ ){
+		$( "#dataSongTable" ).find( "thead" ).find( "tr" )
+		.append( $('<th>').addClass("primaryColor").text( DATA_TABLE_COLUMNS.list[ i ].header ) )
+	}
 
+	$( "#dataSongTable" ).find( "thead" ).find( "tr" ).children()
+		.eq( DATA_TABLE_COLUMNS.getPos( "CHECKBOX" ) )
+		.text( "" ).append( selectAllCheckbox );
 
 	dataSongTable = $("#dataSongTable").DataTable({
 		"language": {
@@ -482,11 +466,7 @@ function initSongTable() {
 			$(row).attr( "draggable", "true");
 		},
 		"columnDefs": [ {
-			"targets": [ 0 ],
-			"visible": false,
-			//"searchable": false
-		}, {
-			"targets": 1,
+			"targets": DATA_TABLE_COLUMNS.getPos( "CHECKBOX" ),
 			"data": null,
 			"className": "preventSongLoad secondaryColor",
 			"orderable": false,
@@ -501,8 +481,8 @@ function initSongTable() {
 			event.dataTransfer = event.originalEvent.dataTransfer;
 		}
 		var jsonDataInfo = JSON.stringify({
-			name : dataSongTable.row( $(this) ).data()[4],
-			data : JSON.parse( dataSongTable.row( $(this) ).data()[0] )
+			name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" ) ],
+			data : JSON.parse( dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
 		});
 
 		event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
@@ -514,7 +494,7 @@ function initSongTable() {
 			return;
 		}
 
-		var dataInfo = JSON.parse(dataSongTable.row( $(this) ).data()[0]);
+		var dataInfo = JSON.parse(dataSongTable.row( $(this) ).data()[DATA_TABLE_COLUMNS.getPos( "DATA_INFO" )]);
 
 		$("#dataSongTable").DataTable().rows(".selected").nodes().to$().removeClass( "selected" );
 		$(this).addClass("selected");
@@ -616,8 +596,8 @@ function getSelectedSongs() {
 	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
 		checkedVissibleSongs = $checkboxes.closest("tr").map( function(i, v) {
 			return {
-				name : $('#dataSongTable').DataTable().row( v ).data()[4],
-				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[0] )
+				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" )],
+				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
 			};
 		}),
 		i,
@@ -871,11 +851,15 @@ function dataTableColumnPicker( event ) {
 
 	$target.toggleClass( "active" );
 
-	var columnVisibilityArray = $("#columnToggleParent").children().map(function(i, v){
-		return $(v).hasClass("active");
-	}).get();
+	const columnVisibilityObject = {};
 
-	DB.saveVal( TROFF_SETTING_SONG_COLUMN_TOGGLE, columnVisibilityArray );
+	$( "#columnToggleParent" ).children().map( function( i, v ) {
+		const dataColumn = $(v).data( "column" );
+		const columnId = DATA_TABLE_COLUMNS.list[ dataColumn ].id;
+		columnVisibilityObject[ columnId ] = $(v).hasClass("active");
+	});
+
+	DB.saveVal( TROFF_SETTING_SONG_COLUMN_TOGGLE, columnVisibilityObject );
 
 	// Toggle the visibility
 	column.visible( ! column.visible() );
@@ -885,7 +869,7 @@ function dataTableColumnPicker( event ) {
 
 function dataTableShowOnlyColumnsForAttachedState() {
 	$( "#columnToggleParent" ).children().each( function( i, v ) {
-		if( $(v).data( "show-on-attached-state" ) ) {
+		if( DATA_TABLE_COLUMNS.list[ $(v).data( "column" ) ].showOnAttachedState ) {
 			$('#dataSongTable').DataTable().column( $(v).data( "column" ) ).visible( true );
 		} else {
 			$('#dataSongTable').DataTable().column( $(v).data( "column" ) ).visible( false );
@@ -1050,7 +1034,7 @@ var TroffClass = function(){
 		let list = $("#dataSongTable").DataTable().rows().data()
 
 		for( let i = 0; i < list.length; i++ ) {
-			let data = JSON.parse(  list[i][0] );
+			let data = JSON.parse(  list[i][ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] );
 			if( data.fullPath == fileName ) {
 				$("#dataSongTable").DataTable().rows().nodes().to$().eq(i).addClass("selected");
 				return;
@@ -1243,14 +1227,23 @@ var TroffClass = function(){
 				}, 42);
 				return;
 			}
-			$( "#columnToggleParent" ).children().each( function( i, v ) {
-				if( columnToggle[i] ) {
-					$(v).addClass( "active" );
-				} else {
-					var column = $('#dataSongTable').DataTable().column( $(v).data('column') );
-					column.visible( false );
+
+			DATA_TABLE_COLUMNS.list.forEach( ( v, i ) => {
+				if( v.hideFromUser ) {
+					const column = $('#dataSongTable').DataTable().column( DATA_TABLE_COLUMNS.getPos( v.id ) );
+        	column.visible( false );
+					return;
 				}
-			} );
+
+				$( "#columnToggleParent" ).append(
+					$( "<input>").attr("type", "button")
+						.attr( "data-column", i )
+						.addClass( "stOnOffButton" )
+						.toggleClass( "active", columnToggle[ v.id ] )
+						.val( v.header )
+						.click( dataTableColumnPicker )
+				);
+			});
 			callback();
 		} );
 	}
@@ -1431,7 +1424,7 @@ var TroffClass = function(){
 		let songObject = nDB.get( key );
 
 		if( songObject == null ) {
-			songObject = DB.fixSongObject( undefined, true );
+			songObject = DB.fixSongObject();
 		}
 		if( songObject.fileData == null ) {
 			songObject.fileData = {};
@@ -2528,7 +2521,7 @@ var TroffClass = function(){
 
 				var maxTime = Number(document.getElementById('timeBar').max);
 
-				if(time == "max" || time > maxTime){
+				if(oMarker.time == "max" || time > maxTime){
 					time = maxTime;
 					var song = Troff.getCurrentSong();
 				}
@@ -3566,9 +3559,13 @@ var DBClass = function(){
 		nDB.set( songId, songObject );
 	}; // end cleanSong
 
-	this.fixSongObject = function(songObject, setMaxSongLength){
+	this.fixSongObject = function( songObject ){
+		let setMaxSongLength = false;
 
-		if (songObject === undefined) songObject = {};
+		if( songObject === undefined ) {
+			songObject = {};
+			setMaxSongLength = true;
+		}
 
 		var songLength;
 		try{
@@ -3619,7 +3616,6 @@ var DBClass = function(){
 		updateAttr( "tempo", "tapTempo" );
 
 		if(!songObject.info ) songObject.info = "";
-		if(songObject.loopTimes > 9) songObject.loopTimes = "inf";
 		if(songObject.aStates === undefined) songObject.aStates = [];
 		if(!songObject.zoomStartTime) songObject.zoomStartTime = 0;
 		if(!songObject.markers) songObject.markers = [oMarkerStart, oMarkerEnd];
@@ -3659,21 +3655,40 @@ var DBClass = function(){
 
 			DB.fixDefaultValue( allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true );
 
-			DB.fixDefaultValue( allKeys, TROFF_SETTING_SONG_COLUMN_TOGGLE, [
-				$("#columnToggleParent" ).find( "[data-column=3]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=4]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=5]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=6]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=7]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=8]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=9]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=10]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=11]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=12]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=13]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=14]" ).data( "default" ),
-				$("#columnToggleParent" ).find( "[data-column=15]" ).data( "default" ),
-			] );
+			const columnToggleList = {};
+			DATA_TABLE_COLUMNS.list.forEach( ( v, i ) => {
+				columnToggleList[ v.id ] = (v.default == "true") || (v.default == true);
+			} );
+
+			/*
+				This following if is ONLY to ease the transition from TROFF_SETTING_SONG_COLUMN_TOGGLE as an array to an object.
+				Can be removed after user have opened the app with this code once...
+			*/
+			if( nDB.get( TROFF_SETTING_SONG_COLUMN_TOGGLE ) != null ) {
+				if( nDB.get( TROFF_SETTING_SONG_COLUMN_TOGGLE ).constructor.name == "Array" ) {
+					const previousColumnToggleList = nDB.get( TROFF_SETTING_SONG_COLUMN_TOGGLE );
+
+					const newColumnToggle = {}
+					newColumnToggle.CHECKBOX = previousColumnToggleList[0];
+					newColumnToggle.TYPE = previousColumnToggleList[1];
+					newColumnToggle.DURATION = previousColumnToggleList[2];
+					newColumnToggle.TITLE_OR_FILE_NAME = previousColumnToggleList[3];
+					newColumnToggle.TITLE = previousColumnToggleList[4];
+					newColumnToggle.ARTIST = previousColumnToggleList[5];
+					newColumnToggle.ALBUM = previousColumnToggleList[6];
+					newColumnToggle.TEMPO = previousColumnToggleList[7];
+					newColumnToggle.GENRE = previousColumnToggleList[8];
+					newColumnToggle.FILE_PATH = previousColumnToggleList[9];
+					newColumnToggle.LAST_MODIFIED = previousColumnToggleList[10];
+					newColumnToggle.FILE_SIZE = previousColumnToggleList[11];
+					newColumnToggle.INFO = previousColumnToggleList[12];
+					newColumnToggle.EXTENSION = previousColumnToggleList[13];
+
+					nDB.set( TROFF_SETTING_SONG_COLUMN_TOGGLE, newColumnToggle );
+				}
+			}
+
+			DB.fixDefaultValue( allKeys, TROFF_SETTING_SONG_COLUMN_TOGGLE, columnToggleList );
 
 			if( allKeys.indexOf( TROFF_CURRENT_STATE_OF_SONG_LISTS ) == -1 ) {
 				Troff.saveCurrentStateOfSonglists();
@@ -4216,7 +4231,6 @@ var IOClass = function(){
 		$( "#toggleExtraExtendedMarkerColor" ).click ( Troff.toggleExtraExtendedMarkerColor );
 
 		$( "#themePickerParent" ).find("input").click ( Troff.setTheme );
-		$( "#columnToggleParent" ).find("input").click( dataTableColumnPicker );
 
 
 		$('#buttPlayUiButtonParent').click( Troff.playUiButton );
