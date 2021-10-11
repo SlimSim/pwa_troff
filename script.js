@@ -3335,6 +3335,7 @@ var TroffClass = function(){
 					IO.updateCellInDataTable( "TEMPO", currTempo );
 				} else {
 					$('#tapTempo').val( "" );
+					IO.updateCellInDataTable( "TEMPO", "" );
 				}
 
 				$('#tapTempo')[0].dispatchEvent(new Event('input'));
