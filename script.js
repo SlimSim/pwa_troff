@@ -3553,6 +3553,9 @@ var DBClass = function(){
 	};
 
 	this.cleanSong = function(songId, songObject){
+		if ( typeof songObject !== "object" || songId.indexOf( "TROFF_" ) === 0 ){
+			return; // this object should not be a song, and should not be cleaned
+		}
 
 		songObject = DB.fixSongObject( songObject );
 
@@ -3731,9 +3734,6 @@ var DBClass = function(){
 			} )
 
 			allKeys.forEach( (key, i) => {
-				if( key == "TROFF_CURRENT_STATE_OF_SONG_LISTS" ) {
-					return;
-				}
 				DB.cleanSong(key, nDB.get( key ) );
 			} );
 		});//end get all keys
