@@ -57,7 +57,7 @@
 	"shortcuts" : [
 		{
 			"name": "Demo song",
-			"url": "/#26&demo.mp4 ",
+			"url": "/#2582986745&demo.mp4 ",
 			"description": "Download the demo-song with markers, colors and see what you can do with Troff!",
 			"icons": [{ "src": "/assets/logos/logo-demo-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
 		},
