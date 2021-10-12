@@ -204,7 +204,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		closeSongDialog();
 	}
 
-	//var path = fullPath;
 	DB.setCurrentSong(path, "pwa-galleryId");
 
 	Troff.setWaitForLoad(path, "pwa-galleryId");
@@ -230,22 +229,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	// TODO: metadata? finns det något sätt jag kan få fram metadata från filerna?
 	$( "#currentPath" ).text( path );
 
-	$('#currentSong').text( Troff.pathToName( path ) ).show();
-	$('#currentArtist').text( "" );
-
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
-
-	// TODO: se om jag kan få till metadata? (att man själv får fylla i det kanske? )
-	/*if(metadata.title){
-		$('#currentSong').text( metadata.title ).show();
-	} else {
-		$('#currentArtist').text(Troff.pathToName(path));
-	}
-	if(metadata.artist)
-		$('#currentArtist').text( metadata.artist );
-	if(metadata.album)
-		$('#currentAlbum').text ( metadata.album ).show();
-	*/
 
 	newElem.setAttribute('src', songData);
 
@@ -1498,7 +1482,13 @@ var TroffClass = function(){
 		document.getElementById('timeBar').max = media.duration;
 		$('#maxTime')[0].innerHTML = Troff.secToDisp(media.duration);
 
-		DB.getSongMetaDataOf(Troff.getCurrentSong());
+		// TODO: Flytta allt i getSongMedaDataOf hit, där det hör hemma, jag har ju lixom songObject!
+		DB.getSongMetaDataOf( key );
+
+		$( "#currentArtist" ).text( songObject.fileData.artist );
+		$( "#currentSong" ).text( songObject.fileData.title || Troff.pathToName( key ) );
+		$( "#currentAlbum" ).text( songObject.fileData.album );
+
 		media.addEventListener("timeupdate", Troff.timeupdateAudio );
 		IO.removeLoadScreen();
 	};
@@ -1914,8 +1904,8 @@ var TroffClass = function(){
 		strCurrentSong = path;
 		iCurrentGalleryId = iGalleryId;
 
-		$('#currentArtist').text("Wait for song to load");
-		$('#currentSong, #currentAlbum').hide();
+		$('#currentSong').text("Wait for song to load");
+		$('#currentArtist, #currentAlbum').text( "" );
 	};
 
 	this.setCurrentSongInDB = function(){ //slim sim here
