@@ -1158,3 +1158,114 @@ table.dataTable .dataTables_empty{
 		height: fit-content !important;
 	}
 }
+
+@media screen and (max-width: 576px) { /* ie width is LESS than 576px */
+	/* This is only for mobile phones: */
+	body{
+		overflow-x: auto !important;
+	}
+
+	.mw-fit-content-on-mobile	{	min-width: fit-content		!important;	}
+
+	.full-height-on-mobile {
+		height: 100%;
+	}
+	.w-auto-on-mobile {
+		width: auto;
+	}
+	.normalSize-on-mobile {
+		font-size: 14px;
+	}
+
+	[for=fileUploader] {
+		font-size: 1.1em;
+	}
+	.svg-inline--fa.fa-stack-1x {
+		height: 1em;
+		width: 1em;
+		left: 0.5em;
+		top: 0.3em;
+	}
+
+	input[type="button"],
+	input[type="text"],
+	input[type="number"],
+	button, [for=fileUploader] {
+		min-width: 42px;
+		min-height: 35px;
+	}
+	#userNoteSection {
+		min-width: 300px;
+	}
+
+	.fixToBottomRightOnMobile {
+		position: fixed;
+		right: 13px;
+		bottom: 18px;
+		z-index: 11;
+	}
+
+	.doubleSliders{
+		height: 95%;
+	}
+
+	#timeSection{
+		flex-direction: row-reverse;
+		align-items: baseline;
+	}
+
+	.overflow-y-auto-on-mobile {
+		overflow-y: auto !important;
+	}
+
+	.roundButt {
+		border-width: 27px;
+	}
+	.roundButt:hover{
+		border-width: 29px;
+		margin: 2px;
+	}
+	.roundButt:active{
+		border-width: 31px;
+		margin: 0;
+	}
+
+	.centerRoundButtCommon {
+		width: 52px;
+		height: 52px;
+	}
+
+	.big-on-mobile {
+		font-size: 58px;
+	}
+
+	.play.hidden-on-mobile-on-play,
+	.pause.hidden-on-mobile-on-pause {
+		display: none !important;
+	}
+
+	#infoSection.wait {
+		position: fixed;
+		background: transparent;
+		text-align: center;
+		width: 100%;
+	}
+
+	#loopButtons {
+		width: 155px;
+	}
+
+	.colorPickerWidth {
+		width: 170px;
+	}
+
+	.hidden-on-mobile {
+		display: none !important;
+	}
+
+	/* special for songList*/
+  #songPickerAttachedArea #superSonglistArea,
+  #songPickerAttachedArea #songListsList {
+  	max-width: calc(100vw - 10px);
+  }
+}
