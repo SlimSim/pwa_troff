@@ -947,6 +947,60 @@
 		</div>
 	</div>
 
+	<div id="editSongDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Edit Song</h2>
+
+			<form>
+				<div class="form-group row">
+					<label for="editSongFile" class="col-sm col-form-label">File:</label>
+					<div class="col-sm">
+						<input type="text" readonly class="form-control-plaintext" id="editSongFile" value="take me" >
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="editSongTitle" class="col-sm col-form-label">Title</label>
+					<div class="col-sm">
+						<input type="text" class="form-control writableField" id="editSongTitle" >
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="editSongArtist" class="col-sm col-form-label">Artist</label>
+					<div class="col-sm">
+						<input type="text" class="form-control writableField" id="editSongArtist" >
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="editSongAlbum" class="col-sm col-form-label">Album</label>
+					<div class="col-sm">
+						<input type="text" class="form-control writableField" id="editSongAlbum" >
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="editSongGenre" class="col-sm col-form-label">Genre</label>
+					<div class="col-sm">
+						<input type="email" class="form-control writableField" id="editSongGenre" >
+					</div>
+				</div>
+
+			</form>
+
+			<div class="flexRow pt-4">
+				<input
+					type="button"
+					class="regularButton buttWidthStandard dialogCancelButton"
+					id="editSongDialogSave"
+					value="Save" />
+				<input
+					type="button"
+					class="regularButton buttWidthStandard dialogCancelButton"
+					value="Cancel" />
+			</div>
+		</div>
+
+	</div>
+
 
 	<div id="importTroffDataToExistingSongDialog" class="outerDialog noCloseOnClick hidden">
 		<div class="innerDialog mediumDialog marginDialog flexCol">

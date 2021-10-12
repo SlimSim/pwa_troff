@@ -51,18 +51,6 @@
 
 
 //script.js rad 1223
-	/*Troff*/this.enterWritableField = function() {
-		IO.setEnterFunction(function(event){
-			if(event.ctrlKey==1){ //Ctrl+Enter will exit
-				IO.blurHack();
-				return false;
-			}
-			return true;
-		});
-	}
-	/*Troff*/this.exitWritableField = function() {
-		IO.clearEnterFunction();
-	}
 
 	/*Troff*/this.getGlobalSettins = function( callback ) {
 		nDBc.getAllKeys( function( keys ) {

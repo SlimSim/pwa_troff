@@ -59,7 +59,7 @@ var MARKER_COLOR_PREFIX = "markerColor";
 const DATA_TABLE_COLUMNS = {
 	list : [
 		{id:"CHECKBOX", header : "Checkbox", default: "true"}, // 1, visible
-		//{id:"EDIT", header : "Edit", default: false"},
+		{id:"EDIT", header : "Edit", default: "true"},
 		{id:"TYPE", header : "Type", default: "true"}, // 2 visible
 		{id:"DURATION", header : "Duration", default: "true"}, // 3 hidden
 		{id:"TITLE_OR_FILE_NAME", header : "Title Or File", default: "true", showOnAttachedState : true}, // 4 visible
@@ -68,7 +68,6 @@ const DATA_TABLE_COLUMNS = {
 		{id:"ALBUM", header : "Album", default: "true"}, // 7, visible
 		{id:"TEMPO", header : "Tempo", default: "true"}, // 8 hidden
 		{id:"GENRE", header : "Genre", default: "true"}, // 9 hidden
-		{id:"FILE_PATH", header : "File path", default: "false"}, // 10 hidden
 		{id:"LAST_MODIFIED", header : "Modified", default: "false"}, // 11 visible
 		{id:"FILE_SIZE", header : "Size", default: "false"}, // 12 hidden
 		{id:"INFO", header : "Song info", default: "false"}, // 13 hidden
@@ -367,11 +366,16 @@ function addItem_NEW_2( key ) {
 
 	DB.getVal( key, function( song ) {
 
-		var tempo = "?",
+		var tempo = "",
 			info = "",
 			duration =  sortAndValue( 0, "" ),
 			lastModified = "",
-			size = "?",
+			size = "",
+			title = "",
+			artist = "",
+      album = "",
+      genre = "",
+
 			//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
 			titleOrFileName = Troff.pathToName( key );
 		if( song != undefined ) {
@@ -384,7 +388,7 @@ function addItem_NEW_2( key ) {
 			"fullPath" : key
 		};
 
-		if( song && song.fileData ){
+		if( song && song.fileData ) {
 			if( song.fileData.duration ) {
 				duration = sortAndValue( song.fileData.duration, Troff.secToDisp( song.fileData.duration ) )
 			}
@@ -394,22 +398,23 @@ function addItem_NEW_2( key ) {
 			if( song.fileData.size ) {
 				size = sortAndValue( song.fileData.size, Troff.byteToDisp( song.fileData.size ) );
 			}
+			title = song.fileData.title;
+			artist = song.fileData.artist;
+			album = song.fileData.album;
+			genre = song.fileData.genre;
 		}
 
 		let columns = [];
 
-		columns[ DATA_TABLE_COLUMNS.getPos( "PLAY" ) ] = "play";
 		columns[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] = JSON.stringify( dataInfo ),
-    //columns[ DATA_TABLE_COLUMNS.getPos( "MENU" ) ] =  "null", // Menu ( Hidden TODO: bring forward and implement )
     columns[ DATA_TABLE_COLUMNS.getPos( "TYPE" ) ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
     columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,//Duration
     columns[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" ) ] = titleOrFileName,
-    columns[ DATA_TABLE_COLUMNS.getPos( "TITLE" ) ] = key, //metadata.title || "",
-    columns[ DATA_TABLE_COLUMNS.getPos( "ARTIST" ) ] = "?",//metadata.artist || "",
-    columns[ DATA_TABLE_COLUMNS.getPos( "ALBUM" ) ] = "?",//metadata.album || "",
-    columns[ DATA_TABLE_COLUMNS.getPos( "TEMPO" ) ] = tempo,
-    columns[ DATA_TABLE_COLUMNS.getPos( "GENRE" ) ] = "?",//metadata.genre || "",
-    columns[ DATA_TABLE_COLUMNS.getPos( "FILE_PATH" ) ] = "?",//mData.name + itemEntry.fullPath, //File Path
+    columns[ DATA_TABLE_COLUMNS.getPos( "TITLE" ) ] = title || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "ARTIST" ) ] = artist || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "ALBUM" ) ] = album || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "TEMPO" ) ] = tempo || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "GENRE" ) ] = genre || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "LAST_MODIFIED" ) ] = lastModified,
     columns[ DATA_TABLE_COLUMNS.getPos( "FILE_SIZE" ) ] = size,
     columns[ DATA_TABLE_COLUMNS.getPos( "INFO" ) ] = info,
@@ -419,6 +424,9 @@ function addItem_NEW_2( key ) {
 		//						onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
 		.draw( false )
 		.node();
+
+		// todo: remove DATA_INFO and use this data-song-key instead!
+		$( newRow ).attr( "data-song-key", key );
 
 		if(selected_path == key && selected_galleryId == galleryId){
 			$( newRow ).addClass( "selected" );
@@ -470,7 +478,16 @@ function initSongTable() {
 			"data": null,
 			"className": "preventSongLoad secondaryColor",
 			"orderable": false,
-			"defaultContent": '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>'
+			"defaultContent": '<div class="checkbox"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>'
+		}, {
+			"targets": DATA_TABLE_COLUMNS.getPos( "EDIT" ),
+			"data": null,
+			"className": "preventSongLoad secondaryColor onClickOpenEditSongDialog",
+			"orderable": false,
+			"defaultContent": '<button class="regularButton"><i class="cr-icon fa fa-pencil"></i></button>'
+		}, {
+			"targets": DATA_TABLE_COLUMNS.getPos( "TYPE" ),
+			"className": "secondaryColor text-center",
 		}, {
 			"targets": [ "_all" ],
 			"className": "secondaryColor",
@@ -490,6 +507,12 @@ function initSongTable() {
 	.on( 'click', 'tbody tr', function ( event ) {
 
 		let $td = $( event.target ).closest( "td, th" );
+		const songKey = $(this).data( "song-key" );
+
+		if( $td.hasClass( "onClickOpenEditSongDialog" ) ){
+			openEditSongDialog( songKey );
+		}
+
 		if( $td.hasClass( "preventSongLoad" ) || $td.hasClass( "dataTables_empty" ) ) {
 			return;
 		}
@@ -556,6 +579,18 @@ function initSongTable() {
 	var songListsObserver = new MutationObserver(songListsObserverCallback);
 	// Start observing the target node for configured mutations
 	songListsObserver.observe( $( "#toggleSonglistsId" )[0], songListsObserverConfig);
+}
+
+function openEditSongDialog( songKey ) {
+	const fileData = nDB.get( songKey ).fileData;
+
+	$( "#editSongDialog" ).removeClass( "hidden" );
+
+	$( "#editSongFile" ).val( songKey );
+  $( "#editSongTitle" ).val( fileData.title );
+  $( "#editSongArtist" ).val( fileData.artist );
+  $( "#editSongAlbum" ).val( fileData.album );
+  $( "#editSongGenre" ).val( fileData.genre );
 }
 
 function onChangeSongListSelector( event ) {
@@ -1208,6 +1243,37 @@ var TroffClass = function(){
 		await createSongAudio( troffData.fileName );
 		addItem_NEW_2( troffData.fileName );
 	};
+
+	/*Troff*/this.editSongDialogSave = ( event ) => {
+		const key = $( "#editSongFile" ).val();
+		const songObject = nDB.get( key );
+
+		songObject.fileData.title = $( "#editSongTitle" ).val();
+		songObject.fileData.artist = $( "#editSongArtist" ).val();
+		songObject.fileData.album = $( "#editSongAlbum" ).val();
+		songObject.fileData.genre = $( "#editSongGenre" ).val();
+
+		IO.updateCellInDataTable( "TITLE", songObject.fileData.title, key );
+		IO.updateCellInDataTable( "ARTIST", songObject.fileData.artist, key );
+		IO.updateCellInDataTable( "ALBUM", songObject.fileData.album, key );
+		IO.updateCellInDataTable( "GENRE", songObject.fileData.genre, key );
+
+		nDB.set( key, songObject );
+	}
+
+	/*Troff*/this.enterWritableField = function() {
+		IO.setEnterFunction(function(event){
+			if(event.ctrlKey==1){ //Ctrl+Enter will exit
+				IO.blurHack();
+				return false;
+			}
+			return true;
+		});
+	}
+
+	/*Troff*/this.exitWritableField = function() {
+		IO.clearEnterFunction();
+	}
 
 	this.recallFloatingDialog = function() {
 		DB.getVal( "TROFF_SETTING_SONG_LIST_FLOATING_DIALOG", function( floatingDialog ){
@@ -3682,7 +3748,6 @@ var DBClass = function(){
 					newColumnToggle.ALBUM = previousColumnToggleList[6];
 					newColumnToggle.TEMPO = previousColumnToggleList[7];
 					newColumnToggle.GENRE = previousColumnToggleList[8];
-					newColumnToggle.FILE_PATH = previousColumnToggleList[9];
 					newColumnToggle.LAST_MODIFIED = previousColumnToggleList[10];
 					newColumnToggle.FILE_SIZE = previousColumnToggleList[11];
 					newColumnToggle.INFO = previousColumnToggleList[12];
@@ -4141,9 +4206,13 @@ var IOClass = function(){
 		}
 	}
 
-	/*IO*/this.updateCellInDataTable = ( column, value ) => {
-		$("#dataSongTable").DataTable().cells(".selected", DATA_TABLE_COLUMNS.getPos( column ) ).nodes()
-    			.to$().html( value );
+	/*IO*/this.updateCellInDataTable = ( column, value, key ) => {
+		if( key == undefined ) {
+			$("#dataSongTable").DataTable().cell( ".selected", DATA_TABLE_COLUMNS.getPos( column ) ).data( value );
+			return;
+		}
+		$("#dataSongTable").DataTable().cell( "[data-song-key='" + key + "']", DATA_TABLE_COLUMNS.getPos( column ) )
+			.data( value );
 	};
 
 	/*IO*/this.fullScreenChange = function(event) {
@@ -4264,6 +4333,8 @@ var IOClass = function(){
 
 		$( ".writableField" ).on( "click", Troff.enterWritableField );
 		$( ".writableField" ).on( "blur", Troff.exitWritableField );
+
+		$( "#editSongDialogSave" ).on( "click", Troff.editSongDialogSave );
 
 		$('#buttCancelMoveMarkersDialog').click(Troff.hideMoveMarkers);
 		$('#buttPromptMoveMarkers').click(Troff.showMoveMarkers);
