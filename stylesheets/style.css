@@ -1133,15 +1133,6 @@ table.dataTable .dataTables_empty{
 
 }
 
-position-absolute-center {
-	position: absolute;
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	align-items: center;
-}
-
-
 .overFilm{
 	z-index: 10;
 }
