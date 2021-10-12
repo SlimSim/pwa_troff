@@ -58,20 +58,20 @@ var MARKER_COLOR_PREFIX = "markerColor";
 
 const DATA_TABLE_COLUMNS = {
 	list : [
-		{id:"CHECKBOX", header : "Checkbox", default: "true"}, // 1, visible
+		{id:"CHECKBOX", header : "Checkbox", default: "true"},
 		{id:"EDIT", header : "Edit", default: "true"},
-		{id:"TYPE", header : "Type", default: "true"}, // 2 visible
-		{id:"DURATION", header : "Duration", default: "true"}, // 3 hidden
-		{id:"TITLE_OR_FILE_NAME", header : "Title Or File", default: "true", showOnAttachedState : true}, // 4 visible
-		{id:"TITLE", header : "Title", default: "false"},//5 visible ?
-		{id:"ARTIST", header : "Artist", default: "true"}, // 6 visible
-		{id:"ALBUM", header : "Album", default: "true"}, // 7, visible
-		{id:"TEMPO", header : "Tempo", default: "true"}, // 8 hidden
-		{id:"GENRE", header : "Genre", default: "true"}, // 9 hidden
-		{id:"LAST_MODIFIED", header : "Modified", default: "false"}, // 11 visible
-		{id:"FILE_SIZE", header : "Size", default: "false"}, // 12 hidden
-		{id:"INFO", header : "Song info", default: "false"}, // 13 hidden
-		{id:"EXTENSION", header : "File type", default: "false"}, // 14 hidden
+		{id:"TYPE", header : "Type", default: "true"},
+		{id:"DURATION", header : "Duration", default: "true"},
+		{id:"TITLE_OR_FILE_NAME", header : "Title Or File", default: "true", showOnAttachedState : true},
+		{id:"TITLE", header : "Title", default: "false"},
+		{id:"ARTIST", header : "Artist", default: "true"},
+		{id:"ALBUM", header : "Album", default: "true"},
+		{id:"TEMPO", header : "Tempo", default: "true"},
+		{id:"GENRE", header : "Genre", default: "true"},
+		{id:"LAST_MODIFIED", header : "Modified", default: "false"},
+		{id:"FILE_SIZE", header : "Size", default: "false"},
+		{id:"INFO", header : "Song info", default: "false"},
+		{id:"EXTENSION", header : "File type", default: "false"},
 		{id:"DATA_INFO", header : "dataInfo", default: "false", hideFromUser : true},
 	],
   getPos : function( id ) {
@@ -517,12 +517,10 @@ function initSongTable() {
 			return;
 		}
 
-		var dataInfo = JSON.parse(dataSongTable.row( $(this) ).data()[DATA_TABLE_COLUMNS.getPos( "DATA_INFO" )]);
-
 		$("#dataSongTable").DataTable().rows(".selected").nodes().to$().removeClass( "selected" );
 		$(this).addClass("selected");
 
-		createSongAudio( /*key:*/ dataInfo.fullPath );
+		createSongAudio( $(this).data( "song-key" ) );
 	} );
 
 	/*
@@ -1066,15 +1064,7 @@ var TroffClass = function(){
 	}
 
 	/*Troff*/ this.selectSongInSongList = function( fileName ) {
-		let list = $("#dataSongTable").DataTable().rows().data()
-
-		for( let i = 0; i < list.length; i++ ) {
-			let data = JSON.parse(  list[i][ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] );
-			if( data.fullPath == fileName ) {
-				$("#dataSongTable").DataTable().rows().nodes().to$().eq(i).addClass("selected");
-				return;
-			}
-		}
+		$( "[data-song-key='" + fileName + "']" ).addClass("selected");
 	};
 
 	/*Troff*/ this.importTroffDataToExistingSong_importNew = async function( event ) {
