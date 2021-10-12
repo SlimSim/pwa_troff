@@ -224,6 +224,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	if ( !newElem ) {
 		console.error( "setSong2: newElem is not defined!" );
+		IO.removeLoadScreen();
 		return;
 	}
 	// TODO: metadata? finns det något sätt jag kan få fram metadata från filerna?
@@ -1144,6 +1145,7 @@ var TroffClass = function(){
 		$( "#importTroffDataToExistingSong_serverId" ).val( serverId );
 		$( "#downloadSongFromServerInProgressDialog" ).addClass("hidden");
 		$( "#importTroffDataToExistingSongDialog" ).removeClass("hidden");
+		IO.removeLoadScreen();
 	};
 
 	/*Troff*/ this.showMarkersDownloadInProgressDialog = function( songName ) {
@@ -1159,6 +1161,7 @@ var TroffClass = function(){
 		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
 		$( ".downloadSongFromServerInProgressDialog_song" ).removeClass( "hidden" );
 		$( ".downloadSongFromServerInProgressDialog_markers" ).addClass( "hidden" );
+		IO.removeLoadScreen();
 	}
 
 	/*Troff*/ this.downloadSongFromServerButDataFromCacheExists = async function(fileName, serverId, troffDataFromCache ) {
@@ -1497,9 +1500,11 @@ var TroffClass = function(){
 
 		DB.getSongMetaDataOf(Troff.getCurrentSong());
 		media.addEventListener("timeupdate", Troff.timeupdateAudio );
+		IO.removeLoadScreen();
 	};
 
 	this.setMetadataImage = function( media ) {
+		IO.removeLoadScreen();
 		DB.getImageMetaDataOf(Troff.getCurrentSong());
 	}
 
@@ -4131,7 +4136,6 @@ var DBClass = function(){
 			Troff.setAreas(song.abAreas);
 			Troff.setCurrentSongInDB();
 			Troff.zoom(song.zoomStartTime, song.zoomEndTime);
-			IO.removeLoadScreen();
 		};// end loadSongMetadata
 
 		nDBc.get(songId, function( song ){
@@ -4221,9 +4225,7 @@ var IOClass = function(){
 	};
 
 	/*IO*/this.removeLoadScreen = function() {
-		setTimeout( () => {
-			$( "#loadScreen, #loadScreenStyle" ).remove();
-		}, 0);
+		$( "#loadScreen, #loadScreenStyle" ).remove();
 	};
 
 	/*IO*/this.startFunc = function() {
