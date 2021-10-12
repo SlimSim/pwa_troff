@@ -1872,43 +1872,25 @@ var TroffClass = function(){
 	};
 
 	this.updateSecondsLeft = function(){
-		if(Troff.getMood() == 'pause'){
-				if ($('#buttPauseBefStart').hasClass('active'))
-				$('.secondsLeft').html( $('#pauseBeforeStart').val() );
-				else
-				$('.secondsLeft').html( 0 );
+		if(Troff.getMood() != 'pause') {
+			return;
 		}
+		if ($('#buttPauseBefStart').hasClass('active'))
+			$('.secondsLeft').html( $('#pauseBeforeStart').val() );
+		else
+			$('.secondsLeft').html( 0 );
 	};
 
 	this.setMood = function( mood ){
-		if(mood == 'pause'){
-			$('#infoSection, .moodColorizedText').removeClass('play wait').addClass('pause');
-			Troff.updateSecondsLeft();
-			if(document.querySelector('#playInFullscreenButt.active')){
-				document.querySelector('#videoBox').classList.remove('fullscreen');
-				document.querySelector('#infoSection').classList.remove('overFilm');
-			}
-			$('#buttPlayUiButtonPlay').removeClass("hidden");
-			$('#buttPlayUiButtonPause').addClass("hidden");
+		let infoSectionClasses = "overFilm bg-transparent position-absolute align-items-center w-100 flexCol";
+		$('#infoSection, .moodColorizedText').removeClass('play pause wait').addClass( mood );
+		if( $( '#playInFullscreenButt' ).hasClass( "active" ) ) {
+			$('#videoBox').toggleClass( 'fullscreen', mood != 'pause' );
 		}
-		if(mood == 'wait'){
-			$('#infoSection, .moodColorizedText').removeClass('play pause').addClass('wait');
-			if(document.querySelector('#playInFullscreenButt.active')){
-				document.querySelector('#videoBox').classList.add('fullscreen');
-				document.querySelector('#infoSection').classList.add('overFilm');
-			}
-			$('#buttPlayUiButtonPlay').addClass("hidden");
-			$('#buttPlayUiButtonPause').removeClass("hidden");
-		}
-		if(mood == 'play'){
-			$('#infoSection, .moodColorizedText').removeClass('wait pause').addClass('play');
-			if(document.querySelector('#playInFullscreenButt.active')){
-				document.querySelector('#videoBox').classList.add('fullscreen');
-				document.querySelector('#infoSection').classList.remove('overFilm');
-			}
-			$('#buttPlayUiButtonPause').removeClass("hidden");
-			$('#buttPlayUiButtonPlay').addClass("hidden");
-		}
+		$( "#infoSection" ).toggleClass( infoSectionClasses, mood == 'wait' && $('#videoBox').hasClass( 'fullscreen' ) );
+		$( '#buttPlayUiButtonPlay' ).toggleClass("hidden", mood != 'pause');
+		$( '#buttPlayUiButtonPause' ).toggleClass("hidden", mood == 'pause');
+		Troff.updateSecondsLeft();
 	};
 	// Troff. ...
 	/*Troff*/this.setCurrentSongStrings = function( currentSong, currentGalleryId ) {

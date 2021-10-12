@@ -428,6 +428,10 @@ textarea {
 	background-color: #dc3545 !important;
 }
 
+.bg-transparent {
+	background: transparent !important;
+}
+
 .flip-both					{ transform: scale(-1); }
 .flip-vertical			{ transform: scaleY(-1); }
 .flip-horizontal		{ transform: scaleX(-1); }
@@ -458,6 +462,7 @@ textarea {
 .d-block{		display:block!important;	}
 .d-inline{	display:inline!important;	}
 
+.position-absolute	{		position: absolute !important;	}
 .position-relative	{		position: relative !important;	}
 
 .flex-wrap{-ms-flex-wrap:wrap!important;flex-wrap:wrap!important}
