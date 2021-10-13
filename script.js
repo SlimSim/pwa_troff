@@ -1070,7 +1070,7 @@ var TroffClass = function(){
 	}
 
 	/*Troff*/ this.selectSongInSongList = function( fileName ) {
-		$( "[data-song-key='" + fileName + "']" ).addClass("selected");
+		$( '[data-song-key="' + fileName + '"]' ).addClass("selected");
 	};
 
 	/*Troff*/ this.importTroffDataToExistingSong_importNew = async function( event ) {
