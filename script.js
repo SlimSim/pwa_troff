@@ -578,7 +578,11 @@ function initSongTable() {
 }
 
 function openEditSongDialog( songKey ) {
-	const fileData = nDB.get( songKey ).fileData;
+	let fileData = nDB.get( songKey ).fileData;
+
+	if( fileData == undefined ) {
+		fileData = DB.fixSongObject();
+	}
 
 	$( "#editSongDialog" ).removeClass( "hidden" );
 
@@ -3635,6 +3639,10 @@ var DBClass = function(){
 			setMaxSongLength = true;
 		}
 
+		if( songObject.fileData === undefined ) {
+			songObject.fileData = {};
+		}
+
 		var songLength;
 		try{
 			songLength = Number(document.getElementById('timeBar').max);
@@ -4208,7 +4216,7 @@ var IOClass = function(){
 			$("#dataSongTable").DataTable().cell( ".selected", DATA_TABLE_COLUMNS.getPos( column ) ).data( value );
 			return;
 		}
-		$("#dataSongTable").DataTable().cell( "[data-song-key='" + key + "']", DATA_TABLE_COLUMNS.getPos( column ) )
+		$("#dataSongTable").DataTable().cell( '[data-song-key="' + key + '"]', DATA_TABLE_COLUMNS.getPos( column ) )
 			.data( value );
 	};
 
