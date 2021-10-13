@@ -70,6 +70,7 @@ const DATA_TABLE_COLUMNS = {
 		{id:"ALBUM", header : "Album", default: "true"},
 		{id:"TEMPO", header : "Tempo", default: "true"},
 		{id:"GENRE", header : "Genre", default: "true"},
+		{id:"TAGS", header : "Tags", default: "false"},
 		{id:"LAST_MODIFIED", header : "Modified", default: "false"},
 		{id:"FILE_SIZE", header : "Size", default: "false"},
 		{id:"INFO", header : "Song info", default: "false"},
@@ -364,6 +365,7 @@ function addItem_NEW_2( key ) {
 			artist = "",
       album = "",
       genre = "",
+      tags = "",
       titleOrFileName = "";
 
 		if( song != undefined ) {
@@ -389,6 +391,7 @@ function addItem_NEW_2( key ) {
 			title = song.fileData.title;
 			choreography = song.fileData.choreography;
 			choreographer = song.fileData.choreographer;
+			tags = song.fileData.tags;
 			artist = song.fileData.artist;
 			album = song.fileData.album;
 			genre = song.fileData.genre;
@@ -409,6 +412,7 @@ function addItem_NEW_2( key ) {
     columns[ DATA_TABLE_COLUMNS.getPos( "ALBUM" ) ] = album || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "TEMPO" ) ] = tempo || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "GENRE" ) ] = genre || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "TAGS" ) ] = tags || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "LAST_MODIFIED" ) ] = lastModified,
     columns[ DATA_TABLE_COLUMNS.getPos( "FILE_SIZE" ) ] = size,
     columns[ DATA_TABLE_COLUMNS.getPos( "INFO" ) ] = info,
@@ -585,6 +589,7 @@ function openEditSongDialog( songKey ) {
   $( "#editSongArtist" ).val( fileData.artist );
   $( "#editSongAlbum" ).val( fileData.album );
   $( "#editSongGenre" ).val( fileData.genre );
+  $( "#editSongTags" ).val( fileData.tags );
   Troff.onEditUpdateName();
 }
 
@@ -1243,6 +1248,7 @@ var TroffClass = function(){
 		songObject.fileData.artist = $( "#editSongArtist" ).val();
 		songObject.fileData.album = $( "#editSongAlbum" ).val();
 		songObject.fileData.genre = $( "#editSongGenre" ).val();
+		songObject.fileData.tags = $( "#editSongTags" ).val();
 
 		IO.updateCellInDataTable( "TITLE_OR_FILE_NAME", $( "#editSongName" ).val(), key );
 		IO.updateCellInDataTable( "TITLE", songObject.fileData.title, key );
@@ -1251,6 +1257,7 @@ var TroffClass = function(){
 		IO.updateCellInDataTable( "ARTIST", songObject.fileData.artist, key );
 		IO.updateCellInDataTable( "ALBUM", songObject.fileData.album, key );
 		IO.updateCellInDataTable( "GENRE", songObject.fileData.genre, key );
+		IO.updateCellInDataTable( "TAGS", songObject.fileData.tags, key );
 
 		nDB.set( key, songObject );
 	};
