@@ -22,6 +22,7 @@ const environment = {};
 			};
 			break;
 		case "slimsim.github.io":
+		case "beta.troff.app":
 			environment.banner.show = true;
 			environment.banner.text = "Welcome to test";
 			environment.showHiddenInProd = true;
