@@ -578,7 +578,11 @@ function initSongTable() {
 }
 
 function openEditSongDialog( songKey ) {
-	const fileData = nDB.get( songKey ).fileData;
+	let fileData = nDB.get( songKey ).fileData;
+
+	if( fileData == undefined ) {
+		fileData = DB.fixSongObject();
+	}
 
 	$( "#editSongDialog" ).removeClass( "hidden" );
 
@@ -3633,6 +3637,10 @@ var DBClass = function(){
 		if( songObject === undefined ) {
 			songObject = {};
 			setMaxSongLength = true;
+		}
+
+		if( songObject.fileData === undefined ) {
+			songObject.fileData = {};
 		}
 
 		var songLength;
