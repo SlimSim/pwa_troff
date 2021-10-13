@@ -948,39 +948,57 @@
 	</div>
 
 	<div id="editSongDialog" class="outerDialog hidden">
-		<div class="innerDialog flexCol mediumDialog">
+		<div class="innerDialog flexCol">
 			<h2 class="paragraph">Edit Song</h2>
 
 			<form>
 				<div class="form-group row">
 					<label for="editSongFile" class="col-sm col-form-label">File:</label>
 					<div class="col-sm">
-						<input type="text" readonly class="form-control-plaintext" id="editSongFile" value="take me" >
+						<input type="text" readonly class="form-control-plaintext writableField" id="editSongFile" value="" >
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="editSongName" class="col-sm col-form-label">Name:</label>
+					<div class="col-sm">
+						<input type="text" readonly class="form-control-plaintext writableField" id="editSongName" value="" >
 					</div>
 				</div>
 
 				<div class="form-group row">
+					<label for="editSongChoreography" class="col-sm col-form-label">Choreography</label>
+					<div class="col-sm">
+						<input type="text" class="form-control writableField onEditUpdateName" id="editSongChoreography" value="">
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="editSongChoreographer" class="col-sm col-form-label">Choreographer</label>
+					<div class="col-sm">
+						<input type="text" class="form-control writableField" id="editSongChoreographer" value="">
+					</div>
+				</div>
+				<div class="form-group row">
 					<label for="editSongTitle" class="col-sm col-form-label">Title</label>
 					<div class="col-sm">
-						<input type="text" class="form-control writableField" id="editSongTitle" >
+						<input type="text" class="form-control writableField onEditUpdateName" id="editSongTitle" value="">
 					</div>
 				</div>
 				<div class="form-group row">
 					<label for="editSongArtist" class="col-sm col-form-label">Artist</label>
 					<div class="col-sm">
-						<input type="text" class="form-control writableField" id="editSongArtist" >
+						<input type="text" class="form-control writableField" id="editSongArtist" value="">
 					</div>
 				</div>
 				<div class="form-group row">
 					<label for="editSongAlbum" class="col-sm col-form-label">Album</label>
 					<div class="col-sm">
-						<input type="text" class="form-control writableField" id="editSongAlbum" >
+						<input type="text" class="form-control writableField" id="editSongAlbum" value="">
 					</div>
 				</div>
 				<div class="form-group row">
 					<label for="editSongGenre" class="col-sm col-form-label">Genre</label>
 					<div class="col-sm">
-						<input type="email" class="form-control writableField" id="editSongGenre" >
+						<input type="email" class="form-control writableField" id="editSongGenre" value="">
 					</div>
 				</div>
 

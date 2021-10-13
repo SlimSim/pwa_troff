@@ -62,7 +62,9 @@ const DATA_TABLE_COLUMNS = {
 		{id:"EDIT", header : "Edit", default: "true"},
 		{id:"TYPE", header : "Type", default: "true"},
 		{id:"DURATION", header : "Duration", default: "true"},
-		{id:"TITLE_OR_FILE_NAME", header : "Title Or File", default: "true", showOnAttachedState : true},
+		{id:"TITLE_OR_FILE_NAME", header : "Name", default: "true", showOnAttachedState : true},
+		{id:"CHOREOGRAPHY", header : "Choreography", default: "false"},
+		{id:"CHOREOGRAPHER", header : "Choreographer", default: "false"},
 		{id:"TITLE", header : "Title", default: "false"},
 		{id:"ARTIST", header : "Artist", default: "true"},
 		{id:"ALBUM", header : "Album", default: "true"},
@@ -357,6 +359,8 @@ function addItem_NEW_2( key ) {
 			lastModified = "",
 			size = "",
 			title = "",
+			choreography = "",
+			choreographer = "",
 			artist = "",
       album = "",
       genre = "",
@@ -383,13 +387,14 @@ function addItem_NEW_2( key ) {
 				size = sortAndValue( song.fileData.size, Troff.byteToDisp( song.fileData.size ) );
 			}
 			title = song.fileData.title;
+			choreography = song.fileData.choreography;
+			choreographer = song.fileData.choreographer;
 			artist = song.fileData.artist;
 			album = song.fileData.album;
 			genre = song.fileData.genre;
 		}
 
-		titleOrFileName = title || Troff.pathToName( key );
-
+		titleOrFileName = choreography || title || Troff.pathToName( key );
 
 		let columns = [];
 
@@ -397,6 +402,8 @@ function addItem_NEW_2( key ) {
     columns[ DATA_TABLE_COLUMNS.getPos( "TYPE" ) ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
     columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,//Duration
     columns[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" ) ] = titleOrFileName,
+    columns[ DATA_TABLE_COLUMNS.getPos( "CHOREOGRAPHY" ) ] = choreography || "",
+    columns[ DATA_TABLE_COLUMNS.getPos( "CHOREOGRAPHER" ) ] = choreographer || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "TITLE" ) ] = title || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "ARTIST" ) ] = artist || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "ALBUM" ) ] = album || "",
@@ -572,10 +579,13 @@ function openEditSongDialog( songKey ) {
 	$( "#editSongDialog" ).removeClass( "hidden" );
 
 	$( "#editSongFile" ).val( songKey );
+  $( "#editSongChoreography" ).val( fileData.choreography );
+  $( "#editSongChoreographer" ).val( fileData.choreographer );
   $( "#editSongTitle" ).val( fileData.title );
   $( "#editSongArtist" ).val( fileData.artist );
   $( "#editSongAlbum" ).val( fileData.album );
   $( "#editSongGenre" ).val( fileData.genre );
+  Troff.onEditUpdateName();
 }
 
 function onChangeSongListSelector( event ) {
@@ -1228,17 +1238,29 @@ var TroffClass = function(){
 		const songObject = nDB.get( key );
 
 		songObject.fileData.title = $( "#editSongTitle" ).val();
+		songObject.fileData.choreography = $( "#editSongChoreography" ).val();
+		songObject.fileData.choreographer = $( "#editSongChoreographer" ).val();
 		songObject.fileData.artist = $( "#editSongArtist" ).val();
 		songObject.fileData.album = $( "#editSongAlbum" ).val();
 		songObject.fileData.genre = $( "#editSongGenre" ).val();
 
+		IO.updateCellInDataTable( "TITLE_OR_FILE_NAME", $( "#editSongName" ).val(), key );
 		IO.updateCellInDataTable( "TITLE", songObject.fileData.title, key );
+		IO.updateCellInDataTable( "CHOREOGRAPHY", songObject.fileData.choreography, key );
+		IO.updateCellInDataTable( "CHOREOGRAPHER", songObject.fileData.choreographer, key );
 		IO.updateCellInDataTable( "ARTIST", songObject.fileData.artist, key );
 		IO.updateCellInDataTable( "ALBUM", songObject.fileData.album, key );
 		IO.updateCellInDataTable( "GENRE", songObject.fileData.genre, key );
 
 		nDB.set( key, songObject );
-	}
+	};
+
+	/*Troff*/this.onEditUpdateName = () => {
+		const name = $( "#editSongChoreography" ).val() ||
+                 			$( "#editSongTitle" ).val() ||
+                 			Troff.pathToName( $( "#editSongFile" ).val() )
+		$( "#editSongName" ).val( name );
+	};
 
 	/*Troff*/this.enterWritableField = function() {
 		IO.setEnterFunction(function(event){
@@ -1487,8 +1509,8 @@ var TroffClass = function(){
 		// TODO: Flytta allt i getSongMedaDataOf hit, där det hör hemma, jag har ju lixom songObject!
 		DB.getSongMetaDataOf( key );
 
-		$( "#currentArtist" ).text( songObject.fileData.artist );
-		$( "#currentSong" ).text( songObject.fileData.title || Troff.pathToName( key ) );
+		$( "#currentArtist" ).text( songObject.fileData.choreographer || songObject.fileData.artist );
+		$( "#currentSong" ).text( songObject.fileData.choreography || songObject.fileData.title || Troff.pathToName( key ) );
 		$( "#currentAlbum" ).text( songObject.fileData.album );
 
 		media.addEventListener("timeupdate", Troff.timeupdateAudio );
@@ -4301,6 +4323,7 @@ var IOClass = function(){
 		$( ".writableField" ).on( "blur", Troff.exitWritableField );
 
 		$( "#editSongDialogSave" ).on( "click", Troff.editSongDialogSave );
+		$( ".onEditUpdateName" ).on( "change", Troff.onEditUpdateName );
 
 		$('#buttCancelMoveMarkersDialog').click(Troff.hideMoveMarkers);
 		$('#buttPromptMoveMarkers').click(Troff.showMoveMarkers);
