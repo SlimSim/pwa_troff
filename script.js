@@ -4216,7 +4216,7 @@ var IOClass = function(){
 			$("#dataSongTable").DataTable().cell( ".selected", DATA_TABLE_COLUMNS.getPos( column ) ).data( value );
 			return;
 		}
-		$("#dataSongTable").DataTable().cell( "[data-song-key='" + key + "']", DATA_TABLE_COLUMNS.getPos( column ) )
+		$("#dataSongTable").DataTable().cell( '[data-song-key="' + key + '"]', DATA_TABLE_COLUMNS.getPos( column ) )
 			.data( value );
 	};
 
