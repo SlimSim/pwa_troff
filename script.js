@@ -360,9 +360,8 @@ function addItem_NEW_2( key ) {
 			artist = "",
       album = "",
       genre = "",
+      titleOrFileName = "";
 
-			//titleOrFileName = metadata.title || file.name.substr(0, file.name.lastIndexOf( '.' ) - 1);
-			titleOrFileName = Troff.pathToName( key );
 		if( song != undefined ) {
 			if( song.TROFF_VALUE_tapTempo != undefined ) tempo = song.TROFF_VALUE_tapTempo;
 			if( song.info != undefined ) info = song.info;
@@ -388,6 +387,9 @@ function addItem_NEW_2( key ) {
 			album = song.fileData.album;
 			genre = song.fileData.genre;
 		}
+
+		titleOrFileName = title || Troff.pathToName( key );
+
 
 		let columns = [];
 
