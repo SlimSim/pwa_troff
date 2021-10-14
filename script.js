@@ -1169,6 +1169,7 @@ var TroffClass = function(){
 
 	/*Troff*/ this.showDownloadSongFromServerInProgress = function( songName ) {
 		"use strict";
+		$( "#downloadPercentDone" ).text( 0 );
 		$( ".downloadSongFromServerInProgressDialog_songName" ).text( songName );
 		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
 		$( ".downloadSongFromServerInProgressDialog_song" ).removeClass( "hidden" );
@@ -5176,8 +5177,11 @@ $(document).ready( async function() {
 
 		Troff.checkHashAndGetSong();
 
-		firebaseWrapper.onProgressUpdate = function( progress ) {
+		firebaseWrapper.onUploadProgressUpdate = function( progress ) {
 			$( "#uploadPercentDone" ).text( Math.trunc( progress ) );
+		};
+		firebaseWrapper.onDownloadProgressUpdate = function( progress ) {
+			$( "#downloadPercentDone" ).text( Math.trunc( progress ) );
 		};
 
 	});
