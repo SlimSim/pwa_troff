@@ -1058,6 +1058,11 @@ var TroffClass = function(){
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 		} else {
 
+			if( !Troff.getCurrentSong() ) {
+				IO.alert( "No Song", "You do not have a song to upload yet.<br />Add a song to Troff and then try again!");
+				return;
+			}
+
 			if( !window.navigator.onLine ) {
 				IO.alert( "Offline", "You appear to be offline, please wait until you have an internet connection and try again then.");
 				return;
