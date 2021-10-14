@@ -427,6 +427,7 @@ function addItem_NEW_2( key ) {
 		$( newRow ).attr( "data-song-key", key );
 
 		if(selected_path == key && selected_galleryId == galleryId){
+			$("#dataSongTable").find("tbody tr").removeClass("selected");
 			$( newRow ).addClass( "selected" );
 		}
 
@@ -1075,6 +1076,7 @@ var TroffClass = function(){
 	}
 
 	/*Troff*/ this.selectSongInSongList = function( fileName ) {
+		$("#dataSongTable").find("tbody tr").removeClass("selected");
 		$( '[data-song-key="' + fileName + '"]' ).addClass("selected");
 	};
 
@@ -3458,6 +3460,18 @@ var TroffClass = function(){
 
 		/* end standAlone Functions */
 
+	/*Troff*/this.checkHashAndGetSong = async () => {
+		if( window.location.hash ) {
+			try {
+				await Troff.downloadSongFromServer( window.location.hash )
+			} catch( e ) {
+				console.error( "error on downloadSongFromServer:", e );
+				DB.getCurrentSong();
+			}
+		} else {
+			DB.getCurrentSong();
+		}
+	}
 
 }; // end TroffClass
 
@@ -5133,6 +5147,8 @@ loadExternalHtml = function(includes, callback) {
 	} );
 }
 
+window.addEventListener('hashchange',  Troff.checkHashAndGetSong );
+
 $(document).ready( async function() {
 	setTimeout( () => {
 		// don't show tha load-screen for more than 10-seconds
@@ -5158,16 +5174,7 @@ $(document).ready( async function() {
 		DB.getShowSongDialog();
 		initEnvironment();
 
-		if( window.location.hash ) {
-			try {
-				await Troff.downloadSongFromServer( window.location.hash )
-			} catch( e ) {
-				console.error( "error on downloadSongFromServer:", e );
-				DB.getCurrentSong();
-			}
-		} else {
-			DB.getCurrentSong();
-		}
+		Troff.checkHashAndGetSong();
 
 		firebaseWrapper.onProgressUpdate = function( progress ) {
 			$( "#uploadPercentDone" ).text( Math.trunc( progress ) );
