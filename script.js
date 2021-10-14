@@ -427,6 +427,7 @@ function addItem_NEW_2( key ) {
 		$( newRow ).attr( "data-song-key", key );
 
 		if(selected_path == key && selected_galleryId == galleryId){
+			$("#dataSongTable").find("tbody tr").removeClass("selected");
 			$( newRow ).addClass( "selected" );
 		}
 
@@ -1058,6 +1059,11 @@ var TroffClass = function(){
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 		} else {
 
+			if( !Troff.getCurrentSong() ) {
+				IO.alert( "No Song", "You do not have a song to upload yet.<br />Add a song to Troff and then try again!");
+				return;
+			}
+
 			if( !window.navigator.onLine ) {
 				IO.alert( "Offline", "You appear to be offline, please wait until you have an internet connection and try again then.");
 				return;
@@ -1070,7 +1076,8 @@ var TroffClass = function(){
 	}
 
 	/*Troff*/ this.selectSongInSongList = function( fileName ) {
-		$( "[data-song-key='" + fileName + "']" ).addClass("selected");
+		$("#dataSongTable").find("tbody tr").removeClass("selected");
+		$( '[data-song-key="' + fileName + '"]' ).addClass("selected");
 	};
 
 	/*Troff*/ this.importTroffDataToExistingSong_importNew = async function( event ) {
@@ -1162,6 +1169,7 @@ var TroffClass = function(){
 
 	/*Troff*/ this.showDownloadSongFromServerInProgress = function( songName ) {
 		"use strict";
+		$( "#downloadPercentDone" ).text( 0 );
 		$( ".downloadSongFromServerInProgressDialog_songName" ).text( songName );
 		$( "#downloadSongFromServerInProgressDialog" ).removeClass("hidden");
 		$( ".downloadSongFromServerInProgressDialog_song" ).removeClass( "hidden" );
@@ -1378,6 +1386,8 @@ var TroffClass = function(){
 
 		DB.saveVal( TROFF_SETTING_SET_THEME, theme);
 
+		//hack to reload css variables:
+		var links = document.getElementsByTagName("link"); for (var i = 0; i < links.length;i++) { var link = links[i]; if (link.rel === "stylesheet") {link.href += "?"; }}
 	};
 
 	/*Troff*/this.updateHrefForTheme = function( theme ) {
@@ -3453,6 +3463,18 @@ var TroffClass = function(){
 
 		/* end standAlone Functions */
 
+	/*Troff*/this.checkHashAndGetSong = async () => {
+		if( window.location.hash ) {
+			try {
+				await Troff.downloadSongFromServer( window.location.hash )
+			} catch( e ) {
+				console.error( "error on downloadSongFromServer:", e );
+				DB.getCurrentSong();
+			}
+		} else {
+			DB.getCurrentSong();
+		}
+	}
 
 }; // end TroffClass
 
@@ -5128,6 +5150,8 @@ loadExternalHtml = function(includes, callback) {
 	} );
 }
 
+window.addEventListener('hashchange',  Troff.checkHashAndGetSong );
+
 $(document).ready( async function() {
 	setTimeout( () => {
 		// don't show tha load-screen for more than 10-seconds
@@ -5153,19 +5177,13 @@ $(document).ready( async function() {
 		DB.getShowSongDialog();
 		initEnvironment();
 
-		if( window.location.hash ) {
-			try {
-				await Troff.downloadSongFromServer( window.location.hash )
-			} catch( e ) {
-				console.error( "error on downloadSongFromServer:", e );
-				DB.getCurrentSong();
-			}
-		} else {
-			DB.getCurrentSong();
-		}
+		Troff.checkHashAndGetSong();
 
-		firebaseWrapper.onProgressUpdate = function( progress ) {
+		firebaseWrapper.onUploadProgressUpdate = function( progress ) {
 			$( "#uploadPercentDone" ).text( Math.trunc( progress ) );
+		};
+		firebaseWrapper.onDownloadProgressUpdate = function( progress ) {
+			$( "#downloadPercentDone" ).text( Math.trunc( progress ) );
 		};
 
 	});

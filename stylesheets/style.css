@@ -765,6 +765,7 @@ table {
 .currentStopMarker:hover {
 	outline-style: solid;
 	outline-width: 2px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 
 }
 .selected:active,
@@ -773,6 +774,7 @@ table {
 .currentStopMarker:active {
 	outline-style: solid;
 	outline-width: 4px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 
 
@@ -803,20 +805,24 @@ table {
 .important:hover {
 	outline-style: solid;
 	outline-width: 2px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 .important:active{
 	outline-style: solid;
 	outline-width: 4px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 
 .special:hover {
 	outline-style: solid;
 	outline-width: 2px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 	z-index: 1;
 }
 .special:active{
 	outline-style: solid;
 	outline-width: 4px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 	z-index: 1;
 }
 
@@ -830,6 +836,7 @@ a { color: #0051A8; }
 }
 .centerRoundButtCommon:hover {
 	outline-width: 0;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 
 .roundButt2 {
@@ -868,12 +875,14 @@ a { color: #0051A8; }
 .stOnOffButton:hover,
 .loopButt:hover{
 	outline-style: solid;
-	outline-width: 2px;;
+	outline-width: 2px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 .stOnOffButton:active,
 .loopButt:active{
 	outline-style: solid;
-	outline-width: 4px;;
+	outline-width: 4px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 .regularButton:focus{
 	outline: none; /*regularButton*/
@@ -881,20 +890,24 @@ a { color: #0051A8; }
 .regularButton:hover{
 	outline-style: solid;
 	outline-width: 2px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 .regularButton:active{
 	outline-style: solid;
 	outline-width: 4px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 
 
 .active:hover {
 	outline-style: solid;
 	outline-width: 2px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 .active:active{
 	outline-style: solid;
 	outline-width: 4px;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
 }
 
 
@@ -1123,7 +1136,9 @@ table.dataTable .dataTables_empty{
 .table-row-selectable tr:hover{
 	cursor: pointer;
 	outline-width: 1px;
-	outline-style: auto;
+	box-shadow: 0px 0px 0px 1px var(--box-shadow-color);
+	outline-style: solid;
+	/*box-shadow: 0px 0px 0px 3px pink;*/
 }
 
 .drop-active {

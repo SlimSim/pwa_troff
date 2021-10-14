@@ -21,6 +21,7 @@ p{
 
 .table-row-selectable tr:hover{
 	outline-color: lightgray;
+	--box-shadow-color: lightgray;
 }
 
 .centerRoundButtCommon{
@@ -32,6 +33,7 @@ p{
 .stOnOffButton,
 .loopButt{
 	outline-color: #BDBDBD;
+	--box-shadow-color: #BDBDBD;
 }
 .stOnOffButton,
 .loopButt{
@@ -103,6 +105,7 @@ p{
 .regularButton:hover,
 .regularButton:active{
 	outline-color: #E0E0E0; /*regularButton*/
+	--box-shadow-color: #E0E0E0; /*regularButton*/
 }
 .regularButton{
 	background-color: #E0E0E0; /*regularButton*/
@@ -164,7 +167,10 @@ li[isdirectory="true"]:not(:first-child) {
 .selected td:active,
 .currentLoop:active,
 .currentMarker:active,
-.currentStopMarker:active {  outline-color: #FFEB3B;}  /* accentColor1 */
+.currentStopMarker:active {
+	outline-color: #FFEB3B;
+	--box-shadow-color: #FFEB3B;
+}  /* accentColor1 */
 
 .accentColor1,
 .selected,
@@ -189,6 +195,7 @@ li[isdirectory="true"]:not(:first-child) {
 .special:hover,
 .special:active{
 	outline-color: #000;
+	--box-shadow-color: #000;
 }
 
 
@@ -232,6 +239,7 @@ li[isdirectory="true"]:not(:first-child) {
 .active:hover,
 .active:active{
 	outline-color: #F5F5F5; /* accentColor3 */
+	--box-shadow-color: #F5F5F5; /* accentColor3 */
 }
 
 .accentColor3,

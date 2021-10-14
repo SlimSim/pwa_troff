@@ -12,6 +12,8 @@ $(function () {
 
 	const nameOfCache = "songCache-v1.0";
 
+	const v3Init = { "status" : 200, "statusText" : "version-3", "responseType" : "cors" };
+
 	const crc32Hash = function(r){
 		for(var a,o=[],c=0;c<256;c++){
 			a=c;for(var f=0;f<8;f++)a=1&a?3988292384^a>>>1:a>>>1;o[c]=a
@@ -129,13 +131,30 @@ $(function () {
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileUrl, songKey ) {
-		return await fetch( fileUrl )
-			.then( (response) => {
-				if( !response.ok ) {
-					throw response;
-				}
-				return fileHandler.saveResponse( response, songKey );
-			});
+		const response = await fetch( fileUrl );
+		if( !response.ok ) {
+			throw response;
+		}
+		const contentLength = +response.headers.get('Content-Length');
+		const reader = response.body.getReader();
+		let receivedLength = 0; // received that many bytes at the moment
+		let chunks = []; // array of received binary chunks (comprises the body)
+		while(true) {
+      const {done, value} = await reader.read();
+
+      if (done) {
+        break;
+      }
+			chunks.push(value);
+			receivedLength += value.length;
+
+			if( typeof firebaseWrapper.onDownloadProgressUpdate == "function" ) {
+				const progress = (receivedLength / contentLength) * 100;
+				firebaseWrapper.onDownloadProgressUpdate( Math.floor( progress ) );
+			}
+    }
+		const blob = new Blob(chunks);
+		return fileHandler.saveResponse( new Response( blob, v3Init ), songKey );
 	};
 
 //private?
@@ -148,11 +167,9 @@ $(function () {
 //private?
 	fileHandler.saveFile = async function( file, callbackFunk ) {
 			const url = file.name;
-			let init = { "status" : 200 , "statusText" : "version-3", "responseType" : "cors"};
-			return fileHandler.saveResponse( new Response( file, init ), url ).then( () => {
+			return fileHandler.saveResponse( new Response( file, v3Init ), url ).then( () => {
 					callbackFunk( url, file );
 			} );
-
 	};
 
 //private?
@@ -264,9 +281,9 @@ $(function () {
 				// Observe state change events such as progress, pause, and resume
 				// Get task progress, including the number of bytes uploaded
 				// and the total number of bytes to be uploaded
-				if( typeof firebaseWrapper.onProgressUpdate == "function" ) {
+				if( typeof firebaseWrapper.onUploadProgressUpdate == "function" ) {
 					const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-					firebaseWrapper.onProgressUpdate( Math.floor( progress ) );
+					firebaseWrapper.onUploadProgressUpdate( Math.floor( progress ) );
 				}
 			}, error => {
 				task.snapshot.ref.getDownloadURL().then( downloadURL => {
