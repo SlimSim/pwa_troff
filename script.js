@@ -1386,6 +1386,8 @@ var TroffClass = function(){
 
 		DB.saveVal( TROFF_SETTING_SET_THEME, theme);
 
+		//hack to reload css variables:
+		var links = document.getElementsByTagName("link"); for (var i = 0; i < links.length;i++) { var link = links[i]; if (link.rel === "stylesheet") {link.href += "?"; }}
 	};
 
 	/*Troff*/this.updateHrefForTheme = function( theme ) {

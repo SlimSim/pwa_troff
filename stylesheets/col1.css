@@ -31,6 +31,7 @@ p{
 .stOnOffButton,
 .loopButt{
 	outline-color: lightgray;
+	--box-shadow-color: lightgray;
 }
 .stOnOffButton,
 .loopButt{
@@ -97,6 +98,7 @@ p{
 .regularButton:hover,
 .regularButton:active{
 	outline-color: #b0bec5; /*regularButton*/
+	--box-shadow-color: #b0bec5; /*regularButton*/
 }
 .regularButton{
 	background-color: #b0bec5; /*regularButton*/
@@ -146,7 +148,10 @@ p{
 .selected td:active,
 .currentLoop:active,
 .currentMarker:active,
-.currentStopMarker:active {  outline-color: #431c5d;}  /* accentColor1 */
+.currentStopMarker:active {
+  outline-color: #431c5d;
+  --box-shadow-color: #431c5d;
+}  /* accentColor1 */
 
 .accentColor1,
 .selected,
@@ -174,7 +179,8 @@ p{
 .important:active,
 .special:hover,
 .special:active{
-	outline-color: #e05915;
+	outline-color: #dd2c00;  /* accentColor2 */
+	--box-shadow-color: #dd2c00;
 }
 
 .roundButt, .roundButt2,
@@ -215,6 +221,7 @@ p{
 .active:hover,
 .active:active{
 	outline-color: #787B1E; /* accentColor3 */
+	--box-shadow-color: #787B1E; /* accentColor3 */
 }
 
 .accentColor3,

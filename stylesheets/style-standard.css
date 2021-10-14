@@ -424,9 +424,8 @@ textarea {
 .text-white {
 	color: #fff !important;
 }
-.bg-danger {
-	background-color: #dc3545 !important;
-}
+.bg-danger	{	background-color: #dc3545 !important;	}
+.bg-dark		{	background-color: #212529 !important;	}
 
 .bg-transparent {
 	background: transparent !important;
