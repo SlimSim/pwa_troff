@@ -58,25 +58,25 @@ var MARKER_COLOR_PREFIX = "markerColor";
 
 const DATA_TABLE_COLUMNS = {
 	list : [
-		{id:"CHECKBOX", header : "Checkbox", default: "true"},
-		{id:"EDIT", header : "Edit", default: "true"},
-		{id:"TYPE", header : "Type", default: "true"},
-		{id:"DURATION", header : "Duration", default: "true"},
-		{id:"DISPLAY_NAME", header : "Name", default: "true", showOnAttachedState : true},
-		{id:"CUSTOM_NAME", header : "Custom Name", default: "false"},
-		{id:"CHOREOGRAPHY", header : "Choreography", default: "false"},
-		{id:"CHOREOGRAPHER", header : "Choreographer", default: "false"},
-		{id:"TITLE", header : "Title", default: "false"},
-		{id:"ARTIST", header : "Artist", default: "true"},
-		{id:"ALBUM", header : "Album", default: "true"},
-		{id:"TEMPO", header : "Tempo", default: "true"},
-		{id:"GENRE", header : "Genre", default: "true"},
-		{id:"TAGS", header : "Tags", default: "false"},
-		{id:"LAST_MODIFIED", header : "Modified", default: "false"},
-		{id:"FILE_SIZE", header : "Size", default: "false"},
-		{id:"INFO", header : "Song info", default: "false"},
-		{id:"EXTENSION", header : "File type", default: "false"},
-		{id:"DATA_INFO", header : "dataInfo", default: "false", hideFromUser : true},
+		{id:"CHECKBOX", header : "Checkbox", default: true},
+		{id:"EDIT", header : "Edit", default: true},
+		{id:"TYPE", header : "Type", default: true},
+		{id:"DURATION", header : "Duration", default: true},
+		{id:"DISPLAY_NAME", header : "Name", default: true, showOnAttachedState : true},
+		{id:"CUSTOM_NAME", header : "Custom Name", default: false},
+		{id:"CHOREOGRAPHY", header : "Choreography", default: false},
+		{id:"CHOREOGRAPHER", header : "Choreographer", default: false},
+		{id:"TITLE", header : "Title", default: false},
+		{id:"ARTIST", header : "Artist", default: true},
+		{id:"ALBUM", header : "Album", default: true},
+		{id:"TEMPO", header : "Tempo", default: true},
+		{id:"GENRE", header : "Genre", default: true},
+		{id:"TAGS", header : "Tags", default: false},
+		{id:"LAST_MODIFIED", header : "Modified", default: false},
+		{id:"FILE_SIZE", header : "Size", default: false},
+		{id:"INFO", header : "Song info", default: false},
+		{id:"EXTENSION", header : "File type", default: false},
+		{id:"DATA_INFO", header : "dataInfo", default: false, hideFromUser : true},
 	],
   getPos : function( id ) {
   	for( let i = 0; i < this.list.length; i++ ) {
@@ -4308,6 +4308,7 @@ var IOClass = function(){
 
 		//TODO: fix so that all cancelButtons use this class, and remove there id, and event-listener :)
 		$( ".dialogCancelButton" ).click( function( event ) {
+			event.preventDefault();
 			$( event.target ).closest(".outerDialog").addClass("hidden")
 		} );
 
