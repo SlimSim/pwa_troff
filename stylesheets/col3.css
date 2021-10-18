@@ -272,6 +272,6 @@ li[isdirectory="true"]:not(:first-child) {
 
 /* only for this one */
 #markerSection {
-	padding-left: 4px;
+	padding-left: 4px !important;
 }
 
