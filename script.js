@@ -4526,6 +4526,10 @@ var IOClass = function(){
 		}
 
 		if(IOEnterFunction){
+			if( event.keyCode == 9 && $( event.target).hasClass( "allow-tab" ) ) {
+				$( event.target).addClass( "tab-activated" );
+			}
+
 			if(event.keyCode == 13){
 				IOEnterFunction(event);
 			}
@@ -4707,6 +4711,11 @@ var IOClass = function(){
 	};
 
 	/*IO*/this.clearEnterFunction = function(){
+		if( $(".tab-activated" ).length != 0 ) {
+			$(".tab-activated" ).removeClass( "tab-activated" );
+			return;
+		}
+
 		IOEnterFunction = false;
 		IOArrowFunction = false;
 	};
