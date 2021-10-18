@@ -4308,6 +4308,7 @@ var IOClass = function(){
 
 		//TODO: fix so that all cancelButtons use this class, and remove there id, and event-listener :)
 		$( ".dialogCancelButton" ).click( function( event ) {
+			event.preventDefault();
 			$( event.target ).closest(".outerDialog").addClass("hidden")
 		} );
 
