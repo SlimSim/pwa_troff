@@ -62,7 +62,8 @@ const DATA_TABLE_COLUMNS = {
 		{id:"EDIT", header : "Edit", default: "true"},
 		{id:"TYPE", header : "Type", default: "true"},
 		{id:"DURATION", header : "Duration", default: "true"},
-		{id:"TITLE_OR_FILE_NAME", header : "Name", default: "true", showOnAttachedState : true},
+		{id:"DISPLAY_NAME", header : "Name", default: "true", showOnAttachedState : true},
+		{id:"CUSTOM_NAME", header : "Custom Name", default: "false"},
 		{id:"CHOREOGRAPHY", header : "Choreography", default: "false"},
 		{id:"CHOREOGRAPHER", header : "Choreographer", default: "false"},
 		{id:"TITLE", header : "Title", default: "false"},
@@ -359,9 +360,10 @@ function addItem_NEW_2( key ) {
 			duration =  sortAndValue( 0, "" ),
 			lastModified = "",
 			size = "",
-			title = "",
+			customName = "",
 			choreography = "",
 			choreographer = "",
+			title = "",
 			artist = "",
       album = "",
       genre = "",
@@ -388,23 +390,25 @@ function addItem_NEW_2( key ) {
 			if( song.fileData.size ) {
 				size = sortAndValue( song.fileData.size, Troff.byteToDisp( song.fileData.size ) );
 			}
-			title = song.fileData.title;
+			customName = song.fileData.customName;
 			choreography = song.fileData.choreography;
 			choreographer = song.fileData.choreographer;
-			tags = song.fileData.tags;
+			title = song.fileData.title;
 			artist = song.fileData.artist;
 			album = song.fileData.album;
 			genre = song.fileData.genre;
+			tags = song.fileData.tags;
 		}
 
-		titleOrFileName = choreography || title || Troff.pathToName( key );
+		titleOrFileName = customName || choreography || title || Troff.pathToName( key );
 
 		let columns = [];
 
 		columns[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] = JSON.stringify( dataInfo ),
     columns[ DATA_TABLE_COLUMNS.getPos( "TYPE" ) ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
     columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,//Duration
-    columns[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" ) ] = titleOrFileName,
+    columns[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ] = titleOrFileName,
+    columns[ DATA_TABLE_COLUMNS.getPos( "CUSTOM_NAME" ) ] = customName,
     columns[ DATA_TABLE_COLUMNS.getPos( "CHOREOGRAPHY" ) ] = choreography || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "CHOREOGRAPHER" ) ] = choreographer || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "TITLE" ) ] = title || "",
@@ -497,7 +501,7 @@ function initSongTable() {
 			event.dataTransfer = event.originalEvent.dataTransfer;
 		}
 		var jsonDataInfo = JSON.stringify({
-			name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" ) ],
+			name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ],
 			data : JSON.parse( dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
 		});
 
@@ -588,6 +592,7 @@ function openEditSongDialog( songKey ) {
 	$( "#editSongDialog" ).removeClass( "hidden" );
 
 	$( "#editSongFile" ).val( songKey );
+  $( "#editSongCustomName" ).val( fileData.customName );
   $( "#editSongChoreography" ).val( fileData.choreography );
   $( "#editSongChoreographer" ).val( fileData.choreographer );
   $( "#editSongTitle" ).val( fileData.title );
@@ -636,7 +641,7 @@ function getSelectedSongs() {
 	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
 		checkedVissibleSongs = $checkboxes.closest("tr").map( function(i, v) {
 			return {
-				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "TITLE_OR_FILE_NAME" )],
+				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" )],
 				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
 			};
 		}),
@@ -1254,18 +1259,20 @@ var TroffClass = function(){
 		const key = $( "#editSongFile" ).val();
 		const songObject = nDB.get( key );
 
-		songObject.fileData.title = $( "#editSongTitle" ).val();
+		songObject.fileData.customName = $( "#editSongCustomName" ).val();
 		songObject.fileData.choreography = $( "#editSongChoreography" ).val();
 		songObject.fileData.choreographer = $( "#editSongChoreographer" ).val();
+		songObject.fileData.title = $( "#editSongTitle" ).val();
 		songObject.fileData.artist = $( "#editSongArtist" ).val();
 		songObject.fileData.album = $( "#editSongAlbum" ).val();
 		songObject.fileData.genre = $( "#editSongGenre" ).val();
 		songObject.fileData.tags = $( "#editSongTags" ).val();
 
-		IO.updateCellInDataTable( "TITLE_OR_FILE_NAME", $( "#editSongName" ).val(), key );
-		IO.updateCellInDataTable( "TITLE", songObject.fileData.title, key );
+		IO.updateCellInDataTable( "DISPLAY_NAME", $( "#editSongDisplayName" ).val(), key );
+		IO.updateCellInDataTable( "CUSTOM_NAME", songObject.fileData.customName, key );
 		IO.updateCellInDataTable( "CHOREOGRAPHY", songObject.fileData.choreography, key );
 		IO.updateCellInDataTable( "CHOREOGRAPHER", songObject.fileData.choreographer, key );
+		IO.updateCellInDataTable( "TITLE", songObject.fileData.title, key );
 		IO.updateCellInDataTable( "ARTIST", songObject.fileData.artist, key );
 		IO.updateCellInDataTable( "ALBUM", songObject.fileData.album, key );
 		IO.updateCellInDataTable( "GENRE", songObject.fileData.genre, key );
@@ -1275,10 +1282,11 @@ var TroffClass = function(){
 	};
 
 	/*Troff*/this.onEditUpdateName = () => {
-		const name = $( "#editSongChoreography" ).val() ||
+		const displayName = $( "#editSongCustomName" ).val() ||
+                 			$( "#editSongChoreography" ).val() ||
                  			$( "#editSongTitle" ).val() ||
                  			Troff.pathToName( $( "#editSongFile" ).val() )
-		$( "#editSongName" ).val( name );
+		$( "#editSongDisplayName" ).val( displayName );
 	};
 
 	/*Troff*/this.enterWritableField = function() {
@@ -1531,7 +1539,7 @@ var TroffClass = function(){
 		DB.getSongMetaDataOf( key );
 
 		$( "#currentArtist" ).text( songObject.fileData.choreographer || songObject.fileData.artist );
-		$( "#currentSong" ).text( songObject.fileData.choreography || songObject.fileData.title || Troff.pathToName( key ) );
+		$( "#currentSong" ).text( songObject.fileData.customName || songObject.fileData.choreography || songObject.fileData.title || Troff.pathToName( key ) );
 		$( "#currentAlbum" ).text( songObject.fileData.album );
 
 		media.addEventListener("timeupdate", Troff.timeupdateAudio );
@@ -3770,7 +3778,7 @@ var DBClass = function(){
 					newColumnToggle.CHECKBOX = previousColumnToggleList[0];
 					newColumnToggle.TYPE = previousColumnToggleList[1];
 					newColumnToggle.DURATION = previousColumnToggleList[2];
-					newColumnToggle.TITLE_OR_FILE_NAME = previousColumnToggleList[3];
+					newColumnToggle.DISPLAY_NAME = previousColumnToggleList[3];
 					newColumnToggle.TITLE = previousColumnToggleList[4];
 					newColumnToggle.ARTIST = previousColumnToggleList[5];
 					newColumnToggle.ALBUM = previousColumnToggleList[6];

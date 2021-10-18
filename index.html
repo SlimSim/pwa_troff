@@ -953,15 +953,22 @@
 
 			<form class="vScroll mh-100 pr-4">
 				<div class="form-group row">
-					<label for="editSongFile" class="col-sm col-form-label">File:</label>
+					<label for="editSongFile" class="col-sm col-form-label">File</label>
 					<div class="col-sm">
 						<input type="text" readonly class="form-control-plaintext writableField secondaryColor" id="editSongFile" value="" >
 					</div>
 				</div>
 				<div class="form-group row">
-					<label for="editSongName" class="col-sm col-form-label">Name:</label>
+					<label for="editSongDisplayName" class="col-sm col-form-label">Name</label>
 					<div class="col-sm">
-						<input type="text" readonly class="form-control-plaintext writableField secondaryColor" id="editSongName" value="" >
+						<input type="text" readonly class="form-control-plaintext writableField secondaryColor" id="editSongDisplayName" value="" >
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label for="editSongCustomName" class="col-sm col-form-label">Custom&nbsp;Name</label>
+					<div class="col-sm">
+						<input type="text" class="form-control writableField onEditUpdateName" id="editSongCustomName" value="">
 					</div>
 				</div>
 
@@ -1380,8 +1387,8 @@
 								data-st-css-selector-to-hide="#currentSong"
 								data-st-save-value-key="TROFF_SETTING_UI_TITLE_SHOW"
 								id="TROFF_SETTING_UI_TITLE_SHOW"
-								title="Show the title name in the Title area"
-								value="title" />
+								title="Show the Custom Name, Choreography, Title or file name title name in the Title area"
+								value="Name" />
 							<input class="w-auto-on-mobile st-simple-on-off-button buttWidthMedium stOnOffButton active"
 								type="button"
 								data-st-css-selector-to-hide="#currentAlbum"
@@ -1627,12 +1634,11 @@
 
 
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="stylesheets/style-standard.css" />
-	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="stylesheets/style.css" />
-
 	<link id="colorScheme"
 				rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"
 				type="text/css"
 				href="stylesheets/col1.css" />
+	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="stylesheets/style.css" />
 
 
 	<script defer type="text/javascript" src="assets/external/DataTables/js/jquery.dataTables.min.js"></script>
