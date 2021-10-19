@@ -1207,7 +1207,7 @@ var TroffClass = function(){
 		}
 
 		try {
-			await fileHandler.fetchAndSaveResponse( troffData.fileId, fileName );
+			await fileHandler.fetchAndSaveResponse( troffData.fileUrl, fileName );
 		} catch ( error ) {
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
