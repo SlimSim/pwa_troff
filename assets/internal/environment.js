@@ -7,6 +7,7 @@ const environment = {};
 
 	switch( window.location.host ) {
 		case "localhost:8000":
+		case "localhost:63342":
 		case "localhost:5000":
 			environment.banner.show = true;
 			environment.banner.text = "Welcome to development";

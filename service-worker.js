@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.6.20",
+		version: "1.6.21",
 		urls: [
 			"/",
 			"/index.html",
@@ -51,7 +51,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'include-assets',
-		version: "1.0.5",
+		version: "1.0.6",
 		urls: [
 			"/includes/quick-help.html",
 		]
@@ -160,7 +160,7 @@ self.addEventListener( "install", function ( event ) {
 			return this.skipWaiting();
 		})
 		.catch(function(e) {
-			console.info("Promise.all catch:", e);
+			console.error("Promise.all catch:", e);
 		});
 	}));
 });
@@ -182,12 +182,7 @@ self.addEventListener( "activate", function( event ) {
 	);
 });
 
-console.log( "service-worker.js -> ");
-self.console.log( "service-worker.js -> ");
-
-
 self.addEventListener( "fetch", event => {
-	console.log( "fetch: " + event.request.method + " " + event.request.url );
 	event.respondWith(
 		caches.match( event.request )
 		.then( cachedResponse => {
@@ -199,18 +194,11 @@ self.addEventListener( "fetch", event => {
       //	console.info( "fetching googletagmanager" );
       //	return fetch( event.request );
       } else {
-      	console.log( "fetch.request was not cached:", event.request );
       	return fetch( event.request )
       	.then( response => {
-      		console.log( "fetch.then  -> " );
-      		console.log( response );
       		return response;
       	})
       	.catch( error => {
-      		console.log( "fetch.catch -> " );
-      		console.log( error );
-      		console.log( "Response.error():" );
-      		console.log( Response.error() );
       		return Response.error();
       	});
       }
