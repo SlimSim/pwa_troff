@@ -51,7 +51,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'include-assets',
-		version: "1.0.5",
+		version: "1.0.6",
 		urls: [
 			"/includes/quick-help.html",
 		]
