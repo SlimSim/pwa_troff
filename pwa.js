@@ -1,9 +1,12 @@
 
 if( "serviceWorker" in navigator) {
+	console.log( "serviceWorker in navigator" );
 	const serviceWorkerPath = "/service-worker.js";
 	window.addEventListener( "load", () => {
+		console.log( "window.addEventListener load ->" );
 		navigator.serviceWorker.register( serviceWorkerPath )
 		.then( reg => {
+			console.log( "service-worker.js registered" );
 			//console.info("service-worker.js registered!");
 		}).catch( error => {
 			console.error( "service-worker.js failed to register:", error );

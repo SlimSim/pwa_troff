@@ -18,6 +18,9 @@
 // todo: try to use the strict mode! :)
 // - what could possibly go wrong?
 // "use strict";
+
+console.log( "script.js -> " );
+
 window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
@@ -110,9 +113,12 @@ function addImageToContentDiv() {
 }
 
 function addAudioToContentDiv() {
+	console.log( "addAudioToContentDiv ->" );
 	var content_div = document.getElementById('content');
 	var audio = document.createElement('audio');
+	console.log( "audio", audio );
 	audio.addEventListener('loadedmetadata', function(e){
+		console.log( "audio.addEventListener('loadedmetadata callback ->" );
 		Troff.setMetadata(audio);
 		Troff.setAudioVideoLayout();
 	});
@@ -950,8 +956,10 @@ var TroffClass = function(){
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
+			console.log( "fileUploader on change -> ");
+			console.log( "fileUploader on change: ", event );
 			fileHandler.handleFiles(event.target.files, (key, file) =>{
-
+				console.log( "fileUploader on change / handleFiles.handleFiles <- key", key);
 				let newSongObject = DB.fixSongObject();
 				newSongObject.fileData = {
 					lastModified : file.lastModified,
@@ -1516,8 +1524,9 @@ var TroffClass = function(){
 	this.setMetadata = function(media){
 
 		let key = Troff.getCurrentSong();
-
+		console.log( "setMetadata: key", key);
 		let songObject = nDB.get( key );
+		console.log( "setMetadata: songObject", songObject);
 
 		if( songObject == null ) {
 			songObject = DB.fixSongObject();
@@ -3748,7 +3757,9 @@ var DBClass = function(){
 	}
 
 	/*DB*/this.cleanDB = function(){
+		console.log( "DB*/this.cleanDB ->");
 		nDBc.getAllKeys( function( allKeys ) {
+			console.log( "nDBc.getAllKeys callback -> allKeys", allKeys);
 			if(allKeys.length === 0){ // This is the first time Troff is started:
 				DB.saveSonglists_new();
 			}
@@ -3838,10 +3849,12 @@ var DBClass = function(){
 			allKeys.forEach( (key, i) => {
 				DB.cleanSong(key, nDB.get( key ) );
 			} );
+			console.log( "nDBc.getAllKeys callback <- " );
 		});//end get all keys
 	};
 
 	/*DB*/this.saveSonglists_new = function() {
+		console.log( "db.saveSonglists_new ->" );
 		var i,
 			aoSonglists = [],
 			aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
@@ -3852,6 +3865,7 @@ var DBClass = function(){
 
 		var straoSonglists = JSON.stringify(aoSonglists);
 		nDB.set( 'straoSongLists', straoSonglists );
+			console.log( "db.saveSonglists_new <-" );
 	}
 
 	/*DB*/this.setCurrentAreas = function(songId){
@@ -5156,21 +5170,31 @@ var IO = new IOClass();
 var Rate = new RateClass();
 
 loadExternalHtml = function(includes, callback) {
+		console.log( "loadExternalHtml -> ");
 	if( includes.length == 0 ) {
+		console.log( "loadExternalHtml -> return callback()" );
 		return callback();
 	}
 	const currentElement = includes.eq(-1);
+
+		console.log( "currentElement: ", currentElement);
 	includes.splice( includes.length-1, 1);
 
 	const file = $( currentElement ).data('include');
+		console.log( "file: ", file);
 	$( currentElement ).load( file, function(){
+		console.log( "( currentElement ).load( file, callback -> ");
 		loadExternalHtml( includes, callback );
 	} );
+
+		console.log( "loadExternalHtml <- ");
 }
 
 window.addEventListener('hashchange',  Troff.checkHashAndGetSong );
 
 $(document).ready( async function() {
+	console.log( "document ready -> ");
+
 	setTimeout( () => {
 		// don't show tha load-screen for more than 10-seconds
 		// (so that it will be removed even if something breaks)
@@ -5181,7 +5205,9 @@ $(document).ready( async function() {
 
 	const includes = $('[data-include]');
 	loadExternalHtml(includes, async function() {
+		console.log( "loadExternalHtml callback -> ");
 		initSongTable();
+		console.log( "loadExternalHtml callback -> ");
 
 		DB.cleanDB();
 		DB.getAllSonglists();
@@ -5203,8 +5229,10 @@ $(document).ready( async function() {
 		firebaseWrapper.onDownloadProgressUpdate = function( progress ) {
 			$( "#downloadPercentDone" ).text( Math.trunc( progress ) );
 		};
+		console.log( "loadExternalHtml callback <- ");
 
 	});
+	console.log( "document ready <- ");
 });
 
 function initEnvironment() {
@@ -5243,6 +5271,7 @@ ShowUserException.prototype.name = 'ShowUserException';
 
 $(function () {
 	"use strict";
+	console.log( "script.js anonumus error handling function -> " );
 
 	errorHandler.backendService_getTroffData = function( error, serverId, fileName ) {
 		IO.removeLoadScreen();
@@ -5384,4 +5413,7 @@ $(function () {
 		console.error( `errorHandler.fileHandler_sendFile: Full Error:\n`, error );
 	}
 
+	console.log( "script.js anonumus error handling function <- " );
 });
+
+console.log( "script.js <- " );

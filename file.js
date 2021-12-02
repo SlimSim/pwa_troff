@@ -99,11 +99,14 @@ $(function () {
 	};
 
 	const handleFileWithFileType = function( file, callbackFunk ) {
+		console.log( "handleFileWithFileType ->" );
 		// Only process image, audio and video files.
 		if( !(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*')) ) {
 			console.error( "handleFileWithFileType: unrecognized type! file: ", file );
 			return;
 		}
+
+		console.log( "handleFileWithFileType: after IF" );
 
 		try {
 			fileHandler.saveFile( file, callbackFunk );
@@ -159,15 +162,20 @@ $(function () {
 
 //private?
 	fileHandler.saveResponse = async function( response, url ) {
+		console.log( "fileHandler.saveResponse ->")
 		return caches.open( nameOfCache ).then( cache => {
+			console.log( "fileHandler.saveResponse: caches.open ->")
 			return cache.put(url, response );
 		});
 	};
 
 //private?
 	fileHandler.saveFile = async function( file, callbackFunk ) {
+		console.log( "fileHandler.saveFile ->" );
 			const url = file.name;
+		console.log( "fileHandler.saveFile: url", url );
 			return fileHandler.saveResponse( new Response( file, v3Init ), url ).then( () => {
+				console.log( "fileHandler.saveFile: fileHandler.saveResponse callback" );
 					callbackFunk( url, file );
 			} );
 	};
@@ -254,13 +262,17 @@ $(function () {
 	};
 
 	fileHandler.handleFiles = async function( files, callbackFunk ) {
+		console.log( "handleFiles ->");
+		console.log( "handleFiles: files:", files);
 		let i = 0;
 
 		// Loop through the FileList and render the files as appropriate.
 		for ( let file; file = files[ i ]; i++) {
 			if( file.type == "" ) {
+				console.log( "file.type is empty :(")
 
 				readFileTypeAndExtension( file, function( fileWithType ) {
+					console.log( "have read fileType!")
 					handleFileWithFileType( fileWithType, callbackFunk );
 				});
 				continue;
