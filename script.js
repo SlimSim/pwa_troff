@@ -1884,9 +1884,13 @@ var TroffClass = function(){
 
 		if(Troff.stopTimeout) clearInterval(Troff.stopTimeout);
 		Troff.setMood('wait');
+		console.log( "trying to fix Safari!");
+		audio.play();
+		audio.pause();
 		Troff.stopTimeout = setTimeout(function(){
 				if(Troff.getMood() == 'pause' ) return;
 				audio.play().catch( e => {
+					console.log( "It didnt work :( " );
 					console.log( "caught error when trying to play!!!" );
 					console.log( e );
 					audio.play().catch( e2 => {
