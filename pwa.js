@@ -40,7 +40,7 @@ PWA.listenForInstallPrompt = function() {
 };
 
 PWA.listenForBroadcastChannel = function() {
-	if( !BroadcastChannel ) {
+	if( typeof BroadcastChannel === 'undefined' ) {
 		console.warn( "No BroadcastChannel, returning" );
 		return;
 	}

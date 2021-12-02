@@ -1884,7 +1884,8 @@ var TroffClass = function(){
 
 		if(Troff.stopTimeout) clearInterval(Troff.stopTimeout);
 		Troff.setMood('wait');
-		console.log( "trying to fix Safari!");
+
+		// Hack to force Safari to play the sound after the timeout:
 		audio.play();
 		audio.pause();
 		Troff.stopTimeout = setTimeout(function(){
