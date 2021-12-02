@@ -133,6 +133,21 @@ self.addEventListener( "install", function ( event ) {
 		});
 	}
 
+	function broadcast( message, status ) {
+	if( typeof BroadcastChannel === 'undefined' ) {
+			return;
+		}
+		// From service-worker.js:
+		const channel = new BroadcastChannel('service-worker-brodcastChanel');
+
+		channel.postMessage({
+			notify : {
+				message : message,
+				status : status
+			}
+		});
+	}
+
 	event.waitUntil(caches.keys().then(function(existingKeys) {
 		return Promise.all(newAppCaches.map(function(appCache) {
 			let appCacheKey = createCacheKey(appCache.name, appCache.version);
@@ -146,16 +161,10 @@ self.addEventListener( "install", function ( event ) {
 			}
 		}))
 		.then(function () {
-
-			// From service-worker.js:
-			const channel = new BroadcastChannel('service-worker-brodcastChanel');
-
-			channel.postMessage({
-				notify : {
-					message : "New version are now cached and Troff will work offline.\nHave fun!",
-					status : "success"
-				}
-			});
+			broadcast(
+				"New version are now cached and Troff will work offline.\nHave fun!",
+				"success"
+			);
 
 			return this.skipWaiting();
 		})

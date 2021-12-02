@@ -36,6 +36,19 @@ PWA.listenForInstallPrompt = function() {
 
 };
 
+PWA.listenForBroadcastChannel = function() {
+	if( typeof BroadcastChannel === 'undefined' ) {
+		return;
+	}
+	const channel = new BroadcastChannel('service-worker-brodcastChanel');
+	channel.addEventListener('message', event => {
+		if( event.data.notify !== undefined ) {
+			$.notify( event.data.notify.message, event.data.notify.status );
+		}
+
+	});
+};
+
 PWA.showPrompt = function( e ) {
 	e.prompt(); // Throws if called more than once or default not prevented
 
@@ -52,12 +65,4 @@ PWA.showPrompt = function( e ) {
 
 
 PWA.listenForInstallPrompt(); // should it be in document ready? i cant se why it should be there...
-
-
-const channel = new BroadcastChannel('service-worker-brodcastChanel');
-channel.addEventListener('message', event => {
-	if( event.data.notify !== undefined ) {
-		$.notify( event.data.notify.message, event.data.notify.status );
-	}
-
-});
+PWA.listenForBroadcastChannel();
