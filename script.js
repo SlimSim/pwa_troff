@@ -1886,18 +1886,15 @@ var TroffClass = function(){
 		Troff.setMood('wait');
 		Troff.stopTimeout = setTimeout(function(){
 				if(Troff.getMood() == 'pause' ) return;
-				try{
-					audio.play();
-					Troff.setMood('play');
-				} catch( e ) {
+				audio.play().catch( e => {
 					console.log( "caught error when trying to play!!!" );
 					console.log( e );
 					audio.play().catch( e2 => {
 						console.log( "caught error when trying to play again!!!" );
 						console.log( e2 );
 					});
-					Troff.setMood('play');
-				}
+				} );
+				Troff.setMood('play');
 		}, wait);
 
 		// stopInterval is the counter
