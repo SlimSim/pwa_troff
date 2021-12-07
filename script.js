@@ -949,6 +949,11 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
+	this.debugTmp = function() {
+		$( "#banner-debug-text").text( "isSafari = " + isSafari + ", isIOS = " + isIOS );
+	}
+
+
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
@@ -5232,6 +5237,7 @@ $(document).ready( async function() {
 		firebaseWrapper.onDownloadProgressUpdate = function( progress ) {
 			$( "#downloadPercentDone" ).text( Math.trunc( progress ) );
 		};
+		Troff.debugTmp();
 
 	});
 });
