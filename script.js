@@ -939,7 +939,6 @@ function dataTableShowColumnsForFloatingState() {
 
 var TroffClass = function(){
 		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-		const isIOS = [ 'iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod' ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
 		var strCurrentSong = "";
 		var iCurrentGalleryId = 0;
 		var startTime = 0; // unused?
@@ -948,11 +947,6 @@ var TroffClass = function(){
 		var nrTapps = 0;
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
-
-	this.debugTmp = function() {
-		$( "#banner-debug-text").text( "isSafari = " + isSafari + ", isIOS = " + isIOS );
-	}
-
 
 	/*Troff*/this.initFileApiImplementation = function() {
 
@@ -5237,7 +5231,6 @@ $(document).ready( async function() {
 		firebaseWrapper.onDownloadProgressUpdate = function( progress ) {
 			$( "#downloadPercentDone" ).text( Math.trunc( progress ) );
 		};
-		Troff.debugTmp();
 
 	});
 });
