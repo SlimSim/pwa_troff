@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.6.23",
+		version: "1.6.24",
 		urls: [
 			"/",
 			"/index.html",
@@ -51,7 +51,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'include-assets',
-		version: "1.0.7",
+		version: "1.0.8",
 		urls: [
 			"/includes/quick-help.html",
 		]
@@ -99,7 +99,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.2.4",
+		version: "1.2.5",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
@@ -111,6 +111,12 @@ var newAppCaches = [
 			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.ttf?2742147",
 			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff?2742147",
 			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff2?2742147",
+			"/assets/external/browserLogos/chrome-logo.svg",
+			"/assets/external/browserLogos/chromium-logo.svg",
+			"/assets/external/browserLogos/edge-logo.svg",
+			"/assets/external/browserLogos/firefox-logo.svg",
+			"/assets/external/browserLogos/ios-logo-partial.svg",
+			"/assets/external/browserLogos/safari-logo-partial.svg",
 			"/assets/external/DataTables/css/dataTables.needed.min.css",
 			"/assets/external/DataTables/images/sort_asc.png",
 			"/assets/external/DataTables/images/sort_asc_disabled.png",
