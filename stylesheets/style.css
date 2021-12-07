@@ -1030,6 +1030,17 @@ table.dataTable .dataTables_empty{
 	width: 38.5px;
 }
 
+.logo-h-w {
+	height: 45px;
+	width: 45px;
+}
+
+
+.w-exact-120 {
+	width: 120px;
+	min-width: 120px;
+}
+
 .h-exact-35 {
 	height: 35px;
 }

@@ -944,6 +944,8 @@ function dataTableShowColumnsForFloatingState() {
 //******************************************************************************
 
 var TroffClass = function(){
+		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+		const isIOS = [ 'iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod' ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
 		var strCurrentSong = "";
 		var iCurrentGalleryId = 0;
 		var startTime = 0; // unused?
@@ -953,19 +955,26 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
+	this.debugTmp = function() {
+		$( "#banner-debug-text").text( "isSafari = " + isSafari + ", isIOS = " + isIOS );
+	}
+
+
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
 			console.log( "fileUploader on change -> ");
 			console.log( "fileUploader on change: ", event );
 			fileHandler.handleFiles(event.target.files, (key, file) =>{
-				console.log( "fileUploader on change / handleFiles.handleFiles <- key", key);
-				let newSongObject = DB.fixSongObject();
-				newSongObject.fileData = {
-					lastModified : file.lastModified,
-					size : file.size
-				};
-				nDB.set( key, newSongObject );
+
+				if( nDB.get(key) == null ) {
+					let newSongObject = DB.fixSongObject();
+					newSongObject.fileData = {
+						lastModified : file.lastModified,
+						size : file.size
+					};
+					nDB.set( key, newSongObject );
+				}
 
 				addItem_NEW_2( key );
 				if( !$( "#dataSongTable_wrapper" ).find( "tr").hasClass( "selected" ) ) {
@@ -981,6 +990,22 @@ var TroffClass = function(){
 		});
 
 	};
+
+	/*Troff*/ this.safariBug = function( fileName, markers ) {
+		//IO.showSafariExplanation();
+		$( "#downloadSongFromServerInProgressDialog" ).addClass("hidden");
+		$( "#loadScreen" ).addClass("hidden");
+
+		$( "#safariBugDialog_filename" ).val( fileName );
+		$( "#safariBugDialog" ).removeClass("hidden");
+
+		Troff.setUrlToSong( undefined, null );
+
+		if( fileName != undefined && markers != undefined ) {
+			nDB.set( fileName, markers );
+		}
+	}
+
 
 	/*Troff*/ this.setUrlToSong = function( serverId, fileName ) {
 		"use strict";
@@ -1205,6 +1230,8 @@ var TroffClass = function(){
 			return;
 		}
 
+		if( isSafari ) { return Troff.safariBug( fileName ) }
+
 		Troff.showDownloadSongFromServerInProgress( fileName );
 
 		let troffData;
@@ -1250,11 +1277,13 @@ var TroffClass = function(){
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
 
+		if( isSafari ) { return Troff.safariBug( troffData.fileName, markers ) }
+
 		try {
 			await Promise.all([
 				fileHandler.fetchAndSaveResponse( troffData.fileUrl, troffData.fileName ),
-				nDB.set( troffData.fileName, markers )]
-			);
+				nDB.set( troffData.fileName, markers )
+			]);
 		} catch ( error ) {
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
@@ -5241,7 +5270,7 @@ $(document).ready( async function() {
 		firebaseWrapper.onDownloadProgressUpdate = function( progress ) {
 			$( "#downloadPercentDone" ).text( Math.trunc( progress ) );
 		};
-		console.log( "loadExternalHtml callback <- ");
+		Troff.debugTmp();
 
 	});
 	console.log( "document ready <- ");
