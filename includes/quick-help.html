@@ -101,10 +101,10 @@
 				<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinusDemo">
 				<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlusDemo">
 			</div>
-			<label class="dataOutput">
-				<div id="speedDemo">100</div><p>%</p>
+			<label for="speedBarDemo" class="dataOutput">
+				<span id="speedDemo">100</span><span>%</span>
 			</label>
-			<input class="sliderRange flexOne" orient="vertical" type="range" min="50" max="200" value="100">
+			<input id="speedBarDemo" class="sliderRange flexOne" orient="vertical" type="range" min="50" max="200" value="100">
 		</div>
 		<div class="d-flex flexCol">
 			<p class="paragraph normalSize bold  mt-0">Change the speed</p>
@@ -129,15 +129,15 @@
 <div class="row">
 	<div class="col d-flex pt-3 align-items-center">
 		<span class="paragraph normalSize bold w-exact-120">Works great with:</span>
-		<img class="p-2 logo-h-w" src="assets/external/browserLogos/chrome-logo.svg" />
-		<img class="p-2 logo-h-w" src="assets/external/browserLogos/chromium-logo.svg" />
-		<img class="p-2 logo-h-w" src="assets/external/browserLogos/firefox-logo.svg" />
-		<img class="p-2 logo-h-w" src="assets/external/browserLogos/edge-logo.svg" />
+		<img class="p-2 logo-h-w" src="assets/external/browserLogos/chrome-logo.svg" alt="Chrome logo" />
+		<img class="p-2 logo-h-w" src="assets/external/browserLogos/chromium-logo.svg" alt="Chromium logo" />
+		<img class="p-2 logo-h-w" src="assets/external/browserLogos/firefox-logo.svg" alt="Firefox logo" />
+		<img class="p-2 logo-h-w" src="assets/external/browserLogos/edge-logo.svg" alt="Edge logo" />
 	</div>
 	<div class="col d-flex pt-3 align-items-center">
 		<span class="paragraph normalSize bold w-exact-120">Works with:</span>
-		<img class="p-2 logo-h-w" src="assets/external/browserLogos/safari-logo-partial.svg" />
-		<img class="p-2 logo-h-w" src="assets/external/browserLogos/ios-logo-partial.svg" />
+		<img class="p-2 logo-h-w" src="assets/external/browserLogos/safari-logo-partial.svg" alt="Partial Safari logo" />
+		<img class="p-2 logo-h-w" src="assets/external/browserLogos/ios-logo-partial.svg" alt="Partial iOS logo" />
 		<p class="paragraph smallSize ml-3">except for downloading songs or movies</p>
 	</div>
 </div><!-- end row -->
