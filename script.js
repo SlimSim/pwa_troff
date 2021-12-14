@@ -1900,7 +1900,6 @@ var TroffClass = function(){
 		Troff.setMood('wait');
 
 		// Hack to force Safari to play the sound after the timeout:
-		console.log( "isSafari", isSafari );
 		if( isSafari ) {
 			audio.play();
 			audio.pause();
