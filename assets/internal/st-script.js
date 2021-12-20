@@ -1,4 +1,21 @@
+
+const st = {};
+
 $( document ).ready( function() {
+
+	st.byteToDisp = function( byte ) {
+		var nrTimes = 0;
+			units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+		while( byte >= 1000 ) {
+			nrTimes++;
+			byte = byte / 1000;
+			if(nrTimes > units.length)
+				return byte;
+		}
+
+		return Math.round( byte * 10 ) / 10 + units[nrTimes];
+	}
 
 	var ST_DB = { // new data base
 		set : function( key, value ) {

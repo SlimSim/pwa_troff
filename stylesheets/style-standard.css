@@ -467,7 +467,7 @@ textarea {
 .flex-wrap{-ms-flex-wrap:wrap!important;flex-wrap:wrap!important}
 .flex-column{-ms-flex-direction:column!important;flex-direction:column!important}
 .flex-row{-ms-flex-direction: row!important;flex-direction: row!important;}
-
+.flex-grow-0{ ms-flex-grow: 0!important; flex-grow: 0!important;}
 
 @media (min-width:576px){  /* ie width is GREATER than 576px */
 	/* NOT ON MOBILE-PHONES */

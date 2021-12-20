@@ -22,6 +22,16 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
+
+window.addEventListener('load', () => {
+	const parsedUrl = new URL(window.location);
+	const { searchParams } = parsedUrl;
+	console.log("Title shared:", searchParams.get('name'));
+	console.log("Text shared:", searchParams.get('description'));
+	console.log("URL shared:", searchParams.get('link'));
+});
+
+
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
@@ -388,7 +398,7 @@ function addItem_NEW_2( key ) {
 				lastModified = Troff.milisToDisp( song.fileData.lastModified );
 			}
 			if( song.fileData.size ) {
-				size = sortAndValue( song.fileData.size, Troff.byteToDisp( song.fileData.size ) );
+				size = sortAndValue( song.fileData.size, st.byteToDisp( song.fileData.size ) );
 			}
 			customName = song.fileData.customName;
 			choreography = song.fileData.choreography;
@@ -1050,20 +1060,6 @@ var TroffClass = function(){
 		var year = "" + date.getFullYear();
 
 		return year + "-" +  mm + "-" + dd;
-	}
-
-	/*Troff*/this.byteToDisp = function( byte ) {
-		var nrTimes = 0;
-			units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-
-		while( byte >= 1000 ) {
-			nrTimes++;
-			byte = byte / 1000;
-			if(nrTimes > units.length)
-				return byte;
-		}
-
-		return Math.round( byte * 10 ) / 10 + units[nrTimes];
 	}
 
 	/*Troff*/ this.buttCopyUrlToClipboard = function() {
