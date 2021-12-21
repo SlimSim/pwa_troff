@@ -123,6 +123,25 @@ $(document).ready( async function() {
 			newDiv.find( ".troffData" ).text( file.troffData.length );
 			$( "#fileList" ).append( newDiv );
 
+			newDiv.find( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).toggleClass( "active" ) } );
+
+			$.each( file.troffData, (tdIndex, troffData ) => {
+				let songData = JSON.parse( troffData.markerJsonString );
+				console.log( "jsonMarkerString", songData );
+				console.log( "songData.info", songData.info );
+				console.log( "songData.markers.length", songData.markers.length );
+				console.log( "songData.aStates.length", songData.aStates.length );
+
+				let newTroffData = $("#troffDataTemplate").children().clone();
+				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.host + "/#" + troffData.id + "&" + file.fileName );
+				newTroffData.find( ".troffDataInfo" ).text( songData.info );
+				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
+				newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
+
+				newDiv.find( ".markerList" ).append( newTroffData );
+
+			});
+
 			newDiv.find( ".removeFile" ).on( "click", () => {
 				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
 
