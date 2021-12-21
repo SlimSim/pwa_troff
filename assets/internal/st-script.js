@@ -3,6 +3,56 @@ const st = {};
 
 $( document ).ready( function() {
 
+	st.confirm = function(textHead, textBox, funcOk, funcCancel) {
+		let outerDiv = $( "<div>" ).addClass("outerDialog onTop");
+		let innerDiv = $( "<div>" ).addClass("innerDialog m-4");
+
+		let clickOk = function() {
+			if( funcOk ) funcOk();
+			document.removeEventListener('keydown', onKeyDown );
+			outerDiv.remove();
+		};
+
+		let clickCancel = function() {
+			if( funcCancel ) funcCancel();
+			document.removeEventListener('keydown', onKeyDown );
+			outerDiv.remove();
+		};
+
+		let buttRow = $( "<div>" )
+			.append(
+				$("<input>" )
+					.addClass( "regularButton" )
+					.attr( "type", "button" ).attr( "value", "OK" )
+					.on( "click", clickOk )
+			)
+			.append(
+				$("<input>" )
+					.addClass( "regularButton" )
+					.attr( "type", "button" ).attr( "value", "Cancel" )
+					.on( "click", clickCancel )
+			);
+
+		innerDiv
+			.append( $( "<h2>" ).html( textHead ) )
+			.append( $( "<p>" ).addClass( "py-2 text-break w-auto" ).html( textBox ) )
+			.append( buttRow );
+
+		document.addEventListener('keydown', onKeyDown );
+
+		function onKeyDown( event ) {
+			event.preventDefault();
+			if(event.keyCode == 13){
+				clickOk();
+			}
+			if(event.keyCode == 27){
+				clickCancel();
+			}
+		}
+
+		$( "body" ).append( outerDiv.append( innerDiv ) );
+	}; // end confirm
+
 	st.byteToDisp = function( byte ) {
 		var nrTimes = 0;
 			units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];

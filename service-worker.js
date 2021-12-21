@@ -38,7 +38,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.3.25",
+		version: "1.3.29",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -85,7 +85,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.2.9",
+		version: "1.2.20",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
