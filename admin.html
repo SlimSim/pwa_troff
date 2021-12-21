@@ -86,7 +86,7 @@
 			You must be admin in to use these features!
 		</p>
 		<div>
-			<button id="googleSignIn" class="btn btn-danger">Sign in with Google</button>
+			<button id="googleSignIn" class="btn regularButton">Sign in with Google</button>
 		</div>
 	</article> <!-- signIn -->
 
@@ -110,7 +110,7 @@
 		<p>
 
 		</p>
-		<button id="signOut" class="btn btn-danger">Sign out</button>
+		<button id="signOut" class="btn regularButton">Sign out</button>
 	</article> <!-- signIn -->
 	<article class="hidden showForLoggedInUsers" >
 		<h2>Files</h2>
@@ -131,12 +131,30 @@
 						<p>Updated: <span class="updated"></span></p>
 					</div>
 					<div class="col-sm flex-grow-0">
-						<button class="removeFile">Remove</button>
-						<span class="hidden btn removedText">Removed</span>
+						<button class="removeFile regularButton">Remove</button>
+						<span class="hidden grayOut removedText">Removed</span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm">
+						<input type="button" class="stOnOffButton toggleNext" value="Show Markers" />
+						<div class="container flex-row p-1 my-1 markerList">
+						</div>
 					</div>
 				</div>
 			</div>
 
+		</div>
+
+		<div id="troffDataTemplate" class="hidden">
+			<div class="row">
+				<div class="col-sm">
+					<h4><a href="#" target="_blank" class="troffDataId"></a></h4>
+					<p class="m-0">States: <span class="troffDataNrStates"></span></p>
+					<p class="m-0">Markers: <span class="troffDataNrMarkers"></span></p>
+					<p class="troffDataInfo text-truncate w-100"></p>
+				</div>
+			</div>
 		</div>
 
 	</article> <!-- signIn -->
@@ -174,9 +192,6 @@
 	</footer>
 	</section>
 
-
-
-	<!-- The Welcome - dialog should be at the bottom! -->
 	<div  id="alertDialog" class="outerDialog p-3 hidden">
 		<div class="innerDialog largeDialog flexCol scroll mh-100">
 			<h2 id="alertHeader"></h2>

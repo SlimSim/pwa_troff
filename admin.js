@@ -34,6 +34,14 @@ $(document).ready( async function() {
 		firebase.auth().signInWithRedirect(provider);
 	}
 
+	const setDivToRemoved = function( div ) {
+		div
+			.addClass( "grayOut" )
+			.removeClass( "bg-Burlywood" );
+		div.find( ".removeFile" ).addClass( "hidden" )
+		div.find( ".removedText" ).removeClass( "hidden" )
+	};
+
 	const superAdmin = async function( p ) {
 		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1" ];
 
@@ -106,11 +114,7 @@ $(document).ready( async function() {
 
 			let newDiv = $("#template").children().clone();
 			if( file.deleted ) {
-				newDiv
-					.addClass( "grayOut" )
-					.removeClass( "bg-Burlywood" );
-				newDiv.find( ".removeFile" ).addClass( "hidden" )
-				newDiv.find( ".removedText" ).removeClass( "hidden" )
+				setDivToRemoved( newDiv );
 			}
 			newDiv.find( ".fileName" ).text( file.fileName ).attr( "href", file.fileUrl );
 			newDiv.find( ".fileType" ).text( file.fileType );
@@ -119,24 +123,45 @@ $(document).ready( async function() {
 			newDiv.find( ".troffData" ).text( file.troffData.length );
 			$( "#fileList" ).append( newDiv );
 
+			newDiv.find( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).toggleClass( "active" ) } );
+
+			$.each( file.troffData, (tdIndex, troffData ) => {
+				let songData = JSON.parse( troffData.markerJsonString );
+				console.log( "jsonMarkerString", songData );
+				console.log( "songData.info", songData.info );
+				console.log( "songData.markers.length", songData.markers.length );
+				console.log( "songData.aStates.length", songData.aStates.length );
+
+				let newTroffData = $("#troffDataTemplate").children().clone();
+				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.host + "/#" + troffData.id + "&" + file.fileName );
+				newTroffData.find( ".troffDataInfo" ).text( songData.info );
+				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
+				newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
+
+				newDiv.find( ".markerList" ).append( newTroffData );
+
+			});
+
 			newDiv.find( ".removeFile" ).on( "click", () => {
+				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
 
-				// Create a reference to the file to delete
-        const desertRef = storageRef.child( file.fullFileName );
+				st.confirm('Delete file?', 'Do you want to delete the file "' + file.fileName + '" on the server?\n' +
+					'Note, all the markers will still be available.', function(){
+					// Create a reference to the file to delete
+					const desertRef = storageRef.child( file.fullFileName );
 
-        // Delete the file
-        desertRef.delete().then( () => {
-        	newDiv
-        		.addClass( "grayOut" )
-        		.removeClass( "bg-Burlywood" );
-        	newDiv.find( ".removeFile" ).addClass( "hidden" )
-        	newDiv.find( ".removedText" ).removeClass( "hidden" )
-        }).catch( ( error ) => {
-					$( "#alertDialog" ).removeClass( "hidden" );
-					$( "#alertHeader" ).text( "Error" );
-					$( "#alertText" ).text( "Could not remove: " + error );
-        	console.error( error );
-        });
+					// Delete the file
+					desertRef.delete().then( () => {
+						setDivToRemoved( newDiv );
+					})
+					.catch( ( error ) => {
+						$( "#alertDialog" ).removeClass( "hidden" );
+						$( "#alertHeader" ).text( "Error" );
+						$( "#alertText" ).text( "Could not remove: " + error );
+						console.error( error );
+					});
+
+				});
 
 			} );
 
