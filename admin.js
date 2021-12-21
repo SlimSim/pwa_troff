@@ -133,7 +133,7 @@ $(document).ready( async function() {
 				console.log( "songData.aStates.length", songData.aStates.length );
 
 				let newTroffData = $("#troffDataTemplate").children().clone();
-				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.host + "/#" + troffData.id + "&" + file.fileName );
+				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
 				newTroffData.find( ".troffDataInfo" ).text( songData.info );
 				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
 				newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
