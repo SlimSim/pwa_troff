@@ -127,10 +127,6 @@ $(document).ready( async function() {
 
 			$.each( file.troffData, (tdIndex, troffData ) => {
 				let songData = JSON.parse( troffData.markerJsonString );
-				console.log( "jsonMarkerString", songData );
-				console.log( "songData.info", songData.info );
-				console.log( "songData.markers.length", songData.markers.length );
-				console.log( "songData.aStates.length", songData.aStates.length );
 
 				let newTroffData = $("#troffDataTemplate").children().clone();
 				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );

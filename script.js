@@ -22,16 +22,6 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-
-window.addEventListener('load', () => {
-	const parsedUrl = new URL(window.location);
-	const { searchParams } = parsedUrl;
-	console.log("Title shared:", searchParams.get('name'));
-	console.log("Text shared:", searchParams.get('description'));
-	console.log("URL shared:", searchParams.get('link'));
-});
-
-
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
@@ -1035,6 +1025,8 @@ var TroffClass = function(){
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
 
+			Troff.saveTroffDataIdAndFileNameUri( resp.id, encodeURI( resp.fileName ) );
+
 			if( songKey == Troff.getCurrentSong() ) {
 				Troff.setUrlToSong( resp.id, resp.fileName );
 			}
@@ -1170,6 +1162,40 @@ var TroffClass = function(){
 		Troff.selectSongInSongList( fileName );
 	};
 
+	/*Troff*/this.saveTroffDataIdAndFileNameUri = function( serverTroffDataId, fileNameUri ){
+
+		const serverSongs = nDB.get( "serverSongs" );
+
+		const troffDataIdObject = {
+			troffDataId : serverTroffDataId,
+			firstTimeLoaded : new Date().getTime()
+		};
+
+		const serverSong = {
+			fileNameUri : fileNameUri,
+			troffDataIdObjectList : [ troffDataIdObject ]
+		};
+
+		if( !serverSongs ) {
+			nDB.set( "serverSongs", [ serverSong ] );
+			return;
+		}
+
+		const existingServerSong = serverSongs.find( ss => ss.fileNameUri == fileNameUri );
+
+		if( !existingServerSong ) {
+			serverSongs.push( serverSong );
+			nDB.set( "serverSongs", serverSongs );
+			return;
+		}
+
+		if( !existingServerSong.troffDataIdObjectList.some(td => td.troffDataId == serverTroffDataId ) ) {
+			existingServerSong.troffDataIdObjectList.push( troffDataIdObject );
+			nDB.set( "serverSongs", serverSongs );
+			return;
+		}
+	};
+
 	/*Troff*/ this.showImportData = function( fileName, serverId ) {
 		"use strict";
 		$( "#importTroffDataToExistingSong_songName" ).text( fileName );
@@ -1242,6 +1268,7 @@ var TroffClass = function(){
 		"use strict";
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
 		const fileName = decodeURI( fileNameURI );
+		Troff.saveTroffDataIdAndFileNameUri( Number( serverId ), fileNameURI );
 		const troffDataFromCache = nDB.get( fileName );
 		let troffData;
 
