@@ -55,6 +55,7 @@ var TROFF_SETTING_SONG_COLUMN_TOGGLE = "TROFF_SETTING_SONG_COLUMN_TOGGLE";
 var TROFF_SETTING_SONG_LISTS_LIST_SHOW = "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
 var TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
 var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
+const TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME"
 
 
 var MARKER_COLOR_PREFIX = "markerColor";
@@ -1172,7 +1173,7 @@ var TroffClass = function(){
 
 	/*Troff*/this.saveTroffDataIdAndFileNameUri = function( serverTroffDataId, fileNameUri ){
 
-		const serverSongs = nDB.get( "serverSongs" );
+		const serverSongs = nDB.get( TROFF_TROFF_DATA_ID_AND_FILE_NAME );
 
 		const troffDataIdObject = {
 			troffDataId : serverTroffDataId,
@@ -1185,7 +1186,7 @@ var TroffClass = function(){
 		};
 
 		if( !serverSongs ) {
-			nDB.set( "serverSongs", [ serverSong ] );
+			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, [ serverSong ] );
 			return;
 		}
 
@@ -1193,13 +1194,13 @@ var TroffClass = function(){
 
 		if( !existingServerSong ) {
 			serverSongs.push( serverSong );
-			nDB.set( "serverSongs", serverSongs );
+			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
 			return;
 		}
 
 		if( !existingServerSong.troffDataIdObjectList.some(td => td.troffDataId == serverTroffDataId ) ) {
 			existingServerSong.troffDataIdObjectList.push( troffDataIdObject );
-			nDB.set( "serverSongs", serverSongs );
+			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
 			return;
 		}
 	};
