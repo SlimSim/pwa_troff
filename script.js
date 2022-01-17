@@ -3653,31 +3653,6 @@ var RateClass = function(){
 	};
 }; //End RateClass
 
-
-const nDB = { // new data base
-	setOnSong : function( songId, key, value ) {
-		let obj = nDB.get( songId );
-		obj[key] = value;
-		nDB.set( songId, obj );
-	},
-	set : function( key, value ) {
-		window.localStorage.setItem( key, JSON.stringify( value ) );
-	},
-	get : function( key ) {
-		return JSON.parse( window.localStorage.getItem( key ) );
-	},
-	delete : function( key ) {
-		window.localStorage.removeItem( key );
-		// todo, add print if "key" do not exist
-	},
-	getAllKeys : function() {
-		return Object.keys(localStorage)
-	},
-	clearAllStorage : function() {
-		localStorage.clear();
-	},
-};
-
 const nDBc = { //new data base callback
 
 	get : function( key, callback ) {
