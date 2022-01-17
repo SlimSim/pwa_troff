@@ -386,7 +386,7 @@ function addItem_NEW_2( key ) {
 				duration = sortAndValue( song.fileData.duration, Troff.secToDisp( song.fileData.duration ) )
 			}
 			if( song.fileData.lastModified ) {
-				lastModified = Troff.milisToDisp( song.fileData.lastModified );
+				lastModified = st.millisToDisp( song.fileData.lastModified );
 			}
 			if( song.fileData.size ) {
 				size = sortAndValue( song.fileData.size, st.byteToDisp( song.fileData.size ) );
@@ -1041,19 +1041,6 @@ var TroffClass = function(){
 			return errorHandler.fileHandler_sendFile( error, songKey );
 		}
 	};
-
-	/*Troff*/this.milisToDisp = function( milis ) {
-		var date = new Date( milis );
-
-		var d = date.getDate();
-		var m = date.getMonth() + 1;
-
-		var dd = d < 10 ? "0"+d : d;
-		var mm = m < 10 ? "0"+m : m;
-		var year = "" + date.getFullYear();
-
-		return year + "-" +  mm + "-" + dd;
-	}
 
 	/*Troff*/ this.buttCopyUrlToClipboard = function() {
 		let url = $( "#doneUploadingSongToServerDialog" ).find( "#shareSongUrl").val();

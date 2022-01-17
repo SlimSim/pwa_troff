@@ -78,6 +78,19 @@ $( document ).ready( function() {
 		$( "body" ).append( outerDiv.append( innerDiv ) );
 	}; // end confirm
 
+	st.millisToDisp = function( millis ) {
+		const date = new Date( millis );
+
+		const d = date.getDate();
+		const m = date.getMonth() + 1;
+
+		const dd = d < 10 ? "0" + d : d;
+		const mm = m < 10 ? "0" + m : m;
+		const year = "" + date.getFullYear();
+
+		return year + "-" +  mm + "-" + dd;
+	}
+
 	st.byteToDisp = function( byte ) {
 		var nrTimes = 0;
 			units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
