@@ -52,7 +52,7 @@ $(document).ready( async function() {
 			return;
 		}
 
-		const snapshot = await firebase.firestore().collection('TroffData').get()
+		const snapshot = await firebase.firestore().collection('TroffData').get();
 		const docs = snapshot.docs;
 		const allTroffData = docs.map(doc => doc.data());
 
@@ -61,6 +61,8 @@ $(document).ready( async function() {
 		let fileList = [];
 
 		let totalSize = 0;
+		let nrOfFiles = 0;
+		let nrOfDeletedFiles = 0;
 
 		for( const troffData of allTroffData ) {
 			const fileUrl = troffData.fileUrl.substring(0, troffData.fileUrl.indexOf('?'))
@@ -95,6 +97,9 @@ $(document).ready( async function() {
 				}
 				if( !deleted ) {
 					totalSize += troffData.fileSize;
+					nrOfFiles++;
+				} else {
+					nrOfDeletedFiles++;
 				}
 
 				fileList.push( file );
@@ -106,8 +111,11 @@ $(document).ready( async function() {
 
 		$( ".totalSize" ).text( st.byteToDisp( totalSize ) );
 
-		// sorting largest first:
-		fileList.sort( ( a, b ) => (a.fileSize < b.fileSize) ? 1 : -1 );
+		$( ".nrOfFiles" ).text( nrOfFiles );
+		$( ".nrOfDeletedFiles" ).text( nrOfDeletedFiles );
+
+		// sorting latest first:
+		fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 );
 
 
 		$.each( fileList, ( i, file ) => {
@@ -116,6 +124,8 @@ $(document).ready( async function() {
 			if( file.deleted ) {
 				setDivToRemoved( newDiv );
 			}
+			newDiv.data( "updated", new Date(file.updated || 0 ).getTime() );
+			newDiv.data( "fileSize", file.fileSize );
 			newDiv.find( ".fileName" ).text( file.fileName ).attr( "href", file.fileUrl );
 			newDiv.find( ".fileType" ).text( file.fileType );
 			newDiv.find( ".updated" ).text( file.deleted ? "" : file.updated.substr( 0, 10 ) );
@@ -180,6 +190,24 @@ $(document).ready( async function() {
 			// An error happened.
 		});
 	}
+
+	const sortFileList = function( cssToSort, orderByAsc ) {
+		orderByAsc = orderByAsc === undefined ? true : orderByAsc;
+		var $fileList = $( "#fileList" );
+
+		$fileList.children().sort(function (a, b) {
+			if( orderByAsc ) {
+				return $(a).data( cssToSort ) - $(b).data( cssToSort );
+			}
+			return $(b).data( cssToSort ) - $(a).data( cssToSort );
+		})
+		.appendTo( $fileList );
+	}
+
+	$( "#sortUpdatedAsc" ).on( "click", () => {	sortFileList( "updated", true ); } );
+	$( "#sortUpdatedDesc" ).on( "click", () => {	sortFileList( "updated", false ); } );
+	$( "#sortSizeAsc" ).on( "click", () => {	sortFileList( "fileSize", true ); } );
+	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
 
 	$( "#googleSignIn" ).on( "click", googleSignIn );
 	$( "#signOut" ).on( "click", signOut );
