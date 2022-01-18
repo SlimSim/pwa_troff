@@ -56,7 +56,7 @@ section {
 	padding: 0px !important;
 }
 
-header, footer {
+header, footer, .themeColor {
 	background-color: #003366;
 	color: white;
 }
@@ -115,7 +115,7 @@ a {
 	height: 48px;
 }
 
-.toggleNext:not(.active) + * {
+.toggleNext:not(.showNext) + *  {
     display: none !important;
 }
 

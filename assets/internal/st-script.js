@@ -1,6 +1,31 @@
 
 const st = {};
 
+const nDB = { // new data base
+	setOnSong : function( songId, key, value ) {
+		let obj = nDB.get( songId );
+		obj[key] = value;
+		nDB.set( songId, obj );
+	},
+	set : function( key, value ) {
+		window.localStorage.setItem( key, JSON.stringify( value ) );
+	},
+	get : function( key ) {
+		return JSON.parse( window.localStorage.getItem( key ) );
+	},
+	delete : function( key ) {
+		window.localStorage.removeItem( key );
+		// todo, add print if "key" do not exist
+	},
+	getAllKeys : function() {
+		return Object.keys(localStorage)
+	},
+	clearAllStorage : function() {
+		localStorage.clear();
+	},
+};
+
+
 $( document ).ready( function() {
 
 	st.confirm = function(textHead, textBox, funcOk, funcCancel) {
@@ -52,6 +77,19 @@ $( document ).ready( function() {
 
 		$( "body" ).append( outerDiv.append( innerDiv ) );
 	}; // end confirm
+
+	st.millisToDisp = function( millis ) {
+		const date = new Date( millis );
+
+		const d = date.getDate();
+		const m = date.getMonth() + 1;
+
+		const dd = d < 10 ? "0" + d : d;
+		const mm = m < 10 ? "0" + m : m;
+		const year = "" + date.getFullYear();
+
+		return year + "-" +  mm + "-" + dd;
+	}
 
 	st.byteToDisp = function( byte ) {
 		var nrTimes = 0;
@@ -188,6 +226,7 @@ $( ".st-simple-on-off-button" ).click( function( event ) {
 
 /* Hide and Save end */
 
+$( ".toggleNext" ).on( "click", ( e ) => { $( e.target ).closest( ".toggleNext" ).toggleClass( "showNext" ) } );
 
 
 

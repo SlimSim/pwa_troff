@@ -416,6 +416,8 @@ textarea {
 .text-nowrap         { white-space: nowrap !important; }
 .text-normal         { white-space: normal !important; }
 
+.float-right	{ float: right !important; }
+
 /* Transformation */
 .text-lowercase      { text-transform: lowercase; }
 .text-uppercase      { text-transform: uppercase; }
@@ -425,6 +427,10 @@ textarea {
 .text-white {
 	color: #fff !important;
 }
+.text-light-gray {
+	color: #ccc !important;
+}
+
 .bg-danger	{	background-color: #dc3545 !important;	}
 .bg-dark		{	background-color: #212529 !important;	}
 
