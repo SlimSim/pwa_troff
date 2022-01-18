@@ -24,66 +24,61 @@ $(document).ready( async function() {
 	/*           Private methods and variables:
 	/************************************************/
 
-	const superAdmin = async function( p ) {
-
-		// const allTroffData = motsvarar alla TroffData - såklart;
+	// const allTroffData = motsvarar alla TroffData - såklart;
 
 
 
-		//4let fileList = [];
+	//4let fileList = [];
 
-		let totalSize = 0;
-		let nrOfFiles = 0;
-		let nrOfDeletedFiles = 0;
+	let totalSize = 0;
+	let nrOfFiles = 0;
+	let nrOfDeletedFiles = 0;
 
-		// fileList här motsvarar kanske det som finns i DB'n
+	// fileList här motsvarar kanske det som finns i DB'n
 
-		let fileList = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
+	let fileList = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
 
-		console.log( "fileList", fileList );
+	console.log( "fileList", fileList );
 
-		$( ".totalSize" ).text( st.byteToDisp( totalSize ) );
-		$( ".nrOfFiles" ).text( nrOfFiles );
-		$( ".nrOfDeletedFiles" ).text( nrOfDeletedFiles );
+	$( ".totalSize" ).text( st.byteToDisp( totalSize ) );
+	$( ".nrOfFiles" ).text( nrOfFiles );
+	$( ".nrOfDeletedFiles" ).text( nrOfDeletedFiles );
 
-		// sorting latest first:
-		fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 );
+	// sorting latest first:
+	fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 );
 
-		$.each( fileList, ( i, file ) => {
+	$.each( fileList, ( i, file ) => {
 
-			let newDiv = $("#template").children().clone( true, true );
+		let newDiv = $("#template").children().clone( true, true );
 
-			console.log( "file", file );
+		console.log( "file", file );
 
-			//fileNameUri
-			//troffDataIdObjectList
-
-
-			newDiv.find( ".fileName" ).text( decodeURI( file.fileNameUri ) );
-			newDiv.find( ".troffData" ).text( file.troffDataIdObjectList.length );
-			$( "#songList" ).append( newDiv );
+		//fileNameUri
+		//troffDataIdObjectList
 
 
-			$.each( file.troffDataIdObjectList, (tdIndex, troffDataIdObject ) => {
-				//let songData = JSON.parse( troffData.markerJsonString );
-
-				let newTroffData = $("#troffDataTemplate").children().clone();
-				newTroffData.find( ".troffDataId" ).text( troffDataIdObject.troffDataId ).attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + file.fileNameUri );
-
-				newTroffData.find( ".troffDataInfo" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
-				/*
-				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
-				newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
-				*/
-
-				newDiv.find( ".markerList" ).append( newTroffData );
-
-			});
-
-		} );
+		newDiv.find( ".fileName" ).text( decodeURI( file.fileNameUri ) );
+		newDiv.find( ".troffData" ).text( file.troffDataIdObjectList.length );
+		$( "#songList" ).append( newDiv );
 
 
-	}
+		$.each( file.troffDataIdObjectList, (tdIndex, troffDataIdObject ) => {
+			//let songData = JSON.parse( troffData.markerJsonString );
+
+			let newTroffData = $("#troffDataTemplate").children().clone();
+			newTroffData.find( ".troffDataId" ).text( troffDataIdObject.troffDataId ).attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + file.fileNameUri );
+
+			newTroffData.find( ".troffDataInfo" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
+			/*
+			newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
+			newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
+			*/
+
+			newDiv.find( ".markerList" ).append( newTroffData );
+
+		});
+
+	} );
 
 
 	const sortFileList = function( cssToSort, orderByAsc ) {
@@ -105,10 +100,6 @@ $(document).ready( async function() {
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
 
 
-	superAdmin();
 
-
-
-
-})
+});
 
