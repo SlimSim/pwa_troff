@@ -89,58 +89,42 @@
 	</header>
 
 <div class="flexRow fill-height-minus-58">
-	<section id="navigation" class="flexCol flexScroll selfMaxWidth d-sm-flex d-none">
-	<nav class="flexCol flexScroll mt-0">
-		<a href="#whatIsTroff">What is Troff</a>
-			<a href="#about" class="subLink">About this guide</a>
-		<!--a href="#quickHelp">Quick Help</a>
-		<a href="#howToAddMedia">Add and play music or movies</a>
-			<a href="#howToRemoveMedia" class="subLink">Remove music or movies</a>
-			<a href="#howToPlayMedia" class="subLink">Play music or movies</a>
-		<a href="#shareViaLink">Share the song</a>
-		<a href="#theUrlInTheAddressBar" class="subLink">The Url in the address bar</a>
-		<a href="#globalSettings">Global settings</a>
-		<a href="#settings">The settings area</a>
-			<a href="#markers" class="subLink">Markers, what are those?</a>
-			<a href="#playPartOfSong" class="subLink">Play only part of a song</a>
-			<a href="#playFullSong" class="subLink">Play entire song</a>
-			<a href="#moveMarkers" class="subLink">Move markers</a>
-			<a href="#exportImport" class="subLink">Export and import settings</a>
-			<a href="#stretchMarkers" class="subLink">Stretch markers</a>
-			<a href="#deleteMarkers" class="subLink">Delete markers</a>
-			<a href="#zoomOnTheTimeline" class="subLink">Zoom in the timeline</a>
-			<a href="#startBeforeStopAfter" class="subLink">Start before and stop after</a>
-			<a href="#loop" class="subLink">Play more than once</a>
-			<a href="#pauses" class="subLink">Pause and wait</a>
-			<a href="#volumeAndSpeed" class="subLink">Volume and speed</a>
-		<a href="#infoArea">The info area</a>
-			<a href="#tapTempo"   class="subLink">Tap tempo</a>
-			<a href="#songInfo"   class="subLink">Song info</a>
-			<a href="#markerInfo" class="subLink">Marker info</a>
-		<a href="#countdown">The countdown area</a>
-		<a href="#songsArea">The songs area</a>
-		<a href="#songLists">The songlists area</a>
-			<a href="#addSongsToSonglists" class="subLink">Add songs to songlists</a>
-		<a href="#states">The states area</a>
-			<a href="#whatIsStates" class="subLink">What is states</a>
-			<a href="#howToUseStates" class="subLink">How to use states</a>
-		<a href="#toggleAreas">Toggle areas</a>
-		<a href="#howToPlayMovies">Play movies</a>
-			<a href="#fullscreen"   class="subLink">Fullscreen</a>
-			<a href="#frameByFrame" class="subLink">Frame by frame stepping</a-->
-		<a href="#share">Tell your friends about Troff</a>
-		<a href="#contribute">Like us and more</a>
-		<a href="#keyboardShortcuts">Keyboard shortcuts</a>
-		<a href="#footer">Contact a human</a>
-	</nav>
-	</section>
 	<section class="flexCol flexScroll">
 
 	<article id="whatIsTroff" class="mt-0">
 		<h2>What's this?</h2>
 		<p>
-			Here you will see all the songs and all there different versions of markers that you have downloaded.
+			Here you will see all the songs that you have downloaded or uploaded.
 		</p>
+		<br />
+		<label class="switch likeLink linkButton pb-3 m-0 p-0" for="whatsThisMoreInfoSwitch">More info</label>
+		<input id="whatsThisMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+		<div class="switch_child" >
+			<p>
+				When you click a song in the list below, you will see
+				all the different versions of markers that is saved for that song.
+			</p>
+			<p>
+				For every marker version, you will se how many markers that version has,
+				as well as when that version was saved.
+				If there are any tags, genre or song info for that version,
+				it will also be displayed there.
+				Although only the first characters of the song info will be shown,
+				to reduce clutter.
+			</p>
+			<p>
+				When you click "Download this version ( version id )"
+				<a class="likeLink" href="/">troff.app</a>
+				will open in a new tab and, if that version is not your current version,
+				you will get a question of whether to import the new markers,
+				merge the new markers with the existing ones or keep the existing ones.
+			</p>
+			<p>
+				Note: when importing new markers, your existing version will be removed
+				and if that version has not been uploaded or exported, Troff will not
+				be able to restore it.
+			</p>
+		</div>
 	</article> <!-- What is Troff -->
 
 	<article id="howToAddMedia">
@@ -211,8 +195,13 @@
 		<div class="row">
 			<div class="col-sm">
 				<div class="themeColor mt-1 p-3">
-					<h4><a href="#" target="_blank" class="troffDataId text-white"></a></h4>
-					<p class="m-0 text-white">Saved at: <span class="troffDataInfo"></span></p>
+					<p class="text-light-gray float-right troffDataFirstTimeLoaded m-0"></p>
+					<h4 class="troffDataDisplayName text-light-gray text-bold"></h4>
+					<span class="troffDataGenre text-light-gray small float-right"></span>
+					<div class="pt-2 text-light-gray small"><span class="troffDataNrMarkers"></span> markers</div>
+					<span class="troffDataTags text-light-gray float-right small float-right"></span>
+					<div class="pt-2 text-light-gray small"><span class="troffDataInfo"></span></div>
+					<div class="pt-2"><a href="#" target="_blank" class="troffDataId text-light-gray likeLink"></a></div>
 				</div>
 			</div>
 		</div>

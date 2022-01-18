@@ -38,7 +38,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.3.31",
+		version: "1.3.33",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",

@@ -19,60 +19,39 @@
 $(document).ready( async function() {
 	"use strict";
 
-	console.log( "history.js " );
 	/************************************************
 	/*           Private methods and variables:
 	/************************************************/
 
-	// const allTroffData = motsvarar alla TroffData - såklart;
-
-
-
-	//4let fileList = [];
-
-	let totalSize = 0;
-	let nrOfFiles = 0;
-	let nrOfDeletedFiles = 0;
-
-	// fileList här motsvarar kanske det som finns i DB'n
-
 	let fileList = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
-
-	console.log( "fileList", fileList );
-
-	$( ".totalSize" ).text( st.byteToDisp( totalSize ) );
-	$( ".nrOfFiles" ).text( nrOfFiles );
-	$( ".nrOfDeletedFiles" ).text( nrOfDeletedFiles );
-
-	// sorting latest first:
-	fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 );
 
 	$.each( fileList, ( i, file ) => {
 
 		let newDiv = $("#template").children().clone( true, true );
 
-		console.log( "file", file );
-
-		//fileNameUri
-		//troffDataIdObjectList
-
-
 		newDiv.find( ".fileName" ).text( decodeURI( file.fileNameUri ) );
 		newDiv.find( ".troffData" ).text( file.troffDataIdObjectList.length );
 		$( "#songList" ).append( newDiv );
 
-
 		$.each( file.troffDataIdObjectList, (tdIndex, troffDataIdObject ) => {
-			//let songData = JSON.parse( troffData.markerJsonString );
 
 			let newTroffData = $("#troffDataTemplate").children().clone();
-			newTroffData.find( ".troffDataId" ).text( troffDataIdObject.troffDataId ).attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + file.fileNameUri );
+			newTroffData.find( ".troffDataId" )
+				.text( "Download this version (" + troffDataIdObject.troffDataId + ")" )
+				.attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + file.fileNameUri );
 
-			newTroffData.find( ".troffDataInfo" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
-			/*
-			newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
-			newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
-			*/
+			newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
+			newTroffData.find( ".troffDataDisplayName" ).text( troffDataIdObject.displayName );
+			newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
+			newTroffData.find( ".troffDataDisplayName" ).text( troffDataIdObject.displayName );
+			newTroffData.find( ".troffDataGenre" ).text( troffDataIdObject.genre );
+			newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
+			newTroffData.find( ".troffDataNrMarkers" ).text( troffDataIdObject.nrMarkers );
+			newTroffData.find( ".troffDataTags" ).text( troffDataIdObject.tags );
+
+			if( troffDataIdObject.nrMarkers === undefined ) {
+				newTroffData.find( ".troffDataNrMarkers" ).parent().remove();
+			}
 
 			newDiv.find( ".markerList" ).append( newTroffData );
 
@@ -98,8 +77,6 @@ $(document).ready( async function() {
 	$( "#sortUpdatedDesc" ).on( "click", () => {	sortFileList( "updated", false ); } );
 	$( "#sortSizeAsc" ).on( "click", () => {	sortFileList( "fileSize", true ); } );
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
-
-
 
 });
 
