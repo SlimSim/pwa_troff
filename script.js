@@ -1022,11 +1022,14 @@ var TroffClass = function(){
 
 		$( "#uploadSongToServerInProgressDialog" ).removeClass( "hidden" );
 		try {
-			let resp = await fileHandler.sendFile( songKey, nDB.get( songKey ) );
+			const markerObject = nDB.get( songKey );
+			let resp = await fileHandler.sendFile( songKey, markerObject );
+
+			const fakeTroffData = { markerJsonString : JSON.stringify( markerObject ) }
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
 
-			Troff.saveTroffDataIdAndFileNameUri( resp.id, encodeURI( resp.fileName ) );
+			Troff.saveDownloadLinkHistory( resp.id, resp.fileName, fakeTroffData );
 
 			if( songKey == Troff.getCurrentSong() ) {
 				Troff.setUrlToSong( resp.id, resp.fileName );
@@ -1093,6 +1096,8 @@ var TroffClass = function(){
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
+		Troff.saveDownloadLinkHistory( Number( serverId ), fileName, troffData );
+
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
 		try {
@@ -1118,6 +1123,9 @@ var TroffClass = function(){
 		try {
 			let troffDataFromServer = await backendService.getTroffData( serverId, fileName );
 			markersFromServer = JSON.parse( troffDataFromServer.markerJsonString );
+
+			Troff.saveDownloadLinkHistory( Number( serverId ), fileName, troffDataFromServer );
+
 		} catch( error ) {
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
@@ -1150,13 +1158,39 @@ var TroffClass = function(){
 		Troff.selectSongInSongList( fileName );
 	};
 
-	/*Troff*/this.saveTroffDataIdAndFileNameUri = function( serverTroffDataId, fileNameUri ){
+	/*Troff*/this.saveDownloadLinkHistory = function( serverTroffDataId, fileName, troffData ){
+
+		const fileNameUri = encodeURI( fileName );
+
+		const markerObject = JSON.parse( troffData.markerJsonString );
+
+		const fileData = markerObject.fileData;
+
+		let displayName = fileName;
+		const nrMarkers = markerObject.markers.length;
+		const info = markerObject.info.substring( 0, 99 );
+		let genre = "";
+		let tags = "";
+
+		if( fileData ) {
+			displayName = fileData.customName ||
+				fileData.choreography ||
+				fileData.title ||
+				displayName;
+			genre = fileData.genre || genre;
+			tags = fileData.tags || tags;
+		}
 
 		const serverSongs = nDB.get( TROFF_TROFF_DATA_ID_AND_FILE_NAME );
 
 		const troffDataIdObject = {
 			troffDataId : serverTroffDataId,
-			firstTimeLoaded : new Date().getTime()
+			firstTimeLoaded : new Date().getTime(),
+			displayName : displayName,
+      nrMarkers : nrMarkers,
+      infoBeginning : info,
+      genre : genre,
+      tags : tags
 		};
 
 		const serverSong = {
@@ -1237,6 +1271,8 @@ var TroffClass = function(){
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
+		Troff.saveDownloadLinkHistory( Number( serverId ), fileName, troffData );
+
 		try {
 			await fileHandler.fetchAndSaveResponse( troffData.fileUrl, fileName );
 		} catch ( error ) {
@@ -1256,7 +1292,6 @@ var TroffClass = function(){
 		"use strict";
 		const [serverId, fileNameURI] = hash.substr(1).split( "&" );
 		const fileName = decodeURI( fileNameURI );
-		Troff.saveTroffDataIdAndFileNameUri( Number( serverId ), fileNameURI );
 		const troffDataFromCache = nDB.get( fileName );
 		let troffData;
 
@@ -1270,6 +1305,7 @@ var TroffClass = function(){
 		} catch( error ) {
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
+		Troff.saveDownloadLinkHistory( Number( serverId ), fileName, troffData );
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
