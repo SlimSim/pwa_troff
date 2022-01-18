@@ -120,7 +120,7 @@ $(document).ready( async function() {
 
 		$.each( fileList, ( i, file ) => {
 
-			let newDiv = $("#template").children().clone();
+			let newDiv = $("#template").children().clone( true, true);
 			if( file.deleted ) {
 				setDivToRemoved( newDiv );
 			}
@@ -133,12 +133,10 @@ $(document).ready( async function() {
 			newDiv.find( ".troffData" ).text( file.troffData.length );
 			$( "#fileList" ).append( newDiv );
 
-			newDiv.find( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).toggleClass( "active" ) } );
-
 			$.each( file.troffData, (tdIndex, troffData ) => {
 				let songData = JSON.parse( troffData.markerJsonString );
 
-				let newTroffData = $("#troffDataTemplate").children().clone();
+				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
 				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
 				newTroffData.find( ".troffDataInfo" ).text( songData.info );
 				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
@@ -256,7 +254,7 @@ $(document).ready( async function() {
 
   });
 
+	$( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).closest( ".stOnOffButton" ).toggleClass( "active" ) } );
 
-
-})
+});
 

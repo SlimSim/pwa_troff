@@ -105,9 +105,6 @@ $(document).ready( async function() {
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
 
 
-	$( ".toggleNext" ).on( "click", ( e ) => { $( e.target ).closest( ".toggleNext" ).toggleClass( "showNext" ) } );
-
-
 	superAdmin();
 
 

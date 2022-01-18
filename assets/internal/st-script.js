@@ -226,6 +226,8 @@ $( ".st-simple-on-off-button" ).click( function( event ) {
 
 /* Hide and Save end */
 
+console.log( "toggleNext on click" );
+$( ".toggleNext" ).on( "click", ( e ) => { $( e.target ).closest( ".toggleNext" ).toggleClass( "showNext" ) } );
 
 
 
