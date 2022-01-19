@@ -4362,9 +4362,9 @@ var IOClass = function(){
 
 			if( $target.hasClass( "stOnOffButton" ) ) {
 				if( $value.hasClass( "hidden" ) ) {
-					$target.addClass( "active" );
-				} else {
 					$target.removeClass( "active" );
+				} else {
+					$target.addClass( "active" );
 				}
 			}
 
