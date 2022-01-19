@@ -2118,7 +2118,19 @@ var TroffClass = function(){
 			if( oImport.strSongInfo !== undefined &&
 					oImport.aoStates !== undefined &&
 					oImport.aoMarkers !== undefined ){
-				Troff.doImportStuff( oImport );
+
+				if( $("#markerList").children().length > 2 ) {
+					IO.confirm( "Delete existing markers?",
+					"Do you want to delete the existing markers before the import,<br />" +
+					"or do you want to merge the new markers with the existing ones?",
+					() => {Troff.deleteAllMarkers(); Troff.doImportStuff( oImport ); },
+					() => {Troff.doImportStuff( oImport );},
+					"Delete existing markers",
+					"Merge markers"
+					)
+				} else {
+					Troff.doImportStuff( oImport );
+				}
 
 			} else {
 				//This else is here to allow for imports of 0.5 and earlier
@@ -5086,12 +5098,15 @@ var IOClass = function(){
 		IO.promptDouble(oFI, func, funcCancle);
 	}; // end prompt
 
-	this.confirm = function(textHead, textBox, func, funcCancle){
+	/*IO*/this.confirm = function(textHead, textBox, func, funcCancel, confirmButtonText, declineButtonText ) {
+		confirmButtonText = st.defaultFor(confirmButtonText, "OK");
+		declineButtonText = st.defaultFor(declineButtonText, "Cancel");
+
 		let outerDiv = $( "<div>" ).addClass("outerDialog onTop");
 		let innerDiv = $( "<div>" ).addClass("innerDialog m-4");
 
 		let clickCancel = function(){
-			if(funcCancle) funcCancle();
+			if(funcCancel) funcCancel();
 			outerDiv.remove();
 			IOEnterFunction = false;
 		};
@@ -5106,13 +5121,13 @@ var IOClass = function(){
 			.append(
 				$("<input>" )
 					.addClass( "regularButton" )
-					.attr( "type", "button" ).attr( "value", "OK" )
+					.attr( "type", "button" ).attr( "value", confirmButtonText )
 					.on( "click", IOEnterFunction )
 			)
 			.append(
 				$("<input>" )
 					.addClass( "regularButton" )
-					.attr( "type", "button" ).attr( "value", "Cancel" )
+					.attr( "type", "button" ).attr( "value", declineButtonText )
 					.on( "click", clickCancel )
 			);
 
