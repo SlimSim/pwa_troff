@@ -105,6 +105,10 @@ $( document ).ready( function() {
 		return Math.round( byte * 10 ) / 10 + units[nrTimes];
 	}
 
+	st.defaultFor = function(arg, val) {
+		return typeof arg !== 'undefined' ? arg : val;
+	}
+
 	var ST_DB = { // new data base
 		set : function( key, value ) {
 			window.localStorage.setItem( key, JSON.stringify( value ) );
