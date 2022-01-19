@@ -530,6 +530,8 @@ function initSongTable() {
 		$("#dataSongTable").DataTable().rows(".selected").nodes().to$().removeClass( "selected" );
 		$(this).addClass("selected");
 
+		gtag('event', 'Change Song', { 'event_category' : 'Perform change' } );
+
 		createSongAudio( $(this).data( "song-key" ) );
 	} );
 
@@ -697,6 +699,8 @@ function createSongList_NEW( songDataList ) {
 
 		Troff.addSonglistToHTML_NEW( newSongList );
 		DB.saveSonglists_new();
+		gtag('event', 'Save Songlist', { 'event_category' : 'Adding Button' } );
+
 
 		clearCreateSongList();
 	}
@@ -1096,6 +1100,8 @@ var TroffClass = function(){
 		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
 
 		Troff.showMarkersDownloadInProgressDialog( fileName );
+		const hash = "#" + serverId + "&" + encodeURI( fileName );
+		gtag('event', 'Download Markers', { 'event_category' : 'Perform change', 'event_label': hash } );
 
 		let troffData;
 		try {
@@ -1125,6 +1131,8 @@ var TroffClass = function(){
 		const serverId = $( "#importTroffDataToExistingSong_serverId" ).val();
 
 		Troff.showMarkersDownloadInProgressDialog( fileName );
+		const hash = "#" + serverId + "&" + encodeURI( fileName );
+		gtag('event', 'Download Markers', { 'event_category' : 'Perform change', 'event_label': hash } );
 
 		const markersFromCache = nDB.get( fileName );
 		let markersFromServer;
@@ -1271,6 +1279,8 @@ var TroffClass = function(){
 		if( isSafari ) { return Troff.safariBug( fileName ) }
 
 		Troff.showDownloadSongFromServerInProgress( fileName );
+		const hash = "#" + serverId + "&" + encodeURI( fileName );
+		gtag('event', 'Download Song', { 'event_category' : 'Perform change', 'event_label': hash } );
 
 		let troffData;
 		try {
@@ -1307,6 +1317,7 @@ var TroffClass = function(){
 			return Troff.downloadSongFromServerButDataFromCacheExists(fileName, serverId, troffDataFromCache);
 		}
 		Troff.showDownloadSongFromServerInProgress( fileName );
+		gtag('event', 'Download Song', { 'event_category' : 'Perform change', 'event_label': hash } );
 
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
@@ -1514,6 +1525,7 @@ var TroffClass = function(){
 	};
 	this.openSettingsDialog = function( event ) {
 		$( "#outerSettingPopUpSquare" ).removeClass( "hidden" );
+		gtag('event', 'Open Settings', { 'event_category' : 'Clicking Button' } );
 	};
 
 	//Public variables:
@@ -1685,8 +1697,9 @@ var TroffClass = function(){
 	};
 
 	/*Troff*/this.setSpeed = function( speed ) {
-		$('#speedBar').val( speed )
+		$('#speedBar').val( speed );
 		$('#speedBar')[0].dispatchEvent(new Event('input'));
+		gtag('event', "Change Speed", { 'event_category': "Perform change", 'value': speed });
 	};
 
 	this.volumeUpdate = function() {
@@ -1772,9 +1785,11 @@ var TroffClass = function(){
 		if( number === undefined ) {
 			number =
 					$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON").hasClass( "active" ) ?
-					"Inf" :
+					0 :
 					$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE").val();
 		}
+
+		gtag('event', "Change loop", { 'event_category': "Perform change", 'value': number });
 
 		if(number===0) number = "Inf";
 
@@ -1948,6 +1963,8 @@ var TroffClass = function(){
 		wait = wait || 0;
 		var audio = document.querySelector('audio, video');
 		if (!audio) return;
+
+		gtag('event', 'Start song', { 'event_category' : 'Perform change' } );
 
 		var secondsLeft = wait/1000;
 		$('.secondsLeft').html(secondsLeft);
@@ -2255,6 +2272,7 @@ var TroffClass = function(){
 				var markers = [oMarker];
 				Troff.addMarkers(markers); // adds marker to html
 				DB.saveMarkers(Troff.getCurrentSong() );
+				gtag('event', 'Add Marker', { 'event_category' : 'Adding Button' } );
 			});
 			clearInterval(quickTimeout);
 		}, 0);
@@ -2509,6 +2527,8 @@ var TroffClass = function(){
 
 			Troff.addButtonsOfStates([JSON.stringify(state)]);
 			DB.saveStates(Troff.getCurrentSong());
+			gtag('event', 'Remember State', { 'event_category' : 'Adding Button' } );
+
 		});
 
 	};
@@ -4383,9 +4403,9 @@ var IOClass = function(){
 
 			if( $target.hasClass( "stOnOffButton" ) ) {
 				if( $value.hasClass( "hidden" ) ) {
-					$target.addClass( "active" );
-				} else {
 					$target.removeClass( "active" );
+				} else {
+					$target.addClass( "active" );
 				}
 			}
 
