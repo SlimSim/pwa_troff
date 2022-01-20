@@ -1699,7 +1699,7 @@ var TroffClass = function(){
 	/*Troff*/this.setSpeed = function( speed ) {
 		$('#speedBar').val( speed );
 		$('#speedBar')[0].dispatchEvent(new Event('input'));
-		gtag('event', "Change Speed", { 'event_category': "Perform change", 'value': speed });
+		gtag('event', "Change Speed", { 'event_category': "Perform change", 'event_label': speed });
 	};
 
 	this.volumeUpdate = function() {
@@ -1789,8 +1789,6 @@ var TroffClass = function(){
 					$("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE").val();
 		}
 
-		gtag('event', "Change loop", { 'event_category': "Perform change", 'value': number });
-
 		if(number===0) number = "Inf";
 
 		$('.currentLoop').removeClass('currentLoop');
@@ -1805,6 +1803,7 @@ var TroffClass = function(){
 	this.setLoop = function(mode){
 		$('.currentLoop').removeClass('currentLoop');
 		$(this).addClass('currentLoop');
+		gtag('event', "Change loop", { 'event_category': "Perform change", 'event_label': $( mode.target ).val() });
 
 		Troff.updateLoopTimes();
 		IO.blurHack();
@@ -4452,6 +4451,7 @@ var IOClass = function(){
 		$('#timeBar')[0].addEventListener('input', Troff.timeUpdate );
 		$('#volumeBar')[0].addEventListener('input', Troff.volumeUpdate );
 		$('#speedBar')[0].addEventListener('input', Troff.speedUpdate );
+		$('#speedBar').on("change", ( e ) => {gtag('event', 'Set Speed', { 'event_category' : 'Perform change', 'event_label': $(e.target).val() } );} );
 
 		$('#buttRememberState').click(Troff.rememberCurrentState);
 		$('#buttMarker').click(Troff.createMarker);
@@ -4520,8 +4520,8 @@ var IOClass = function(){
 		$('#volumeMinus').click(() => { Troff.incrementInput( "#volumeBar", - 5 ) } );
 		$('#volumePlus').click(() => { Troff.incrementInput( "#volumeBar", + 5 ) } );
 		$('#buttResetSpeed, #buttResetSpeedDemo').click(() => Troff.setSpeed( $( "#TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE" ).val() ) );
-		$('#speedMinus, #speedMinusDemo').click(() => { Troff.incrementInput( "#speedBar", - 5 ) } );
-		$('#speedPlus, #speedPlusDemo').click(() => { Troff.incrementInput( "#speedBar", + 5 ) } );
+		$('#speedMinus, #speedMinusDemo').click(() => { Troff.incrementInput( "#speedBar", - 5 ); gtag('event', 'Increment Speed', { 'event_category' : 'Perform change', 'event_label': $("#speedBar").val() } ); } );
+		$('#speedPlus, #speedPlusDemo').click(() => { Troff.incrementInput( "#speedBar", + 5 ); gtag('event', 'Increment Speed', { 'event_category' : 'Perform change', 'event_label': $("#speedBar").val() } ); } );
 
 		$('#buttTapTempo').click( Troff.tapTime );
 
@@ -4679,6 +4679,7 @@ var IOClass = function(){
 				// pressed a number
 				var number = event.keyCode - 48;
 				Troff.setLoopTo(number);
+				gtag('event', "Change loop", { 'event_category': "Perform change", 'event_label': number || '∞' });
 		}
 
 		var altTime = 0.08333333333; // one frame
