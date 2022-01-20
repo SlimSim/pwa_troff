@@ -4106,49 +4106,6 @@ var DBClass = function(){
 	});
 	};// end saveMarkers
 
-
-	// This is NOT run when creating a State, but when loading a state
-	// so that when the song is reloaded, the correct markers, nr of loops
-	// mm is selected,
-	// this method should not be used, but rather the existing methods for
-	// saving the volume, speed, slected marker mm, but once I reasoned
-	// that accessing the DB and updating the same song-object that many times
-	// would be bad for preformance.... so now I have this method....
-	/*DB* /this.saveSongDataFromState = function(songId, oState){
-	nDBc.get(songId, function( song ){
-		if(!song){
-				console.error('Error "saveSongDataFromState, noSong" occurred,'+
-												' songId=' +songId);
-				return;
-		}
-
-		Denna behövs inte eftersom alla världen sparas när man laddar in den! :)
-
-		song.TROFF_CLASS_TO_TOGGLE_buttStartBefore = oState.buttStartBefore;
-		song.TROFF_VALUE_startBefore = oState.startBefore;
-		song.TROFF_CLASS_TO_TOGGLE_buttStopAfter = oState.buttStopAfter;
-		song.TROFF_VALUE_stopAfter = oState.stopAfter;
-
-		song.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = oState.buttPauseBefStart;
-		song.TROFF_VALUE_pauseBeforeStart = oState.pauseBeforeStart;
-		song.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = oState.buttIncrementUntil;
-		song.TROFF_VALUE_incrementUntilValue = oState.incrementUntilValue;
-		song.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops = oState.buttWaitBetweenLoops;
-		song.TROFF_VALUE_waitBetweenLoops = oState.waitBetweenLoops;
-
-		song.volume = oState.volumeBar;
-		song.speed = oState.speedBar;
-		if($('#'+ oState.currentMarker).length)
-			song.currentStartMarker = oState.currentMarker;
-		if($('#'+ oState.currentStopMarker).length)
-			song.currentStopMarker = oState.currentStopMarker;
-		song.wait = [oState.buttWaitBetweenLoops, oState.waitBetweenLoops];
-
-		nDB.set( songId, song );
-	});
-
-	}; */
-
 	/*DB*/this.setCurrentStartAndStopMarker = function(startMarkerId, stopMarkerId,
 			songId) {
 	nDBc.get(songId, function( song ){
