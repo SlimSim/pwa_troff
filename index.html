@@ -235,6 +235,14 @@
 								type="button"
 								title="Move more than one marker"
 								class="regularButton full-width"
+								id="buttOpenCopyMarkersDialog"
+								data-st-css-selector-to-toggle="#copyMarkersDialog"
+								value="copy markers"
+								/>
+							<input
+								type="button"
+								title="Move more than one marker"
+								class="regularButton full-width"
 								id="buttPromptMoveMarkers"
 								value="move markers"
 								/>
@@ -650,6 +658,23 @@
 					type="button"
 					value="Don't show again" />
 			</span>
+		</div>
+	</div>
+
+	<div id="copyMarkersDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mediumDialog">
+			<h2 class="paragraph">Copy markers</h2>
+			<p class="paragraph normalSize">
+				Copy the <span id="copyMarkersNrOfMarkers"></span> selected markers to:
+			</p>
+			<p class="paragraph normalSize">
+				<input type="number" id="copyMarkersNumber" class="w-auto px-2 text-left form-control d-inline" value=0 /> seconds.
+			</p>
+			<p class="pt-1 pb-2"><a target="_blank" href="/help.html#copyMarkers">more info</a></p>
+			<div class="flexRow flex-wrap">
+				<input id="okCopyMarkersDialog" type="button" class="regularButton" value="Copy markers" title="Copy markers to selected time" />
+				<input type="button" class="regularButton buttWidthStandard dialogCancelButton" value="Cancel" />
+			</div>
 		</div>
 	</div>
 
