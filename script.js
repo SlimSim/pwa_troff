@@ -2919,7 +2919,7 @@ var TroffClass = function(){
 			var stopTime = Number($('#'+markerId)[0].timeValue);
 			var startTime = Troff.getStartTime();
 
-			// if Marker after stopMarker - unselect Marker:
+			// if startMarker after stopMarker -> unselect startMarker:
 			if((startTime + 0.5) >= stopTime ){
 				var aFirstAndLast = Troff.getFirstAndLastMarkers();
 				var firstMarkerId = aFirstAndLast[0];
@@ -3092,6 +3092,60 @@ var TroffClass = function(){
 		}
 
 		/*
+			copyMarkers
+		*/
+		/*Troff*/this.openCopyMarkersDialog = function() {
+			$( "#copyMarkersNumber" ).val( document.querySelector('audio, video').currentTime );
+			$( "#copyMarkersNrOfMarkers" ).text( Troff.getNrOfSelectedMarkers() );
+			$( "#copyMarkersNumber" ).select();
+			IO.setEnterFunction(function(event){
+				IO.blurHack();
+				Troff.copyMarkers();
+				return false;
+			});
+		};
+
+		/*Troff*/this.copyMarkers = function() {
+			let aAllMarkers = nDB.get( Troff.getCurrentSong() ).markers,
+				i,
+				timeToAddToMarkers,
+				timeForFirstMarker = Number( $( "#copyMarkersNumber" ).val() ),
+				startNumber,
+				endNumber,
+				newMarker,
+				nrMarkersToCopy;
+
+			const strMarkersBeforeCopy = JSON.stringify( aAllMarkers );
+
+			[startNumber, endNumber] = Troff.getStartAndEndMarkerNr( 0, 1 );
+
+			timeToAddToMarkers = timeForFirstMarker - aAllMarkers[ startNumber ].time;
+
+			for( i = startNumber; i < endNumber; i++ ) {
+				newMarker = aAllMarkers[i];
+				newMarker.time += timeToAddToMarkers;
+				newMarker.id = Troff.getNewMarkerId();
+				Troff.addMarkers( [ newMarker ] ); // adds marker to html
+			}
+			DB.saveMarkers( Troff.getCurrentSong() );
+			gtag('event', 'Copy Markers', { 'event_category' : 'Adding Button' } );
+
+			$( "#copyMarkersDialog" ).addClass( "hidden" );
+			IO.clearEnterFunction();
+
+			notifyUndo( "Copied " + (endNumber - startNumber) + " markers", function() {
+				const oldMarkers = JSON.parse( strMarkersBeforeCopy );
+				const startId = oldMarkers[ startNumber ].id;
+				const endId = oldMarkers[ endNumber - 1 ].id;
+				$( "#markerList" ).children().remove(); // removes all marker from html
+				Troff.addMarkers( oldMarkers ); // adds marker to html
+				Troff.selectMarker( startId );
+				Troff.selectStopMarker( endId + "S" );
+				DB.saveMarkers( Troff.getCurrentSong() );
+			} );
+		};
+
+		/*
 			move all or some markers.
 		*/
 		this.moveAllMarkersUp = function(){
@@ -3112,6 +3166,11 @@ var TroffClass = function(){
 		this.moveOneMarkerDown = function(val){
 			$('#moveMarkersNumber').val( val );
 			Troff.moveMarkers(true, true);
+		};
+
+		/*Troff*/this.getNrOfSelectedMarkers = function() {
+			let [ startMarkerNr, endMarkerNr ] = Troff.getStartAndEndMarkerNr( 0, 1 );
+			return endMarkerNr - startMarkerNr;
 		};
 
 		/*Troff*/this.getStartAndEndMarkerNr = function( addToStartNr, addToEndNr ) {
@@ -4391,6 +4450,8 @@ var IOClass = function(){
 
 		$('#buttRememberState').click(Troff.rememberCurrentState);
 		$('#buttMarker').click(Troff.createMarker);
+		$('#okCopyMarkersDialog').click( Troff.copyMarkers );
+		$('#buttOpenCopyMarkersDialog').click( Troff.openCopyMarkersDialog );
 		$('#okMoveAllMarkersDialogUp').click(Troff.moveAllMarkersUp);
 		$('#okMoveAllMarkersDialogDown').click(Troff.moveAllMarkersDown);
 		$('#okMoveSomeMarkersDialogUp').click(Troff.moveSomeMarkersUp);
