@@ -6,7 +6,7 @@
 
 	let badLogJsParent = $("<section>" ).addClass("bg-Burlywood normalSize");
 	let badLogJs = $("<div>" ).addClass("vScroll h-100 overflow-y-auto-on-mobile mw-fit-content-on-mobile");
-	let badLogClear = $("<button>clear</button>").on( "click", function(){
+	let badLogClear = $("<button>Clear</button>").on( "click", function(){
 		badLogJs.empty();
 	} );
 	badLogJsParent.append( badLogClear );
