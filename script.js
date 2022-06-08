@@ -1329,7 +1329,7 @@ var TroffClass = function(){
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
 
-		if( isSafari ) { return Troff.safariBug( troffData.fileName, markers ) }
+		if( isSafari && environment.preventSafari ) { return Troff.safariBug( troffData.fileName, markers ) }
 
 		try {
 			await Promise.all([

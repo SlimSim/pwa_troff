@@ -12,6 +12,7 @@ const environment = {};
 			environment.banner.show = true;
 			environment.banner.text = "Welcome to development";
 			environment.showHiddenInProd = true;
+			environment.preventSafari = false;
 
 			environment.firebaseConfig = {
 				apiKey: "AIzaSyCo1r8aMFCPHdfNu_V-hqF1GMa4A9rU7ww",
@@ -27,6 +28,7 @@ const environment = {};
 			environment.banner.show = true;
 			environment.banner.text = "Welcome to test";
 			environment.showHiddenInProd = true;
+			environment.preventSafari = false;
 
 			environment.firebaseConfig = {
 				apiKey: "AIzaSyCEO1gRovzs8OX7iVrLcOhjyosnYjeKRtM",
@@ -43,6 +45,7 @@ const environment = {};
 			environment.banner.show = false;
 			environment.banner.text = "Production";
 			environment.showHiddenInProd = false;
+			environment.preventSafari = true;
 
 			environment.firebaseConfig = {
 				apiKey: "AIzaSyCuXb4zPlM50HMJGilbgM9DxvZuMGxG7yw",
