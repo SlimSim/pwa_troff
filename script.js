@@ -2935,7 +2935,7 @@ var TroffClass = function(){
 			var stopTime = Number($('#'+markerId)[0].timeValue);
 			var startTime = Troff.getStartTime();
 
-			// if Marker after stopMarker - unselect Marker:
+			// if startMarker after stopMarker -> unselect startMarker:
 			if((startTime + 0.5) >= stopTime ){
 				var aFirstAndLast = Troff.getFirstAndLastMarkers();
 				var firstMarkerId = aFirstAndLast[0];
@@ -3108,6 +3108,60 @@ var TroffClass = function(){
 		}
 
 		/*
+			copyMarkers
+		*/
+		/*Troff*/this.openCopyMarkersDialog = function() {
+			$( "#copyMarkersNumber" ).val( document.querySelector('audio, video').currentTime );
+			$( "#copyMarkersNrOfMarkers" ).text( Troff.getNrOfSelectedMarkers() );
+			$( "#copyMarkersNumber" ).select();
+			IO.setEnterFunction(function(event){
+				IO.blurHack();
+				Troff.copyMarkers();
+				return false;
+			});
+		};
+
+		/*Troff*/this.copyMarkers = function() {
+			let aAllMarkers = nDB.get( Troff.getCurrentSong() ).markers,
+				i,
+				timeToAddToMarkers,
+				timeForFirstMarker = Number( $( "#copyMarkersNumber" ).val() ),
+				startNumber,
+				endNumber,
+				newMarker,
+				nrMarkersToCopy;
+
+			const strMarkersBeforeCopy = JSON.stringify( aAllMarkers );
+
+			[startNumber, endNumber] = Troff.getStartAndEndMarkerNr( 0, 1 );
+
+			timeToAddToMarkers = timeForFirstMarker - aAllMarkers[ startNumber ].time;
+
+			for( i = startNumber; i < endNumber; i++ ) {
+				newMarker = aAllMarkers[i];
+				newMarker.time += timeToAddToMarkers;
+				newMarker.id = Troff.getNewMarkerId();
+				Troff.addMarkers( [ newMarker ] ); // adds marker to html
+			}
+			DB.saveMarkers( Troff.getCurrentSong() );
+			gtag('event', 'Copy Markers', { 'event_category' : 'Adding Button' } );
+
+			$( "#copyMarkersDialog" ).addClass( "hidden" );
+			IO.clearEnterFunction();
+
+			notifyUndo( "Copied " + (endNumber - startNumber) + " markers", function() {
+				const oldMarkers = JSON.parse( strMarkersBeforeCopy );
+				const startId = oldMarkers[ startNumber ].id;
+				const endId = oldMarkers[ endNumber - 1 ].id;
+				$( "#markerList" ).children().remove(); // removes all marker from html
+				Troff.addMarkers( oldMarkers ); // adds marker to html
+				Troff.selectMarker( startId );
+				Troff.selectStopMarker( endId + "S" );
+				DB.saveMarkers( Troff.getCurrentSong() );
+			} );
+		};
+
+		/*
 			move all or some markers.
 		*/
 		this.moveAllMarkersUp = function(){
@@ -3128,6 +3182,11 @@ var TroffClass = function(){
 		this.moveOneMarkerDown = function(val){
 			$('#moveMarkersNumber').val( val );
 			Troff.moveMarkers(true, true);
+		};
+
+		/*Troff*/this.getNrOfSelectedMarkers = function() {
+			let [ startMarkerNr, endMarkerNr ] = Troff.getStartAndEndMarkerNr( 0, 1 );
+			return endMarkerNr - startMarkerNr;
 		};
 
 		/*Troff*/this.getStartAndEndMarkerNr = function( addToStartNr, addToEndNr ) {
@@ -4127,49 +4186,6 @@ var DBClass = function(){
 	});
 	};// end saveMarkers
 
-
-	// This is NOT run when creating a State, but when loading a state
-	// so that when the song is reloaded, the correct markers, nr of loops
-	// mm is selected,
-	// this method should not be used, but rather the existing methods for
-	// saving the volume, speed, slected marker mm, but once I reasoned
-	// that accessing the DB and updating the same song-object that many times
-	// would be bad for preformance.... so now I have this method....
-	/*DB* /this.saveSongDataFromState = function(songId, oState){
-	nDBc.get(songId, function( song ){
-		if(!song){
-				console.error('Error "saveSongDataFromState, noSong" occurred,'+
-												' songId=' +songId);
-				return;
-		}
-
-		Denna behövs inte eftersom alla världen sparas när man laddar in den! :)
-
-		song.TROFF_CLASS_TO_TOGGLE_buttStartBefore = oState.buttStartBefore;
-		song.TROFF_VALUE_startBefore = oState.startBefore;
-		song.TROFF_CLASS_TO_TOGGLE_buttStopAfter = oState.buttStopAfter;
-		song.TROFF_VALUE_stopAfter = oState.stopAfter;
-
-		song.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = oState.buttPauseBefStart;
-		song.TROFF_VALUE_pauseBeforeStart = oState.pauseBeforeStart;
-		song.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = oState.buttIncrementUntil;
-		song.TROFF_VALUE_incrementUntilValue = oState.incrementUntilValue;
-		song.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops = oState.buttWaitBetweenLoops;
-		song.TROFF_VALUE_waitBetweenLoops = oState.waitBetweenLoops;
-
-		song.volume = oState.volumeBar;
-		song.speed = oState.speedBar;
-		if($('#'+ oState.currentMarker).length)
-			song.currentStartMarker = oState.currentMarker;
-		if($('#'+ oState.currentStopMarker).length)
-			song.currentStopMarker = oState.currentStopMarker;
-		song.wait = [oState.buttWaitBetweenLoops, oState.waitBetweenLoops];
-
-		nDB.set( songId, song );
-	});
-
-	}; */
-
 	/*DB*/this.setCurrentStartAndStopMarker = function(startMarkerId, stopMarkerId,
 			songId) {
 	nDBc.get(songId, function( song ){
@@ -4455,6 +4471,8 @@ var IOClass = function(){
 
 		$('#buttRememberState').click(Troff.rememberCurrentState);
 		$('#buttMarker').click(Troff.createMarker);
+		$('#okCopyMarkersDialog').click( Troff.copyMarkers );
+		$('#buttOpenCopyMarkersDialog').click( Troff.openCopyMarkersDialog );
 		$('#okMoveAllMarkersDialogUp').click(Troff.moveAllMarkersUp);
 		$('#okMoveAllMarkersDialogDown').click(Troff.moveAllMarkersDown);
 		$('#okMoveSomeMarkersDialogUp').click(Troff.moveSomeMarkersUp);
