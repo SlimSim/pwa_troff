@@ -6,7 +6,11 @@ if( "serviceWorker" in navigator) {
 		console.log( "window.addEventListener load ->" );
 		navigator.serviceWorker.register( serviceWorkerPath )
 		.then( reg => {
-			console.log( "service-worker.js registered" );
+			console.log( "service-worker.js registered 2" );
+
+			reg.update();
+			console.log( "service-worker.js updated" );
+
 			//console.info("service-worker.js registered!");
 		}).catch( error => {
 			console.error( "service-worker.js failed to register:", error );

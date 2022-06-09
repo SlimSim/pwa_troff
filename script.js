@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js -> " );
+console.log( "script.js 2022-06-09 12:15 -> " );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -1328,6 +1328,8 @@ var TroffClass = function(){
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
+
+		console.log( "implemented environment.preventSafari :) " );
 
 		if( isSafari && environment.preventSafari ) { return Troff.safariBug( troffData.fileName, markers ) }
 

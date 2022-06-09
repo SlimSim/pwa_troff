@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.6.39",
+		version: "1.6.45",
 		urls: [
 			"/",
 			"/index.html",
@@ -141,7 +141,7 @@ self.addEventListener( "install", function ( event ) {
 
 	function broadcast( message, status ) {
 	if( typeof BroadcastChannel === 'undefined' ) {
-			console.warn( "No BroadcastChannel, returning" );
+			console.warn( "No BroadcastChannel, returning", message, status );
 			return;
 		}
 		// From service-worker.js:
@@ -175,12 +175,16 @@ self.addEventListener( "install", function ( event ) {
 				"success"
 			);
 
+			broadcast( "skipp waiting 1 ->", "success" );
 			return this.skipWaiting();
 		})
 		.catch(function(e) {
 			console.error("Promise.all catch:", e);
 		});
 	}));
+	broadcast( "skipp waiting 2 ->", "success" );
+	this.skipWaiting();
+	broadcast( "skipp waiting 2 <-", "success" );
 });
 
 self.addEventListener( "activate", function( event ) {
