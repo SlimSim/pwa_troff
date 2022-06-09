@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-06-09 12:15 -> " );
+console.log( "script.js 2022-06-09 21:47 -> " );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -1276,33 +1276,75 @@ var TroffClass = function(){
 			return;
 		}
 
-		if( isSafari ) { return Troff.safariBug( fileName ) }
+		console.log( "implemented environment.preventSafari :) 2 " );
+		console.log( "downloadSongFromServerButDataFromCacheExists isSafari " + isSafari );
+
+		if( isSafari && environment.preventSafari ) { return Troff.safariBug( fileName ) }
+		console.log( "downloadSongFromServerButDataFromCacheExists fileName " + fileName );
+		console.log( "downloadSongFromServerButDataFromCacheExists serverId " + serverId );
 
 		Troff.showDownloadSongFromServerInProgress( fileName );
 		const hash = "#" + serverId + "&" + encodeURI( fileName );
 		gtag('event', 'Download Song', { 'event_category' : 'Perform change', 'event_label': hash } );
 
+		console.log( "downloadSongFromServerButDataFromCacheExists B" );
+
 		let troffData;
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
+			console.error( "downloadSongFromServerButDataFromCacheExists error on backendService.getTroffData" );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.message = " + error.message );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.name = " + error.name );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.cause = " + error.cause );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.fileName = " + error.fileName );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.lineNumber = " + error.lineNumber );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.toString = " + error.toString() );
+			console.error( error );
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
+		console.log( "downloadSongFromServerButDataFromCacheExists C" );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffData.fileName = " +  troffData.fileName );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffData.fileSize = " +  troffData.fileSize );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffData.fileType = " +  troffData.fileType );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffData.fileUrl = " +  troffData.fileUrl );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffData.id = " +  troffData.id );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffData.markerJsonString = " +  troffData.markerJsonString );
+
+
 		Troff.saveDownloadLinkHistory( Number( serverId ), fileName, troffData );
 
+		console.log( "downloadSongFromServerButDataFromCacheExists D" );
 		try {
 			await fileHandler.fetchAndSaveResponse( troffData.fileUrl, fileName );
 		} catch ( error ) {
+			console.error( "downloadSongFromServerButDataFromCacheExists error on fileHandler.fetchAndSaveResponse" );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.message = " + error.message );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.name = " + error.name );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.cause = " + error.cause );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.fileName = " + error.fileName );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.lineNumber = " + error.lineNumber );
+			console.error( "downloadSongFromServerButDataFromCacheExists error.toString = " + error.toString() );
+			console.error( error );
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
+		console.log( "downloadSongFromServerButDataFromCacheExists E" );
+		console.error( "serverId = " + serverId );
+		console.error( "troffDataFromCache.serverId = " + troffDataFromCache.serverId );
 
 		if( serverId == troffDataFromCache.serverId ) {
+			console.error( "createSongAudio -> fileName = " + fileName );
 			await createSongAudio( fileName );
+			console.error( "addItem_NEW_2 -> fileName = " + fileName );
 			addItem_NEW_2( fileName );
+			console.error( "addItem_NEW_2 <-" );
 		} else {
+			console.error( "Troff.showImportData -> fileName = " + fileName );
 			Troff.showImportData( fileName, serverId );
+			console.error( "Troff.showImportData <-" );
 		}
+		console.log( "downloadSongFromServerButDataFromCacheExists F" );
 
 	};
 
@@ -1313,18 +1355,42 @@ var TroffClass = function(){
 		const troffDataFromCache = nDB.get( fileName );
 		let troffData;
 
+		console.log( "downloadSongFromServer A fileName = " + fileName );
+
 		if( troffDataFromCache != null ) {
+			console.log( "downloadSongFromServer. troffDataFromCache != null");
 			return Troff.downloadSongFromServerButDataFromCacheExists(fileName, serverId, troffDataFromCache);
 		}
+
 		Troff.showDownloadSongFromServerInProgress( fileName );
 		gtag('event', 'Download Song', { 'event_category' : 'Perform change', 'event_label': hash } );
 
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
+			console.error( "downloadSongFromServer error on backendService.getTroffData" );
+			console.error( "downloadSongFromServer error.message = " + error.message );
+			console.error( "downloadSongFromServer error.name = " + error.name );
+			console.error( "downloadSongFromServer error.cause = " + error.cause );
+			console.error( "downloadSongFromServer error.fileName = " + error.fileName );
+			console.error( "downloadSongFromServer error.lineNumber = " + error.lineNumber );
+			console.error( "downloadSongFromServer error.toString = " + error.toString() );
+			console.error( error );
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
+
+		console.log( "downloadSongFromServer C" );
+		console.log( "downloadSongFromServer troffData.fileName = " +  troffData.fileName );
+		console.log( "downloadSongFromServer troffData.fileSize = " +  troffData.fileSize );
+		console.log( "downloadSongFromServer troffData.fileType = " +  troffData.fileType );
+		console.log( "downloadSongFromServer troffData.fileUrl = " +  troffData.fileUrl );
+		console.log( "downloadSongFromServer troffData.id = " +  troffData.id );
+		console.log( "downloadSongFromServer troffData.markerJsonString = " +  troffData.markerJsonString );
+
+
 		Troff.saveDownloadLinkHistory( Number( serverId ), fileName, troffData );
+
+		console.log( "downloadSongFromServer D" );
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
@@ -1339,11 +1405,22 @@ var TroffClass = function(){
 				nDB.set( troffData.fileName, markers )
 			]);
 		} catch ( error ) {
+			console.error( "downloadSongFromServer error on fileHandler.fetchAndSaveResponse or nDB.set" );
+			console.error( "downloadSongFromServer error.message = " + error.message );
+			console.error( "downloadSongFromServer error.name = " + error.name );
+			console.error( "downloadSongFromServer error.cause = " + error.cause );
+			console.error( "downloadSongFromServer error.fileName = " + error.fileName );
+			console.error( "downloadSongFromServer error.lineNumber = " + error.lineNumber );
+			console.error( "downloadSongFromServer error.toString = " + error.toString() );
+			console.error( error );
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 
+		console.error( "createSongAudio -> troffData.fileName = " + troffData.fileName );
 		await createSongAudio( troffData.fileName );
+		console.error( "addItem_NEW_2 -> troffData.fileName = " + troffData.fileName );
 		addItem_NEW_2( troffData.fileName );
+		console.error( "addItem_NEW_2 <-" );
 	};
 
 	/*Troff*/this.editSongDialogSave = ( event ) => {
