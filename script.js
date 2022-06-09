@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-06-09 21:55 -> " );
+console.log( "script.js 2022-06-09 22:30 -> " );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -1293,14 +1293,8 @@ var TroffClass = function(){
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
-			console.error( "downloadSongFromServerButDataFromCacheExists error on backendService.getTroffData" );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.message = " + error.message );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.name = " + error.name );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.cause = " + error.cause );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.fileName = " + error.fileName );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.lineNumber = " + error.lineNumber );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.toString = " + error.toString() );
-			console.error( error );
+			console.error( "downloadSongFromServerButDataFromCacheExists Error on backendService.getTroffData" );
+			console.error( "downloadSongFromServerButDataFromCacheExists Error: " + error.toString() );
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
@@ -1319,14 +1313,8 @@ var TroffClass = function(){
 		try {
 			await fileHandler.fetchAndSaveResponse( troffData.fileUrl, fileName );
 		} catch ( error ) {
-			console.error( "downloadSongFromServerButDataFromCacheExists error on fileHandler.fetchAndSaveResponse" );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.message = " + error.message );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.name = " + error.name );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.cause = " + error.cause );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.fileName = " + error.fileName );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.lineNumber = " + error.lineNumber );
-			console.error( "downloadSongFromServerButDataFromCacheExists error.toString = " + error.toString() );
-			console.error( error );
+			console.error( "downloadSongFromServerButDataFromCacheExists Error on fileHandler.fetchAndSaveResponse" );
+			console.error( "downloadSongFromServerButDataFromCacheExists Error = " + error.toString() );
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 		console.log( "downloadSongFromServerButDataFromCacheExists E" );
@@ -1368,14 +1356,8 @@ var TroffClass = function(){
 		try {
 			troffData = await backendService.getTroffData( serverId, fileName );
 		} catch( error ) {
-			console.error( "downloadSongFromServer error on backendService.getTroffData" );
-			console.error( "downloadSongFromServer error.message = " + error.message );
-			console.error( "downloadSongFromServer error.name = " + error.name );
-			console.error( "downloadSongFromServer error.cause = " + error.cause );
-			console.error( "downloadSongFromServer error.fileName = " + error.fileName );
-			console.error( "downloadSongFromServer error.lineNumber = " + error.lineNumber );
-			console.error( "downloadSongFromServer error.toString = " + error.toString() );
-			console.error( error );
+			console.error( "downloadSongFromServer Error on backendService.getTroffData" );
+			console.error( "downloadSongFromServer Error = " + error.toString() );
 			return errorHandler.backendService_getTroffData( error, serverId, fileName );
 		}
 
@@ -1405,14 +1387,8 @@ var TroffClass = function(){
 				nDB.set( troffData.fileName, markers )
 			]);
 		} catch ( error ) {
-			console.error( "downloadSongFromServer error on fileHandler.fetchAndSaveResponse or nDB.set" );
-			console.error( "downloadSongFromServer error.message = " + error.message );
-			console.error( "downloadSongFromServer error.name = " + error.name );
-			console.error( "downloadSongFromServer error.cause = " + error.cause );
-			console.error( "downloadSongFromServer error.fileName = " + error.fileName );
-			console.error( "downloadSongFromServer error.lineNumber = " + error.lineNumber );
-			console.error( "downloadSongFromServer error.toString = " + error.toString() );
-			console.error( error );
+			console.error( "downloadSongFromServer Error on fileHandler.fetchAndSaveResponse or nDB.set" );
+			console.error( "downloadSongFromServer Error = " + error.toString() );
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 
