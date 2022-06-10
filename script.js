@@ -1392,11 +1392,11 @@ var TroffClass = function(){
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 
-		console.error( "createSongAudio -> troffData.fileName = " + troffData.fileName );
+		console.log( "createSongAudio -> troffData.fileName = " + troffData.fileName );
 		await createSongAudio( troffData.fileName );
-		console.error( "addItem_NEW_2 -> troffData.fileName = " + troffData.fileName );
+		console.log( "addItem_NEW_2 -> troffData.fileName = " + troffData.fileName );
 		addItem_NEW_2( troffData.fileName );
-		console.error( "addItem_NEW_2 <-" );
+		console.log( "addItem_NEW_2 <-" );
 	};
 
 	/*Troff*/this.editSongDialogSave = ( event ) => {

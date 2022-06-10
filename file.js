@@ -127,14 +127,12 @@ $(function () {
 		console.log( "backendService.getTroffData: db created" );
 		const troffDataReference = db.collection( 'TroffData' ).doc( troffDataId );
 		console.log( "backendService.getTroffData: troffDataReference created" );
-		console.log( "backendService.getTroffData: troffDataReference = " + troffDataReference );
 		console.log( "backendService.getTroffData: troffDataReference:", troffDataReference );
 
 		return troffDataReference.get().then( doc => {
 			console.log( "backendService.getTroffData / troffDataReference.get().then ->" );
-			console.log( "backendService.getTroffData / troffDataReference.get().then -> doc = " + doc );
-			console.log( "backendService.getTroffData / troffDataReference.get().then -> doc:", doc );
 			console.log( "backendService.getTroffData / troffDataReference.get().then -> doc.exists = " + doc.exists );
+			console.log( "backendService.getTroffData / troffDataReference.get().then -> doc:", doc );
 
 			if( !doc.exists ){
 				throw new ShowUserException(`Could not find song "${fileName}", with id "${troffDataId}", on the server,

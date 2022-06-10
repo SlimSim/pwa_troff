@@ -29,7 +29,8 @@
 		let $log = $( "<div>").addClass("pt-3").css( "color", color );
 
 		for( let i = 0; i < args.length; i++ ) {
-			let arg =  $( "<div>" + char + args[i] + "</div>" );
+			let content = typeof args[i] == "object" ? JSON.stringify( args[i] ) : args[i];
+			let arg =  $( "<div>" + char + content + "</div>" );
 			char = "";
 			if( i != 0 ) {
 				arg.addClass("small");
@@ -77,7 +78,6 @@
 
 
 $( "body" ).on( "touchstart", (e) => {
-	console.log( "touchstart prevent default" );
 	e.preventDefault();
 } );
 
