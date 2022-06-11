@@ -3711,6 +3711,7 @@ var TroffClass = function(){
 
 	/*Troff*/this.checkHashAndGetSong = async () => {
 		if( window.location.hash ) {
+			console.log("downloading: " + window.location.href );
 			try {
 				await Troff.downloadSongFromServer( window.location.hash )
 			} catch( e ) {

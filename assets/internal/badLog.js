@@ -25,7 +25,19 @@
 		badLogJs.children().children().each( function( i, v ) {
 			text += $( v ).text() + "\n";
 		} );
+
+		let copyParent = $( "<div>" ).addClass( "outerDialog" );
+		let copyParentInner = $( "<div>" ).addClass( "innerDialog" );
+		let removeCopy = $( "<button>Close</button>" ).on( "click", function() {
+			copyParent.remove();
+		});
+		let textToCopy = $( "<textarea>" ).text( text );
+
+		$("body").append( copyParent.append( copyParentInner.append( removeCopy ).append( textToCopy ) ) );
+
 		navigator.clipboard.writeText( text );
+
+
 	} );
 	badLogJsParent.append( badLogClear );
 	badLogJsParent.append( badLogCopy );
