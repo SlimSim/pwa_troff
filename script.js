@@ -19,6 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
+console.log( "script.js 2022-06-11 11:20 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -3709,7 +3710,6 @@ var TroffClass = function(){
 		/* end standAlone Functions */
 
 	/*Troff*/this.checkHashAndGetSong = async () => {
-		console.log( "script.js 2022-06-10 20:30 -> " +  window.location.href );
 		if( window.location.hash ) {
 			try {
 				await Troff.downloadSongFromServer( window.location.hash )
