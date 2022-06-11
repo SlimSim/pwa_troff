@@ -7,9 +7,18 @@
 	let badLogJsParent = $("<section>" ).addClass("bg-Burlywood normalSize");
 	let badLogJs = $("<div>" ).addClass("vScroll h-100 overflow-y-auto-on-mobile mw-fit-content-on-mobile");
 	let badLogClear = $("<button>Clear</button>").on( "click", function(){
-		if( confirm( "Clear log?" ) ) {
+		let ok = $( "<button>Sure?</button>").on("click", function(){
 			badLogJs.empty();
-		}
+			ok.remove();
+			cancel.remove();
+		});
+		let cancel =  $( "<button>Cancel</button>").on("click", function(){
+			ok.remove();
+			cancel.remove();
+		});
+		badLogClear
+			.after( ok )
+			.after( cancel );
 	} );
 	let badLogCopy = $("<button>Copy Log</button>").on( "click", function() {
 		let text = "";
