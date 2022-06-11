@@ -6,10 +6,10 @@ if( "serviceWorker" in navigator) {
 		console.log( "window.addEventListener load ->" );
 		navigator.serviceWorker.register( serviceWorkerPath )
 		.then( reg => {
-			console.log( "service-worker.js registered 2" );
+			//console.log( "service-worker.js registered 2" );
 
 			reg.update();
-			console.log( "service-worker.js updated" );
+			//console.log( "service-worker.js updated" );
 
 			//console.info("service-worker.js registered!");
 		}).catch( error => {
@@ -47,6 +47,8 @@ PWA.listenForBroadcastChannel = function() {
 	if( typeof BroadcastChannel === 'undefined' ) {
 		console.warn( "No BroadcastChannel, returning" );
 		return;
+	} else {
+		console.log( "BroadcastChannel exists!" );
 	}
 	const channel = new BroadcastChannel('service-worker-brodcastChanel');
 	channel.addEventListener('message', event => {

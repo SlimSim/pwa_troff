@@ -242,6 +242,11 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
+	console.log( "setSong2 A");
+	console.log( "setSong2: newElem", newElem);
+	console.log( "setSong2: songData", songData);
+
+
 	newElem.setAttribute('src', songData);
 
 } //end setSong2
@@ -323,9 +328,11 @@ function escapeRegExp(string) {
 }
 
 async function createSongAudio( path ) {
+	console.log( "createSongAudio -> path", path );
 	let songIsV2;
 	try {
-		songIsV2 = await cacheImplementation.isSongV2( path )
+		songIsV2 = await cacheImplementation.isSongV2( path );
+		console.log( "createSongAudio: songIsV2", songIsV2 );
 	} catch ( e ) {
 		return errorHandler.fileHandler_fetchAndSaveResponse( new ShowUserException(`The song "${path}" does not exist.
 			if you have the file named "${path}", you can
@@ -336,6 +343,8 @@ async function createSongAudio( path ) {
 		try {
 			var songData = await cacheImplementation.getSong( path );
 
+			console.log( "createSongAudio: songData", songData );
+
 			setSong2( path, "audio", songData );
 		} catch (e) {
 			console.error("error: No song selected yet: ", e);
@@ -343,6 +352,9 @@ async function createSongAudio( path ) {
 	} else {
 		try {
 			let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
+
+			console.log( "createSongAudio: v3SongObjectUrl", v3SongObjectUrl);
+
 			setSong2( path, "audio", v3SongObjectUrl );
 		} catch ( e ) {
 			errorHandler.fileHandler_sendFile( e );
@@ -1318,19 +1330,19 @@ var TroffClass = function(){
 			return errorHandler.fileHandler_fetchAndSaveResponse( error, fileName );
 		}
 		console.log( "downloadSongFromServerButDataFromCacheExists E" );
-		console.error( "serverId = " + serverId );
-		console.error( "troffDataFromCache.serverId = " + troffDataFromCache.serverId );
+		console.log( "downloadSongFromServerButDataFromCacheExists serverId = " + serverId );
+		console.log( "downloadSongFromServerButDataFromCacheExists troffDataFromCache.serverId = " + troffDataFromCache.serverId );
 
 		if( serverId == troffDataFromCache.serverId ) {
-			console.error( "createSongAudio -> fileName = " + fileName );
+			console.log( "downloadSongFromServerButDataFromCacheExists createSongAudio -> fileName = " + fileName );
 			await createSongAudio( fileName );
-			console.error( "addItem_NEW_2 -> fileName = " + fileName );
+			console.log( "downloadSongFromServerButDataFromCacheExists addItem_NEW_2 -> fileName = " + fileName );
 			addItem_NEW_2( fileName );
-			console.error( "addItem_NEW_2 <-" );
+			console.log( "downloadSongFromServerButDataFromCacheExists addItem_NEW_2 <-" );
 		} else {
-			console.error( "Troff.showImportData -> fileName = " + fileName );
+			console.log( "downloadSongFromServerButDataFromCacheExists Troff.showImportData -> fileName = " + fileName );
 			Troff.showImportData( fileName, serverId );
-			console.error( "Troff.showImportData <-" );
+			console.log( "downloadSongFromServerButDataFromCacheExists Troff.showImportData <-" );
 		}
 		console.log( "downloadSongFromServerButDataFromCacheExists F" );
 
@@ -3963,7 +3975,6 @@ var DBClass = function(){
 	/*DB*/this.cleanDB = function(){
 		console.log( "DB*/this.cleanDB ->");
 		nDBc.getAllKeys( function( allKeys ) {
-			console.log( "nDBc.getAllKeys callback -> allKeys", allKeys);
 			if(allKeys.length === 0){ // This is the first time Troff is started:
 				DB.saveSonglists_new();
 			}
@@ -4053,12 +4064,10 @@ var DBClass = function(){
 			allKeys.forEach( (key, i) => {
 				DB.cleanSong(key, nDB.get( key ) );
 			} );
-			console.log( "nDBc.getAllKeys callback <- " );
 		});//end get all keys
 	};
 
 	/*DB*/this.saveSonglists_new = function() {
-		console.log( "db.saveSonglists_new ->" );
 		var i,
 			aoSonglists = [],
 			aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
@@ -4069,7 +4078,6 @@ var DBClass = function(){
 
 		var straoSonglists = JSON.stringify(aoSonglists);
 		nDB.set( 'straoSongLists', straoSonglists );
-			console.log( "db.saveSonglists_new <-" );
 	}
 
 	/*DB*/this.setCurrentAreas = function(songId){
@@ -5338,14 +5346,13 @@ var IO = new IOClass();
 var Rate = new RateClass();
 
 loadExternalHtml = function(includes, callback) {
-		console.log( "loadExternalHtml -> ");
+	console.log( "loadExternalHtml -> ");
 	if( includes.length == 0 ) {
 		console.log( "loadExternalHtml -> return callback()" );
 		return callback();
 	}
 	const currentElement = includes.eq(-1);
 
-		console.log( "currentElement: ", currentElement);
 	includes.splice( includes.length-1, 1);
 
 	const file = $( currentElement ).data('include');
