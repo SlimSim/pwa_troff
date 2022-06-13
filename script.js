@@ -246,8 +246,12 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	console.log( "setSong2: newElem", newElem);
 	console.log( "setSong2: songData", songData);
 
-
-	newElem.setAttribute('src', songData);
+	console.log( "setSong2: trying to set songData to src of newElem" );
+	//newElem.setAttribute('src', songData);
+	console.log( "script.js setSong2: settign src to path instead of songData!" );
+	console.log( "script.js setSong2: path", path );
+	newElem.setAttribute('src', path); // bara byta från songData till path?
+	console.log( "setSong2: done setting songData to src of newElem" );
 
 } //end setSong2
 
@@ -353,7 +357,7 @@ async function createSongAudio( path ) {
 		try {
 			let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile( path );
 
-			console.log( "createSongAudio: v3SongObjectUrl", v3SongObjectUrl);
+//			console.log( "createSongAudio: v3SongObjectUrl", v3SongObjectUrl); // v3SongObjectUrl är olika för iOS och dator Chrome SAMT dator Firefox, så behöver inte vara samma :)
 
 			setSong2( path, "audio", v3SongObjectUrl );
 		} catch ( e ) {

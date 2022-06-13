@@ -94,11 +94,6 @@ $(document).ready( async function() {
 	console.log( "ios.js D have set src to horse.mp3" );
 	console.log( "ios.js Good luck!" );
 
-//	$( "#player3" ).attr( "src",  );
-
-
-
-
 });
 
 
