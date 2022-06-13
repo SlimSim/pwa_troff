@@ -2,6 +2,10 @@
 	if( !window.console ) {
 		return;
 	}
+
+	if( !environment.badLog ) {
+		return;
+	}
 	//let cl,ce,cw;
 
 	let badLogJsParent = $("<section>" ).addClass("bg-Burlywood normalSize");
