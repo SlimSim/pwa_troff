@@ -236,7 +236,12 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
-	newElem.setAttribute('src', songData);
+	//Safari does not support blobs as src :(
+	if( Troff.isSafari ) {
+		newElem.setAttribute('src', path );
+	} else {
+		newElem.setAttribute('src', songData );
+	}
 
 } //end setSong2
 
@@ -943,7 +948,7 @@ function dataTableShowColumnsForFloatingState() {
 //******************************************************************************
 
 var TroffClass = function(){
-		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+		/*Troff*/this.isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 		var strCurrentSong = "";
 		var iCurrentGalleryId = 0;
 		var startTime = 0; // unused?
@@ -1268,8 +1273,6 @@ var TroffClass = function(){
 			return;
 		}
 
-		if( isSafari ) { return Troff.safariBug( fileName ) }
-
 		Troff.showDownloadSongFromServerInProgress( fileName );
 		const hash = "#" + serverId + "&" + encodeURI( fileName );
 		gtag('event', 'Download Song', { 'event_category' : 'Perform change', 'event_label': hash } );
@@ -1320,8 +1323,6 @@ var TroffClass = function(){
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
-
-		if( isSafari ) { return Troff.safariBug( troffData.fileName, markers ) }
 
 		try {
 			await Promise.all([
@@ -1963,7 +1964,7 @@ var TroffClass = function(){
 		Troff.setMood('wait');
 
 		// Hack to force Safari to play the sound after the timeout:
-		if( isSafari ) {
+		if( Troff.isSafari ) {
 			audio.play();
 			audio.pause();
 		}

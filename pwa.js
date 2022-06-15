@@ -5,6 +5,7 @@ if( "serviceWorker" in navigator) {
 		navigator.serviceWorker.register( serviceWorkerPath )
 		.then( reg => {
 			//console.info("service-worker.js registered!");
+			reg.update();
 		}).catch( error => {
 			console.error( "service-worker.js failed to register:", error );
 		});
