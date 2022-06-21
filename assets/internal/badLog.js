@@ -3,6 +3,11 @@
 		return;
 	}
 
+	if( typeof environment == 'undefined' || environment.badLog === undefined ) {
+		console.warn( "environment.badLog is not defined, returning from badLog" );
+		return;
+	}
+
 	if( !environment.badLog ) {
 		return;
 	}
