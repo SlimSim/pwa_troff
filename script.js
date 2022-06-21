@@ -2885,6 +2885,7 @@ var TroffClass = function(){
 				document.getElementById(nameId + 'S').addEventListener('click', stopM);
 				document.getElementById(nameId + 'E').addEventListener('click', editM);
 			}//end for-loop
+			console.log( "addMarkers: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
 			Troff.fixMarkerExtraExtendedColor();
 		}; // end addMarker ****************/
@@ -3061,6 +3062,7 @@ var TroffClass = function(){
 
 			// Remove Marker from HTML
 			$( markerId ).closest('li').remove();
+			console.log( "removeMarker: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
 
 			// remove from DB
@@ -3172,6 +3174,7 @@ var TroffClass = function(){
 				$('#'+markerId).prev().html( Troff.secToDisp(newTime) );
 			}
 
+			console.log( "stretchMarkers: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
 			DB.saveMarkers(Troff.getCurrentSong() );
 			$( "#stretchMarkersDialog" ).addClass( "hidden" );
@@ -3344,6 +3347,7 @@ var TroffClass = function(){
 				$('#'+markerId).prev().html( Troff.secToDisp(newTime) );
 			}
 
+			console.log( "moveMarkers: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
 			DB.saveMarkers(Troff.getCurrentSong() );
 		};
@@ -3422,6 +3426,7 @@ var TroffClass = function(){
 
 				$('#'+markerId)[0].timeValue = newTime;
 				$('#'+markerId + 'S')[0].timeValue = newTime;
+				console.log( "editMarker: -> setAppropriateMarkerDistance");
 				Troff.setAppropriateMarkerDistance();
 
 				var startTime = Number($('.currentMarker')[0].timeValue);
@@ -3509,27 +3514,40 @@ var TroffClass = function(){
 		}; // end setAppropriateActivePlayRegion
 
 		this.setAppropriateMarkerDistance = function () {
+			console.log( "setAppropriateMarkerDistance -> " );
 			$( "#markerSection" ).removeClass( "hidden" );
 			var child = $('#markerList li:first-child')[0];
 
 			var timeBarHeight = $('#timeBar').height() - 10;
+			console.log( "setAppropriateMarkerDistance: timeBarHeight", timeBarHeight );
 			var totalDistanceTop = 4;
 
 			var barMarginTop = parseInt($('#timeBar').css('margin-top'));
+			console.log( "setAppropriateMarkerDistance: barMarginTop", barMarginTop );
 			while(child){
+
+				console.log( "setAppropriateMarkerDistance: CHILD" );
 				var audioVideo =  document.querySelector('audio, video');
 				if( audioVideo == null ) {
 					console.error("there is no audio or video tag");
 					return;
 				}
 				var songTime = audioVideo.duration;
+				console.log( "setAppropriateMarkerDistance: songTime", songTime );
 				var markerTime = Number(child.childNodes[2].timeValue);
+				console.log( "setAppropriateMarkerDistance: markerTime", markerTime );
 				var myRowHeight = child.clientHeight;
+				console.log( "setAppropriateMarkerDistance: myRowHeight", myRowHeight );
 
 				var freeDistanceToTop = timeBarHeight * markerTime / songTime;
+				console.log( "setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop );
 
 				var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
+				console.log( "setAppropriateMarkerDistance: marginTop", marginTop );
+
+				// TODO: varför gör jag denna uträkning??? använder inte totalDistanceTop mer!!!
 				totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
+				console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
 
 				if( marginTop > 0 ){
 					$( child ).css( "border-top-width", marginTop + "px" );
@@ -3654,6 +3672,7 @@ var TroffClass = function(){
 			$('#markerSection').css("height", (height + "%"));
 			$('#markerSection').css("margin-top", (marginTopPX + "px"));
 
+			console.log( "zoom: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
 		};
 
@@ -4632,6 +4651,7 @@ var IOClass = function(){
 
 
 		window.addEventListener('resize', function(){
+			console.log( "resize: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
 		});
 
