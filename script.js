@@ -243,6 +243,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
 	console.log( "setSong2 A");
+	/*
 	console.log( "setSong2: newElem", newElem);
 	console.log( "setSong2: songData", songData);
 
@@ -252,6 +253,28 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	console.log( "script.js setSong2: path", path );
 	newElem.setAttribute('src', path); // bara byta från songData till path?
 	console.log( "setSong2: done setting songData to src of newElem" );
+*/
+/*
+										nedladdad via länk					tillagd från datorn
+på linux path				EJ *												EJ **
+på linux songData		OK													OK
+på safari path
+på safari songData
+
+*			Funkar efter omladdning, MEN markörerna fungerar INTE
+**		Markörerna fungerar INTE
+
+*/
+
+	if( Troff.isSafari ) {
+		newElem.setAttribute('src', path );			console.log( "setting src as path!" );
+	} else if( $("#usePath").hasClass("active") ) { // TODO: remove! and remove usePath!
+		newElem.setAttribute('src', path );			console.log( "setting src as path!" );
+	} else {
+		//för vanlig linux, bäst att använda songData hela tiden :)
+		newElem.setAttribute('src', songData ); 	console.log( "setting src to songData!" );
+	}
+
 
 } //end setSong2
 
