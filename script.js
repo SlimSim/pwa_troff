@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-25 12:21 -> " +  window.location.href )
+console.log( "script.js 2022-08-25 15:14 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -258,25 +258,63 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 										nedladdad via länk					tillagd från datorn
 på linux path				EJ *												EJ **
 på linux songData		OK													OK
-på safari path
+på safari path			OK (markörer fucked up)			funkar med foto. Ej film
 på safari songData	EJ (efter omladdning EJ)		Fungerar med foto, Fungerar EJ med video
 
 *			Funkar efter omladdning, MEN markörerna fungerar INTE
 **		Markörerna fungerar INTE
 
+
+on linux, tilladg från datorn, fungerar ej första gången
+		men fungerar efter omladdning
+		men fungerar INTE vid hård omladdning :(
+
 */
+/*
+	$( newElem ).bind('canplay', function() {
+		console.log( "newElem can play!" );
+		this.currentTime = 60;
+	});
+	*/
+	/*
+	newElem.oncanplay = function() {
+		console.log( "newElem can play javascript!" );
+    newElem.currentTime = 60;
+  };
+  */
+
+
+  let troffData = nDB.get( path );
+	console.log( "troffData", troffData);
+
+//  newElem.setAttribute( "type", "audio/mpeg" );
 	console.log( "Troff.isSafari():" + Troff.isSafari() );
+	console.log( "path", path);
+	console.log( "type", type);
+	console.log( "songData", songData);
 	if( Troff.isSafari() ) {
-		newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
-		//newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
+
+		/* TODO: SAFARI!!!!!
+		1) 		jag vill spara fileUrl på troffData när jag hämtar troffdatat från servern :)
+								-> men var vill jag spara fileUrl? det är ju inte fileData,
+										men det är ju inte troffData heller???
+		2)		jag vill ha med troffData här så att jag kan ta troffData.fileUrl för safari :)
+		3)		detta kommer INTE fungera när man lägger till egna låtar från datorn för safari :(
+		*/
+		if( troffData.fileUrl != undefined ) {
+			newElem.setAttribute('src', troffData.fileUrl ); 	console.log( "Safari: setting src to troffData.fileUrl!" );
+		} else {
+			// TODO: DONT KNOW vad som är bäst.....
+			// måste testa lite mer!
+			newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
+			//newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
+		}
+
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
 		newElem.setAttribute('src', songData ); 	console.log( "Linux: setting src to songData!" );
 		// TODO: USE songData HERE!!!
 
-
-		//Temp use
-		//newElem.setAttribute('src', path ); 	console.log( "Linux: setting src to path!" );
 	}
 
 
@@ -1423,6 +1461,7 @@ var TroffClass = function(){
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
+		markers.fileUrl = troffData.fileUrl;
 
 		console.log( "implemented environment.preventSafari :) " );
 
