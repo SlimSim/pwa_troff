@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.6.56",
+		version: "1.6.57",
 		urls: [
 			"/",
 			"/index.html",

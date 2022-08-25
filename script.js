@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-25 11:00 -> " +  window.location.href );
+console.log( "script.js 2022-08-25 11:25 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -259,7 +259,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 på linux path				EJ *												EJ **
 på linux songData		OK													OK
 på safari path
-på safari songData
+på safari songData	EJ
 
 *			Funkar efter omladdning, MEN markörerna fungerar INTE
 **		Markörerna fungerar INTE
@@ -267,9 +267,8 @@ på safari songData
 */
 
 	if( Troff.isSafari ) {
-		newElem.setAttribute('src', path );			console.log( "setting src as path!" );
-	} else if( $("#usePath").hasClass("active") ) { // TODO: remove! and remove usePath!
-		newElem.setAttribute('src', path );			console.log( "setting src as path!" );
+		newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
+		//newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
 		newElem.setAttribute('src', songData ); 	console.log( "setting src to songData!" );
