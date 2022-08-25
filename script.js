@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-25 11:42 -> " +  window.location.href );
+console.log( "script.js 2022-08-25 11:52 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -259,24 +259,24 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 på linux path				EJ *												EJ **
 på linux songData		OK													OK
 på safari path
-på safari songData	EJ
+på safari songData
 
 *			Funkar efter omladdning, MEN markörerna fungerar INTE
 **		Markörerna fungerar INTE
 
 */
-	console.log( "Troff.isSafari:" + Troff.isSafari );
-	if( Troff.isSafari ) {
-		newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
-		//newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
+	console.log( "Troff.isSafari():" + Troff.isSafari() );
+	if( Troff.isSafari() ) {
+		//newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
+		newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
-		//newElem.setAttribute('src', songData ); 	console.log( "Linux: setting src to songData!" );
+		newElem.setAttribute('src', songData ); 	console.log( "Linux: setting src to songData!" );
 		// TODO: USE songData HERE!!!
 
 
 		//Temp use
-		newElem.setAttribute('src', path ); 	console.log( "Linux: setting src to path!" );
+		//newElem.setAttribute('src', path ); 	console.log( "Linux: setting src to path!" );
 	}
 
 
@@ -1001,6 +1001,10 @@ var TroffClass = function(){
 		var nrTapps = 0;
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
+
+	/*Troff*/this.isSafari = function() {
+		return isSafari;
+	}
 
 	/*Troff*/this.initFileApiImplementation = function() {
 
