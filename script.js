@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-25 11:25 -> " +  window.location.href );
+console.log( "script.js 2022-08-25 11:42 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
