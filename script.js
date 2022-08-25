@@ -265,13 +265,18 @@ på safari songData	EJ
 **		Markörerna fungerar INTE
 
 */
-
+	console.log( "Troff.isSafari:" + Troff.isSafari );
 	if( Troff.isSafari ) {
 		newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
 		//newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
-		newElem.setAttribute('src', songData ); 	console.log( "setting src to songData!" );
+		//newElem.setAttribute('src', songData ); 	console.log( "Linux: setting src to songData!" );
+		// TODO: USE songData HERE!!!
+
+
+		//Temp use
+		newElem.setAttribute('src', path ); 	console.log( "Linux: setting src to path!" );
 	}
 
 
