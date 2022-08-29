@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-28 11:35 -> " +  window.location.href )
+console.log( "script.js 2022-08-29 12:18 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -3597,30 +3597,50 @@ var TroffClass = function(){
 
 			var barMarginTop = parseInt($('#timeBar').css('margin-top'));
 			console.log( "setAppropriateMarkerDistance: barMarginTop", barMarginTop );
-			while(child) {
 
-				//console.log( "setAppropriateMarkerDistance: CHILD" );
-				var audioVideo =  document.querySelector('audio, video');
-				if( audioVideo == null ) {
-					console.error("there is no audio or video tag");
-					return;
+			var audioVideo =  document.querySelector('audio, video');
+			if( audioVideo == null ) {
+				console.error("there is no audio or video tag");
+				return;
+			}
+
+			console.log( "setAppropriateMarkerDistance: audioVideo", audioVideo);
+
+			var songTime = audioVideo.duration;
+			console.log( "setAppropriateMarkerDistance: songTime (" + (typeof songTime) + ")", songTime );
+
+			if( true ) {
+				console.log( "setAppropriateMarkerDistance: songTime is infinity :(");
+				troffData = nDB.get( Troff.getCurrentSong() );
+				if( troffData.fileData != undefined && troffData.fileData.duration != undefined ) {
+					console.log( "setAppropriateMarkerDistance: setting songTime to songData duration");
+					songTime = troffData.songData.duration;
+				} else {
+					console.log( "setAppropriateMarkerDistance: setting songTime to max marker");
+					songTime = Number( $('#markerList li:last-child')[0].childNodes[2].timeValue);
 				}
-				var songTime = audioVideo.duration;
-				console.log( "setAppropriateMarkerDistance: songTime", songTime );
+			}
+			console.log( "setAppropriateMarkerDistance: songTime (" + (typeof songTime) + ")", songTime );
+
+
+
+			while(child) {
+				console.log( "--setAppropriateMarkerDistance: NEW CHILD" );
+
 				var markerTime = Number(child.childNodes[2].timeValue);
-				console.log( "setAppropriateMarkerDistance: markerTime", markerTime );
+				//console.log( "-setAppropriateMarkerDistance: markerTime", markerTime ); markerTime stämmer :)
 				var myRowHeight = child.clientHeight;
-				console.log( "setAppropriateMarkerDistance: myRowHeight", myRowHeight );
+				//console.log( "-setAppropriateMarkerDistance: myRowHeight", myRowHeight ); myRowHeight stämmer :)
 
 				var freeDistanceToTop = timeBarHeight * markerTime / songTime;
-				console.log( "setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop );
+				console.log( "- setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop ); // Blir fel <0>, pga songTime
 
 				var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
-				console.log( "setAppropriateMarkerDistance: marginTop", marginTop );
+				console.log( "- setAppropriateMarkerDistance: marginTop", marginTop );
 
 				// TODO: varför gör jag denna uträkning??? använder inte totalDistanceTop mer, jo, i nästa loop...
 				totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-				console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
+				console.log( "- setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );	// blir fel, ska ändra sig varje loop
 
 				if( marginTop > 0 ){
 					$( child ).css( "border-top-width", marginTop + "px" );
