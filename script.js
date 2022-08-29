@@ -18,6 +18,9 @@
 // todo: try to use the strict mode! :)
 // - what could possibly go wrong?
 // "use strict";
+
+console.log( "script.js 2022-08-29 14:17 -> " +  window.location.href )
+
 window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
