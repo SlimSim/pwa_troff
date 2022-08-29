@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-25 15:14 -> " +  window.location.href )
+console.log( "script.js 2022-08-28 11:14 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -292,7 +292,9 @@ on linux, tilladg från datorn, fungerar ej första gången
 	console.log( "path", path);
 	console.log( "type", type);
 	console.log( "songData", songData);
-	if( Troff.isSafari() ) {
+	console.log( "troffData", troffData);
+	console.log( "troffData.fileUrl", troffData.fileUrl);
+	if( true || Troff.isSafari() ) {
 
 		/* TODO: SAFARI!!!!!
 		1) 		jag vill spara fileUrl på troffData när jag hämtar troffdatat från servern :)
@@ -306,8 +308,8 @@ on linux, tilladg från datorn, fungerar ej första gången
 		} else {
 			// TODO: DONT KNOW vad som är bäst.....
 			// måste testa lite mer!
-			newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
-			//newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
+			//newElem.setAttribute('src', path );			console.log( "Safari: " + path + ", setting src as path!" );
+			newElem.setAttribute('src', songData ); console.log( "Safari: " + path + ", setting src to songData!" );
 		}
 
 	} else {
@@ -2911,7 +2913,7 @@ var TroffClass = function(){
 				listElement.appendChild(p);
 				listElement.appendChild(button);
 				listElement.appendChild(buttonS);
-				$( listElement ).addClass( MARKER_COLOR_PREFIX + color );
+				//$( listElement ).addClass( MARKER_COLOR_PREFIX + color ); // todo: ta tillbaka!
 
 
 				var child = $('#markerList li:first-child')[0];
@@ -2957,7 +2959,7 @@ var TroffClass = function(){
 			}//end for-loop
 			console.log( "addMarkers: -> setAppropriateMarkerDistance");
 			Troff.setAppropriateMarkerDistance();
-			Troff.fixMarkerExtraExtendedColor();
+			//Troff.fixMarkerExtraExtendedColor(); // TODO: ta tillbaka!
 		}; // end addMarker ****************/
 
 
@@ -3584,40 +3586,40 @@ var TroffClass = function(){
 		}; // end setAppropriateActivePlayRegion
 
 		this.setAppropriateMarkerDistance = function () {
-			console.log( "setAppropriateMarkerDistance -> " );
+			//console.log( "setAppropriateMarkerDistance -> " );
 			$( "#markerSection" ).removeClass( "hidden" );
 			var child = $('#markerList li:first-child')[0];
 
 			var timeBarHeight = $('#timeBar').height() - 10;
-			console.log( "setAppropriateMarkerDistance: timeBarHeight", timeBarHeight );
+			//console.log( "setAppropriateMarkerDistance: timeBarHeight", timeBarHeight );
 			var totalDistanceTop = 4;
 
 			var barMarginTop = parseInt($('#timeBar').css('margin-top'));
-			console.log( "setAppropriateMarkerDistance: barMarginTop", barMarginTop );
-			while(child){
+			//console.log( "setAppropriateMarkerDistance: barMarginTop", barMarginTop );
+			while(child) {
 
-				console.log( "setAppropriateMarkerDistance: CHILD" );
+				//console.log( "setAppropriateMarkerDistance: CHILD" );
 				var audioVideo =  document.querySelector('audio, video');
 				if( audioVideo == null ) {
 					console.error("there is no audio or video tag");
 					return;
 				}
 				var songTime = audioVideo.duration;
-				console.log( "setAppropriateMarkerDistance: songTime", songTime );
+				//console.log( "setAppropriateMarkerDistance: songTime", songTime );
 				var markerTime = Number(child.childNodes[2].timeValue);
-				console.log( "setAppropriateMarkerDistance: markerTime", markerTime );
+				//console.log( "setAppropriateMarkerDistance: markerTime", markerTime );
 				var myRowHeight = child.clientHeight;
-				console.log( "setAppropriateMarkerDistance: myRowHeight", myRowHeight );
+				//console.log( "setAppropriateMarkerDistance: myRowHeight", myRowHeight );
 
 				var freeDistanceToTop = timeBarHeight * markerTime / songTime;
-				console.log( "setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop );
+				//console.log( "setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop );
 
 				var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
 				console.log( "setAppropriateMarkerDistance: marginTop", marginTop );
 
-				// TODO: varför gör jag denna uträkning??? använder inte totalDistanceTop mer!!!
+				// TODO: varför gör jag denna uträkning??? använder inte totalDistanceTop mer, jo, i nästa loop...
 				totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-				console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
+				//console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
 
 				if( marginTop > 0 ){
 					$( child ).css( "border-top-width", marginTop + "px" );
@@ -3630,6 +3632,12 @@ var TroffClass = function(){
 				}
 				child = child.nextSibling;
 			}
+			console.log("setAppropriateMarkerDistance: every marker style:")
+			$("#markerList").children().each((i, v) => {
+				console.log( " * " +  $(v).attr("style") );
+			} );
+			console.log("setAppropriateMarkerDistance: every marker style done!");
+
 			Troff.setAppropriateActivePlayRegion();
 		}; // end setAppropriateMarkerDistance
 
