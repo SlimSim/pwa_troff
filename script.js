@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-29 14:17 -> " +  window.location.href )
+console.log( "script.js 2022-08-29 14:31 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -241,16 +241,20 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	//Safari does not play well with blobs as src :(
 	if( Troff.isSafari() ) {
-	  let troffData = nDB.get( path ); // borde denna ligga i if-en?
+		console.log( "setSong2: isSafari" );
+	  let troffData = nDB.get( path );
 		if( troffData.fileUrl != undefined ) {
+			console.log( "setSong2: setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
 		} else {
 			// TODO: Don't know vad som är bäst..... måste testa lite mer! MEN songData användes ju förut i prod så...
 			//newElem.setAttribute('src', path );
+			console.log( "setSong2: setting src to songData" );
 			newElem.setAttribute('src', songData );
 		}
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
+		console.log( "setSong2: is Linux setting src to songData" );
 		newElem.setAttribute('src', songData );
 	}
 
@@ -959,7 +963,7 @@ function dataTableShowColumnsForFloatingState() {
 //******************************************************************************
 
 var TroffClass = function(){
-		/*Troff*/this.isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 		var strCurrentSong = "";
 		var iCurrentGalleryId = 0;
 		var startTime = 0; // unused?
@@ -3454,6 +3458,7 @@ var TroffClass = function(){
 			var songTime = audioVideo.duration;
 
 			if( !isFinite( songTime ) ) {
+				console.log( "setAppropriateMarkerDistance: songTime is not finite!" );
 				troffData = nDB.get( Troff.getCurrentSong() );
 				if( troffData.fileData != undefined && troffData.fileData.duration != undefined ) {
 					songTime = troffData.fileData.duration;
