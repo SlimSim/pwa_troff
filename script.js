@@ -236,10 +236,18 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
-	//Safari does not support blobs as src :(
-	if( Troff.isSafari ) {
-		newElem.setAttribute('src', path );
+	//Safari does not play well with blobs as src :(
+	if( Troff.isSafari() ) {
+	  let troffData = nDB.get( path ); // borde denna ligga i if-en?
+		if( troffData.fileUrl != undefined ) {
+			newElem.setAttribute('src', troffData.fileUrl );
+		} else {
+			// TODO: Don't know vad som är bäst..... måste testa lite mer! MEN songData användes ju förut i prod så...
+			//newElem.setAttribute('src', path );
+			newElem.setAttribute('src', songData );
+		}
 	} else {
+		//för vanlig linux, bäst att använda songData hela tiden :)
 		newElem.setAttribute('src', songData );
 	}
 
@@ -958,6 +966,10 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
+	/*Troff*/this.isSafari = function() {
+		return isSafari;
+	}
+
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
@@ -1323,6 +1335,7 @@ var TroffClass = function(){
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
+		markers.fileUrl = troffData.fileUrl;
 
 		try {
 			await Promise.all([
@@ -1964,7 +1977,7 @@ var TroffClass = function(){
 		Troff.setMood('wait');
 
 		// Hack to force Safari to play the sound after the timeout:
-		if( Troff.isSafari ) {
+		if( isSafari ) {
 			audio.play();
 			audio.pause();
 		}
