@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-29 12:37 -> " +  window.location.href )
+console.log( "script.js 2022-08-29 12:56 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -3617,11 +3617,11 @@ var TroffClass = function(){
 				console.log( "setAppropriateMarkerDistance: songTime is infinity :(");
 				troffData = nDB.get( Troff.getCurrentSong() );
 				if( troffData.fileData != undefined && troffData.fileData.duration != undefined ) {
-					console.log( "setAppropriateMarkerDistance: setting songTime to songData duration");
+					console.log( "setAppropriateMarkerDistance: setting songTime to fileData duration");
 					console.log( "setAppropriateMarkerDistance: troffData", troffData);
-					console.log( "setAppropriateMarkerDistance: troffData.songData", troffData.songData);
-					console.log( "setAppropriateMarkerDistance: troffData.songData.duration", troffData.songData.duration);
-					songTime = troffData.songData.duration;
+					console.log( "setAppropriateMarkerDistance: troffData.fileData", troffData.fileData);
+					console.log( "setAppropriateMarkerDistance: troffData.fileData.duration", troffData.fileData.duration);
+					songTime = troffData.fileData.duration;
 				} else {
 					console.log( "setAppropriateMarkerDistance: setting songTime to max marker");
 					songTime = Number( $('#markerList li:last-child')[0].childNodes[2].timeValue);
