@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-28 11:14 -> " +  window.location.href )
+console.log( "script.js 2022-08-28 11:35 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -3593,9 +3593,10 @@ var TroffClass = function(){
 			var timeBarHeight = $('#timeBar').height() - 10;
 			//console.log( "setAppropriateMarkerDistance: timeBarHeight", timeBarHeight );
 			var totalDistanceTop = 4;
+			console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
 
 			var barMarginTop = parseInt($('#timeBar').css('margin-top'));
-			//console.log( "setAppropriateMarkerDistance: barMarginTop", barMarginTop );
+			console.log( "setAppropriateMarkerDistance: barMarginTop", barMarginTop );
 			while(child) {
 
 				//console.log( "setAppropriateMarkerDistance: CHILD" );
@@ -3605,21 +3606,21 @@ var TroffClass = function(){
 					return;
 				}
 				var songTime = audioVideo.duration;
-				//console.log( "setAppropriateMarkerDistance: songTime", songTime );
+				console.log( "setAppropriateMarkerDistance: songTime", songTime );
 				var markerTime = Number(child.childNodes[2].timeValue);
-				//console.log( "setAppropriateMarkerDistance: markerTime", markerTime );
+				console.log( "setAppropriateMarkerDistance: markerTime", markerTime );
 				var myRowHeight = child.clientHeight;
-				//console.log( "setAppropriateMarkerDistance: myRowHeight", myRowHeight );
+				console.log( "setAppropriateMarkerDistance: myRowHeight", myRowHeight );
 
 				var freeDistanceToTop = timeBarHeight * markerTime / songTime;
-				//console.log( "setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop );
+				console.log( "setAppropriateMarkerDistance: freeDistanceToTop", freeDistanceToTop );
 
 				var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
 				console.log( "setAppropriateMarkerDistance: marginTop", marginTop );
 
 				// TODO: varför gör jag denna uträkning??? använder inte totalDistanceTop mer, jo, i nästa loop...
 				totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-				//console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
+				console.log( "setAppropriateMarkerDistance: totalDistanceTop", totalDistanceTop );
 
 				if( marginTop > 0 ){
 					$( child ).css( "border-top-width", marginTop + "px" );
