@@ -3430,13 +3430,23 @@ var TroffClass = function(){
 			var totalDistanceTop = 4;
 
 			var barMarginTop = parseInt($('#timeBar').css('margin-top'));
-			while(child){
-				var audioVideo =  document.querySelector('audio, video');
-				if( audioVideo == null ) {
-					console.error("there is no audio or video tag");
-					return;
+			var audioVideo =  document.querySelector('audio, video');
+			if( audioVideo == null ) {
+				console.error("there is no audio or video tag");
+				return;
+			}
+			var songTime = audioVideo.duration;
+
+			if( !isFinite( songTime ) ) {
+				troffData = nDB.get( Troff.getCurrentSong() );
+				if( troffData.fileData != undefined && troffData.fileData.duration != undefined ) {
+					songTime = troffData.fileData.duration;
+				} else {
+					songTime = Number( $('#markerList li:last-child')[0].childNodes[2].timeValue);
 				}
-				var songTime = audioVideo.duration;
+			}
+
+			while(child){
 				var markerTime = Number(child.childNodes[2].timeValue);
 				var myRowHeight = child.clientHeight;
 
