@@ -19,14 +19,11 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-30 13:05 -> " +  window.location.href );
-console.log( "newAppCaches", newAppCaches );
+console.log( "script.js 2022-08-30 15:17  1.7.39 -> " +  window.location.href );
 
-/*
 window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
-*/
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];

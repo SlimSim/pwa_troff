@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.7.6",
+		version: "1.7.39",
 		urls: [
 			"/",
 			"/index.html",
@@ -131,26 +131,17 @@ function createCacheKey(name, version) {
 	return name + "-v" + version;
 }
 
+
+
+( () => {
+} )();
+
+
 self.addEventListener( "install", function ( event ) {
 
 	function addToCache(cache, url) {
 		cache.add(url).catch(e => {
 			console.info(`Info: cache.add( ${ url } ) fails:`, e);
-		});
-	}
-
-	function broadcast( message, status ) {
-	if( typeof BroadcastChannel === 'undefined' ) {
-			return;
-		}
-		// From service-worker.js:
-		const channel = new BroadcastChannel('service-worker-brodcastChanel');
-
-		channel.postMessage({
-			notify : {
-				message : message,
-				status : status
-			}
 		});
 	}
 
@@ -167,10 +158,14 @@ self.addEventListener( "install", function ( event ) {
 			}
 		}))
 		.then(function () {
-			broadcast(
-				"New version are now cached and Troff will work offline.\nHave fun!",
-				"success"
-			);
+			if( typeof BroadcastChannel === 'undefined' ) {
+				return;
+			}
+			const channel = new BroadcastChannel('service-worker-broadcastChanel');
+
+			channel.postMessage({
+				versionNumber : newAppCaches[0].version
+			});
 
 			return this.skipWaiting();
 		})
