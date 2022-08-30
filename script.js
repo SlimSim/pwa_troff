@@ -19,11 +19,14 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-30 12:50 -> " +  window.location.href )
+console.log( "script.js 2022-08-30 13:05 -> " +  window.location.href );
+console.log( "newAppCaches", newAppCaches );
 
+/*
 window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
+*/
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
@@ -246,27 +249,14 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		if( troffData.fileUrl != undefined ) {
 			console.log( "setSong2: setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
-			/*
-			newElem.addEventListener("loadeddata", (event ) => {
-				console.log( "setSong2 / loadeddata ->");
-				console.log( "setSong2 / loadeddata: a", event);
-				console.log( "setSong2 / loadeddata: setting newElem.currentTime to 50");
-				newElem.currentTime = 50;
-				console.log( "setSong2 / loadeddata: done setting newElem.currentTime to 50");
-			});
-			*/
-
-			console.log( "setSong2: loading newElem:" );
-			newElem.load();
-			console.log( "setSong2: pausing newElem" );
-			newElem.pause();
-
 		} else {
 			// TODO: Don't know vad som är bäst..... måste testa lite mer! MEN songData användes ju förut i prod så...
 			//newElem.setAttribute('src', path );
 			console.log( "setSong2: setting src to songData" );
 			newElem.setAttribute('src', songData );
 		}
+		newElem.load();
+		newElem.pause();
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
 		console.log( "setSong2: is Linux setting src to songData" );
@@ -1999,9 +1989,7 @@ var TroffClass = function(){
 		Troff.setMood('wait');
 
 		// Hack to force Safari to play the sound after the timeout:
-		console.log( "troff.playSong, isSafari", isSafari );
 		if( isSafari ) {
-			console.log( "troff.playSong, in isSafari" );
 			audio.play();
 			audio.pause();
 		}
@@ -3475,7 +3463,6 @@ var TroffClass = function(){
 			var songTime = audioVideo.duration;
 
 			if( !isFinite( songTime ) ) {
-				console.log( "setAppropriateMarkerDistance: songTime is not finite!" );
 				troffData = nDB.get( Troff.getCurrentSong() );
 				if( troffData.fileData != undefined && troffData.fileData.duration != undefined ) {
 					songTime = troffData.fileData.duration;
