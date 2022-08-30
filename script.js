@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-29 14:31 -> " +  window.location.href )
+console.log( "script.js 2022-08-30 11:51 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -240,12 +240,29 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
 	//Safari does not play well with blobs as src :(
-	if( Troff.isSafari() ) {
+	if( true || Troff.isSafari() ) {
 		console.log( "setSong2: isSafari" );
 	  let troffData = nDB.get( path );
 		if( troffData.fileUrl != undefined ) {
 			console.log( "setSong2: setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
+			newElem.addEventListener("loadeddata", (a, b, c ) => {
+				console.log( "setSong2 / loadeddata ->");
+				console.log( "setSong2 / loadeddata: a", a);
+				console.log( "setSong2 / loadeddata: b", b);
+				console.log( "setSong2 / loadeddata: c", c);
+				console.log( "setSong2 / loadeddata: setting newElem.currentTime to 50");
+				newElem.currentTime = 50;
+				console.log( "setSong2 / loadeddata: done setting newElem.currentTime to 50");
+			});
+
+			/*
+			console.log( "setSong2: loading newElem:" );
+			newElem.load();
+			console.log( "setSong2: pausing newElem" );
+			newElem.pause();
+			*/
+
 		} else {
 			// TODO: Don't know vad som är bäst..... måste testa lite mer! MEN songData användes ju förut i prod så...
 			//newElem.setAttribute('src', path );
@@ -1984,7 +2001,9 @@ var TroffClass = function(){
 		Troff.setMood('wait');
 
 		// Hack to force Safari to play the sound after the timeout:
+		console.log( "troff.playSong, isSafari", isSafari );
 		if( isSafari ) {
+			console.log( "troff.playSong, in isSafari" );
 			audio.play();
 			audio.pause();
 		}
