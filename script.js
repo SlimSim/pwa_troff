@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-30 12:41 -> " +  window.location.href )
+console.log( "script.js 2022-08-30 12:50 -> " +  window.location.href )
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -246,6 +246,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		if( troffData.fileUrl != undefined ) {
 			console.log( "setSong2: setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
+			/*
 			newElem.addEventListener("loadeddata", (event ) => {
 				console.log( "setSong2 / loadeddata ->");
 				console.log( "setSong2 / loadeddata: a", event);
@@ -253,6 +254,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 				newElem.currentTime = 50;
 				console.log( "setSong2 / loadeddata: done setting newElem.currentTime to 50");
 			});
+			*/
 
 			console.log( "setSong2: loading newElem:" );
 			newElem.load();
