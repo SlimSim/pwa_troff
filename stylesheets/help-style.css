@@ -19,6 +19,7 @@ header {
 	font-size: 20px;
 	padding: 0px;
 	min-height: 48px;
+	max-height: 60px;
 }
 footer {
 	/*min-height: 100px;*/
