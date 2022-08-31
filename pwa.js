@@ -51,8 +51,9 @@ PWA.listenForBroadcastChannel = function() {
 
 		if( event.data.versionNumber !== undefined ) {
 
+			const oldVersionNumber = nDB.get( "TROFF_VERSION_NUMBER" );
 			window.localStorage.setItem( "TROFF_VERSION_NUMBER", JSON.stringify( event.data.versionNumber ) );
-			if( nDB.get( "TROFF_VERSION_NUMBER" ) == null ) {
+			if( oldVersionNumber == null ) {
 				$.notify(
 					"Troff is now cached and will work offline.\nHave fun!",
         	"success"
