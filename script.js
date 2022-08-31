@@ -57,6 +57,10 @@ var TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
 var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 const TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME"
 
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const isIphone = navigator.userAgent.indexOf( "iPhone" );
+const isIpad = navigator.userAgent.indexOf( "iPad" );
+
 
 var MARKER_COLOR_PREFIX = "markerColor";
 
@@ -240,8 +244,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
 	//Safari does not play well with blobs as src :(
-	if( true || Troff.isSafari() ) {
-		console.log( "setSong2: isSafari" );
+	if( isSafari ) {
 	  let troffData = nDB.get( path );
 		if( troffData.fileUrl != undefined ) {
 			console.log( "setSong2: setting src to troffData.fileUrl" );
@@ -965,7 +968,6 @@ function dataTableShowColumnsForFloatingState() {
 //******************************************************************************
 
 var TroffClass = function(){
-		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 		var strCurrentSong = "";
 		var iCurrentGalleryId = 0;
 		var startTime = 0; // unused?
@@ -975,9 +977,10 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
-	/*Troff*/this.isSafari = function() {
+	/*Troff* /this.isSafari = function() {
 		return isSafari;
 	}
+	*/
 
 	/*Troff*/this.initFileApiImplementation = function() {
 
@@ -5310,6 +5313,11 @@ loadExternalHtml = function(includes, callback) {
 window.addEventListener('hashchange',  Troff.checkHashAndGetSong );
 
 $(document).ready( async function() {
+
+	if( isIpad || isIphone ) {
+		$( "#TROFF_SETTING_UI_VOLUME_SLIDER_SHOW" ).removeClass( "active" );
+	}
+
 	setTimeout( () => {
 		// don't show tha load-screen for more than 10-seconds
 		// (so that it will be removed even if something breaks)
