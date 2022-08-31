@@ -406,7 +406,7 @@
 				<div class="full-height">
 					<h1 class="d-sm-none">Settings</h1>
 					<div class="doubleSliders flexOne">
-						<div class="sliderInfo">
+						<div id="volumeParent" class="sliderInfo">
 							<input
 									class="button small regularButton"
 									type="button"
@@ -1471,6 +1471,13 @@
 								id="TROFF_SETTING_UI_LOOP_BUTTONS_SHOW"
 								title="Show the nr-of-loops-selector"
 								value="nr of loop" />
+							<input class="w-auto-on-mobile buttWidthMedium st-simple-on-off-button stOnOffButton active"
+								type="button"
+								data-st-css-selector-to-hide="#volumeParent"
+								data-st-save-value-key="TROFF_SETTING_UI_VOLUME_SLIDER_SHOW"
+								id="TROFF_SETTING_UI_VOLUME_SLIDER_SHOW"
+								title="Show the volume-slider"
+								value="volume" />
 						</div>
 					</div>
 
