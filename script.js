@@ -19,9 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-09-01 08:09  1.7.50 -> " +  window.location.href );
-
-console.log("navigator.userAgent", navigator.userAgent);
+console.log( "script.js 2022-09-01 09:02  1.7.52 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -60,8 +58,8 @@ var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 const TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME"
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const isIphone = navigator.userAgent.indexOf( "iPhone" );
-const isIpad = navigator.userAgent.indexOf( "iPad" );
+const isIphone = navigator.userAgent.indexOf( "iPhone" ) !== -1;
+const isIpad = navigator.userAgent.indexOf( "iPad" ) !== -1;
 
 
 var MARKER_COLOR_PREFIX = "markerColor";
@@ -246,6 +244,35 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
 	//Safari does not play well with blobs as src :(
+	if( $( "#TROFF_ADVANCED_SETTING_FORCE_SRC_TYPE" ).hasClass("active") ) {
+		let msg = "setSong2: override src to";
+
+		let troffData = nDB.get( path );
+		if( $( "#TROFF_ADVANCED_SETTING_USE_SRC_FILE_URL" ).hasClass("active") ) {
+
+			newElem.setAttribute('src', troffData.fileUrl );
+			msg += " fileUrl";
+		}
+		else if ( $( "#TROFF_ADVANCED_SETTING_USE_SRC_SONG_DATA" ).hasClass("active") ) {
+			newElem.setAttribute('src', songData );
+			msg += " songData";
+		}
+		else if ( $( "#TROFF_ADVANCED_SETTING_USE_SRC_PATH" ).hasClass("active") ) {
+			newElem.setAttribute('src', path );
+			msg += " path";
+		}
+		else { msg += " UNDEFINED!\nApp will probably crash...  :(  " }
+
+		if( $( "#TROFF_ADVANCED_SETTING_DO_LOAD_AND_PAUSE" ).hasClass("active") ) {
+			newElem.load();
+			newElem.pause();
+			msg += ", doing load/pause";
+		}
+
+		msg += ", safari("+isSafari+"), iPhone("+isIphone+"), iPad("+isIpad+"), fileUrl(" + troffData.fileUrl + ")";
+		console.log( msg );
+
+	} else
 	if( isSafari ) {
 	  let troffData = nDB.get( path );
 		if( troffData.fileUrl != undefined ) {
@@ -1137,6 +1164,7 @@ var TroffClass = function(){
 
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
+		markers.fileUrl = troffData.fileUrl;
 		try {
 			let saveToDBResponse = nDB.set( troffData.fileName, markers );
 			let doneSaveToDB = await saveToDBResponse;
