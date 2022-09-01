@@ -85,7 +85,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.2.27",
+		version: "1.2.28",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",

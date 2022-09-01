@@ -206,7 +206,12 @@ $( ".st-simple-on-off-button" ).each( function( i, v ) {
 $( ".st-simple-on-off-button" ).click( function( event ) {
 	var $target = $( event.target ).closest( ".st-simple-on-off-button" ),
 		cssSelectorToHide = $target.data( "st-css-selector-to-hide" ),
+		selectKey = $target.data( "st-select-key" ),
 		setActive = !$target.hasClass( "active" );
+
+	if( selectKey ) {
+		$( "[data-st-select-key=" + selectKey + "]" ).removeClass( "active" );
+	}
 
 	if( setActive ) {
 		$target.addClass( "active" );
