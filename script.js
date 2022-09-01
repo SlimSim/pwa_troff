@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-08-30 15:17  1.7.44 -> " +  window.location.href );
+console.log( "script.js 2022-09-01 08:09  1.7.50 -> " +  window.location.href );
 
 console.log("navigator.userAgent", navigator.userAgent);
 
