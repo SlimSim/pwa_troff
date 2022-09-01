@@ -210,7 +210,10 @@ $( ".st-simple-on-off-button" ).click( function( event ) {
 		setActive = !$target.hasClass( "active" );
 
 	if( selectKey ) {
-		$( "[data-st-select-key=" + selectKey + "]" ).removeClass( "active" );
+		$( "[data-st-select-key=" + selectKey + "]" ).each( (i, v) => {
+				$(v).removeClass( "active" );
+        ST_DB.set( $(v).data( "st-save-value-key" ), false );
+    });
 	}
 
 	if( setActive ) {
