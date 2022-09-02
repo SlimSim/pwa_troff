@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-09-01 15:11  1.7.53 -> " +  window.location.href );
+console.log( "script.js 2022-09-02 23:57  1.7.54 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -224,7 +224,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	var newElem = null;
 	// show the file data
 	clearContentDiv();
-	var type = getFileType(path);
+	var type = getFileType(path); //varför gör jag detta? jag har ju redan type!!!
 
 	if (type == "image")
 		newElem = addImageToContentDiv();
@@ -273,22 +273,45 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		console.log( msg );
 
 	} else
-	if( isSafari ) {
+	if( true ||  isSafari ) {
+
+
 	  let troffData = nDB.get( path );
-		if( troffData.fileUrl != undefined ) {
-			console.log( "setSong2: setting src to troffData.fileUrl" );
+		console.log( "troffData", troffData );
+	  if( troffData.localInformation && troffData.localInformation.addedFromThisDevice ) {
+			console.log( "setSong2: song is added from this device; setting src to songData" );
+			newElem.setAttribute('src', songData );
+	  } else if( troffData.fileUrl != undefined ) {
+			console.log( "setSong2: song is added from the internet; setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
+
+			IO.alert(
+				"Please add song manually",
+				"This song has been downloaded from the internet, " +
+				"and will not work offline. You can solve this in two ways:<br />" +
+				"1) Add the file called<br /><br />" + path + "<br /><br />" +
+				"with the "+
+				"<label " +
+					"title=\"Add songs, videos or pictures to Troff\"" +
+					"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
+					"for=\"fileUploader\">" +
+						"<i class=\"fa-music fa-stack-10x m-relative-7 font-size-relative-1\"></i>" +
+						"<i class=\"fa-plus fa-stack-10x m-relative-4 font-size-relative-65\"></i>" +
+				"</label>" +
+				"-button at the top of the song-dialog or <br /><br />"+
+				"2) Switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />" +
+				"Best of luck!"
+			);
+
 		} else {
-			// TODO: Don't know vad som är bäst..... måste testa lite mer! MEN songData användes ju förut i prod så...
-			//newElem.setAttribute('src', path );
-			console.log( "setSong2: setting src to songData" );
+			console.log( "setSong2: song origin is unknown; setting src to songData" );
 			newElem.setAttribute('src', songData );
 		}
 		newElem.load();
 		newElem.pause();
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
-		console.log( "setSong2: is Linux setting src to songData" );
+		console.log( "setSong2: is Linux; setting src to songData" );
 		newElem.setAttribute('src', songData );
 	}
 
@@ -1018,11 +1041,18 @@ var TroffClass = function(){
 
 				if( nDB.get(key) == null ) {
 					let newSongObject = DB.fixSongObject();
+					newSongObject.localInformation = {
+						addedFromThisDevice : true,
+					}
 					newSongObject.fileData = {
 						lastModified : file.lastModified,
 						size : file.size
 					};
 					nDB.set( key, newSongObject );
+				} else {
+					let localInf = nDB.get( key ).localInformation || {};
+					localInf.addedFromThisDevice = true;
+					nDB.setOnSong( key, "localInformation", localInf );
 				}
 
 				addItem_NEW_2( key );
@@ -1085,9 +1115,12 @@ var TroffClass = function(){
 		$( "#uploadSongToServerInProgressDialog" ).removeClass( "hidden" );
 		try {
 			const markerObject = nDB.get( songKey );
-			let resp = await fileHandler.sendFile( songKey, markerObject );
-
 			const fakeTroffData = { markerJsonString : JSON.stringify( markerObject ) }
+
+			//removing localInformation before sending it to server:
+			markerObject.localInformation = undefined;
+
+			let resp = await fileHandler.sendFile( songKey, markerObject );
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
 
@@ -1165,6 +1198,9 @@ var TroffClass = function(){
 		let markers = JSON.parse( troffData.markerJsonString );
 		markers.serverId = serverId;
 		markers.fileUrl = troffData.fileUrl;
+		let oldMarkers = nDB.get( troffData.fileName ) || {};
+		markers.localInformation = oldMarkers.localInformation;
+
 		try {
 			let saveToDBResponse = nDB.set( troffData.fileName, markers );
 			let doneSaveToDB = await saveToDBResponse;
