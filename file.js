@@ -102,7 +102,7 @@ $(function () {
 		// Only process image, audio and video files.
 		console.log( "file.js handleFileWithFileType: file.type ", file.type );
 		console.log( "isSafari", isSafari );
-		if( true || !(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*')) ) {
+		if( !(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*')) ) {
 			if( isSafari ) {
 				IO.alert( "Safari can not recognize this file", "Troff only supports audios, videos and images, " +
 					"if this file is on of those, " +
