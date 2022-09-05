@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-09-02 23:57  1.7.54 -> " +  window.location.href );
+console.log( "script.js 2022-09-05 13:19  1.7.56 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -273,7 +273,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		console.log( msg );
 
 	} else
-	if( true ||  isSafari ) {
+	if( isSafari ) {
 
 
 	  let troffData = nDB.get( path );
@@ -285,23 +285,26 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 			console.log( "setSong2: song is added from the internet; setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
 
-			IO.alert(
-				"Please add song manually",
-				"This song has been downloaded from the internet, " +
-				"and will not work offline. You can solve this in two ways:<br />" +
-				"1) Add the file called<br /><br />" + path + "<br /><br />" +
-				"with the "+
-				"<label " +
-					"title=\"Add songs, videos or pictures to Troff\"" +
-					"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
-					"for=\"fileUploader\">" +
-						"<i class=\"fa-music fa-stack-10x m-relative-7 font-size-relative-1\"></i>" +
-						"<i class=\"fa-plus fa-stack-10x m-relative-4 font-size-relative-65\"></i>" +
-				"</label>" +
-				"-button at the top of the song-dialog or <br /><br />"+
-				"2) Switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />" +
-				"Best of luck!"
-			);
+			// if first time loading the song, don't show alert :)
+			if( troffData.localInformation && troffData.localInformation.nrTimesLoaded > 5 ) {
+				IO.alert(
+					"Please add file manually",
+					"This file has been downloaded, " +
+					"and will not work offline. You can solve this in two ways:<br />" +
+					"1) Add the file called<br /><br />" + path + "<br /><br />" +
+					"with the "+
+					"<label " +
+						"title=\"Add songs, videos or pictures to Troff\"" +
+						"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
+						"for=\"fileUploader\">" +
+							"<i class=\"fa-music fa-stack-10x m-relative-7 font-size-relative-1\"></i>" +
+							"<i class=\"fa-plus fa-stack-10x m-relative-4 font-size-relative-65\"></i>" +
+					"</label>" +
+					"-button at the top of the song-dialog or <br /><br />"+
+					"2) Switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />" +
+					"Best of luck!"
+				);
+			}
 
 		} else {
 			console.log( "setSong2: song origin is unknown; setting src to songData" );
@@ -315,6 +318,9 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		newElem.setAttribute('src', songData );
 	}
 
+	const localInfo = nDB.get( path ).localInformation || {};
+	const nrTimesLoaded = localInfo.nrTimesLoaded || 0;
+	nDB.setOnSong( path, ["localInformation", "nrTimesLoaded"], nrTimesLoaded + 1 );
 } //end setSong2
 
 function sortAndValue(sortValue, stringValue) {
@@ -1050,9 +1056,7 @@ var TroffClass = function(){
 					};
 					nDB.set( key, newSongObject );
 				} else {
-					let localInf = nDB.get( key ).localInformation || {};
-					localInf.addedFromThisDevice = true;
-					nDB.setOnSong( key, "localInformation", localInf );
+					nDB.setOnSong( key, [ "localInformation", "addedFromThisDevice" ], true );
 				}
 
 				addItem_NEW_2( key );
