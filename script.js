@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-09-05 13:35  1.7.57 -> " +  window.location.href );
+console.log( "script.js 2022-09-05 23:12  1.7.59 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -429,6 +429,7 @@ async function createSongAudio( path ) {
 };
 
 function addItem_NEW_2( key ) {
+	console.log( "addItem_NEW_2 -> key ", key );
 
 	var galleryId = "pwa-galleryId";
 	var extension = getFileExtension( key );
@@ -436,6 +437,18 @@ function addItem_NEW_2( key ) {
 
 	var selected_path = Troff.getCurrentSong();
 	var selected_galleryId = Troff.getCurrentGalleryId();
+
+	var dataInfo = {
+		"galleryId" : galleryId,
+		"fullPath" : key
+	};
+
+	const strDataInfo = JSON.stringify( dataInfo );
+	const thisSongAlreadyAdded = $('#dataSongTable').DataTable().column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
+		.data().toArray().includes( strDataInfo );
+	if( thisSongAlreadyAdded ) {
+		return;
+	}
 
 	DB.getVal( key, function( song ) {
 
@@ -458,11 +471,6 @@ function addItem_NEW_2( key ) {
 			if( song.TROFF_VALUE_tapTempo != undefined ) tempo = song.TROFF_VALUE_tapTempo;
 			if( song.info != undefined ) info = song.info;
 		}
-
-		var dataInfo = {
-			"galleryId" : galleryId,
-			"fullPath" : key
-		};
 
 		if( song && song.fileData ) {
 			if( song.fileData.duration ) {
@@ -488,7 +496,7 @@ function addItem_NEW_2( key ) {
 
 		let columns = [];
 
-		columns[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] = JSON.stringify( dataInfo ),
+		columns[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] = strDataInfo,
     columns[ DATA_TABLE_COLUMNS.getPos( "TYPE" ) ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
     columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,//Duration
     columns[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ] = titleOrFileName,
@@ -1064,6 +1072,7 @@ var TroffClass = function(){
 					Troff.selectSongInSongList( key );
 					createSongAudio( key );
 				}
+				$.notify( key + " was successfully added" );
 			} );
 		});
 
@@ -1389,6 +1398,7 @@ var TroffClass = function(){
 		if( serverId == troffDataFromCache.serverId ) {
 			await createSongAudio( fileName );
 			addItem_NEW_2( fileName );
+			$.notify( fileName + " was successfully added" );
 		} else {
 			Troff.showImportData( fileName, serverId );
 		}
@@ -1430,6 +1440,7 @@ var TroffClass = function(){
 
 		await createSongAudio( troffData.fileName );
 		addItem_NEW_2( troffData.fileName );
+		$.notify( troffData.fileName + " was successfully added" );
 	};
 
 	/*Troff*/this.editSongDialogSave = ( event ) => {
