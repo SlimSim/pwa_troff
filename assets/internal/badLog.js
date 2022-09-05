@@ -73,12 +73,12 @@
 
 
 	if( console.log ) {
-		//let cl = console.log;
+		let cl = console.log;
 		let kk = console.warn;
 		console.log = function(){
 			print(arguments, "#000000", "L: ");
-			//cl.apply(this, arguments)
-			kk.apply(this, arguments)
+			cl.apply(this, arguments)
+			//kk.apply(this, arguments)
 		}
 	}
 
