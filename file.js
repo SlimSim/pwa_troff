@@ -100,7 +100,21 @@ $(function () {
 
 	const handleFileWithFileType = function( file, callbackFunk ) {
 		// Only process image, audio and video files.
-		if( !(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*')) ) {
+		console.log( "file.js handleFileWithFileType: file.type ", file.type );
+		console.log( "isSafari", isSafari );
+		if( true || !(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*')) ) {
+			if( isSafari ) {
+				IO.alert( "Safari can not recognize this file", "Troff only supports audios, videos and images, " +
+					"if this file is on of those, " +
+					"you can try to use a different browser such as Firefox Chromium or Chrome<br /><br />" +
+					"Happy training!" );
+			} else {
+				IO.alert( "Unrecognized file", "Troff only supports audios, videos and images, " +
+					"this file seems to be a <br /><br />" + file.type +
+					"<br /><br />If this file is an audio-, video- or image-file, " +
+					"we are deeply sorry, please contact us and describe your problem<br /><br />" +
+					"Happy training!" );
+			}
 			console.error( "handleFileWithFileType: unrecognized type! file: ", file );
 			return;
 		}
