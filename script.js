@@ -244,45 +244,12 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	$( "#downloadSongFromServerInProgressDialog" ).addClass( "hidden" );
 
 	//Safari does not play well with blobs as src :(
-	if( $( "#TROFF_ADVANCED_SETTING_FORCE_SRC_TYPE" ).hasClass("active") ) {
-		let msg = "setSong2: override src to";
-
-		let troffData = nDB.get( path );
-		if( $( "#TROFF_ADVANCED_SETTING_USE_SRC_FILE_URL" ).hasClass("active") ) {
-
-			newElem.setAttribute('src', troffData.fileUrl );
-			msg += " fileUrl";
-		}
-		else if ( $( "#TROFF_ADVANCED_SETTING_USE_SRC_SONG_DATA" ).hasClass("active") ) {
-			newElem.setAttribute('src', songData );
-			msg += " songData";
-		}
-		else if ( $( "#TROFF_ADVANCED_SETTING_USE_SRC_PATH" ).hasClass("active") ) {
-			newElem.setAttribute('src', path );
-			msg += " path";
-		}
-		else { msg += " UNDEFINED!\nApp will probably crash...  :(  " }
-
-		if( $( "#TROFF_ADVANCED_SETTING_DO_LOAD_AND_PAUSE" ).hasClass("active") ) {
-			newElem.load();
-			newElem.pause();
-			msg += ", doing load/pause";
-		}
-
-		msg += ", safari("+isSafari+"), iPhone("+isIphone+"), iPad("+isIpad+"), fileUrl(" + troffData.fileUrl + ")";
-		console.log( msg );
-
-	} else
 	if( isSafari ) {
 
-
 	  let troffData = nDB.get( path );
-		console.log( "troffData", troffData );
 	  if( troffData.localInformation && troffData.localInformation.addedFromThisDevice ) {
-			console.log( "setSong2: song is added from this device; setting src to songData" );
 			newElem.setAttribute('src', songData );
 	  } else if( troffData.fileUrl != undefined ) {
-			console.log( "setSong2: song is added from the internet; setting src to troffData.fileUrl" );
 			newElem.setAttribute('src', troffData.fileUrl );
 
 			// if first time loading the song, don't show alert :)
@@ -307,14 +274,12 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 			}
 
 		} else {
-			console.log( "setSong2: song origin is unknown; setting src to songData" );
 			newElem.setAttribute('src', songData );
 		}
 		newElem.load();
 		newElem.pause();
 	} else {
 		//för vanlig linux, bäst att använda songData hela tiden :)
-		console.log( "setSong2: is Linux; setting src to songData" );
 		newElem.setAttribute('src', songData );
 	}
 
