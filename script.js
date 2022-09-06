@@ -19,7 +19,7 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-09-05 23:12  1.7.59 -> " +  window.location.href );
+console.log( "script.js 2022-09-05 23:12  1.7.60 -> " +  window.location.href );
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -2069,108 +2069,22 @@ var TroffClass = function(){
 		if(Troff.stopTimeout) clearInterval(Troff.stopTimeout);
 		Troff.setMood('wait');
 
-		//Todo: remove theese ifs, ticket: TESTING_SAFARI_NO_PLAY
-		if( $( "#TROFF_ADVANCED_SETTING_NOT_PLAYING_1" ).hasClass("active") ) {
-			let msg1 = "test 1, only enter isSafari-play/pause if wait > 0. wait(" + wait + ")";
-			if( isSafari && wait > 0 ) {
-				audio.play();
-				audio.pause();
-				msg1 += ", have done play/pause for safari";
-			}
-			console.log( msg1 );
-
-			Troff.stopTimeout = setTimeout(function(){
-					if(Troff.getMood() == 'pause' ) return;
-					audio.play();
-					Troff.setMood('play');
-			}, wait);
-
+		let localPlayAndSetMood = function() {
+			if( Troff.getMood() == 'pause' ) return;
+			audio.play();
+			Troff.setMood('play');
 		}
-		else if( $( "#TROFF_ADVANCED_SETTING_NOT_PLAYING_2" ).hasClass("active") ) {
-			let msg2 = "test 2, only do a timeout if wait > 0. wait(" + wait + ")";
+
+		if( wait > 0 ) {
+			// Hack to force Safari to play the sound after the timeout:
 			if( isSafari ) {
 				audio.play();
 				audio.pause();
-				msg2 += ", have done play/pause for safari";
 			}
-
-			console.log( msg2 );
-
-
-
-			if( wait > 0 ) {
-
-				Troff.stopTimeout = setTimeout(function(){
-					if(Troff.getMood() == 'pause' ) return;
-					audio.play();
-					Troff.setMood('play');
-				}, wait);
-			} else {
-				if(Troff.getMood() == 'pause' ) return; // is this neaded in this if?
-				audio.play();
-				Troff.setMood('play');
-			}
+			Troff.stopTimeout = setTimeout( localPlayAndSetMood, wait);
+		} else {
+			localPlayAndSetMood();
 		}
-		else if( $( "#TROFF_ADVANCED_SETTING_NOT_PLAYING_3" ).hasClass("active") ) {
-			let msg3 = "test 3, only do a timeout and only enter isSafari if wait > 0. wait(" + wait + ")";
-
-
-			if( isSafari & wait > 0 ) {
-				audio.play();
-				audio.pause();
-				msg3 += ", have done play/pause for safari";
-			}
-
-			console.log( msg3 );
-			if( wait > 0 ) {
-
-				Troff.stopTimeout = setTimeout(function(){
-					if(Troff.getMood() == 'pause' ) return;
-					audio.play();
-					Troff.setMood('play');
-				}, wait);
-			} else {
-				if(Troff.getMood() == 'pause' ) return; // is this neaded in this if?
-				audio.play();
-				Troff.setMood('play');
-			}
-		}
-		else if( $( "#TROFF_ADVANCED_SETTING_NOT_PLAYING_4" ).hasClass("active") ) {
-			const minWait = $( "#TROFF_ADVANCED_SETTING_NOT_PLAYING_NUMBER" ).val();
-			let msg4 = "test 4, if wait = 0, increase wait to + " + minWait + ". wait(" + wait + ")";
-
-			if( true || isSafari ) {
-				audio.play();
-				audio.pause();
-				msg4 += ", have done play/pause for safari";
-				if( wait == 0 ) {
-					wait = minWait;
-					msg4 += ", setting wait to " + wait;
-				}
-			}
-
-			console.log( msg4 );
-			Troff.stopTimeout = setTimeout(function(){
-					if(Troff.getMood() == 'pause' ) return;
-					audio.play();
-					Troff.setMood('play');
-			}, wait);
-		}
-		else { //Todo: remove this line along with the iffs, ticket: TESTING_SAFARI_NO_PLAY
-		console.log( "using old play-style ==> no special test solution is selected" );
-		// Hack to force Safari to play the sound after the timeout:
-		if( isSafari ) {
-			audio.play();
-			audio.pause();
-		}
-
-		Troff.stopTimeout = setTimeout(function(){
-				if(Troff.getMood() == 'pause' ) return;
-				audio.play();
-				Troff.setMood('play');
-		}, wait);
-
-		}//Todo: remove this line along with the iffs, ticket: TESTING_SAFARI_NO_PLAY
 
 		// stopInterval is the counter
 		if(Troff.stopInterval) clearInterval(Troff.stopInterval);
