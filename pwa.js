@@ -42,8 +42,8 @@ PWA.listenForBroadcastChannel = function() {
 	}
 
 	function updateVersionNumberInHtml( versionNumber ) {
-		$( ".app-version-number-parent" ).removeClass( "hidden" );
-		$( ".app-version-number" ).text( versionNumber );
+		$( ".app-core-version-number-parent" ).removeClass( "hidden" );
+		$( ".app-core-version-number" ).text( versionNumber );
 	};
 
 	updateVersionNumberInHtml( JSON.parse( window.localStorage.getItem( "TROFF_VERSION_NUMBER" ) ) );
