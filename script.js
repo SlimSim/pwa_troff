@@ -19,8 +19,6 @@
 // - what could possibly go wrong?
 // "use strict";
 
-console.log( "script.js 2022-09-05 23:12  1.7.60 -> " +  window.location.href );
-
 window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
@@ -1333,6 +1331,10 @@ var TroffClass = function(){
 
 		if( fileDoesExists ) {
 			if( serverId == troffDataFromCache.serverId ) {
+				const currentSongTroffData = nDB.get( Troff.getCurrentSong() );
+				if( currentSongTroffData && currentSongTroffData.serverId == serverId ) {
+					return;
+				}
 				await createSongAudio( fileName );
 				Troff.selectSongInSongList( fileName );
 			} else {
