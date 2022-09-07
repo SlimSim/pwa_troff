@@ -41,26 +41,41 @@ PWA.listenForBroadcastChannel = function() {
 		return;
 	}
 
-	function updateVersionNumberInHtml( versionNumber ) {
-		$( ".app-core-version-number-parent" ).removeClass( "hidden" );
-		$( ".app-core-version-number" ).text( versionNumber );
+	function updateVersionNumberInHtml( type, versionNumber ) {
+		$( ".app-" + type + "-version-number-parent" ).removeClass( "hidden" );
+		$( ".app-" + type + "-version-number" ).text( versionNumber );
 	};
 
-	updateVersionNumberInHtml( JSON.parse( window.localStorage.getItem( "TROFF_VERSION_NUMBER" ) ) );
+	updateVersionNumberInHtml( "core", JSON.parse( window.localStorage.getItem( "TROFF_CORE_VERSION_NUMBER" ) ) );
+	updateVersionNumberInHtml( "style-assets", JSON.parse( window.localStorage.getItem( "TROFF_STYLE_ASSETS_VERSION_NUMBER" ) ) );
+	updateVersionNumberInHtml( "include-assets", JSON.parse( window.localStorage.getItem( "TROFF_INCLUDE_ASSETS_VERSION_NUMBER" ) ) );
+	updateVersionNumberInHtml( "app-assets", JSON.parse( window.localStorage.getItem( "TROFF_APP_ASSETS_VERSION_NUMBER" ) ) );
+	updateVersionNumberInHtml( "internal-assets", JSON.parse( window.localStorage.getItem( "TROFF_INTERNAL_ASSETS_VERSION_NUMBER" ) ) );
+	updateVersionNumberInHtml( "external-assets", JSON.parse( window.localStorage.getItem( "TROFF_EXTERNAL_ASSETS_VERSION_NUMBER" ) ) );
 	const channel = new BroadcastChannel('service-worker-broadcastChanel');
 	channel.addEventListener('message', event => {
 
-		if( event.data.versionNumber !== undefined ) {
+		if( event.data.coreVersionNumber !== undefined ) {
 
-			const oldVersionNumber = nDB.get( "TROFF_VERSION_NUMBER" );
-			window.localStorage.setItem( "TROFF_VERSION_NUMBER", JSON.stringify( event.data.versionNumber ) );
+			updateVersionNumberInHtml( "core", event.data.coreVersionNumber );
+			updateVersionNumberInHtml( "style-assets", event.data.styleAssetsVersionNumber );
+			updateVersionNumberInHtml( "include-assets", event.data.includeAssetsVersionNumber );
+			updateVersionNumberInHtml( "app-assets", event.data.appAssetsVersionNumber );
+			updateVersionNumberInHtml( "internal-assets", event.data.internalAssetsVersionNumber );
+			updateVersionNumberInHtml( "external-assets", event.data.externalAssetsVersionNumber );
+
+			const oldVersionNumber = nDB.get( "TROFF_CORE_VERSION_NUMBER" );
+			window.localStorage.setItem( "TROFF_CORE_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
+			window.localStorage.setItem( "TROFF_STYLE_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
+			window.localStorage.setItem( "TROFF_INCLUDE_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
+			window.localStorage.setItem( "TROFF_APP_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
+			window.localStorage.setItem( "TROFF_INTERNAL_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
+			window.localStorage.setItem( "TROFF_EXTERNAL_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
 			if( oldVersionNumber == null ) {
 				$.notify(
 					"Troff is now cached and will work offline.\nHave fun!",
         	"success"
         );
-
-        updateVersionNumberInHtml( event.data.versionNumber );
 				return;
 			}
 

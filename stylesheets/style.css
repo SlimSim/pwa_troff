@@ -488,6 +488,10 @@ input[type=number].numberWider{
 	width: 107px;
 }
 
+.buttWidthLarge{
+	width: 200px;
+}
+
 
 .svgButt{
 	height: 31px;
