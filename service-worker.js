@@ -51,7 +51,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'include-assets',
-		version: "1.0.9",
+		version: "1.0.10",
 		urls: [
 			"/includes/quick-help.html",
 		]
@@ -99,7 +99,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.2.5",
+		version: "1.2.6",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
@@ -115,8 +115,8 @@ var newAppCaches = [
 			"/assets/external/browserLogos/chromium-logo.svg",
 			"/assets/external/browserLogos/edge-logo.svg",
 			"/assets/external/browserLogos/firefox-logo.svg",
-			"/assets/external/browserLogos/ios-logo-partial.svg",
-			"/assets/external/browserLogos/safari-logo-partial.svg",
+			"/assets/external/browserLogos/ios-logo.svg",
+			"/assets/external/browserLogos/safari-logo.svg",
 			"/assets/external/DataTables/css/dataTables.needed.min.css",
 			"/assets/external/DataTables/images/sort_asc.png",
 			"/assets/external/DataTables/images/sort_asc_disabled.png",
