@@ -1039,11 +1039,6 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
-	/*Troff* /this.isSafari = function() {
-		return isSafari;
-	}
-	*/
-
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
@@ -1078,22 +1073,6 @@ var TroffClass = function(){
 		});
 
 	};
-
-	/*Troff*/ this.safariBug = function( fileName, markers ) {
-		//IO.showSafariExplanation();
-		$( "#downloadSongFromServerInProgressDialog" ).addClass("hidden");
-		$( "#loadScreen" ).addClass("hidden");
-
-		$( "#safariBugDialog_filename" ).val( fileName );
-		$( "#safariBugDialog" ).removeClass("hidden");
-
-		Troff.setUrlToSong( undefined, null );
-
-		if( fileName != undefined && markers != undefined ) {
-			nDB.set( fileName, markers );
-		}
-	}
-
 
 	/*Troff*/ this.setUrlToSong = function( serverId, fileName ) {
 		"use strict";
