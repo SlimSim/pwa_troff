@@ -52,6 +52,7 @@ PWA.listenForBroadcastChannel = function() {
 	updateVersionNumberInHtml( "app-assets", JSON.parse( window.localStorage.getItem( "TROFF_APP_ASSETS_VERSION_NUMBER" ) ) );
 	updateVersionNumberInHtml( "internal-assets", JSON.parse( window.localStorage.getItem( "TROFF_INTERNAL_ASSETS_VERSION_NUMBER" ) ) );
 	updateVersionNumberInHtml( "external-assets", JSON.parse( window.localStorage.getItem( "TROFF_EXTERNAL_ASSETS_VERSION_NUMBER" ) ) );
+
 	const channel = new BroadcastChannel('service-worker-broadcastChanel');
 	channel.addEventListener('message', event => {
 
@@ -66,11 +67,11 @@ PWA.listenForBroadcastChannel = function() {
 
 			const oldVersionNumber = nDB.get( "TROFF_CORE_VERSION_NUMBER" );
 			window.localStorage.setItem( "TROFF_CORE_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
-			window.localStorage.setItem( "TROFF_STYLE_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
-			window.localStorage.setItem( "TROFF_INCLUDE_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
-			window.localStorage.setItem( "TROFF_APP_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
-			window.localStorage.setItem( "TROFF_INTERNAL_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
-			window.localStorage.setItem( "TROFF_EXTERNAL_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.coreVersionNumber ) );
+			window.localStorage.setItem( "TROFF_STYLE_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.styleAssetsVersionNumber ) );
+			window.localStorage.setItem( "TROFF_INCLUDE_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.includeAssetsVersionNumber ) );
+			window.localStorage.setItem( "TROFF_APP_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.appAssetsVersionNumber ) );
+			window.localStorage.setItem( "TROFF_INTERNAL_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.internalAssetsVersionNumber ) );
+			window.localStorage.setItem( "TROFF_EXTERNAL_ASSETS_VERSION_NUMBER", JSON.stringify( event.data.externalAssetsVersionNumber ) );
 			if( oldVersionNumber == null ) {
 				$.notify(
 					"Troff is now cached and will work offline.\nHave fun!",
@@ -83,7 +84,7 @@ PWA.listenForBroadcastChannel = function() {
 				{
 					title: $("<span class=\"d-flex flex-column\">")
 						.append( $("<h2>").text( "New version" ))
-						.append( $("<p>").attr( "class", "small text-left" ).text( "A new version of Troff is available please reload to start using version " + event.data.versionNumber ))
+						.append( $("<p>").attr( "class", "small text-left" ).text( "A new version of Troff is available! Please reload to start using version " + event.data.coreVersionNumber ))
 						.append(
 							$("<span class=\"d-flex flex-row justify-content-between align-items-center\">")
 							.append( $( "<button>" ).text( "RELOAD" ).on( "click", function() {
