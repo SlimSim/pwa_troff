@@ -284,7 +284,39 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 	const localInfo = nDB.get( path ).localInformation || {};
 	const nrTimesLoaded = localInfo.nrTimesLoaded || 0;
 	nDB.setOnSong( path, ["localInformation", "nrTimesLoaded"], nrTimesLoaded + 1 );
+
+	updateVersionLink( path );
+
 } //end setSong2
+
+function updateVersionLink( path ) {
+	const fileNameUri = encodeURI( path );
+
+	function hideVersionLink( number ) {
+		$( ".nr-of-versions-in-history" ).text( 0 );
+		$( ".nr-of-versions-in-history-parent" ).addClass( "hidden" );
+		return;
+	}
+
+	dbHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
+	if( dbHistory == null ) {
+		return hideVersionLink( 0 );
+	}
+
+	let hist = dbHistory.filter( h => h.fileNameUri == fileNameUri );
+
+	if( hist.length == 0 || hist[0].troffDataIdObjectList == null || hist[0].troffDataIdObjectList.length == 0 ) {
+		return hideVersionLink( 0 );
+	}
+
+	if( hist[0].troffDataIdObjectList.length == 1 && nDB.get( path ).serverId != undefined ) {
+		// hiding the history-link since there is only one version, ant that version is in use now
+		return hideVersionLink( 1 );
+	}
+
+	$( ".nr-of-versions-in-history" ).text( hist[0].troffDataIdObjectList.length );
+	$( ".nr-of-versions-in-history-parent" ).removeClass( "hidden" );
+}
 
 function sortAndValue(sortValue, stringValue) {
 	if( sortValue === undefined )
@@ -392,7 +424,6 @@ async function createSongAudio( path ) {
 };
 
 function addItem_NEW_2( key ) {
-	console.log( "addItem_NEW_2 -> key ", key );
 
 	var galleryId = "pwa-galleryId";
 	var extension = getFileExtension( key );
@@ -4178,6 +4209,7 @@ var DBClass = function(){
 		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
+		updateVersionLink( songId );
 	});
 	};// end updateMarker
 
@@ -4245,6 +4277,7 @@ var DBClass = function(){
 		song.markers = aMarkers;
 		song.serverId = undefined;
 		Troff.setUrlToSong( undefined, null );
+		songId( songId );
 
 		nDB.set( songId, song );
 
@@ -4280,6 +4313,7 @@ var DBClass = function(){
 		DB.setCurrent(songId, 'info', info, function() {
 			nDB.setOnSong( songId, "serverId", undefined );
 			Troff.setUrlToSong( undefined, null );
+			updateVersionLink( songId );
 		});
 	};
 

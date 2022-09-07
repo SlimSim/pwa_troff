@@ -33,6 +33,7 @@ var newAppCaches = [
 			"/pwa.js",
 			"/file.js",
 			"/help.html",
+			"/history.html",
 			"/FileApiImplementation.js"
 		]
 	},
