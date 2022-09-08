@@ -55,6 +55,7 @@ PWA.listenForBroadcastChannel = function() {
 
 	const channel = new BroadcastChannel('service-worker-broadcastChanel');
 	channel.addEventListener('message', event => {
+		console.log( "service-worker-broadcastChanel message -> e.data ", event.data );
 
 		if( event.data.coreVersionNumber !== undefined ) {
 
