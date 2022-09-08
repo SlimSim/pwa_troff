@@ -55,7 +55,6 @@ PWA.listenForBroadcastChannel = function() {
 
 	const channel = new BroadcastChannel('service-worker-broadcastChanel');
 	channel.addEventListener('message', event => {
-		console.log( "service-worker-broadcastChanel message -> e.data ", event.data );
 
 		if( event.data.coreVersionNumber !== undefined ) {
 
@@ -85,8 +84,10 @@ PWA.listenForBroadcastChannel = function() {
 				{
 					title: $("<span class=\"d-flex flex-column\">")
 						.append( $("<h2>").text( "New version" ))
-						.append( $("<p>").attr( "class", "small text-left" ).text( "A new version of Troff is available! Please reload to start using version " + event.data.coreVersionNumber ))
-						.append(
+						.append( $("<p>")
+									.attr( "class", "small text-left" )
+									.text( "A new version of Troff is available! Please reload to start using the new version!" )
+						).append(
 							$("<span class=\"d-flex flex-row justify-content-between align-items-center\">")
 							.append( $( "<button>" ).text( "RELOAD" ).on( "click", function() {
 								$( this ).trigger( 'notify-hide' );
