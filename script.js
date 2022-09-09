@@ -23,7 +23,7 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-const appVersionNumber = "1.3";
+const appVersionNumber = "1.4";
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
