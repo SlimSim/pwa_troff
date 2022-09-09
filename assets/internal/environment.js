@@ -38,6 +38,7 @@ const environment = {};
 			};
 			break;
 		case "troff.app":
+		case "ios.troff.app":
 		case "troff.slimsim.heliohost.org":
 		case "troff.ternsjo-it.heliohost.us":
 			environment.banner.show = false;
@@ -54,6 +55,11 @@ const environment = {};
 				measurementId: "G-8XLWPKBFL1"
 			};
 			break;
+		default:
+			console.warn(
+				"No environment set for " + window.location.host +
+				"! Downloading and uploading songs will not work."
+			);
 	}
 
 
