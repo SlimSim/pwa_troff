@@ -35,10 +35,6 @@ console.log( "update.js ->" );
 
 function addToCache(cache, url) {
 	console.log( "adding " + url + " to ", cache);
-
-
-
-
 	cache.add(url).catch(e => {
 		console.info(`Info: cache.add( ${ url } ) fails:`, e);
 	});
@@ -62,10 +58,10 @@ caches.keys().then( async function(names) {
 		console.log( "deleting name", name );
 		caches.delete( name );
 
-		//let cache = await caches.open( name );
-		//console.log( name + " is open as ", cache );
+		let cache = await caches.open( name );
+		console.log( name + " is open as ", cache );
 
-		//urls.forEach( url => addToCache( cache, url ) );
+		urls.forEach( url => addToCache( cache, url ) );
 
 	}
 	console.log( "done!" );
