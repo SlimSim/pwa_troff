@@ -5445,6 +5445,10 @@ $(document).ready( async function() {
 		IO.removeLoadScreen();
 	}, 10000 );
 
+	if( window.location.hash == "#reload" ) {
+		window.location.replace( "/" );
+	}
+
 	// include external HTML-files:
 
 	const includes = $('[data-include]');

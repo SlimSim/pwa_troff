@@ -69,7 +69,7 @@ caches.keys().then( async function(names) {
   }
 
 	setTimeout( () => {
-		window.location.replace( "/" );
+		window.location.replace( "/#reload" );
 	}, 9000 );
 });
 
