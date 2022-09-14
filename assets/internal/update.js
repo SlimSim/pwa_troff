@@ -33,7 +33,6 @@ function addToCache(cache, url) {
 
 caches.keys().then( async function(names) {
 	console.log( "names", names);
-	/*
 	for (let name of names) {
 
 		if( name.includes( "songCache" ) ) {
@@ -68,7 +67,6 @@ caches.keys().then( async function(names) {
   		});
   	});
   }
-  */
 
 	setTimeout( () => {
 		window.location.replace( "/" );
@@ -76,6 +74,8 @@ caches.keys().then( async function(names) {
 });
 
 
+/*
+This don't seem to fire, the service-worker does not send a message :(
 (() => {
 	if( typeof BroadcastChannel === 'undefined' ) {
 		return;
@@ -89,7 +89,7 @@ caches.keys().then( async function(names) {
 		window.location.replace( "/" );
 	});
 })();
-
+*/
 
 
 
