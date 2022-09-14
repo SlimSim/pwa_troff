@@ -76,7 +76,7 @@ caches.keys().then( async function(names) {
 });
 
 
-PWA.listenForBroadcastChannel = function() {
+(() => {
 	if( typeof BroadcastChannel === 'undefined' ) {
 		return;
 	}
@@ -88,7 +88,7 @@ PWA.listenForBroadcastChannel = function() {
 
 		window.location.replace( "/" );
 	});
-};
+})();
 
 
 
