@@ -23,7 +23,7 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-console.log( "script.js v 1.8.0.12" );
+console.log( "script.js v 1.8.0.16" );
 
 const appVersionNumber = "1.4";
 
@@ -4098,6 +4098,13 @@ var DBClass = function(){
 				}
 			} )
 
+			ifExistsPrepAndThenRemove( "TROFF_CORE_VERSION_NUMBER" );
+			ifExistsPrepAndThenRemove( "TROFF_STYLE_ASSETS_VERSION_NUMBER" );
+			ifExistsPrepAndThenRemove( "TROFF_INCLUDE_ASSETS_VERSION_NUMBER" );
+			ifExistsPrepAndThenRemove( "TROFF_APP_ASSETS_VERSION_NUMBER" );
+			ifExistsPrepAndThenRemove( "TROFF_INTERNAL_ASSETS_VERSION_NUMBER" );
+			ifExistsPrepAndThenRemove( "TROFF_EXTERNAL_ASSETS_VERSION_NUMBER" );
+
 			allKeys.forEach( (key, i) => {
 				DB.cleanSong(key, nDB.get( key ) );
 			} );
@@ -4492,6 +4499,31 @@ var IOClass = function(){
 		$( "#loadScreen, #loadScreenStyle" ).remove();
 	};
 
+	/*IO*/this.addCacheVersionToAdvancedSetting = async function() {
+		( await caches.keys() ).forEach( ( cacheName ) => {
+
+			let [name, versionNumber] = cacheName.split( "-v");
+
+			if( name.includes( "songCache" ) ) {
+				return;
+			}
+
+			if( name.includes( "core" ) ) {
+				$(".app-core-version-number" ).text( versionNumber );
+			}
+
+			name = name.replace( "-", " " );
+			name = name[0].toUpperCase() + name.substring(1);
+
+			const $newVersion = $( "<div>" ).addClass( "py-2" )
+			.append( $( "<h4>" ).addClass( "buttWidthLarge inlineBlock").text( name ) )
+			.append( $( "<span>" ).addClass( "small" ).text( versionNumber ) )
+
+			$( "#advancedSettings" ).append( $newVersion )
+
+		} );
+	}
+
 	/*IO*/this.startFunc = function() {
 
 		document.addEventListener('keydown', IO.keyboardKeydown);
@@ -4503,6 +4535,7 @@ var IOClass = function(){
 			}
 		} );
 
+		IO.addCacheVersionToAdvancedSetting();
 
 		// this is to not change volume or speed when scrolling horizontally on mobile (require https://j11y.io/javascript/special-scroll-events-for-jquery/)
 		$( document ).on( "scrollStart", function (e) {

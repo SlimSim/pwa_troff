@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.8.0.12",
+		version: "1.8.0.16",
 		urls: [
 			"/",
 			"/index.html",
@@ -158,14 +158,7 @@ self.addEventListener( "install", function ( event ) {
 			}
 			const channel = new BroadcastChannel('service-worker-broadcastChanel');
 
-			channel.postMessage({
-				coreVersionNumber 					: newAppCaches[0].version,
-				styleAssetsVersionNumber 		: newAppCaches[1].version,
-				includeAssetsVersionNumber 	: newAppCaches[2].version,
-				appAssetsVersionNumber 			: newAppCaches[3].version,
-				internalAssetsVersionNumber : newAppCaches[4].version,
-				externalAssetsVersionNumber : newAppCaches[5].version
-			});
+			channel.postMessage( "install" );
 
 			return this.skipWaiting();
 		})
