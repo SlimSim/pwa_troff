@@ -18,20 +18,7 @@
 
 $( document ).ready( () => {
 
-
-let coreFiles = [
-	"/",
-	"/index.html",
-	"/script.js",
-	"/pwa.js",
-	"/file.js",
-	"/help.html",
-	"/history.html",
-	"/FileApiImplementation.js"
-];
-
 console.log( "update.js ->" );
-
 
 function addToCache(cache, url) {
 	console.log( "adding " + url + " to ", cache);
