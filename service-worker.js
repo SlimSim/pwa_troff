@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.8",
+		version: "1.8.0.12",
 		urls: [
 			"/",
 			"/index.html",
@@ -39,7 +39,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.3.36",
+		version: "1.3.38",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -132,12 +132,6 @@ function createCacheKey(name, version) {
 	return name + "-v" + version;
 }
 
-
-
-( () => {
-} )();
-
-
 self.addEventListener( "install", function ( event ) {
 
 	function addToCache(cache, url) {
@@ -199,6 +193,10 @@ self.addEventListener( "activate", function( event ) {
 });
 
 self.addEventListener( "fetch", event => {
+	console.log( "SW, fetch, event", event );
+	const eventUrl = event.request.url;
+	const eventMethod = event.request.method;
+
 	event.respondWith(
 		caches.match( event.request )
 		.then( cachedResponse => {
@@ -212,6 +210,10 @@ self.addEventListener( "fetch", event => {
       } else {
       	return fetch( event.request )
       	.then( response => {
+
+
+
+      		console.log( "SW - fetch response", response);
       		return response;
       	})
       	.catch( error => {

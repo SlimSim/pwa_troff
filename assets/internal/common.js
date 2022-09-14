@@ -16,6 +16,7 @@
 */
 
 (function(){
+console.log( "common 1.2.39" );
 
 document.addEventListener("DOMContentLoaded", function(event){
 	var shareButtons = document.querySelectorAll(".shareClass");
