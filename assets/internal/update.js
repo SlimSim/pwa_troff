@@ -33,6 +33,7 @@ function addToCache(cache, url) {
 
 caches.keys().then( async function(names) {
 	console.log( "names", names);
+	/*
 	for (let name of names) {
 
 		if( name.includes( "songCache" ) ) {
@@ -67,6 +68,7 @@ caches.keys().then( async function(names) {
   		});
   	});
   }
+  */
 
 
 });
