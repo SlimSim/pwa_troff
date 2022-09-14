@@ -70,7 +70,9 @@ caches.keys().then( async function(names) {
   }
   */
 
-	window.location.replace( "/" );
+	setTimeout( () => {
+		window.location.replace( "/" );
+	}, 1000 );
 });
 
 
