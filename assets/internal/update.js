@@ -72,8 +72,25 @@ caches.keys().then( async function(names) {
 
 	setTimeout( () => {
 		window.location.replace( "/" );
-	}, 1000 );
+	}, 9000 );
 });
+
+
+PWA.listenForBroadcastChannel = function() {
+	if( typeof BroadcastChannel === 'undefined' ) {
+		return;
+	}
+
+	const channel = new BroadcastChannel('service-worker-broadcastChanel');
+	channel.addEventListener('message', event => {
+		console.log( "service-worker-broadcastChanel event", event);
+		console.log( "service-worker-broadcastChanel event.data", event.data);
+
+		window.location.replace( "/" );
+	});
+};
+
+
 
 
 });
