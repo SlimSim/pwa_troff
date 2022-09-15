@@ -245,6 +245,8 @@ $(function () {
 					fileType: file.type,
 					fileSize: file.size,
 					fileUrl: fileUrl,
+					troffDataPublic : true,
+					troffDataUploadedMillis : (new Date()).getTime(),
 					markerJsonString: strSongTroffInfo
 				};
 
