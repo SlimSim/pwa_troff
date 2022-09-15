@@ -56,7 +56,10 @@
 		$(function () {
 			loadExternalHtml = function(includes, callback) {
 				if( includes.length == 0 ) {
-					return callback();
+					if( typeof callback == "function" ) {
+						return callback();
+					}
+					return;
 				}
 				const currentElement = includes.eq(-1);
 				includes.splice( includes.length-1, 1);
