@@ -23,31 +23,11 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-console.log( "script.js v 1.8.0.16" );
-
 const appVersionNumber = "1.4";
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
-
-
-
-
-
-
-
-/*
-kolla om jag kan fixa en sida som alltid laddas?
-och om jag därifrån kan ränsa hela cachen :)
-	(förutom local storage)
-	för att kunna uppdatera sidan! :)
-*/
-
-
-
-
-
 
 var TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
 var TROFF_SETTING_EXTENDED_MARKER_COLOR = "TROFF_SETTING_EXTENDED_MARKER_COLOR";
@@ -5444,10 +5424,6 @@ $(document).ready( async function() {
 		// (so that it will be removed even if something breaks)
 		IO.removeLoadScreen();
 	}, 10000 );
-
-	if( window.location.hash == "#reload" ) {
-		window.location.replace( "/" );
-	}
 
 	// include external HTML-files:
 

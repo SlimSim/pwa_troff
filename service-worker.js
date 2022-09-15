@@ -186,10 +186,6 @@ self.addEventListener( "activate", function( event ) {
 });
 
 self.addEventListener( "fetch", event => {
-	console.log( "SW, fetch, event", event );
-	const eventUrl = event.request.url;
-	const eventMethod = event.request.method;
-
 	event.respondWith(
 		caches.match( event.request )
 		.then( cachedResponse => {
@@ -203,10 +199,6 @@ self.addEventListener( "fetch", event => {
       } else {
       	return fetch( event.request )
       	.then( response => {
-
-
-
-      		console.log( "SW - fetch response", response);
       		return response;
       	})
       	.catch( error => {
