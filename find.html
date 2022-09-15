@@ -1,0 +1,176 @@
+<!doctype html>
+<!--
+	This file is part of Troff.
+
+	Troff is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License,
+	or (at your option) any later version.
+
+	Troff is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Troff. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<html lang="en-US" class="overflow-hidden" >
+<head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-158173734-3"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+		gtag('config', 'UA-158173734-3');
+	</script>
+
+	<title>Troff - Find new songs</title>
+	<meta charset="UTF-8">
+	<meta name="description" content="Find new songs with markers and info to practice!">
+	<meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, Find, Search">
+
+	<link rel="icon" href="assets/logos/favicon.ico">
+
+	<meta name="theme-color" content="#003366"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<style>
+		button,input,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{font-weight:400;margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
+	</style>
+	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
+
+	<!--script src="assets/internal/common.js"></script -->
+
+	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css" />
+	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
+
+	<script src="assets/external/jquery-3.6.0.min.js"></script>
+	<script src="assets/internal/st-script.js"></script>
+
+	<script src="assets/internal/environment.js"></script>
+
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+
+	<script src="find.js"></script>
+
+</head>
+
+<body class="backgroundColor flexCol">
+	<input id="blur-hack" type="button"/>
+	<header class="m-2">
+		<span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
+					data-toggle="collapse" data-target="#navigation">
+			<i class="fa-menu"></i>
+		</span>
+		<img src="assets/logos/logo.svg" width="48" alt="logo"/>
+		<h1>Troff - Find new songs</h1>
+	</header>
+
+<div class="flexRow fill-height-minus-58">
+	<section class="flexCol flexScroll">
+
+
+	<article>
+		<h2>Files</h2>
+
+		<p>Total Size: <span class="totalSize"></span></p>
+		<p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
+		<p class="pl-2">Nr of deleted files: <span class="nrOfDeletedFiles"></span></p>
+		<div>
+			<button class="btn regularButton" id="sortUpdatedDesc">Newest first</button>
+			<button class="btn regularButton" id="sortUpdatedAsc">...last</button>
+			<button class="ml-3 btn regularButton" id="sortSizeDesc">Biggest First</button>
+			<button class="btn regularButton" id="sortSizeAsc">...last</button>
+		</div>
+
+		<div id="fileList" class="flexCol"></div>
+
+
+		<div id="template" class="hidden">
+			<div class="bg-Burlywood container flex-row p-2 my-1">
+				<div class="row">
+					<div class="col-sm">
+						<h3><a href="#" target="_blank" class="fileName"></a></h3>
+						<p><span class="fileType"></span></p>
+						<p>Size: <span class="fileSize"></span></p>
+						<p>TroffData: <span class="troffData"></span></p>
+						<p>Updated: <span class="updated"></span></p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm">
+						<input type="button" class="stOnOffButton toggleNext" value="Show Markers" />
+						<div class="container flex-row p-1 my-1 markerList">
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div id="troffDataTemplate" class="hidden">
+			<div class="row">
+				<div class="col-sm">
+					<h4><a href="#" target="_blank" class="troffDataId"></a></h4>
+					<p class="m-0">States: <span class="troffDataNrStates"></span></p>
+					<p class="m-0">Markers: <span class="troffDataNrMarkers"></span></p>
+					<p class="troffDataInfo text-truncate w-100"></p>
+				</div>
+			</div>
+		</div>
+
+	</article> <!-- signIn -->
+
+
+	<footer id="footer" class="white flexRow">
+		<div class="flexCol">
+			<p>
+				Contact a human:
+				<a class="white" target=_blank rel="noopener" href="mailto:slimsimapps@gmail.com">
+					slimsimapps@gmail.com</a>.
+			</p>
+			<p>
+				Like us on
+				<a class="white" target=_blank rel="noopener"
+					href="https://www.facebook.com/troffmusic">facebook</a>!
+			</p>
+			<p>
+				<a class="white" target=_blank rel="noopener" href="LICENSE.html">LICENSE</a>.
+			</p>
+			<p>
+				<a class="white" target=_blank rel="noopener" href="privacy_policy.html">Privacy Policy</a>.
+			</p>
+			<p>
+				<a class="white" target=_blank rel="noopener" href="terms.html">Terms and conditions</a>.
+			</p>
+			<p>
+				Happy training!
+			</p>
+		</div>
+		<div class="flexCol white center flexOne">
+			<p class="white Big">Troff</p>
+			<p class="white Big textCenter">Training with music</p>
+		</div>
+	</footer>
+	</section>
+
+	<div  id="alertDialog" class="outerDialog p-3 hidden">
+		<div class="innerDialog largeDialog flexCol scroll mh-100">
+			<h2 id="alertHeader"></h2>
+			<div id="alertText"></div>
+		</div>
+	</div>
+
+</div>
+</body>
+</html>
