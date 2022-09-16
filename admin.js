@@ -77,7 +77,7 @@ $(document).ready( async function() {
 				return troffData;
 			})
 			.catch( (error) => {
-				console.log( "markTroffDataDeletedOnServer: catch error", error );
+				console.error( "markTroffDataDeletedOnServer: catch error", error );
 				$( "#alertDialog" ).removeClass( "hidden" );
 				$( "#alertHeader" ).text( "Error" );
 				$( "#alertText" ).text( "Could not mark Troff Data Deleted On Server: " + error );
@@ -112,7 +112,6 @@ $(document).ready( async function() {
 
 			if( currentFile == undefined ) {
 				const fileData = ( troffData.markerJsonString ? JSON.parse( troffData.markerJsonString ).fileData : {} ) || {};
-				console.log( "fileData", fileData);
 
 				let file = {
 					fileName : troffData.fileName,
@@ -149,6 +148,9 @@ $(document).ready( async function() {
 		$.each( fileList, ( i, file ) => {
 
 			let newDiv = $("#template").children().clone( true, true);
+			let atLeastOneTroffDataIsDeleted = false;
+			let atLeastOneTroffDataIsNotDeleted = false;
+
 			if( file.deleted ) {
 				setDivToRemoved( newDiv );
 			}
@@ -164,6 +166,12 @@ $(document).ready( async function() {
 			$.each( file.troffDataList, (i, troffData ) => {
 				let songData = JSON.parse( troffData.markerJsonString );
 
+				if( troffData.deleted ){
+					atLeastOneTroffDataIsDeleted = true;
+				} else {
+					atLeastOneTroffDataIsNotDeleted = true;
+				}
+
 				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
 				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
 				newTroffData.find( ".troffDataInfo" ).text( songData.info );
@@ -173,6 +181,13 @@ $(document).ready( async function() {
 				newDiv.find( ".markerList" ).append( newTroffData );
 
 			});
+
+			if( atLeastOneTroffDataIsDeleted && atLeastOneTroffDataIsNotDeleted ) {
+				// If at Least One TroffData Is Deleted, then all troffData should be deleted, and the song should be removed
+				// so if at Least One TroffData Is Not Deleted, then they should be removed! :)
+				removeFileFromServer( file.fileUrl, newDiv );
+				file.troffDataList.forEach( markTroffDataDeletedOnServer );
+			}
 
 			newDiv.find( ".removeFile" ).on( "click", () => {
 				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
