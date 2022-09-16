@@ -4265,7 +4265,6 @@ var DBClass = function(){
 		song.markers = aMarkers;
 		song.serverId = undefined;
 		Troff.setUrlToSong( undefined, null );
-		songId( songId );
 
 		nDB.set( songId, song );
 
