@@ -19,8 +19,6 @@
 $(document).ready( async function() {
 	"use strict";
 
-	console.log( "document ready");
-
 	/************************************************
 	/*           Private methods and variables:
 	/************************************************/
@@ -29,7 +27,7 @@ $(document).ready( async function() {
   const storage = firebase.storage();
   const storageRef = storage.ref();
 
-
+	let allTroffData;
 
 	const setDivToRemoved = function( div ) {
 		div
@@ -39,63 +37,85 @@ $(document).ready( async function() {
 		div.find( ".removedText" ).removeClass( "hidden" )
 	};
 
+	const superStartParent = async function() {
+
+		const snapshot = await firebase.firestore().collection('TroffData')
+			.where( "troffDataPublic", "==", true )
+			.get();
+		const docs = snapshot.docs;
+		allTroffData = docs.map(doc => doc.data());
+		superStart();
+	}
+
 	const superStart = async function() {
 
-		const snapshot = await firebase.firestore().collection('TroffData').get();
-		const docs = snapshot.docs;
-		const allTroffData = docs.map(doc => doc.data());
-
-		//console.log( "allTroffData", allTroffData );
+		$( "#fileList, #deletedFileList" ).empty();
 
 		let fileList = [];
 
+		let totalSize = 0;
 		let nrOfFiles = 0;
 		let nrOfDeletedFiles = 0;
 
 		for( const troffData of allTroffData ) {
 
-			if( !troffData.troffDataPublic ) {
-				//console.log( "troffData is not public", troffData );
+			if( troffData.songData == undefined ) {
+				troffData.songData = JSON.parse( troffData.markerJsonString );
+				delete troffData.markerJsonString;
+			}
+
+			//if( troffData.fileName != "Welcome To Jurassic Park.mp3" ) continue;
+
+			let customName = "";
+			let choreography = "";
+			let title = "";
+			const fileName = troffData.fileName || "";
+			if( troffData.songData.fileData ) {
+				customName = troffData.songData.fileData.customName || "";
+				choreography = troffData.songData.fileData.choreography || "";
+				title = troffData.songData.fileData.title || "";
+			}
+
+			const search = $("#search").val().toLowerCase();
+			const includesSearch = fileName.toLowerCase().includes( search ) ||
+					customName.toLowerCase().includes( search ) ||
+					choreography.toLowerCase().includes( search ) ||
+					title.toLowerCase().includes( search )
+
+			if( !includesSearch ) {
 				continue;
 			}
-			console.log( "troffData", troffData, "markerString", JSON.parse( troffData.markerJsonString ) );
 
 			const fileUrl = troffData.fileUrl.substring(0, troffData.fileUrl.indexOf('?'))
 
-			let miniTroffData = {
-				id : troffData.id,
-				markerJsonString : troffData.markerJsonString,
-			}
-
 			let currentFile = fileList.find( x => x.fileUrl == fileUrl );
 
+			const fileDataLastModified = troffData.songData.fileData ? troffData.songData.fileData.lastModified : undefined;
+			troffData.troffDataUploadedMillis = troffData.troffDataUploadedMillis || fileDataLastModified;
 
 			if( currentFile == undefined ) {
-
-				/*
-				const fileData = await fetch( fileUrl )
-					.then(res => res.json());
-
-				let deleted = false;
-				if( fileData.error && fileData.error.code == 404 ) {
-					deleted = true;
-				}
-				*/
 
 				let file = {
 					fileName : troffData.fileName,
 					fileUrl : fileUrl,
 					fileType : troffData.fileType,
 					fileSize : troffData.fileSize,
-					//deleted : deleted,
-					//updated : fileData.updated,
-					//updated : deleted ? "" : fileData.updated,
-					troffData : [ miniTroffData ]
+					deleted : troffData.deleted,
+					updated : troffData.troffDataUploadedMillis,
+					troffDataList : [ troffData ]
 				}
 
 				fileList.push( file );
 			} else {
-				currentFile.troffData.push( miniTroffData );
+				if( troffData.deleted ) {
+					currentFile.deleted = true;
+				}
+
+				if( currentFile.updated == undefined || troffData.troffDataUploadedMillis < currentFile.updated ) {
+					currentFile.updated = troffData.troffDataUploadedMillis;
+				}
+
+				currentFile.troffDataList.push( troffData );
 			}
 
 		};
@@ -103,33 +123,59 @@ $(document).ready( async function() {
 		$( ".nrOfFiles" ).text( nrOfFiles );
 
 		// sorting latest first:
-		fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 );
+		fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 ); // updated does not exist
 
 
 		$.each( fileList, ( i, file ) => {
 
 			let newDiv = $("#template").children().clone( true, true);
-			//if( file.deleted ) {
-			//	return;
-			//}
 			newDiv.data( "updated", new Date(file.updated || 0 ).getTime() );
 			newDiv.data( "fileSize", file.fileSize );
 			newDiv.find( ".fileName" ).text( file.fileName ).attr( "href", file.fileUrl );
 			newDiv.find( ".fileType" ).text( file.fileType );
-			//newDiv.find( ".updated" ).text( file.deleted ? "" : file.updated.substr( 0, 10 ) );
+			newDiv.find( ".updated" ).text( st.millisToDisp( file.updated ) );
 			newDiv.find( ".fileSize" ).text( st.byteToDisp( file.fileSize ) );
-			newDiv.find( ".troffData" ).text( file.troffData.length );
-			$( "#fileList" ).append( newDiv );
+			newDiv.find( ".troffDataLength" ).text( file.troffDataList.length );
 
-			$.each( file.troffData, (tdIndex, troffData ) => {
-				let songData = JSON.parse( troffData.markerJsonString );
-				//console.log( "troffData", troffData, "songData", songData);
+			if( file.deleted ) {
+				newDiv.removeClass( "tertiaryColor" ).addClass( "accentColor2" );
+				$( "#deletedFileList" ).append( newDiv );
+				nrOfDeletedFiles++;
+			} else {
+				nrOfFiles++;
+				totalSize += file.fileSize;
+				$( "#fileList" ).append( newDiv );
+			}
+
+			$.each( file.troffDataList, (tdIndex, troffData ) => {
+
+				let displayName = file.fileName
+				let genre = "";
+				let tags = "";
+				if( troffData.songData.fileData ) {
+					displayName = troffData.songData.fileData.customName ||
+							troffData.songData.fileData.choreography ||
+							troffData.songData.fileData.title ||
+							file.fileName;
+					genre = troffData.songData.fileData.genre || "";
+					tags = troffData.songData.fileData.tags || "";
+				}
 
 				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
-				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
-				newTroffData.find( ".troffDataInfo" ).text( songData.info );
-				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
-				newTroffData.find( ".troffDataNrStates" ).text( songData.aStates.length );
+				newTroffData.find( ".troffDataId" )
+					.text( "Download this version (" + troffData.id + ")"   )
+					.attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
+
+				newTroffData.find( ".troffDataInfo" ).text( troffData.songData.info.substring( 0, 99 ) );
+				newTroffData.find( ".troffDataNrMarkers" ).text( troffData.songData.markers.length );
+				if( troffData.songData.aStates.length == 0 ) {
+					$( ".troffDataNrStatesParent" ).addClass( "hidden" )
+				}
+				newTroffData.find( ".troffDataNrStates" ).text( troffData.songData.aStates.length );
+				newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffData.troffDataUploadedMillis ) );
+				newTroffData.find( ".troffDataDisplayName" ).text( displayName );
+				newTroffData.find( ".troffDataGenre" ).text( genre );
+				newTroffData.find( ".troffDataTags" ).text( tags );
 
 				newDiv.find( ".markerList" ).append( newTroffData );
 
@@ -137,6 +183,15 @@ $(document).ready( async function() {
 
 		} );
 
+		$( ".nrOfFiles" ).text( nrOfFiles );
+		$( ".totalSize" ).text( st.byteToDisp( totalSize ) );
+		$( ".nrOfDeletedFiles" ).text( nrOfDeletedFiles );
+
+		$( "#loadingArticle" ).addClass( "hidden" );
+		$( "#mainArticle" ).removeClass( "hidden" );
+		if( nrOfDeletedFiles > 0 ) {
+			$( "#showDeletedButt" ).removeClass( "hidden" );
+		}
 	}
 
 	const sortFileList = function( cssToSort, orderByAsc ) {
@@ -156,11 +211,20 @@ $(document).ready( async function() {
 	$( "#sortUpdatedDesc" ).on( "click", () => {	sortFileList( "updated", false ); } );
 	$( "#sortSizeAsc" ).on( "click", () => {	sortFileList( "fileSize", true ); } );
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
+	$( "#showDeletedButt" ).on( "click", () => {	$( "#deletedFileListParent" ).toggleClass( "hidden" );  } );
+
+	$( "#buttSearch" ).on( "click", superStart );
 
 
 	$( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).closest( ".stOnOffButton" ).toggleClass( "active" ) } );
+	$("#search").keyup( function( event ) {
+		if ( event.keyCode === 13 ) {
+			$("#buttSearch").click();
+		}
+	});
 
-	superStart();
+
+	superStartParent();
 
 });
 
