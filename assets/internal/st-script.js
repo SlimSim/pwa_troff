@@ -125,6 +125,10 @@ $( document ).ready( function() {
 	}; // end confirm
 
 	st.millisToDisp = function( millis ) {
+		if( !millis ) {
+			return "";
+		}
+
 		const date = new Date( millis );
 
 		const d = date.getDate();
