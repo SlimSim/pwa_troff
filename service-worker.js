@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.8.3",
+		version: "1.8.3.2",
 		urls: [
 			"/",
 			"/index.html",
@@ -33,6 +33,8 @@ var newAppCaches = [
 			"/pwa.js",
 			"/file.js",
 			"/help.html",
+			"/find.html",
+			"/admin.html",
 			"/history.html",
 			"/FileApiImplementation.js"
 		]
