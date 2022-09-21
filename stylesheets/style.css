@@ -1217,6 +1217,9 @@ table.dataTable .dataTables_empty{
 	.normalSize-on-mobile {
 		font-size: 14px;
 	}
+	.BigSize-on-mobile {
+		font-size: 18px;
+	}
 
 	[for=fileUploader] {
 		font-size: 1.1em;
@@ -1276,7 +1279,7 @@ table.dataTable .dataTables_empty{
 		height: 52px;
 	}
 
-	.big-on-mobile {
+	.gigantic-on-mobile {
 		font-size: 58px;
 	}
 
