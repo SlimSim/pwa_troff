@@ -36,6 +36,7 @@ $(document).ready( async function() {
 		repopulateFileListDivs();
 
 		const snapshot = await firebase.firestore().collection('TroffData')
+			.where( "fileName", "==", "demo.mp4" )
 			.where( "troffDataPublic", "==", true )
 			.get();
 		const docs = snapshot.docs;
@@ -111,6 +112,8 @@ $(document).ready( async function() {
 	const troffDataListToServerSongList = function( troffDataList ) {
 		let serverSongList = [];
 
+		console.log( "troffDataList", troffDataList );
+
 		for( const troffData of troffDataList ) {
 
 			const fileNameUri = encodeURI( troffData.fileName );
@@ -136,6 +139,7 @@ $(document).ready( async function() {
 			}
 
 		}
+		console.log( "serverSongList", serverSongList );
 
 		return serverSongList;
 	}
@@ -262,14 +266,27 @@ $(document).ready( async function() {
 		return newTroffData;
 	};
 
+	const pathToName = function( filepath ) {
+		let lastIndex = filepath.lastIndexOf( '.' );
+		if( lastIndex == -1 ) {
+			return filepath;
+		}
+		return filepath.substr( 0, lastIndex );
+	};
+
 	const getDisplayNameFromTroffData = function( troffData, defaultValue ) {
-		let displayName = defaultValue || "";
+		console.log( "troffData", troffData );
+		console.log( "defaultValue", defaultValue );
+		let displayName = defaultValue || pathToName( troffData.fileName );
+		console.log( "displayName", displayName );
 		if( troffData.songData && troffData.songData.fileData ) {
 			displayName = troffData.songData.fileData.customName ||
 					troffData.songData.fileData.choreography ||
 					troffData.songData.fileData.title ||
-					defaultValue;
+					defaultValue ||
+					pathToName( troffData.fileName );
 		}
+
 		return displayName;
 	}
 
