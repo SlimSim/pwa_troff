@@ -42,6 +42,48 @@ $(document).ready( async function() {
 		div.find( ".removedText" ).removeClass( "hidden" )
 	};
 
+	const removeFileFromServer = async function( fileUrl, newDiv ) {
+
+		// Create a reference to the file to delete
+		const fileData = await fetch( fileUrl )
+			.then(res => res.json());
+
+		if( fileData.error && fileData.error.code == 404 ) {
+			// file is already removed...
+			setDivToRemoved( newDiv );
+			return;
+		}
+		const desertRef = storageRef.child( fileData.name );
+
+		// Delete the file
+		desertRef.delete().then( () => {
+			setDivToRemoved( newDiv );
+		})
+		.catch( ( error ) => {
+			$( "#alertDialog" ).removeClass( "hidden" );
+			$( "#alertHeader" ).text( "Error" );
+			$( "#alertText" ).text( "Could not remove: " + error );
+			console.error( error );
+		});
+	};
+
+	const markTroffDataDeletedOnServer = function( troffData ) {
+
+		troffData.deleted = true;
+
+		const db = firebase.firestore();
+		return db.collection( "TroffData" ).doc( String( troffData.id ) ).set(troffData)
+			.then( x => {
+				return troffData;
+			})
+			.catch( (error) => {
+				console.error( "markTroffDataDeletedOnServer: catch error", error );
+				$( "#alertDialog" ).removeClass( "hidden" );
+				$( "#alertHeader" ).text( "Error" );
+				$( "#alertText" ).text( "Could not mark Troff Data Deleted On Server: " + error );
+			});
+	};
+
 	const superAdmin = async function( p ) {
 		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1" ];
 
@@ -65,37 +107,22 @@ $(document).ready( async function() {
 		let nrOfDeletedFiles = 0;
 
 		for( const troffData of allTroffData ) {
-			const fileUrl = troffData.fileUrl.substring(0, troffData.fileUrl.indexOf('?'))
-
-			let miniTroffData = {
-				id : troffData.id,
-				markerJsonString : troffData.markerJsonString,
-			}
-
+			const fileUrl = troffData.fileUrl.substring(0, troffData.fileUrl.indexOf('?'));
 			let currentFile = fileList.find( x => x.fileUrl == fileUrl );
 
-
 			if( currentFile == undefined ) {
-
-				const fileData = await fetch( fileUrl )
-					.then(res => res.json());
-
-				let deleted = false;
-				if( fileData.error && fileData.error.code == 404 ) {
-					deleted = true;
-				}
+				const fileData = ( troffData.markerJsonString ? JSON.parse( troffData.markerJsonString ).fileData : {} ) || {};
 
 				let file = {
 					fileName : troffData.fileName,
 					fileUrl : fileUrl,
 					fileType : troffData.fileType,
 					fileSize : troffData.fileSize,
-					deleted : deleted,
-					updated : deleted ? "" : fileData.updated,
-					fullFileName : deleted ? "" : fileData.name,
-					troffData : [ miniTroffData ]
+					deleted : troffData.deleted,
+					updated : troffData.deleted ? "" : ( (new Date( fileData.lastModified ) ).toJSON()  || "" ),
+					troffDataList : [ troffData ]
 				}
-				if( !deleted ) {
+				if( !troffData.deleted ) {
 					totalSize += troffData.fileSize;
 					nrOfFiles++;
 				} else {
@@ -104,7 +131,7 @@ $(document).ready( async function() {
 
 				fileList.push( file );
 			} else {
-				currentFile.troffData.push( miniTroffData );
+				currentFile.troffDataList.push( troffData );
 			}
 
 		};
@@ -121,6 +148,9 @@ $(document).ready( async function() {
 		$.each( fileList, ( i, file ) => {
 
 			let newDiv = $("#template").children().clone( true, true);
+			let atLeastOneTroffDataIsDeleted = false;
+			let atLeastOneTroffDataIsNotDeleted = false;
+
 			if( file.deleted ) {
 				setDivToRemoved( newDiv );
 			}
@@ -130,11 +160,17 @@ $(document).ready( async function() {
 			newDiv.find( ".fileType" ).text( file.fileType );
 			newDiv.find( ".updated" ).text( file.deleted ? "" : file.updated.substr( 0, 10 ) );
 			newDiv.find( ".fileSize" ).text( st.byteToDisp( file.fileSize ) );
-			newDiv.find( ".troffData" ).text( file.troffData.length );
+			newDiv.find( ".troffData" ).text( file.troffDataList.length );
 			$( "#fileList" ).append( newDiv );
 
-			$.each( file.troffData, (tdIndex, troffData ) => {
+			$.each( file.troffDataList, (i, troffData ) => {
 				let songData = JSON.parse( troffData.markerJsonString );
+
+				if( troffData.deleted ){
+					atLeastOneTroffDataIsDeleted = true;
+				} else {
+					atLeastOneTroffDataIsNotDeleted = true;
+				}
 
 				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
 				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
@@ -146,26 +182,21 @@ $(document).ready( async function() {
 
 			});
 
+			if( atLeastOneTroffDataIsDeleted && atLeastOneTroffDataIsNotDeleted ) {
+				// If at Least One TroffData Is Deleted, then all troffData should be deleted, and the song should be removed
+				// so if at Least One TroffData Is Not Deleted, then they should be removed! :)
+				removeFileFromServer( file.fileUrl, newDiv );
+				file.troffDataList.forEach( markTroffDataDeletedOnServer );
+			}
+
 			newDiv.find( ".removeFile" ).on( "click", () => {
 				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
 
 				st.confirm('Delete file?', 'Do you want to delete the file "' + file.fileName + '" on the server?\n' +
-					'Note, all the markers will still be available.', function(){
-					// Create a reference to the file to delete
-					const desertRef = storageRef.child( file.fullFileName );
-
-					// Delete the file
-					desertRef.delete().then( () => {
-						setDivToRemoved( newDiv );
-					})
-					.catch( ( error ) => {
-						$( "#alertDialog" ).removeClass( "hidden" );
-						$( "#alertHeader" ).text( "Error" );
-						$( "#alertText" ).text( "Could not remove: " + error );
-						console.error( error );
-					});
-
-				});
+					'Note, all the markers will still be available.', function() {
+					removeFileFromServer( file.fileUrl, newDiv );
+					file.troffDataList.forEach( markTroffDataDeletedOnServer );
+				} );
 
 			} );
 

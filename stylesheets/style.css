@@ -860,12 +860,24 @@ a { color: #0051A8; }
 .font-size-relative-1 {
 	font-size: 1em;
 }
+.font-size-relative-8 {
+	font-size: 0.8em;
+}
 
 .m-relative-7 {
 	margin: 0.7em !important;
 }
+.m-relative-3 {
+	margin: 0.3em !important;
+}
 .m-relative-4 {
 	margin: 0.4em !important;
+}
+.ml-relative-11 {
+	margin-left: 1.1em !important;
+}
+.mt-relative-5 {
+	margin-top: 0.5em !important;
 }
 
 .st-simple-on-off-button{
@@ -937,7 +949,7 @@ a { color: #0051A8; }
 /* checkbox switch widget : */
 
 .switch_checkbox:not(:checked) + .switch_child {
-	display: none;
+	display: none !important;
 }
 
 
@@ -1205,6 +1217,9 @@ table.dataTable .dataTables_empty{
 	.normalSize-on-mobile {
 		font-size: 14px;
 	}
+	.BigSize-on-mobile {
+		font-size: 18px;
+	}
 
 	[for=fileUploader] {
 		font-size: 1.1em;
@@ -1264,7 +1279,7 @@ table.dataTable .dataTables_empty{
 		height: 52px;
 	}
 
-	.big-on-mobile {
+	.gigantic-on-mobile {
 		font-size: 58px;
 	}
 

@@ -1259,6 +1259,7 @@ var TroffClass = function(){
 
 		let displayName = fileName;
 		const nrMarkers = markerObject.markers.length;
+		const nrStates = markerObject.aStates ? markerObject.aStates.length : 0;
 		const info = markerObject.info.substring( 0, 99 );
 		let genre = "";
 		let tags = "";
@@ -1279,6 +1280,7 @@ var TroffClass = function(){
 			firstTimeLoaded : new Date().getTime(),
 			displayName : displayName,
       nrMarkers : nrMarkers,
+      nrStates : nrStates,
       infoBeginning : info,
       genre : genre,
       tags : tags

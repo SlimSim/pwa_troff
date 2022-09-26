@@ -42,8 +42,6 @@ $(document).ready( async function() {
 
 			newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
 			newTroffData.find( ".troffDataDisplayName" ).text( troffDataIdObject.displayName );
-			newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
-			newTroffData.find( ".troffDataDisplayName" ).text( troffDataIdObject.displayName );
 			newTroffData.find( ".troffDataGenre" ).text( troffDataIdObject.genre );
 			newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
 			newTroffData.find( ".troffDataNrMarkers" ).text( troffDataIdObject.nrMarkers );

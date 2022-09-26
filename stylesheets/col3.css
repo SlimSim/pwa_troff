@@ -40,12 +40,6 @@ p{
 	background-color: #BDBDBD;
 }
 
-.gray-out-next-on-non-active:not(.active) ~*,
-.grayOut{
-		color: #595959;
-		background-color: lightgray;
-}
-
 
 /* oddballs */
 .textareaStandard{
@@ -251,6 +245,12 @@ li[isdirectory="true"]:not(:first-child) {
 .wait .secondsLeft,
 .wait .loopTimesLeft{
 	color: #F5F5F5; /* accentColor3 - IF YELLOW ISH... */
+}
+
+.gray-out-next-on-non-active:not(.active) ~*,
+.grayOut{
+		color: #595959;
+		background-color: lightgray;
 }
 
 
