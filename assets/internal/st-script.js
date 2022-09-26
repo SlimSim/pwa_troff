@@ -125,7 +125,7 @@ $( document ).ready( function() {
 	}; // end confirm
 
 	st.millisToDisp = function( millis ) {
-		if( !millis ) {
+		if( !millis || millis < 162431283500 ) {
 			return "";
 		}
 
@@ -142,6 +142,9 @@ $( document ).ready( function() {
 	}
 
 	st.byteToDisp = function( byte ) {
+		if( byte == undefined ) {
+			return "";
+		}
 		var nrTimes = 0;
 			units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 

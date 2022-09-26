@@ -38,11 +38,6 @@ p{
 	background-color: lightgray;
 }
 
-.gray-out-next-on-non-active:not(.active) ~*,
-.grayOut{
-	color: #595959;
-	background-color: lightgray;
-}
 
 
 /* oddballs */
@@ -236,6 +231,11 @@ p{
 	color: #787B1E; /* accentColor3 - IF YELLOW ISH... */
 }
 
+.gray-out-next-on-non-active:not(.active) ~*,
+.grayOut{
+	color: #595959;
+	background-color: lightgray;
+}
 
 /* end "Anton & Irene" color scheeme */
 

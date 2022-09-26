@@ -27,171 +27,267 @@ $(document).ready( async function() {
   const storage = firebase.storage();
   const storageRef = storage.ref();
 
-	let allTroffData;
+	let serverSongListHistory;
 
-	const setDivToRemoved = function( div ) {
-		div
-			.addClass( "grayOut" )
-			.removeClass( "bg-Burlywood" );
-		div.find( ".removeFile" ).addClass( "hidden" )
-		div.find( ".removedText" ).removeClass( "hidden" )
-	};
-
-	const superStartParent = async function() {
+	const initiateApp = async function() {
+		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
+		const savedServerSongListFromServer = nDB.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
+		mergeWithServerSongListHistory( savedServerSongListFromServer );
+		repopulateFileListDivs();
 
 		const snapshot = await firebase.firestore().collection('TroffData')
 			.where( "troffDataPublic", "==", true )
 			.get();
 		const docs = snapshot.docs;
-		allTroffData = docs.map(doc => doc.data());
-		superStart();
+		const allTroffDataFromServer = docs.map(doc => doc.data());
+		let latestServerSongListFromServer = troffDataListToServerSongList( allTroffDataFromServer );
+		nDB.set( "TROFF_SERVER_SONG_LIST_FROM_SERVER", latestServerSongListFromServer );
+
+		if(
+			savedServerSongListFromServer == null ||
+			savedServerSongListFromServer.length != latestServerSongListFromServer.length ||
+			!savedServerSongListFromServer.every( a => latestServerSongListFromServer.some( b => serverSongEqual(a, b) ) )
+		) {
+			// latestServerSongListFromServer contains new updates compared to savedServerSongListFromServer!
+			mergeWithServerSongListHistory( latestServerSongListFromServer );
+			repopulateFileListDivs();
+		}
+
 	}
 
-	const superStart = async function() {
+	const serverSongEqual = function( ss1, ss2 ) {
+		if( ss1.fileNameUri != ss2.fileNameUri ) return false;
+		if( ss1.troffDataIdObjectList.length != ss2.troffDataIdObjectList.length ) return false;
+		return ss1.troffDataIdObjectList.every( tdio1 =>
+			ss2.troffDataIdObjectList.some( tdio2 => tdio1.troffDataId == tdio2.troffDataId )
+		);
+	}
 
-		$( "#fileList, #deletedFileList" ).empty();
+	const mergeWithServerSongListHistory = function( serverSongListFromServer ) {
 
-		let fileList = [];
+		if( serverSongListFromServer == undefined ) {
+			return;
+		}
+		if( serverSongListHistory == undefined ) {
+			serverSongListHistory = [];
+		}
 
-		let totalSize = 0;
-		let nrOfFiles = 0;
-		let nrOfDeletedFiles = 0;
+		serverSongListFromServer.forEach( ssFromServer => {
 
-		for( const troffData of allTroffData ) {
+			const ssHistory = serverSongListHistory.find( hss => hss.fileNameUri == ssFromServer.fileNameUri );
 
-			if( troffData.songData == undefined ) {
-				troffData.songData = JSON.parse( troffData.markerJsonString );
-				delete troffData.markerJsonString;
+			if( ssHistory == undefined ) {
+				ssFromServer.fromServer = true;
+				ssFromServer.troffDataIdObjectList.forEach( tdio => tdio.fromServer = true );
+				serverSongListHistory.push( ssFromServer );
+			} else {
+				ssHistory.deleted = [ssHistory.deleted, ssFromServer.deleted].some( a => a );
+				ssHistory.size = ssHistory.size || ssFromServer.size;
+				ssHistory.type = ssHistory.type || ssFromServer.type;
+				ssHistory.uploaded = getEarliestTime( ssHistory.uploaded, ssFromServer.uploaded );
+
+				ssFromServer.troffDataIdObjectList.forEach( tdioFromServer => {
+					const tdioHistory = ssHistory.troffDataIdObjectList.find( tdio => tdio.troffDataId == tdioFromServer.troffDataId );
+
+					if( tdioHistory == undefined ) {
+						tdioFromServer.fromServer = true;
+						ssHistory.troffDataIdObjectList.push( tdioFromServer );
+					} else {
+						tdioHistory.firstTimeLoaded = tdioHistory.firstTimeLoaded || tdioFromServer.firstTimeLoaded;
+						tdioHistory.displayName = tdioHistory.displayName || tdioFromServer.displayName;
+						tdioHistory.nrMarkers = tdioHistory.nrMarkers || tdioFromServer.nrMarkers;
+						tdioHistory.infoBeginning = tdioHistory.infoBeginning || tdioFromServer.infoBeginning;
+						tdioHistory.genre = tdioHistory.genre || tdioFromServer.genre;
+						tdioHistory.tags = tdioHistory.tags || tdioFromServer.tags;
+					}
+
+				} );
 			}
 
-			//if( troffData.fileName != "Welcome To Jurassic Park.mp3" ) continue;
+		} )
 
-			let customName = "";
-			let choreography = "";
-			let title = "";
-			const fileName = troffData.fileName || "";
-			if( troffData.songData.fileData ) {
-				customName = troffData.songData.fileData.customName || "";
-				choreography = troffData.songData.fileData.choreography || "";
-				title = troffData.songData.fileData.title || "";
-			}
+	};
 
-			const search = $("#search").val().toLowerCase();
-			const includesSearch = fileName.toLowerCase().includes( search ) ||
-					customName.toLowerCase().includes( search ) ||
-					choreography.toLowerCase().includes( search ) ||
-					title.toLowerCase().includes( search )
+	const troffDataListToServerSongList = function( troffDataList ) {
+		let serverSongList = [];
 
-			if( !includesSearch ) {
-				continue;
-			}
+		for( const troffData of troffDataList ) {
 
-			const fileUrl = troffData.fileUrl.substring(0, troffData.fileUrl.indexOf('?'))
+			const fileNameUri = encodeURI( troffData.fileName );
 
-			let currentFile = fileList.find( x => x.fileUrl == fileUrl );
+			let currentServerSong = serverSongList.find( ss => ss.fileNameUri == fileNameUri );
 
-			const fileDataLastModified = troffData.songData.fileData ? troffData.songData.fileData.lastModified : undefined;
-			troffData.troffDataUploadedMillis = troffData.troffDataUploadedMillis || fileDataLastModified;
-
-			if( currentFile == undefined ) {
-
-				let file = {
-					fileName : troffData.fileName,
-					fileUrl : fileUrl,
-					fileType : troffData.fileType,
-					fileSize : troffData.fileSize,
-					deleted : troffData.deleted,
-					updated : troffData.troffDataUploadedMillis,
-					troffDataList : [ troffData ]
-				}
-
-				fileList.push( file );
+			if( currentServerSong == undefined ) {
+				const serverSong = {
+					fileNameUri : fileNameUri,
+					deleted : troffData.deleted != undefined ? troffData.deleted : false,
+					size : troffData.fileSize,
+					type : troffData.fileType,
+					uploaded : troffData.troffDataUploadedMillis,
+					troffDataIdObjectList : [ troffDataToTroffDataIdObject( troffData ) ]
+				};
+				serverSongList.push( serverSong );
 			} else {
 				if( troffData.deleted ) {
-					currentFile.deleted = true;
+					currentServerSong.deleted = true;
 				}
-
-				if( currentFile.updated == undefined || troffData.troffDataUploadedMillis < currentFile.updated ) {
-					currentFile.updated = troffData.troffDataUploadedMillis;
-				}
-
-				currentFile.troffDataList.push( troffData );
+				currentServerSong.uploaded = getEarliestTime( currentServerSong.uploaded, troffData.troffDataUploadedMillis );
+				currentServerSong.troffDataIdObjectList.push( troffDataToTroffDataIdObject( troffData ) );
 			}
 
-		};
+		}
 
-		$( ".nrOfFiles" ).text( nrOfFiles );
+		return serverSongList;
+	}
 
-		// sorting latest first:
-		fileList.sort( ( a, b ) => (a.updated < b.updated) ? 1 : -1 ); // updated does not exist
+	const repopulateFileListDivs = function() {
+		$( "#fileList, #deletedFileList" ).empty();
 
+		$.each( serverSongListHistory, ( i, serverSong ) => {
 
-		$.each( fileList, ( i, file ) => {
+			let newDiv = $("#serverSongTemplate").children().clone( true, true );
 
-			let newDiv = $("#template").children().clone( true, true);
-			newDiv.data( "updated", new Date(file.updated || 0 ).getTime() );
-			newDiv.data( "fileSize", file.fileSize );
-			newDiv.find( ".fileName" ).text( file.fileName ).attr( "href", file.fileUrl );
-			newDiv.find( ".fileType" ).text( file.fileType );
-			newDiv.find( ".updated" ).text( st.millisToDisp( file.updated ) );
-			newDiv.find( ".fileSize" ).text( st.byteToDisp( file.fileSize ) );
-			newDiv.find( ".troffDataLength" ).text( file.troffDataList.length );
+			let upld= st.millisToDisp( serverSong.uploaded );
 
-			if( file.deleted ) {
-				newDiv.removeClass( "tertiaryColor" ).addClass( "accentColor2" );
+			const fileName = decodeURI( serverSong.fileNameUri )
+			newDiv.data( "fileName", fileName );
+			newDiv.data( "uploaded", new Date( serverSong.uploaded || 0 ).getTime());
+			newDiv.data( "fileSize", serverSong.size || 0)
+			newDiv.find( ".fileName" ).text( fileName );
+			newDiv.find( ".newSong" ).toggleClass( "hidden", !serverSong.fromServer );
+			newDiv.find( ".uploaded" ).text( upld );
+			newDiv.find( ".fileType" ).text( serverSong.type );
+			newDiv.find( ".fileSize" ).text( st.byteToDisp( serverSong.size ) );
+			if( serverSong.type != "" && serverSong.type != null ) {
+				newDiv.find( ".fileTypeSizeSeparator" ).removeClass( "hidden" );
+			}
+
+			newDiv.find( ".troffDataLength" ).text( serverSong.troffDataIdObjectList.length );
+			newDiv.toggleClass( "grayOut", !!serverSong.deleted ); // <-- !! converts undefined and null to false :)
+
+			let addNewDiv = false;
+			let defaultValue = false;
+			if( fileName.toLowerCase().includes( $( "#search" ).val().toLowerCase() ) ) {
+				defaultValue = true;
+			}
+			$.each( serverSong.troffDataIdObjectList, (tdIndex, troffDataIdObject ) => {
+				if( !includesSearch( $( "#search" ).val(), troffDataIdObject, defaultValue ) ) {
+					return;
+				}
+				addNewDiv = true;
+
+				let newTroffDataDiv = getFullTroffDataDiv( troffDataIdObject, serverSong.fileNameUri );
+				newDiv.find( ".markerList" ).append( newTroffDataDiv );
+			});
+			if( !addNewDiv ) {
+				return;
+			}
+			if( !!serverSong.deleted ) {
+				$( "#showDeletedButt" ).removeClass( "hidden" );
 				$( "#deletedFileList" ).append( newDiv );
-				nrOfDeletedFiles++;
 			} else {
-				nrOfFiles++;
-				totalSize += file.fileSize;
 				$( "#fileList" ).append( newDiv );
 			}
 
-			$.each( file.troffDataList, (tdIndex, troffData ) => {
-
-				let displayName = file.fileName
-				let genre = "";
-				let tags = "";
-				if( troffData.songData.fileData ) {
-					displayName = troffData.songData.fileData.customName ||
-							troffData.songData.fileData.choreography ||
-							troffData.songData.fileData.title ||
-							file.fileName;
-					genre = troffData.songData.fileData.genre || "";
-					tags = troffData.songData.fileData.tags || "";
-				}
-
-				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
-				newTroffData.find( ".troffDataId" )
-					.text( "Download this version (" + troffData.id + ")"   )
-					.attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
-
-				newTroffData.find( ".troffDataInfo" ).text( troffData.songData.info.substring( 0, 99 ) );
-				newTroffData.find( ".troffDataNrMarkers" ).text( troffData.songData.markers.length );
-				if( troffData.songData.aStates.length == 0 ) {
-					$( ".troffDataNrStatesParent" ).addClass( "hidden" )
-				}
-				newTroffData.find( ".troffDataNrStates" ).text( troffData.songData.aStates.length );
-				newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffData.troffDataUploadedMillis ) );
-				newTroffData.find( ".troffDataDisplayName" ).text( displayName );
-				newTroffData.find( ".troffDataGenre" ).text( genre );
-				newTroffData.find( ".troffDataTags" ).text( tags );
-
-				newDiv.find( ".markerList" ).append( newTroffData );
-
-			});
-
 		} );
-
-		$( ".nrOfFiles" ).text( nrOfFiles );
-		$( ".totalSize" ).text( st.byteToDisp( totalSize ) );
-		$( ".nrOfDeletedFiles" ).text( nrOfDeletedFiles );
 
 		$( "#loadingArticle" ).addClass( "hidden" );
 		$( "#mainArticle" ).removeClass( "hidden" );
-		if( nrOfDeletedFiles > 0 ) {
-			$( "#showDeletedButt" ).removeClass( "hidden" );
+
+	};
+
+	const getEarliestTime = function( m1, m2 ) {
+		if( m1 == undefined && m2 == undefined ) return 0;
+
+		if( (m1 == undefined || m1 < 162431283500) && m2 > 162431283500 ) return m2;
+		if( (m2 == undefined || m2 < 162431283500) && m1 > 162431283500 ) return m1;
+
+		if( (m1 == undefined || m1 < 162431283500) && (m2 == undefined || m2 < 162431283500) ) return 0;
+		return Math.min( m1, m2 );
+	}
+
+	const getFirstTimeLoadedFromTroffData = function( troffData ) {
+		const millis = troffData.troffDataUploadedMillis;
+		if( !(!millis || millis < 162431283500 ) ) {
+			return millis;
 		}
+		if( troffData.songData && troffData.songData.fileData && troffData.songData.fileData.lastModified ) {
+			return troffData.songData.fileData.lastModified;
+		}
+		return 0;
+	}
+
+	const troffDataToTroffDataIdObject = function( troffData ) {
+		if( troffData.songData == undefined ) {
+			troffData.songData = JSON.parse( troffData.markerJsonString );
+			delete troffData.markerJsonString;
+		}
+		return {
+			troffDataId : troffData.id,
+			firstTimeLoaded : getFirstTimeLoadedFromTroffData ( troffData ),
+			displayName : getDisplayNameFromTroffData( troffData ),
+      nrMarkers : troffData.songData.markers.length,
+      nrStates : troffData.songData.aStates ? troffData.songData.aStates.length : 0,
+      infoBeginning : troffData.songData.info.substring( 0, 99 ),
+      genre : ( troffData.songData.fileData && troffData.songData.fileData.genre ) || "",
+      tags : ( troffData.songData.fileData && troffData.songData.fileData.tags ) || ""
+		};
+	}
+
+	const getFullTroffDataDiv = function( troffDataIdObject, fileNameUri ) {
+		let newTroffData = $("#troffDataTemplate").children().clone(true, true);
+		const downloadText = troffDataIdObject.fromServer ? "for the first time" : "again";
+		newTroffData.find( ".troffDataId" )
+			.text( "Download this version " + downloadText + " (" + troffDataIdObject.troffDataId + ")" )
+			.attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + fileNameUri );
+
+		newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
+		if( !troffDataIdObject.nrMarkers ) {
+			newTroffData.find( ".troffDataNrMarkersParent" ).addClass( "hidden" );
+		}
+		newTroffData.find( ".troffDataNrMarkers" ).text( troffDataIdObject.nrMarkers );
+		if( troffDataIdObject.nrStates > 0 ) {
+			newTroffData.find( ".troffDataNrStatesParent" ).removeClass( "hidden" )
+		}
+		newTroffData.find( ".troffDataNrStates" ).text( troffDataIdObject.nrStates );
+		newTroffData.find( ".troffDataFirstTimeLoaded" ).text( st.millisToDisp( troffDataIdObject.firstTimeLoaded ) );
+		newTroffData.find( ".troffDataDisplayName" ).text( troffDataIdObject.displayName );
+		newTroffData.find( ".troffDataGenre" ).text( troffDataIdObject.genre );
+		newTroffData.find( ".troffDataTags" ).text( troffDataIdObject.tags );
+		return newTroffData;
+	};
+
+	const getDisplayNameFromTroffData = function( troffData, defaultValue ) {
+		let displayName = defaultValue || "";
+		if( troffData.songData && troffData.songData.fileData ) {
+			displayName = troffData.songData.fileData.customName ||
+					troffData.songData.fileData.choreography ||
+					troffData.songData.fileData.title ||
+					defaultValue;
+		}
+		return displayName;
+	}
+
+	const getSearchableFields = function( troffDataIdObject ) {
+		let customName = "";
+		let choreography = "";
+		let displayName = troffDataIdObject.displayName || "";
+		let genre = troffDataIdObject.genre || "";
+		let tags = troffDataIdObject.tags || "";
+		return [customName, choreography, displayName, genre, tags];
+	}
+
+	const includesSearch = function( text, troffDataIdObject, defaultValue ) {
+		if( text == "" ) return true;
+		text = text.toLowerCase();
+		const searchableFields = getSearchableFields( troffDataIdObject );
+		if( searchableFields.every( f => f == "" ) ) {
+			return defaultValue;
+		}
+
+		return searchableFields.map( t => {
+		 	return t.toLowerCase().includes( text )
+		 }).some( a => a );
 	}
 
 	const sortFileList = function( cssToSort, orderByAsc ) {
@@ -207,14 +303,13 @@ $(document).ready( async function() {
 		.appendTo( $fileList );
 	}
 
-	$( "#sortUpdatedAsc" ).on( "click", () => {	sortFileList( "updated", true ); } );
-	$( "#sortUpdatedDesc" ).on( "click", () => {	sortFileList( "updated", false ); } );
+	$( "#sortUploadedAsc" ).on( "click", () => {	sortFileList( "uploaded", true ); } );
+	$( "#sortUploadedDesc" ).on( "click", () => {	sortFileList( "uploaded", false ); } );
 	$( "#sortSizeAsc" ).on( "click", () => {	sortFileList( "fileSize", true ); } );
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
 	$( "#showDeletedButt" ).on( "click", () => {	$( "#deletedFileListParent" ).toggleClass( "hidden" );  } );
 
-	$( "#buttSearch" ).on( "click", superStart );
-
+	$( "#buttSearch" ).on( "click", repopulateFileListDivs );
 
 	$( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).closest( ".stOnOffButton" ).toggleClass( "active" ) } );
 	$("#search").keyup( function( event ) {
@@ -223,8 +318,7 @@ $(document).ready( async function() {
 		}
 	});
 
-
-	superStartParent();
+	initiateApp();
 
 });
 
