@@ -143,13 +143,21 @@
 
 
 		<div>
-			<label class="switch float-rigth likeLink linkButton pb-3 m-0 p-0" for="sortMoreInfoSwitch">Sort</label>
+			<label class="likeLink linkButton pb-3 m-0 p-0" for="sortMoreInfoSwitch">Settings</label>
 			<input id="sortMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
-			<div class="switch_child" >
-				<button class="btn regularButton" id="sortUploadedDesc">Newest first</button>
-				<button class="btn regularButton" id="sortUploadedAsc">...last</button>
-				<button class="ml-3 btn regularButton" id="sortSizeDesc">Biggest First</button>
-				<button class="btn regularButton" id="sortSizeAsc">...last</button>
+			<div class="switch_child d-flex flex-wrap" >
+				<button class="btn stOnOffButton" id="filterOnlyHistoryButt">Only my versions</button>
+				<span class="flex-one"></span>
+				<div>
+					<span class="inlineBlock">
+						<button class="btn regularButton" id="sortUploadedDesc">Newest first</button>
+						<button class="btn regularButton mr-3" id="sortUploadedAsc">...last</button>
+					</span>
+					<span class="inlineBlock">
+						<button class="btn regularButton" id="sortSizeDesc">Biggest First</button>
+						<button class="btn regularButton" id="sortSizeAsc">...last</button>
+					</span>
+				</div>
 			</div>
 		</div>
 

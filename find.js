@@ -145,9 +145,11 @@ $(document).ready( async function() {
 
 		$.each( serverSongListHistory, ( i, serverSong ) => {
 
-			let newDiv = $("#serverSongTemplate").children().clone( true, true );
+			if( $("#filterOnlyHistoryButt").hasClass( "active" ) && serverSong.fromServer ) {
+				return;
+			}
 
-			let upld= st.millisToDisp( serverSong.uploaded );
+			let newDiv = $("#serverSongTemplate").children().clone( true, true );
 
 			const fileName = decodeURI( serverSong.fileNameUri )
 			newDiv.data( "fileName", fileName );
@@ -155,7 +157,7 @@ $(document).ready( async function() {
 			newDiv.data( "fileSize", serverSong.size || 0)
 			newDiv.find( ".fileName" ).text( fileName );
 			newDiv.find( ".newSong" ).toggleClass( "hidden", !serverSong.fromServer );
-			newDiv.find( ".uploaded" ).text( upld );
+			newDiv.find( ".uploaded" ).text( st.millisToDisp( serverSong.uploaded ) );
 			newDiv.find( ".fileType" ).text( serverSong.type );
 			newDiv.find( ".fileSize" ).text( st.byteToDisp( serverSong.size ) );
 			if( serverSong.type != "" && serverSong.type != null ) {
@@ -172,6 +174,9 @@ $(document).ready( async function() {
 			}
 			$.each( serverSong.troffDataIdObjectList, (tdIndex, troffDataIdObject ) => {
 				if( !includesSearch( $( "#search" ).val(), troffDataIdObject, defaultValue ) ) {
+					return;
+				}
+				if( $("#filterOnlyHistoryButt").hasClass( "active" ) && troffDataIdObject.fromServer ) {
 					return;
 				}
 				addNewDiv = true;
@@ -303,15 +308,16 @@ $(document).ready( async function() {
 		.appendTo( $fileList );
 	}
 
+	$( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).closest( ".stOnOffButton" ).toggleClass( "active" ) } );
 	$( "#sortUploadedAsc" ).on( "click", () => {	sortFileList( "uploaded", true ); } );
 	$( "#sortUploadedDesc" ).on( "click", () => {	sortFileList( "uploaded", false ); } );
 	$( "#sortSizeAsc" ).on( "click", () => {	sortFileList( "fileSize", true ); } );
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
 	$( "#showDeletedButt" ).on( "click", () => {	$( "#deletedFileListParent" ).toggleClass( "hidden" );  } );
+	$( "#filterOnlyHistoryButt" ).on( "click", repopulateFileListDivs );
 
 	$( "#buttSearch" ).on( "click", repopulateFileListDivs );
 
-	$( ".stOnOffButton" ).on( "click", ( e ) => { $( e.target ).closest( ".stOnOffButton" ).toggleClass( "active" ) } );
 	$("#search").keyup( function( event ) {
 		if ( event.keyCode === 13 ) {
 			$("#buttSearch").click();

@@ -949,7 +949,7 @@ a { color: #0051A8; }
 /* checkbox switch widget : */
 
 .switch_checkbox:not(:checked) + .switch_child {
-	display: none;
+	display: none !important;
 }
 
 
