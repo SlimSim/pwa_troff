@@ -551,7 +551,8 @@ function initSongTable() {
 	dataSongTable = $("#dataSongTable").DataTable({
 		"language": {
 			"emptyTable": "<h1 class=\"lead\">No files added!</h1>" +
-			"<br />Try adding songs by clicking the <br / >" +
+			"<br />Find new songs at <a href=\"/find.html\">troff.app/find.html</a>" +
+			"<br /><br />Or add your own songs by clicking the <br / >" +
 				"<label " +
 					"title=\"Add songs, videos or pictures to Troff\"" +
 					"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
