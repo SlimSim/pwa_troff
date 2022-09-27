@@ -18,14 +18,6 @@
 
 <html lang="en-US" class="overflow-hidden" >
 <head>
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-158173734-3"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
-		gtag('config', 'UA-158173734-3');
-	</script>
 
 	<title>History - Troff</title>
 	<meta charset="UTF-8">
@@ -40,176 +32,14 @@
 	<style>
 		button,input,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{font-weight:400;margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
 	</style>
-	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
-
-	<script src="assets/internal/common.js"></script>
-
-	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css" />
-	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
-
-	<script src="assets/external/jquery-3.6.0.min.js"></script>
-	<script src="assets/internal/st-script.js"></script>
-	<script src="history.js"></script>
-	<!--script>
-
-		$(function () {
-			loadExternalHtml = function(includes, callback) {
-				if( includes.length == 0 ) {
-					return callback();
-				}
-				const currentElement = includes.eq(-1);
-				includes.splice( includes.length-1, 1);
-
-				const file = $( currentElement ).data('include');
-				$( currentElement ).load( file, function(){
-					loadExternalHtml( includes, callback );
-				} );
-			}
-
-			const includes = $('[data-include]');
-			loadExternalHtml(includes);
-		});
-
-	</script-->
+	<script>
+		window.location.replace( window.location.origin + "/find.html#f=my" )
+	</script>
 
 </head>
 
 <body class="backgroundColor flexCol">
-	<input id="blur-hack" type="button"/>
-	<header class="m-2">
-		<span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
-					data-toggle="collapse" data-target="#navigation">
-			<i class="fa-menu"></i>
-		</span>
-		<img src="assets/logos/logo.svg" width="48" alt="logo"/>
-		<h1>Troff - My History</h1>
-	</header>
-
-<div class="flexRow fill-height-minus-58">
-	<section class="flexCol flexScroll">
-
-	<article id="whatIsTroff" class="mt-0">
-		<h2>What's this?</h2>
-		<p>
-			Here you will see all the songs that you have downloaded or uploaded.
-			Search for new songs and choreographies among all the songs and choreographies at
-			<a class="likeLink" href="/find.html">troff.app/find.html</a>!
-		</p>
-
-		<label class="switch likeLink linkButton pb-3 m-0 p-0" for="whatsThisMoreInfoSwitch">More info</label>
-		<input id="whatsThisMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
-		<div class="switch_child" >
-			<p>
-				When you click a song in the list below, you will see
-				all the different versions of markers that is saved for that song.
-			</p>
-			<p>
-				For every marker version, you will se how many markers that version has,
-				as well as when that version was saved.
-				If there are any tags, genre or song info for that version,
-				it will also be displayed there.
-				Although only the first characters of the song info will be shown,
-				to reduce clutter.
-			</p>
-			<p>
-				When you click "Download this version ( version id )"
-				<a class="likeLink" href="/">troff.app</a>
-				will open in a new tab and, if that version is not your current version,
-				you will get a question of whether to import the new markers,
-				merge the new markers with the existing ones or keep the existing ones.
-			</p>
-			<p>
-				Note: when importing new markers, your existing version will be removed
-				and if that version has not been uploaded or exported, Troff will not
-				be able to restore it.
-			</p>
-		</div>
-	</article> <!-- What is Troff -->
-
-	<article id="howToAddMedia">
-		<h2>List</h2>
-
-		<div id="songList"></div>
-
-
-	</article> <!-- add and play music -->
-
-	<footer id="footer" class="white flexRow">
-		<div class="flexCol">
-			<p>
-				Contact a human:
-				<a class="white" target=_blank rel="noopener" href="mailto:slimsimapps@gmail.com">
-					slimsimapps@gmail.com</a>.
-			</p>
-			<p>
-				Like us on
-				<a class="white" target=_blank rel="noopener"
-					href="https://www.facebook.com/troffmusic">facebook</a>!
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="LICENSE.html">LICENSE</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="privacy_policy.html">Privacy Policy</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="terms.html">Terms and conditions</a>.
-			</p>
-			<p>
-				Happy training!
-			</p>
-		</div>
-		<div class="flexCol white center flexOne">
-			<p class="white Big">Troff</p>
-			<p class="white Big textCenter">Training with music</p>
-		</div>
-	</footer>
-	</section>
-</div>
-
-
-
-
-
-
-
-	<aside id="template" class="hidden">
-		<div class="tertiaryColor container flex-row p-2 my-1">
-			<div class="row toggleNext cursor-pointer">
-				<div class="col-sm">
-					<h3 class="fileName"></h3>
-					<p>Number of different versions: <span class="troffData"></span></p>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-sm">
-					<div class="container flex-row p-1 my-1 markerList">
-					</div>
-				</div>
-			</div>
-		</div>
-	</aside>
-
-	<aside id="troffDataTemplate" class="hidden">
-		<div class="row">
-			<div class="col-sm">
-				<div class="themeColor mt-1 p-3">
-					<p class="text-light-gray float-right troffDataFirstTimeLoaded m-0"></p>
-					<h4 class="troffDataDisplayName text-light-gray text-bold"></h4>
-					<div class="py-2 text-light-gray small">
-						<span class="troffDataGenre text-light-gray small float-right"></span>
-						<span class="troffDataNrMarkers"></span> markers
-					</div>
-					<span class="pt-1 troffDataTags text-light-gray float-right small float-right"></span>
-					<div class="pt-2 text-light-gray small"><span class="troffDataInfo"></span></div>
-					<div class="pt-2"><a href="#" target="_blank" class="troffDataId text-light-gray likeLink"></a></div>
-				</div>
-			</div>
-		</div>
-	</aside>
-
+	<h1>This page is deprecated</h1>
+	<p>Please use <a href="/find.html#f=my">troff.app/find.html#f=my</a> instead!</p>
 </body>
 </html>
