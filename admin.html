@@ -130,14 +130,17 @@
 				<div class="row">
 					<div class="col-sm">
 						<h3><a href="#" target="_blank" class="fileName"></a></h3>
-						<p><span class="fileType"></span></p>
-						<p>Size: <span class="fileSize"></span></p>
-						<p>TroffData: <span class="troffData"></span></p>
+						<p><span class="fileType"></span>, <span class="fileSize"></span></p>
+						<p>TroffData: <span class="troffData"></span>,
+							Public: <span class="troffDataPublic"></span>,
+							Private: <span class="troffDataPrivate"></span></p>
 						<p>Updated: <span class="updated"></span></p>
 					</div>
 					<div class="col-sm flex-grow-0">
 						<button class="removeFile regularButton">Remove</button>
 						<span class="hidden grayOut removedText">Removed</span>
+						<button class="makeAllPrivate regularButton mt-2">Make All Private</button>
+						<button class="makeAllPublic regularButton mt-2">Make All Public</button>
 					</div>
 				</div>
 				<div class="row">
@@ -154,7 +157,9 @@
 		<div id="troffDataTemplate" class="hidden">
 			<div class="row">
 				<div class="col-sm">
-					<h4><a href="#" target="_blank" class="troffDataId"></a></h4>
+					<button class="troffDataMakePrivate regularButton float-right">Make Private</button>
+					<button class="troffDataMakePublic regularButton float-right hidden">Make Public</button>
+					<h4><span class="troffDataPublicOrPrivate"></span>: <a href="#" target="_blank" class="troffDataId"></a></h4>
 					<p class="m-0">States: <span class="troffDataNrStates"></span></p>
 					<p class="m-0">Markers: <span class="troffDataNrMarkers"></span></p>
 					<p class="troffDataInfo text-truncate w-100"></p>
