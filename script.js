@@ -317,7 +317,9 @@ function updateVersionLink( path ) {
 	}
 
 	$( ".nr-of-versions-in-history" ).text( hist[0].troffDataIdObjectList.length );
-	$( ".nr-of-versions-in-history-parent" ).removeClass( "hidden" );
+	$( ".nr-of-versions-in-history-parent" )
+		.attr( "href", "find.html#f=my&id=" + fileNameUri )
+		.removeClass( "hidden" );
 }
 
 function sortAndValue(sortValue, stringValue) {

@@ -33,7 +33,15 @@ $(document).ready( async function() {
 		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
 		const savedServerSongListFromServer = nDB.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
 		mergeWithServerSongListHistory( savedServerSongListFromServer );
+
+		let filter = new URLSearchParams( window.location.hash ).get( "f" )
+		if( filter == "my" ) {
+			$( "#sortMoreInfoSwitch" ).click();
+			$( "#filterOnlyHistoryButt" ).click();
+		}
+
 		repopulateFileListDivs();
+		scrollToUrlSong();
 
 		const snapshot = await firebase.firestore().collection('TroffData')
 			.where( "troffDataPublic", "==", true )
@@ -51,8 +59,24 @@ $(document).ready( async function() {
 			// latestServerSongListFromServer contains new updates compared to savedServerSongListFromServer!
 			mergeWithServerSongListHistory( latestServerSongListFromServer );
 			repopulateFileListDivs();
+			scrollToUrlSong();
 		}
 
+	}
+
+	const scrollToUrlSong = function() {
+		let id = new URLSearchParams( window.location.hash ).get("id")
+		if( id ) {
+			let element =  document.getElementById( fileNameToId( decodeURI( id ) ) );
+			if( element ) {
+				element.scrollIntoView();
+				element.querySelector( ".toggleNext" ).click();
+			}
+		}
+	}
+
+	const fileNameToId = function( fileName ) {
+		return fileName.split( ' ' ).join( '_' );
 	}
 
 	const serverSongEqual = function( ss1, ss2 ) {
@@ -152,6 +176,7 @@ $(document).ready( async function() {
 			let newDiv = $("#serverSongTemplate").children().clone( true, true );
 
 			const fileName = decodeURI( serverSong.fileNameUri )
+			newDiv.attr( "id", fileNameToId( fileName ) );
 			newDiv.data( "fileName", fileName );
 			newDiv.data( "uploaded", new Date( serverSong.uploaded || 0 ).getTime());
 			newDiv.data( "fileSize", serverSong.size || 0)
