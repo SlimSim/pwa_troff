@@ -1123,6 +1123,7 @@ var TroffClass = function(){
 			$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
 			$( "#shareSongUrl").val( window.location.origin + Troff.createHash( resp.id, resp.fileName ) );
 			$( "#doneUploadingSongToServerDialog_songName" ).text( songKey );
+			$( "#doneUploadingSongToServerLink" ).attr( "href", "/find.html#id=" + resp.fileName );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 
 		} catch ( error ) {
@@ -1144,6 +1145,7 @@ var TroffClass = function(){
 			$( ".showOnSongAlreadyUploaded" ).removeClass( "hidden" );
 
 			$( "#doneUploadingSongToServerDialog_songName" ).text( Troff.getCurrentSong() );
+			$( "#doneUploadingSongToServerLink" ).attr( "href", "/find.html#id=" + Troff.getCurrentSong() );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 		} else {
 
