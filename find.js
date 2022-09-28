@@ -268,7 +268,7 @@ $(document).ready( async function() {
 			.attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + fileNameUri );
 
 		if( troffDataIdObject.fromServer ) {
-			newTroffDataDiv.addClass( "fromServer" );
+			newTroffData.addClass( "fromServer" );
 		}
 
 		newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
