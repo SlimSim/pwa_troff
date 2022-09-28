@@ -67,21 +67,32 @@ $(document).ready( async function() {
 		});
 	};
 
-	const markTroffDataDeletedOnServer = function( troffData ) {
-
-		troffData.deleted = true;
-
+	const updateTroffDataOnServer = function( troffData ) {
 		const db = firebase.firestore();
-		return db.collection( "TroffData" ).doc( String( troffData.id ) ).set(troffData)
+		return db.collection( "TroffData" ).doc( String( troffData.id ) ).set( troffData )
 			.then( x => {
 				return troffData;
 			})
 			.catch( (error) => {
-				console.error( "markTroffDataDeletedOnServer: catch error", error );
+				console.error( "updateTroffDataOnServer: catch error", error );
 				$( "#alertDialog" ).removeClass( "hidden" );
 				$( "#alertHeader" ).text( "Error" );
-				$( "#alertText" ).text( "Could not mark Troff Data Deleted On Server: " + error );
+				$( "#alertText" ).text( "Could not update Troff Data On Server: " + error );
 			});
+	}
+
+	const markTroffDataDeletedOnServer = function( troffData ) {
+		troffData.deleted = true;
+		return updateTroffDataOnServer( troffData );
+	};
+
+	const markTroffDataPrivateOnServer = function( troffData ) {
+		troffData.troffDataPublic = false;
+		return updateTroffDataOnServer( troffData );
+	};
+	const markTroffDataPublicOnServer = function( troffData ) {
+		troffData.troffDataPublic = true;
+		return updateTroffDataOnServer( troffData );
 	};
 
 	const superAdmin = async function( p ) {
@@ -94,7 +105,11 @@ $(document).ready( async function() {
 			return;
 		}
 
-		const snapshot = await firebase.firestore().collection('TroffData').get();
+		const snapshot = await firebase.firestore().collection('TroffData')
+			//.where( "troffDataPublic", "==", true )
+			//.where( "fileName", "==", "A Tiger.mp3" )
+			//.where( "id", "==", 860081095 )
+			.get();
 		const docs = snapshot.docs;
 		const allTroffData = docs.map(doc => doc.data());
 
@@ -147,9 +162,11 @@ $(document).ready( async function() {
 
 		$.each( fileList, ( i, file ) => {
 
-			let newDiv = $("#template").children().clone( true, true);
+			let newDiv = $("#template").children().clone( true, true );
 			let atLeastOneTroffDataIsDeleted = false;
 			let atLeastOneTroffDataIsNotDeleted = false;
+			let nrTroffDataPublic = 0;
+			let nrTroffDataPrivate = 0;
 
 			if( file.deleted ) {
 				setDivToRemoved( newDiv );
@@ -165,14 +182,40 @@ $(document).ready( async function() {
 
 			$.each( file.troffDataList, (i, troffData ) => {
 				let songData = JSON.parse( troffData.markerJsonString );
+				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
 
-				if( troffData.deleted ){
+				if( troffData.deleted ) {
 					atLeastOneTroffDataIsDeleted = true;
 				} else {
 					atLeastOneTroffDataIsNotDeleted = true;
 				}
+				if( troffData.troffDataPublic ) {
+					newTroffData.find( ".troffDataPublicOrPrivate" ).text( "Public" );
+					nrTroffDataPublic++;
+				} else {
+					newTroffData.find( ".troffDataPublicOrPrivate" ).text( "Private" );
+					nrTroffDataPrivate++;
+					newTroffData.find( ".troffDataMakePrivate" ).addClass( "hidden" );
+					newTroffData.find( ".troffDataMakePublic" ).removeClass( "hidden" );
+				}
 
-				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
+				newTroffData.find( ".troffDataMakePrivate" ).on( "click", () => {
+					markTroffDataPrivateOnServer( troffData );
+					newTroffData.find( ".troffDataMakePrivate" ).addClass( "hidden" );
+          newTroffData.find( ".troffDataMakePublic" ).removeClass( "hidden" );
+					newDiv.find( ".troffDataPublic" ).text( Number( newDiv.find( ".troffDataPublic" ).text() ) - 1 );
+					newDiv.find( ".troffDataPrivate" ).text( Number( newDiv.find( ".troffDataPrivate" ).text() ) + 1 );
+					newTroffData.find( ".troffDataPublicOrPrivate" ).text( "Private" );
+
+				});
+				newTroffData.find( ".troffDataMakePublic" ).on( "click", () => {
+					markTroffDataPublicOnServer( troffData );
+					newTroffData.find( ".troffDataMakePrivate" ).removeClass( "hidden" );
+          newTroffData.find( ".troffDataMakePublic" ).addClass( "hidden" );
+					newDiv.find( ".troffDataPublic" ).text( Number( newDiv.find( ".troffDataPublic" ).text() ) + 1 );
+					newDiv.find( ".troffDataPrivate" ).text( Number( newDiv.find( ".troffDataPrivate" ).text() ) - 1 );
+					newTroffData.find( ".troffDataPublicOrPrivate" ).text( "Public" );
+				});
 				newTroffData.find( ".troffDataId" ).text( troffData.id ).attr( "href", window.location.origin + "/#" + troffData.id + "&" + file.fileName );
 				newTroffData.find( ".troffDataInfo" ).text( songData.info );
 				newTroffData.find( ".troffDataNrMarkers" ).text( songData.markers.length );
@@ -189,6 +232,9 @@ $(document).ready( async function() {
 				file.troffDataList.forEach( markTroffDataDeletedOnServer );
 			}
 
+			newDiv.find( ".troffDataPublic" ).text( nrTroffDataPublic );
+			newDiv.find( ".troffDataPrivate" ).text( nrTroffDataPrivate );
+
 			newDiv.find( ".removeFile" ).on( "click", () => {
 				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
 
@@ -198,6 +244,30 @@ $(document).ready( async function() {
 					file.troffDataList.forEach( markTroffDataDeletedOnServer );
 				} );
 
+			} );
+			newDiv.find( ".makeAllPrivate" ).on( "click", () => {
+				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
+				st.confirm('Make All Private?', 'Do you want to make all the troffData private for "' + file.fileName + '"?',
+				function() {
+					file.troffDataList.forEach( markTroffDataPrivateOnServer );
+					newDiv.find( ".troffDataMakePrivate" ).addClass( "hidden" );
+					newDiv.find( ".troffDataMakePublic" ).removeClass( "hidden" );
+					newDiv.find( ".troffDataPublic" ).text( 0 );
+					newDiv.find( ".troffDataPrivate" ).text( file.troffDataList.length );
+					newDiv.find( ".troffDataPublicOrPrivate" ).text( "Private" );
+				} );
+			} );
+			newDiv.find( ".makeAllPublic" ).on( "click", () => {
+				document.getElementById( "blur-hack" ).focus({ preventScroll: true });
+				st.confirm('REALLY? Make All PUBLIC?', 'Do you want to make ALL the troffData PUBLIC for "' + file.fileName + '"?',
+				function() {
+					file.troffDataList.forEach( markTroffDataPublicOnServer );
+					newDiv.find( ".troffDataMakePrivate" ).removeClass( "hidden" );
+					newDiv.find( ".troffDataMakePublic" ).addClass( "hidden" );
+					newDiv.find( ".troffDataPublic" ).text( file.troffDataList.length );
+					newDiv.find( ".troffDataPrivate" ).text( 0 );
+					newDiv.find( ".troffDataPublicOrPrivate" ).text( "Public" );
+				} );
 			} );
 
 		} );

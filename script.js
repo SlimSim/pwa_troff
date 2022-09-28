@@ -317,7 +317,9 @@ function updateVersionLink( path ) {
 	}
 
 	$( ".nr-of-versions-in-history" ).text( hist[0].troffDataIdObjectList.length );
-	$( ".nr-of-versions-in-history-parent" ).removeClass( "hidden" );
+	$( ".nr-of-versions-in-history-parent" )
+		.attr( "href", "find.html#f=my&id=" + fileNameUri )
+		.removeClass( "hidden" );
 }
 
 function sortAndValue(sortValue, stringValue) {
@@ -549,7 +551,8 @@ function initSongTable() {
 	dataSongTable = $("#dataSongTable").DataTable({
 		"language": {
 			"emptyTable": "<h1 class=\"lead\">No files added!</h1>" +
-			"<br />Try adding songs by clicking the <br / >" +
+			"<br />Find new songs at <a href=\"/find.html\">troff.app/find.html</a>" +
+			"<br /><br />Or add your own songs by clicking the <br / >" +
 				"<label " +
 					"title=\"Add songs, videos or pictures to Troff\"" +
 					"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
@@ -1121,6 +1124,7 @@ var TroffClass = function(){
 			$( "#uploadSongToServerInProgressDialog" ).addClass( "hidden" );
 			$( "#shareSongUrl").val( window.location.origin + Troff.createHash( resp.id, resp.fileName ) );
 			$( "#doneUploadingSongToServerDialog_songName" ).text( songKey );
+			$( "#doneUploadingSongToServerLink" ).attr( "href", "/find.html#id=" + resp.fileName );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 
 		} catch ( error ) {
@@ -1142,6 +1146,7 @@ var TroffClass = function(){
 			$( ".showOnSongAlreadyUploaded" ).removeClass( "hidden" );
 
 			$( "#doneUploadingSongToServerDialog_songName" ).text( Troff.getCurrentSong() );
+			$( "#doneUploadingSongToServerLink" ).attr( "href", "/find.html#id=" + Troff.getCurrentSong() );
 			$( "#doneUploadingSongToServerDialog" ).removeClass( "hidden" );
 		} else {
 

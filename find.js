@@ -33,7 +33,15 @@ $(document).ready( async function() {
 		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
 		const savedServerSongListFromServer = nDB.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
 		mergeWithServerSongListHistory( savedServerSongListFromServer );
+
+		let filter = new URLSearchParams( window.location.hash.slice( 1 ) ).get( "f" );
+		if( filter == "my" ) {
+			$( "#sortMoreInfoSwitch" ).click();
+			$( "#filterOnlyHistoryButt" ).click();
+		}
+
 		repopulateFileListDivs();
+		scrollToUrlSong();
 
 		const snapshot = await firebase.firestore().collection('TroffData')
 			.where( "troffDataPublic", "==", true )
@@ -51,8 +59,24 @@ $(document).ready( async function() {
 			// latestServerSongListFromServer contains new updates compared to savedServerSongListFromServer!
 			mergeWithServerSongListHistory( latestServerSongListFromServer );
 			repopulateFileListDivs();
+			scrollToUrlSong();
 		}
 
+	}
+
+	const scrollToUrlSong = function() {
+		let id = new URLSearchParams( window.location.hash.slice( 1 ) ).get("id");
+		if( id ) {
+			let element =  document.getElementById( fileNameToId( decodeURI( id ) ) );
+			if( element ) {
+				element.scrollIntoView();
+				element.querySelector( ".toggleNext" ).click();
+			}
+		}
+	}
+
+	const fileNameToId = function( fileName ) {
+		return fileName.split( ' ' ).join( '_' );
 	}
 
 	const serverSongEqual = function( ss1, ss2 ) {
@@ -145,13 +169,13 @@ $(document).ready( async function() {
 
 		$.each( serverSongListHistory, ( i, serverSong ) => {
 
-			if( $("#filterOnlyHistoryButt").hasClass( "active" ) && serverSong.fromServer ) {
-				return;
-			}
-
 			let newDiv = $("#serverSongTemplate").children().clone( true, true );
 
 			const fileName = decodeURI( serverSong.fileNameUri )
+			newDiv.attr( "id", fileNameToId( fileName ) );
+			if( serverSong.fromServer ) {
+				newDiv.addClass( "fromServer" );
+			}
 			newDiv.data( "fileName", fileName );
 			newDiv.data( "uploaded", new Date( serverSong.uploaded || 0 ).getTime());
 			newDiv.data( "fileSize", serverSong.size || 0)
@@ -174,9 +198,6 @@ $(document).ready( async function() {
 			}
 			$.each( serverSong.troffDataIdObjectList, (tdIndex, troffDataIdObject ) => {
 				if( !includesSearch( $( "#search" ).val(), troffDataIdObject, defaultValue ) ) {
-					return;
-				}
-				if( $("#filterOnlyHistoryButt").hasClass( "active" ) && troffDataIdObject.fromServer ) {
 					return;
 				}
 				addNewDiv = true;
@@ -245,6 +266,10 @@ $(document).ready( async function() {
 		newTroffData.find( ".troffDataId" )
 			.text( "Download this version " + downloadText + " (" + troffDataIdObject.troffDataId + ")" )
 			.attr( "href", window.location.origin + "/#" + troffDataIdObject.troffDataId + "&" + fileNameUri );
+
+		if( troffDataIdObject.fromServer ) {
+			newTroffData.addClass( "fromServer" );
+		}
 
 		newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
 		if( !troffDataIdObject.nrMarkers ) {
@@ -323,7 +348,9 @@ $(document).ready( async function() {
 	$( "#sortSizeAsc" ).on( "click", () => {	sortFileList( "fileSize", true ); } );
 	$( "#sortSizeDesc" ).on( "click", () => {	sortFileList( "fileSize", false ); } );
 	$( "#showDeletedButt" ).on( "click", () => {	$( "#deletedFileListParent" ).toggleClass( "hidden" );  } );
-	$( "#filterOnlyHistoryButt" ).on( "click", repopulateFileListDivs );
+	$( "#filterOnlyHistoryButt" ).on( "click", () =>
+		$( "#fileList, #deletedFileList" ).toggleClass( "hideFromServer", $( "#filterOnlyHistoryButt" ).hasClass("active") )
+	);
 
 	$( "#buttSearch" ).on( "click", repopulateFileListDivs );
 
