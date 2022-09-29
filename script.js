@@ -23,8 +23,6 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-const appVersionNumber = "1.4";
-
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
@@ -5464,7 +5462,10 @@ $(document).ready( async function() {
 function initEnvironment() {
 	"use strict";
 
-	$( ".app-version-number" ).text( appVersionNumber );
+
+	$.getJSON( "manifest.json", function( manifest ) {
+		$( ".app-version-number" ).text( manifest.version );
+	});
 
 	if( environment.banner.show ) {
 		$( "#banner" ).removeClass( "hidden" );
