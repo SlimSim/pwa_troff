@@ -4484,7 +4484,9 @@ var IOClass = function(){
 	};
 
 	/*IO*/this.addCacheVersionToAdvancedSetting = async function() {
-		( await caches.keys() ).forEach( ( cacheName ) => {
+		( await caches.keys() )
+			.sort( (c1, c2) => c1.split( "-v" )[0].length - c2.split( "-v" )[0].length )
+			.forEach( ( cacheName ) => {
 
 			let [name, versionNumber] = cacheName.split( "-v");
 
