@@ -336,7 +336,7 @@ function clickSongList_NEW( event ) {
 		galleryId = $target.attr("data-gallery-id"),
 		fullPath = $target.attr("data-full-path");
 
-	$( "#songListAll_NEW" ).removeClass( "selected" );
+	$( "#songListAll" ).removeClass( "selected" );
 
 	if( $("#TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT").hasClass( "active" ) ) {
 
@@ -362,9 +362,17 @@ function clickSongList_NEW( event ) {
 function filterSongTable( list ) {
 	var regex = list.join("|") || false;
 	if( $( "#directoryList, #galleryList, #songListsList").find("button").filter( ".active, .selected" ).length == 0 ) {
-		$( "#songListAll_NEW" ).addClass( "selected" );
+		$( "#songListAll" ).addClass( "selected" );
 		regex = "";
 	}
+	$( "#songlistSelectedWarning" ).toggleClass( "hidden", $( "#songListAll" ).hasClass( "selected" ) );
+	let $songLists = $( "#songListList .selected, #songListList .active"  );
+	if( $songLists.length == 1 ) {
+		$( "#songlistSelectedWarningName" ).text( " \"" + $songLists.text() + "\"" );
+	} else {
+		$( "#songlistSelectedWarningName" ).text( "s" );
+	}
+
 	$('#dataSongTable').DataTable()
 		.columns( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
 		.search( regex, true, false )
@@ -2459,23 +2467,23 @@ var TroffClass = function(){
 
 				var indicatorClass = isAdditiveSelect ? "active" : "selected";
 
-				$("#songListAll_NEW").removeClass( "selected" );
+				$("#songListAll").removeClass( "selected" );
 
 				o.directoryList.forEach(function(v, i){
 					$("#directoryList").find("[data-gallery-id="+v.galleryId+"]").each(function( inner_index, inner_value){
 						if( $(inner_value).data("full-path") == v.fullPath ) {
 							$(inner_value).addClass( indicatorClass );
-							$("#songListAll_NEW").removeClass( "selected" );
+							$("#songListAll").removeClass( "selected" );
 						}
 					});
 				});
 				o.galleryList.forEach(function(v, i){
 					$("#galleryList").find("[data-gallery-id="+v+"]").addClass( indicatorClass );
-					$("#songListAll_NEW").removeClass( "selected" );
+					$("#songListAll").removeClass( "selected" );
 				});
 				o.songListList.forEach(function(v, i){
 					$("#songListList").find("[data-songlist-id="+v+"]").addClass( indicatorClass );
-					$("#songListAll_NEW").removeClass( "selected" );
+					$("#songListAll").removeClass( "selected" );
 				});
 
 				filterSongTable( getFilterDataList() );
@@ -4561,7 +4569,8 @@ var IOClass = function(){
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
 		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
-		$( "#songListAll_NEW" ).click( clickSongList_NEW );
+		$( "#songListAll" ).click( clickSongList_NEW );
+		$( "#clickSongListAll" ).click( () => $( "#songListAll" ).click() );
 		$( "#songListSelector" ).change( onChangeSongListSelector );
 
 		$( "#buttSettingsDialog" ).click ( Troff.openSettingsDialog );

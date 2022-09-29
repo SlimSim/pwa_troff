@@ -926,7 +926,7 @@
 				<div id="songListsList" class="flex-none scroll">
 					<input
 						type="button"
-						id="songListAll_NEW"
+						id="songListAll"
 						class="selected stOnOffButton"
 						value="All songs" />
 					<input
@@ -939,6 +939,11 @@
 
 				</div>
 				<div id="superSonglistArea" class="flexCol scroll">
+					<div id="songlistSelectedWarning" class="hidden2 p-2">
+						Songlist<span id="songlistSelectedWarningName"></span>
+						selected.
+						<input type="button" id="clickSongListAll" class="stOnOffButton" value="Show all">
+					</div>
 
 					<table id="dataSongTable" class="super-data-table table-row-selectable">
 						<thead>
