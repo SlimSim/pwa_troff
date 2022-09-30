@@ -23,8 +23,6 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
-const appVersionNumber = "1.4";
-
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
@@ -338,7 +336,7 @@ function clickSongList_NEW( event ) {
 		galleryId = $target.attr("data-gallery-id"),
 		fullPath = $target.attr("data-full-path");
 
-	$( "#songListAll_NEW" ).removeClass( "selected" );
+	$( "#songListAll" ).removeClass( "selected" );
 
 	if( $("#TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT").hasClass( "active" ) ) {
 
@@ -364,9 +362,17 @@ function clickSongList_NEW( event ) {
 function filterSongTable( list ) {
 	var regex = list.join("|") || false;
 	if( $( "#directoryList, #galleryList, #songListsList").find("button").filter( ".active, .selected" ).length == 0 ) {
-		$( "#songListAll_NEW" ).addClass( "selected" );
+		$( "#songListAll" ).addClass( "selected" );
 		regex = "";
 	}
+	$( "#songlistSelectedWarning" ).toggleClass( "hidden", $( "#songListAll" ).hasClass( "selected" ) );
+	let $songLists = $( "#songListList .selected, #songListList .active"  );
+	if( $songLists.length == 1 ) {
+		$( "#songlistSelectedWarningName" ).text( " \"" + $songLists.text() + "\"" );
+	} else {
+		$( "#songlistSelectedWarningName" ).text( "s" );
+	}
+
 	$('#dataSongTable').DataTable()
 		.columns( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
 		.search( regex, true, false )
@@ -732,7 +738,7 @@ function onChangeSongListSelector( event ) {
 function getSelectedSongs() {
 
 	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
-		checkedVissibleSongs = $checkboxes.closest("tr").map( function(i, v) {
+		checkedVisibleSongs = $checkboxes.closest("tr").map( function(i, v) {
 			return {
 				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" )],
 				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
@@ -741,8 +747,8 @@ function getSelectedSongs() {
 		i,
 		songs = [];
 
-	for( i = 0; i < checkedVissibleSongs.length; i++ ){
-		songs.push( checkedVissibleSongs[i] );
+	for( i = 0; i < checkedVisibleSongs.length; i++ ){
+		songs.push( checkedVisibleSongs[i] );
 	}
 	$checkboxes.prop("checked", false);
 	return songs;
@@ -1042,6 +1048,68 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
+	/*Troff*/this.addAskedSongsToCurrentSongList = function( event, songKeys, $songList ) {
+
+		$( event.target ).addClass( "active" );
+		$( "#addAddedSongsToSongList_doNotAdd" ).addClass( "hidden" );
+		$( "#addAddedSongsToSongList_done" ).removeClass( "hidden" );
+
+		let songs = [];
+
+		songKeys.each( (i, songKey) => {
+			songs.push( {
+				name : songKey,
+				data : {
+					"galleryId" : "pwa-galleryId",
+					"fullPath" : songKey
+				}
+			} );
+		} );
+
+		addSongsToSonglist( songs, $songList );
+
+		const nrPossibleSongListsToAddTo = $( "#addAddedSongsToSongList_currentSongLists" ).children().length;
+		const nrAlreadySongListsToAddTo = $( "#addAddedSongsToSongList_currentSongLists .active" ).length;
+		if( nrPossibleSongListsToAddTo == nrAlreadySongListsToAddTo ) {
+			$( "#addAddedSongsToSongList_songs" ).empty();
+			$( "#addAddedSongsToSongList" ).addClass( "hidden" );
+		}
+
+		filterSongTable( getFilterDataList() );
+	}
+
+	/*Troff*/this.askIfAddSongsToCurrentSongList = function( key ) {
+		if( $( "#songListAll" ).hasClass( "selected" ) ) {
+			return;
+		}
+
+		$( "#addAddedSongsToSongList_doNotAdd" ).removeClass( "hidden" );
+		$( "#addAddedSongsToSongList_done" ).addClass( "hidden" );
+		$( "#addAddedSongsToSongList" ).removeClass( "hidden" );
+		$( "#addAddedSongsToSongList_songs" ).append( $( "<li>" ).text( key ) );
+		$( "#addAddedSongsToSongList_currentSongLists" ).empty();
+
+		let songKeys = $( "#addAddedSongsToSongList_songs" ).children().map( (i, v) => $(v).text() );
+
+		$( ".songlist.selected, .songlist.active" ).each( (i, songList) => {
+			$( "#addAddedSongsToSongList_currentSongLists" ).append( $( "<li>").append(
+				$( "<button>" )
+						.addClass( "regularButton" )
+						.text( "Add songs to \"" + $( songList ).text() + "\"" )
+						.click( ( event ) => Troff.addAskedSongsToCurrentSongList( event, songKeys, $( songList ) ) )
+			));
+		});
+
+		const songListName = $( ".songlist.selected" ).text()
+	}
+
+	/*Troff*/this.emptyAddAddedSongsToSongList_songs = function( event ) {
+		if( !$( event.target ).hasClass( "emptyAddAddedSongsToSongList_songs" ) ) {
+			return;
+		}
+		$( "#addAddedSongsToSongList_songs" ).empty();
+	}
+
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
@@ -1061,6 +1129,7 @@ var TroffClass = function(){
 					nDB.setOnSong( key, [ "localInformation", "addedFromThisDevice" ], true );
 				}
 
+				Troff.askIfAddSongsToCurrentSongList( key );
 				addItem_NEW_2( key );
 				if( !$( "#dataSongTable_wrapper" ).find( "tr").hasClass( "selected" ) ) {
 					Troff.selectSongInSongList( key );
@@ -1425,6 +1494,7 @@ var TroffClass = function(){
 		}
 
 		await createSongAudio( troffData.fileName );
+		Troff.askIfAddSongsToCurrentSongList( troffData.fileName )
 		addItem_NEW_2( troffData.fileName );
 		$.notify( troffData.fileName + " was successfully added" );
 	};
@@ -2461,23 +2531,23 @@ var TroffClass = function(){
 
 				var indicatorClass = isAdditiveSelect ? "active" : "selected";
 
-				$("#songListAll_NEW").removeClass( "selected" );
+				$("#songListAll").removeClass( "selected" );
 
 				o.directoryList.forEach(function(v, i){
 					$("#directoryList").find("[data-gallery-id="+v.galleryId+"]").each(function( inner_index, inner_value){
 						if( $(inner_value).data("full-path") == v.fullPath ) {
 							$(inner_value).addClass( indicatorClass );
-							$("#songListAll_NEW").removeClass( "selected" );
+							$("#songListAll").removeClass( "selected" );
 						}
 					});
 				});
 				o.galleryList.forEach(function(v, i){
 					$("#galleryList").find("[data-gallery-id="+v+"]").addClass( indicatorClass );
-					$("#songListAll_NEW").removeClass( "selected" );
+					$("#songListAll").removeClass( "selected" );
 				});
 				o.songListList.forEach(function(v, i){
 					$("#songListList").find("[data-songlist-id="+v+"]").addClass( indicatorClass );
-					$("#songListAll_NEW").removeClass( "selected" );
+					$("#songListAll").removeClass( "selected" );
 				});
 
 				filterSongTable( getFilterDataList() );
@@ -4486,7 +4556,9 @@ var IOClass = function(){
 	};
 
 	/*IO*/this.addCacheVersionToAdvancedSetting = async function() {
-		( await caches.keys() ).forEach( ( cacheName ) => {
+		( await caches.keys() )
+			.sort( (c1, c2) => c1.split( "-v" )[0].length - c2.split( "-v" )[0].length )
+			.forEach( ( cacheName ) => {
 
 			let [name, versionNumber] = cacheName.split( "-v");
 
@@ -4561,7 +4633,8 @@ var IOClass = function(){
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
 		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
-		$( "#songListAll_NEW" ).click( clickSongList_NEW );
+		$( "#songListAll" ).click( clickSongList_NEW );
+		$( "#clickSongListAll" ).click( () => $( "#songListAll" ).click() );
 		$( "#songListSelector" ).change( onChangeSongListSelector );
 
 		$( "#buttSettingsDialog" ).click ( Troff.openSettingsDialog );
@@ -4569,7 +4642,7 @@ var IOClass = function(){
 
 		$( ".buttCloseSongsDialog" ).click( closeSongDialog );
 		$( "#buttAttachedSongListToggle" ).click( clickAttachedSongListToggle );
-
+		$( ".emptyAddAddedSongsToSongList_songs" ).on( "click", Troff.emptyAddAddedSongsToSongList_songs )
 
 		$( "#buttSongsDialog" ).click( clickSongsDialog );
 		$( ".buttSetSongsDialogToAttachedState" ).click( minimizeSongPicker );
@@ -5464,7 +5537,10 @@ $(document).ready( async function() {
 function initEnvironment() {
 	"use strict";
 
-	$( ".app-version-number" ).text( appVersionNumber );
+
+	$.getJSON( "manifest.json", function( manifest ) {
+		$( ".app-version-number" ).text( manifest.version );
+	});
 
 	if( environment.banner.show ) {
 		$( "#banner" ).removeClass( "hidden" );
