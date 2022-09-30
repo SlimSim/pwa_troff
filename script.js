@@ -738,7 +738,7 @@ function onChangeSongListSelector( event ) {
 function getSelectedSongs() {
 
 	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
-		checkedVissibleSongs = $checkboxes.closest("tr").map( function(i, v) {
+		checkedVisibleSongs = $checkboxes.closest("tr").map( function(i, v) {
 			return {
 				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" )],
 				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
@@ -747,8 +747,8 @@ function getSelectedSongs() {
 		i,
 		songs = [];
 
-	for( i = 0; i < checkedVissibleSongs.length; i++ ){
-		songs.push( checkedVissibleSongs[i] );
+	for( i = 0; i < checkedVisibleSongs.length; i++ ){
+		songs.push( checkedVisibleSongs[i] );
 	}
 	$checkboxes.prop("checked", false);
 	return songs;
@@ -1048,6 +1048,68 @@ var TroffClass = function(){
 		var m_zoomStartTime = 0;
 		var m_zoomEndTime = null;
 
+	/*Troff*/this.addAskedSongsToCurrentSongList = function( event, songKeys, $songList ) {
+
+		$( event.target ).addClass( "active" );
+		$( "#addAddedSongsToSongList_doNotAdd" ).addClass( "hidden" );
+		$( "#addAddedSongsToSongList_done" ).removeClass( "hidden" );
+
+		let songs = [];
+
+		songKeys.each( (i, songKey) => {
+			songs.push( {
+				name : songKey,
+				data : {
+					"galleryId" : "pwa-galleryId",
+					"fullPath" : songKey
+				}
+			} );
+		} );
+
+		addSongsToSonglist( songs, $songList );
+
+		const nrPossibleSongListsToAddTo = $( "#addAddedSongsToSongList_currentSongLists" ).children().length;
+		const nrAlreadySongListsToAddTo = $( "#addAddedSongsToSongList_currentSongLists .active" ).length;
+		if( nrPossibleSongListsToAddTo == nrAlreadySongListsToAddTo ) {
+			$( "#addAddedSongsToSongList_songs" ).empty();
+			$( "#addAddedSongsToSongList" ).addClass( "hidden" );
+		}
+
+		filterSongTable( getFilterDataList() );
+	}
+
+	/*Troff*/this.askIfAddSongsToCurrentSongList = function( key ) {
+		if( $( "#songListAll" ).hasClass( "selected" ) ) {
+			return;
+		}
+
+		$( "#addAddedSongsToSongList_doNotAdd" ).removeClass( "hidden" );
+		$( "#addAddedSongsToSongList_done" ).addClass( "hidden" );
+		$( "#addAddedSongsToSongList" ).removeClass( "hidden" );
+		$( "#addAddedSongsToSongList_songs" ).append( $( "<li>" ).text( key ) );
+		$( "#addAddedSongsToSongList_currentSongLists" ).empty();
+
+		let songKeys = $( "#addAddedSongsToSongList_songs" ).children().map( (i, v) => $(v).text() );
+
+		$( ".songlist.selected, .songlist.active" ).each( (i, songList) => {
+			$( "#addAddedSongsToSongList_currentSongLists" ).append( $( "<li>").append(
+				$( "<button>" )
+						.addClass( "regularButton" )
+						.text( "Add songs to \"" + $( songList ).text() + "\"" )
+						.click( ( event ) => Troff.addAskedSongsToCurrentSongList( event, songKeys, $( songList ) ) )
+			));
+		});
+
+		const songListName = $( ".songlist.selected" ).text()
+	}
+
+	/*Troff*/this.emptyAddAddedSongsToSongList_songs = function( event ) {
+		if( !$( event.target ).hasClass( "emptyAddAddedSongsToSongList_songs" ) ) {
+			return;
+		}
+		$( "#addAddedSongsToSongList_songs" ).empty();
+	}
+
 	/*Troff*/this.initFileApiImplementation = function() {
 
 		$( "#fileUploader" ).on("change", event => {
@@ -1067,6 +1129,7 @@ var TroffClass = function(){
 					nDB.setOnSong( key, [ "localInformation", "addedFromThisDevice" ], true );
 				}
 
+				Troff.askIfAddSongsToCurrentSongList( key );
 				addItem_NEW_2( key );
 				if( !$( "#dataSongTable_wrapper" ).find( "tr").hasClass( "selected" ) ) {
 					Troff.selectSongInSongList( key );
@@ -1431,6 +1494,7 @@ var TroffClass = function(){
 		}
 
 		await createSongAudio( troffData.fileName );
+		Troff.askIfAddSongsToCurrentSongList( troffData.fileName )
 		addItem_NEW_2( troffData.fileName );
 		$.notify( troffData.fileName + " was successfully added" );
 	};
@@ -4578,7 +4642,7 @@ var IOClass = function(){
 
 		$( ".buttCloseSongsDialog" ).click( closeSongDialog );
 		$( "#buttAttachedSongListToggle" ).click( clickAttachedSongListToggle );
-
+		$( ".emptyAddAddedSongsToSongList_songs" ).on( "click", Troff.emptyAddAddedSongsToSongList_songs )
 
 		$( "#buttSongsDialog" ).click( clickSongsDialog );
 		$( ".buttSetSongsDialogToAttachedState" ).click( minimizeSongPicker );
