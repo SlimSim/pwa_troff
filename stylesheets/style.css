@@ -1043,7 +1043,7 @@ table.dataTable .dataTables_empty{
 	padding-left: 13px !important;
 }
 .w-exact-38-5 {
-	width: 38.5px;
+	width: 38.5px !important;
 }
 
 .logo-h-w {
