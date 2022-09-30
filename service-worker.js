@@ -60,7 +60,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'app-assets',
-		version: "1.4",
+		version: "1.5",
 		urls: [
 			"/assets/logos/favicon.ico",
 			"/assets/logos/logo.svg",
