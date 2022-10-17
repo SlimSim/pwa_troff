@@ -99,7 +99,7 @@ $(document).ready( async function() {
 	const superAdmin = async function( p ) {
 		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1" ];
 
-		if( p.includes( d ) ) {
+		if( !d.includes( p ) ) {
 			$( ".showForUnauthorised" ).removeClass( "hidden" );
 			$( ".showForNewUsers" ).addClass( "hidden" );
 			$( ".showForLoggedInUsers" ).addClass( "hidden" );
