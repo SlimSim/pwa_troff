@@ -69,7 +69,6 @@ $(document).ready( async function() {
 
 	const updateTroffDataOnServer = function( troffData ) {
 		const db = firebase.firestore();
-		console.log( "updateTroffDataOnServer: firebase.auth().currentUser", firebase.auth().currentUser );
 		return db.collection( "TroffData" ).doc( String( troffData.id ) ).set( troffData )
 			.then( x => {
 				return troffData;
@@ -97,7 +96,7 @@ $(document).ready( async function() {
 	};
 
 	const superAdmin = async function( p ) {
-		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1" ];
+		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1", "v0LuGf9ccjW0wWERWmBKwx1BiH83", "OD3MRzoRJHXBvBZksZHLnrLn58n2", "6KHeS82V28c4PR1nwAH6rlBNDO72", "bX7aEd5T5AgTt1gZIZQJgloOckL2", "iP27JMxnEuPjZG7GgLQxddizxVF3", "f99yGdVUImOS2BXd1RNUv0zOkxq1" ];
 
 		if( !d.includes( p ) ) {
 			$( ".showForUnauthorised" ).removeClass( "hidden" );
@@ -182,7 +181,16 @@ $(document).ready( async function() {
 			$( "#fileList" ).append( newDiv );
 
 			$.each( file.troffDataList, (i, troffData ) => {
-				let songData = JSON.parse( troffData.markerJsonString );
+				let songData = null;
+				try {
+					songData = JSON.parse( troffData.markerJsonString );
+				}
+				catch (e) {
+					console.error( "Error parsing troffData.markerJsonString, troffData:", troffData );
+					console.error( "    .... Error:", e );
+					return ;
+				}
+
 				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
 
 				if( troffData.deleted ) {
@@ -338,8 +346,6 @@ $(document).ready( async function() {
     $( "#userName" ).text( user.displayName );
     $( "#userEmail" ).text( user.email );
     $( "#userPhoneNumber" ).text( user.phoneNumber );
-
-    console.log( "user", user );
 
 		superAdmin( user.uid );
 
