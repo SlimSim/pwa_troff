@@ -69,6 +69,7 @@ $(document).ready( async function() {
 
 	const updateTroffDataOnServer = function( troffData ) {
 		const db = firebase.firestore();
+		console.log( "updateTroffDataOnServer: firebase.auth().currentUser", firebase.auth().currentUser );
 		return db.collection( "TroffData" ).doc( String( troffData.id ) ).set( troffData )
 			.then( x => {
 				return troffData;
@@ -98,7 +99,7 @@ $(document).ready( async function() {
 	const superAdmin = async function( p ) {
 		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1" ];
 
-		if( p.includes( d ) ) {
+		if( !d.includes( p ) ) {
 			$( ".showForUnauthorised" ).removeClass( "hidden" );
 			$( ".showForNewUsers" ).addClass( "hidden" );
 			$( ".showForLoggedInUsers" ).addClass( "hidden" );
@@ -337,6 +338,8 @@ $(document).ready( async function() {
     $( "#userName" ).text( user.displayName );
     $( "#userEmail" ).text( user.email );
     $( "#userPhoneNumber" ).text( user.phoneNumber );
+
+    console.log( "user", user );
 
 		superAdmin( user.uid );
 
