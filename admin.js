@@ -187,7 +187,7 @@ $(document).ready( async function() {
 					songData = JSON.parse( troffData.markerJsonString );
 				}
 				catch (e) {
-					console.error( "Error parsing troffData.markerJsonString, troffData:", troffData
+					console.error( "Error parsing troffData.markerJsonString, troffData:", troffData );
 					console.error( "    .... Error:", e );
 					return ;
 				}
