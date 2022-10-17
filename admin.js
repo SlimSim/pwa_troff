@@ -182,7 +182,16 @@ $(document).ready( async function() {
 			$( "#fileList" ).append( newDiv );
 
 			$.each( file.troffDataList, (i, troffData ) => {
-				let songData = JSON.parse( troffData.markerJsonString );
+				let songData = null;
+				try {
+					songData = JSON.parse( troffData.markerJsonString );
+				}
+				catch (e) {
+					console.error( "Error parsing troffData.markerJsonString, troffData:", troffData
+					console.error( "    .... Error:", e );
+					return ;
+				}
+
 				let newTroffData = $("#troffDataTemplate").children().clone(true, true);
 
 				if( troffData.deleted ) {
