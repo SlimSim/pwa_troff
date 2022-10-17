@@ -97,7 +97,7 @@ $(document).ready( async function() {
 	};
 
 	const superAdmin = async function( p ) {
-		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1" ];
+		const d = ["vdUz7MqtIWd6EJMPW1sV6RNQla32", "2bQpoKUPSVS7zW54bUt2AMvFdYD2", "5D1r1lWfbnbC1zcbAuyjFJDMmrj1", "v0LuGf9ccjW0wWERWmBKwx1BiH83", "OD3MRzoRJHXBvBZksZHLnrLn58n2", "6KHeS82V28c4PR1nwAH6rlBNDO72", "bX7aEd5T5AgTt1gZIZQJgloOckL2", "iP27JMxnEuPjZG7GgLQxddizxVF3", "f99yGdVUImOS2BXd1RNUv0zOkxq1" ];
 
 		if( !d.includes( p ) ) {
 			$( ".showForUnauthorised" ).removeClass( "hidden" );
