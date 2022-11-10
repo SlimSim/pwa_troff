@@ -166,6 +166,7 @@ $(document).ready( async function() {
 
 	const repopulateFileListDivs = function() {
 		$( "#fileList, #deletedFileList" ).empty();
+		let nrOfHistorySongs = 0;
 
 		$.each( serverSongListHistory, ( i, serverSong ) => {
 
@@ -175,6 +176,8 @@ $(document).ready( async function() {
 			newDiv.attr( "id", fileNameToId( fileName ) );
 			if( serverSong.fromServer ) {
 				newDiv.addClass( "fromServer" );
+			} else {
+				nrOfHistorySongs++;
 			}
 			newDiv.data( "fileName", fileName );
 			newDiv.data( "uploaded", new Date( serverSong.uploaded || 0 ).getTime());
@@ -216,6 +219,9 @@ $(document).ready( async function() {
 			}
 
 		} );
+
+
+		$( "#nrOfHistorySongs" ).text( nrOfHistorySongs );
 
 		$( "#loadingArticle" ).addClass( "hidden" );
 		$( "#mainArticle" ).removeClass( "hidden" );
