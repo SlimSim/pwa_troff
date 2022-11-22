@@ -24,10 +24,11 @@ $(document).ready( async function() {
 	/************************************************/
 
 	const app = firebase.initializeApp(environment.firebaseConfig);
-  const storage = firebase.storage();
-  const storageRef = storage.ref();
+	const storage = firebase.storage();
+	const storageRef = storage.ref();
 
 	let serverSongListHistory;
+	let allTroffDataFromServer;
 
 	const initiateApp = async function() {
 		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
@@ -47,7 +48,8 @@ $(document).ready( async function() {
 			.where( "troffDataPublic", "==", true )
 			.get();
 		const docs = snapshot.docs;
-		const allTroffDataFromServer = docs.map(doc => doc.data());
+		allTroffDataFromServer = docs.map(doc => doc.data());
+		console.log( "allTroffDataFromServer", allTroffDataFromServer);
 		let latestServerSongListFromServer = troffDataListToServerSongList( allTroffDataFromServer );
 		nDB.set( "TROFF_SERVER_SONG_LIST_FROM_SERVER", latestServerSongListFromServer );
 
@@ -249,6 +251,101 @@ $(document).ready( async function() {
 		return 0;
 	}
 
+	const setAppropriateMarkerDistance = function() {
+		var child = $('#markerList li:first-child')[0];
+
+		var timeBarHeight = $('#markerList').height() - $('#markerList').find( "li" ).height();
+		console.log( "timeBarHeight", timeBarHeight );
+		var totalDistanceTop = 4;
+
+		var barMarginTop = parseInt($('#markerList').css('margin-top'));
+//		console.log( "barMarginTop", barMarginTop);
+		var songTime = $( "#markerList" ).data( "songLength" );
+//		console.log( "songTime", songTime);
+		
+
+		while (child) {
+			let markerTime = Number($(child).data("time"));
+			var myRowHeight = child.clientHeight;
+
+			var freeDistanceToTop = timeBarHeight * markerTime / songTime;
+
+			var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
+			totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
+
+			if (marginTop > 0) {
+				$(child).css("border-top-width", marginTop + "px");
+				$(child).css("border-top-style", "solid");
+				$(child).css("margin-top", "");
+			} else {
+				$(child).css("border-top-width", "");
+				$(child).css("border-top-style", "");
+				$(child).css("margin-top", marginTop + "px");
+			}
+			child = child.nextSibling;
+		}
+		//Troff.setAppropriateActivePlayRegion();
+	}; // end setAppropriateMarkerDistance
+
+	const showMoreAboutVersionPopUpFor = function(troffDataId) {
+
+		$( "#moreAboutVersionDialog" ).removeClass( "hidden" );
+		$( "#moreAboutVersionDialog" ).data( "troffDataId", troffDataId );
+
+		const troffData = allTroffDataFromServer.find(td => td.id == troffDataId);
+		const songData = troffData.songData;
+
+		$( "#fileName" ).text( troffData.fileName );
+		$( "#info" ).text( songData.info );//.substring(0, 99) );
+		$( "#nrMarkers" ).text( songData?.markers.length );
+		const songLength = songData.fileData.duration;
+
+		let previousColor = "None";
+		$( "#markerList" ).empty();
+		$( "#markerList" ).data( "songLength", songLength );
+		
+		songData.markers.forEach( marker => {
+			let markerSpan = $("#markerTemplate").children().clone( true, true );
+			markerSpan.data( "time", marker.time );
+
+			markerSpan.find( ".markerName" ).val( marker.name );
+			markerSpan.find( ".markerTime" ).text( st.secToDisp( marker.time ) ).attr("timeValue", marker.time);
+			
+			
+			if( marker.color !== "None" ) {
+				previousColor = marker.color;
+			}
+			
+			markerSpan.addClass( "markerColor" + previousColor );
+			markerSpan.css( "border-top-width",  + "px" );
+
+			$( "#markerList" ).append( markerSpan );
+		} );
+		setAppropriateMarkerDistance();
+
+
+		//$( "#markerParent" ).text( songData.markerParent );
+		$( "#nrStates" ).text( songData.nrStates );
+		$( "#nrTimesLoaded" ).text( songData?.localInformation?.nrTimesLoaded );
+		//$( "#statesParent" ).text( songData.statesParent );
+		console.log( "songData.currentStartMarker", songData.currentStartMarker );
+		console.log( "songData.currentStopMarker", songData.currentStopMarker );
+
+		/*
+
+		troffData.fileName;
+		troffData.fileUrl;
+		songData.fildData = "...";
+		songData.info
+		songData.aStates
+		songData.markers
+			songData.currentStartMarker
+			songData.currentEndMarker
+		songData.localInformation.nrTimesLoaded
+		*/
+
+	}
+
 	const troffDataToTroffDataIdObject = function( troffData ) {
 		if( troffData.songData == undefined ) {
 			troffData.songData = JSON.parse( troffData.markerJsonString );
@@ -277,6 +374,9 @@ $(document).ready( async function() {
 			newTroffData.addClass( "fromServer" );
 		}
 
+		newTroffData.find( ".moreAboutVersion" ).on( "click", () => {
+			showMoreAboutVersionPopUpFor( troffDataIdObject.troffDataId );
+		});
 		newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
 		if( !troffDataIdObject.nrMarkers ) {
 			newTroffData.find( ".troffDataNrMarkersParent" ).addClass( "hidden" );
@@ -357,6 +457,11 @@ $(document).ready( async function() {
 	$( "#filterOnlyHistoryButt" ).on( "click", () =>
 		$( "#fileList, #deletedFileList" ).toggleClass( "hideFromServer", $( "#filterOnlyHistoryButt" ).hasClass("active") )
 	);
+	$( ".outerDialog" ).click( function( event ) {
+		if( $(event.target ).hasClass( "outerDialog" ) && !$(event.target ).hasClass( "noCloseOnClick" ) ) {
+			$( event.target ).addClass( "hidden" );
+		}
+	} );
 
 	$( "#buttSearch" ).on( "click", repopulateFileListDivs );
 
@@ -367,6 +472,11 @@ $(document).ready( async function() {
 	});
 
 	initiateApp();
+	window.addEventListener('resize', function(){
+		if( $( "#moreAboutVersionDialog" ).hasClass("hidden") ) return;
+		const troffDataId = $( "#moreAboutVersionDialog" ).data( "troffDataId" );
+		showMoreAboutVersionPopUpFor( troffDataId );
+	});
 
 });
 
