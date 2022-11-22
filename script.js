@@ -3801,11 +3801,7 @@ var TroffClass = function(){
 		}
 
 		this.secToDisp = function(seconds){
-				var sec = ( seconds | 0 ) % 60;
-				if ( sec < 10 )
-						sec = "0"+sec;
-				var min = (seconds / 60) | 0;
-				return min + ':' + sec;
+			return st.secToDisp( seconds );
 		};
 
 		/*Troff*/this.incrementInput = function( identifier, amount ){
