@@ -232,10 +232,12 @@
 		</div>
 
 		<div id="markerTemplate" class="hidden">
-			<li  class="flexRow px-2 ">
-				<button class="small regularButton height-15" aria-label="More Info about marker"><i class="fa fa-question cursor-help m-0"></i></button>
+			<li  class="flexRow px-2 align-items-center">
 				<b class="markerTime ml-1">0:42</b>
-				<input class="markerName mx-1" type="button" value="marker nr 3" />
+				<input class="markerName mx-1" type="button" value="marker nr 69" />
+				<button class="markerInfoIndicator regularButton" aria-label="More Info about marker">
+					<i class="fa fa-question cursor-pointer m-0"></i>
+				</button>
 			</li>
 		</div>
 
@@ -283,12 +285,25 @@
 
 	<div  id="moreAboutVersionDialog" class="outerDialog p-5 hidden closeOnClick">
 		<div class="innerDialog w-min-content flexCol h-100 mw-100">
-			<h2 class="hidden2" id="fileName">This is war.mp3</h2>
-			<span id="nrMarkers"></span>
+			<div>
+				<a id="moreAboutVersionDownload" href="#" class="float-right p-1 m-1">Download!</a>
+				<h2 id="fileName">Song title</h2>
+			</div>
+
+			<span class="pl-2"><span id="nrMarkers"></span> markers:</span>
 			<div class="h-100 mw-100 overflow-x-auto">
 				<div class="d-flex flex-row h-100">
 					<ul id="markerList" class="h-100 px-2 min-width-min-100-305px pt-2 flex-grow-1 li-child-overflow-x-clip li-child-m-0 li-child-b-t-color-transparent extra-extended mw-fit-content"></ul>
-					<textarea id="info" class="h-100 px-2 min-width-min-100-305px" placeholder="No song info has been writen in this version"></textarea>
+					<div class="h-100 p-0 min-width-min-100-305px flexCol">
+						<div class="min-width-min-100-305px flex-one px-2 flexCol pb-3">
+							<h2>Song info</h2>
+							<textarea id="songInfo" class="flex-one" placeholder="No song info has been writen in this version"></textarea>
+						</div>
+						<div class="min-width-min-100-305px flex-one px-2 flexCol">
+							<h2>Current marker info</h2>
+							<textarea id="markerInfo" class=" flex-one" placeholder="No marker info has been writen for the selected marker"></textarea>
+						</div>
+					</div>
 				</div>
 			</div>
 			<span id="nrStates"></span>

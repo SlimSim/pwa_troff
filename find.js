@@ -287,6 +287,13 @@ $(document).ready( async function() {
 		//Troff.setAppropriateActivePlayRegion();
 	}; // end setAppropriateMarkerDistance
 
+
+	const selectMarkerSpan = function( markerSpan, markerInfo ) {
+		$( "#markerList" ).children().find(".markerName").removeClass( "selected" );
+		markerSpan.find( ".markerName" ).addClass("selected");
+		$("#markerInfo").text( markerInfo );
+	}
+
 	const showMoreAboutVersionPopUpFor = function(troffDataId) {
 
 		$( "#moreAboutVersionDialog" ).removeClass( "hidden" );
@@ -294,9 +301,10 @@ $(document).ready( async function() {
 
 		const troffData = allTroffDataFromServer.find(td => td.id == troffDataId);
 		const songData = troffData.songData;
+		$( "#moreAboutVersionDownload" ).attr( "href", "/#" + troffDataId + "&" + troffData.fileName );
 
 		$( "#fileName" ).text( troffData.fileName );
-		$( "#info" ).text( songData.info );//.substring(0, 99) );
+		$( "#songInfo" ).text( songData.info );
 		$( "#nrMarkers" ).text( songData?.markers.length );
 		const songLength = songData.fileData.duration;
 
@@ -304,13 +312,21 @@ $(document).ready( async function() {
 		$( "#markerList" ).empty();
 		$( "#markerList" ).data( "songLength", songLength );
 		
+
+		songData.currentStartMarker
 		songData.markers.forEach( marker => {
 			let markerSpan = $("#markerTemplate").children().clone( true, true );
 			markerSpan.data( "time", marker.time );
 
-			markerSpan.find( ".markerName" ).val( marker.name );
+			markerSpan.find( ".markerName, .markerInfoIndicator" ).val( marker.name )
+				.on( "click", () => selectMarkerSpan( markerSpan, marker.info ) );
+
+			if( songData.currentStartMarker === marker.id ) {
+				selectMarkerSpan( markerSpan, marker.info );
+			}
 			markerSpan.find( ".markerTime" ).text( st.secToDisp( marker.time ) ).attr("timeValue", marker.time);
 			
+			markerSpan.find( ".markerInfoIndicator" ).toggleClass( "hidden", marker.info === "" );
 			
 			if( marker.color !== "None" ) {
 				previousColor = marker.color;
