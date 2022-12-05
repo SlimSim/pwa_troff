@@ -45,11 +45,9 @@ $(document).ready( async function() {
 		scrollToUrlSong();
 
 		const snapshot = await firebase.firestore().collection('TroffData')
-			.where( "troffDataPublic", "==", true )
 			.get();
 		const docs = snapshot.docs;
-		allTroffDataFromServer = docs.map(doc => doc.data());
-		console.log( "allTroffDataFromServer", allTroffDataFromServer);
+		allTroffDataFromServer = docs.map(doc => doc.data()).filter( troffDataExistsInLocalHistoryOrIsPublic );
 		let latestServerSongListFromServer = troffDataListToServerSongList( allTroffDataFromServer );
 		nDB.set( "TROFF_SERVER_SONG_LIST_FROM_SERVER", latestServerSongListFromServer );
 
@@ -64,6 +62,18 @@ $(document).ready( async function() {
 			scrollToUrlSong();
 		}
 
+	}
+
+	const troffDataExistsInLocalHistoryOrIsPublic = function( troffDataFromServer ) {
+		if( troffDataFromServer.troffDataPublic ) return true; // troffData is public
+
+		const localHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
+		if( !localHistory ) return false; // troffData is not public and we have no local history
+
+		const correctSong = localHistory.find( td => td.fileNameUri == encodeURI(troffDataFromServer.fileName) );
+		if( !correctSong ) return false; // troffData is not public and this file is NOT in our local history.
+
+		return correctSong.troffDataIdObjectList.some( tdId => tdId.troffDataId == troffDataFromServer.id )
 	}
 
 	const scrollToUrlSong = function() {
@@ -255,13 +265,10 @@ $(document).ready( async function() {
 		var child = $('#markerList li:first-child')[0];
 
 		var timeBarHeight = $('#markerList').height() - $('#markerList').find( "li" ).height();
-		console.log( "timeBarHeight", timeBarHeight );
 		var totalDistanceTop = 4;
 
 		var barMarginTop = parseInt($('#markerList').css('margin-top'));
-//		console.log( "barMarginTop", barMarginTop);
 		var songTime = $( "#markerList" ).data( "songLength" );
-//		console.log( "songTime", songTime);
 		
 
 		while (child) {
@@ -344,8 +351,6 @@ $(document).ready( async function() {
 		$( "#nrStates" ).text( songData.nrStates );
 		$( "#nrTimesLoaded" ).text( songData?.localInformation?.nrTimesLoaded );
 		//$( "#statesParent" ).text( songData.statesParent );
-		console.log( "songData.currentStartMarker", songData.currentStartMarker );
-		console.log( "songData.currentStopMarker", songData.currentStopMarker );
 
 		/*
 
@@ -371,11 +376,11 @@ $(document).ready( async function() {
 			troffDataId : troffData.id,
 			firstTimeLoaded : getFirstTimeLoadedFromTroffData ( troffData ),
 			displayName : getDisplayNameFromTroffData( troffData ),
-      nrMarkers : troffData.songData.markers.length,
-      nrStates : troffData.songData.aStates ? troffData.songData.aStates.length : 0,
-      infoBeginning : troffData.songData.info.substring( 0, 99 ),
-      genre : ( troffData.songData.fileData && troffData.songData.fileData.genre ) || "",
-      tags : ( troffData.songData.fileData && troffData.songData.fileData.tags ) || ""
+			nrMarkers : troffData.songData.markers.length,
+			nrStates : troffData.songData.aStates ? troffData.songData.aStates.length : 0,
+			infoBeginning : troffData.songData.info.substring( 0, 99 ),
+			genre : ( troffData.songData.fileData && troffData.songData.fileData.genre ) || "",
+			tags : ( troffData.songData.fileData && troffData.songData.fileData.tags ) || ""
 		};
 	}
 
