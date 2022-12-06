@@ -30,6 +30,26 @@ $(document).ready( async function() {
 	let serverSongListHistory;
 	let allTroffDataFromServer;
 
+	const IO = {
+		alert : function( headline, message ) {
+			const head = $( "<h2>").text( headline );
+			const body = $( "<p>").text( message );
+			const removePopUp = () => { outer.remove(); };
+			const okButton = $( "<button>" ).text( "OK" ).addClass( "regularButton" ).on( "click", removePopUp );
+	
+			let outer = $( "<div>" ).addClass( "outerDialog" )
+			.append( 
+				$( "<div>").addClass( "innerDialog" )
+				.append( head )
+				.append( body )
+				.append( okButton )
+			)
+			.on( "click", removePopUp );
+	
+			$( "body" ).append( outer );
+		},
+	};
+
 	const initiateApp = async function() {
 		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
 		const savedServerSongListFromServer = nDB.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
@@ -73,7 +93,8 @@ $(document).ready( async function() {
 		const correctSong = localHistory.find( td => td.fileNameUri == encodeURI(troffDataFromServer.fileName) );
 		if( !correctSong ) return false; // troffData is not public and this file is NOT in our local history.
 
-		return correctSong.troffDataIdObjectList.some( tdId => tdId.troffDataId == troffDataFromServer.id )
+		const troffDataIdExistsInHistory = correctSong.troffDataIdObjectList.some( tdId => tdId.troffDataId == troffDataFromServer.id );
+		return troffDataIdExistsInHistory; // true if troffData.id is in our local history!
 	}
 
 	const scrollToUrlSong = function() {
@@ -307,13 +328,21 @@ $(document).ready( async function() {
 		$( "#moreAboutVersionDialog" ).data( "troffDataId", troffDataId );
 
 		const troffData = allTroffDataFromServer.find(td => td.id == troffDataId);
+		if( !troffData ) {
+			$( "#moreAboutVersionDialog" ).addClass( "hidden" );
+			IO.alert( "This version is not on the server any more!", 
+			"We apologize for the inconvenience." );
+			return;
+		}
 		const songData = troffData.songData;
 		$( "#moreAboutVersionDownload" ).attr( "href", "/#" + troffDataId + "&" + troffData.fileName );
 
 		$( "#fileName" ).text( troffData.fileName );
 		$( "#songInfo" ).text( songData.info );
 		$( "#nrMarkers" ).text( songData?.markers.length );
-		const songLength = songData.fileData.duration;
+		
+		// if fileData does not exist, use the time for the final marker as songLength instead
+		const songLength = songData.fileData ? songData.fileData.duration : songData.markers[ songData.markers.length -1 ].time;
 
 		let previousColor = "None";
 		$( "#markerList" ).empty();
