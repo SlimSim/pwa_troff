@@ -336,10 +336,15 @@ $(document).ready( async function() {
 		}
 		const songData = troffData.songData;
 		$( "#moreAboutVersionDownload" ).attr( "href", "/#" + troffDataId + "&" + troffData.fileName );
-
 		$( "#fileName" ).text( troffData.fileName );
+
+		$( "#moreAoutVersionChoreographer" ).text( songData?.fileData?.choreographer || "" );
+		$( "#moreAboutVersionChoreography" ).text( songData?.fileData?.choreography || "" );
+
+		$( "#moreAoutVersionAlbum" ).text( songData?.fileData?.album || "" );
+		$( "#moreAboutVersionArtist" ).text( songData?.fileData?.artist || "" );
+		
 		$( "#songInfo" ).text( songData.info );
-		$( "#nrMarkers" ).text( songData?.markers.length );
 		
 		// if fileData does not exist, use the time for the final marker as songLength instead
 		const songLength = songData.fileData ? songData.fileData.duration : songData.markers[ songData.markers.length -1 ].time;
