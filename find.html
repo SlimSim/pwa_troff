@@ -289,19 +289,25 @@
 				<a id="moreAboutVersionDownload" href="#" class="float-right p-1 m-1">Download!</a>
 				<h2 id="fileName">Song title</h2>
 			</div>
-
-			<span class="pl-2"><span id="nrMarkers"></span> markers:</span>
+			<div class="pt-1">
+				<p id="moreAoutVersionChoreographer" class="float-right"></p>
+				<p id="moreAboutVersionChoreography"></p>
+			</div>
+			<div>
+				<p id="moreAoutVersionAlbum" class="float-right"></p>
+				<p id="moreAboutVersionArtist"></p>
+			</div>
 			<div class="h-100 mw-100 overflow-x-auto">
 				<div class="d-flex flex-row h-100">
 					<ul id="markerList" class="h-100 px-2 min-width-min-100-305px pt-2 flex-grow-1 li-child-overflow-x-clip li-child-m-0 li-child-b-t-color-transparent extra-extended mw-fit-content"></ul>
 					<div class="h-100 p-0 min-width-min-100-305px flexCol">
 						<div class="min-width-min-100-305px flex-one px-2 flexCol pb-3">
-							<h2>Song info</h2>
-							<textarea id="songInfo" class="flex-one" placeholder="No song info has been writen in this version"></textarea>
+							<h3 class="mt-0 mb-1">Song info</h3>
+							<textarea readonly id="songInfo" class="flex-one" placeholder="No song info has been writen in this version"></textarea>
 						</div>
 						<div class="min-width-min-100-305px flex-one px-2 flexCol">
-							<h2>Current marker info</h2>
-							<textarea id="markerInfo" class=" flex-one" placeholder="No marker info has been writen for the selected marker"></textarea>
+							<h3 class="mt-0 mb-1">Current marker info</h3>
+							<textarea readonly id="markerInfo" class=" flex-one" placeholder="No marker info has been writen for the selected marker"></textarea>
 						</div>
 					</div>
 				</div>
