@@ -512,6 +512,10 @@ $(document).ready( async function() {
 			$( event.target ).addClass( "hidden" );
 		}
 	} );
+	$( ".dialogCancelButton" ).click( function( event ) {
+		event.preventDefault();
+		$( event.target ).closest(".outerDialog").addClass("hidden")
+	} );
 
 	$( "#buttSearch" ).on( "click", repopulateFileListDivs );
 

@@ -1051,7 +1051,7 @@ table.dataTable .dataTables_empty{
 	width: 45px;
 }
 
-.min-width-min-100-305px { min-width: min(100vw, 305px);}
+.min-width-min-100-290px { min-width: min(100vw, 290px);}
 
 .w-exact-120 {
 	width: 120px;
