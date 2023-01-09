@@ -3837,6 +3837,8 @@ var RateClass = function(){
 	this.RATED_STATUS_ASK_LATER = 3;
 	this.RATED_STATUS_ALREADY_RATED = 4;
 
+	this.MILLIS_IN_ONE_MONTH = 2678400000; // nr of millisecunds in a month!
+
 	this.startFunc = function(){
 		var oData = {
 			millisFirstTimeStartingApp : nDB.get( "millisFirstTimeStartingApp" ),
@@ -3851,9 +3853,6 @@ var RateClass = function(){
 			return;
 		}
 
-		if(oData.iRatedStatus == Rate.RATED_STATUS_ALREADY_RATED) return;
-
-		var millisOneMonth = 2678400000; // nr of millisecunds in a month!
 		var aLastMonthUsage = JSON.parse(oData.straLastMonthUsage);
 
 		var d = new Date();
@@ -3862,7 +3861,7 @@ var RateClass = function(){
 
 		// update the user statistics
 		aLastMonthUsage = aLastMonthUsage.filter(function(element){
-			return element > millis - millisOneMonth;
+			return element > millis - Rate.MILLIS_IN_ONE_MONTH;
 		});
 
 		while( aLastMonthUsage.length > 100 ) {
@@ -3874,24 +3873,36 @@ var RateClass = function(){
 		// return if no conection
 		if(!navigator.onLine) return;
 
+		Rate.checkToShowUserSurvey( aLastMonthUsage );
+		Rate.checkToShowRateDialog( oData.iRatedStatus, aLastMonthUsage, millis, oData.millisFirstTimeStartingApp);
+		
+	};
+
+	/*Rate*/this.checkToShowUserSurvey = function( aLastMonthUsage ) {
+		// return if user has used Troff less than 5 times durring the last month
+		if( aLastMonthUsage.length < 5 ) return;
+
+		$( "#linkToUserSurvey" ).removeClass( "hidden" );
+	};
+
+	/*Rate*/this.checkToShowRateDialog = function( iRatedStatus, aLastMonthUsage, millis, millisFirstTimeStartingApp ) {
+
 		// return if user has used the app for less than 3 months
-		if(millis - oData.millisFirstTimeStartingApp < 3*millisOneMonth ) return;
+		if(millis - millisFirstTimeStartingApp < 3 * Rate.MILLIS_IN_ONE_MONTH ) return;
 
 		// return if user has used Troff less than 4 times durring the last month
 		if(aLastMonthUsage.length < 4) return;
 
-		if(oData.iRatedStatus == Rate.RATED_STATUS_NOT_ASKED) {
-			Rate.showRateDialog();
-		}
+		if( iRatedStatus == Rate.RATED_STATUS_ALREADY_RATED) return;
 
-		if(oData.iRatedStatus == Rate.RATED_STATUS_ASK_LATER) {
+		if( iRatedStatus == Rate.RATED_STATUS_NOT_ASKED) {
+			Rate.showRateDialog();
+		} else if( iRatedStatus == Rate.RATED_STATUS_ASK_LATER) {
 			if(Math.random() < 0.30)
 				Rate.showRateDialog();
-		}
-
-		if(oData.iRatedStatus == Rate.RATED_STATUS_NO_THANKS) {
+		} else if( iRatedStatus == Rate.RATED_STATUS_NO_THANKS) {
 			if(aLastMonthUsage.length < 20) return;
-			if(Math.random() < 0.05){
+			if(Math.random() < 0.05) {
 				Rate.showRateDialog();
 			}
 		}
