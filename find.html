@@ -45,6 +45,13 @@
 	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
 
+	<style>
+		.li-child-m-0 > li				{ 	margin: 0;	}
+		.li-child-overflow-x-clip > li	{ 	overflow-x: clip;	}
+		.li-child-b-t-color-transparent > li { border-top-color: transparent; }
+		
+	</style>
+
 	<!--script src="assets/internal/common.js"></script -->
 
 	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css" />
@@ -146,7 +153,7 @@
 			<label class="likeLink linkButton pb-3 m-0 p-0" for="sortMoreInfoSwitch">Settings</label>
 			<input id="sortMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
 			<div class="switch_child d-flex flex-wrap" >
-				<button class="btn stOnOffButton" id="filterOnlyHistoryButt">Only my versions</button>
+				<button class="btn stOnOffButton" id="filterOnlyHistoryButt">Only my versions (<span id="nrOfHistorySongs"></span>)</button>
 				<span class="flex-one"></span>
 				<div>
 					<span class="inlineBlock">
@@ -215,10 +222,23 @@
 						<span class="pt-1 troffDataTags text-light-gray float-right small float-right"></span>
 
 						<div class="pt-1 pb-2 text-light-gray small troffDataInfo"></div>
-						<a href="#" target="_blank" class="troffDataId text-light-gray likeLink"></a>
+						<div>
+							<a href="#" target="_blank" class="troffDataId text-light-gray likeLink pr-3"></a>
+							<button class="moreAboutVersion text-light-gray likeLink">More about this version!</button>
+						</div>
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div id="markerTemplate" class="hidden">
+			<li  class="flexRow px-2 align-items-center">
+				<b class="markerTime ml-1">0:42</b>
+				<input class="markerName mx-1" type="button" value="marker nr 69" />
+				<button class="markerInfoIndicator regularButton" aria-label="More Info about marker">
+					<i class="fa fa-question cursor-pointer m-0"></i>
+				</button>
+			</li>
 		</div>
 
 	</article> <!-- signIn -->
@@ -260,6 +280,42 @@
 		<div class="innerDialog largeDialog flexCol scroll mh-100">
 			<h2 id="alertHeader"></h2>
 			<div id="alertText"></div>
+		</div>
+	</div>
+
+	<div  id="moreAboutVersionDialog" class="outerDialog p-5 hidden">
+		<div class="innerDialog w-min-content flexCol h-100 mw-100">
+			<div>
+				<button class="dialogCancelButton regularButton float-right"><i class="fa-window-close"></i></button>
+				<a id="moreAboutVersionDownload" href="#" class="float-right p-1 m-1">Download!</a>
+				<h2 id="fileName">Song title</h2>
+			</div>
+			<div class="pt-1">
+				<p id="moreAoutVersionChoreographer" class="float-right"></p>
+				<p id="moreAboutVersionChoreography"></p>
+			</div>
+			<div>
+				<p id="moreAoutVersionAlbum" class="float-right"></p>
+				<p id="moreAboutVersionArtist"></p>
+			</div>
+			<div class="h-100 mw-100 overflow-x-auto">
+				<div class="d-flex flex-row h-100">
+					<ul id="markerList" class="h-100 px-1 min-width-min-78-305px pt-2 flex-grow-1 li-child-overflow-x-clip li-child-m-0 li-child-b-t-color-transparent extra-extended mw-fit-content"></ul>
+					<div class="h-100 p-0 min-width-min-78-305px flexCol">
+						<div class="min-width-min-78-305px flex-one px-2 flexCol pb-3">
+							<h3 class="mt-0 mb-1">Song info</h3>
+							<textarea readonly id="songInfo" class="flex-one" placeholder="No song info has been writen in this version"></textarea>
+						</div>
+						<div class="min-width-min-78-305px flex-one px-2 flexCol">
+							<h3 class="mt-0 mb-1">Current marker info</h3>
+							<textarea readonly id="markerInfo" class=" flex-one" placeholder="No marker info has been writen for the selected marker"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<span id="nrStates"></span>
+			<ul id="statesParent"></ul>
+			<span id="nrTimesLoaded"></span>
 		</div>
 	</div>
 

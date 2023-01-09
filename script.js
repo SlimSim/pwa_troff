@@ -557,8 +557,9 @@ function initSongTable() {
 	dataSongTable = $("#dataSongTable").DataTable({
 		"language": {
 			"emptyTable": "<h1 class=\"lead\">No files added!</h1>" +
-			"<br />Find new songs at <a href=\"/find.html\">troff.app/find.html</a>" +
-			"<br /><br />Or add your own songs by clicking the <br / >" +
+			"<br /><a href=\"/#2582986745&demo.mp4\">Download the demo-video</a>," +
+			"<br /><br />find new songs at <a href=\"/find.html\">troff.app/find.html</a>" +
+			"<br /><br />or add your own songs by clicking the <br / >" +
 				"<label " +
 					"title=\"Add songs, videos or pictures to Troff\"" +
 					"class=\"cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile\"" +
@@ -3800,11 +3801,7 @@ var TroffClass = function(){
 		}
 
 		this.secToDisp = function(seconds){
-				var sec = ( seconds | 0 ) % 60;
-				if ( sec < 10 )
-						sec = "0"+sec;
-				var min = (seconds / 60) | 0;
-				return min + ':' + sec;
+			return st.secToDisp( seconds );
 		};
 
 		/*Troff*/this.incrementInput = function( identifier, amount ){

@@ -24,10 +24,31 @@ $(document).ready( async function() {
 	/************************************************/
 
 	const app = firebase.initializeApp(environment.firebaseConfig);
-  const storage = firebase.storage();
-  const storageRef = storage.ref();
+	const storage = firebase.storage();
+	const storageRef = storage.ref();
 
 	let serverSongListHistory;
+	let allTroffDataFromServer;
+
+	const IO = {
+		alert : function( headline, message ) {
+			const head = $( "<h2>").text( headline );
+			const body = $( "<p>").text( message );
+			const removePopUp = () => { outer.remove(); };
+			const okButton = $( "<button>" ).text( "OK" ).addClass( "regularButton" ).on( "click", removePopUp );
+	
+			let outer = $( "<div>" ).addClass( "outerDialog" )
+			.append( 
+				$( "<div>").addClass( "innerDialog" )
+				.append( head )
+				.append( body )
+				.append( okButton )
+			)
+			.on( "click", removePopUp );
+	
+			$( "body" ).append( outer );
+		},
+	};
 
 	const initiateApp = async function() {
 		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
@@ -44,10 +65,9 @@ $(document).ready( async function() {
 		scrollToUrlSong();
 
 		const snapshot = await firebase.firestore().collection('TroffData')
-			.where( "troffDataPublic", "==", true )
 			.get();
 		const docs = snapshot.docs;
-		const allTroffDataFromServer = docs.map(doc => doc.data());
+		allTroffDataFromServer = docs.map(doc => doc.data()).filter( troffDataExistsInLocalHistoryOrIsPublic );
 		let latestServerSongListFromServer = troffDataListToServerSongList( allTroffDataFromServer );
 		nDB.set( "TROFF_SERVER_SONG_LIST_FROM_SERVER", latestServerSongListFromServer );
 
@@ -62,6 +82,19 @@ $(document).ready( async function() {
 			scrollToUrlSong();
 		}
 
+	}
+
+	const troffDataExistsInLocalHistoryOrIsPublic = function( troffDataFromServer ) {
+		if( troffDataFromServer.troffDataPublic ) return true; // troffData is public
+
+		const localHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
+		if( !localHistory ) return false; // troffData is not public and we have no local history
+
+		const correctSong = localHistory.find( td => td.fileNameUri == encodeURI(troffDataFromServer.fileName) );
+		if( !correctSong ) return false; // troffData is not public and this file is NOT in our local history.
+
+		const troffDataIdExistsInHistory = correctSong.troffDataIdObjectList.some( tdId => tdId.troffDataId == troffDataFromServer.id );
+		return troffDataIdExistsInHistory; // true if troffData.id is in our local history!
 	}
 
 	const scrollToUrlSong = function() {
@@ -166,6 +199,7 @@ $(document).ready( async function() {
 
 	const repopulateFileListDivs = function() {
 		$( "#fileList, #deletedFileList" ).empty();
+		let nrOfHistorySongs = 0;
 
 		$.each( serverSongListHistory, ( i, serverSong ) => {
 
@@ -175,6 +209,8 @@ $(document).ready( async function() {
 			newDiv.attr( "id", fileNameToId( fileName ) );
 			if( serverSong.fromServer ) {
 				newDiv.addClass( "fromServer" );
+			} else {
+				nrOfHistorySongs++;
 			}
 			newDiv.data( "fileName", fileName );
 			newDiv.data( "uploaded", new Date( serverSong.uploaded || 0 ).getTime());
@@ -217,6 +253,9 @@ $(document).ready( async function() {
 
 		} );
 
+
+		$( "#nrOfHistorySongs" ).text( nrOfHistorySongs );
+
 		$( "#loadingArticle" ).addClass( "hidden" );
 		$( "#mainArticle" ).removeClass( "hidden" );
 
@@ -243,6 +282,125 @@ $(document).ready( async function() {
 		return 0;
 	}
 
+	const setAppropriateMarkerDistance = function() {
+		var child = $('#markerList li:first-child')[0];
+
+		var timeBarHeight = $('#markerList').height() - $('#markerList').find( "li" ).height();
+		var totalDistanceTop = 4;
+
+		var barMarginTop = parseInt($('#markerList').css('margin-top'));
+		var songTime = $( "#markerList" ).data( "songLength" );
+		
+
+		while (child) {
+			let markerTime = Number($(child).data("time"));
+			var myRowHeight = child.clientHeight;
+
+			var freeDistanceToTop = timeBarHeight * markerTime / songTime;
+
+			var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
+			totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
+
+			if (marginTop > 0) {
+				$(child).css("border-top-width", marginTop + "px");
+				$(child).css("border-top-style", "solid");
+				$(child).css("margin-top", "");
+			} else {
+				$(child).css("border-top-width", "");
+				$(child).css("border-top-style", "");
+				$(child).css("margin-top", marginTop + "px");
+			}
+			child = child.nextSibling;
+		}
+		//Troff.setAppropriateActivePlayRegion();
+	}; // end setAppropriateMarkerDistance
+
+
+	const selectMarkerSpan = function( markerSpan, markerInfo ) {
+		$( "#markerList" ).children().find(".markerName").removeClass( "selected" );
+		markerSpan.find( ".markerName" ).addClass("selected");
+		$("#markerInfo").text( markerInfo );
+	}
+
+	const showMoreAboutVersionPopUpFor = function(troffDataId) {
+
+		$( "#moreAboutVersionDialog" ).removeClass( "hidden" );
+		$( "#moreAboutVersionDialog" ).data( "troffDataId", troffDataId );
+
+		const troffData = allTroffDataFromServer.find(td => td.id == troffDataId);
+		if( !troffData ) {
+			$( "#moreAboutVersionDialog" ).addClass( "hidden" );
+			IO.alert( "This version is not on the server any more!", 
+			"We apologize for the inconvenience." );
+			return;
+		}
+		const songData = troffData.songData;
+		$( "#moreAboutVersionDownload" ).attr( "href", "/#" + troffDataId + "&" + troffData.fileName );
+		$( "#fileName" ).text( troffData.fileName );
+
+		$( "#moreAoutVersionChoreographer" ).text( songData?.fileData?.choreographer || "" );
+		$( "#moreAboutVersionChoreography" ).text( songData?.fileData?.choreography || "" );
+
+		$( "#moreAoutVersionAlbum" ).text( songData?.fileData?.album || "" );
+		$( "#moreAboutVersionArtist" ).text( songData?.fileData?.artist || "" );
+		
+		$( "#songInfo" ).text( songData.info );
+		
+		// if fileData does not exist, use the time for the final marker as songLength instead
+		const songLength = songData.fileData ? songData.fileData.duration : songData.markers[ songData.markers.length -1 ].time;
+
+		let previousColor = "None";
+		$( "#markerList" ).empty();
+		$( "#markerList" ).data( "songLength", songLength );
+		
+
+		songData.currentStartMarker
+		songData.markers.forEach( marker => {
+			let markerSpan = $("#markerTemplate").children().clone( true, true );
+			markerSpan.data( "time", marker.time );
+
+			markerSpan.find( ".markerName, .markerInfoIndicator" ).val( marker.name )
+				.on( "click", () => selectMarkerSpan( markerSpan, marker.info ) );
+
+			if( songData.currentStartMarker === marker.id ) {
+				selectMarkerSpan( markerSpan, marker.info );
+			}
+			markerSpan.find( ".markerTime" ).text( st.secToDisp( marker.time ) ).attr("timeValue", marker.time);
+			
+			markerSpan.find( ".markerInfoIndicator" ).toggleClass( "hidden", marker.info === "" );
+			
+			if( marker.color !== "None" ) {
+				previousColor = marker.color;
+			}
+			
+			markerSpan.addClass( "markerColor" + previousColor );
+			markerSpan.css( "border-top-width",  + "px" );
+
+			$( "#markerList" ).append( markerSpan );
+		} );
+		setAppropriateMarkerDistance();
+
+
+		//$( "#markerParent" ).text( songData.markerParent );
+		$( "#nrStates" ).text( songData.nrStates );
+		$( "#nrTimesLoaded" ).text( songData?.localInformation?.nrTimesLoaded );
+		//$( "#statesParent" ).text( songData.statesParent );
+
+		/*
+
+		troffData.fileName;
+		troffData.fileUrl;
+		songData.fildData = "...";
+		songData.info
+		songData.aStates
+		songData.markers
+			songData.currentStartMarker
+			songData.currentEndMarker
+		songData.localInformation.nrTimesLoaded
+		*/
+
+	}
+
 	const troffDataToTroffDataIdObject = function( troffData ) {
 		if( troffData.songData == undefined ) {
 			troffData.songData = JSON.parse( troffData.markerJsonString );
@@ -252,11 +410,11 @@ $(document).ready( async function() {
 			troffDataId : troffData.id,
 			firstTimeLoaded : getFirstTimeLoadedFromTroffData ( troffData ),
 			displayName : getDisplayNameFromTroffData( troffData ),
-      nrMarkers : troffData.songData.markers.length,
-      nrStates : troffData.songData.aStates ? troffData.songData.aStates.length : 0,
-      infoBeginning : troffData.songData.info.substring( 0, 99 ),
-      genre : ( troffData.songData.fileData && troffData.songData.fileData.genre ) || "",
-      tags : ( troffData.songData.fileData && troffData.songData.fileData.tags ) || ""
+			nrMarkers : troffData.songData.markers.length,
+			nrStates : troffData.songData.aStates ? troffData.songData.aStates.length : 0,
+			infoBeginning : troffData.songData.info.substring( 0, 99 ),
+			genre : ( troffData.songData.fileData && troffData.songData.fileData.genre ) || "",
+			tags : ( troffData.songData.fileData && troffData.songData.fileData.tags ) || ""
 		};
 	}
 
@@ -271,6 +429,9 @@ $(document).ready( async function() {
 			newTroffData.addClass( "fromServer" );
 		}
 
+		newTroffData.find( ".moreAboutVersion" ).on( "click", () => {
+			showMoreAboutVersionPopUpFor( troffDataIdObject.troffDataId );
+		});
 		newTroffData.find( ".troffDataInfo" ).text( troffDataIdObject.infoBeginning );
 		if( !troffDataIdObject.nrMarkers ) {
 			newTroffData.find( ".troffDataNrMarkersParent" ).addClass( "hidden" );
@@ -351,6 +512,15 @@ $(document).ready( async function() {
 	$( "#filterOnlyHistoryButt" ).on( "click", () =>
 		$( "#fileList, #deletedFileList" ).toggleClass( "hideFromServer", $( "#filterOnlyHistoryButt" ).hasClass("active") )
 	);
+	$( ".outerDialog" ).click( function( event ) {
+		if( $(event.target ).hasClass( "outerDialog" ) && !$(event.target ).hasClass( "noCloseOnClick" ) ) {
+			$( event.target ).addClass( "hidden" );
+		}
+	} );
+	$( ".dialogCancelButton" ).click( function( event ) {
+		event.preventDefault();
+		$( event.target ).closest(".outerDialog").addClass("hidden")
+	} );
 
 	$( "#buttSearch" ).on( "click", repopulateFileListDivs );
 
@@ -361,6 +531,11 @@ $(document).ready( async function() {
 	});
 
 	initiateApp();
+	window.addEventListener('resize', function(){
+		if( $( "#moreAboutVersionDialog" ).hasClass("hidden") ) return;
+		const troffDataId = $( "#moreAboutVersionDialog" ).data( "troffDataId" );
+		showMoreAboutVersionPopUpFor( troffDataId );
+	});
 
 });
 
