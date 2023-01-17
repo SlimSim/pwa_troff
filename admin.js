@@ -24,14 +24,15 @@ $(document).ready( async function() {
 	/*           Private methods and variables:
 	/************************************************/
 
-	const app = firebase.initializeApp(environment.firebaseConfig);
-  const storage = firebase.storage();
-  const storageRef = storage.ref();
+	const app = firebase.initializeApp(environment.firebaseConfig),
+		//database = app.database(),
+		auth = app.auth(),
+		storage = app.storage(),
+		storageRef = storage.ref();
 
 
 	const googleSignIn = function() {
-		var provider = new firebase.auth.GoogleAuthProvider();
-		firebase.auth().signInWithRedirect(provider);
+		auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
 	}
 
 	const setDivToRemoved = function( div ) {
@@ -284,17 +285,24 @@ $(document).ready( async function() {
 
 	}
 
+	const setUiToSignIn = function( user )  {
+		$( ".showForNewUsers" ).addClass( "hidden" );
+		$( ".showForLoggedInUsers" ).removeClass( "hidden" );
+		$( "#userName" ).text( user.displayName );
+		$( "#userEmail" ).text( user.email );
+		$( "#userPhoneNumber" ).text( user.phoneNumber );
+	}
+
+	const setUiToNotSignIn = function () {
+		$( ".showForNewUsers" ).removeClass( "hidden" );
+		$( ".showForLoggedInUsers" ).addClass( "hidden" );
+		$( "#userName" ).val( "" );
+		$( "#userEmail" ).val( "" );
+		$( "#userPhoneNumber" ).val( "" );
+	}
+
 	const signOut = function() {
-		firebase.auth().signOut().then(() => {
-			// Sign-out successful.
-
-			$( ".showForNewUsers" ).removeClass( "hidden" );
-			$( ".showForLoggedInUsers" ).addClass( "hidden" );
-
-			$( "#userName" ).val( "" );
-			$( "#userEmail" ).val( "" );
-			$( "#userPhoneNumber" ).val( "" );
-		}).catch((error) => {
+		auth.signOut().then( setUiToNotSignIn ).catch((error) => {
 			// An error happened.
 		});
 	}
@@ -320,15 +328,20 @@ $(document).ready( async function() {
 	$( "#googleSignIn" ).on( "click", googleSignIn );
 	$( "#signOut" ).on( "click", signOut );
 
+	auth.onAuthStateChanged((user) => {
+		if( user == null ) {
+			return;
+		}
+		
+		// The signed-in user info.
+		setUiToSignIn( user );
+		superAdmin( user.uid );
+	});
 
-
-	firebase.auth().getRedirectResult()
-  .then((result) => {
-
-    if( !result.credential) {
-    $( ".showForNewUsers" ).removeClass( "hidden" );
-
-    	return signOut();
+	//firebase.auth().getRedirectResult()
+	auth.getRedirectResult().then((result) => {
+		if( !result.credential) {
+    		return setUiToNotSignIn();
 		}
 
 		/** @type {firebase.auth.OAuthCredential} */
@@ -337,15 +350,10 @@ $(document).ready( async function() {
 		// This gives you a Google Access Token. You can use it to access the Google API.
 		var token = credential.accessToken;
 
-    // The signed-in user info.
-    var user = result.user;
+		// The signed-in user info.
+		var user = result.user;
 
-    $( ".showForNewUsers" ).addClass( "hidden" );
-    $( ".showForLoggedInUsers" ).removeClass( "hidden" );
-
-    $( "#userName" ).text( user.displayName );
-    $( "#userEmail" ).text( user.email );
-    $( "#userPhoneNumber" ).text( user.phoneNumber );
+		setUiToSignIn( user );
 
 		superAdmin( user.uid );
 
