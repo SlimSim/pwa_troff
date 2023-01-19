@@ -24,6 +24,8 @@ $(document).ready( async function() {
 	/*           Private methods and variables:
 	/************************************************/
 
+	var userIsSignedId = false;
+
 	const app = firebase.initializeApp(environment.firebaseConfig),
 		//database = app.database(),
 		auth = app.auth(),
@@ -212,7 +214,7 @@ $(document).ready( async function() {
 				newTroffData.find( ".troffDataMakePrivate" ).on( "click", () => {
 					markTroffDataPrivateOnServer( troffData );
 					newTroffData.find( ".troffDataMakePrivate" ).addClass( "hidden" );
-          newTroffData.find( ".troffDataMakePublic" ).removeClass( "hidden" );
+					newTroffData.find( ".troffDataMakePublic" ).removeClass( "hidden" );
 					newDiv.find( ".troffDataPublic" ).text( Number( newDiv.find( ".troffDataPublic" ).text() ) - 1 );
 					newDiv.find( ".troffDataPrivate" ).text( Number( newDiv.find( ".troffDataPrivate" ).text() ) + 1 );
 					newTroffData.find( ".troffDataPublicOrPrivate" ).text( "Private" );
@@ -221,7 +223,7 @@ $(document).ready( async function() {
 				newTroffData.find( ".troffDataMakePublic" ).on( "click", () => {
 					markTroffDataPublicOnServer( troffData );
 					newTroffData.find( ".troffDataMakePrivate" ).removeClass( "hidden" );
-          newTroffData.find( ".troffDataMakePublic" ).addClass( "hidden" );
+					newTroffData.find( ".troffDataMakePublic" ).addClass( "hidden" );
 					newDiv.find( ".troffDataPublic" ).text( Number( newDiv.find( ".troffDataPublic" ).text() ) + 1 );
 					newDiv.find( ".troffDataPrivate" ).text( Number( newDiv.find( ".troffDataPrivate" ).text() ) - 1 );
 					newTroffData.find( ".troffDataPublicOrPrivate" ).text( "Public" );
@@ -291,6 +293,7 @@ $(document).ready( async function() {
 		$( "#userName" ).text( user.displayName );
 		$( "#userEmail" ).text( user.email );
 		$( "#userPhoneNumber" ).text( user.phoneNumber );
+		userIsSignedId = true;
 	}
 
 	const setUiToNotSignIn = function () {
@@ -299,6 +302,7 @@ $(document).ready( async function() {
 		$( "#userName" ).val( "" );
 		$( "#userEmail" ).val( "" );
 		$( "#userPhoneNumber" ).val( "" );
+		userIsSignedId = false;
 	}
 
 	const signOut = function() {
@@ -329,7 +333,7 @@ $(document).ready( async function() {
 	$( "#signOut" ).on( "click", signOut );
 
 	auth.onAuthStateChanged((user) => {
-		if( user == null ) {
+		if( user == null || userIsSignedId ) {
 			return;
 		}
 		
@@ -352,6 +356,10 @@ $(document).ready( async function() {
 
 		// The signed-in user info.
 		var user = result.user;
+
+		if( userIsSignedId ) {
+			return;
+		}
 
 		setUiToSignIn( user );
 
