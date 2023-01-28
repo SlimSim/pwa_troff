@@ -23,12 +23,77 @@ $(document).ready( async function() {
 	/*           Private methods and variables:
 	/************************************************/
 
-	const app = firebase.initializeApp(environment.firebaseConfig);
-	const storage = firebase.storage();
-	const storageRef = storage.ref();
+	const app = firebase.initializeApp(environment.firebaseConfig),
+		auth = app.auth(),
+		storage = app.storage(),
+		storageRef = storage.ref();
 
+	let firebaseUser = null;
 	let serverSongListHistory;
-	let allTroffDataFromServer;
+	let allPublicTroffDataFromServer;
+
+	//firebase.firestore().enablePersistence();
+
+	const googleSignIn = function() {
+		auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+	};
+
+	const signOut = function() {
+		auth.signOut().then().catch((error) => {
+			// An error happened.
+		});
+	};
+
+	auth.onAuthStateChanged( user => {
+		firebaseUser = user;
+		if( user == null ) {
+			setUiToNotSignIn();
+			return;
+		}
+
+		// The signed-in user info.
+		setUiToSignIn( firebaseUser );
+		getPrivateOnlineHistoryList( firebaseUser );
+	});
+
+	auth.getRedirectResult().then( result => {
+		if( !result.credential) {
+    		return setUiToNotSignIn();
+		}
+		/** @type {firebase.auth.OAuthCredential} * /
+		var credential = result.credential;
+		// This gives you a Google Access Token. You can use it to access the Google API.
+		var token = credential.accessToken;
+		*/
+	}).catch((error) => {
+		console.error( "auth.getRedirectResult error", error);
+		// Handle Errors here.
+		var errorCode = error.code;
+		var errorMessage = error.message;
+		// The email of the user's account used.
+		var email = error.email;
+		// The firebase.auth.AuthCredential type that was used.
+		var credential = error.credential;
+		$( "#alertDialog" ).removeClass( "hidden" );
+		$( "#alertHeader" ).text( "Error" );
+		$( "#alertText" ).text( "could not authenticate: " 
+			+ error.code + ", " + errorMessage 
+		);
+	});
+
+	const setUiToNotSignIn = function( user ) {
+		$("#userName").addClass("hidden").text( "" );
+		$("#googleSignIn").removeClass("hidden");
+		$("#signOut").addClass("hidden");
+	}
+
+	const setUiToSignIn = async function( user ) {
+		$("#userName").removeClass("hidden").text( user.displayName );
+		$("#googleSignIn").addClass("hidden");
+		$("#signOut").removeClass("hidden");
+	}
+	$( "#googleSignIn" ).on( "click", googleSignIn );
+	$( "#signOut" ).on( "click", signOut );
 
 	const IO = {
 		alert : function( headline, message ) {
@@ -36,76 +101,131 @@ $(document).ready( async function() {
 			const body = $( "<p>").text( message );
 			const removePopUp = () => { outer.remove(); };
 			const okButton = $( "<button>" ).text( "OK" ).addClass( "regularButton" ).on( "click", removePopUp );
-	
+
 			let outer = $( "<div>" ).addClass( "outerDialog" )
-			.append( 
+			.append(
 				$( "<div>").addClass( "innerDialog" )
 				.append( head )
 				.append( body )
 				.append( okButton )
 			)
 			.on( "click", removePopUp );
-	
+
 			$( "body" ).append( outer );
 		},
 	};
 
 	const initiateApp = async function() {
+		populateFromMemory();
+		repopulateFromFirebase();
+	}
+
+	const populateFromMemory = function() {
 		serverSongListHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
-		const savedServerSongListFromServer = nDB.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
+		const savedServerSongListFromServer = 
+				nDB.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
 		mergeWithServerSongListHistory( savedServerSongListFromServer );
 
-		let filter = new URLSearchParams( window.location.hash.slice( 1 ) ).get( "f" );
+		let filter = new URLSearchParams( window.location.hash.slice( 1 ) )
+			.get( "f" );
 		if( filter == "my" ) {
-			$( "#sortMoreInfoSwitch" ).click();
-			$( "#filterOnlyHistoryButt" ).click();
+			$( "#sortMoreInfoSwitch" ).prop('checked', true);
+			if( !$( "#filterOnlyHistoryButt" ).hasClass("active") ) {
+				$( "#filterOnlyHistoryButt" ).click();
+			}
 		}
 
 		repopulateFileListDivs();
 		scrollToUrlSong();
+	};
+
+	const getLatestPublicTroffDataFromFireBaseAndSaveLocaly = async function() {
 
 		const snapshot = await firebase.firestore().collection('TroffData')
 			.get();
 		const docs = snapshot.docs;
-		allTroffDataFromServer = docs.map(doc => doc.data()).filter( troffDataExistsInLocalHistoryOrIsPublic );
-		let latestServerSongListFromServer = troffDataListToServerSongList( allTroffDataFromServer );
-		nDB.set( "TROFF_SERVER_SONG_LIST_FROM_SERVER", latestServerSongListFromServer );
+		allPublicTroffDataFromServer = docs
+			.map(doc => doc.data())
+			.filter( troffDataExistsInLocalHistoryOrIsPublic );
+		let latestServerSongListFromServer = troffDataListToServerSongList(
+			allPublicTroffDataFromServer
+		);
+		nDB.set( 
+			"TROFF_SERVER_SONG_LIST_FROM_SERVER",
+			latestServerSongListFromServer
+		);
+		return latestServerSongListFromServer;
+	}
+	
+	const listOfServerSongsAreEqual = function( list1, list2 ) {
+		// if any are null, they are not equal:
+		if( list1 == null || list2 == null ) return false;
 
-		if(
-			savedServerSongListFromServer == null ||
-			savedServerSongListFromServer.length != latestServerSongListFromServer.length ||
-			!savedServerSongListFromServer.every( a => latestServerSongListFromServer.some( b => serverSongEqual(a, b) ) )
-		) {
-			// latestServerSongListFromServer contains new updates compared to savedServerSongListFromServer!
+		// if they are not the same length, they are not equal:
+		if( list1.length != list2.length ) return false;
+
+		// if every song in 1 matches some song in 2, they ARE equal!
+		return list1.every( a => list2.some( b => serverSongEqual(a, b) ) );
+	}
+
+	const repopulateFromFirebase = async function() {
+
+		const savedServerSongListFromServer = nDB
+			.get( "TROFF_SERVER_SONG_LIST_FROM_SERVER" );
+		let latestServerSongListFromServer = 
+			await getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
+
+		const listsAreEqual = listOfServerSongsAreEqual(
+			savedServerSongListFromServer,
+			latestServerSongListFromServer
+		);
+		if( !listsAreEqual ) {
+			// latestServerSongListFromServer contains new updates
+			// compared to savedServerSongListFromServer!
 			mergeWithServerSongListHistory( latestServerSongListFromServer );
 			repopulateFileListDivs();
 			scrollToUrlSong();
 		}
-
 	}
 
-	const troffDataExistsInLocalHistoryOrIsPublic = function( troffDataFromServer ) {
-		if( troffDataFromServer.troffDataPublic ) return true; // troffData is public
+	const troffDataExistsInLocalHistoryOrIsPublic = function( troffData ) {
+		// if troffData is public, return true;
+		if( troffData.troffDataPublic ) return true; 
 
 		const localHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
-		if( !localHistory ) return false; // troffData is not public and we have no local history
+		// if troffData is not public and we have no local history:
+		if( !localHistory ) return false; 
 
-		const correctSong = localHistory.find( td => td.fileNameUri == encodeURI(troffDataFromServer.fileName) );
-		if( !correctSong ) return false; // troffData is not public and this file is NOT in our local history.
+		const correctSong = localHistory
+			.find( td => td.fileNameUri == encodeURI(
+				troffData.fileName
+			) );
+		
+		// if troffData is not public and this file is NOT in our local history:
+		if( !correctSong ) return false; 
 
-		const troffDataIdExistsInHistory = correctSong.troffDataIdObjectList.some( tdId => tdId.troffDataId == troffDataFromServer.id );
-		return troffDataIdExistsInHistory; // true if troffData.id is in our local history!
+		const troffDataIdExistsInHistory = correctSong.troffDataIdObjectList
+			.some( tdId => tdId.troffDataId == troffData.id );
+		
+		// true if troffData.id is in our local history:
+		return troffDataIdExistsInHistory;
 	}
 
 	const scrollToUrlSong = function() {
-		let id = new URLSearchParams( window.location.hash.slice( 1 ) ).get("id");
-		if( id ) {
-			let element =  document.getElementById( fileNameToId( decodeURI( id ) ) );
-			if( element ) {
-				element.scrollIntoView();
-				element.querySelector( ".toggleNext" ).click();
-			}
-		}
+		let id = new URLSearchParams( window.location.hash.slice( 1 ) )
+			.get("id");
+
+		if( !id ) return;
+
+		let element =  document.getElementById( 
+			fileNameToId( decodeURI( id ) ) 
+		);
+
+		if( !element ) return;
+
+		element.scrollIntoView();
+		element.querySelector( ".toggleNext" ).click();
+		
 	}
 
 	const fileNameToId = function( fileName ) {
@@ -118,6 +238,108 @@ $(document).ready( async function() {
 		return ss1.troffDataIdObjectList.every( tdio1 =>
 			ss2.troffDataIdObjectList.some( tdio2 => tdio1.troffDataId == tdio2.troffDataId )
 		);
+	}
+
+	const nrIdsInHistoryList = function( historyList ) {
+		if( !historyList ) return 0;
+		let nrIds = 0;
+		historyList.forEach( historyObject => {
+			nrIds += historyObject.troffDataIdObjectList.length;
+		} )
+		return nrIds;
+	}
+
+	const serverSongContainsId = function( serverSong, id ) {
+		return serverSong.troffDataIdObjectList
+		.some( tdio => tdio.troffDataId == htdio.troffDataId ) 
+	}
+
+	const getPrivateOnlineHistoryList = async function( user ) {
+
+		const snapshot = await firebase.firestore()
+			.collection( 'UserData' ).doc( user.uid ).get();
+		let userData = snapshot.exists ? snapshot.data() : {};
+
+		const uploadedHistory = userData.uploadedHistory || [];
+		const localHistory = nDB
+			.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" ) || [];
+		const totalList = mergeSongListHistorys( 
+			uploadedHistory, localHistory
+		);
+
+		const nrIdsInTotalList = nrIdsInHistoryList( totalList );
+		const nrIdsInLocalHistory = nrIdsInHistoryList( localHistory );
+		const nrIdsInUploadedHistory = nrIdsInHistoryList( uploadedHistory );
+		
+		// om total är längre än localHistory, så ska 
+		// 1) TROFF_TROFF_DATA_ID_AND_FILE_NAME uppdateras
+		// 2) sen ska UIt laddas om
+		if( nrIdsInTotalList > nrIdsInLocalHistory ) {
+			console.log( "Should update UI!" );
+			nDB.set( "TROFF_TROFF_DATA_ID_AND_FILE_NAME", totalList );
+			populateFromMemory();
+			getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
+		} else {
+			console.log( "UI is fine!" );
+		}
+
+		// om total är längre än uploadedHistory, så ska 
+		// firebase uppdateras!
+		if( nrIdsInTotalList > nrIdsInUploadedHistory ) {
+			console.log( "Should update firebase!");
+			// totalList kanske ska ränsa totalList från onödiga saker???
+			// beroende på hur mycket plats det tar upp i firebase...
+			userData.uploadedHistory = totalList; 
+			firebase.firestore()
+				.collection( 'UserData' ).doc( user.uid ).set( userData );
+		} else {
+			console.log( "firebase is fine!" );
+		}
+
+	}
+
+	const mergeSongHistorys = function( song1, song2 ) {
+		if( song1 == null ) return song2;
+		if( song2 == null ) return song1;
+
+		const song = { fileNameUri : song1.fileNameUri };
+
+		const tdioList = song1.troffDataIdObjectList;
+
+		song2.troffDataIdObjectList.forEach( tdio => {
+			if (tdioList.some(td => td.troffDataId === tdio.troffDataId)) {
+				/* Troffdata already in troffDataIdObjectList */
+				return;
+			}
+			tdioList.push( tdio );
+		});
+		song.troffDataIdObjectList = tdioList;
+		return song;
+	}
+
+	const mergeSongListHistorys = function( songList1, songList2 ){
+		if( songList1 == null && songList2 == null ) return [];
+		if( songList1 == null ) return songList2;
+		if( songList2 == null ) return songList1;
+
+		const mergedSongList = [];
+		songList1.forEach( song1 => {
+			const song2 = songList2
+				.find( s => s.fileNameUri == song1.fileNameUri );
+			mergedSongList.push( mergeSongHistorys( song1, song2) );
+		});
+
+		// adding the songs from songList2 that was not in songList1 
+		// (and thus not handled in the above forEach):
+		songList2.forEach( song2 => {
+			const song1 = songList1
+				.find( s => s.fileNameUri == song2.fileNameUri );
+			if( song1 == undefined ) {
+				mergedSongList.push( song2 );
+			}
+		});
+
+		return mergedSongList;
 	}
 
 	const mergeWithServerSongListHistory = function( serverSongListFromServer ) {
@@ -161,7 +383,7 @@ $(document).ready( async function() {
 				} );
 			}
 
-		} )
+		} );
 
 	};
 
@@ -327,10 +549,11 @@ $(document).ready( async function() {
 		$( "#moreAboutVersionDialog" ).removeClass( "hidden" );
 		$( "#moreAboutVersionDialog" ).data( "troffDataId", troffDataId );
 
-		const troffData = allTroffDataFromServer.find(td => td.id == troffDataId);
+		const troffData = allPublicTroffDataFromServer
+			.find(td => td.id == troffDataId);
 		if( !troffData ) {
 			$( "#moreAboutVersionDialog" ).addClass( "hidden" );
-			IO.alert( "This version is not on the server any more!", 
+			IO.alert( "This version is not on the server any more!",
 			"We apologize for the inconvenience." );
 			return;
 		}
@@ -343,16 +566,16 @@ $(document).ready( async function() {
 
 		$( "#moreAoutVersionAlbum" ).text( songData?.fileData?.album || "" );
 		$( "#moreAboutVersionArtist" ).text( songData?.fileData?.artist || "" );
-		
+
 		$( "#songInfo" ).text( songData.info );
-		
-		// if fileData does not exist, use the time for the final marker as songLength instead
+
+		// if fileData does not exist, use the time for the final marker as 
+		// songLength instead
 		const songLength = songData.fileData ? songData.fileData.duration : songData.markers[ songData.markers.length -1 ].time;
 
 		let previousColor = "None";
 		$( "#markerList" ).empty();
 		$( "#markerList" ).data( "songLength", songLength );
-		
 
 		songData.currentStartMarker
 		songData.markers.forEach( marker => {
@@ -366,13 +589,13 @@ $(document).ready( async function() {
 				selectMarkerSpan( markerSpan, marker.info );
 			}
 			markerSpan.find( ".markerTime" ).text( st.secToDisp( marker.time ) ).attr("timeValue", marker.time);
-			
+
 			markerSpan.find( ".markerInfoIndicator" ).toggleClass( "hidden", marker.info === "" );
-			
+
 			if( marker.color !== "None" ) {
 				previousColor = marker.color;
 			}
-			
+
 			markerSpan.addClass( "markerColor" + previousColor );
 			markerSpan.css( "border-top-width",  + "px" );
 
