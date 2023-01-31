@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.11.14",
+		version: "1.12",
 		urls: [
 			"/",
 			"/index.html",
@@ -40,7 +40,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.6.1",
+		version: "1.7",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -60,7 +60,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'app-assets',
-		version: "1.6",
+		version: "1.7",
 		urls: [
 			"/assets/logos/favicon.ico",
 			"/assets/logos/logo.svg",
@@ -87,7 +87,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.3.2",
+		version: "1.4",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
@@ -101,7 +101,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.2.8",
+		version: "1.3",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
