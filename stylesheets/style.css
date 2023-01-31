@@ -1037,6 +1037,9 @@ table.dataTable .dataTables_empty{
 	border-top-style: solid;
 }
 
+.top-exact--6 {
+	top: -6px;
+}
 
 .px-exact-13 {
 	padding-right: 13px !important;

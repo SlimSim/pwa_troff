@@ -43,7 +43,7 @@
 
 	<link
 			rel="preload"
-			href="assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff2?2742147"
+			href="assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff2?2742147"
 			as="font"
 			type="font/woff2"
 			crossorigin>
@@ -92,6 +92,16 @@
 	<section id="songsSection" class="flexCol">
 		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
 			<nav class="flexCol center">
+				<!--
+				<i class="tooltip fa fa-user">
+					<div class="tooltiptext">
+						<div id="userName" class="p-3 small"></div>
+							<button id="signOut" class="btn regularButton hidden">Sign out</button>
+					</div>					
+				</i>
+				-->
+
+				
 				<button class="svgButt special regularButton showUploadSongToServerDialog"
 								type="button"
 								title="Share this song to friends via link">
@@ -138,20 +148,60 @@
 				</div>
 			</div>
 			<nav class="flexCol center">
-				<button class="svgButt regularButton"
+				<div class="tooltip fa fa-user hide-on-sign-out hidden">
+					<div class="tooltiptext">
+						<div 
+							id="userName"
+							class="p-3 small"
+							title="You are signed in, welcome!"
+							></div>
+						<button 
+							class="svgButt regularButton buttSettingsDialog"
+							type="button"
+							title="Open the global settings dialogue">
+							<i class="fa-cog"></i>
+						</button>
+						<button class="svgButt regularButton cursor-help"
+							data-href="help.html"
+							type="button"
+							title="Get tips on how to get the most out of Troff">
+							<i class="fa-question cursor-help"></i>
+						</button>
+						<a 
+							href="/find.html" 
+							target="_blank"
+							class="position-relative top-exact--6">
+							<button class="svgButt fa-stack regularButton"
+								type="button"
+								title="Find new songs and choreographies online!">
+								<i class="fa-music fa-stack-10x m-relative-3 font-size-relative-8" ></i>
+								<i class="fa-search fa-stack-10x mt-relative-5 ml-relative-11 font-size-relative-1" ></i>
+							</button>
+						</a>
+						<button 
+							id="signOut"
+							class="regularButton svgButt regularButton"
+							title="Sign out!">
+							<i class="fa-logout"></i>
+						</button>
+					</div>					
+				</div>
+				<div class="flex-one hide-on-sign-out hidden"></div>
+
+				<button 
+					class="svgButt regularButton buttSettingsDialog hide-on-sign-in"
 					type="button"
-					title="Open the global settings dialogue"
-					id="buttSettingsDialog" >
+					title="Open the global settings dialogue">
 					<i class="fa-cog"></i>
 				</button>
-				<button class="svgButt regularButton cursor-help"
+				<button class="svgButt regularButton cursor-help hide-on-sign-in"
 					data-href="help.html"
 					type="button"
 					title="Get tips on how to get the most out of Troff">
 					<i class="fa-question cursor-help"></i>
 				</button>
 				<a href="/find.html" target="_blank">
-					<button class="svgButt fa-stack regularButton"
+					<button class="svgButt fa-stack regularButton hide-on-sign-in"
 						type="button"
 						title="Find new songs and choreographies online!">
 						<i class="fa-music fa-stack-10x m-relative-3 font-size-relative-8" ></i>
@@ -1692,7 +1742,7 @@
 
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/checkbox.css" />
 
-	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2021-08-12/css/troff-icon-pack.css" />
+	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-01-31/css/troff-icon-pack.css" />
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/internal/fontello-extra.css" />
 
 

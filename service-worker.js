@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.11",
+		version: "1.11.14",
 		urls: [
 			"/",
 			"/index.html",
@@ -40,7 +40,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.6",
+		version: "1.6.1",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -87,7 +87,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.3",
+		version: "1.3.2",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
@@ -101,18 +101,18 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.2.6",
+		version: "1.2.8",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
 			"/assets/external/reset.css",
 			"/assets/external/notify-js/notify.min.js",
-			"/assets/external/Fontello-2021-08-12/css/troff-icon-pack.css",
-			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.eot?2742147",
-			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.svg?2742147",
-			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.ttf?2742147",
-			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff?2742147",
-			"/assets/external/Fontello-2021-08-12/font/troff-icon-pack.woff2?2742147",
+			"/assets/external/Fontello-2023-01-31/css/troff-icon-pack.css",
+			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.eot?2742147",
+			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.svg?2742147",
+			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.ttf?2742147",
+			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff?2742147",
+			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff2?2742147",
 			"/assets/external/browserLogos/chrome-logo.svg",
 			"/assets/external/browserLogos/chromium-logo.svg",
 			"/assets/external/browserLogos/edge-logo.svg",
