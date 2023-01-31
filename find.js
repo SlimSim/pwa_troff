@@ -275,25 +275,21 @@ $(document).ready( async function() {
 		// 1) TROFF_TROFF_DATA_ID_AND_FILE_NAME uppdateras
 		// 2) sen ska UIt laddas om
 		if( nrIdsInTotalList > nrIdsInLocalHistory ) {
-			console.log( "Should update UI!" );
 			nDB.set( "TROFF_TROFF_DATA_ID_AND_FILE_NAME", totalList );
 			populateFromMemory();
 			getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
-		} else {
-			console.log( "UI is fine!" );
 		}
 
 		// om total är längre än uploadedHistory, så ska 
 		// firebase uppdateras!
 		if( nrIdsInTotalList > nrIdsInUploadedHistory ) {
-			console.log( "Should update firebase!");
 			// totalList kanske ska ränsa totalList från onödiga saker???
 			// beroende på hur mycket plats det tar upp i firebase...
 			userData.uploadedHistory = totalList; 
 			firebase.firestore()
-				.collection( 'UserData' ).doc( user.uid ).set( userData );
-		} else {
-			console.log( "firebase is fine!" );
+				.collection( 'UserData' )
+				.doc( user.uid )
+				.set( userData );
 		}
 
 	}

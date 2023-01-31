@@ -336,7 +336,7 @@ $(function () {
 	};
 
 	// Initialize Firebase:
-	const app = firebase.initializeApp(environment.firebaseConfig);
+	//const app = firebase.initializeApp(environment.firebaseConfig);
 	//const analytics = getAnalytics(app);
 
 });

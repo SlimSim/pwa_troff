@@ -23,6 +23,8 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
+let firebaseUser = null;
+
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
@@ -92,6 +94,121 @@ const DATA_TABLE_COLUMNS = {
   	}
   	return -1;
   }
+}
+
+const app = firebase.initializeApp(environment.firebaseConfig),
+	auth = app.auth(),
+	storage = app.storage();
+
+const signOut = function() {
+	auth.signOut().then().catch((error) => {
+		// An error happened.
+	});
+};
+
+const setUiToNotSignIn = function( user ) {
+	$( ".hide-on-sign-out" ).addClass("hidden");
+	$( ".hide-on-sign-in" ).removeClass("hidden");
+}
+
+const setUiToSignIn = async function( user ) {
+	$("#userName").text( user.displayName );
+	$(".hide-on-sign-out").removeClass("hidden");
+	$(".hide-on-sign-in").addClass("hidden");
+}
+
+auth.onAuthStateChanged( user => {
+	firebaseUser = user;
+	if( user == null ) {
+		setUiToNotSignIn();
+		return;
+	}
+
+	// The signed-in user info.
+	setUiToSignIn( firebaseUser );
+});
+
+const mergeSongHistorys = function( song1, song2 ) {
+	if( song1 == null ) return song2;
+	if( song2 == null ) return song1;
+
+	const song = { fileNameUri : song1.fileNameUri };
+
+	const tdioList = song1.troffDataIdObjectList;
+
+	song2.troffDataIdObjectList.forEach( tdio => {
+		if (tdioList.some(td => td.troffDataId === tdio.troffDataId)) {
+			/* Troffdata already in troffDataIdObjectList */
+			return;
+		}
+		tdioList.push( tdio );
+	});
+	song.troffDataIdObjectList = tdioList;
+	return song;
+}
+
+const mergeSongListHistorys = function( songList1, songList2 ){
+	if( songList1 == null && songList2 == null ) return [];
+	if( songList1 == null ) return songList2;
+	if( songList2 == null ) return songList1;
+
+	const mergedSongList = [];
+	songList1.forEach( song1 => {
+		const song2 = songList2
+			.find( s => s.fileNameUri == song1.fileNameUri );
+		mergedSongList.push( mergeSongHistorys( song1, song2) );
+	});
+
+	// adding the songs from songList2 that was not in songList1 
+	// (and thus not handled in the above forEach):
+	songList2.forEach( song2 => {
+		const song1 = songList1
+			.find( s => s.fileNameUri == song2.fileNameUri );
+		if( song1 == undefined ) {
+			mergedSongList.push( song2 );
+		}
+	});
+
+	return mergedSongList;
+}
+
+const nrIdsInHistoryList = function( historyList ) {
+	if( !historyList ) return 0;
+	let nrIds = 0;
+	historyList.forEach( historyObject => {
+		nrIds += historyObject.troffDataIdObjectList.length;
+	} )
+	return nrIds;
+}
+
+const updateUploadedHistory = async function() {
+
+	if( firebaseUser == null ) return;
+	const snapshot = await firebase.firestore()
+		.collection( 'UserData' ).doc( firebaseUser.uid ).get();
+	let userData = snapshot.exists ? snapshot.data() : {};
+
+	const uploadedHistory = userData.uploadedHistory || [];
+	const localHistory = nDB
+		.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" ) || [];
+	const totalList = mergeSongListHistorys( 
+		uploadedHistory, localHistory
+	);
+
+	const nrIdsInTotalList = nrIdsInHistoryList( totalList );
+	const nrIdsInUploadedHistory = nrIdsInHistoryList( uploadedHistory );
+	
+	// om total är längre än uploadedHistory, så ska 
+	// firebase uppdateras!
+	if( nrIdsInTotalList > nrIdsInUploadedHistory ) {
+		// totalList kanske ska ränsa totalList från onödiga saker???
+		// beroende på hur mycket plats det tar upp i firebase...
+		userData.uploadedHistory = totalList; 
+		firebase.firestore()
+			.collection( 'UserData' )
+			.doc( firebaseUser.uid )
+			.set( userData );
+	}
 }
 
 function addImageToContentDiv() {
@@ -1167,7 +1284,8 @@ var TroffClass = function(){
 	/*Troff*/ this.uploadSongToServer = async function( event ) {
 		"use strict";
 
-		// show a pop-up that says song is being uploaded, will let you know when it is done
+		// show a pop-up that says 
+		// "song is being uploaded, will let you know when it is done"
 		// alt 1, please do not close this app in the mean time
 		// alt 2, please do not switch song in the mean time....
 
@@ -1176,7 +1294,9 @@ var TroffClass = function(){
 		$( "#uploadSongToServerInProgressDialog" ).removeClass( "hidden" );
 		try {
 			const markerObject = nDB.get( songKey );
-			const fakeTroffData = { markerJsonString : JSON.stringify( markerObject ) }
+			const fakeTroffData = { 
+				markerJsonString : JSON.stringify( markerObject ) 
+			}
 
 			//removing localInformation before sending it to server:
 			markerObject.localInformation = undefined;
@@ -1185,7 +1305,9 @@ var TroffClass = function(){
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
 
-			Troff.saveDownloadLinkHistory( resp.id, resp.fileName, fakeTroffData );
+			Troff.saveDownloadLinkHistory( 
+				resp.id, resp.fileName, fakeTroffData 
+			);
 
 			if( songKey == Troff.getCurrentSong() ) {
 				Troff.setUrlToSong( resp.id, resp.fileName );
@@ -1324,7 +1446,8 @@ var TroffClass = function(){
 		Troff.selectSongInSongList( fileName );
 	};
 
-	/*Troff*/this.saveDownloadLinkHistory = function( serverTroffDataId, fileName, troffData ){
+	/*Troff*/this.saveDownloadLinkHistory = function( 
+				serverTroffDataId, fileName, troffData ) {
 
 		const fileNameUri = encodeURI( fileName );
 
@@ -1334,7 +1457,8 @@ var TroffClass = function(){
 
 		let displayName = fileName;
 		const nrMarkers = markerObject.markers.length;
-		const nrStates = markerObject.aStates ? markerObject.aStates.length : 0;
+		const nrStates = 
+			markerObject.aStates ? markerObject.aStates.length : 0;
 		const info = markerObject.info.substring( 0, 99 );
 		let genre = "";
 		let tags = "";
@@ -1354,11 +1478,11 @@ var TroffClass = function(){
 			troffDataId : serverTroffDataId,
 			firstTimeLoaded : new Date().getTime(),
 			displayName : displayName,
-      nrMarkers : nrMarkers,
-      nrStates : nrStates,
-      infoBeginning : info,
-      genre : genre,
-      tags : tags
+			nrMarkers : nrMarkers,
+			nrStates : nrStates,
+			infoBeginning : info,
+			genre : genre,
+			tags : tags
 		};
 
 		const serverSong = {
@@ -1368,6 +1492,7 @@ var TroffClass = function(){
 
 		if( !serverSongs ) {
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, [ serverSong ] );
+			updateUploadedHistory();	
 			return;
 		}
 
@@ -1376,15 +1501,22 @@ var TroffClass = function(){
 		if( !existingServerSong ) {
 			serverSongs.push( serverSong );
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
+			updateUploadedHistory();	
 			return;
 		}
 
 		if( !existingServerSong.troffDataIdObjectList.some(td => td.troffDataId == serverTroffDataId ) ) {
 			existingServerSong.troffDataIdObjectList.push( troffDataIdObject );
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
+			updateUploadedHistory();	
 			return;
 		}
+
 	};
+
+
+
+
 
 	/*Troff*/ this.showImportData = function( fileName, serverId ) {
 		"use strict";
@@ -4645,7 +4777,7 @@ var IOClass = function(){
 		$( "#clickSongListAll" ).click( () => $( "#songListAll" ).click() );
 		$( "#songListSelector" ).change( onChangeSongListSelector );
 
-		$( "#buttSettingsDialog" ).click ( Troff.openSettingsDialog );
+		$( ".buttSettingsDialog" ).click ( Troff.openSettingsDialog );
 		$( "#buttCloseSettingPopUpSquare" ).click ( Troff.closeSettingsDialog );
 
 		$( ".buttCloseSongsDialog" ).click( closeSongDialog );
@@ -4766,6 +4898,7 @@ var IOClass = function(){
 
 		$(".jsUploadSongButt").on("click", Troff.uploadSongToServer );
 
+		$( "#signOut" ).on( "click", signOut );
 
 		window.addEventListener('resize', function(){
 			Troff.setAppropriateMarkerDistance();
