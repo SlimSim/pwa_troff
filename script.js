@@ -23,6 +23,76 @@ window.alert = function( alert){
 	console.warn("Alert:", alert);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+/*
+så, nu vill jag lägga in grupper,
+och så kan man lägga till folk i grupperna
+och alla folk kan lägga till låtar,
+och dom låtarna uppdateras automatiskt
+och synkas med alla andra i den gruppen!
+
+Wow!
+
+
+kolla grupper och permissins och sånt här:
+https://firebase.google.com/docs/firestore/solutions/role-based-access
+
+
+Lycka till!
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let firebaseUser = null;
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
@@ -106,6 +176,44 @@ const signOut = function() {
 	});
 };
 
+const initiateAllGroupsFromFirebase = async function() {
+	console.clear();
+	console.log( "initiateAllGroupsFromFirebase -> " );
+
+	firebase.firestore()
+		.collection( 'Group' )
+		.where( "owner", "array-contains", firebaseUser.email)
+		.get()
+		.then( initiateCollections );
+}
+
+const initiateCollections = function( querySnapshot ) {
+	querySnapshot.forEach( doc => {
+		doc.ref.onSnapshot( groupDocUpdate );
+		doc.ref.collection( "Songs" ).get().then( subCollection => {
+			subCollection.forEach( songDoc => {
+				songDoc.ref.onSnapshot( songDocUpdate )
+			});
+		});
+	} );
+}
+
+const groupDocUpdate = function( doc ) {
+	if( !doc.exists ) {
+		console.error( "groupDocUpdate: oc no longer exists!", doc.id );
+		return;
+	}
+	console.log( "groupDocUpdate:", doc.data() );
+}
+
+const songDocUpdate = function( doc ) {
+	if( !doc.exists ) {
+		console.error( "songDocUpdate: oc no longer exists!", doc.id );
+		return;
+	}
+	console.log( "songDocUpdate:", doc.data() );
+}
+
 const setUiToNotSignIn = function( user ) {
 	$( ".hide-on-sign-out" ).addClass("hidden");
 	$( ".hide-on-sign-in" ).removeClass("hidden");
@@ -126,6 +234,7 @@ auth.onAuthStateChanged( user => {
 
 	// The signed-in user info.
 	setUiToSignIn( firebaseUser );
+	initiateAllGroupsFromFirebase();
 });
 
 const mergeSongHistorys = function( song1, song2 ) {
@@ -159,7 +268,7 @@ const mergeSongListHistorys = function( songList1, songList2 ){
 		mergedSongList.push( mergeSongHistorys( song1, song2) );
 	});
 
-	// adding the songs from songList2 that was not in songList1 
+	// adding the songs from songList2 that was not in songList1
 	// (and thus not handled in the above forEach):
 	songList2.forEach( song2 => {
 		const song1 = songList1
@@ -191,19 +300,19 @@ const updateUploadedHistory = async function() {
 	const uploadedHistory = userData.uploadedHistory || [];
 	const localHistory = nDB
 		.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" ) || [];
-	const totalList = mergeSongListHistorys( 
+	const totalList = mergeSongListHistorys(
 		uploadedHistory, localHistory
 	);
 
 	const nrIdsInTotalList = nrIdsInHistoryList( totalList );
 	const nrIdsInUploadedHistory = nrIdsInHistoryList( uploadedHistory );
-	
-	// om total är längre än uploadedHistory, så ska 
+
+	// om total är längre än uploadedHistory, så ska
 	// firebase uppdateras!
 	if( nrIdsInTotalList > nrIdsInUploadedHistory ) {
 		// totalList kanske ska ränsa totalList från onödiga saker???
 		// beroende på hur mycket plats det tar upp i firebase...
-		userData.uploadedHistory = totalList; 
+		userData.uploadedHistory = totalList;
 		firebase.firestore()
 			.collection( 'UserData' )
 			.doc( firebaseUser.uid )
@@ -1284,7 +1393,7 @@ var TroffClass = function(){
 	/*Troff*/ this.uploadSongToServer = async function( event ) {
 		"use strict";
 
-		// show a pop-up that says 
+		// show a pop-up that says
 		// "song is being uploaded, will let you know when it is done"
 		// alt 1, please do not close this app in the mean time
 		// alt 2, please do not switch song in the mean time....
@@ -1294,8 +1403,8 @@ var TroffClass = function(){
 		$( "#uploadSongToServerInProgressDialog" ).removeClass( "hidden" );
 		try {
 			const markerObject = nDB.get( songKey );
-			const fakeTroffData = { 
-				markerJsonString : JSON.stringify( markerObject ) 
+			const fakeTroffData = {
+				markerJsonString : JSON.stringify( markerObject )
 			}
 
 			//removing localInformation before sending it to server:
@@ -1305,8 +1414,8 @@ var TroffClass = function(){
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
 
-			Troff.saveDownloadLinkHistory( 
-				resp.id, resp.fileName, fakeTroffData 
+			Troff.saveDownloadLinkHistory(
+				resp.id, resp.fileName, fakeTroffData
 			);
 
 			if( songKey == Troff.getCurrentSong() ) {
@@ -1446,7 +1555,7 @@ var TroffClass = function(){
 		Troff.selectSongInSongList( fileName );
 	};
 
-	/*Troff*/this.saveDownloadLinkHistory = function( 
+	/*Troff*/this.saveDownloadLinkHistory = function(
 				serverTroffDataId, fileName, troffData ) {
 
 		const fileNameUri = encodeURI( fileName );
@@ -1457,7 +1566,7 @@ var TroffClass = function(){
 
 		let displayName = fileName;
 		const nrMarkers = markerObject.markers.length;
-		const nrStates = 
+		const nrStates =
 			markerObject.aStates ? markerObject.aStates.length : 0;
 		const info = markerObject.info.substring( 0, 99 );
 		let genre = "";
@@ -1492,7 +1601,7 @@ var TroffClass = function(){
 
 		if( !serverSongs ) {
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, [ serverSong ] );
-			updateUploadedHistory();	
+			updateUploadedHistory();
 			return;
 		}
 
@@ -1501,14 +1610,14 @@ var TroffClass = function(){
 		if( !existingServerSong ) {
 			serverSongs.push( serverSong );
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
-			updateUploadedHistory();	
+			updateUploadedHistory();
 			return;
 		}
 
 		if( !existingServerSong.troffDataIdObjectList.some(td => td.troffDataId == serverTroffDataId ) ) {
 			existingServerSong.troffDataIdObjectList.push( troffDataIdObject );
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
-			updateUploadedHistory();	
+			updateUploadedHistory();
 			return;
 		}
 
@@ -4007,7 +4116,7 @@ var RateClass = function(){
 
 		Rate.checkToShowUserSurvey( aLastMonthUsage );
 		Rate.checkToShowRateDialog( oData.iRatedStatus, aLastMonthUsage, millis, oData.millisFirstTimeStartingApp);
-		
+
 	};
 
 	/*Rate*/this.checkToShowUserSurvey = function( aLastMonthUsage ) {
@@ -4900,7 +5009,7 @@ var IOClass = function(){
 
 		$( "#signOut" ).on( "click", signOut );
 
-		window.addEventListener('resize', function(){
+		window.addEventListener('resize', function() {
 			Troff.setAppropriateMarkerDistance();
 		});
 
