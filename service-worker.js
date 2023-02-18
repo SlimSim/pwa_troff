@@ -101,7 +101,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.3",
+		version: "1.3.1",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",

@@ -951,6 +951,11 @@
 				<div class="flexOne"></div>
 				<div class="flexRow hideOnSongsDialogFloatingState pl-1">
 
+					<button class="mr-2 regularButton buttNewGroup"
+						type="button"
+						title="show Songlists">
+						<i class="fa-users"></i>
+					</button>
 					<button class="mr-2 stOnOffButton"
 						type="button"
 						title="show Songlists"
@@ -969,14 +974,18 @@
 						title="open the songs dialog in floating window">
 						<i class="fa-window-maximize"></i>
 					</button>
-					<button class="regularButton mr-2 buttCloseSongsDialog"
+					<!--button class="regularButton mr-2 buttCloseSongsDialog"
 						type="button"
 						title="close the songs dialog window">
 						<i class="fa-window-close"></i>
-					</button>
+					</button-->
 				</div>
 			</div>
 			<div id="songPicker" class="flexRow scroll h-100">
+				<div id="groupListParent" class="flex-none scroll">
+					<h2>Groups!</h2>
+					<ul id="groupList" class="flexScroll onOffParent maxWidthParent"></ul>
+				</div>
 				<div id="songListsList" class="flex-none scroll">
 					<input
 						type="button"
@@ -1299,6 +1308,137 @@
 			</span>
 		</div>
 	</div>
+
+	<div id="groupDialogOwnerRowTemplate" class="hidden">
+		<div class="form-group row">
+			<div class="col-sm">
+				<div class="input-group mb-1">
+					<input
+						type="text" 
+						class="allow-tab form-control writableField groupDialogOwner"
+						value="" />
+					<div class="input-group-append pt-1">
+						<button 
+							type="button"
+							title="Remove this owner"
+							class="regularButton groupDialogRemoveOwner">
+							<i class="fa fa-window-close" ></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="groupDialogSongRowTemplate" class="hidden">
+		<div class="form-group row">
+			<div class="col-sm">
+				<div class="input-group mb-1">
+					<input
+						type="text" 
+						class="allow-tab form-control writableField groupDialogSong"
+						value="" />
+					<div class="input-group-append pt-1">
+						<button 
+							type="button"
+							title="Remove this song"
+							class="regularButton groupDialogRemoveSong">
+							<i class="fa fa-window-close" ></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="groupDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mh-100">
+			<h2 class="paragraph">Group!</h2>
+
+			<form class="vScroll mh-100 pr-4">
+				<div class="form-group row">
+					<label for="groupDialogName" class="col-sm col-form-label">Name</label>
+					<div class="col-sm">
+						<input type="text" class="allow-tab form-control writableField" id="groupDialogName" value="" />
+					</div>
+					<input type="text" id="groupDialogGroupId" value="" /> 
+				</div>
+
+				<div class="form-group">
+					<span>Owners:</span>
+					<div id="groupOwnerParent">
+					</div>
+					<button
+						type="button"
+						id="groupAddOwnerButt"
+						title="Add new owner"
+						class="regularButton">
+						<i class="fa-plus" ></i>
+					</button>
+				</div>
+				<div class="form-group">
+					<span>Sogns:</span>
+					<div id="groupSongParent">
+					</div>
+					<button
+						type="button"
+						id="groupAddSongButt"
+						title="Add new song"
+						class="regularButton">
+						<i class="fa-plus" ></i>
+					</button>
+					<ul id="song-examples"></ul>
+				</div>
+
+				<div class="flexRow pt-4">
+					<input
+						type="submit"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						id="groupDialogSave"
+						value="Save" />
+					<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Cancel" />
+				</div>
+			</form>
+
+		</div>
+
+	</div>
+
+
+	<!--div id="groupDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">Group!</h2>
+			<div class="flex-row">
+				<span>Group name</span>
+				<span><input type="text" /></span>
+			</div>
+			<div class="flex-row">
+				<span>member1</span>
+				<span><input type="text" /></span>
+			</div>
+			<div class="flex-row">
+				<span>member2</span>
+				<span><input type="text" /></span>
+			</div>
+			<div class="flex-row">
+				<span>member3</span>
+				<span><input type="text" /></span>
+			</div>
+			<span class="flexRow">
+				<input 
+					type="button"
+					id="addAddedSongsToSongList_doNotAdd"
+					class="regularButton flex-none  dialogCancelButton" value="Done" />
+				<input 
+					type="button"
+					id="addAddedSongsToSongList_done"
+					class="regularButton flex-none hidden emptyAddAddedSongsToSongList_songs dialogCancelButton ml-2" value="Ok" />
+			</span>
+		</div>
+	</div-->
 
 	<div id="outerSettingPopUpSquare" class="outerDialog hidden">
 		<div class="popUpSquare" id="innerSettingPopUpSquare" >

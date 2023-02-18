@@ -206,7 +206,10 @@ $(function () {
 
 	};
 
-	fileHandler.sendFile = async function( fileKey, oSongTroffInfo ) {
+	fileHandler.sendFile = async function( 
+		fileKey,
+		oSongTroffInfo,
+		storageDir = "TroffFiles" ) {
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
 			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
             we apologize for the inconvenience.
@@ -232,7 +235,8 @@ $(function () {
 
         let fileHash = await hashFile( file );
 
-				const fileUrl = await firebaseWrapper.uploadFile( fileHash, file )
+				const fileUrl = await firebaseWrapper
+					.uploadFile( fileHash, file, storageDir )
 					.catch( error => {
 						if( error instanceof ShowUserException ) {
 							throw error;
@@ -255,6 +259,7 @@ $(function () {
 				return firebaseWrapper.uploadTroffData( troffData ).then( retVal => {
 					return {
 						id: troffData.id,
+						fileUrl: troffData.fileUrl,
 						fileName: troffData.fileName
 						//fileType: troffData.fileType,
 						//fileSize: troffData.fileSize,
@@ -283,11 +288,15 @@ $(function () {
 		}
 	};
 
-	firebaseWrapper.uploadFile = async function( fileId, file ) {
+	firebaseWrapper.uploadFile = async function( 
+		fileId,
+		file,
+		storageDir = "TroffFiles" ) {
 
-    const storageRef = firebase.storage().ref( "TroffFiles" );
-    const fileRef = storageRef.child( fileId );
-    const task = fileRef.put( file );
+
+		const storageRef = firebase.storage().ref( storageDir );
+		const fileRef = storageRef.child( fileId );
+		const task = fileRef.put( file );
 
 		return new Promise((resolve, reject) => {
 

@@ -178,17 +178,18 @@ const signOut = function() {
 
 const initiateAllGroupsFromFirebase = async function() {
 	console.clear();
-	console.log( "initiateAllGroupsFromFirebase -> " );
 
 	firebase.firestore()
-		.collection( 'Group' )
-		.where( "owner", "array-contains", firebaseUser.email)
+		.collection( 'Groups' )
+		.where( "owners", "array-contains", firebaseUser.email)
 		.get()
 		.then( initiateCollections );
 }
 
 const initiateCollections = function( querySnapshot ) {
+	console.log( "initiateCollections ->" );
 	querySnapshot.forEach( doc => {
+		console.log( "eachGroupsI'm in -> ");
 		doc.ref.onSnapshot( groupDocUpdate );
 		doc.ref.collection( "Songs" ).get().then( subCollection => {
 			subCollection.forEach( songDoc => {
@@ -203,16 +204,321 @@ const groupDocUpdate = function( doc ) {
 		console.error( "groupDocUpdate: oc no longer exists!", doc.id );
 		return;
 	}
-	console.log( "groupDocUpdate:", doc.data() );
+
+	const oldLiGroup = $( "#groupList" )
+		.find( "[group-id=" + doc.id + "]" );
+
+	const group = doc.data();
+
+	const name = $( "<button>" )
+		.text( group.name )
+		.addClass( "stOnOffButton flex-one text-left")
+
+	const liGroup = $( "<li>" )
+		.attr( "group-id", doc.id )
+		.addClass( "py-1" )
+		.append( name );
+
+	if( oldLiGroup.length > 0 ) {
+		liGroup.insertBefore( oldLiGroup );
+		oldLiGroup.remove();
+	} else {
+		$( "#groupList" ).append( liGroup );
+	}
+
+	name.on( "click", () => {
+		openGroupDialog( doc );
+	} );
+
 }
 
 const songDocUpdate = function( doc ) {
+	console.log( "songDocUPdate ->");
+	const songDocId = doc.id;
+	const groupDocId = doc.ref.parent.parent.id;
+
+
 	if( !doc.exists ) {
 		console.error( "songDocUpdate: oc no longer exists!", doc.id );
+		DB.removeFromMyFirestoreGroups( songDocId );
 		return;
 	}
-	console.log( "songDocUpdate:", doc.data() );
+
+	const songData = doc.data();
+	const songKey = songData.songKey;
+	const existingMarkerInfo = nDB.get( songKey );
+	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
+	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
+
+	nDB.set( songKey, newMarkerInfo );
+
+	DB.addToMyFirestoreGroups(groupDocId, songDocId, songKey );
+
 }
+
+
+const openGroupDialog = async function( doc ) {
+	emptyGroupDialog();
+	const group = doc.data();
+	$( "#groupDialogName" ).val( group.name );
+	$( "#groupDialogName" ).attr( "groupDocId", doc.id );
+	group.owners.forEach( owner =>{
+		addGroupOwnerRow( owner );
+	} );
+
+
+
+	const subCollection = await doc.ref.collection( "Songs" ).get();
+	subCollection.docs.forEach( songDoc => {
+		const song = songDoc.data();
+		addGroupSongRow( songDoc.id, song );
+	});
+	let dataInfo = $('#dataSongTable')
+		.DataTable()
+		.column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
+		.data();
+
+	let songs = "";
+	dataInfo.each( v => {
+		songs +=  + "<br />\n";
+		$( "#song-examples" ).append($(
+			"<li>").text( JSON.parse( v ).fullPath )
+		)
+	} );
+	$( "#groupDialog" ).removeClass( "hidden" );
+
+};
+
+const emptyGroupDialog = function() {
+	$( "#groupOwnerParent" ).empty();
+	$( "#groupSongParent" ).empty();
+	$( "#groupDialogName" ).val( "" ).attr("groupDocId", null);
+
+	$( "#song-examples" ).empty();
+}
+
+const newGroupDialog = function( event ) {
+	emptyGroupDialog();
+	$( "#groupDialog" ).removeClass( "hidden" );
+};
+
+const removeOwnerRow = function( event ) {
+	const row = $( event.target ).closest( ".form-group.row" );
+	const owner = row.find( ".groupDialogOwner" ).val();
+
+	notifyUndo( owner + " was removed.", function() {
+		addGroupOwnerRow( owner );
+	} );
+
+	row.remove();
+};
+
+const removeSongRow = function( event ) {
+	const row = $( event.target ).closest( ".form-group.row" );
+	row.find( ".groupDialogSong" ).addClass( "bg-danger removed");
+/*
+	notifyUndo( song + " was removed.", function() {
+		addGroupOwnerRow( song );
+	} );
+	*/
+
+	//row.remove();
+};
+
+
+const addGroupSongRow = function( songDocId, song ) {
+
+	const songRow = $("#groupDialogSongRowTemplate")
+		.children()
+		.clone( true, true );
+
+	songRow
+		.find(".groupDialogRemoveSong" )
+		.on( "click", removeSongRow );
+	songRow
+		.find( ".groupDialogSong" )
+		.attr( "songDocId", songDocId )
+		.val( song?.songKey );
+
+	$( "#groupSongParent" ).append( songRow );
+}
+
+const addGroupOwnerRow = function( owner ) {
+	const ownerRow = $("#groupDialogOwnerRowTemplate")
+		.children()
+		.clone( true, true );
+
+	ownerRow
+		.find(".groupDialogRemoveOwner")
+		.on( "click", removeOwnerRow );
+	ownerRow
+		.find( ".groupDialogOwner" )
+		.val( owner );
+	$( "#groupOwnerParent" ).append( ownerRow );
+};
+
+const groupDialogSave = async function( event ) {
+	const owners = [];
+
+	$("#groupOwnerParent" ).find(".groupDialogOwner")
+		.each( (i, v) => {
+			owners.push( $( v ).val() );
+	} );
+
+	if( !owners.includes( firebaseUser.email ) ) {
+		owners.push( firebaseUser.email );
+	}
+
+	let docId = $( "#groupDialogName" ).attr( "groupDocId" );
+
+	console.log( "docId", docId );
+
+	const groupData = {
+		name : $( "#groupDialogName" ).val(),
+		owners : owners
+	};
+
+	if( docId != null ) {
+		await firebase.firestore()
+		.collection( 'Groups' )
+		.doc( docId )
+		.set( groupData );
+	} else {
+		const groupRef = await firebase.firestore()
+		.collection( 'Groups' )
+		.add( groupData );
+
+		groupRef.onSnapshot( groupDocUpdate );
+
+		console.log( "groupRef", groupRef);
+
+		docId = groupRef.id;
+	}
+
+	$( "#groupSongParent" ).find( "input" ).each( async ( i, v ) => {
+		const songKey = $( v ).val();
+		const songDocId = $( v ).attr( "songDocId" );
+
+		if( songKey == "" ) {
+			return;
+		}
+
+		if( $( v ).hasClass( "removed" ) ) {
+			if( songDocId != undefined ) {
+				firebase.firestore()
+					.collection( 'Groups' )
+					.doc( docId )
+					.collection( "Songs" )
+					.doc( songDocId )
+					.delete();
+			}
+			return;
+		}
+
+		saveSongDataToFirebaseGroup( songKey, docId, songDocId );
+	} );
+}
+
+const saveSongDataToFirebaseGroup = async function(
+	songKey,
+	docId,
+	songDocId ) {
+		console.log( "saveSongDataToFirebaseGroup ->");
+	/*
+		Vad på en låt vill jag dela i gruppen?
+		- Kanske
+			markörerna
+			states
+			info
+			fileData,
+			serverId
+
+
+
+
+		Vad delar jag när jag laddar upp den på gamla sättet?
+			- allt utom localInformation...
+
+		jag börjar med allt utom localInformation :)
+
+	*/
+	const publicData = Troff.removeLocalInfo( nDB.get( songKey ) );
+
+	/*
+	publicData.fileUrl, där ligger själva url-en till låten
+	(om den inte finns, så kanske den borde laddas upp
+	kanske någon annan stanns (med sån där rules o så...))
+	*/
+
+	const songData = {
+		songKey : songKey,
+		jsonDataInfo : JSON.stringify( publicData )
+	};
+
+console.log( "songDocId", songDocId);
+
+	if( songDocId != undefined ) {
+		firebase.firestore()
+			.collection( 'Groups' )
+			.doc( docId )
+			.collection( "Songs" )
+			.doc( songDocId )
+			.set( songData );
+	} else {
+		let docRef = await firebase.firestore()
+			.collection( 'Groups' )
+			.doc( docId )
+			.collection( "Songs" )
+			.add( songData );
+
+		docRef.onSnapshot( songDocUpdate );
+	}
+};
+
+/*
+vilka låtar har fileUrl?
+
+de låtar som jag laddar upp?
+	- nej
+låtar som jag laddar ner
+	- ja!
+*/
+
+
+const ifGroupSongUpdateFirestore = function( songKey ) {
+	console.log( "ifroupSongUpdateFirestore????? what is this group?" );
+	const myGroups = DB.getMyFirestoreGroups();
+	firestoreIdentifierList = myGroups[ songKey ];
+	if( firestoreIdentifierList == undefined ) {
+		return;
+	}
+	console.log( "ifGroupSongUpdateFirestore: update song", songKey );
+	/*
+	myGroups = {
+		songKey1 : [
+			{"groupDocId" : groupDocId, "songDocId" : songDocId},
+			{"groupDocId" : groupDocId1, "songDocId" : songDocId}
+		],
+		...
+	}
+	*/
+
+
+
+
+	// If this song is in no groups =>
+	// firestoreIdentifierList will be undefined and
+	// ?. will simply return undefined instead of craching...
+	firestoreIdentifierList?.forEach( fi => {
+		console.log( "B -> saveSongDataToFirebaseGroup");
+		saveSongDataToFirebaseGroup(
+			songKey,
+			fi.groupDocId,
+			fi.songDocId);
+	});
+
+}
+
 
 const setUiToNotSignIn = function( user ) {
 	$( ".hide-on-sign-out" ).addClass("hidden");
@@ -235,7 +541,28 @@ auth.onAuthStateChanged( user => {
 	// The signed-in user info.
 	setUiToSignIn( firebaseUser );
 	initiateAllGroupsFromFirebase();
+
+
+	testFirebaseStorage();
 });
+
+const testFirebaseStorage = async function() {
+	console.log( " testFirebaseStorage -> " );
+	let groupId = "nAlXxYsvY2HDhUesoPdi";
+	var storageRef = firebase.storage()
+		.ref("Groups/" + groupId + "/Waterfall.jpeg");
+
+	storageRef.getDownloadURL().then(function( url ) {
+		console.log(" Waterfall = " + url);
+		$( "#myimg" ).attr( "src" , url);
+	});
+
+	/* så, när jag loggar in, kolla om jag har låtarna i varje grupp
+		har jag inte det, så ladda ner dom och lägg i cachen?
+
+		Måste se till att dom INTE laddas ner varje gång!
+	*/
+};
 
 const mergeSongHistorys = function( song1, song2 ) {
 	if( song1 == null ) return song2;
@@ -1390,6 +1717,21 @@ var TroffClass = function(){
 		return "#" + serverId + "&" + encodeURI( fileName )
 	}
 
+	/*Troff*/ this.removeLocalInfo = function( markerObject ) {
+		markerObject.localInformation = undefined;
+		return markerObject;
+	};
+
+
+/*
+	för att ge access i storage till någon i en firestore grupp!
+	https://stackoverflow.com/questions/46861983/can-firebase-cloud-storage-rules-validate-against-firestore-data
+
+	Bästa exemplet!  :
+	https://firebase.blog/posts/2022/09/announcing-cross-service-security-rules
+*/
+
+
 	/*Troff*/ this.uploadSongToServer = async function( event ) {
 		"use strict";
 
@@ -1408,11 +1750,13 @@ var TroffClass = function(){
 			}
 
 			//removing localInformation before sending it to server:
-			markerObject.localInformation = undefined;
+			const publicData = Troff.removeLocalInfo(markerObject);
 
-			let resp = await fileHandler.sendFile( songKey, markerObject );
+			let resp = await fileHandler.sendFile( songKey, publicData );
+			console.log( "resp", resp );
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
+			nDB.setOnSong( songKey, "fileUrl", resp.fileUrl );
 
 			Troff.saveDownloadLinkHistory(
 				resp.id, resp.fileName, fakeTroffData
@@ -4417,6 +4761,73 @@ var DBClass = function(){
 		});//end get all keys
 	};
 
+	/*DB*/this.removeFromMyFirestoreGroups = function( songDocId ) {
+		const myGroups = DB.getMyFirestoreGroups();
+		
+		Object.entries( myGroups ).forEach( v => {
+			let idObjectList = v[1];
+			idObjectList = idObjectList
+				.filter( o => o.songDocId != songDocId );
+			if( idObjectList.length == 0 ){
+				delete myGroups[v[0]];
+			} else {
+				myGroups[v[0]] = idObjectList;	
+			}
+		});
+
+		nDB.set( "TROFF_MY_FIRESTORE_GROUPS", myGroups );
+	}
+
+	/*DB*/this.addToMyFirestoreGroups = function(
+		groupDocId,
+		songDocId,
+		songKey) {
+
+		const myGroups = DB.getMyFirestoreGroups();
+		var thisSong = myGroups[ songKey ];
+
+		if( thisSong == undefined ) {
+			thisSong = [];
+		}
+	
+		const thisSongIsInThisGroup = thisSong.some( o =>
+			o.groupDocId == groupDocId && o.songDocId == songDocId );
+	
+		if( thisSongIsInThisGroup ) {
+			return;
+		}
+		thisSong.push( {
+			"groupDocId": groupDocId,
+			"songDocId": songDocId
+		} );
+		myGroups[ songKey ] = thisSong;
+	
+		nDB.set( "TROFF_MY_FIRESTORE_GROUPS", myGroups );
+		/*
+		myGroups = {
+			songKey1 : [
+				{"groupDocId" : groupDocId, "songDocId" : songDocId},
+				{"groupDocId" : groupDocId1, "songDocId" : songDocId}
+			],
+			...
+		}
+		*/
+	}
+
+
+	/* 
+		Varför vill jag har myFirestoreGroups????
+		För att om en låt ligger i flera grupper, så när låten uppdateras
+		så behvöer den skicka uppdateringen till alla grupper! 
+	*/
+	/*DB*/this.getMyFirestoreGroups = function() {
+		let myGroups = nDB.get( "TROFF_MY_FIRESTORE_GROUPS" );
+		if( myGroups == undefined ) {
+			myGroups = {};
+		}
+		return myGroups;
+	};
+
 	/*DB*/this.saveSonglists_new = function() {
 		var i,
 			aoSonglists = [],
@@ -4524,6 +4935,10 @@ var DBClass = function(){
 
 		nDB.set( songId, song );
 		updateVersionLink( songId );
+
+
+		ifGroupSongUpdateFirestore( songId );
+
 	});
 	};// end updateMarker
 
@@ -4545,6 +4960,8 @@ var DBClass = function(){
 		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
+
+		ifGroupSongUpdateFirestore( songId );
 		if( callback ) {
 			callback();
 		}
@@ -4594,6 +5011,7 @@ var DBClass = function(){
 
 		nDB.set( songId, song );
 
+		ifGroupSongUpdateFirestore( songId );
 		if( callback ) {
 			callback();
 		}
@@ -4626,6 +5044,8 @@ var DBClass = function(){
 		DB.setCurrent(songId, 'info', info, function() {
 			nDB.setOnSong( songId, "serverId", undefined );
 			Troff.setUrlToSong( undefined, null );
+
+			ifGroupSongUpdateFirestore( songId );
 			updateVersionLink( songId );
 		});
 	};
@@ -5009,6 +5429,10 @@ var IOClass = function(){
 
 		$( "#signOut" ).on( "click", signOut );
 
+		$( ".buttNewGroup" ).on( "click", newGroupDialog );
+		$( "#groupDialogSave" ).on( "click", groupDialogSave );
+		$( "#groupAddOwnerButt" ).on( "click", () => {addGroupOwnerRow();} );
+		$( "#groupAddSongButt" ).on( "click", () => {addGroupSongRow();} );
 		window.addEventListener('resize', function() {
 			Troff.setAppropriateMarkerDistance();
 		});
