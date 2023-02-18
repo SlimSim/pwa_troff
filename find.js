@@ -82,13 +82,23 @@ $(document).ready( async function() {
 	});
 
 	const setUiToNotSignIn = function( user ) {
-		$("#userName").addClass("hidden").text( "" );
+		$("#userName")
+			.addClass("hidden")
+			.text( "" );
+		$("#userPhoto")
+			.addClass("hidden")
+			.attr( "src", "" );
 		$("#googleSignIn").removeClass("hidden");
 		$("#signOut").addClass("hidden");
 	}
 
 	const setUiToSignIn = async function( user ) {
-		$("#userName").removeClass("hidden").text( user.displayName );
+		$("#userName")
+			.removeClass("hidden")
+			.text( user.displayName );
+		$("#userPhoto")
+			.removeClass("hidden")
+			.attr( "src", user.photoURL);
 		$("#googleSignIn").addClass("hidden");
 		$("#signOut").removeClass("hidden");
 	}
