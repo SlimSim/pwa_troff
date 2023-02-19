@@ -232,11 +232,10 @@ const groupDocUpdate = function( doc ) {
 
 }
 
-const songDocUpdate = function( doc ) {
-	console.log( "songDocUPdate ->");
+const songDocUpdate = async function( doc ) {
+	console.log( "songDocUPdate ->" );
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
-
 
 	if( !doc.exists ) {
 		console.error( "songDocUpdate: oc no longer exists!", doc.id );
@@ -246,13 +245,27 @@ const songDocUpdate = function( doc ) {
 
 	const songData = doc.data();
 	const songKey = songData.songKey;
+	const fileUrl = songData.fileUrl;
 	const existingMarkerInfo = nDB.get( songKey );
 	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
-	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
+	
+	if( existingMarkerInfo != null ) {
+		newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
+	}
 
 	nDB.set( songKey, newMarkerInfo );
 
-	DB.addToMyFirestoreGroups(groupDocId, songDocId, songKey );
+	DB.addToMyFirestoreGroups(groupDocId, songDocId, songKey, fileUrl );
+
+	console.log( "songDocUpdate: songKey:", songKey, "fileUrl:", fileUrl);
+	if( !(await fileHandler.doesFileExistInCache( songKey ) ) ) {
+		console.log( "songDocUpdate: songKey dont exist in cache", songKey);
+		// get file fileUrl!
+		await fileHandler.fetchAndSaveResponse( fileUrl, songKey );
+
+		addItem_NEW_2( songKey );
+		$.notify( songKey + " was successfully added" );
+	}
 
 }
 
@@ -411,6 +424,10 @@ const groupDialogSave = async function( event ) {
 					.collection( "Songs" )
 					.doc( songDocId )
 					.delete();
+
+
+				//TODO: låten i fireStore - mappen tas INTE bort just nu, 
+				// gör det :)
 			}
 			return;
 		}
@@ -455,16 +472,33 @@ const saveSongDataToFirebaseGroup = async function(
 		jsonDataInfo : JSON.stringify( publicData )
 	};
 
-console.log( "songDocId", songDocId);
+	console.log( "songDocId", songDocId);
 
 	if( songDocId != undefined ) {
+
+		//här måste jag se till att fileUrl läggs på songData!
+
+		const myGroups = DB.getMyFirestoreGroups();
+		const firestoreIdentifierList = myGroups[ songKey ];
+		songData.fileUrl = firestoreIdentifierList?.find( fi =>
+			fi.groupDocId == docId 
+			&& fi.songDocId == songDocId )?.fileUrl;
+
 		firebase.firestore()
 			.collection( 'Groups' )
 			.doc( docId )
 			.collection( "Songs" )
 			.doc( songDocId )
 			.set( songData );
+
 	} else {
+		songData.fileUrl = await uploadSongToFirebaseGroup( 
+			docId,
+			songKey
+			);
+
+		console.log( "docId", docId);
+		console.log( "songData", songData);
 		let docRef = await firebase.firestore()
 			.collection( 'Groups' )
 			.doc( docId )
@@ -474,6 +508,19 @@ console.log( "songDocId", songDocId);
 		docRef.onSnapshot( songDocUpdate );
 	}
 };
+
+const uploadSongToFirebaseGroup = async function(
+	groupId,
+	songKey ) {
+	
+	console.log( "uploadSongToFirebaseGroup -> " );
+	console.log( ": -> fileHandler.sendFileToFirebase" );
+	const [fileUrl, file] = await fileHandler
+		.sendFileToFirebase( songKey, "Groups/"+ groupId );
+	console.log( ": <- fileHandler.sendFileToFirebase, fileUrl", fileUrl );
+	return fileUrl;
+	
+}
 
 /*
 vilka låtar har fileUrl?
@@ -488,7 +535,7 @@ låtar som jag laddar ner
 const ifGroupSongUpdateFirestore = function( songKey ) {
 	console.log( "ifroupSongUpdateFirestore????? what is this group?" );
 	const myGroups = DB.getMyFirestoreGroups();
-	firestoreIdentifierList = myGroups[ songKey ];
+	const firestoreIdentifierList = myGroups[ songKey ];
 	if( firestoreIdentifierList == undefined ) {
 		return;
 	}
@@ -543,12 +590,12 @@ auth.onAuthStateChanged( user => {
 	initiateAllGroupsFromFirebase();
 
 
-	testFirebaseStorage();
+	//testFirebaseStorage();
 });
 
 const testFirebaseStorage = async function() {
 	console.log( " testFirebaseStorage -> " );
-	let groupId = "nAlXxYsvY2HDhUesoPdi";
+	let groupId = "3p9qg7R6sS01q3sBnZwg";
 	var storageRef = firebase.storage()
 		.ref("Groups/" + groupId + "/Waterfall.jpeg");
 
@@ -4781,7 +4828,8 @@ var DBClass = function(){
 	/*DB*/this.addToMyFirestoreGroups = function(
 		groupDocId,
 		songDocId,
-		songKey) {
+		songKey,
+		fileUrl) {
 
 		const myGroups = DB.getMyFirestoreGroups();
 		var thisSong = myGroups[ songKey ];
@@ -4798,7 +4846,8 @@ var DBClass = function(){
 		}
 		thisSong.push( {
 			"groupDocId": groupDocId,
-			"songDocId": songDocId
+			"songDocId": songDocId,
+			"fileUrl" : fileUrl
 		} );
 		myGroups[ songKey ] = thisSong;
 	

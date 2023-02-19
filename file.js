@@ -206,70 +206,92 @@ $(function () {
 
 	};
 
+	fileHandler.sendFileToFirebase = async function(
+		fileKey,
+		storageDir
+		) {
+
+			console.log( "fileKey", fileKey);
+			console.log( "storageDir", storageDir);
+		if( await cacheImplementation.isSongV2( fileKey ) ) {
+			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
+			we apologize for the inconvenience.
+			Please add the file "${fileKey}" to troff again,
+			reload the page and try to upload it again` );
+		}
+
+		const cachedResponse = await caches.match( fileKey );
+		if ( cachedResponse === undefined ) {
+			throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
+			Please add the song to Troff and try to upload it again.` );
+		}
+
+		const myBlob = await cachedResponse.blob();
+
+		const file = new File(
+			[myBlob],
+			fileKey,
+			{type: myBlob.type}
+		);
+
+		const fileHash = await hashFile( file );
+
+		const fileUrl = await firebaseWrapper
+			.uploadFile( fileHash, file, storageDir )
+			.catch( error => {
+				if( error instanceof ShowUserException ) {
+					throw error;
+				}
+			});
+
+		console.log( "fileUrl", fileUrl);
+		return [fileUrl, file];
+	}
+
+	/**
+	 * Sends both the file and the TroffData to Firebase
+	 * @param {string} fileKey 
+	 * @param {TroffData-object} oSongTroffInfo 
+	 * @param {string} storageDir 
+	 * @returns {} object with troffData id, url and fileName
+	 */
 	fileHandler.sendFile = async function( 
 		fileKey,
 		oSongTroffInfo,
 		storageDir = "TroffFiles" ) {
-		if( await cacheImplementation.isSongV2( fileKey ) ) {
-			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
-            we apologize for the inconvenience.
-            Please add the file "${fileKey}" to troff again,
-            reload the page and try to upload it again` );
-		}
+
+		const [fileUrl, file] = await fileHandler
+			.sendFileToFirebase( fileKey, storageDir );
 
 		const strSongTroffInfo = JSON.stringify( oSongTroffInfo );
+		const troffData = {
+			//id: - to be added after hashing
+			fileName: file.name,
+			fileType: file.type,
+			fileSize: file.size,
+			fileUrl: fileUrl,
+			troffDataPublic : true,
+			troffDataUploadedMillis : (new Date()).getTime(),
+			markerJsonString: strSongTroffInfo
+		};
 
-		return caches.match( fileKey ).then(cachedResponse => {
-			if ( cachedResponse === undefined ) {
-				throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
-                Please add the song to Troff and try to upload it again.` );
-			}
+		troffData.id = crc32Hash( JSON.stringify( troffData ) );
 
-			return cachedResponse.blob().then( async myBlob => {
-
-				var file = new File(
-					[myBlob],
-					fileKey,
-					{type: myBlob.type}
-				);
-
-        let fileHash = await hashFile( file );
-
-				const fileUrl = await firebaseWrapper
-					.uploadFile( fileHash, file, storageDir )
-					.catch( error => {
-						if( error instanceof ShowUserException ) {
-							throw error;
-						}
-					});
-
-				const troffData = {
-					//id: - to be added after hashing
-					fileName: file.name,
-					fileType: file.type,
-					fileSize: file.size,
-					fileUrl: fileUrl,
-					troffDataPublic : true,
-					troffDataUploadedMillis : (new Date()).getTime(),
-					markerJsonString: strSongTroffInfo
-				};
-
-        troffData.id = crc32Hash( JSON.stringify( troffData ) );
-
-				return firebaseWrapper.uploadTroffData( troffData ).then( retVal => {
-					return {
-						id: troffData.id,
-						fileUrl: troffData.fileUrl,
-						fileName: troffData.fileName
-						//fileType: troffData.fileType,
-						//fileSize: troffData.fileSize,
-						//fileId: troffData.fileId,
-						//markerJsonString: troffData.markerJsonString
-					};
-				});
-
-			});
+		return firebaseWrapper.uploadTroffData( troffData ).then( retVal => {
+			return {
+				id: troffData.id,
+				fileUrl: troffData.fileUrl,
+				fileName: troffData.fileName
+				//fileType: troffData.fileType,
+				//fileSize: troffData.fileSize,
+				//fileId: troffData.fileId,
+				//markerJsonString: troffData.markerJsonString
+			};
+		});
+/*
+		});
     });
+	*/
 	};
 
 	fileHandler.handleFiles = async function( files, callbackFunk ) {
@@ -294,9 +316,16 @@ $(function () {
 		storageDir = "TroffFiles" ) {
 
 
+
+//eeeee vart specar jag vilken grupp den ska in i? alltså vilken sub-mapp?
+
+		console.log( "storageDir", storageDir);
 		const storageRef = firebase.storage().ref( storageDir );
+		console.log( "storageRef", storageDir);
 		const fileRef = storageRef.child( fileId );
+		console.log( "fileRef", fileRef);
 		const task = fileRef.put( file );
+		console.log( "task", task);
 
 		return new Promise((resolve, reject) => {
 
