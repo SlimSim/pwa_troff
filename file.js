@@ -315,17 +315,9 @@ $(function () {
 		file,
 		storageDir = "TroffFiles" ) {
 
-
-
-//eeeee vart specar jag vilken grupp den ska in i? alltså vilken sub-mapp?
-
-		console.log( "storageDir", storageDir);
 		const storageRef = firebase.storage().ref( storageDir );
-		console.log( "storageRef", storageDir);
 		const fileRef = storageRef.child( fileId );
-		console.log( "fileRef", fileRef);
 		const task = fileRef.put( file );
-		console.log( "task", task);
 
 		return new Promise((resolve, reject) => {
 

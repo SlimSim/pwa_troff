@@ -1195,6 +1195,9 @@ table.dataTable .dataTables_empty{
 	display: none !important;
 }
 
+.groupIndication {
+	border-left: 2px solid red;
+}
 
 @media (min-width:576px){ /* ie width is GREATER than 576px */
 	/* NOT ON MOBILE-PHONES */
