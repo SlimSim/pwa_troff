@@ -24,9 +24,16 @@
 saker jag vill göra
 1) på något sätt integrera grupp med låt-lista
 	(men man måste kunna se att en låtlista är en grupp)
-2) ta bort filen från firebase när den tas bort från gruppen
+KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
 3) markera på en låt att den är med i en grupp
-4) lista på vald grupp VILKA grupper den är med i!
+	lägg till visualQue (.groupIndication) när låtar läggs till i en grupp
+	ta bort visualQue när låtar tas bort från en grupp...
+	Fixa bättre style (.groupIndication) för låtar i grupp!
+4) lista på vald låt VILKA grupper den är med i!
+	visa någonstanns i inforutan uppe till vänster
+	(kanske en tool-tip eller något som fälls ut?
+		iaf om den tillhör fler än 1 grupp?)
+
 */
 
 
@@ -122,8 +129,6 @@ const signOut = function() {
 };
 
 const initiateAllGroupsFromFirebase = async function() {
-	console.clear();
-
 	firebase.firestore()
 		.collection( 'Groups' )
 		.where( "owners", "array-contains", firebaseUser.email)
@@ -848,11 +853,11 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 function updateGroupNotification( songKey ) {
 	if( DB.getNrOfGroupsThisSongIsIn( songKey ) == 0 ) {
-		$( "#mediaInfoBox" ).removeClass( "groupIndication" );
+		$( ".groupIndicationDiv" ).removeClass( "groupIndication" );
 		return;
 	}
 
-	$( "#mediaInfoBox" ).addClass( "groupIndication" );
+	$( ".groupIndicationDiv" ).addClass( "groupIndication" );
 };
 
 function updateVersionLink( path ) {

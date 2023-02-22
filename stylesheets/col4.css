@@ -196,6 +196,7 @@ li[isdirectory="true"]:not(:first-child) {
 .roundButt, .roundButt2,
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
+.groupIndication,
 .selected.important {
 	border-color: #231F20; /* accentColor2 */
 }

@@ -148,6 +148,7 @@ li[isdirectory="true"]:not(:first-child) {
 
 
 /* accentColor1 */
+.groupIndication,
 .drop-active.selected{
 	border-color: #FFEB3B; /* accentColor1 */
 }
