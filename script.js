@@ -22,6 +22,12 @@
 
 /*
 saker jag vill göra
+0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
+	säg att jag har test.mp3 igång.
+	lisa har sin test.mp3 igång och lägger till 10 markerör
+	efter det ändrar jag i en av mina markörer, 
+	då kommer den skriva över lisas ändringar med mina markörer
+		(som inte innehåller hennes senaste 10...)
 1) på något sätt integrera grupp med låt-lista
 	(men man måste kunna se att en låtlista är en grupp)
 KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
@@ -33,10 +39,10 @@ KLAR! 3) markera på en låt att den är med i en grupp
 	visa någonstanns i inforutan uppe till vänster
 	(kanske en tool-tip eller något som fälls ut?
 		iaf om den tillhör fler än 1 grupp?)
-5) lägg på/ta bort .groupIndication på .groupIndicationDiv
+KLAR 5) lägg på/ta bort .groupIndication på .groupIndicationDiv
 		om en aktiv låt läggs till / tas bort ifrån en grupp
 
-6) hur blir det med .groupIndication om en låt ligger i flera
+KLAR 6) hur blir det med .groupIndication om en låt ligger i flera
 		grupper och tas bort från en av dom?
 */
 
@@ -201,7 +207,9 @@ const songDocUpdate = async function( doc ) {
 			"info"
 		);
 
+		const songKey = DB.songDocIdToSongKey( songDocId );
 		DB.removeFromMyFirestoreGroups( songDocId, undefined );
+		removeGroupIndicationIfSongInNoGroup( songKey );
 		return;
 	}
 
@@ -234,6 +242,22 @@ const songDocUpdate = async function( doc ) {
 
 }
 
+const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
+	if( DB.getNrOfGroupsThisSongIsIn( songKey ) > 0 ) {
+		return;
+	}
+
+	$( "#dataSongTable" )
+		.find( `[data-song-key="${songKey}"]` )
+		.removeClass( "groupIndication" );
+
+	if( Troff.getCurrentSong() != songKey ) {
+		return;
+	}
+
+	$( ".groupIndicationDiv" )
+		.removeClass( "groupIndication" );
+}
 
 const openGroupDialog = async function( doc ) {
 	emptyGroupDialog();
@@ -405,14 +429,6 @@ const groupDialogSave = async function( event ) {
 						error );
 				});
 
-			$( "#dataSongTable" )
-				.find( `[data-song-key="${songKey}"]` )
-				.removeClass( "groupIndication" );
-
-			if( Troff.getCurrentSong() == songKey ) {
-				$( ".groupIndicationDiv" )
-					.removeClass( "groupIndication" );
-			}
 			return;
 		}
 
