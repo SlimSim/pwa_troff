@@ -25,7 +25,7 @@ saker jag vill göra
 1) på något sätt integrera grupp med låt-lista
 	(men man måste kunna se att en låtlista är en grupp)
 KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
-3) markera på en låt att den är med i en grupp
+KLAR! 3) markera på en låt att den är med i en grupp
 	lägg till visualQue (.groupIndication) när låtar läggs till i en grupp
 	ta bort visualQue när låtar tas bort från en grupp...
 	Fixa bättre style (.groupIndication) för låtar i grupp!
@@ -351,9 +351,9 @@ const groupDialogSave = async function( event ) {
 
 	if( docId != null ) {
 		await firebase.firestore()
-		.collection( 'Groups' )
-		.doc( docId )
-		.set( groupData );
+			.collection( 'Groups' )
+			.doc( docId )
+			.set( groupData );
 	} else {
 		const groupRef = await firebase.firestore()
 			.collection( 'Groups' )
@@ -373,32 +373,37 @@ const groupDialogSave = async function( event ) {
 		}
 
 		if( $( v ).hasClass( "removed" ) ) {
-			if( songDocId != undefined ) {
-
-				firebase.firestore()
-					.collection( 'Groups' )
-					.doc( docId )
-					.collection( "Songs" )
-					.doc( songDocId )
-					.delete();
-
-				const fileUrl = DB.songKeyToFileUrl(
-					songKey,
-					docId,
-					songDocId );
-
-				const storageFileName = fileUrlToStorageFileName( fileUrl ); 
-
-				let storageRef = firebase.storage()
-					.ref("Groups/" + docId + "/" + storageFileName);
-				
-				storageRef.delete().then(() => {
-					}).catch((error) => {
-						console.error( 
-							songKey + " could not be deleted!",
-							error );
-					});
+			if( songDocId == undefined ) {
+				return;
 			}
+
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( docId )
+				.collection( "Songs" )
+				.doc( songDocId )
+				.delete();
+
+			const fileUrl = DB.songKeyToFileUrl(
+				songKey,
+				docId,
+				songDocId );
+
+			const storageFileName = fileUrlToStorageFileName( fileUrl );
+
+			let storageRef = firebase.storage()
+				.ref("Groups/" + docId + "/" + storageFileName);
+
+			storageRef.delete().then(() => {
+				}).catch((error) => {
+					console.error(
+						songKey + " could not be deleted!",
+						error );
+				});
+
+			$( "#dataSongTable" )
+				.find( `[data-song-key="${songKey}"]` )
+				.removeClass( "groupIndication" );
 			return;
 		}
 
@@ -472,6 +477,11 @@ const saveSongDataToFirebaseGroup = async function(
 			.doc( docId )
 			.collection( "Songs" )
 			.add( songData );
+
+
+		$( "#dataSongTable" )
+			.find( `[data-song-key="${songKey}"]` )
+			.addClass( "groupIndication" );
 
 		docRef.onSnapshot( songDocUpdate );
 	}
