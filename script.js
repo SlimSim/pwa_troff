@@ -33,7 +33,11 @@ KLAR! 3) markera på en låt att den är med i en grupp
 	visa någonstanns i inforutan uppe till vänster
 	(kanske en tool-tip eller något som fälls ut?
 		iaf om den tillhör fler än 1 grupp?)
+5) lägg på/ta bort .groupIndication på .groupIndicationDiv
+		om en aktiv låt läggs till / tas bort ifrån en grupp
 
+6) hur blir det med .groupIndication om en låt ligger i flera
+		grupper och tas bort från en av dom?
 */
 
 
@@ -404,6 +408,11 @@ const groupDialogSave = async function( event ) {
 			$( "#dataSongTable" )
 				.find( `[data-song-key="${songKey}"]` )
 				.removeClass( "groupIndication" );
+
+			if( Troff.getCurrentSong() == songKey ) {
+				$( ".groupIndicationDiv" )
+					.removeClass( "groupIndication" );
+			}
 			return;
 		}
 
@@ -482,6 +491,11 @@ const saveSongDataToFirebaseGroup = async function(
 		$( "#dataSongTable" )
 			.find( `[data-song-key="${songKey}"]` )
 			.addClass( "groupIndication" );
+
+		if( Troff.getCurrentSong() == songKey ) {
+			$( ".groupIndicationDiv" )
+				.addClass( "groupIndication" );
+		}
 
 		docRef.onSnapshot( songDocUpdate );
 	}
