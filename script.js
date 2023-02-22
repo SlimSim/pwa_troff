@@ -216,8 +216,8 @@ const songDocUpdate = async function( doc ) {
 	if( !(await fileHandler.doesFileExistInCache( songKey ) ) ) {
 		try {
 			await fileHandler.fetchAndSaveResponse(
-				troffData.fileUrl,
-				fileName );
+				songData.fileUrl,
+				songKey );
 		} catch ( error ) {
 			return errorHandler.fileHandler_fetchAndSaveResponse(
 				error,
