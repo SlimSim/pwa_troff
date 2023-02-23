@@ -30,15 +30,16 @@ saker jag vill göra
 		(som inte innehåller hennes senaste 10...)
 1) på något sätt integrera grupp med låt-lista
 	(men man måste kunna se att en låtlista är en grupp)
+4) lista på vald låt VILKA grupper den är med i!
+	visa någonstanns i inforutan uppe till vänster
+	(kanske en tool-tip eller något som fälls ut?
+		iaf om den tillhör fler än 1 grupp?)
 KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
 KLAR! 3) markera på en låt att den är med i en grupp
 	lägg till visualQue (.groupIndication) när låtar läggs till i en grupp
 	ta bort visualQue när låtar tas bort från en grupp...
 	Fixa bättre style (.groupIndication) för låtar i grupp!
-4) lista på vald låt VILKA grupper den är med i!
-	visa någonstanns i inforutan uppe till vänster
-	(kanske en tool-tip eller något som fälls ut?
-		iaf om den tillhör fler än 1 grupp?)
+
 KLAR 5) lägg på/ta bort .groupIndication på .groupIndicationDiv
 		om en aktiv låt läggs till / tas bort ifrån en grupp
 
@@ -233,7 +234,7 @@ const songDocUpdate = async function( doc ) {
 		} catch ( error ) {
 			return errorHandler.fileHandler_fetchAndSaveResponse(
 				error,
-				fileName
+				songKey
 				);
 		}
 		addItem_NEW_2( songKey );
