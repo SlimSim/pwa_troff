@@ -196,21 +196,23 @@ const groupDocUpdate = function( doc ) {
 
 }
 
+// onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
 
 	if( !doc.exists ) {
-		const fileName = DB.getFileNameFromSongDocId( doc.id );
+		const fileName = DB.getFileNameFromSongDocId( songDocId );
+		const groupName = $( `[group-id="${groupDocId}"]`).text()
 		$.notify(
-			`The song "${fileName}" has been removed from a group
+			`The song "${fileName}" has been removed from the group
+			${groupName}
 			\nBut the song and markers are still saved on your computer!`, 
 			"info"
 		);
 
-		const songKey = DB.songDocIdToSongKey( songDocId );
 		DB.removeFromMyFirestoreGroups( songDocId, undefined );
-		removeGroupIndicationIfSongInNoGroup( songKey );
+		removeGroupIndicationIfSongInNoGroup( fileName );
 		return;
 	}
 
@@ -4839,14 +4841,17 @@ var DBClass = function(){
 		const myGroupsE = Object.entries( myGroups );
 		
 		for( let i = 0; i < myGroupsE.length; i++ ) {
-			myGroupsE[i][1].some( idObject =>{
-				if( idObject.songDocId == songDocId ) {
-					return myGroupsE[i][0];
-				}
-			});
-		}
-		return "undefined";
+			let groupWithSongList = myGroupsE[i][1]
+				.filter( idObject => idObject.songDocId == songDocId);
 
+			if( groupWithSongList.length == 0 ) {
+				continue;
+			}
+			return myGroupsE[i][0];
+		}
+		console.info( `getFileNameFromSongDocId: songDocId (${songDocId})`
+			` did not return any fileName!`);
+		return "undefined";
 	};
 
 	/**
