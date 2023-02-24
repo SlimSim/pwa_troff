@@ -22,7 +22,7 @@
 
 /*
 saker jag vill göra
-0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
+KLAR 0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
 	säg att jag har test.mp3 igång.
 	lisa har sin test.mp3 igång och lägger till 10 markerör
 	efter det ändrar jag i en av mina markörer, 
@@ -218,6 +218,16 @@ const songDocUpdate = async function( doc ) {
 
 	const songData = doc.data();
 	const songKey = songData.songKey;
+
+	if( Troff.getCurrentSong() == songKey ) {
+		if( !doc.metadata.hasPendingWrites ) {
+			// The update has troffData that is not from this computer
+			// should replace the current troffData without interupting
+			// the current activity
+			replaceTroffDataWithoutInterupt( songData );
+		}
+	}
+
 	const fileUrl = songData.fileUrl;
 	const existingMarkerInfo = nDB.get( songKey );
 	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
@@ -243,6 +253,36 @@ const songDocUpdate = async function( doc ) {
 		$.notify( songKey + " was successfully added" );
 	}
 
+}
+
+const replaceTroffDataWithoutInterupt = function( songData ) {
+	const serverTroffData = JSON.parse( songData.jsonDataInfo );
+
+	// Update the states:
+	Troff.clearAllStates();
+	Troff.addButtonsOfStates(serverTroffData.aStates);
+
+	// Update the markers:
+	const currentMarkerId = $( '.currentMarker' ).attr('id');
+	const currentStopMarkerId = $( '.currentStopMarker' ).attr('id');
+	$( "#markerList" ).children().remove();
+	Troff.addMarkers(serverTroffData.markers);
+	$( '.currentMarker' ).removeClass( "currentMarker" );
+	$( '.currentStopMarker' ).removeClass( "currentStopMarker" );
+	$( "#" + currentMarkerId ).addClass( "currentMarker" );
+	$( "#" + currentStopMarkerId ).addClass( "currentStopMarker" );
+	Troff.setAppropriateActivePlayRegion();
+
+	// Update the Song info:
+	if( !$( "#songInfoArea").is( ":focus" ) ) {
+		Troff.setInfo( serverTroffData.info );
+	}
+
+	// Update the current marker info:
+	if( !$( "#markerInfoArea").is( ":focus" ) ) {
+		$( "#markerInfoArea")
+			.val( $("#" + currentMarkerId )[0].info );
+	}
 }
 
 const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
