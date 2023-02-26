@@ -22,19 +22,67 @@
 
 /*
 saker jag vill göra
+7) När låt-data uppdateras (tempo OCH info i song-listan 
+	(tup custom name mm) ) så ska den skicka till firebase
+1) på något sätt integrera grupp med låt-lista
+	(men man måste kunna se att en låtlista är en grupp)
+
+	så, en låtlistorna är sparade i localStorage med key
+		straoSongLists
+	varje låt-liste-objekt är
+		id, name, songs (ev isDirecotry)
+		(vad används ID till?)
+	en grup från firebase har
+		id, name, songs, owners
+	
+	Jag borde behandla grupperna i local storage presic på samam sätt som 
+		"vanliga listor". Men hur ska jag koppla ihop dom?
+	När jag skapar en grupp så skapas en lista, den får samam namn och låtar
+		och ett nytt attribut som är firestoreId
+	och på så sätt kan jag koppla ihop en grupp från firebase
+		(när grupperna laddas) med en befintlig låtlista
+	
+	om jag har en låtlista så vill jag kunna säga "gör till grupp"
+		detta ska jag ju INTE kunna göra med en låtlista som "tillhör" en grupp, eftersom en låtlista har antingen en eller ingen grupp!
+	
+	Så, låtlistor som har attributet firestoreId är grupper, 
+		dom som INTE har det är vanliga gamla Listor
+	
+	Kanske ska byta ut soptunnan bredvid en låt-lista mot en edit-knapp
+	och byta ut soptunnan bredvid en grupp mot en edit-knapp
+	pop-upp-dialogen kanske är samma dialog för grupp och låtlista men
+		att grupp visar lite flera saker, typ owners mm.
+		och att låt-lista visar namn, låtar och "konvertera till grupp kanske"
+
+		Gruppen ska ju också ha "ta bort grupp" eller "konvertera till låtlista" - och den måste ju ha en förklaring om att gruppen kommer försvinna från alla medlemmar och konverteras till låtlistor för dom.
+
+		man kanske också ska ha "lämna grupp" / 
+
+		måste fundera på hur jag ska visa 
+			"ta bort grupp för alla medlemmar"
+			"lämna grupp"
+			och om man gör något av detta, ska låtlistan vara kvar???
+
+		andra fina saker som grupper har kanske låt-listor också ska ha
+			så som färg, inforuta mm (så att straoSongLists blir så lika som möjligt ? :) )
+
+4) lista på vald låt VILKA grupper den är med i!
+	visa någonstanns i inforutan uppe till vänster
+	(kanske en tool-tip eller något som fälls ut?
+		iaf om den tillhör fler än 1 grupp?)
 KLAR 0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
 	säg att jag har test.mp3 igång.
 	lisa har sin test.mp3 igång och lägger till 10 markerör
 	efter det ändrar jag i en av mina markörer, 
 	då kommer den skriva över lisas ändringar med mina markörer
 		(som inte innehåller hennes senaste 10...)
-1) på något sätt integrera grupp med låt-lista
-	(men man måste kunna se att en låtlista är en grupp)
-4) lista på vald låt VILKA grupper den är med i!
-	visa någonstanns i inforutan uppe till vänster
-	(kanske en tool-tip eller något som fälls ut?
-		iaf om den tillhör fler än 1 grupp?)
 KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
+
+3.1) Det verkar som att låtar INTE tas bort från groupIndication ibland
+		Tex A horse...
+		det kanske bara är gammal data jag har men...
+		kanske ska kolla på att appen automatiskt uppdaterar den datan varje gång den får connection med firebase...???
+
 KLAR! 3) markera på en låt att den är med i en grupp
 	lägg till visualQue (.groupIndication) när låtar läggs till i en grupp
 	ta bort visualQue när låtar tas bort från en grupp...
@@ -2213,6 +2261,7 @@ var TroffClass = function(){
 		IO.updateCellInDataTable( "TAGS", songObject.fileData.tags, key );
 
 		nDB.set( key, songObject );
+		ifGroupSongUpdateFirestore( key );
 	};
 
 	/*Troff*/this.onEditUpdateName = () => {
@@ -4454,12 +4503,14 @@ var TroffClass = function(){
 				if( Number.isInteger( currTempo ) ){
 					$('#tapTempo').val( currTempo );
 					IO.updateCellInDataTable( "TEMPO", currTempo );
+					ifGroupSongUpdateFirestore( Troff.getCurrentSong() );
 				} else {
 					$('#tapTempo').val( "" );
 					IO.updateCellInDataTable( "TEMPO", "" );
 				}
 
 				$('#tapTempo')[0].dispatchEvent(new Event('input'));
+
 		};
 
 		this.setTempo = function( tempo ){
