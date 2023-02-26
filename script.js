@@ -306,6 +306,9 @@ const songDocUpdate = async function( doc ) {
 const replaceTroffDataWithoutInterupt = function( songData ) {
 	const serverTroffData = JSON.parse( songData.jsonDataInfo );
 
+	// Update tempo:
+	$( "#tapTempo" ).val( serverTroffData.TROFF_VALUE_tapTempo );
+
 	// Update the states:
 	Troff.clearAllStates();
 	Troff.addButtonsOfStates(serverTroffData.aStates);
@@ -4487,6 +4490,10 @@ var TroffClass = function(){
 			Troff.setAppropriateMarkerDistance();
 		};
 
+		this.onTapTempoSavedToDb = function() {
+			ifGroupSongUpdateFirestore( Troff.getCurrentSong() );
+		};
+
 		this.tapTime = function(){
 				previousTime = time;
 				time = new Date().getTime() / 1000;
@@ -4503,7 +4510,6 @@ var TroffClass = function(){
 				if( Number.isInteger( currTempo ) ){
 					$('#tapTempo').val( currTempo );
 					IO.updateCellInDataTable( "TEMPO", currTempo );
-					ifGroupSongUpdateFirestore( Troff.getCurrentSong() );
 				} else {
 					$('#tapTempo').val( "" );
 					IO.updateCellInDataTable( "TEMPO", "" );
@@ -4512,13 +4518,6 @@ var TroffClass = function(){
 				$('#tapTempo')[0].dispatchEvent(new Event('input'));
 
 		};
-
-		this.setTempo = function( tempo ){
-				$('#tapTempo').val( tempo );
-		};
-
-
-
 
 		this.fixMarkerExtraExtendedColor = function() {
 			$( "#markerList" ).children().removeClassStartingWith("extend_");
@@ -5606,7 +5605,7 @@ var IOClass = function(){
 		$('#speedPlus, #speedPlusDemo').click(() => { Troff.incrementInput( "#speedBar", + 5 ); gtag('event', 'Increment Speed', { 'event_category' : 'Perform change', 'event_label': $("#speedBar").val() } ); } );
 
 		$('#buttTapTempo').click( Troff.tapTime );
-
+		$( '#tapTempo' ).on( "savedToDbEvent", Troff.onTapTempoSavedToDb );
 
 		$('#rateDialogNoThanks').click(Rate.rateDialogNoThanks);
 		$('#rateDialogAskLater').click(Rate.rateDialogAskLater);
@@ -6315,6 +6314,7 @@ var IOClass = function(){
 
 		key = "TROFF_VALUE_" + id;
 		DB.setCurrent(Troff.getCurrentSong(), key, value );
+		event.target.dispatchEvent( new Event("savedToDbEvent") );
 	}
 
 	/*IO*/this.saveOnSongToggleClass = function( event ) {
