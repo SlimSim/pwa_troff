@@ -22,9 +22,13 @@
 
 /*
 saker jag vill göra
-7) När låt-data uppdateras (tempo OCH info i song-listan 
-	(tup custom name mm) ) så ska den skicka till firebase
 1) på något sätt integrera grupp med låt-lista
+
+
+	spara ny låtlista med lite markerade låtar
+	redigera befintlig låtlista :)
+
+
 	(men man måste kunna se att en låtlista är en grupp)
 
 	så, en låtlistorna är sparade i localStorage med key
@@ -70,7 +74,10 @@ saker jag vill göra
 	visa någonstanns i inforutan uppe till vänster
 	(kanske en tool-tip eller något som fälls ut?
 		iaf om den tillhör fler än 1 grupp?)
-KLAR 0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
+KLAR 7) När låt-data uppdateras (tempo OCH info i song-listan 
+	(tup custom name mm) ) så ska den skicka till firebase
+
+	KLAR 0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
 	säg att jag har test.mp3 igång.
 	lisa har sin test.mp3 igång och lägger till 10 markerör
 	efter det ändrar jag i en av mina markörer, 
@@ -238,8 +245,30 @@ const groupDocUpdate = function( doc ) {
 		$( "#groupList" ).append( liGroup );
 	}
 
+
+	/*
+	Så, här vill jag lägga till / byta ut denna grupp i en songList också
+	och se hur det lirar...
+
+	funktionen som anropas när save-knappen på new Songlist dialogen trycks
+	är 
+		saveSongList
+	fast! 
+	den funktionen öppnar upp new song-list dialogen...
+
+
+	(
+		kanske ska göra om detta så att songList får en enklare hantering
+		med edit också, så att det blir lättare att få en blick över det???
+	)
+
+	TODO:
+	jag tänker att jag inte vill "byta ut knappen mot en ny" här,
+	utan snarare uppdatera befintlig knapp, (som är en song-list-edit-button...)
+	*/
+
 	name.on( "click", () => {
-		openGroupDialog( doc );
+		preOpenGroupDialog( doc );
 	} );
 
 }
@@ -353,26 +382,69 @@ const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
 		.removeClass( "groupIndication" );
 }
 
-const openGroupDialog = async function( doc ) {
+const preOpenGroupDialog = async function( doc ) {
+	console.log( "preOpenGroupDialog -> " );
 	emptyGroupDialog();
 	const group = doc.data();
-	$( "#groupDialogName" ).val( group.name );
-	$( "#groupDialogName" ).attr( "groupDocId", doc.id );
-	group.owners.forEach( owner =>{
-		addGroupOwnerRow( owner );
-	} );
+	console.log( "preOpenGroupDialog -> doc.data", doc.data());
+/*
+	Vill ha: songList-objekt:
+	{
+		songListName:
+		songs: [
+			{
+				galleryId: 'pwa-galleryId',
+				fullPath: 'NW - Amaranth.mp3',
+				firebaseSongDocId <- If group :)
+			}
+		]
+		owners : []
+		id: 
+		firebaseGroupDocId:
+		isDirectory: false
+	}
+	*/
+	const songLIstObject = {
+		name : group.name,
+		firebaseGroupDocId : doc.id,
+		owners : group.owners,
+		songs : []
+	};
+	// här vill jag anropa openGroupDialog med en songLIstObject
+	
+	//$( "#groupDialogName" ).val( group.name );
+	//$( "#groupDialogName" ).attr( "groupDocId", doc.id );
+	// group.owners.forEach( owner =>{
+	// 	addGroupOwnerRow( owner );
+	// } );
 
 	const subCollection = await doc.ref.collection( "Songs" ).get();
 	subCollection.docs.forEach( songDoc => {
 		const song = songDoc.data();
-		addGroupSongRow( songDoc.id, song );
-	});
-	let dataInfo = $('#dataSongTable')
-		.DataTable()
-		.column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
-		.data();
+		console.log( "song", song);
 
+		songLIstObject.songs.push( {
+			galleryId: 'pwa-galleryId',
+			fullPath: song.songKey,
+			firebaseSongDocId : songDoc.id
+		});
+
+		// addGroupSongRow( songDoc.id, song );
+	});
+
+
+	//$( "#groupDialog" ).removeClass( "hidden" );
+	console.log( "preOpenGroupDialog: -> openGroupDialog songLIstObject:", songLIstObject)
+	openGroupDialog( songLIstObject );
+};
+
+const populateExampleSongsInGroupDialog = function() {
 	// TODO: fixa bättre sätt att lägga på låtarna!
+	let dataInfo = $('#dataSongTable')
+	.DataTable()
+	.column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
+	.data();
+
 	let songs = "";
 	dataInfo.each( v => {
 		songs +=  + "<br />\n";
@@ -380,14 +452,42 @@ const openGroupDialog = async function( doc ) {
 			"<li>").text( JSON.parse( v ).fullPath )
 		)
 	} );
+}
+
+const openGroupDialog = async function( songListObject ) {
+	console.log( "openGroupDialog ->", songListObject );
+
+	emptyGroupDialog();
+
+	const isGroup = songListObject.firebaseGroupDocId !== undefined;
+
+	$( "#groupDialogName" ).val( songListObject.name );
+	$( "#groupDialogName" ).data( "songListObjectId", songListObject.id );
+	$( "#groupDialogName" )
+		.data( "groupDocId", songListObject.firebaseGroupDocId );
+	
+	$( "#groupDialogIsGroup" ).prop('checked', isGroup);
+
+	songListObject.owners?.forEach( addGroupOwnerRow );
+
+	songListObject.songs.forEach( addGroupSongRow_NEW );
+
+	populateExampleSongsInGroupDialog();
 
 	$( "#groupDialog" ).removeClass( "hidden" );
-};
+
+}
 
 const emptyGroupDialog = function() {
+
+	$("#groupDialog").find( "form" ).trigger("reset");
+
 	$( "#groupOwnerParent" ).empty();
 	$( "#groupSongParent" ).empty();
+
+	// todo: byta ut attr groupDocId till data groupDocId!
 	$( "#groupDialogName" ).val( "" ).attr("groupDocId", null);
+	$( "#groupDialogName" ).data( "songListObjectId" )
 
 	$( "#song-examples" ).empty();
 }
@@ -438,6 +538,25 @@ const addGroupSongRow = function( songDocId, song ) {
 	$( "#groupSongParent" ).append( songRow );
 }
 
+const addGroupSongRow_NEW = function( songIdObject ) {
+
+	const songRow = $("#groupDialogSongRowTemplate")
+		.children()
+		.clone( true, true );
+
+	songRow
+		.find( ".groupDialogRemoveSong" )
+		.on( "click", removeSongRow );
+	songRow
+		.find( ".groupDialogSong" )
+		.data( "galleryId", songIdObject.galleryId )
+		.data( "firebaseSongDocId", songIdObject.firebaseSongDocId )
+		.val( songIdObject.fullPath );
+
+	$( "#groupSongParent" ).append( songRow );
+}
+
+
 const addGroupOwnerRow = function( owner ) {
 	const ownerRow = $("#groupDialogOwnerRowTemplate")
 		.children()
@@ -453,6 +572,124 @@ const addGroupOwnerRow = function( owner ) {
 };
 
 const groupDialogSave = async function( event ) {
+
+	const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
+	const groupDocId = $( "#groupDialogName" ).data( "groupDocId" );
+
+	const songListObject = {
+		id : $( "#groupDialogName" ).data( "songListObjectId" ),
+		name : $( "#groupDialogName" ).val(),
+	};
+
+	if( isGroup ) {
+	const owners = [];
+		$("#groupOwnerParent" ).find(".groupDialogOwner")
+			.each( (i, v) => {
+				owners.push( $( v ).val() );
+		} );
+
+		if( !owners.includes( firebaseUser.email ) ) {
+			owners.push( firebaseUser.email );
+		}
+
+		const groupData = {
+			name : $( "#groupDialogName" ).val(),
+			owners : owners
+		};
+		console.log( "groupDocId", groupDocId);
+
+
+		if( groupDocId != null ) {
+			await firebase.firestore()
+				.collection( 'Groups' )
+				.doc( groupDocId )
+				.set( groupData );
+		} else {
+			const groupRef = await firebase.firestore()
+				.collection( 'Groups' )
+				.add( groupData );
+
+			groupRef.onSnapshot( groupDocUpdate );
+
+			groupDocId = groupRef.id;
+		}
+
+
+		songListObject.owners = owners;
+		songListObject.firebaseGroupDocId = groupDocId;
+
+	}
+
+	const songs = [];
+	$( "#groupSongParent" ).find( "input" ).each( async ( i, v ) => {
+		const songKey = $( v ).val();
+
+		if ( $( v ).hasClass( "removed" )  ) {
+			return;
+		}
+
+		const galleryId = $( v ).data( "galleryId" );
+		const songDocId = $( v ).data( "firebaseSongDocId" );
+
+		const songIdObject = {
+			fullPath : songKey,
+			galleryId : galleryId,
+			firebaseSongDocId : songDocId
+		}
+
+		if( songKey == "" ) {
+			return;
+		}
+
+		
+		if (isGroup) {
+			if( $( v ).hasClass( "removed" ) ) {
+				if( songDocId == undefined ) {
+					return;
+				}
+
+				firebase.firestore()
+					.collection( 'Groups' )
+					.doc( groupDocId )
+					.collection( "Songs" )
+					.doc( songDocId )
+					.delete();
+
+				const fileUrl = DB.songKeyToFileUrl(
+					songKey,
+					groupDocId,
+					songDocId );
+
+				const storageFileName = fileUrlToStorageFileName( fileUrl );
+
+				let storageRef = firebase.storage()
+					.ref("Groups/" + groupDocId + "/" + storageFileName);
+
+				storageRef.delete().then(() => {
+					}).catch((error) => {
+						console.error(
+							songKey + " could not be deleted!",
+							error );
+					});
+
+				return;
+			}
+			saveSongDataToFirebaseGroup( songKey, groupDocId, songDocId );
+		}
+	
+		songs.push(  songIdObject );
+	} );
+	songListObject.songs = songs;
+
+	if ( songListObject.id == undefined ) {
+		Troff.addSonglistToHTML_NEW( songListObject );	
+	} else {
+		Troff.updateSognListInHTML( songListObject );
+	}
+	DB.saveSonglists_new();
+}
+
+const groupDialogSave_SAVE_fungerar = async function( event ) {
 	const owners = [];
 
 	$("#groupOwnerParent" ).find(".groupDialogOwner")
@@ -463,8 +700,11 @@ const groupDialogSave = async function( event ) {
 	if( !owners.includes( firebaseUser.email ) ) {
 		owners.push( firebaseUser.email );
 	}
+	// todo: fixa så att om det INTE är en grupp så ska inte firebaseUser.email pushas med (och om man inte är inloggad så ska det ju fungera endå...)
 
-	let docId = $( "#groupDialogName" ).attr( "groupDocId" );
+
+
+	let docId = $( "#groupDialogName" ).data( "groupDocId" );
 
 	const groupData = {
 		name : $( "#groupDialogName" ).val(),
@@ -529,6 +769,31 @@ const groupDialogSave = async function( event ) {
 		saveSongDataToFirebaseGroup( songKey, docId, songDocId );
 	} );
 }
+/*
+const saveSongListObjectToLocalStore = function( songListObject ) {
+	console.log( "saveSongListObjectToLocalStore -> ");
+	/*
+	Todo: testa att det funkar att spara med tomt namn, 
+	och den tömmer låtlistan :)
+	if( $( "#createSongListName" ).val() === "" ) {
+		clearCreateSongList();
+		return;
+	}
+	 */
+
+/*
+	var newSongList = {
+		id : Troff.getUniqueSonglistId(),
+		name : $( "#createSongListName" ).val(),
+		songs : songs
+	};
+	* /
+	// hur är sognListObject, är det name eller sognListName (tror name)
+	// hur är songs???
+	Troff.addSonglistToHTML_NEW( songListObject );
+	DB.saveSonglists_new();
+}
+*/
 
 const saveSongDataToFirebaseGroup = async function(
 	songKey,
@@ -1091,6 +1356,7 @@ function getFilterDataList(){
 	$( "#songListsList").find("button").filter( ".active, .selected" ).each(function(i, v){
 		var innerData = $(v).data("songList");
 
+		console.log( "innerData", innerData );
 		if( innerData ) {
 			$.each(innerData.songs, function(i, vi) {
 				if( vi.isDirectory ) {
@@ -1307,10 +1573,16 @@ function initSongTable() {
 		if( event.dataTransfer === undefined ) {
 			event.dataTransfer = event.originalEvent.dataTransfer;
 		}
-		var jsonDataInfo = JSON.stringify({
-			name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ],
-			data : JSON.parse( dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
-		});
+		// var jsonDataInfo = JSON.stringify({
+		// 	name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ],
+		// 	data : JSON.parse( dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
+		// });
+
+		var jsonDataInfo = JSON.parse( 
+			dataSongTable
+				.row( $(this) )
+				.data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] 
+		);
 
 		event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
 	})
@@ -1417,16 +1689,17 @@ function onChangeSongListSelector( event ) {
 	var $target = $( event.target ),
 		$selected = $target.find(":selected"),
 		$checkedRows = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
-		songs = getSelectedSongs();
+		songDataInfoList = getSelectedSongs_NEW();
 
 	var $songlist = $("#songListList").find( '[data-songlist-id="'+$selected.val()+'"]' );
 
+	console.log( "songDataInfoList", songDataInfoList);
 	if( $selected.val() == "+" ) {
-		createSongList_NEW( songs );
+		openGroupDialog( { songs : songDataInfoList } );
 	} else if( $selected.val() == "--remove" ) {
-		IO.confirm( "Remove songs?", "Remove songs: <br />" + songs.map( s => s.name ).join( "<br />") +
+		IO.confirm( "Remove songs?", "Remove songs: <br />" + songDataInfoList.map( s => s.name ).join( "<br />") +
 			"?<br /><br />Can not be undone.", () => {
-			songs.forEach( song => {
+				songDataInfoList.forEach( song => {
 				cacheImplementation.removeSong( song.data.fullPath );
 			});
 			$checkedRows.closest("tr").each( (i, row ) => {
@@ -1434,9 +1707,9 @@ function onChangeSongListSelector( event ) {
 			} );
 		});
 	} else if( $selected.parent().attr( "id" ) == "songListSelectorAddToSonglist" ) {
-		addSongsToSonglist( songs, $songlist );
+		addSongsToSonglist( songDataInfoList, $songlist );
 	} else if(  $selected.parent().attr( "id" ) == "songListSelectorRemoveFromSonglist" ){
-		removeSongsFromSonglist( songs, $songlist );
+		removeSongsFromSonglist( songDataInfoList, $songlist );
 	} else {
 		console.error("something wrong");
 	}
@@ -1445,7 +1718,8 @@ function onChangeSongListSelector( event ) {
 
 }
 
-function getSelectedSongs() {
+function getSelectedSongs( uncheckSongs = true ) {
+	console.info( "DEPRECATED function: getSelectedSongs");
 
 	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
 		checkedVisibleSongs = $checkboxes.closest("tr").map( function(i, v) {
@@ -1460,16 +1734,75 @@ function getSelectedSongs() {
 	for( i = 0; i < checkedVisibleSongs.length; i++ ){
 		songs.push( checkedVisibleSongs[i] );
 	}
-	$checkboxes.prop("checked", false);
+	if (uncheckSongs) {
+		$checkboxes.prop("checked", false);
+	}
 	return songs;
+}
 
+/**
+ * returns a list of the checked visible songs in the SongTable 
+ * AND ALSO unchecks the songs!
+ * @returns List of songDataInfoObjects {galleryId, fullPath}
+ */
+function getSelectedSongs_NEW() {
+
+	const $checkboxes = $( "#dataSongTable" )
+		.find( "td" )
+		.find( "input[type=checkbox]:checked" );
+	const checkedVisibleSongs = $checkboxes
+		.closest("tr")
+		.map( (i, v) => JSON.parse(
+			$('#dataSongTable').DataTable().row( v ).data()[
+				DATA_TABLE_COLUMNS.getPos( "DATA_INFO" )
+			] 
+		) ).get();
+
+	$checkboxes.prop("checked", false);
+	return checkedVisibleSongs;
 }
 
 function clickButtNewSongList( event ) {
-	var songs = getSelectedSongs();
-	createSongList_NEW( songs );
+	var songs = getSelectedSongs_NEW();
+	openGroupDialog( { songs: songs } );
 }
 
+
+var clearCreateSongList = function(){
+	IO.blurHack();
+	$("#createSongListName").val("");
+	$("#createSongListDialog").addClass("hidden");
+	IO.clearEnterFunction();
+};
+
+
+/*
+const songListDialogSave = function( event ) {
+	console.log( "songListDialogSave -> ");
+
+	if( $( "#createSongListName" ).val() === "" ) {
+		clearCreateSongList();
+		return;
+	}
+
+	const songs = $( "#createSongListDialog" ).data( "songs" );
+	console.log( "songs", songs);
+
+	var newSongList = {
+		id : Troff.getUniqueSonglistId(),
+		name : $( "#createSongListName" ).val(),
+		songs : songs
+	};
+
+	Troff.addSonglistToHTML_NEW( newSongList );
+	DB.saveSonglists_new();
+	gtag('event', 'Save Songlist', { 'event_category' : 'Adding Button' } );
+
+	clearCreateSongList();
+};
+*/
+
+/*
 function createSongList_NEW( songDataList ) {
 
 	var songs = songDataList.map(x => x.data);
@@ -1512,6 +1845,29 @@ function createSongList_NEW( songDataList ) {
 	$("#createSongListSave").on( "click.saveSongList", saveSongList );
 	$( "#createSongListName" ).focus();
 
+}
+*/
+function createSongList_NEW( songDataList ) {
+	console.info( "DEPRECATED FUNCTION, USE openGroupDialog!");
+	openGroupDialog ( songDataList );
+}
+
+/*
+function songListDialogOpen( songListObject ) {
+
+
+	openGroupDialog( songListObject );
+
+}
+*/
+
+function songListDialogOpenExisting( event ) {
+	openGroupDialog(
+		$( event.target )
+		.closest( "button")
+		.next()
+		.data( "songList" )
+	);
 }
 
 function onDragleave( ev ) {
@@ -1584,20 +1940,32 @@ function removeSongsFromSonglist( songs, $target ) {
 	DB.saveSonglists_new();
 }
 
+function updateSonglistWithNewInfo( songListObject, $target ) {
+	const songList = $target.data("songList");
+	console.log( "existing songList", songList);
+	console.log( "New  songList", songListObject);
+	
+
+	$target.data("songList", songListObject);
+	DB.saveSonglists_new();
+}
+
+// När drag and dropp anropar så får den "gamla" songs, 
+// dvs lista med {name: "",  data: }
+// men jag vill skicka in en lista med "data", eller 
 function addSongsToSonglist( songs, $target ) {
 	var	songAlreadyExists,
 		songList = $target.data("songList");
 
-
 	$.each( songs, function(i, song) {
-		var dataInfo = song.data;
+		var dataInfo = song;
 		songAlreadyExists = songList.songs.filter(function(value, index, arr){
 			return value.galleryId == dataInfo.galleryId &&
 				value.fullPath == dataInfo.fullPath;
 		} ).length > 0;
 
 		if( songAlreadyExists ) {
-			$.notify( song.name + " is already in " + songList.name, "info" );
+			$.notify( song.fullPath + " is already in " + songList.name, "info" );
 			return;
 		}
 
@@ -1607,7 +1975,7 @@ function addSongsToSonglist( songs, $target ) {
 
 		$target.data("songList", songList);
 
-		notifyUndo( song.name + " was added to " + songList.name, function(){
+		notifyUndo( song.fullPath + " was added to " + songList.name, function(){
 			var i,
 				undo_songList = $target.data("songList");
 
@@ -2964,7 +3332,7 @@ var TroffClass = function(){
 		$('#currentArtist, #currentAlbum').text( "" );
 	};
 
-	this.setCurrentSongInDB = function(){ //slim sim here
+	this.setCurrentSongInDB = function(){
 		DB.setCurrentSong(strCurrentSong, iCurrentGalleryId);
 	}; // end SetCurrentSong
 
@@ -3210,18 +3578,56 @@ var TroffClass = function(){
 		}
 	};
 
-	/*Troff*/this.addSonglistToHTML_NEW = function( oSongList ) {
+	/*Troff*/this.onClickremoveSonglist = function( event ) {
+		const songListObjectId = $( "#groupDialogName")
+			.data( "songListObjectId" );
+		Troff.removeSonglist_NEW( songListObjectId );
+		emptyGroupDialog();
+		$( "#groupDialog" ).addClass( "hidden" );
+	}
 
-		removeSonglist_NEW = function( event ) {
-			$(event.target).closest( "li" ).remove();
-			$("#songListSelector").find("[value=\"" + oSongList.id + "\"]").remove()
-			DB.saveSonglists_new();
+	/*Troff*/this.removeSonglist_NEW = function( songListId ) {
 
-			notifyUndo( "The songlist \"" + oSongList.name + "\" was removed", function() {
-				Troff.addSonglistToHTML_NEW( oSongList );
-				DB.saveSonglists_new();
-			} );
+		const songListObject = JSON.parse( nDB.get( "straoSongLists" ) )
+			.filter( sl => sl.id == songListId )[0];
+
+		$( "#songListList" )
+			.find(`[data-songlist-id="${songListId}"]`)
+			.closest( "li" )
+			.remove();
+		$( "#songListSelector" )
+			.find(`[value="${songListId}"]`)
+			.remove();
+
+		DB.saveSonglists_new();
+		if ( songListObject == undefined ) {
+			console.warn( `Trying to remove songList with id ${songListId}, but it is not in the Local dataBase`);
+			return;
 		}
+		notifyUndo( "The songlist \"" + songListObject.name + "\" was removed", function() {
+			Troff.addSonglistToHTML_NEW( songListObject );
+			DB.saveSonglists_new();
+		} );
+	}
+	
+	/*Troff*/this.updateSognListInHTML = function( songListObject ) {
+		var $target = $("#songListList")
+		.find( '[data-songlist-id="'+songListObject.id+'"]' );
+	
+		$target.text( songListObject.name );
+		$target.data("songList", songListObject);
+
+		if ( $target.hasClass( "selected" ) ) {
+			$target.click();
+		}
+	}
+
+	/*Troff*/this.addSonglistToHTML_NEW = function( oSongList ) {
+		console.log( "addSonglistToHTML_NEW, oSognList", oSongList );
+		if (oSongList.id == undefined ) {
+			oSongList.id = Troff.getUniqueSonglistId();
+		}
+
 
 		$( "#songListList" )
 			.append(
@@ -3237,8 +3643,8 @@ var TroffClass = function(){
 							.append(
 								$( "<i>" )
 								.addClass( "fa")
-								.addClass( "fa-trash")
-							).on("click", removeSonglist_NEW )
+								.addClass( "fa-pencil")
+							).on("click", songListDialogOpenExisting )
 						)
 						.append( $( "<button>" )
 							.addClass( "songlist" )
@@ -5031,6 +5437,7 @@ var DBClass = function(){
 		var i,
 			aoSonglists = [],
 			aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
+		console.log("saveSonglists_new aDOMSonglist", aDOMSonglist); 
 
 		for( i=0; i<aDOMSonglist.length; i++ ){
 			aoSonglists.push(aDOMSonglist.eq(i).data('songList'));
@@ -5500,6 +5907,11 @@ var IOClass = function(){
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
+		
+		$( ".buttNewGroup" ).on( "click", newGroupDialog );
+		$( "#groupDialogSave" ).on( "click", groupDialogSave );
+		//$( "#createSongListSave" ).on( "click", songListDialogSave );
+
 		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
 		$( "#songListAll" ).click( clickSongList_NEW );
 		$( "#clickSongListAll" ).click( () => $( "#songListAll" ).click() );
@@ -5593,7 +6005,7 @@ var IOClass = function(){
 		$('#newSongListName').click(Troff.enterSongListName);
 		$('#newSongListName').blur(Troff.exitSongListName);
 		$('#saveNewSongList').click(Troff.saveNewSongList);
-		$('#removeSongList').click(Troff.removeSonglist);
+		$('#removeSongList').click(Troff.onClickremoveSonglist);
 		$('#cancelSongList').click(Troff.cancelSongList);
 
 		$('#buttUnselectMarkers').click(Troff.unselectMarkers);
@@ -5628,8 +6040,6 @@ var IOClass = function(){
 
 		$( "#signOut" ).on( "click", signOut );
 
-		$( ".buttNewGroup" ).on( "click", newGroupDialog );
-		$( "#groupDialogSave" ).on( "click", groupDialogSave );
 		$( "#groupAddOwnerButt" ).on( "click", () => {addGroupOwnerRow();} );
 		$( "#groupAddSongButt" ).on( "click", () => {addGroupSongRow();} );
 		window.addEventListener('resize', function() {
