@@ -65,6 +65,7 @@ saker jag vill göra
 		måste fundera på hur jag ska visa 
 			"ta bort grupp för alla medlemmar"
 			"lämna grupp"
+			"blockera grupp?" - om man inte vill kunna bli tillagd?
 			och om man gör något av detta, ska låtlistan vara kvar???
 
 		andra fina saker som grupper har kanske låt-listor också ska ha
@@ -194,7 +195,7 @@ const signOut = function() {
 	});
 };
 
-const initiateAllGroupsFromFirebase = async function() {
+const initiateAllFirebaseGroups = async function() {
 	firebase.firestore()
 		.collection( 'Groups' )
 		.where( "owners", "array-contains", firebaseUser.email)
@@ -203,46 +204,107 @@ const initiateAllGroupsFromFirebase = async function() {
 }
 
 const initiateCollections = function( querySnapshot ) {
-	querySnapshot.forEach( doc => {
+	querySnapshot.forEach( async doc => {
+
 		doc.ref.onSnapshot( groupDocUpdate );
-		doc.ref.collection( "Songs" ).get().then( subCollection => {
-			subCollection.forEach( songDoc => {
-				songDoc.ref.onSnapshot( songDocUpdate );
+		const group = doc.data();
+
+		const songListObject = {
+			name : group.name,
+			firebaseGroupDocId : doc.id,
+			owners : group.owners,
+			songs : []
+		};
+
+		let subCollection = await doc.ref.collection( "Songs" ).get()
+		subCollection.forEach( songDoc => {
+			songListObject.songs.push({
+				galleryId : 'pwa-galleryId',
+				fullPath : songDoc.data().songKey,
+				firebaseSongDocId : songDoc.id
 			});
+			
+			songDoc.ref.onSnapshot( songDocUpdate );
 		});
+
+/*
+		så, här har jag en songListObject, som jag 
+		ANTINGEN ska lägga till som songList,
+			Troff.addSonglistToHTML_NEW och sen DB.saveSonglists_new
+		ELLER uppdatera befintlig songList med :) 
+			Troff.updateSongListInHTML och DB.saveSonglists_new
+		
+		Så, hur vet jag om gruppen redan finns som songList? 
+			kan inte gå på namn, måste gå på songListObject.firebaseGroupDocId
+		
+		Jo: Jag slänger på en data-firebaseGroupDocId på knappen i listan 
+			OM det finns en firebaseGroupDocId på songListObject som skickas med i addSognlistToHTML_NEW
+			så, kolla om det finns :)
+
+		Måste kolla att isGroup-fungerar
+			(och kanske lägga den som data-attribut också? )
+		*/
+
+
+		//return;
+
+		const exists = $("#songListList")
+			.find( `[data-firebase-group-doc-id="${doc.id}"]` )
+			.length;
+
+		if( exists == 0 ) {
+			console.log( "adding new Group! :) ");
+			Troff.addSonglistToHTML_NEW( songListObject );
+		} else {
+			console.log( "updating existing Group! :) ");
+			Troff.updateSongListInHTML( songListObject );
+		}
+		DB.saveSonglists_new();
+
 	} );
 }
 
 const groupDocUpdate = function( doc ) {
-	const oldLiGroup = $( "#groupList" )
-		.find( "[group-id=" + doc.id + "]" );
+	const oldLiGroup = $( "#groupList" ) // todo: ta bort :)
+		.find( "[group-id=" + doc.id + "]" ); // todo: ta bort :)
 
 	if( !doc.exists ) {
 		$.notify(
 			`The group "${oldLiGroup.text()}" has been removed`, 
 			"info"
 		);
-		oldLiGroup.remove()
+		oldLiGroup.remove() // todo: ta bort :)
 		DB.removeFromMyFirestoreGroups( undefined, doc.id );
 		return;
 	}
 
 	const group = doc.data();
+	const $target = $("#songListList")
+		.find( `[data-firebase-group-doc-id="${doc.id}"]` );
+	const songListObject = $target.data( "songList" );
+	
+	songListObject.name = group.name;
+	songListObject.owners = group.owners;
 
-	const name = $( "<button>" )
+	Troff.updateSongListInHTML( songListObject );
+
+
+
+	// 
+	const name = $( "<button>" ) // todo: ta bort :)
 		.text( group.name )
 		.addClass( "stOnOffButton flex-one text-left")
 
-	const liGroup = $( "<li>" )
+	const liGroup = $( "<li>" ) // todo: ta bort :)
 		.attr( "group-id", doc.id )
 		.addClass( "py-1" )
 		.append( name );
 
-	if( oldLiGroup.length > 0 ) {
+	if( oldLiGroup.length > 0 ) { // todo: ta bort :)
 		liGroup.insertBefore( oldLiGroup );
 		oldLiGroup.remove();
 	} else {
-		$( "#groupList" ).append( liGroup );
+		$( "#groupList" ).append( liGroup ); // todo: ta bort :)
 	}
 
 
@@ -267,14 +329,21 @@ const groupDocUpdate = function( doc ) {
 	utan snarare uppdatera befintlig knapp, (som är en song-list-edit-button...)
 	*/
 
-	name.on( "click", () => {
-		preOpenGroupDialog( doc );
+	name.on( "click", () => { // todo: ta bort :)
+		preOpenGroupDialog( doc ); // todo: ta bort :)
 	} );
 
 }
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
+
+	/*
+	som jag förstår så finns det INGET som är lagrat på låten som behöver uppdateras på låt-listan när den uppdateras...
+	FÖRUTOM när en låt läggs till eller tas bort???
+	*/
+
+
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
 
@@ -382,59 +451,30 @@ const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
 		.removeClass( "groupIndication" );
 }
 
+
+// Denna anropas bara när gamla grupp-knappen trycks på, denna funktion ska tas bort när jag inte behöver Groups!-listan till vänster om songList-listan
+// todo: ta bort!
 const preOpenGroupDialog = async function( doc ) {
-	console.log( "preOpenGroupDialog -> " );
 	emptyGroupDialog();
 	const group = doc.data();
-	console.log( "preOpenGroupDialog -> doc.data", doc.data());
-/*
-	Vill ha: songList-objekt:
-	{
-		songListName:
-		songs: [
-			{
-				galleryId: 'pwa-galleryId',
-				fullPath: 'NW - Amaranth.mp3',
-				firebaseSongDocId <- If group :)
-			}
-		]
-		owners : []
-		id: 
-		firebaseGroupDocId:
-		isDirectory: false
-	}
-	*/
+
 	const songLIstObject = {
 		name : group.name,
 		firebaseGroupDocId : doc.id,
 		owners : group.owners,
 		songs : []
 	};
-	// här vill jag anropa openGroupDialog med en songLIstObject
-	
-	//$( "#groupDialogName" ).val( group.name );
-	//$( "#groupDialogName" ).attr( "groupDocId", doc.id );
-	// group.owners.forEach( owner =>{
-	// 	addGroupOwnerRow( owner );
-	// } );
 
 	const subCollection = await doc.ref.collection( "Songs" ).get();
-	subCollection.docs.forEach( songDoc => {
-		const song = songDoc.data();
-		console.log( "song", song);
 
+	subCollection.docs.forEach( songDoc => {
 		songLIstObject.songs.push( {
 			galleryId: 'pwa-galleryId',
-			fullPath: song.songKey,
+			fullPath: songDoc.data().songKey,
 			firebaseSongDocId : songDoc.id
 		});
-
-		// addGroupSongRow( songDoc.id, song );
 	});
 
-
-	//$( "#groupDialog" ).removeClass( "hidden" );
-	console.log( "preOpenGroupDialog: -> openGroupDialog songLIstObject:", songLIstObject)
 	openGroupDialog( songLIstObject );
 };
 
@@ -455,9 +495,27 @@ const populateExampleSongsInGroupDialog = function() {
 }
 
 const openGroupDialog = async function( songListObject ) {
-	console.log( "openGroupDialog ->", songListObject );
 
 	emptyGroupDialog();
+
+// som jag trodde, det är data-songList som läggs på sorterings-knappen som är olika! .)
+/*
+när jag öppnar denna med en song list anropas jag från
+	songListDialogOpenExisting	@	script.js:1702
+och får: 
+	id: 2
+	name: "Hard"
+	songs: (4) [{…}, {…}, {…}, {…}]
+
+när jag öppnar den med en group anropas jag från 
+	songListDialogOpenExisting	@	script.js:1702
+och får får:
+	firebaseGroupDocId: "1MvSi6qOG73Fegx7fCDf"
+	name: "Test58"
+	owners: (4) ['slimsimapps@gmail.com', 'diana.besh@gmail.com']
+	songs: (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+varför har inte den id???
+*/
 
 	const isGroup = songListObject.firebaseGroupDocId !== undefined;
 
@@ -485,9 +543,8 @@ const emptyGroupDialog = function() {
 	$( "#groupOwnerParent" ).empty();
 	$( "#groupSongParent" ).empty();
 
-	// todo: byta ut attr groupDocId till data groupDocId!
-	$( "#groupDialogName" ).val( "" ).attr("groupDocId", null);
-	$( "#groupDialogName" ).data( "songListObjectId" )
+	$( "#groupDialogName" ).val( "" );
+	$( "#groupDialogName" ).removeData();
 
 	$( "#song-examples" ).empty();
 }
@@ -574,7 +631,7 @@ const addGroupOwnerRow = function( owner ) {
 const groupDialogSave = async function( event ) {
 
 	const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
-	const groupDocId = $( "#groupDialogName" ).data( "groupDocId" );
+	let groupDocId = $( "#groupDialogName" ).data( "groupDocId" );
 
 	const songListObject = {
 		id : $( "#groupDialogName" ).data( "songListObjectId" ),
@@ -582,7 +639,7 @@ const groupDialogSave = async function( event ) {
 	};
 
 	if( isGroup ) {
-	const owners = [];
+		const owners = [];
 		$("#groupOwnerParent" ).find(".groupDialogOwner")
 			.each( (i, v) => {
 				owners.push( $( v ).val() );
@@ -596,8 +653,6 @@ const groupDialogSave = async function( event ) {
 			name : $( "#groupDialogName" ).val(),
 			owners : owners
 		};
-		console.log( "groupDocId", groupDocId);
-
 
 		if( groupDocId != null ) {
 			await firebase.firestore()
@@ -624,9 +679,6 @@ const groupDialogSave = async function( event ) {
 	$( "#groupSongParent" ).find( "input" ).each( async ( i, v ) => {
 		const songKey = $( v ).val();
 
-		if ( $( v ).hasClass( "removed" )  ) {
-			return;
-		}
 
 		const galleryId = $( v ).data( "galleryId" );
 		const songDocId = $( v ).data( "firebaseSongDocId" );
@@ -647,34 +699,13 @@ const groupDialogSave = async function( event ) {
 				if( songDocId == undefined ) {
 					return;
 				}
-
-				firebase.firestore()
-					.collection( 'Groups' )
-					.doc( groupDocId )
-					.collection( "Songs" )
-					.doc( songDocId )
-					.delete();
-
-				const fileUrl = DB.songKeyToFileUrl(
-					songKey,
-					groupDocId,
-					songDocId );
-
-				const storageFileName = fileUrlToStorageFileName( fileUrl );
-
-				let storageRef = firebase.storage()
-					.ref("Groups/" + groupDocId + "/" + storageFileName);
-
-				storageRef.delete().then(() => {
-					}).catch((error) => {
-						console.error(
-							songKey + " could not be deleted!",
-							error );
-					});
-
+				removeSongFromFirebaseGroup(songKey, groupDocId, songDocId);
 				return;
 			}
 			saveSongDataToFirebaseGroup( songKey, groupDocId, songDocId );
+		}
+		if ( $( v ).hasClass( "removed" )  ) {
+			return;
 		}
 	
 		songs.push(  songIdObject );
@@ -684,116 +715,52 @@ const groupDialogSave = async function( event ) {
 	if ( songListObject.id == undefined ) {
 		Troff.addSonglistToHTML_NEW( songListObject );	
 	} else {
-		Troff.updateSognListInHTML( songListObject );
+		Troff.updateSongListInHTML( songListObject );
 	}
 	DB.saveSonglists_new();
 }
 
-const groupDialogSave_SAVE_fungerar = async function( event ) {
-	const owners = [];
+const removeSongFileFromFirebaseGroupStorage = async function (
+	groupDocId,
+	storageFileName) {
 
-	$("#groupOwnerParent" ).find(".groupDialogOwner")
-		.each( (i, v) => {
-			owners.push( $( v ).val() );
-	} );
+	let storageRef = firebase.storage()
+		.ref("Groups/" + groupDocId + "/" + storageFileName);
 
-	if( !owners.includes( firebaseUser.email ) ) {
-		owners.push( firebaseUser.email );
-	}
-	// todo: fixa så att om det INTE är en grupp så ska inte firebaseUser.email pushas med (och om man inte är inloggad så ska det ju fungera endå...)
+		console.log( "groupDocId", groupDocId);
+		console.log( "storageRef", storageRef);
 
-
-
-	let docId = $( "#groupDialogName" ).data( "groupDocId" );
-
-	const groupData = {
-		name : $( "#groupDialogName" ).val(),
-		owners : owners
-	};
-
-	if( docId != null ) {
-		await firebase.firestore()
-			.collection( 'Groups' )
-			.doc( docId )
-			.set( groupData );
-	} else {
-		const groupRef = await firebase.firestore()
-			.collection( 'Groups' )
-			.add( groupData );
-
-		groupRef.onSnapshot( groupDocUpdate );
-
-		docId = groupRef.id;
-	}
-
-	$( "#groupSongParent" ).find( "input" ).each( async ( i, v ) => {
-		const songKey = $( v ).val();
-		const songDocId = $( v ).attr( "songDocId" );
-
-		if( songKey == "" ) {
-			return;
-		}
-
-		if( $( v ).hasClass( "removed" ) ) {
-			if( songDocId == undefined ) {
-				return;
-			}
-
-			firebase.firestore()
-				.collection( 'Groups' )
-				.doc( docId )
-				.collection( "Songs" )
-				.doc( songDocId )
-				.delete();
-
-			const fileUrl = DB.songKeyToFileUrl(
-				songKey,
-				docId,
-				songDocId );
-
-			const storageFileName = fileUrlToStorageFileName( fileUrl );
-
-			let storageRef = firebase.storage()
-				.ref("Groups/" + docId + "/" + storageFileName);
-
-			storageRef.delete().then(() => {
-				}).catch((error) => {
-					console.error(
-						songKey + " could not be deleted!",
-						error );
-				});
-
-			return;
-		}
-
-		saveSongDataToFirebaseGroup( songKey, docId, songDocId );
-	} );
+	storageRef.delete().then(() => {
+		console.log( `deleted ${storageFileName}`);
+		}).catch((error) => {
+			console.error(
+				storageFileName + " could not be deleted!",
+				error );
+		});
 }
-/*
-const saveSongListObjectToLocalStore = function( songListObject ) {
-	console.log( "saveSongListObjectToLocalStore -> ");
-	/*
-	Todo: testa att det funkar att spara med tomt namn, 
-	och den tömmer låtlistan :)
-	if( $( "#createSongListName" ).val() === "" ) {
-		clearCreateSongList();
-		return;
-	}
-	 */
 
-/*
-	var newSongList = {
-		id : Troff.getUniqueSonglistId(),
-		name : $( "#createSongListName" ).val(),
-		songs : songs
-	};
-	* /
-	// hur är sognListObject, är det name eller sognListName (tror name)
-	// hur är songs???
-	Troff.addSonglistToHTML_NEW( songListObject );
-	DB.saveSonglists_new();
-}
-*/
+const removeSongFromFirebaseGroup = async function(
+	songKey,
+	groupDocId,
+	songDocId) {
+
+	firebase.firestore()
+		.collection( 'Groups' )
+		.doc( groupDocId )
+		.collection( "Songs" )
+		.doc( songDocId )
+		.delete();
+
+	const fileUrl = DB.songKeyToFileUrl(
+		songKey,
+		groupDocId,
+		songDocId );
+
+	const storageFileName = fileUrlToStorageFileName( fileUrl );
+
+	removeSongFileFromFirebaseGroupStorage( groupDocId, storageFileName );
+
+};
 
 const saveSongDataToFirebaseGroup = async function(
 	songKey,
@@ -941,10 +908,7 @@ auth.onAuthStateChanged( user => {
 
 	// The signed-in user info.
 	setUiToSignIn( firebaseUser );
-	initiateAllGroupsFromFirebase();
-
-
-	//testFirebaseStorage();
+	initiateAllFirebaseGroups();
 });
 
 const fileUrlToStorageFileName = function( downloadUrl ) {
@@ -953,22 +917,6 @@ const fileUrlToStorageFileName = function( downloadUrl ) {
 
 	// return last part, which is the file-name!
 	return partList[ partList.length -1 ];
-};
-
-const testFirebaseStorage = async function() {
-	let groupId = "3p9qg7R6sS01q3sBnZwg";
-	var storageRef = firebase.storage()
-		.ref("Groups/" + groupId + "/Waterfall.jpeg");
-
-	storageRef.getDownloadURL().then(function( url ) {
-		$( "#myimg" ).attr( "src" , url);
-	});
-
-	/* så, när jag loggar in, kolla om jag har låtarna i varje grupp
-		har jag inte det, så ladda ner dom och lägg i cachen?
-
-		Måste se till att dom INTE laddas ner varje gång!
-	*/
 };
 
 const mergeSongHistorys = function( song1, song2 ) {
@@ -1356,7 +1304,6 @@ function getFilterDataList(){
 	$( "#songListsList").find("button").filter( ".active, .selected" ).each(function(i, v){
 		var innerData = $(v).data("songList");
 
-		console.log( "innerData", innerData );
 		if( innerData ) {
 			$.each(innerData.songs, function(i, vi) {
 				if( vi.isDirectory ) {
@@ -1573,16 +1520,10 @@ function initSongTable() {
 		if( event.dataTransfer === undefined ) {
 			event.dataTransfer = event.originalEvent.dataTransfer;
 		}
-		// var jsonDataInfo = JSON.stringify({
-		// 	name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ],
-		// 	data : JSON.parse( dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
-		// });
 
-		var jsonDataInfo = JSON.parse( 
-			dataSongTable
+		var jsonDataInfo = dataSongTable
 				.row( $(this) )
 				.data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] 
-		);
 
 		event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
 	})
@@ -1693,7 +1634,6 @@ function onChangeSongListSelector( event ) {
 
 	var $songlist = $("#songListList").find( '[data-songlist-id="'+$selected.val()+'"]' );
 
-	console.log( "songDataInfoList", songDataInfoList);
 	if( $selected.val() == "+" ) {
 		openGroupDialog( { songs : songDataInfoList } );
 	} else if( $selected.val() == "--remove" ) {
@@ -1716,28 +1656,6 @@ function onChangeSongListSelector( event ) {
 
 	$target.val( "-" );
 
-}
-
-function getSelectedSongs( uncheckSongs = true ) {
-	console.info( "DEPRECATED function: getSelectedSongs");
-
-	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
-		checkedVisibleSongs = $checkboxes.closest("tr").map( function(i, v) {
-			return {
-				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" )],
-				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
-			};
-		}),
-		i,
-		songs = [];
-
-	for( i = 0; i < checkedVisibleSongs.length; i++ ){
-		songs.push( checkedVisibleSongs[i] );
-	}
-	if (uncheckSongs) {
-		$checkboxes.prop("checked", false);
-	}
-	return songs;
 }
 
 /**
@@ -1766,100 +1684,6 @@ function clickButtNewSongList( event ) {
 	var songs = getSelectedSongs_NEW();
 	openGroupDialog( { songs: songs } );
 }
-
-
-var clearCreateSongList = function(){
-	IO.blurHack();
-	$("#createSongListName").val("");
-	$("#createSongListDialog").addClass("hidden");
-	IO.clearEnterFunction();
-};
-
-
-/*
-const songListDialogSave = function( event ) {
-	console.log( "songListDialogSave -> ");
-
-	if( $( "#createSongListName" ).val() === "" ) {
-		clearCreateSongList();
-		return;
-	}
-
-	const songs = $( "#createSongListDialog" ).data( "songs" );
-	console.log( "songs", songs);
-
-	var newSongList = {
-		id : Troff.getUniqueSonglistId(),
-		name : $( "#createSongListName" ).val(),
-		songs : songs
-	};
-
-	Troff.addSonglistToHTML_NEW( newSongList );
-	DB.saveSonglists_new();
-	gtag('event', 'Save Songlist', { 'event_category' : 'Adding Button' } );
-
-	clearCreateSongList();
-};
-*/
-
-/*
-function createSongList_NEW( songDataList ) {
-
-	var songs = songDataList.map(x => x.data);
-
-	$( "#newSonglistNrSongs" ).text( songs.length );
-	$("#createSongListDialog").removeClass("hidden");
-
-	var saveSongList = function( event ) {
-		var clearCreateSongList = function(){
-			IO.blurHack();
-			$("#createSongListName").val("");
-			$("#createSongListDialog").addClass("hidden");
-			$('#createSongListSave').off( "click.saveSongList" );
-			IO.clearEnterFunction();
-		};
-
-		if( $( "#createSongListName" ).val() === "" ) {
-			clearCreateSongList();
-			return;
-		}
-
-		var newSongList = {
-			id : Troff.getUniqueSonglistId(),
-			name : $( "#createSongListName" ).val(),
-			songs : songs
-		};
-
-		Troff.addSonglistToHTML_NEW( newSongList );
-		DB.saveSonglists_new();
-		gtag('event', 'Save Songlist', { 'event_category' : 'Adding Button' } );
-
-
-		clearCreateSongList();
-	}
-
-	IO.setEnterFunction(function(event){
-		saveSongList();
-		return false;
-	});
-	$("#createSongListSave").on( "click.saveSongList", saveSongList );
-	$( "#createSongListName" ).focus();
-
-}
-*/
-function createSongList_NEW( songDataList ) {
-	console.info( "DEPRECATED FUNCTION, USE openGroupDialog!");
-	openGroupDialog ( songDataList );
-}
-
-/*
-function songListDialogOpen( songListObject ) {
-
-
-	openGroupDialog( songListObject );
-
-}
-*/
 
 function songListDialogOpenExisting( event ) {
 	openGroupDialog(
@@ -1901,12 +1725,9 @@ function dropSongOnSonglist( event ) {
 }
 
 function removeSongsFromSonglist( songs, $target ) {
+	let songDidNotExists;
 
-	var	i,
-		songDidNotExists,
-		songList = $target.data("songList");
-
-
+	const songList = $target.data("songList");
 
 	$.each( songs, function(i, song) {
 		var index,
@@ -1940,19 +1761,14 @@ function removeSongsFromSonglist( songs, $target ) {
 	DB.saveSonglists_new();
 }
 
-function updateSonglistWithNewInfo( songListObject, $target ) {
-	const songList = $target.data("songList");
-	console.log( "existing songList", songList);
-	console.log( "New  songList", songListObject);
-	
-
-	$target.data("songList", songListObject);
-	DB.saveSonglists_new();
-}
-
-// När drag and dropp anropar så får den "gamla" songs, 
-// dvs lista med {name: "",  data: }
-// men jag vill skicka in en lista med "data", eller 
+/**
+ * Denna funktion används när envändaren själv lägger till låtar i en songList
+ * antingen via drag and drop, eller selecten
+ * Den används INTE om groupDialog sparas, 
+ * eller om låtarna läggs till via en firebase update!
+ * @param {array of songs} songs 
+ * @param {jQuery button} $target 
+ */
 function addSongsToSonglist( songs, $target ) {
 	var	songAlreadyExists,
 		songList = $target.data("songList");
@@ -1986,6 +1802,14 @@ function addSongsToSonglist( songs, $target ) {
 
 			DB.saveSonglists_new();
 		} );
+		const groupDocId = $target.data( "firebaseGroupDocId");
+		if (groupDocId != undefined) {
+			const songDocId = undefined;
+			saveSongDataToFirebaseGroup(
+				dataInfo.fullPath,
+				groupDocId,
+				songDocId );
+		}
 	});
 	DB.saveSonglists_new();
 }
@@ -2245,16 +2069,6 @@ var TroffClass = function(){
 		markerObject.localInformation = undefined;
 		return markerObject;
 	};
-
-
-/*
-	för att ge access i storage till någon i en firestore grupp!
-	https://stackoverflow.com/questions/46861983/can-firebase-cloud-storage-rules-validate-against-firestore-data
-
-	Bästa exemplet!  :
-	https://firebase.blog/posts/2022/09/announcing-cross-service-security-rules
-*/
-
 
 	/*Troff*/ this.uploadSongToServer = async function( event ) {
 		"use strict";
@@ -3610,9 +3424,24 @@ var TroffClass = function(){
 		} );
 	}
 	
-	/*Troff*/this.updateSognListInHTML = function( songListObject ) {
+	/**
+	 * Denna funktion används när en låtlista uppdateras automatiskt
+	 * tex, när firebase uppdaterar låtlista,
+	 * eller när groupDialog sparas.
+	 * Den används INTE vid drag and dropp, eller selecten!
+	 * @param {Object of Songlist} songListObject 
+	 * @param {jQuery button} $target 
+	 */
+	/*Troff*/this.updateSongListInHTML = function( songListObject ) {
+
 		var $target = $("#songListList")
-		.find( '[data-songlist-id="'+songListObject.id+'"]' );
+			.find( '[data-songlist-id="'+songListObject.id+'"]' );
+		if( songListObject.id == undefined ) {
+			const groupId = songListObject.firebaseGroupDocId;
+			$target = $("#songListList")
+				.find( `[data-firebase-group-doc-id="${groupId}"]` );
+			songListObject.id = $target.data( "songlistId" );
+		}
 	
 		$target.text( songListObject.name );
 		$target.data("songList", songListObject);
@@ -3620,10 +3449,13 @@ var TroffClass = function(){
 		if ( $target.hasClass( "selected" ) ) {
 			$target.click();
 		}
+		if ( $target.hasClass( "active" ) ) {
+			$target.click();
+			$target.click();
+		}
 	}
 
 	/*Troff*/this.addSonglistToHTML_NEW = function( oSongList ) {
-		console.log( "addSonglistToHTML_NEW, oSognList", oSongList );
 		if (oSongList.id == undefined ) {
 			oSongList.id = Troff.getUniqueSonglistId();
 		}
@@ -3652,7 +3484,12 @@ var TroffClass = function(){
 							.addClass( "flex-one" )
 							.addClass( "text-left" )
 							.data("songList", oSongList)
-							.attr("data-songlist-id", oSongList.id)
+							.data("songList2", oSongList)
+							.attr("data-songlist-id", oSongList.id) 
+								//  workaround to be able to select by for example $(" [data-songlist-id]")
+							.attr( 
+								"data-firebase-group-doc-id",
+								oSongList.firebaseGroupDocId)
 							.text( oSongList.name )
 							.click(clickSongList_NEW)
 						)
@@ -5355,7 +5192,7 @@ var DBClass = function(){
 	 * Note: if groupDocId is undefined, only the song will be removed
 	 * if the songDocId is undefined, the group will be removed!
 	 * @param {int} songDocId 
-	 * @param {int}} groupDocId 
+	 * @param {int} groupDocId 
 	 */
 	/*DB*/this.removeFromMyFirestoreGroups = function(
 		songDocId,
@@ -5437,7 +5274,6 @@ var DBClass = function(){
 		var i,
 			aoSonglists = [],
 			aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
-		console.log("saveSonglists_new aDOMSonglist", aDOMSonglist); 
 
 		for( i=0; i<aDOMSonglist.length; i++ ){
 			aoSonglists.push(aDOMSonglist.eq(i).data('songList'));
@@ -5910,7 +5746,6 @@ var IOClass = function(){
 		
 		$( ".buttNewGroup" ).on( "click", newGroupDialog );
 		$( "#groupDialogSave" ).on( "click", groupDialogSave );
-		//$( "#createSongListSave" ).on( "click", songListDialogSave );
 
 		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
 		$( "#songListAll" ).click( clickSongList_NEW );
