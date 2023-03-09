@@ -205,6 +205,7 @@ const initiateAllFirebaseGroups = async function() {
 
 const initiateCollections = function( querySnapshot ) {
 	querySnapshot.forEach( async doc => {
+		const subCollection = await doc.ref.collection( "Songs" ).get();
 
 		doc.ref.onSnapshot( groupDocUpdate );
 		const group = doc.data();
@@ -216,7 +217,6 @@ const initiateCollections = function( querySnapshot ) {
 			songs : []
 		};
 
-		let subCollection = await doc.ref.collection( "Songs" ).get()
 		subCollection.forEach( songDoc => {
 			songListObject.songs.push({
 				galleryId : 'pwa-galleryId',
