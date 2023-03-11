@@ -3446,6 +3446,11 @@ var TroffClass = function(){
 		$target.text( songListObject.name );
 		$target.data("songList", songListObject);
 
+		if( songListObject.firebaseGroupDocId != undefined ) {
+			$target.attr("data-firebase-group-doc-id", songListObject.firebaseGroupDocId );
+			$target.addClass( "groupIndication" );
+		}
+
 		if ( $target.hasClass( "selected" ) ) {
 			$target.click();
 		}
@@ -3460,7 +3465,8 @@ var TroffClass = function(){
 			oSongList.id = Troff.getUniqueSonglistId();
 		}
 
-
+		const groupDocId = oSongList.firebaseGroupDocId
+		const groupClass = groupDocId ? "groupIndication" : "";
 		$( "#songListList" )
 			.append(
 				$("<li>")
@@ -3480,6 +3486,7 @@ var TroffClass = function(){
 						)
 						.append( $( "<button>" )
 							.addClass( "songlist" )
+							.addClass( groupClass )
 							.addClass( "stOnOffButton" )
 							.addClass( "flex-one" )
 							.addClass( "text-left" )
@@ -3487,9 +3494,7 @@ var TroffClass = function(){
 							.data("songList2", oSongList)
 							.attr("data-songlist-id", oSongList.id) 
 								//  workaround to be able to select by for example $(" [data-songlist-id]")
-							.attr( 
-								"data-firebase-group-doc-id",
-								oSongList.firebaseGroupDocId)
+							.attr( "data-firebase-group-doc-id", groupDocId)
 							.text( oSongList.name )
 							.click(clickSongList_NEW)
 						)
