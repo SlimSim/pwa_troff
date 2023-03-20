@@ -25,6 +25,24 @@ saker jag vill göra
 1) på något sätt integrera grupp med låt-lista
 
 
+1.1) TODO: när man har en befintlig songList, 
+		och konverterar till en group,
+		så får songs-documentet man skicakr till firebase endast
+			jsonDataInfo och songKey
+		alltså INTE fileUrl!!!
+		fileUrl fås när man lägger till en låt via drag and drop :)
+		(	
+			antar att det bara är att ladda upp låten först 
+			och ta hand om fileUrl och lägga på den 
+			innan man skickar upp själva songData (eller vad det nu heter :) 
+		)
+1.2) TODO: när jag skapat en ny grupp med låt i,
+			och sen lägger till en användare
+			så blir song-datat i firebase dublerat???
+1.3) TODO: uppdateringen att en grupp tagits bort skickas inte 
+			om en användare loggar in efter att gruppen tagits bort :(
+
+
 	spara ny låtlista med lite markerade låtar
 	redigera befintlig låtlista :)
 
@@ -264,16 +282,45 @@ const initiateCollections = function( querySnapshot ) {
 	} );
 }
 
+const setGroupAsSonglist = function(groupDocId) {
+	console.log( "setGroupAsSognlist -> groupDocId", groupDocId);
+	DB.removeFromMyFirestoreGroups( undefined, groupDocId );
+
+	DB.setSonglistAsNotGroup( groupDocId );
+
+	const $target = $("#songListList")
+		.find( `[data-firebase-group-doc-id="${groupDocId}"]` );
+	if( $target.length == 0 ) {
+		return;
+	}
+
+	$target.removeClass( "groupIndication" );
+	$target.attr( "data-firebase-group-doc-id", null);
+
+	const songList = $target.data( "songList" );
+	if( songList == undefined ) {
+		return;
+	}
+
+	delete songList.firebaseGroupDocId;
+	delete songList.owners;
+	$target.data( "songList", songList );
+
+}
+
 const groupDocUpdate = function( doc ) {
+	console.log( "groupDocUpdate -> doc", doc);
 	const oldLiGroup = $( "#groupList" ) // todo: ta bort :)
 		.find( "[group-id=" + doc.id + "]" ); // todo: ta bort :)
 
 	if( !doc.exists ) {
+		console.log( "groupDocUpdate -> group is gone! doc.id", doc.id);
 		$.notify(
 			`The group "${oldLiGroup.text()}" has been removed`, 
 			"info"
 		);
 		oldLiGroup.remove() // todo: ta bort :)
+		setGroupAsSonglist(doc.id);
 		DB.removeFromMyFirestoreGroups( undefined, doc.id );
 		return;
 	}
@@ -281,6 +328,28 @@ const groupDocUpdate = function( doc ) {
 	const group = doc.data();
 	const $target = $("#songListList")
 		.find( `[data-firebase-group-doc-id="${doc.id}"]` );
+
+	if( !group.owners.includes( firebaseUser.email ) ) {
+		setGroupAsSonglist(doc.id);
+		// DB.removeFromMyFirestoreGroups( undefined, doc.id );
+		// $target.removeClass( "groupIndication" );
+		// $target.attr( "data-firebase-group-doc-id", null);
+		// DB.setSonglistAsNotGroup( doc.id );
+
+		// const songList = $target.data( "songList" );
+		// delete songList.firebaseGroupDocId;
+		// delete songList.owners;
+		// $target.data( "songList", songList );
+
+
+		$.notify(
+			`You have been removed from the group "${$target.text()}".
+			It has been converted to a songlist`, 
+			"info"
+		);
+		return;
+	}
+
 	const songListObject = $target.data( "songList" );
 	
 	songListObject.name = group.name;
@@ -290,7 +359,7 @@ const groupDocUpdate = function( doc ) {
 
 
 
-	// 
+
 	const name = $( "<button>" ) // todo: ta bort :)
 		.text( group.name )
 		.addClass( "stOnOffButton flex-one text-left")
@@ -307,28 +376,6 @@ const groupDocUpdate = function( doc ) {
 		$( "#groupList" ).append( liGroup ); // todo: ta bort :)
 	}
 
-
-	/*
-	Så, här vill jag lägga till / byta ut denna grupp i en songList också
-	och se hur det lirar...
-
-	funktionen som anropas när save-knappen på new Songlist dialogen trycks
-	är 
-		saveSongList
-	fast! 
-	den funktionen öppnar upp new song-list dialogen...
-
-
-	(
-		kanske ska göra om detta så att songList får en enklare hantering
-		med edit också, så att det blir lättare att få en blick över det???
-	)
-
-	TODO:
-	jag tänker att jag inte vill "byta ut knappen mot en ny" här,
-	utan snarare uppdatera befintlig knapp, (som är en song-list-edit-button...)
-	*/
-
 	name.on( "click", () => { // todo: ta bort :)
 		preOpenGroupDialog( doc ); // todo: ta bort :)
 	} );
@@ -337,12 +384,6 @@ const groupDocUpdate = function( doc ) {
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
-
-	/*
-	som jag förstår så finns det INGET som är lagrat på låten som behöver uppdateras på låt-listan när den uppdateras...
-	FÖRUTOM när en låt läggs till eller tas bort???
-	*/
-
 
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
@@ -592,6 +633,8 @@ const addGroupSongRow = function( songDocId, song ) {
 		.attr( "songDocId", songDocId )
 		.val( song?.songKey );
 
+	console.log( "songDocId", songDocId );
+
 	$( "#groupSongParent" ).append( songRow );
 }
 
@@ -627,6 +670,32 @@ const addGroupOwnerRow = function( owner ) {
 		.val( owner );
 	$( "#groupOwnerParent" ).append( ownerRow );
 };
+
+/**
+ * Gets the data in the group that is sent to firebase!
+ * IE it does NOT include the songLIstObjectId, 
+ * because that is 
+ */
+const getFirebaseGroupDataFromDialog = function( forceUserEmail ) {
+
+	const owners = [];
+	$("#groupOwnerParent" ).find(".groupDialogOwner")
+		.each( (i, v) => {
+			owners.push( $( v ).val() );
+	} );
+
+	if( forceUserEmail && !owners.includes( firebaseUser.email ) ) {
+		owners.push( firebaseUser.email );
+	}
+
+	const groupData = {
+		name : $( "#groupDialogName" ).val(),
+		owners : owners
+	};
+
+	return groupData;
+
+}
 
 const groupDialogSave = async function( event ) {
 
@@ -723,20 +792,38 @@ const groupDialogSave = async function( event ) {
 const removeSongFileFromFirebaseGroupStorage = async function (
 	groupDocId,
 	storageFileName) {
-
-	let storageRef = firebase.storage()
+	return new Promise( function( resolve, reject) {
+		let storageRef = firebase.storage()
 		.ref("Groups/" + groupDocId + "/" + storageFileName);
 
-		console.log( "groupDocId", groupDocId);
-		console.log( "storageRef", storageRef);
+			console.log( "groupDocId", groupDocId);
+			console.log( "storageRef", storageRef);
 
-	storageRef.delete().then(() => {
-		console.log( `deleted ${storageFileName}`);
-		}).catch((error) => {
-			console.error(
-				storageFileName + " could not be deleted!",
-				error );
-		});
+		storageRef.delete().then(() => {
+			console.log( `deleted ${storageFileName}`);
+			resolve();
+			}).catch((error) => {
+				console.error(
+					storageFileName + " could not be deleted!",
+					error );
+				reject();
+			});
+	});
+
+}
+
+const removeSongDataFromFirebaseGroup = async function(
+	groupDocId,
+	songDocId) {
+
+	console.log( "removeSongData:", groupDocId, songDocId );
+
+	return firebase.firestore()
+		.collection( 'Groups' )
+		.doc( groupDocId )
+		.collection( "Songs" )
+		.doc( songDocId )
+		.delete();
 }
 
 const removeSongFromFirebaseGroup = async function(
@@ -744,22 +831,19 @@ const removeSongFromFirebaseGroup = async function(
 	groupDocId,
 	songDocId) {
 
-	firebase.firestore()
-		.collection( 'Groups' )
-		.doc( groupDocId )
-		.collection( "Songs" )
-		.doc( songDocId )
-		.delete();
+	return new Promise( async function( resolve, reject) {
+		await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
 
-	const fileUrl = DB.songKeyToFileUrl(
-		songKey,
-		groupDocId,
-		songDocId );
+		const fileUrl = DB.songKeyToFileUrl(
+			songKey,
+			groupDocId,
+			songDocId );
 
-	const storageFileName = fileUrlToStorageFileName( fileUrl );
+		const storageFileName = fileUrlToStorageFileName( fileUrl );
 
-	removeSongFileFromFirebaseGroupStorage( groupDocId, storageFileName );
-
+		await removeSongFileFromFirebaseGroupStorage( groupDocId, storageFileName );
+		resolve();
+	} );
 };
 
 const saveSongDataToFirebaseGroup = async function(
@@ -3392,6 +3476,125 @@ var TroffClass = function(){
 		}
 	};
 
+/*
+	om jag tar bort gruppen så har songen i songListen fortfarande firebaseSognId kvar...$
+	Det borde vara samma sak om jag bara lämnar gruppen?
+	nejdå, den tas bara på återstuttsen (dvs när jag får firebase eventet
+		att det hänt!
+		(vilket inte skickas alltid...)
+		)
+*
+/
+	/*Troff*/this.onClickLeaveGroup = function( event ) {
+		console.log( "onClickLeaveGroup ->" );
+		IO.confirm(
+			"Leave group?",
+			"Are you sure you wanna leave this great group?",
+			async () => {
+				$( "#groupDialog" ).addClass( "hidden" );
+				const groupDocId = $( "#groupDialogName" )
+					.data( "groupDocId" );
+				const groupData = getFirebaseGroupDataFromDialog( false );
+
+				groupData.owners = groupData.owners
+					.filter( o => o != firebaseUser.email );
+
+				emptyGroupDialog();
+				await firebase.firestore()
+					.collection( 'Groups' )
+					.doc( groupDocId )
+					.set( groupData );
+			}, 
+			() => {
+
+			},
+			"Yes, leave group",
+			"No, I like this group!"
+		);
+	}
+
+	/*Troff*/this.onClickRemoveGroup = function( event ) {
+		console.log( "onClickRemoveGroup ->" );
+
+		IO.confirm(
+			"Remove group for every one?",
+			"This will convert this group to a songlist for all the members, updates to a song will no longer sync. Is this what you want?",
+			async () => {
+				$( "#groupDialog" ).addClass( "hidden" );
+				const groupDocId = $( "#groupDialogName" )
+					.data( "groupDocId" );
+				
+				console.log( "trying to delete " + groupDocId);
+				const storageRef = firebase.storage()
+					.ref(`Groups/${groupDocId}`);
+				
+				
+				await storageRef.listAll().then((listResults) => {
+					console.log( "listResults", listResults);
+					const promises = listResults.items.map((item) => {
+						console.log( "item", item);
+						return item.delete();
+					});
+					Promise.all(promises);
+				});
+
+				const songDocIds = [];
+				$( "#groupSongParent" ).find(".groupDialogSong").each((i, s) => {
+					songDocIds.push($(s).data("firebaseSongDocId"));
+				});
+
+				console.log("songDocIds", songDocIds);
+				emptyGroupDialog();
+
+/*
+
+				const group = JSON.parse( nDB.get( "straoSongLists" ) )
+					.find( sl => sl.firebaseGroupDocId == groupDocId );
+
+				const deletePromises = [];
+				group.songs.forEach( async song => {
+
+					const fileUrl = DB.songKeyToFileUrlOnlyDocId(
+						song.fullPath,
+						groupDocId);
+
+					const storageFileName = fileUrlToStorageFileName(fileUrl);
+
+					deletePromises.push(
+						removeSongFileFromFirebaseGroupStorage(
+							groupDocId,
+							storageFileName)
+					);
+
+					//jag måste ta bort själva song-en också från subCollectionen!
+				});
+
+				await Promise.all(deletePromises);
+
+				*/
+				const removeDataPromise = [];
+				songDocIds.forEach( songDocId => {
+					removeDataPromise.push(
+						removeSongDataFromFirebaseGroup(
+							groupDocId, songDocId ) );
+				});
+				await Promise.all(removeDataPromise);
+
+
+				firebase.firestore()
+					.collection( 'Groups' )
+					.doc( groupDocId )
+					.delete();
+				
+			}, 
+			() => {
+
+			},
+			"Yes, remove group",
+			"No, I like this group!"
+		);
+	}
+
 	/*Troff*/this.onClickremoveSonglist = function( event ) {
 		const songListObjectId = $( "#groupDialogName")
 			.data( "songListObjectId" );
@@ -5163,6 +5366,12 @@ var DBClass = function(){
 		});//end get all keys
 	};
 
+	/*DB*/this.songKeyToFileUrlOnlyDocId = function( songKey, docId ) {
+		const myGroups = DB.getMyFirestoreGroups();
+		const firestoreIdentifierList = myGroups[ songKey ];
+		return firestoreIdentifierList?.find( fi =>
+			fi.groupDocId == docId )?.fileUrl;
+	}
 
 	/*DB*/this.songKeyToFileUrl = function( songKey, docId, songDocId ) {
 		const myGroups = DB.getMyFirestoreGroups();
@@ -5191,6 +5400,20 @@ var DBClass = function(){
 			` did not return any fileName!`);
 		return "undefined";
 	};
+
+	/*DB*/this.setSonglistAsNotGroup = function( firebaseGroupDocId ) {
+		const allSonglists = JSON.parse( nDB.get( "straoSongLists" ) );
+		console.log( "allSonglists", allSonglists);
+		const currentSonglist = allSonglists
+			.find( g => g.firebaseGroupDocId == firebaseGroupDocId);
+		delete currentSonglist.firebaseGroupDocId;
+		delete currentSonglist.owners;
+		currentSonglist.songs.forEach( song => {
+			delete song.firebaseSongDocId;
+		});
+
+		nDB.set( "straoSongLists", JSON.stringify( allSonglists ) );
+	}
 
 	/**
 	 * This removes a songDoc from myGroups or a group
@@ -5846,6 +6069,9 @@ var IOClass = function(){
 		$('#newSongListName').blur(Troff.exitSongListName);
 		$('#saveNewSongList').click(Troff.saveNewSongList);
 		$('#removeSongList').click(Troff.onClickremoveSonglist);
+		$('#removeGroup').click(Troff.onClickRemoveGroup);
+		$('#leaveGroup').click(Troff.onClickLeaveGroup);
+		
 		$('#cancelSongList').click(Troff.cancelSongList);
 
 		$('#buttUnselectMarkers').click(Troff.unselectMarkers);
