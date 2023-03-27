@@ -783,7 +783,7 @@ const removeSongFileFromFirebaseGroupStorage = async function (
 
 }
 
-const removeSongDataFromFirebaseGroup = async function(
+const removeSongDataFromFirebaseGroup = function(
 	groupDocId,
 	songDocId) {
 
@@ -817,33 +817,10 @@ const removeSongFromFirebaseGroup = async function(
 
 const saveSongDataToFirebaseGroup = async function(
 	songKey,
-	docId,
+	groupDocId,
 	songDocId ) {
-	/*
-		Vad på en låt vill jag dela i gruppen?
-		- Kanske
-			markörerna
-			states
-			info
-			fileData,
-			serverId
-
-
-
-
-		Vad delar jag när jag laddar upp den på gamla sättet?
-			- allt utom localInformation...
-
-		jag börjar med allt utom localInformation :)
-
-	*/
+	
 	const publicData = Troff.removeLocalInfo( nDB.get( songKey ) );
-
-	/*
-	publicData.fileUrl, där ligger själva url-en till låten
-	(om den inte finns, så kanske den borde laddas upp
-	kanske någon annan stanns (med sån där rules o så...))
-	*/
 
 	const songData = {
 		songKey : songKey,
@@ -854,7 +831,7 @@ const saveSongDataToFirebaseGroup = async function(
 
 		//här måste jag se till att fileUrl läggs på songData!
 
-		DB.songKeyToFileUrl( songKey, docId, songDocId );
+		DB.songKeyToFileUrl( songKey, groupDocId, songDocId );
 		/*
 		const myGroups = DB.getMyFirestoreGroups();
 		const firestoreIdentifierList = myGroups[ songKey ];
@@ -865,23 +842,22 @@ const saveSongDataToFirebaseGroup = async function(
 
 		firebase.firestore()
 			.collection( 'Groups' )
-			.doc( docId )
+			.doc( groupDocId )
 			.collection( "Songs" )
 			.doc( songDocId )
 			.set( songData );
 
 	} else {
 		songData.fileUrl = await uploadSongToFirebaseGroup( 
-			docId,
+			groupDocId,
 			songKey
 			);
 
 		let docRef = await firebase.firestore()
 			.collection( 'Groups' )
-			.doc( docId )
+			.doc( groupDocId )
 			.collection( "Songs" )
 			.add( songData );
-
 
 		$( "#dataSongTable" )
 			.find( `[data-song-key="${songKey}"]` )
@@ -892,7 +868,27 @@ const saveSongDataToFirebaseGroup = async function(
 				.addClass( "groupIndication" );
 		}
 
+		DB.addToMyFirestoreGroups(
+			groupDocId,
+			docRef.id,
+			songKey,
+			songData.fileUrl);
+
 		docRef.onSnapshot( songDocUpdate );
+		const songList = $( "#songListList" )
+			.find(`[data-firebase-group-doc-id="${groupDocId}"]`)
+			.data( "songList" );
+
+		songList.songs.forEach( song => {
+			if( song.fullPath == songKey ) {
+				song.firebaseSongDocId = docRef.id
+			}
+		});
+
+		$( "#songListList" )
+			.find(`[data-firebase-group-doc-id="${groupDocId}"]`)
+			.data( "songList", songList );
+
 	}
 };
 
@@ -3458,6 +3454,11 @@ var TroffClass = function(){
 				groupData.owners = groupData.owners
 					.filter( o => o != firebaseUser.email );
 
+				if ( groupData.owners.length == 0) {
+					Troff.removeGroup();
+					return;
+				}
+
 				emptyGroupDialog();
 				await firebase.firestore()
 					.collection( 'Groups' )
@@ -3472,51 +3473,54 @@ var TroffClass = function(){
 		);
 	}
 
+	/*Troff*/this.removeGroup = async function () {
+		$( "#groupDialog" ).addClass( "hidden" );
+			const groupDocId = $( "#groupDialogName" )
+				.data( "groupDocId" );
+			
+			const storageRef = firebase.storage()
+				.ref(`Groups/${groupDocId}`);
+			
+			await storageRef.listAll().then(async (listResults) => {
+				const promises = listResults.items.map((item) => {
+					return item.delete();
+				});
+				return await Promise.all(promises);
+			});
+
+			const songDocIds = [];
+			$( "#groupSongParent" )
+				.find(".groupDialogSong")
+				.each((i, s) => {
+					songDocIds.push($(s).data("firebaseSongDocId"));
+				});
+
+			emptyGroupDialog();
+
+			const removeDataPromise = [];
+			songDocIds.forEach( songDocId => {
+				removeDataPromise.push(
+					removeSongDataFromFirebaseGroup(
+						groupDocId, songDocId ) );
+			});
+			await Promise.all(removeDataPromise);
+
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( groupDocId )
+				.delete();
+	}
+
 	/*Troff*/this.onClickRemoveGroup = function( event ) {
 
 		IO.confirm(
 			"Remove group for every one?",
 			"This will convert this group to a songlist for all the members, updates to a song will no longer sync. Is this what you want?",
 			async () => {
-				$( "#groupDialog" ).addClass( "hidden" );
-				const groupDocId = $( "#groupDialogName" )
-					.data( "groupDocId" );
-				
-				const storageRef = firebase.storage()
-					.ref(`Groups/${groupDocId}`);
-				
-				await storageRef.listAll().then((listResults) => {
-					const promises = listResults.items.map((item) => {
-						return item.delete();
-					});
-					return Promise.all(promises);
-				});
-
-				const songDocIds = [];
-				$( "#groupSongParent" )
-					.find(".groupDialogSong")
-					.each((i, s) => {
-						songDocIds.push($(s).data("firebaseSongDocId"));
-					});
-
-				emptyGroupDialog();
-
-				const removeDataPromise = [];
-				songDocIds.forEach( songDocId => {
-					removeDataPromise.push(
-						removeSongDataFromFirebaseGroup(
-							groupDocId, songDocId ) );
-				});
-				await Promise.all(removeDataPromise);
-
-				firebase.firestore()
-					.collection( 'Groups' )
-					.doc( groupDocId )
-					.delete();
-				
+				Troff.removeGroup();
 			}, 
 			() => {
-				//Dont do annything on cancel...
+				//Do not do annything on cancel...
 			},
 			"Yes, remove group",
 			"No, I like this group!"
