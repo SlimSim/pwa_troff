@@ -1348,7 +1348,7 @@
 
 	<div id="groupDialog" class="outerDialog hidden">
 		<div class="innerDialog flexCol mh-100">
-			<h2 class="paragraph">Group!</h2>
+			<h2 class="paragraph">Songlist!</h2>
 
 			<form class="vScroll mh-100 pr-4">
 				<div class="form-group row">
@@ -1356,30 +1356,27 @@
 					<div class="col-sm">
 						<input type="text" class="allow-tab form-control writableField" id="groupDialogName" value="" />
 					</div>
+					<input
+						type="checkbox"
+						class="hidden"
+						id="groupDialogIsGroup" />
+
 				</div>
 
-				<div class="form-group row">
-					<label for="groupDialogIsGroup" class="form-group">
-						<span>Is Group:</span>
-					</label>
-						<input type="checkbox" id="groupDialogIsGroup" />
-				</div>
-
-
-				<div class="form-group">
-					<span>Owners:</span>
+				<div class="form-group hidden pt-4" id="groupOwnerRow">
+					<span>This songlist is shared with:</span>
 					<div id="groupOwnerParent">
 					</div>
 					<button
 						type="button"
 						id="groupAddOwnerButt"
-						title="Add new owner"
+						title="Add someone who will get these songs and all the updates to them!"
 						class="regularButton">
-						<i class="fa-plus" ></i>
+						add new person to share with
 					</button>
 				</div>
-				<div class="form-group">
-					<span>Sogns:</span>
+				<div class="form-group pt-4">
+					<span>Songs:</span>
 					<div id="groupSongParent">
 					</div>
 					<button
@@ -1389,7 +1386,6 @@
 						class="regularButton">
 						<i class="fa-plus" ></i>
 					</button>
-					<ul id="song-examples"></ul>
 				</div>
 
 				<div class="flexRow pt-4 flexRowWrap">
@@ -1410,6 +1406,13 @@
 							class="regularButton"
 							id="removeSongList"
 							value="Remove">
+
+						<input
+							type="button"
+							class="regularButton"
+							id="shareSonglist"
+							title="Share this songlist with your freinds, and they will receive updated you make to the songs in this songlist, and vice versa!"
+							value="Share!">
 
 						<input
 							type="button"

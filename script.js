@@ -471,6 +471,9 @@ const openGroupDialog = async function( songListObject ) {
 
 	if (isGroup) {
 		$( "#leaveGroup" ).removeClass( "hidden" );
+		$( "#groupOwnerRow" ).removeClass( "hidden" );
+	} else {
+		$( "#shareSonglist" ).removeClass( "hidden" );
 	}
 
 	$( "#groupDialogName" ).val( songListObject.name );
@@ -500,9 +503,9 @@ const emptyGroupDialog = function() {
 	$( "#groupDialogName" ).val( "" );
 	$( "#groupDialogName" ).removeData();
 
-	$( "#song-examples" ).empty();
-
 	$( "#leaveGroup" ).addClass( "hidden" );
+	$( "#shareSonglist" ).addClass( "hidden" );
+	$( "#groupOwnerRow" ).addClass( "hidden" );
 }
 
 const newGroupDialog = function( event ) {
@@ -545,6 +548,8 @@ const addGroupSongRow = function( songDocId, song ) {
 		.on( "click", removeSongRow );
 	songRow
 		.find( ".groupDialogSong" )
+		.attr( "readonly", true )
+		.addClass( "form-control-plaintext" )
 		.attr( "songDocId", songDocId )
 		.val( song?.songKey );
 
@@ -562,6 +567,8 @@ const addGroupSongRow_NEW = function( songIdObject ) {
 		.on( "click", removeSongRow );
 	songRow
 		.find( ".groupDialogSong" )
+		.attr( "readonly", true )
+		.addClass( "form-control-plaintext" )
 		.data( "galleryId", songIdObject.galleryId )
 		.data( "firebaseSongDocId", songIdObject.firebaseSongDocId )
 		.val( songIdObject.fullPath );
@@ -3400,6 +3407,12 @@ var TroffClass = function(){
 			.set( groupData );
 	}
 
+	/*Troff*/this.onClickShareSonglist = function( event ) {
+		$("#groupOwnerRow").removeClass("hidden");
+		$( "#groupDialogIsGroup" ).prop('checked', true);
+		addGroupOwnerRow( firebaseUser.email );
+	}
+
 	/*Troff*/this.onClickLeaveGroup = function( event ) {
 		IO.confirm(
 			"Stop sharing this songlist",
@@ -5964,6 +5977,7 @@ var IOClass = function(){
 		$('#saveNewSongList').click(Troff.saveNewSongList);
 		$('#removeSongList').click(Troff.onClickremoveSonglist);
 		$('#leaveGroup').click(Troff.onClickLeaveGroup);
+		$('#shareSonglist').click(Troff.onClickShareSonglist)
 		
 		$('#cancelSongList').click(Troff.cancelSongList);
 
