@@ -469,6 +469,10 @@ const openGroupDialog = async function( songListObject ) {
 
 	const isGroup = songListObject.firebaseGroupDocId !== undefined;
 
+	if (isGroup) {
+		$( "#leaveGroup" ).removeClass( "hidden" );
+	}
+
 	$( "#groupDialogName" ).val( songListObject.name );
 	$( "#groupDialogName" ).data( "songListObjectId", songListObject.id );
 	$( "#groupDialogName" )
@@ -497,6 +501,8 @@ const emptyGroupDialog = function() {
 	$( "#groupDialogName" ).removeData();
 
 	$( "#song-examples" ).empty();
+
+	$( "#leaveGroup" ).addClass( "hidden" );
 }
 
 const newGroupDialog = function( event ) {
@@ -3373,35 +3379,39 @@ var TroffClass = function(){
 		}
 	};
 
+	/*Troff*/this.leaveGroup = async function() {
+		$( "#groupDialog" ).addClass( "hidden" );
+		const groupDocId = $( "#groupDialogName" )
+			.data( "groupDocId" );
+		const groupData = getFirebaseGroupDataFromDialog( false );
+
+		groupData.owners = groupData.owners
+			.filter( o => o != firebaseUser.email );
+
+		if ( groupData.owners.length == 0) {
+			Troff.removeGroup();
+			return;
+		}
+
+		emptyGroupDialog();
+		await firebase.firestore()
+			.collection( 'Groups' )
+			.doc( groupDocId )
+			.set( groupData );
+	}
+
 	/*Troff*/this.onClickLeaveGroup = function( event ) {
 		IO.confirm(
-			"Leave group?",
-			"Are you sure you wanna leave this great group?",
+			"Stop sharing this songlist",
+			"Are you sure you want to stop sharing this songlist? Updates that you do will no longer be shared to the other members of this songlist.",
 			async () => {
-				$( "#groupDialog" ).addClass( "hidden" );
-				const groupDocId = $( "#groupDialogName" )
-					.data( "groupDocId" );
-				const groupData = getFirebaseGroupDataFromDialog( false );
-
-				groupData.owners = groupData.owners
-					.filter( o => o != firebaseUser.email );
-
-				if ( groupData.owners.length == 0) {
-					Troff.removeGroup();
-					return;
-				}
-
-				emptyGroupDialog();
-				await firebase.firestore()
-					.collection( 'Groups' )
-					.doc( groupDocId )
-					.set( groupData );
-			}, 
+				Troff.leaveGroup();
+			},
 			() => {
 
 			},
-			"Yes, leave group",
-			"No, I like this group!"
+			"Yes, stop share",
+			"No, I want to continue sharing!"
 		);
 	}
 
@@ -3443,7 +3453,7 @@ var TroffClass = function(){
 				.delete();
 	}
 
-	/*Troff*/this.onClickRemoveGroup = function( event ) {
+	/*Troff* /this.onClickRemoveGroup = function( event ) {
 
 		IO.confirm(
 			"Remove group for every one?",
@@ -3457,14 +3467,35 @@ var TroffClass = function(){
 			"Yes, remove group",
 			"No, I like this group!"
 		);
-	}
+	}*/
 
-	/*Troff*/this.onClickremoveSonglist = function( event ) {
+	/*Troff*/this.IO_removeSonglist = async function() {
+		const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
 		const songListObjectId = $( "#groupDialogName")
 			.data( "songListObjectId" );
+
+		if (isGroup) {
+			await Troff.leaveGroup();
+		}
+
 		Troff.removeSonglist_NEW( songListObjectId );
 		emptyGroupDialog();
 		$( "#groupDialog" ).addClass( "hidden" );
+	}
+
+	/*Troff*/this.onClickremoveSonglist = async function( event ) {
+		const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
+		if( !isGroup ) {
+			Troff.IO_removeSonglist();
+			return;
+		}
+		IO.confirm(
+			"Remove Songlist?",
+			"This will remove this songlist and updates to songs will no longer be shared to the rest of the owners for this songlist",
+			Troff.IO_removeSonglist,
+			() => {},
+			"Yes, remove songlist",
+			"No, I like this songlist!");
 	}
 
 	/*Troff*/this.removeSonglist_NEW = function( songListId ) {
@@ -5932,7 +5963,6 @@ var IOClass = function(){
 		$('#newSongListName').blur(Troff.exitSongListName);
 		$('#saveNewSongList').click(Troff.saveNewSongList);
 		$('#removeSongList').click(Troff.onClickremoveSonglist);
-		$('#removeGroup').click(Troff.onClickRemoveGroup);
 		$('#leaveGroup').click(Troff.onClickLeaveGroup);
 		
 		$('#cancelSongList').click(Troff.cancelSongList);

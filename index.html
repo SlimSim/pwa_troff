@@ -1392,7 +1392,7 @@
 					<ul id="song-examples"></ul>
 				</div>
 
-				<div class="flexRow pt-4">
+				<div class="flexRow pt-4 flexRowWrap">
 					<input
 						type="submit"
 						class="regularButton buttWidthStandard dialogCancelButton"
@@ -1404,25 +1404,21 @@
 						value="Cancel" />
 						<div class="flex-one"></div>
 
-					<input
-						type="button"
-						class="regularButton buttWidthStandard"
-						id="removeSongList"
-						value="Remove">
+					<div>
+						<input
+							type="button"
+							class="regularButton"
+							id="removeSongList"
+							value="Remove">
 
-					<input
-						type="button"
-						class="regularButton buttWidthStandard"
-						id="leaveGroup"
-						title="Leave this group and convert it to a songlist"
-						value="Leave Group">
+						<input
+							type="button"
+							class="regularButton"
+							id="leaveGroup"
+							title="Stop sharing this songlist with with the others."
+							value="Stop sharing">
+					</div>
 
-					<input
-						type="button"
-						class="regularButton buttWidthStandard"
-						id="removeGroup"
-						title="Removing this group will convert it to a songlist for all group-members."
-						value="Remove Group">
 
 				</div>
 			</form>
