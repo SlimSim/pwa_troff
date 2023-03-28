@@ -25,7 +25,7 @@ saker jag vill göra
 1) på något sätt integrera grupp med låt-lista
 
 
-1.1) TODO: när man har en befintlig songList, 
+KLAR 1.1) TODO: när man har en befintlig songList, 
 		och konverterar till en group,
 		så får songs-documentet man skicakr till firebase endast
 			jsonDataInfo och songKey
@@ -36,10 +36,14 @@ saker jag vill göra
 			och ta hand om fileUrl och lägga på den 
 			innan man skickar upp själva songData (eller vad det nu heter :) 
 		)
-1.2) TODO: när jag skapat en ny grupp med låt i,
+KLAR 1.2) TODO: när jag skapat en ny grupp med låt i,
 			och sen lägger till en användare
 			så blir song-datat i firebase dublerat???
-1.3) TODO: uppdateringen att en grupp tagits bort skickas inte 
+
+KLAR 1.3)	TODO:
+			När jag sparar en befintlig grupp
+			så tas fileUrl bort från firebase :(
+1.4) TODO: uppdateringen att en grupp tagits bort skickas inte 
 			om en användare loggar in efter att gruppen tagits bort :(
 
 
@@ -455,10 +459,8 @@ const populateExampleSongsInGroupDialog = function( songs ) {
 		.data();
 
 	const fullPathList = songs.map( song => song.fullPath );
-		console.log( "fullPathList", fullPathList)
 	dataInfo.each( v => {
 		const fullPath = JSON.parse( v ).fullPath;
-		console.log( "fp", fullPath )
 		if (fullPathList.includes( fullPath ) ) {
 			return;
 		}
@@ -800,16 +802,13 @@ const saveSongDataToFirebaseGroup = async function(
 
 	if( songDocId != undefined ) {
 
-		//här måste jag se till att fileUrl läggs på songData!
-
 		DB.songKeyToFileUrl( songKey, groupDocId, songDocId );
-		/*
+		
 		const myGroups = DB.getMyFirestoreGroups();
 		const firestoreIdentifierList = myGroups[ songKey ];
 		songData.fileUrl = firestoreIdentifierList?.find( fi =>
-			fi.groupDocId == docId 
+			fi.groupDocId == groupDocId 
 			&& fi.songDocId == songDocId )?.fileUrl;
-			*/
 
 		firebase.firestore()
 			.collection( 'Groups' )
