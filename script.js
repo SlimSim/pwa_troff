@@ -22,7 +22,16 @@
 
 /*
 saker jag vill göra
-1) på något sätt integrera grupp med låt-lista
+
+8) andra fina saker som grupper har kanske låt-listor också ska ha
+	så som färg, inforuta mm (så att straoSongLists blir så lika som möjligt ? :) )
+
+KLAR 4) lista på vald låt VILKA grupper den är med i!
+	visa någonstanns i inforutan uppe till vänster
+	(kanske en tool-tip eller något som fälls ut?
+		iaf om den tillhör fler än 1 grupp?)
+
+KLAR 1) på något sätt integrera grupp med låt-lista
 
 
 KLAR 1.1) TODO: när man har en befintlig songList, 
@@ -39,64 +48,12 @@ KLAR 1.1) TODO: när man har en befintlig songList,
 KLAR 1.2) TODO: när jag skapat en ny grupp med låt i,
 			och sen lägger till en användare
 			så blir song-datat i firebase dublerat???
-
-KLAR 1.3)	TODO:
-			När jag sparar en befintlig grupp
+KLAR 1.3) TODO: När jag sparar en befintlig grupp
 			så tas fileUrl bort från firebase :(
-1.4) TODO: uppdateringen att en grupp tagits bort skickas inte 
+KLAR 1.4) TODO: uppdateringen att en grupp tagits bort skickas inte 
 			om en användare loggar in efter att gruppen tagits bort :(
 
 
-	spara ny låtlista med lite markerade låtar
-	redigera befintlig låtlista :)
-
-
-	(men man måste kunna se att en låtlista är en grupp)
-
-	så, en låtlistorna är sparade i localStorage med key
-		straoSongLists
-	varje låt-liste-objekt är
-		id, name, songs (ev isDirecotry)
-		(vad används ID till?)
-	en grup från firebase har
-		id, name, songs, owners
-	
-	Jag borde behandla grupperna i local storage presic på samam sätt som 
-		"vanliga listor". Men hur ska jag koppla ihop dom?
-	När jag skapar en grupp så skapas en lista, den får samam namn och låtar
-		och ett nytt attribut som är firestoreId
-	och på så sätt kan jag koppla ihop en grupp från firebase
-		(när grupperna laddas) med en befintlig låtlista
-	
-	om jag har en låtlista så vill jag kunna säga "gör till grupp"
-		detta ska jag ju INTE kunna göra med en låtlista som "tillhör" en grupp, eftersom en låtlista har antingen en eller ingen grupp!
-	
-	Så, låtlistor som har attributet firestoreId är grupper, 
-		dom som INTE har det är vanliga gamla Listor
-	
-	Kanske ska byta ut soptunnan bredvid en låt-lista mot en edit-knapp
-	och byta ut soptunnan bredvid en grupp mot en edit-knapp
-	pop-upp-dialogen kanske är samma dialog för grupp och låtlista men
-		att grupp visar lite flera saker, typ owners mm.
-		och att låt-lista visar namn, låtar och "konvertera till grupp kanske"
-
-		Gruppen ska ju också ha "ta bort grupp" eller "konvertera till låtlista" - och den måste ju ha en förklaring om att gruppen kommer försvinna från alla medlemmar och konverteras till låtlistor för dom.
-
-		man kanske också ska ha "lämna grupp" / 
-
-		måste fundera på hur jag ska visa 
-			"ta bort grupp för alla medlemmar"
-			"lämna grupp"
-			"blockera grupp?" - om man inte vill kunna bli tillagd?
-			och om man gör något av detta, ska låtlistan vara kvar???
-
-		andra fina saker som grupper har kanske låt-listor också ska ha
-			så som färg, inforuta mm (så att straoSongLists blir så lika som möjligt ? :) )
-
-4) lista på vald låt VILKA grupper den är med i!
-	visa någonstanns i inforutan uppe till vänster
-	(kanske en tool-tip eller något som fälls ut?
-		iaf om den tillhör fler än 1 grupp?)
 KLAR 7) När låt-data uppdateras (tempo OCH info i song-listan 
 	(tup custom name mm) ) så ska den skicka till firebase
 
@@ -108,7 +65,7 @@ KLAR 7) När låt-data uppdateras (tempo OCH info i song-listan
 		(som inte innehåller hennes senaste 10...)
 KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
 
-3.1) Det verkar som att låtar INTE tas bort från groupIndication ibland
+KLAR 3.1) Det verkar som att låtar INTE tas bort från groupIndication ibland
 		Tex A horse...
 		det kanske bara är gammal data jag har men...
 		kanske ska kolla på att appen automatiskt uppdaterar den datan varje gång den får connection med firebase...???
@@ -307,11 +264,6 @@ const setGroupAsSonglist = function(groupDocId) {
 const groupDocUpdate = function( doc ) {
 
 	if( !doc.exists ) {
-		$.notify(
-			`The group "${oldLiGroup.text()}" has been removed`, 
-			"info"
-		);
-
 		setGroupAsSonglist(doc.id);
 		DB.removeFromMyFirestoreGroups( undefined, doc.id );
 		return;
@@ -1218,12 +1170,36 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 } //end setSong2
 
 function updateGroupNotification( songKey ) {
-	if( DB.getNrOfGroupsThisSongIsIn( songKey ) == 0 ) {
+	const nrGroups = DB.getNrOfGroupsThisSongIsIn( songKey )
+	if( nrGroups == 0 ) {
+		$( "#currentGroupsParent" ).addClass( "hidden" );
 		$( ".groupIndicationDiv" ).removeClass( "groupIndication" );
 		return;
 	}
+	$( "#currentGroupsParent" ).removeClass( "hidden" );
 
 	$( ".groupIndicationDiv" ).addClass( "groupIndication" );
+
+	$( ".currentNrGroups" ).text( nrGroups ); 
+
+	const groups = DB.getMyFirestoreGroups()[songKey];
+	
+	const groupNames = groups.map( group => {
+		return $( "#songListList" )
+			.find( `[data-firebase-group-doc-id="${group.groupDocId}"]` )
+			.text();
+	});
+
+	$( "#currentNrGroupsPluralS" ).toggleClass( "hidden", nrGroups == 1 );
+
+	$( "#currentGroups" ).empty();
+	groupNames.forEach( name => {
+		$( "#currentGroups" ).append(
+			$( "<li>" ).addClass("pt-2").text( name )
+		);
+	});
+
+
 };
 
 function updateVersionLink( path ) {

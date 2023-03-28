@@ -1061,6 +1061,10 @@ table.dataTable .dataTables_empty{
 	min-width: 120px;
 }
 
+.w-exact-200 {
+	width: 200px !important;
+}
+
 .h-exact-35 {
 	height: 35px;
 }
