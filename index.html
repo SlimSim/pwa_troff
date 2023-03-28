@@ -1372,20 +1372,21 @@
 						id="groupAddOwnerButt"
 						title="Add someone who will get these songs and all the updates to them!"
 						class="regularButton">
-						add new person to share with
+						Add new person to share with
 					</button>
 				</div>
 				<div class="form-group pt-4">
-					<span>Songs:</span>
+					<span>Songs in this songlist:</span>
 					<div id="groupSongParent">
 					</div>
 					<button
 						type="button"
-						id="groupAddSongButt"
-						title="Add new song"
-						class="regularButton">
-						<i class="fa-plus" ></i>
+						data-st-css-selector-to-toggle="#possible-songs-to-add"
+						title="Add a new song to this songlist"
+						class="stOnOffButton">
+						Add new songs to songlist
 					</button>
+					<ul class="hidden" id="possible-songs-to-add"></ul>
 				</div>
 
 				<div class="flexRow pt-4 flexRowWrap">

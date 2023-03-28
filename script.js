@@ -447,20 +447,35 @@ const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
 		.removeClass( "groupIndication" );
 }
 
-const populateExampleSongsInGroupDialog = function() {
+const populateExampleSongsInGroupDialog = function( songs ) {
 	// TODO: fixa bättre sätt att lägga på låtarna!
 	let dataInfo = $('#dataSongTable')
-	.DataTable()
-	.column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
-	.data();
+		.DataTable()
+		.column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
+		.data();
 
-	let songs = "";
+	const fullPathList = songs.map( song => song.fullPath );
+		console.log( "fullPathList", fullPathList)
 	dataInfo.each( v => {
-		songs +=  + "<br />\n";
-		$( "#song-examples" ).append($(
-			"<li>").text( JSON.parse( v ).fullPath )
+		const fullPath = JSON.parse( v ).fullPath;
+		console.log( "fp", fullPath )
+		if (fullPathList.includes( fullPath ) ) {
+			return;
+		}
+		$( "#possible-songs-to-add" ).append($(
+			"<li>").addClass("py-1").append(
+				$( "<button>")
+					.text( fullPath )
+					.addClass( "regularButton")
+					.attr( "type", "button" )
+					.data( "fullPath", fullPath )
+					.click( onClickAddNewSongToGroup )
+
+			)
 		)
 	} );
+
+
 }
 
 const openGroupDialog = async function( songListObject ) {
@@ -487,7 +502,7 @@ const openGroupDialog = async function( songListObject ) {
 
 	songListObject.songs.forEach( addGroupSongRow_NEW );
 
-	populateExampleSongsInGroupDialog();
+	populateExampleSongsInGroupDialog( songListObject.songs );
 
 	$( "#groupDialog" ).removeClass( "hidden" );
 
@@ -499,6 +514,7 @@ const emptyGroupDialog = function() {
 
 	$( "#groupOwnerParent" ).empty();
 	$( "#groupSongParent" ).empty();
+	$( "#possible-songs-to-add" ).empty();
 
 	$( "#groupDialogName" ).val( "" );
 	$( "#groupDialogName" ).removeData();
@@ -534,6 +550,16 @@ const removeSongRow = function( event ) {
 	*/
 
 	//row.remove();
+};
+
+const onClickAddNewSongToGroup = function( event ) {
+	const target = $( event.target );
+	addGroupSongRow(
+		undefined,
+		{songKey : target.data( "fullPath") }
+	);
+	target.remove();
+
 };
 
 
@@ -6014,7 +6040,6 @@ var IOClass = function(){
 		$( "#signOut" ).on( "click", signOut );
 
 		$( "#groupAddOwnerButt" ).on( "click", () => {addGroupOwnerRow();} );
-		$( "#groupAddSongButt" ).on( "click", () => {addGroupSongRow();} );
 		window.addEventListener('resize', function() {
 			Troff.setAppropriateMarkerDistance();
 		});
