@@ -301,15 +301,13 @@ const setGroupAsSonglist = function(groupDocId) {
 }
 
 const groupDocUpdate = function( doc ) {
-	const oldLiGroup = $( "#groupList" ) // todo: ta bort :)
-		.find( "[group-id=" + doc.id + "]" ); // todo: ta bort :)
 
 	if( !doc.exists ) {
 		$.notify(
 			`The group "${oldLiGroup.text()}" has been removed`, 
 			"info"
 		);
-		oldLiGroup.remove() // todo: ta bort :)
+
 		setGroupAsSonglist(doc.id);
 		DB.removeFromMyFirestoreGroups( undefined, doc.id );
 		return;
@@ -336,26 +334,6 @@ const groupDocUpdate = function( doc ) {
 	songListObject.owners = group.owners;
 
 	Troff.updateSongListInHTML( songListObject );
-
-	const name = $( "<button>" ) // todo: ta bort :)
-		.text( group.name )
-		.addClass( "stOnOffButton flex-one text-left")
-
-	const liGroup = $( "<li>" ) // todo: ta bort :)
-		.attr( "group-id", doc.id )
-		.addClass( "py-1" )
-		.append( name );
-
-	if( oldLiGroup.length > 0 ) { // todo: ta bort :)
-		liGroup.insertBefore( oldLiGroup );
-		oldLiGroup.remove();
-	} else {
-		$( "#groupList" ).append( liGroup ); // todo: ta bort :)
-	}
-
-	name.on( "click", () => { // todo: ta bort :)
-		preOpenGroupDialog( doc ); // todo: ta bort :)
-	} );
 
 }
 
@@ -469,33 +447,6 @@ const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
 		.removeClass( "groupIndication" );
 }
 
-
-// Denna anropas bara när gamla grupp-knappen trycks på, denna funktion ska tas bort när jag inte behöver Groups!-listan till vänster om songList-listan
-// todo: ta bort!
-const preOpenGroupDialog = async function( doc ) {
-	emptyGroupDialog();
-	const group = doc.data();
-
-	const songLIstObject = {
-		name : group.name,
-		firebaseGroupDocId : doc.id,
-		owners : group.owners,
-		songs : []
-	};
-
-	const subCollection = await doc.ref.collection( "Songs" ).get();
-
-	subCollection.docs.forEach( songDoc => {
-		songLIstObject.songs.push( {
-			galleryId: 'pwa-galleryId',
-			fullPath: songDoc.data().songKey,
-			firebaseSongDocId : songDoc.id
-		});
-	});
-
-	openGroupDialog( songLIstObject );
-};
-
 const populateExampleSongsInGroupDialog = function() {
 	// TODO: fixa bättre sätt att lägga på låtarna!
 	let dataInfo = $('#dataSongTable')
@@ -515,25 +466,6 @@ const populateExampleSongsInGroupDialog = function() {
 const openGroupDialog = async function( songListObject ) {
 
 	emptyGroupDialog();
-
-// som jag trodde, det är data-songList som läggs på sorterings-knappen som är olika! .)
-/*
-när jag öppnar denna med en song list anropas jag från
-	songListDialogOpenExisting	@	script.js:1702
-och får: 
-	id: 2
-	name: "Hard"
-	songs: (4) [{…}, {…}, {…}, {…}]
-
-när jag öppnar den med en group anropas jag från 
-	songListDialogOpenExisting	@	script.js:1702
-och får får:
-	firebaseGroupDocId: "1MvSi6qOG73Fegx7fCDf"
-	name: "Test58"
-	owners: (4) ['slimsimapps@gmail.com', 'diana.besh@gmail.com']
-	songs: (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
-varför har inte den id???
-*/
 
 	const isGroup = songListObject.firebaseGroupDocId !== undefined;
 
@@ -5481,7 +5413,7 @@ var DBClass = function(){
 			if( straoSongLists == undefined ) {
 				straoSongLists = [];
 			}
-			//Troff.setSonglists(JSON.parse(straoSongLists)); //todo: ta bort denna setSonglists :)
+
 			Troff.setSonglists_NEW(JSON.parse(straoSongLists));
 		});
 	};
