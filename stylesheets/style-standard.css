@@ -438,6 +438,9 @@ textarea {
 .text-light-gray {
 	color: #ccc !important;
 }
+.text-inherit {
+	color: inherit !important;
+}
 
 .bg-danger	{	background-color: #dc3545 !important;	}
 .bg-dark		{	background-color: #212529 !important;	}

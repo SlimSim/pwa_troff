@@ -24,68 +24,13 @@
 saker jag vill göra
 
 8) andra fina saker som grupper har kanske låt-listor också ska ha
-	så som färg, inforuta mm (så att straoSongLists blir så lika som möjligt ? :) )
+	
+KLAR) 8.1) TODO: inforuta
 
-KLAR 4) lista på vald låt VILKA grupper den är med i!
-	visa någonstanns i inforutan uppe till vänster
-	(kanske en tool-tip eller något som fälls ut?
-		iaf om den tillhör fler än 1 grupp?)
+8.3) TODO: loga
 
-KLAR 1) på något sätt integrera grupp med låt-lista
-
-
-KLAR 1.1) TODO: när man har en befintlig songList, 
-		och konverterar till en group,
-		så får songs-documentet man skicakr till firebase endast
-			jsonDataInfo och songKey
-		alltså INTE fileUrl!!!
-		fileUrl fås när man lägger till en låt via drag and drop :)
-		(	
-			antar att det bara är att ladda upp låten först 
-			och ta hand om fileUrl och lägga på den 
-			innan man skickar upp själva songData (eller vad det nu heter :) 
-		)
-KLAR 1.2) TODO: när jag skapat en ny grupp med låt i,
-			och sen lägger till en användare
-			så blir song-datat i firebase dublerat???
-KLAR 1.3) TODO: När jag sparar en befintlig grupp
-			så tas fileUrl bort från firebase :(
-KLAR 1.4) TODO: uppdateringen att en grupp tagits bort skickas inte 
-			om en användare loggar in efter att gruppen tagits bort :(
-
-
-KLAR 7) När låt-data uppdateras (tempo OCH info i song-listan 
-	(tup custom name mm) ) så ska den skicka till firebase
-
-	KLAR 0) fixa vad som händer är någon annan ändrar markerna på VALD låt :)
-	säg att jag har test.mp3 igång.
-	lisa har sin test.mp3 igång och lägger till 10 markerör
-	efter det ändrar jag i en av mina markörer, 
-	då kommer den skriva över lisas ändringar med mina markörer
-		(som inte innehåller hennes senaste 10...)
-KLAR! 2) ta bort filen från firebase när den tas bort från gruppen
-
-KLAR 3.1) Det verkar som att låtar INTE tas bort från groupIndication ibland
-		Tex A horse...
-		det kanske bara är gammal data jag har men...
-		kanske ska kolla på att appen automatiskt uppdaterar den datan varje gång den får connection med firebase...???
-
-KLAR! 3) markera på en låt att den är med i en grupp
-	lägg till visualQue (.groupIndication) när låtar läggs till i en grupp
-	ta bort visualQue när låtar tas bort från en grupp...
-	Fixa bättre style (.groupIndication) för låtar i grupp!
-
-KLAR 5) lägg på/ta bort .groupIndication på .groupIndicationDiv
-		om en aktiv låt läggs till / tas bort ifrån en grupp
-
-KLAR 6) hur blir det med .groupIndication om en låt ligger i flera
-		grupper och tas bort från en av dom?
+8.2) TODO: färg
 */
-
-
-//ska filerna i firebase storage ha hashat namn eller orginal-filnamnet
-
-
 
 window.alert = function( alert){
 	console.warn("Alert:", alert);
@@ -285,9 +230,10 @@ const groupDocUpdate = function( doc ) {
 	}
 
 	const songListObject = $target.data( "songList" );
-	
-	songListObject.name = group.name;
-	songListObject.owners = group.owners;
+
+	Object.entries(group).forEach(([key, value]) => {
+		songListObject[key] = value
+	});
 
 	Troff.updateSongListInHTML( songListObject );
 
@@ -452,6 +398,8 @@ const openGroupDialog = async function( songListObject ) {
 	
 	$( "#groupDialogIsGroup" ).prop('checked', isGroup);
 
+	$( "#groupDialogInfo" ).val( songListObject.info );
+
 	songListObject.owners?.forEach( addGroupOwnerRow );
 
 	songListObject.songs.forEach( addGroupSongRow_NEW );
@@ -549,6 +497,7 @@ const addGroupSongRow_NEW = function( songIdObject ) {
 		.find( ".groupDialogSong" )
 		.attr( "readonly", true )
 		.addClass( "form-control-plaintext" )
+		.addClass( "text-inherit" )
 		.data( "galleryId", songIdObject.galleryId )
 		.data( "firebaseSongDocId", songIdObject.firebaseSongDocId )
 		.val( songIdObject.fullPath );
@@ -605,6 +554,7 @@ const groupDialogSave = async function( event ) {
 	const songListObject = {
 		id : $( "#groupDialogName" ).data( "songListObjectId" ),
 		name : $( "#groupDialogName" ).val(),
+		info : $( "#groupDialogInfo" ).val(),
 	};
 
 	if( isGroup ) {
@@ -617,11 +567,11 @@ const groupDialogSave = async function( event ) {
 		if( !owners.includes( firebaseUser.email ) ) {
 			owners.push( firebaseUser.email );
 		}
+		songListObject.owners = owners;
 
-		const groupData = {
-			name : $( "#groupDialogName" ).val(),
-			owners : owners
-		};
+		// copying songListObject to groupData without references!
+		const groupData = JSON.parse(JSON.stringify(songListObject));
+		delete groupData.id;
 
 		if( groupDocId != null ) {
 			await firebase.firestore()
@@ -639,7 +589,6 @@ const groupDialogSave = async function( event ) {
 		}
 
 
-		songListObject.owners = owners;
 		songListObject.firebaseGroupDocId = groupDocId;
 
 	}
