@@ -247,12 +247,12 @@ $(function () {
 
 	/**
 	 * Sends both the file and the TroffData to Firebase
-	 * @param {string} fileKey 
-	 * @param {TroffData-object} oSongTroffInfo 
-	 * @param {string} storageDir 
+	 * @param {string} fileKey
+	 * @param {TroffData-object} oSongTroffInfo
+	 * @param {string} storageDir
 	 * @returns {} object with troffData id, url and fileName
 	 */
-	fileHandler.sendFile = async function( 
+	fileHandler.sendFile = async function(
 		fileKey,
 		oSongTroffInfo,
 		storageDir = "TroffFiles" ) {
@@ -304,7 +304,7 @@ $(function () {
 		}
 	};
 
-	firebaseWrapper.uploadFile = async function( 
+	firebaseWrapper.uploadFile = async function(
 		fileId,
 		file,
 		storageDir = "TroffFiles" ) {
