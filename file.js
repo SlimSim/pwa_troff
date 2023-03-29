@@ -211,8 +211,6 @@ $(function () {
 		storageDir
 		) {
 
-			console.log( "fileKey", fileKey);
-			console.log( "storageDir", storageDir);
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
 			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
 			we apologize for the inconvenience.
@@ -244,7 +242,6 @@ $(function () {
 				}
 			});
 
-		console.log( "fileUrl", fileUrl);
 		return [fileUrl, file];
 	}
 
@@ -288,10 +285,7 @@ $(function () {
 				//markerJsonString: troffData.markerJsonString
 			};
 		});
-/*
-		});
-    });
-	*/
+
 	};
 
 	fileHandler.handleFiles = async function( files, callbackFunk ) {
