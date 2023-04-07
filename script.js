@@ -30,6 +30,59 @@ KLAR) 8.1) TODO: inforuta
 8.3) TODO: loga
 
 8.2) TODO: färg
+
+
+
+9) TYP KLAR, (måste testa lite mer bara) BUGG
+	När man laddar sidan, och den uppdaterar firebase-grupperna
+	så ska den också räkna om myFirebaseGroups!
+	(just nu har jag 
+		{A Horse.mp3: Array(5)}
+	trotts att jag INTE har några grupper...)
+
+	så, helt enkelt räkna om HELA myFirebaseGroups
+	MEN: anledningen till att jag har myFirestoreGroups är för att 
+	spara fileUrl, (så antingen återanvända den som finns)
+		ELLER ännubätter, borde kunna få med det från firestore????
+
+		Eller hur! :)
+
+9.2) KLAR "group-indication-strecken" uppdateras INTE efter 
+	initiateCollections
+		så OM man i songToGroupMappen har INGA låtar i databasen
+		och firebase uppdaterar med ett gäng, så kommer inga låtar
+		få groupIndication-sträcket! :)
+
+	Funderar på att ha ett EVENT som man kan fira i slutet av 
+	SongToGroup.quickAdd där man skickar ut typ eventet
+		songAddedToMap med info om songId, songKey, groupId mm?
+	och så kan man i koden lyssna på det eventet och helt enkelt 
+	slänga på groupIndication på den låten när det eventet firas?
+	
+	känns som "bästa sättet" att hantera det på :) 
+		(jämfört med att anropa updateGroupIndication från 
+		SongToGroup-klassen...)
+
+10) Share-knappen - Om man INTE är inloggad ska den visa en popupp
+	som beskriver funktionen och fråga om man vill logga in!
+
+Allmänt bättre beskrivning av funktionen!
+och en inloggnings-knapp någon stanns!
+
+(men! släpp detta till prod med en hidden-shar-knapp!
+	så att jag kan testa det utan att andra testar, 
+	och se att firebase lirar med reglerna o så...
+)
+
+When deploying to prod;
+
+If the rules do not work: follow Sam Olsens comment:
+https://stackoverflow.com/questions/75897502/how-to-enabling-cross-service-communication-in-firebase?noredirect=1#comment133876950_75897502
+
+Firebaser here! It's possible to check if the permission is set up correctly. First, navigate to the Cloud Console IAM page for your project. Check the checkbox titled "Include Google-provided role grants." Look for a service account ending in @gcp-sa-firebasestorage.iam.gserviceaccount.com. This service account should have Firebase Rules Firestore Service Agent listed under the "Role" column. – 
+Sam Olsen
+
+(Det fungerade efter en dag när jag testade :) )
 */
 
 window.alert = function( alert){
@@ -109,9 +162,176 @@ const DATA_TABLE_COLUMNS = {
   }
 }
 
+
+class SongToGroup {
+	static #map = {};
+
+	static #onSongAdded = [];
+
+	static get(){
+		return this.#map;
+	}
+
+	static getSongGroupList(songKey){
+		return this.#map[songKey];
+	};
+
+	static onSongAdded( callback ) {
+		this.#onSongAdded.push( callback );
+	}
+
+	static add(
+		groupDocId,
+		songDocId,
+		songKey,
+		fileUrl) {
+		this.quickAdd(groupDocId, songDocId, songKey, fileUrl);
+		this.saveToDb();
+	}
+
+	static quickAdd(
+		groupDocId,
+		songDocId,
+		songKey,
+		fileUrl) {
+
+		const myGroups = this.#map;
+		var thisSong = myGroups[ songKey ];
+
+		if( thisSong == undefined ) {
+			thisSong = [];
+		}
+
+		const thisSongIsInThisGroup = thisSong.some( o =>
+			o.groupDocId == groupDocId && o.songDocId == songDocId );
+
+		if( thisSongIsInThisGroup ) {
+			return;
+		}
+		thisSong.push( {
+			"groupDocId": groupDocId,
+			"songDocId": songDocId,
+			"fileUrl" : fileUrl
+		} );
+		myGroups[ songKey ] = thisSong;
+
+		this.#map = myGroups;
+
+		this.#onSongAdded.forEach( funk => {
+			funk({
+				detail : {
+					groupDocId : groupDocId,
+					songDocId : songDocId,
+					songKey : songKey,
+					fileUrl : fileUrl}
+			});
+		});
+
+	};
+
+	static remove(
+		songDocId,
+		groupDocId
+		) {
+
+		const myGroups = this.#map;
+
+		Object.entries( myGroups ).forEach( v => {
+			let idObjectList = v[1];
+			idObjectList = idObjectList
+				.filter(
+					o => o.songDocId != songDocId
+					&& o.groupDocId != groupDocId
+				);
+			if( idObjectList.length == 0 ){thisSongIsInThisG
+				delete myGroups[v[0]];
+			} else {
+				myGroups[v[0]] = idObjectList;
+			}
+		});
+
+		this.#map = myGroups;
+		this.saveToDb();
+	};
+
+	static getNrOfGroupsThisSongIsIn( songKey ) {
+		let myGroups = this.#map;
+
+		const firestoreIdentifierList = myGroups[ songKey ];
+		if( firestoreIdentifierList == undefined ) {
+			return 0;
+		}
+		return firestoreIdentifierList.length;
+	};
+
+	static saveToDb() {
+		nDB.set( "TROFF_SONG_GROUP_MAP", this.#map );
+	};
+
+	static initiateFromDb() {
+		this.#map = nDB.get( "TROFF_SONG_GROUP_MAP" ) || {};
+	};
+
+	static clearMap() {
+		this.#map = {};
+	}
+
+	/*
+	static songKeyToFileUrlOnlyDocId( songKey, docId ) {
+		const myGroups = this.#map;
+		const firestoreIdentifierList = myGroups[ songKey ];
+		return firestoreIdentifierList?.find( fi =>
+			fi.groupDocId == docId )?.fileUrl;
+	}
+	*/
+
+	static songKeyToFileUrl = function( songKey, docId, songDocId ) {
+		const myGroups = this.#map;
+		const firestoreIdentifierList = myGroups[ songKey ];
+		return firestoreIdentifierList?.find( fi =>
+			fi.groupDocId == docId
+			&& fi.songDocId == songDocId )?.fileUrl;
+	}
+
+	static getFileNameFromSongDocId(songDocId) {
+
+		const myGroups = this.#map;
+		const myGroupsE = Object.entries( myGroups );
+
+		for( let i = 0; i < myGroupsE.length; i++ ) {
+			let groupWithSongList = myGroupsE[i][1]
+				.filter( idObject => idObject.songDocId == songDocId);
+
+			if( groupWithSongList.length == 0 ) {
+				continue;
+			}
+			return myGroupsE[i][0];
+		}
+		console.info( `getFileNameFromSongDocId: songDocId (${songDocId})`
+			` did not return any fileName!`);
+		return "undefined";
+	}
+}
+
 const app = firebase.initializeApp(environment.firebaseConfig),
 	auth = app.auth(),
 	storage = app.storage();
+
+SongToGroup.initiateFromDb();
+
+SongToGroup.onSongAdded( (event)=> {
+	const songKey = event.detail.songKey;
+
+	$( "#dataSongTable" )
+		.find( `[data-song-key="${songKey}"]` )
+		.addClass( "groupIndication" );
+
+	if( Troff.getCurrentSong() == songKey ) {
+		$( ".groupIndicationDiv" )
+			.addClass( "groupIndication" );
+	}
+
+});
 
 const signOut = function() {
 	auth.signOut().then().catch((error) => {
@@ -128,6 +348,14 @@ const initiateAllFirebaseGroups = async function() {
 }
 
 const initiateCollections = async function( querySnapshot ) {
+
+	if( querySnapshot.metadata.fromCache ) {
+		// If the result is from the cache,
+		// we dont want to update the DB with the result!
+		return;
+	}
+
+	SongToGroup.clearMap();
 
 	await Promise.all( querySnapshot.docs.map( async doc => {
 		const subCollection = await doc.ref.collection( "Songs" ).get();
@@ -148,6 +376,13 @@ const initiateCollections = async function( querySnapshot ) {
 				fullPath : songDoc.data().songKey,
 				firebaseSongDocId : songDoc.id
 			});
+
+			SongToGroup.quickAdd(
+				doc.id,
+				songDoc.id,
+				songDoc.data().songKey,
+				songDoc.data().fileUrl
+			);
 			
 			songDoc.ref.onSnapshot( songDocUpdate );
 		});
@@ -169,20 +404,20 @@ const initiateCollections = async function( querySnapshot ) {
 
 	} ) );
 
-	
 	$("#songListList")
 		.find( `[data-firebase-group-doc-id]` )
 		.not( `.verrified-in-firebase`)
 		.each( (i, v) => {
 			const groupDocId = $( v ).data( "firebase-group-doc-id" );
 			setGroupAsSonglist(groupDocId);
-			DB.removeFromMyFirestoreGroups( undefined, groupDocId );
 		} );
+
+	SongToGroup.saveToDb();
 
 }
 
 const setGroupAsSonglist = function(groupDocId) {
-	DB.removeFromMyFirestoreGroups( undefined, groupDocId );
+	SongToGroup.remove( undefined, groupDocId);
 
 	DB.setSonglistAsNotGroup( groupDocId );
 
@@ -210,7 +445,6 @@ const groupDocUpdate = function( doc ) {
 
 	if( !doc.exists ) {
 		setGroupAsSonglist(doc.id);
-		DB.removeFromMyFirestoreGroups( undefined, doc.id );
 		return;
 	}
 
@@ -246,7 +480,7 @@ const songDocUpdate = async function( doc ) {
 	const groupDocId = doc.ref.parent.parent.id;
 
 	if( !doc.exists ) {
-		const fileName = DB.getFileNameFromSongDocId( songDocId );
+		const fileName = SongToGroup.getFileNameFromSongDocId( songDocId );
 		const groupName = $( `[group-id="${groupDocId}"]`).text()
 		$.notify(
 			`The song "${fileName}" has been removed from the group
@@ -255,7 +489,7 @@ const songDocUpdate = async function( doc ) {
 			"info"
 		);
 
-		DB.removeFromMyFirestoreGroups( songDocId, undefined );
+		SongToGroup.remove(songDocId, undefined);
 		removeGroupIndicationIfSongInNoGroup( fileName );
 		return;
 	}
@@ -280,7 +514,7 @@ const songDocUpdate = async function( doc ) {
 
 	nDB.set( songKey, newMarkerInfo );
 
-	DB.addToMyFirestoreGroups(groupDocId, songDocId, songKey, fileUrl );
+	SongToGroup.add(groupDocId, songDocId, songKey, fileUrl);
 
 	if( !(await fileHandler.doesFileExistInCache( songKey ) ) ) {
 		try {
@@ -333,7 +567,7 @@ const replaceTroffDataWithoutInterupt = function( songData ) {
 }
 
 const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
-	if( DB.getNrOfGroupsThisSongIsIn( songKey ) > 0 ) {
+	if( SongToGroup.getNrOfGroupsThisSongIsIn( songKey ) > 0 ) {
 		return;
 	}
 
@@ -677,7 +911,7 @@ const removeSongFromFirebaseGroup = async function(
 	return new Promise( async function( resolve, reject) {
 		await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
 
-		const fileUrl = DB.songKeyToFileUrl(
+		const fileUrl = SongToGroup.songKeyToFileUrl(
 			songKey,
 			groupDocId,
 			songDocId );
@@ -703,10 +937,9 @@ const saveSongDataToFirebaseGroup = async function(
 
 	if( songDocId != undefined ) {
 
-		DB.songKeyToFileUrl( songKey, groupDocId, songDocId );
+		SongToGroup.songKeyToFileUrl( songKey, groupDocId, songDocId );
 		
-		const myGroups = DB.getMyFirestoreGroups();
-		const firestoreIdentifierList = myGroups[ songKey ];
+		const firestoreIdentifierList = SongToGroup.getSongGroupList(songKey);
 		songData.fileUrl = firestoreIdentifierList?.find( fi =>
 			fi.groupDocId == groupDocId 
 			&& fi.songDocId == songDocId )?.fileUrl;
@@ -730,20 +963,7 @@ const saveSongDataToFirebaseGroup = async function(
 			.collection( "Songs" )
 			.add( songData );
 
-		$( "#dataSongTable" )
-			.find( `[data-song-key="${songKey}"]` )
-			.addClass( "groupIndication" );
-
-		if( Troff.getCurrentSong() == songKey ) {
-			$( ".groupIndicationDiv" )
-				.addClass( "groupIndication" );
-		}
-
-		DB.addToMyFirestoreGroups(
-			groupDocId,
-			docRef.id,
-			songKey,
-			songData.fileUrl);
+		SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
 
 		docRef.onSnapshot( songDocUpdate );
 		const songList = $( "#songListList" )
@@ -789,8 +1009,7 @@ låtar som jag laddar ner
  * update the info in firestore for that gruop
  */
 const ifGroupSongUpdateFirestore = function( songKey ) {
-	const myGroups = DB.getMyFirestoreGroups();
-	const firestoreIdentifierList = myGroups[ songKey ];
+	const firestoreIdentifierList = SongToGroup.getSongGroupList(songKey);
 	if( firestoreIdentifierList == undefined ) {
 		return;
 	}
@@ -1119,7 +1338,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 } //end setSong2
 
 function updateGroupNotification( songKey ) {
-	const nrGroups = DB.getNrOfGroupsThisSongIsIn( songKey )
+	const nrGroups = SongToGroup.getNrOfGroupsThisSongIsIn( songKey )
 	if( nrGroups == 0 ) {
 		$( "#currentGroupsParent" ).addClass( "hidden" );
 		$( ".groupIndicationDiv" ).removeClass( "groupIndication" );
@@ -1131,7 +1350,7 @@ function updateGroupNotification( songKey ) {
 
 	$( ".currentNrGroups" ).text( nrGroups ); 
 
-	const groups = DB.getMyFirestoreGroups()[songKey];
+	const groups = SongToGroup.getSongGroupList(songKey);
 	
 	const groupNames = groups.map( group => {
 		return $( "#songListList" )
@@ -1388,7 +1607,7 @@ function addItem_NEW_2( key ) {
 
 		// todo: remove DATA_INFO and use this data-song-key instead!
 		$( newRow ).attr( "data-song-key", key );
-		if( DB.getNrOfGroupsThisSongIsIn( key ) > 0 ) {
+		if( SongToGroup.getNrOfGroupsThisSongIsIn( key ) > 0 ) {
 			$( newRow ).addClass( "groupIndication" );
 		}
 
@@ -3797,7 +4016,6 @@ var TroffClass = function(){
 		$('#' + oState.currentMarker).click();
 		$('#' + oState.currentStopMarker).click();
 
-		//DB.saveSongDataFromState(Troff.getCurrentSong(), oState);
 	};
 
 	/*Troff*/this.onSearchKeyup = function( event ) {
@@ -5223,41 +5441,6 @@ var DBClass = function(){
 		});//end get all keys
 	};
 
-	/*DB*/this.songKeyToFileUrlOnlyDocId = function( songKey, docId ) {
-		const myGroups = DB.getMyFirestoreGroups();
-		const firestoreIdentifierList = myGroups[ songKey ];
-		return firestoreIdentifierList?.find( fi =>
-			fi.groupDocId == docId )?.fileUrl;
-	}
-
-	/*DB*/this.songKeyToFileUrl = function( songKey, docId, songDocId ) {
-		const myGroups = DB.getMyFirestoreGroups();
-		const firestoreIdentifierList = myGroups[ songKey ];
-		return firestoreIdentifierList?.find( fi =>
-			fi.groupDocId == docId 
-			&& fi.songDocId == songDocId )?.fileUrl;
-	}
-
-	/*DB*/this.getFileNameFromSongDocId = function(
-		songDocId
-		) {
-		const myGroups = DB.getMyFirestoreGroups();
-		const myGroupsE = Object.entries( myGroups );
-		
-		for( let i = 0; i < myGroupsE.length; i++ ) {
-			let groupWithSongList = myGroupsE[i][1]
-				.filter( idObject => idObject.songDocId == songDocId);
-
-			if( groupWithSongList.length == 0 ) {
-				continue;
-			}
-			return myGroupsE[i][0];
-		}
-		console.info( `getFileNameFromSongDocId: songDocId (${songDocId})`
-			` did not return any fileName!`);
-		return "undefined";
-	};
-
 	/*DB*/this.setSonglistAsNotGroup = function( firebaseGroupDocId ) {
 		const allSonglists = JSON.parse( nDB.get( "straoSongLists" ) );
 		const currentSonglist = allSonglists
@@ -5270,90 +5453,6 @@ var DBClass = function(){
 
 		nDB.set( "straoSongLists", JSON.stringify( allSonglists ) );
 	}
-
-	/**
-	 * This removes a songDoc from myGroups or a group
-	 * Note: if groupDocId is undefined, only the song will be removed
-	 * if the songDocId is undefined, the group will be removed!
-	 * @param {int} songDocId 
-	 * @param {int} groupDocId 
-	 */
-	/*DB*/this.removeFromMyFirestoreGroups = function(
-		songDocId,
-		groupDocId
-		) {
-		const myGroups = DB.getMyFirestoreGroups();
-		
-		Object.entries( myGroups ).forEach( v => {
-			let idObjectList = v[1];
-			idObjectList = idObjectList
-				.filter(
-					o => o.songDocId != songDocId 
-					&& o.groupDocId != groupDocId 
-				);
-			if( idObjectList.length == 0 ){
-				delete myGroups[v[0]];
-			} else {
-				myGroups[v[0]] = idObjectList;	
-			}
-		});
-
-		nDB.set( "TROFF_MY_FIRESTORE_GROUPS", myGroups );
-	};
-
-	/*DB*/this.addToMyFirestoreGroups = function(
-		groupDocId,
-		songDocId,
-		songKey,
-		fileUrl) {
-
-		const myGroups = DB.getMyFirestoreGroups();
-		var thisSong = myGroups[ songKey ];
-
-		if( thisSong == undefined ) {
-			thisSong = [];
-		}
-	
-		const thisSongIsInThisGroup = thisSong.some( o =>
-			o.groupDocId == groupDocId && o.songDocId == songDocId );
-	
-		if( thisSongIsInThisGroup ) {
-			return;
-		}
-		thisSong.push( {
-			"groupDocId": groupDocId,
-			"songDocId": songDocId,
-			"fileUrl" : fileUrl
-		} );
-		myGroups[ songKey ] = thisSong;
-	
-		nDB.set( "TROFF_MY_FIRESTORE_GROUPS", myGroups );
-
-	}
-
-
-	/* 
-		Varför vill jag har myFirestoreGroups????
-		För att om en låt ligger i flera grupper, så när låten uppdateras
-		så behvöer den skicka uppdateringen till alla grupper!
-		Och det är här som jag sparar fileUrl för varje grupp! :)
-	*/
-	/*DB*/this.getMyFirestoreGroups = function() {
-		let myGroups = nDB.get( "TROFF_MY_FIRESTORE_GROUPS" );
-		if( myGroups == undefined ) {
-			myGroups = {};
-		}
-		return myGroups;
-	};
-	/*DB*/this.getNrOfGroupsThisSongIsIn = function( songKey ) {
-		let myGroups = DB.getMyFirestoreGroups();
-
-		const firestoreIdentifierList = myGroups[ songKey ];
-		if( firestoreIdentifierList == undefined ) {
-			return 0;
-		}
-		return firestoreIdentifierList.length;
-	};
 
 	/*DB*/this.saveSonglists_new = function() {
 		var i,
