@@ -32,37 +32,6 @@ KLAR) 8.1) TODO: inforuta
 8.2) TODO: färg
 
 
-
-9) TYP KLAR, (måste testa lite mer bara) BUGG
-	När man laddar sidan, och den uppdaterar firebase-grupperna
-	så ska den också räkna om myFirebaseGroups!
-	(just nu har jag 
-		{A Horse.mp3: Array(5)}
-	trotts att jag INTE har några grupper...)
-
-	så, helt enkelt räkna om HELA myFirebaseGroups
-	MEN: anledningen till att jag har myFirestoreGroups är för att 
-	spara fileUrl, (så antingen återanvända den som finns)
-		ELLER ännubätter, borde kunna få med det från firestore????
-
-		Eller hur! :)
-
-9.2) KLAR "group-indication-strecken" uppdateras INTE efter 
-	initiateCollections
-		så OM man i songToGroupMappen har INGA låtar i databasen
-		och firebase uppdaterar med ett gäng, så kommer inga låtar
-		få groupIndication-sträcket! :)
-
-	Funderar på att ha ett EVENT som man kan fira i slutet av 
-	SongToGroup.quickAdd där man skickar ut typ eventet
-		songAddedToMap med info om songId, songKey, groupId mm?
-	och så kan man i koden lyssna på det eventet och helt enkelt 
-	slänga på groupIndication på den låten när det eventet firas?
-	
-	känns som "bästa sättet" att hantera det på :) 
-		(jämfört med att anropa updateGroupIndication från 
-		SongToGroup-klassen...)
-
 10) Share-knappen - Om man INTE är inloggad ska den visa en popupp
 	som beskriver funktionen och fråga om man vill logga in!
 
@@ -86,7 +55,7 @@ Sam Olsen
 */
 
 window.alert = function( alert){
-	console.warn("Alert:", alert);
+	//console.warn("Alert:", alert);
 }
 
 let firebaseUser = null;
@@ -276,15 +245,6 @@ class SongToGroup {
 		this.#map = {};
 	}
 
-	/*
-	static songKeyToFileUrlOnlyDocId( songKey, docId ) {
-		const myGroups = this.#map;
-		const firestoreIdentifierList = myGroups[ songKey ];
-		return firestoreIdentifierList?.find( fi =>
-			fi.groupDocId == docId )?.fileUrl;
-	}
-	*/
-
 	static songKeyToFileUrl = function( songKey, docId, songDocId ) {
 		const myGroups = this.#map;
 		const firestoreIdentifierList = myGroups[ songKey ];
@@ -348,6 +308,7 @@ const initiateAllFirebaseGroups = async function() {
 }
 
 const initiateCollections = async function( querySnapshot ) {
+	console.log( "initiateCollections ->" );
 
 	if( querySnapshot.metadata.fromCache ) {
 		// If the result is from the cache,
@@ -497,6 +458,35 @@ const songDocUpdate = async function( doc ) {
 	const songData = doc.data();
 	const songKey = songData.songKey;
 
+	const fileUrl = songData.fileUrl;
+	const existingMarkerInfo = nDB.get( songKey );
+	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
+
+	const existingUploadTime = existingMarkerInfo.latestUploadToFirebase;
+	const firebaseUploadTime = newMarkerInfo.latestUploadToFirebase;
+
+	const songHaveLocalChanges = DB.popSongWithLocalChanges(
+		groupDocId,
+		songDocId,
+		songKey
+	);
+
+	if( existingUploadTime == firebaseUploadTime ) {
+		// firestore does NOT have any new updates:
+
+		if( songHaveLocalChanges ) {
+			// But there is local updates that should be pushed to firestore:
+			saveSongDataToFirebaseGroup(
+				songKey,
+				groupDocId,
+				songDocId
+			);
+		}
+
+		return;
+
+	}
+
 	if( Troff.getCurrentSong() == songKey ) {
 		if( !doc.metadata.hasPendingWrites ) {
 			// The update has troffData that is not from this computer
@@ -506,11 +496,19 @@ const songDocUpdate = async function( doc ) {
 		}
 	}
 
-	const fileUrl = songData.fileUrl;
-	const existingMarkerInfo = nDB.get( songKey );
-	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
-	
 	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
+
+	if( songHaveLocalChanges ) {
+		$.notify(
+			`The song ${songKey} had local changes that where overwritten`,
+			{
+				className: 'info',
+				autoHide: false,
+				clickToHide: true
+			}
+		);
+		// (och kanske spara undan dom markörerna i en temp-grejj om man vill ta in dom igen??? eller för komplicerat?)
+	}
 
 	nDB.set( songKey, newMarkerInfo );
 
@@ -923,12 +921,40 @@ const removeSongFromFirebaseGroup = async function(
 	} );
 };
 
+const onOnline = function() {
+
+	// this timeOut is because I want to wait untill possible existing
+	// firestore updates get synced to the ego-computer.
+	// because then Ego-offline-changes should be overwritten.
+	setTimeout( () => {
+		const changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
+
+		// This is to send local changes IF the server does NOT
+		// have new updates
+		changedSongList.forEach( changedSong => {
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( changedSong.groupDocId )
+				.collection( "Songs" )
+				.doc( changedSong.songDocId )
+				.get()
+				.then( songDocUpdate );
+			// There is 2 callbacks,
+			// it is because firebase is beign updated and the
+			// it sends out the update-calblack, so all in good order!
+		});
+	}, 42);
+
+};
+
 const saveSongDataToFirebaseGroup = async function(
 	songKey,
 	groupDocId,
 	songDocId ) {
 	
 	const publicData = Troff.removeLocalInfo( nDB.get( songKey ) );
+
+	publicData.latestUploadToFirebase = Date.now();
 
 	const songData = {
 		songKey : songKey,
@@ -937,25 +963,41 @@ const saveSongDataToFirebaseGroup = async function(
 
 	if( songDocId != undefined ) {
 
-		SongToGroup.songKeyToFileUrl( songKey, groupDocId, songDocId );
-		
-		const firestoreIdentifierList = SongToGroup.getSongGroupList(songKey);
-		songData.fileUrl = firestoreIdentifierList?.find( fi =>
-			fi.groupDocId == groupDocId 
-			&& fi.songDocId == songDocId )?.fileUrl;
+		songData.fileUrl = SongToGroup.songKeyToFileUrl(
+			songKey,
+			groupDocId,
+			songDocId);
 
-		firebase.firestore()
-			.collection( 'Groups' )
-			.doc( groupDocId )
-			.collection( "Songs" )
-			.doc( songDocId )
-			.set( songData );
+		if( navigator.onLine ) {
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( groupDocId )
+				.collection( "Songs" )
+				.doc( songDocId )
+				.set( songData );
+		} else {
+			$.notify(
+				"You are offline, your changes will be synced online once you come online!",
+				{
+					className: 'info',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+
+			DB.pushSongWithLocalChanges( groupDocId, songDocId, songKey );
+		}
 
 	} else {
 		songData.fileUrl = await uploadSongToFirebaseGroup( 
 			groupDocId,
 			songKey
 			);
+
+
+		// TODO! kolla att jag är online!
+		//songData.latestUploadToFirebase = Date.now();
+
 
 		let docRef = await firebase.firestore()
 			.collection( 'Groups' )
@@ -5234,6 +5276,53 @@ const nDBc = { //new data base callback
 
 var DBClass = function(){
 
+	/*DB*/this.popSongWithLocalChanges = function(
+		groupDocId,
+		songDocId,
+		songKey) {
+
+		function rightSong( o ) {
+			return o.groupDocId == groupDocId &&
+				o.songDocId == songDocId &&
+				o.songKey == songKey;
+		}
+
+		let changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
+
+		const songInGroupAlreadyExists = changedSongList.find( rightSong );
+
+		changedSongList = changedSongList.filter( o => !rightSong(o));
+
+		nDB.set( "TROFF_SONGS_WITH_LOCAL_CHANGES", changedSongList );
+		return songInGroupAlreadyExists;
+	};
+
+	/*DB*/this.pushSongWithLocalChanges = function(
+		groupDocId,
+		songDocId,
+		songKey) {
+
+		const changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
+
+		const songInGroupAlreadyExists = changedSongList.find( o =>
+			o.groupDocId == groupDocId &&
+			o.songDocId == songDocId &&
+			o.songKey == songKey
+		);
+
+		if( songInGroupAlreadyExists ) {
+			return;
+		}
+
+		changedSongList.push( {
+			groupDocId : groupDocId,
+			songDocId : songDocId,
+			songKey : songKey
+		} );
+
+		nDB.set( "TROFF_SONGS_WITH_LOCAL_CHANGES", changedSongList );
+	}
+
 	// deprecated: use nDB.set( key, value )
 	this.saveVal = function( key, value) {
 		nDB.set( key, value );
@@ -5738,7 +5827,9 @@ var DBClass = function(){
 				}
 
 				$target.val( value );
-				$target[0].dispatchEvent(new Event('input'));
+				if( $target.attr( "type" ) == "range" ) {
+					$target[0].dispatchEvent(new Event('input'));
+				}
 			});
 
 			Troff.setUrlToSong( song.serverId, songId );
@@ -6068,6 +6159,12 @@ var IOClass = function(){
 		});
 
 		Troff.recallGlobalSettings();
+
+		window.addEventListener('online', onOnline );
+
+		if( navigator.onLine ) {
+			onOnline();
+		}
 
 	};//end startFunc
 
