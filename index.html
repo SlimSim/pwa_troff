@@ -42,7 +42,7 @@
 	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
 	<link
-			href="assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff2?2742147"
+			href="assets/external/Fontello-2023-04-21/font/troff-icon-pack.woff2?2742147"
 			as="font"
 			type="font/woff2"
 			crossorigin>
@@ -198,6 +198,11 @@
 							class="regularButton svgButt regularButton"
 							title="Sign out!">
 							<i class="fa-logout"></i>
+						</button>
+						<button 
+							class="regularButton svgButt regularButton onClickReload"
+							title="Reload browser!">
+							<i class="fa-reload"></i>
 						</button>
 					</div>					
 				</div>
@@ -1408,6 +1413,12 @@
 						class="regularButton">
 						Add new person to share with
 					</button>
+					<a
+						class="float-right"
+						target="_blank"
+						href="/help.html#shareSonglist">
+						Read more about sharing songlists
+					</a>
 				</div>
 				<div class="form-group pt-4">
 					<span>Songs in this songlist:</span>
@@ -1463,6 +1474,57 @@
 
 		</div>
 
+	</div>
+
+	<div id="shareInstructionDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">
+				You have to sign in to share a songlist!
+			</h2>
+			<div>
+				<p class="paragraph normalSize">
+					With shared songlist, any changes you make to a song will
+					be uploaded and shared to all the members of the songlist.
+					Therefore, you have to sign in to share songlists.
+				</p>
+				<p class="d-block">
+					<button
+						title="Sign in using Google"
+						class="regularButton googleSignIn flexRow center">
+						<img
+							class="height-15 mr-3"
+							src="assets/external/signInLogos/google-logo.svg"
+							alt="Google logo" />
+						Sign In
+					</button>
+					<!-- TODO: implement facebook sign in! -->
+					<!--button
+						title="Sign in using Facebook"
+						class="regularButton facebookSignIn flexRow center">
+						<img
+							class="height-15 mr-3"
+							src="assets/external/signInLogos/facebook-logo.svg"
+							alt="Facebook logo" />
+						Sign In
+					</button -->
+				</p>
+				<p class="paragraph normalSize">
+					Read more at 
+						<a 
+						target="_blank"
+						href="/help.html#shareSonglist">
+						Share songlists
+					</a>
+				</p>
+			</div>
+
+			<span class="flexRow">
+				<input
+					class="regularButton dialogCancelButton"
+					type="button"
+					value="Cancel" />
+			</span>
+		</div>
 	</div>
 
 	<div id="outerSettingPopUpSquare" class="outerDialog hidden">
@@ -1907,7 +1969,7 @@
 
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/checkbox.css" />
 
-	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-01-31/css/troff-icon-pack.css" />
+	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-04-21/css/troff-icon-pack.css" />
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/internal/fontello-extra.css" />
 
 

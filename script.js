@@ -35,8 +35,9 @@ KLAR) 8.1) TODO: inforuta
 10) Share-knappen - Om man INTE är inloggad ska den visa en popupp
 	som beskriver funktionen och fråga om man vill logga in!
 
-Allmänt bättre beskrivning av funktionen!
-och en inloggnings-knapp någon stanns!
+12) Allmänt bättre beskrivning av funktionen!
+
+13) och en inloggnings-knapp någon stanns!
 
 (men! släpp detta till prod med en hidden-shar-knapp!
 	så att jag kan testa det utan att andra testar, 
@@ -292,6 +293,10 @@ SongToGroup.onSongAdded( (event)=> {
 	}
 
 });
+
+const googleSignIn = function() {
+	auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+};
 
 const signOut = function() {
 	auth.signOut().then().catch((error) => {
@@ -779,6 +784,10 @@ const getFirebaseGroupDataFromDialog = function( forceUserEmail ) {
 }
 
 const groupDialogSave = async function( event ) {
+
+	if ( !$( "#buttAttachedSongListToggle").hasClass( "active" ) ) {
+		$( "#buttAttachedSongListToggle").click();
+	}
 
 	const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
 	let groupDocId = $( "#groupDialogName" ).data( "groupDocId" );
@@ -3619,6 +3628,12 @@ var TroffClass = function(){
 	}
 
 	/*Troff*/this.onClickShareSonglist = function( event ) {
+
+		if( !firebaseUser ) {
+			$( "#shareInstructionDialog" ).removeClass( "hidden" );
+			return;
+		}
+
 		$("#groupOwnerRow").removeClass("hidden");
 		$( "#groupDialogIsGroup" ).prop('checked', true);
 		addGroupOwnerRow( firebaseUser.email );
@@ -6104,6 +6119,7 @@ var IOClass = function(){
 		$('#buttZoomOut').click(Troff.zoomOut);
 
 		$('#areaSelector >').click(Troff.toggleArea);
+		$(".onClickReload").click( () => window.location.reload());
 
 		$('#markerInfoArea').change(Troff.updateMarkerInfo);
 		$('#markerInfoArea').blur(Troff.exitMarkerInfo);
@@ -6152,6 +6168,7 @@ var IOClass = function(){
 		$(".jsUploadSongButt").on("click", Troff.uploadSongToServer );
 
 		$( "#signOut" ).on( "click", signOut );
+		$( ".googleSignIn" ).on( "click", googleSignIn );
 
 		$( "#groupAddOwnerButt" ).on( "click", () => {addGroupOwnerRow();} );
 		window.addEventListener('resize', function() {

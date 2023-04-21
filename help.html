@@ -98,8 +98,13 @@
 		<a href="#howToAddMedia">Add and play music or movies</a>
 			<a href="#howToRemoveMedia" class="subLink">Remove music or movies</a>
 			<a href="#howToPlayMedia" class="subLink">Play music or movies</a>
-		<a href="#shareViaLink">Share the song</a>
-		<a href="#theUrlInTheAddressBar" class="subLink">The Url in the address bar</a>
+		<a href="#shareViaLink">Share the song via link</a>
+			<a href="#theUrlInTheAddressBar" class="subLink">The Url in the address bar</a>
+			<a href="#history" class="subLink"></a>
+			<a href="#find" class="subLink"></a>
+		<a href="#shareSonglist">Share songlists!</a>
+			<a href="#emovingSongsOrUsers" class="subLink">Removing songs or users</a>
+			<a href="#stopSharing" class="subLink">Stop sharing</a>
 		<a href="#globalSettings">Global settings</a>
 		<a href="#settings">The settings area</a>
 			<a href="#markers" class="subLink">Markers, what are those?</a>
@@ -206,7 +211,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			<p>Note: The files you add will be copied into your web browsers memory.
 			This means that</p>
 			<ol class="smallSize list-style-type-decimal ml-4">
-				<li class="small">No data will be sent to the server (unless you <a href="#shareViaLink">share the song</a>); your files will not leave your computer</li>
+				<li class="small">No data will be sent to the server (unless you share the song <a href="#shareViaLink">via link</a> or <a href="#shareSonglist">songlist</a>); your files will not leave your computer</li>
 				<li class="small">
 					If you remove or change the original files, your songs in Troff will still be intact
 					(as long as the file-name is the same, you can import the file again to make the changes apply)
@@ -246,7 +251,11 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 		</p>
 	</article> <!-- add and play music -->
 	<article id="shareViaLink">
-		<h2>Share the song!</h2>
+		<h2>Share the song via link!</h2>
+		<p>
+			There are two ways to share your songs and all the markers:
+			via a link or with a <a href="#shareSonglist">songlist</a>.
+		</p>
 		<p>
 			You can upload your song along with all the markers and info to our servers,
 			and then share a link to the song with anybody who needs to practice to the song!
@@ -296,6 +305,72 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			and then activate "Only my versions".
 		</p>
 	</article> <!-- shareViaLink -->
+	<article id="shareSonglist">
+		<h2>Share songlists</h3>
+		<p>
+			If you are sign in, you can share
+			<a href="#songLists">songlists</a> with other users
+			that are also signed in!
+		</p>
+		<p>
+			Simply edit the songlist and click the
+			<button class="regularButton">Share!</button>-button
+			in the lower right corner.
+			Then you will be able to add new users to the songlist
+			by entering the email-adress that they use.
+		</p>
+		<p>
+			The next time those users sign in,
+			they will receive the songlist with all the songs
+			and markers, and whats more,
+			if you or they update the markers,
+			or add new songs to the songlist,
+			all the other people in that songlist will receive those
+			updates!
+		</p>
+		<p>
+			This is a perfect way for a team or group to work together
+			on routines:
+			Everybody will always have the same songs,
+			and the latest versions!
+		</p>
+
+		<h3 id="emovingSongsOrUsers">Removing songs or users</h3>
+		<p>
+			If you remove a song from a shared songlist,
+			the song will be removed from the songlist for all users
+			BUT, it will not be removed from any users computer.
+		</p>
+		<p>
+			Similarly, if you remove a user from a songlist,
+			that user will not receive updates made to the songs in that
+			songlist, but they will still have all the songs and the songlist
+			on there computer, just not a shared songlist.
+		</p>
+		<h3 id="stopSharing">Stop sharing</h3>
+		<p>
+			When you stop sharing a songlist
+			you will still have the songlist on your computer,
+			but the other users will no longer get updates
+			you make to the songs,
+			and you will not receive updates that they make.
+		</p>
+		<div class="note">
+			<p>
+				Note: Users you add to the songlist have access to the same functionality as you do.
+				This means that they can
+			</p>
+			<ol class="smallSize list-style-type-decimal ml-4">
+				<li class="small">Edit markers and info on songs</li>
+				<li class="small">Edit the songlist info</li>
+				<li class="small">Add and remove songs</li>
+				<li class="small">Add and remove users, including you</li>
+			</ol>
+			<p>
+				So, only add users you share a common goal with!
+			</p>
+		</div>
+	</article><!-- shareSonglist -->
 	<article id="globalSettings">
 	<h2>Global settings</h2>
 		<p>
@@ -587,10 +662,6 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
 			If you repeatedly tap "Tempo" (T) to the tempo of the song,
 			Troff will calculate the tempo and display it. This tempo will be saved
 			for the particular song.
-		</p>
-		<p class="note">
-			Note: Troff will wait 3 seconds before saving the value,
-			so don't change song during that time!
 		</p>
 		<h3 id="songInfo">Song info</h3>
 		<p>
