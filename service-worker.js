@@ -101,7 +101,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.3.2",
+		version: "1.3.3",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
@@ -113,6 +113,8 @@ var newAppCaches = [
 			"/assets/external/Fontello-2023-04-21/font/troff-icon-pack.ttf?2742147",
 			"/assets/external/Fontello-2023-04-21/font/troff-icon-pack.woff?2742147",
 			"/assets/external/Fontello-2023-04-21/font/troff-icon-pack.woff2?2742147",
+			"/assets/external/signInLogos/google-logo.svg",
+			"/assets/external/signInLogos/facebook-logo.svg",
 			"/assets/external/browserLogos/chrome-logo.svg",
 			"/assets/external/browserLogos/chromium-logo.svg",
 			"/assets/external/browserLogos/edge-logo.svg",
