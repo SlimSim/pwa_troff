@@ -274,9 +274,9 @@ class SongToGroup {
 	}
 }
 
-const app = firebase.initializeApp(environment.firebaseConfig),
-	auth = app.auth(),
-	storage = app.storage();
+	const app = firebase.initializeApp(environment.firebaseConfig),
+		auth = app.auth(),
+		storage = app.storage();
 
 SongToGroup.initiateFromDb();
 
@@ -815,6 +815,7 @@ const groupDialogSave = async function( event ) {
 		id : $( "#groupDialogName" ).data( "songListObjectId" ),
 		name : $( "#groupDialogName" ).val(),
 		color : $( "#groupDialogColor" ).val(),
+		icon : $( "#groupDialogIcon" ).val(),
 		info : $( "#groupDialogInfo" ).val(),
 	};
 
@@ -1505,9 +1506,15 @@ function clickSongList_NEW( event ) {
 		$( "#songListsList" ).find( "button" ).removeClass("selected").removeClass("active");
 		$target.addClass( "selected" );
 
-		$( "#headArea" )
-			.removeClassStartingWith( "bg-" )
-			.addClass( data.color );
+		$( "#headArea" ).removeClassStartingWith( "bg-" );
+		$( "#songlistIcon" ).removeClassStartingWith( "fa-" );
+		$( "#songlistName" ).text( "" );
+
+		if( data && data.firebaseGroupDocId ) {
+			$( "#headArea" ).addClass( data.color );
+			$( "#songlistIcon" ).addClass( data.icon || "fa-users" );
+			$( "#songlistName" ).text( data.name );
+		}
 	}
 
 	Troff.saveCurrentStateOfSonglists();
@@ -1924,7 +1931,6 @@ function clickButtNewSongList( event ) {
 }
 
 function songListDialogOpenExisting( event ) {
-	console.warn( "deprecated??? " );
 	openGroupDialog(
 		$( event.target )
 		.closest( "button")
@@ -3631,6 +3637,28 @@ var TroffClass = function(){
 		}
 	};
 
+	this.setSonglistIcon = function( event ) {
+
+		const button = event.target.tagName == "I" ?
+			event.target.parentElement :
+			event.target;
+
+		const element = button.firstElementChild;
+
+		const icon = [...element.classList]
+			.find( o => o.startsWith("fa-" ) );
+
+		$( "#songlistIconPicker" ).children().removeClass( "selected" );
+
+		button.classList.add( "selected" );
+
+		$( "#groupDialogSonglistIcon" )
+			.removeClassStartingWith( "fa-" )
+			.addClass( icon );
+
+		$( "#groupDialogIcon" ).val( icon );
+	}
+
 	this.setSonglistColor = function( event ) {
 		const element = event.target;
 		const color = [...element.classList]
@@ -3641,8 +3669,6 @@ var TroffClass = function(){
 		$( dialog )
 			.find( ".colorPickerSelected" )
 			.removeClass( "colorPickerSelected" );
-
-		$( "#markerList" ).children().removeClassStartingWith("extend_");
 
 		$( dialog ).removeClassStartingWith( "bg-" );
 
@@ -3815,6 +3841,10 @@ var TroffClass = function(){
 			.removeClassStartingWith( "bg-" )
 			.addClass( songListObject.color );
 
+		$target.parent().find( ".editSongList" ).find( "i" )
+			.removeClassStartingWith( "fa-" )
+			.addClass( songListObject.icon || "fa-users" )
+
 		$target.text( songListObject.name );
 		$target.data("songList", songListObject);
 
@@ -3839,6 +3869,8 @@ var TroffClass = function(){
 
 		const groupDocId = oSongList.firebaseGroupDocId
 		const groupClass = groupDocId ? "groupIndication" : "";
+		const groupLogo = oSongList.icon || "fa-pencil";
+
 		$( "#songListList" )
 			.append(
 				$("<li>")
@@ -3854,8 +3886,8 @@ var TroffClass = function(){
 							.addClass( "mr-2" )
 							.append(
 								$( "<i>" )
-								.addClass( "fa")
-								.addClass( "fa-pencil")
+								.addClass( "fa" )
+								.addClass( groupLogo )
 							).on("click", songListDialogOpenExisting )
 						)
 						.append( $( "<button>" )
@@ -3917,6 +3949,8 @@ var TroffClass = function(){
 							.find("[data-songlist-id="+v+"]")
 							.data( "songList" );
 						$( "#headArea" ).addClass( songListData.color );
+						$( "#songlistIcon" ).addClass( songListData.icon );
+						$( "#songlistName" ).text( songListData.name );
 					}
 				});
 
@@ -6151,6 +6185,9 @@ var IOClass = function(){
 		$( "#songlistColorPicker" ).find( "input" ).on(
 			"click",
 			Troff.setSonglistColor);
+		$( "#songlistIconPicker" ).find( "button" ).on(
+			"click",
+			Troff.setSonglistIcon);
 
 		// The jQuery version doesn't update as the user is typing:
 		$( "[data-save-on-song-value]" ).each( function( i, element ){

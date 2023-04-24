@@ -129,7 +129,10 @@
 
 				<input type="button" id="pwaAddToHomeScreen" class="hidden regularButton special ml-2" value="Install Troff" />
 
-				<div id="playerParent"></div>
+				<div class="m-0">
+					<i id="songlistIcon"></i>
+					<span id="songlistName"></span>
+				</div>
 				<div id="currentArtist">
 					Please select a song or movie from the songs area
 				</div>
@@ -1373,8 +1376,11 @@
 				<div class="form-group row">
 					<label
 						for="groupDialogName"
-						class="col-sm col-form-label">
+						class="col-sm col-form-label flexRow">
 						<h2 class="paragraph text-inherit">Songlist</h2>
+						<i
+							class="pl-3 fa showOnSharedSonglist hidden"
+							id="groupDialogSonglistIcon"></i>
 					</label>
 					<div class="col-sm">
 						<input
@@ -1467,111 +1473,114 @@
 					<div class="col-sm">
 
 						<h3 class="text-inherit">Songlist icon</h3>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-users"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-award"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-glass"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-diamond"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-camera"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-target"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-bullseye"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-fire"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-flash"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-mic"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-note"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-note-beamed"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-leaf"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-feather"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-magic"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-lightbulb"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-smile"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-rebel"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-clock"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-sun"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-moon"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-snowflake-o"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-fighter-jet"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-space-shuttle"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-rocket"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-linux"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-paw"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-home"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-cab"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-tree"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-graduation-cap"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-coffee"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-birthday"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-hand-spock-o"></i>
-						</button>
-						<button class="stOnOffButton m-1" type="button">
-							<i class="fa fa-hand-peace-o"></i>
-						</button>
+						<div id="songlistIconPicker">
+							<input type="hidden" id="groupDialogIcon" />
+							<button class="stOnOffButton m-1 selected" type="button">
+								<i class="fa fa-users"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-award"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-glass"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-diamond"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-camera"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-target"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-bullseye"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-fire"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-flash"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-mic"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-note"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-note-beamed"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-leaf"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-feather"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-magic"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-lightbulb"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-smile"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-rebel"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-clock"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-sun"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-moon"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-snowflake-o"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-fighter-jet"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-space-shuttle"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-rocket"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-linux"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-paw"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-home"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-cab"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-tree"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-graduation-cap"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-coffee"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-birthday"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-hand-spock-o"></i>
+							</button>
+							<button class="stOnOffButton m-1" type="button">
+								<i class="fa fa-hand-peace-o"></i>
+							</button>
+						</div>
 					</div>
 				</div>
 				<div class="form-group row">
