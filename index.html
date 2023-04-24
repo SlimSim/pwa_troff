@@ -42,7 +42,7 @@
 	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
 	<link
-			href="assets/external/Fontello-2023-04-21/font/troff-icon-pack.woff2?2742147"
+			href="assets/external/Fontello-2023-04-23/font/troff-icon-pack.woff2?2742147"
 			as="font"
 			type="font/woff2"
 			crossorigin>
@@ -96,11 +96,11 @@
 					<div class="tooltiptext">
 						<div id="userName" class="p-3 small"></div>
 							<button id="signOut" class="btn regularButton hidden">Sign out</button>
-					</div>					
+					</div>
 				</i>
 				-->
 
-				
+
 				<button class="svgButt special regularButton showUploadSongToServerDialog"
 								type="button"
 								title="Share this song to friends via link">
@@ -165,12 +165,12 @@
 			<nav class="flexCol center">
 				<div class="tooltip fa fa-user hide-on-sign-out hidden">
 					<div class="tooltiptext">
-						<div 
+						<div
 							id="userName"
 							class="p-3 small"
 							title="You are signed in, welcome!"
 							></div>
-						<button 
+						<button
 							class="svgButt regularButton buttSettingsDialog"
 							type="button"
 							title="Open the global settings dialogue">
@@ -182,8 +182,8 @@
 							title="Get tips on how to get the most out of Troff">
 							<i class="fa-question cursor-help"></i>
 						</button>
-						<a 
-							href="/find.html" 
+						<a
+							href="/find.html"
 							target="_blank"
 							class="position-relative top-exact--6">
 							<button class="svgButt fa-stack regularButton"
@@ -193,22 +193,22 @@
 								<i class="fa-search fa-stack-10x mt-relative-5 ml-relative-11 font-size-relative-1" ></i>
 							</button>
 						</a>
-						<button 
+						<button
 							id="signOut"
 							class="regularButton svgButt regularButton"
 							title="Sign out!">
 							<i class="fa-logout"></i>
 						</button>
-						<button 
+						<button
 							class="regularButton svgButt regularButton onClickReload"
 							title="Reload browser!">
 							<i class="fa-reload"></i>
 						</button>
-					</div>					
+					</div>
 				</div>
 				<div class="flex-one hide-on-sign-out hidden"></div>
 
-				<button 
+				<button
 					class="svgButt regularButton buttSettingsDialog hide-on-sign-in"
 					type="button"
 					title="Open the global settings dialogue">
@@ -1374,7 +1374,7 @@
 					<label
 						for="groupDialogName"
 						class="col-sm col-form-label">
-						<h2 class="paragraph">Songlist</h2>
+						<h2 class="paragraph text-inherit">Songlist</h2>
 					</label>
 					<div class="col-sm">
 						<input
@@ -1390,6 +1390,190 @@
 						id="groupDialogIsGroup" />
 
 				</div>
+				<div class="form-group row showOnSharedSonglist hidden">
+					<div class="col-sm">
+						<h3 class="text-inherit">Songlist color</h3>
+						<div class="flexRow" id="songlistColorPicker">
+							<input type="hidden" id="groupDialogColor" />
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 colorPickerSelected backgroundColorNone" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-blue-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-green-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-red-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-purple-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-brown-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-white-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-5" />
+							</div>
+							<div class="flexCol">
+								<input type="button" value="" class="colorPicker m-1 bg-black-1" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-2" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-3" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-4" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-5" />
+							</div>
+						</div>
+
+					</div>
+					<div class="col-sm">
+
+						<h3 class="text-inherit">Songlist icon</h3>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-users"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-award"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-glass"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-diamond"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-camera"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-target"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-bullseye"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-fire"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-flash"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-mic"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-note"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-note-beamed"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-leaf"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-feather"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-magic"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-lightbulb"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-smile"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-rebel"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-clock"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-sun"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-moon"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-snowflake-o"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-fighter-jet"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-space-shuttle"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-rocket"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-linux"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-paw"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-home"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-cab"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-tree"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-graduation-cap"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-coffee"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-birthday"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-hand-spock-o"></i>
+						</button>
+						<button class="stOnOffButton m-1" type="button">
+							<i class="fa fa-hand-peace-o"></i>
+						</button>
+					</div>
+				</div>
 				<div class="form-group row">
 					<div class="col-sm">
 						<textarea
@@ -1402,7 +1586,7 @@
 					</div>
 				</div>
 
-				<div class="form-group hidden pt-4" id="groupOwnerRow">
+				<div class="form-group hidden pt-4 showOnSharedSonglist">
 					<span>This songlist is shared with:</span>
 					<div id="groupOwnerParent">
 					</div>
@@ -1509,8 +1693,8 @@
 					</button -->
 				</p>
 				<p class="paragraph normalSize">
-					Read more at 
-						<a 
+					Read more at
+						<a
 						target="_blank"
 						href="/help.html#shareSonglist">
 						Share songlists
@@ -1969,7 +2153,7 @@
 
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/checkbox.css" />
 
-	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-04-21/css/troff-icon-pack.css" />
+	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-04-23/css/troff-icon-pack.css" />
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/internal/fontello-extra.css" />
 
 

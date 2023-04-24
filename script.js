@@ -24,15 +24,15 @@
 saker jag vill göra
 
 8) andra fina saker som grupper har kanske låt-listor också ska ha
-	
+
 KLAR) 8.1) TODO: inforuta
 
 8.3) TODO: loga
 
-8.2) TODO: färg
+8.2) KLAR TODO: färg
 
 
-10) Share-knappen - Om man INTE är inloggad ska den visa en popupp
+10) KLAR Share-knappen - Om man INTE är inloggad ska den visa en popupp
 	som beskriver funktionen och fråga om man vill logga in!
 
 12) Allmänt bättre beskrivning av funktionen!
@@ -40,7 +40,7 @@ KLAR) 8.1) TODO: inforuta
 13) och en inloggnings-knapp någon stanns!
 
 (men! släpp detta till prod med en hidden-shar-knapp!
-	så att jag kan testa det utan att andra testar, 
+	så att jag kan testa det utan att andra testar,
 	och se att firebase lirar med reglerna o så...
 )
 
@@ -49,7 +49,7 @@ When deploying to prod;
 If the rules do not work: follow Sam Olsens comment:
 https://stackoverflow.com/questions/75897502/how-to-enabling-cross-service-communication-in-firebase?noredirect=1#comment133876950_75897502
 
-Firebaser here! It's possible to check if the permission is set up correctly. First, navigate to the Cloud Console IAM page for your project. Check the checkbox titled "Include Google-provided role grants." Look for a service account ending in @gcp-sa-firebasestorage.iam.gserviceaccount.com. This service account should have Firebase Rules Firestore Service Agent listed under the "Role" column. – 
+Firebaser here! It's possible to check if the permission is set up correctly. First, navigate to the Cloud Console IAM page for your project. Check the checkbox titled "Include Google-provided role grants." Look for a service account ending in @gcp-sa-firebasestorage.iam.gserviceaccount.com. This service account should have Firebase Rules Firestore Service Agent listed under the "Role" column. –
 Sam Olsen
 
 (Det fungerade efter en dag när jag testade :) )
@@ -313,7 +313,6 @@ const initiateAllFirebaseGroups = async function() {
 }
 
 const initiateCollections = async function( querySnapshot ) {
-	console.log( "initiateCollections ->" );
 
 	if( querySnapshot.metadata.fromCache ) {
 		// If the result is from the cache,
@@ -349,7 +348,7 @@ const initiateCollections = async function( querySnapshot ) {
 				songDoc.data().songKey,
 				songDoc.data().fileUrl
 			);
-			
+
 			songDoc.ref.onSnapshot( songDocUpdate );
 		});
 
@@ -423,7 +422,7 @@ const groupDocUpdate = function( doc ) {
 
 		$.notify(
 			`You have been removed from the group "${$target.text()}".
-			It has been converted to a songlist`, 
+			It has been converted to a songlist`,
 			"info"
 		);
 		return;
@@ -436,6 +435,8 @@ const groupDocUpdate = function( doc ) {
 	});
 
 	Troff.updateSongListInHTML( songListObject );
+
+	DB.saveSonglists_new();
 
 }
 
@@ -451,7 +452,7 @@ const songDocUpdate = async function( doc ) {
 		$.notify(
 			`The song "${fileName}" has been removed from the group
 			${groupName}
-			\nBut the song and markers are still saved on your computer!`, 
+			\nBut the song and markers are still saved on your computer!`,
 			"info"
 		);
 
@@ -623,7 +624,7 @@ const openGroupDialog = async function( songListObject ) {
 
 	if (isGroup) {
 		$( "#leaveGroup" ).removeClass( "hidden" );
-		$( "#groupOwnerRow" ).removeClass( "hidden" );
+		$( ".showOnSharedSonglist" ).removeClass( "hidden" );
 	} else {
 		$( "#shareSonglist" ).removeClass( "hidden" );
 	}
@@ -632,7 +633,17 @@ const openGroupDialog = async function( songListObject ) {
 	$( "#groupDialogName" ).data( "songListObjectId", songListObject.id );
 	$( "#groupDialogName" )
 		.data( "groupDocId", songListObject.firebaseGroupDocId );
-	
+
+	$( "#groupDialog" )
+		.find( ".innerDialog" )
+		.addClass( songListObject.color );
+
+ 	$( "#groupDialogColor" ).val( songListObject.color );
+
+	$( "#songlistColorPicker" )
+		.find( "." + (songListObject.color || "backgroundColorNone") )
+		.addClass( "colorPickerSelected" );
+
 	$( "#groupDialogIsGroup" ).prop('checked', isGroup);
 
 	$( "#groupDialogInfo" ).val( songListObject.info );
@@ -660,7 +671,15 @@ const emptyGroupDialog = function() {
 
 	$( "#leaveGroup" ).addClass( "hidden" );
 	$( "#shareSonglist" ).addClass( "hidden" );
-	$( "#groupOwnerRow" ).addClass( "hidden" );
+	$( ".showOnSharedSonglist" ).addClass( "hidden" );
+
+	$( "#groupDialog" ).find( ".innerDialog" )
+		.removeClassStartingWith( "bg-" );
+
+	$( "#songlistColorPicker" )
+		.find( ".colorPickerSelected" )
+		.removeClass( "colorPickerSelected" );
+
 }
 
 const newGroupDialog = function( event ) {
@@ -759,8 +778,8 @@ const addGroupOwnerRow = function( owner ) {
 
 /**
  * Gets the data in the group that is sent to firebase!
- * IE it does NOT include the songLIstObjectId, 
- * because that is 
+ * IE it does NOT include the songLIstObjectId,
+ * because that is
  */
 const getFirebaseGroupDataFromDialog = function( forceUserEmail ) {
 
@@ -795,6 +814,7 @@ const groupDialogSave = async function( event ) {
 	const songListObject = {
 		id : $( "#groupDialogName" ).data( "songListObjectId" ),
 		name : $( "#groupDialogName" ).val(),
+		color : $( "#groupDialogColor" ).val(),
 		info : $( "#groupDialogInfo" ).val(),
 	};
 
@@ -852,7 +872,7 @@ const groupDialogSave = async function( event ) {
 			return;
 		}
 
-		
+
 		if (isGroup) {
 			if( $( v ).hasClass( "removed" ) ) {
 				if( songDocId == undefined ) {
@@ -866,13 +886,13 @@ const groupDialogSave = async function( event ) {
 		if ( $( v ).hasClass( "removed" )  ) {
 			return;
 		}
-	
+
 		songs.push(  songIdObject );
 	} );
 	songListObject.songs = songs;
 
 	if ( songListObject.id == undefined ) {
-		Troff.addSonglistToHTML_NEW( songListObject );	
+		Troff.addSonglistToHTML_NEW( songListObject );
 	} else {
 		Troff.updateSongListInHTML( songListObject );
 	}
@@ -960,7 +980,7 @@ const saveSongDataToFirebaseGroup = async function(
 	songKey,
 	groupDocId,
 	songDocId ) {
-	
+
 	const publicData = Troff.removeLocalInfo( nDB.get( songKey ) );
 
 	publicData.latestUploadToFirebase = Date.now();
@@ -998,7 +1018,7 @@ const saveSongDataToFirebaseGroup = async function(
 		}
 
 	} else {
-		songData.fileUrl = await uploadSongToFirebaseGroup( 
+		songData.fileUrl = await uploadSongToFirebaseGroup(
 			groupDocId,
 			songKey
 			);
@@ -1041,7 +1061,7 @@ const uploadSongToFirebaseGroup = async function(
 	const [fileUrl, file] = await fileHandler
 		.sendFileToFirebase( songKey, "Groups/"+ groupId );
 	return fileUrl;
-	
+
 }
 
 /*
@@ -1399,10 +1419,10 @@ function updateGroupNotification( songKey ) {
 
 	$( ".groupIndicationDiv" ).addClass( "groupIndication" );
 
-	$( ".currentNrGroups" ).text( nrGroups ); 
+	$( ".currentNrGroups" ).text( nrGroups );
 
 	const groups = SongToGroup.getSongGroupList(songKey);
-	
+
 	const groupNames = groups.map( group => {
 		return $( "#songListList" )
 			.find( `[data-firebase-group-doc-id="${group.groupDocId}"]` )
@@ -1484,6 +1504,10 @@ function clickSongList_NEW( event ) {
 	} else {
 		$( "#songListsList" ).find( "button" ).removeClass("selected").removeClass("active");
 		$target.addClass( "selected" );
+
+		$( "#headArea" )
+			.removeClassStartingWith( "bg-" )
+			.addClass( data.color );
 	}
 
 	Troff.saveCurrentStateOfSonglists();
@@ -1737,7 +1761,7 @@ function initSongTable() {
 
 		var jsonDataInfo = dataSongTable
 				.row( $(this) )
-				.data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] 
+				.data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ]
 
 		event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
 	})
@@ -1873,7 +1897,7 @@ function onChangeSongListSelector( event ) {
 }
 
 /**
- * returns a list of the checked visible songs in the SongTable 
+ * returns a list of the checked visible songs in the SongTable
  * AND ALSO unchecks the songs!
  * @returns List of songDataInfoObjects {galleryId, fullPath}
  */
@@ -1887,7 +1911,7 @@ function getSelectedSongs_NEW() {
 		.map( (i, v) => JSON.parse(
 			$('#dataSongTable').DataTable().row( v ).data()[
 				DATA_TABLE_COLUMNS.getPos( "DATA_INFO" )
-			] 
+			]
 		) ).get();
 
 	$checkboxes.prop("checked", false);
@@ -1900,6 +1924,7 @@ function clickButtNewSongList( event ) {
 }
 
 function songListDialogOpenExisting( event ) {
+	console.warn( "deprecated??? " );
 	openGroupDialog(
 		$( event.target )
 		.closest( "button")
@@ -1978,10 +2003,10 @@ function removeSongsFromSonglist( songs, $target ) {
 /**
  * Denna funktion används när envändaren själv lägger till låtar i en songList
  * antingen via drag and drop, eller selecten
- * Den används INTE om groupDialog sparas, 
+ * Den används INTE om groupDialog sparas,
  * eller om låtarna läggs till via en firebase update!
- * @param {array of songs} songs 
- * @param {jQuery button} $target 
+ * @param {array of songs} songs
+ * @param {jQuery button} $target
  */
 function addSongsToSonglist( songs, $target ) {
 	var	songAlreadyExists,
@@ -3606,6 +3631,28 @@ var TroffClass = function(){
 		}
 	};
 
+	this.setSonglistColor = function( event ) {
+		const element = event.target;
+		const color = [...element.classList]
+			.find( o => o.startsWith("bg-" ) );
+
+		const dialog = $( "#groupDialog" ).find( ".innerDialog" )[0];
+
+		$( dialog )
+			.find( ".colorPickerSelected" )
+			.removeClass( "colorPickerSelected" );
+
+		$( "#markerList" ).children().removeClassStartingWith("extend_");
+
+		$( dialog ).removeClassStartingWith( "bg-" );
+
+		element.classList.add( "colorPickerSelected" );
+		dialog.classList.add( color );
+
+		$( dialog ).find( "#groupDialogColor" ).val( color );
+	}
+
+
 	/*Troff*/this.leaveGroup = async function() {
 		$( "#groupDialog" ).addClass( "hidden" );
 		const groupDocId = $( "#groupDialogName" )
@@ -3634,7 +3681,7 @@ var TroffClass = function(){
 			return;
 		}
 
-		$("#groupOwnerRow").removeClass("hidden");
+		$(".showOnSharedSonglist").removeClass("hidden");
 		$( "#groupDialogIsGroup" ).prop('checked', true);
 		addGroupOwnerRow( firebaseUser.email );
 	}
@@ -3658,10 +3705,10 @@ var TroffClass = function(){
 		$( "#groupDialog" ).addClass( "hidden" );
 			const groupDocId = $( "#groupDialogName" )
 				.data( "groupDocId" );
-			
+
 			const storageRef = firebase.storage()
 				.ref(`Groups/${groupDocId}`);
-			
+
 			await storageRef.listAll().then(async (listResults) => {
 				const promises = listResults.items.map((item) => {
 					return item.delete();
@@ -3691,22 +3738,6 @@ var TroffClass = function(){
 				.doc( groupDocId )
 				.delete();
 	}
-
-	/*Troff* /this.onClickRemoveGroup = function( event ) {
-
-		IO.confirm(
-			"Remove group for every one?",
-			"This will convert this group to a songlist for all the members, updates to a song will no longer sync. Is this what you want?",
-			async () => {
-				Troff.removeGroup();
-			}, 
-			() => {
-				//Do not do annything on cancel...
-			},
-			"Yes, remove group",
-			"No, I like this group!"
-		);
-	}*/
 
 	/*Troff*/this.IO_removeSonglist = async function() {
 		const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
@@ -3760,14 +3791,14 @@ var TroffClass = function(){
 			DB.saveSonglists_new();
 		} );
 	}
-	
+
 	/**
 	 * Denna funktion används när en låtlista uppdateras automatiskt
 	 * tex, när firebase uppdaterar låtlista,
 	 * eller när groupDialog sparas.
 	 * Den används INTE vid drag and dropp, eller selecten!
-	 * @param {Object of Songlist} songListObject 
-	 * @param {jQuery button} $target 
+	 * @param {Object of Songlist} songListObject
+	 * @param {jQuery button} $target
 	 */
 	/*Troff*/this.updateSongListInHTML = function( songListObject ) {
 
@@ -3779,7 +3810,11 @@ var TroffClass = function(){
 				.find( `[data-firebase-group-doc-id="${groupId}"]` );
 			songListObject.id = $target.data( "songlistId" );
 		}
-	
+
+		$target.parent().find( ".editSongList" )
+			.removeClassStartingWith( "bg-" )
+			.addClass( songListObject.color );
+
 		$target.text( songListObject.name );
 		$target.data("songList", songListObject);
 
@@ -3814,6 +3849,8 @@ var TroffClass = function(){
 						.append( $( "<button>" )
 							.addClass("small")
 							.addClass("regularButton")
+							.addClass("editSongList")
+							.addClass( oSongList.color )
 							.addClass( "mr-2" )
 							.append(
 								$( "<i>" )
@@ -3828,7 +3865,7 @@ var TroffClass = function(){
 							.addClass( "flex-one" )
 							.addClass( "text-left" )
 							.data("songList", oSongList)
-							.attr("data-songlist-id", oSongList.id) 
+							.attr("data-songlist-id", oSongList.id)
 								//  workaround to be able to select by for example $(" [data-songlist-id]")
 							.attr( "data-firebase-group-doc-id", groupDocId)
 							.text( oSongList.name )
@@ -3874,6 +3911,13 @@ var TroffClass = function(){
 				o.songListList.forEach(function(v, i){
 					$("#songListList").find("[data-songlist-id="+v+"]").addClass( indicatorClass );
 					$("#songListAll").removeClass( "selected" );
+
+					if( !isAdditiveSelect ) {
+						const songListData = $("#songListList")
+							.find("[data-songlist-id="+v+"]")
+							.data( "songList" );
+						$( "#headArea" ).addClass( songListData.color );
+					}
 				});
 
 				filterSongTable( getFilterDataList() );
@@ -6033,7 +6077,7 @@ var IOClass = function(){
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
-		
+
 		$( ".buttNewGroup" ).on( "click", newGroupDialog );
 		$( "#groupDialogSave" ).on( "click", groupDialogSave );
 
@@ -6104,6 +6148,10 @@ var IOClass = function(){
 
 		$("[data-save-on-song-toggle-class]").click( IO.saveOnSongToggleClass );
 
+		$( "#songlistColorPicker" ).find( "input" ).on(
+			"click",
+			Troff.setSonglistColor);
+
 		// The jQuery version doesn't update as the user is typing:
 		$( "[data-save-on-song-value]" ).each( function( i, element ){
 			$( element )[0].addEventListener( "input", IO.saveOnSongValue );
@@ -6134,7 +6182,7 @@ var IOClass = function(){
 		$('#removeSongList').click(Troff.onClickremoveSonglist);
 		$('#leaveGroup').click(Troff.onClickLeaveGroup);
 		$('#shareSonglist').click(Troff.onClickShareSonglist)
-		
+
 		$('#cancelSongList').click(Troff.cancelSongList);
 
 		$('#buttUnselectMarkers').click(Troff.unselectMarkers);
