@@ -634,15 +634,28 @@ const openGroupDialog = async function( songListObject ) {
 	$( "#groupDialogName" )
 		.data( "groupDocId", songListObject.firebaseGroupDocId );
 
+	if( !songListObject.icon ) {
+		songListObject.icon = "fa-users";
+	}
+
 	$( "#groupDialog" )
 		.find( ".innerDialog" )
 		.addClass( songListObject.color );
 
- 	$( "#groupDialogColor" ).val( songListObject.color );
+	$( "#groupDialogSonglistIcon" )
+		.addClass( songListObject.icon );
+
+	$( "#groupDialogColor" ).val( songListObject.color );
+	$( "#groupDialogIcon" ).val( songListObject.icon );
 
 	$( "#songlistColorPicker" )
 		.find( "." + (songListObject.color || "backgroundColorNone") )
 		.addClass( "colorPickerSelected" );
+
+	$( "#songlistIconPicker" )
+		.find( "." + songListObject.icon )
+		.parent()
+		.addClass( "selected" );
 
 	$( "#groupDialogIsGroup" ).prop('checked', isGroup);
 
@@ -675,6 +688,12 @@ const emptyGroupDialog = function() {
 
 	$( "#groupDialog" ).find( ".innerDialog" )
 		.removeClassStartingWith( "bg-" );
+
+	$( "#groupDialogSonglistIcon" )
+		.removeClassStartingWith( "fa-" );
+
+	$( "#songlistIconPicker" ).find( "button" )
+		.removeClass( "selected" );
 
 	$( "#songlistColorPicker" )
 		.find( ".colorPickerSelected" )
@@ -3648,7 +3667,7 @@ var TroffClass = function(){
 		const icon = [...element.classList]
 			.find( o => o.startsWith("fa-" ) );
 
-		$( "#songlistIconPicker" ).children().removeClass( "selected" );
+		$( "#songlistIconPicker" ).find( "button" ).removeClass( "selected" );
 
 		button.classList.add( "selected" );
 

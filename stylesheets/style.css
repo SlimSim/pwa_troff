@@ -663,6 +663,28 @@ table {
 	flex: 1;
 }
 
+.flex-two {
+	flex-grow: 2;
+}
+
+.fa-lindy-hop, .fa-hop, .fa-violin, .fa-trombone, .fa-saxophone {
+	margin-left: -5px;
+	margin-right: 5px;
+}
+
+.fa-hop {
+	margin-left: -6px;
+	margin-right: 6px;
+}
+.fa-trumpet, .fa-clarinet, .fa-ukelele {
+	margin-left: -4px;
+	margin-right: 4px;
+}
+.fa-guitar, .fa-banjo, .fa-oboe {
+	margin-left: -3px;
+	margin-right: 3px;
+}
+
 .rowBreak{
 	white-space: normal;
 }

@@ -535,4 +535,12 @@ textarea {
 		max-width: 20%;
 	}
 
+	.flex-sm-col {
+		flex-direction: column !important;
+	}
+
+	.flex-sm-row {
+		flex-direction: row !important;
+	}
+
 }
