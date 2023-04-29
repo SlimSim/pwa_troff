@@ -35,7 +35,7 @@ KLAR) 8.1) TODO: inforuta
 10) KLAR Share-knappen - Om man INTE är inloggad ska den visa en popupp
 	som beskriver funktionen och fråga om man vill logga in!
 
-12) Allmänt bättre beskrivning av funktionen!
+12) KLAR Allmänt bättre beskrivning av funktionen!
 
 13) och en inloggnings-knapp någon stanns!
 
