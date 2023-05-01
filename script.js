@@ -23,7 +23,7 @@
 /*
 saker jag vill göra
 
-8) andra fina saker som grupper har kanske låt-listor också ska ha
+8) KLAR andra fina saker som grupper har kanske låt-listor också ska ha
 
 KLAR) 8.1) TODO: inforuta
 
@@ -36,6 +36,22 @@ KLAR) 8.1) TODO: inforuta
 	som beskriver funktionen och fråga om man vill logga in!
 
 12) KLAR Allmänt bättre beskrivning av funktionen!
+
+14) KLAR READING FROM NULL
+	på raden
+		const existingUploadTime = existingMarkerInfo.latestUploadToFirebase;
+
+	Uncaught (in promise) TypeError: Cannot read properties of null (reading 'latestUploadToFirebase')
+		at Object.songDocUpdate [as next] (script.js:471:48)
+		at Object.next (prebuilt.js:17765:25)
+		at next (prebuilt.js:17093:23)
+		at prebuilt.js:13573:27
+
+15) Att det blinkar till! när man startar troff,
+	borde vara för att den tar bort klasser som startar med fa- (eller color?)
+	och sen lägger till dom igen...., 
+	borde ENDAST ta bort klassen om det är en annan än den jag vill lägga till?
+	KANSKE.... TESTA!
 
 13) och en inloggnings-knapp någon stanns!
 
@@ -468,7 +484,9 @@ const songDocUpdate = async function( doc ) {
 	const existingMarkerInfo = nDB.get( songKey );
 	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
 
-	const existingUploadTime = existingMarkerInfo.latestUploadToFirebase;
+
+
+	const existingUploadTime = existingMarkerInfo?.latestUploadToFirebase;
 	const firebaseUploadTime = newMarkerInfo.latestUploadToFirebase;
 
 	const songHaveLocalChanges = DB.popSongWithLocalChanges(
