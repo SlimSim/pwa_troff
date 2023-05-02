@@ -47,11 +47,15 @@ KLAR) 8.1) TODO: inforuta
 		at next (prebuilt.js:17093:23)
 		at prebuilt.js:13573:27
 
-15) Att det blinkar till! när man startar troff,
+15) KLAR Att det blinkar till! när man startar troff,
 	borde vara för att den tar bort klasser som startar med fa- (eller color?)
-	och sen lägger till dom igen...., 
+	och sen lägger till dom igen....,
 	borde ENDAST ta bort klassen om det är en annan än den jag vill lägga till?
 	KANSKE.... TESTA!
+
+16) när man importerar en låt, med en aktiv låtlista
+	så frågar den om man vill lägga till låten.
+		jag svarade "JA" och fick en exception :(
 
 13) och en inloggnings-knapp någon stanns!
 
@@ -348,6 +352,8 @@ const initiateCollections = async function( querySnapshot ) {
 			name : group.name,
 			firebaseGroupDocId : doc.id,
 			owners : group.owners,
+			color : group.color,
+			icon : group.icon,
 			songs : []
 		};
 
@@ -1139,12 +1145,14 @@ const ifGroupSongUpdateFirestore = function( songKey ) {
 const setUiToNotSignIn = function( user ) {
 	$( ".hide-on-sign-out" ).addClass("hidden");
 	$( ".hide-on-sign-in" ).removeClass("hidden");
+	nDB.set( "TROFF_FIREBASE_PREVIOUS_SIGNED_IN", false);
 }
 
 const setUiToSignIn = async function( user ) {
 	$("#userName").text( user.displayName );
 	$(".hide-on-sign-out").removeClass("hidden");
 	$(".hide-on-sign-in").addClass("hidden");
+	nDB.set( "TROFF_FIREBASE_PREVIOUS_SIGNED_IN", true);
 }
 
 auth.onAuthStateChanged( user => {
@@ -6099,6 +6107,11 @@ var IOClass = function(){
 	}
 
 	/*IO*/this.startFunc = function() {
+
+		if( nDB.get( "TROFF_FIREBASE_PREVIOUS_SIGNED_IN" ) ) {
+			$(".hide-on-sign-out").removeClass("hidden");
+			$(".hide-on-sign-in").addClass("hidden");
+		}
 
 		document.addEventListener('keydown', IO.keyboardKeydown);
 		document.addEventListener('fullscreenchange', IO.fullScreenChange );
