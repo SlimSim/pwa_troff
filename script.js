@@ -23,36 +23,6 @@
 /*
 saker jag vill göra
 
-8) KLAR andra fina saker som grupper har kanske låt-listor också ska ha
-
-KLAR) 8.1) TODO: inforuta
-
-8.3) TODO: loga
-
-8.2) KLAR TODO: färg
-
-
-10) KLAR Share-knappen - Om man INTE är inloggad ska den visa en popupp
-	som beskriver funktionen och fråga om man vill logga in!
-
-12) KLAR Allmänt bättre beskrivning av funktionen!
-
-14) KLAR READING FROM NULL
-	på raden
-		const existingUploadTime = existingMarkerInfo.latestUploadToFirebase;
-
-	Uncaught (in promise) TypeError: Cannot read properties of null (reading 'latestUploadToFirebase')
-		at Object.songDocUpdate [as next] (script.js:471:48)
-		at Object.next (prebuilt.js:17765:25)
-		at next (prebuilt.js:17093:23)
-		at prebuilt.js:13573:27
-
-15) KLAR Att det blinkar till! när man startar troff,
-	borde vara för att den tar bort klasser som startar med fa- (eller color?)
-	och sen lägger till dom igen....,
-	borde ENDAST ta bort klassen om det är en annan än den jag vill lägga till?
-	KANSKE.... TESTA!
-
 16) när man importerar en låt, med en aktiv låtlista
 	så frågar den om man vill lägga till låten.
 		jag svarade "JA" och fick en exception :(
@@ -233,7 +203,7 @@ class SongToGroup {
 					o => o.songDocId != songDocId
 					&& o.groupDocId != groupDocId
 				);
-			if( idObjectList.length == 0 ){thisSongIsInThisG
+			if( idObjectList.length == 0 ) {
 				delete myGroups[v[0]];
 			} else {
 				myGroups[v[0]] = idObjectList;
@@ -649,6 +619,28 @@ const openGroupDialog = async function( songListObject ) {
 	if (isGroup) {
 		$( "#leaveGroup" ).removeClass( "hidden" );
 		$( ".showOnSharedSonglist" ).removeClass( "hidden" );
+		if( !songListObject.icon ) {
+			songListObject.icon = "fa-users";
+		}
+
+		$( "#groupDialog" )
+			.find( ".innerDialog" )
+			.addClass( songListObject.color );
+
+		$( "#groupDialogSonglistIcon" )
+			.addClass( songListObject.icon );
+
+		$( "#groupDialogColor" ).val( songListObject.color );
+		$( "#groupDialogIcon" ).val( songListObject.icon );
+
+		$( "#songlistColorPicker" )
+			.find( "." + (songListObject.color || "backgroundColorNone") )
+			.addClass( "colorPickerSelected" );
+
+		$( "#songlistIconPicker" )
+			.find( "." + songListObject.icon )
+			.parent()
+			.addClass( "selected" );
 	} else {
 		$( "#shareSonglist" ).removeClass( "hidden" );
 	}
@@ -658,28 +650,6 @@ const openGroupDialog = async function( songListObject ) {
 	$( "#groupDialogName" )
 		.data( "groupDocId", songListObject.firebaseGroupDocId );
 
-	if( !songListObject.icon ) {
-		songListObject.icon = "fa-users";
-	}
-
-	$( "#groupDialog" )
-		.find( ".innerDialog" )
-		.addClass( songListObject.color );
-
-	$( "#groupDialogSonglistIcon" )
-		.addClass( songListObject.icon );
-
-	$( "#groupDialogColor" ).val( songListObject.color );
-	$( "#groupDialogIcon" ).val( songListObject.icon );
-
-	$( "#songlistColorPicker" )
-		.find( "." + (songListObject.color || "backgroundColorNone") )
-		.addClass( "colorPickerSelected" );
-
-	$( "#songlistIconPicker" )
-		.find( "." + songListObject.icon )
-		.parent()
-		.addClass( "selected" );
 
 	$( "#groupDialogIsGroup" ).prop('checked', isGroup);
 
@@ -3752,8 +3722,11 @@ var TroffClass = function(){
 			return;
 		}
 
+		$( "#shareSonglist" ).addClass( "hidden" );
 		$(".showOnSharedSonglist").removeClass("hidden");
 		$( "#groupDialogIsGroup" ).prop('checked', true);
+		$( "#defaultIcon" ).click();
+		$( "#songlistColorPicker .backgroundColorNone" ).click();
 		addGroupOwnerRow( firebaseUser.email );
 	}
 
@@ -3882,21 +3855,24 @@ var TroffClass = function(){
 			songListObject.id = $target.data( "songlistId" );
 		}
 
-		$target.parent().find( ".editSongList" )
-			.removeClassStartingWith( "bg-" )
-			.addClass( songListObject.color );
-
-		$target.parent().find( ".editSongList" ).find( "i" )
-			.removeClassStartingWith( "fa-" )
-			.addClass( songListObject.icon || "fa-users" )
-
 		$target.text( songListObject.name );
 		$target.data("songList", songListObject);
 
 		if( songListObject.firebaseGroupDocId != undefined ) {
 			$target.attr("data-firebase-group-doc-id", songListObject.firebaseGroupDocId );
 			$target.addClass( "groupIndication" );
+		} else {
+			songListObject.color = "";
+			songListObject.icon = "fa-pencil";
 		}
+
+		$target.parent().find( ".editSongList" )
+			.removeClassStartingWith( "bg-" )
+			.addClass( songListObject.color );
+
+		$target.parent().find( ".editSongList" ).find( "i" )
+			.removeClassStartingWith( "fa-" )
+			.addClass( songListObject.icon || "fa-users" );
 
 		if ( $target.hasClass( "selected" ) ) {
 			$target.click();
