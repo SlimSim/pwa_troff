@@ -23,9 +23,14 @@
 /*
 saker jag vill göra
 
-16) när man importerar en låt, med en aktiv låtlista
+16) KLAR när man importerar en låt, med en aktiv låtlista
 	så frågar den om man vill lägga till låten.
 		jag svarade "JA" och fick en exception :(
+
+16.2 KLAR när jag tar remove song får jag exception
+
+
+17) iOS, hur fungerar det där??? ska man ens FÅ logga in?
 
 13) och en inloggnings-knapp någon stanns!
 
@@ -1567,9 +1572,11 @@ function getFilterDataList(){
 		if( innerData ) {
 			$.each(innerData.songs, function(i, vi) {
 				if( vi.isDirectory ) {
-					list.push( "^{\"galleryId\":\"" + vi.galleryId + "\"" );
+					const galleryId = vi.galleryId || vi.data.galleryId;
+					list.push( "^{\"galleryId\":\"" + galleryId + "\"" );
 				} else {
-					list.push( "\"fullPath\":\"" + escapeRegExp(vi.fullPath) + "\"}$" );
+					const fullPath = vi.fullPath || vi.data.fullPath;
+					list.push( "\"fullPath\":\"" + escapeRegExp(fullPath) + "\"}$" );
 				}
 			} );
 		}
@@ -1897,11 +1904,12 @@ function onChangeSongListSelector( event ) {
 	if( $selected.val() == "+" ) {
 		openGroupDialog( { songs : songDataInfoList } );
 	} else if( $selected.val() == "--remove" ) {
-		IO.confirm( "Remove songs?", "Remove songs: <br />" + songDataInfoList.map( s => s.name ).join( "<br />") +
+		IO.confirm( "Remove songs?", "Remove songs: <br />" + songDataInfoList.map( s => s.fullPath || s.name ).join( "<br />") +
 			"?<br /><br />Can not be undone.", () => {
 				songDataInfoList.forEach( song => {
-				cacheImplementation.removeSong( song.data.fullPath );
-			});
+					const fullPath = song.fullPath || song.data.fullPath;
+					cacheImplementation.removeSong( fullPath );
+				});
 			$checkedRows.closest("tr").each( (i, row ) => {
 				$('#dataSongTable').DataTable().row( row ).remove().draw();
 			} );
@@ -1991,7 +1999,7 @@ function removeSongsFromSonglist( songs, $target ) {
 
 	$.each( songs, function(i, song) {
 		var index,
-			dataInfo = song.data,
+			dataInfo = song.data || song,
 			value;
 		songDidNotExists = true;
 
@@ -2004,7 +2012,7 @@ function removeSongsFromSonglist( songs, $target ) {
 		}
 
 		if( songDidNotExists ) {
-			$.notify( song.name + " did not exist in " + songList.name, "info" );
+			$.notify( dataInfo.fullPath + " did not exist in " + songList.name, "info" );
 			return;
 		}
 
@@ -2034,7 +2042,7 @@ function addSongsToSonglist( songs, $target ) {
 		songList = $target.data("songList");
 
 	$.each( songs, function(i, song) {
-		var dataInfo = song;
+		var dataInfo = song.data || song;
 		songAlreadyExists = songList.songs.filter(function(value, index, arr){
 			return value.galleryId == dataInfo.galleryId &&
 				value.fullPath == dataInfo.fullPath;
@@ -2047,11 +2055,11 @@ function addSongsToSonglist( songs, $target ) {
 
 
 		songList.isDirectory = false;
-		songList.songs.push( dataInfo );
+		songList.songs.push( song );
 
 		$target.data("songList", songList);
 
-		notifyUndo( song.fullPath + " was added to " + songList.name, function(){
+		notifyUndo( dataInfo.fullPath + " was added to " + songList.name, function(){
 			var i,
 				undo_songList = $target.data("songList");
 
