@@ -31,8 +31,23 @@ saker jag vill göra
 
 
 17) iOS, hur fungerar det där??? ska man ens FÅ logga in?
+			det verkar funka, men svårt att testa....
+			funkar INTE på min telefon, men funkar på alla andra ställej jag testat, typ?
+
+
+
 
 13) och en inloggnings-knapp någon stanns!
+Så, flytta ut find-new-songs-knappen och lägg allt annat i en tooltip som visas på en hover-grejj
+
+och hover-grejjen är troff-ikonen???
+			eller något annat så man fattar att man kan hovra, kanske en hambörjare???
+
+kom också ihåg att lägga färg och ikon underst i låtliste dialogen.
+för det viktigaste är ju att kunna lägga till / ta bort folk,
+och sen lägga till / ta bort låtar. (INTE ändra färj och ikon...)
+
+Japp, lägger det i i en tool-tip bakom en hambörjare!
 
 (men! släpp detta till prod med en hidden-shar-knapp!
 	så att jag kan testa det utan att andra testar,

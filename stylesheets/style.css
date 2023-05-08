@@ -491,6 +491,13 @@ input[type=number].numberWider{
 	width: 200px;
 }
 
+.left-100p {
+	left: -100%;
+}
+
+.top-35 {
+	top: 35px;
+}
 
 .svgButt{
 	height: 31px;
@@ -1084,6 +1091,10 @@ table.dataTable .dataTables_empty{
 
 .w-exact-200 {
 	width: 200px !important;
+}
+
+.h-exact-20 {
+	height: 20px;
 }
 
 .h-exact-35 {
