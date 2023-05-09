@@ -169,21 +169,7 @@
 
 			</div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			<nav class="flexCol justify-content-between">
+			<nav class="flexCol center justify-content-between">
 				<div class="tooltip svgButt fa fa-menu h-exact-20">
 					<div class="tooltiptext">
 						<div
@@ -1407,6 +1393,39 @@
 							id="groupDialogInfo" ></textarea>
 					</div>
 				</div>
+
+				<div class="form-group hidden pt-4 showOnSharedSonglist">
+					<span>This songlist is shared with:</span>
+					<div id="groupOwnerParent">
+					</div>
+					<button
+						type="button"
+						id="groupAddOwnerButt"
+						title="Add someone who will get these songs and all the updates to them!"
+						class="fa-plus regularButton">
+						Add new person to share with
+					</button>
+					<a
+						class="float-right"
+						target="_blank"
+						href="/help.html#shareSonglist">
+						Read more about sharing songlists
+					</a>
+				</div>
+				<div class="form-group pt-4">
+					<span>Songs in this songlist:</span>
+					<div id="groupSongParent">
+					</div>
+					<button
+						type="button"
+						data-st-css-selector-to-fade-in="#possible-songs-to-add"
+						title="Add a new song to this songlist"
+						class="fa-plus rotate-on-active stOnOffButton">
+						Add new songs to songlist
+					</button>
+					<ul class="fadedOut" id="possible-songs-to-add"></ul>
+				</div>
+
 				<div class="form-group row showOnSharedSonglist hidden">
 					<div class="col-sm">
 						<h3 class="text-inherit pt-4">Songlist color</h3>
@@ -1479,7 +1498,6 @@
 								<input type="button" value="" class="colorPicker m-1 bg-black-5" title="Black" />
 							</div>
 						</div>
-
 					</div>
 					<div class="col-sm flex-two">
 
@@ -1610,38 +1628,6 @@
 							</div>
 						</div>
 					</div>
-				</div>
-
-				<div class="form-group hidden pt-4 showOnSharedSonglist">
-					<span>This songlist is shared with:</span>
-					<div id="groupOwnerParent">
-					</div>
-					<button
-						type="button"
-						id="groupAddOwnerButt"
-						title="Add someone who will get these songs and all the updates to them!"
-						class="regularButton">
-						Add new person to share with
-					</button>
-					<a
-						class="float-right"
-						target="_blank"
-						href="/help.html#shareSonglist">
-						Read more about sharing songlists
-					</a>
-				</div>
-				<div class="form-group pt-4">
-					<span>Songs in this songlist:</span>
-					<div id="groupSongParent">
-					</div>
-					<button
-						type="button"
-						data-st-css-selector-to-toggle="#possible-songs-to-add"
-						title="Add a new song to this songlist"
-						class="stOnOffButton">
-						Add new songs to songlist
-					</button>
-					<ul class="hidden" id="possible-songs-to-add"></ul>
 				</div>
 
 				<div class="flexRow pt-4 flexRowWrap">

@@ -512,7 +512,24 @@ rect.svg_rect_btn {
 	stroke-opacity:0;
 }
 
+.rotate-on-active::before {
+    transition: all 0.6s;
+}
 
+.active.rotate-on-active::before {
+    transform: rotate(45deg);
+}
+
+.fadedOut {
+	height: 0;
+	overflow: hidden;
+	transition: height 0.3s ease;
+}
+
+.fadeIn {
+	height: 206px;
+	overflow: auto;
+}
 
 input, button, .linkButton, .st-simple-on-off-button{
 	border-width: 0;

@@ -6135,6 +6135,7 @@ var IOClass = function(){
 
 
 		$( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
+			IO.blurHack();
 			var $target = $( event.target ),
 				$value = $( $target.data( "st-css-selector-to-toggle" ) );
 
@@ -6147,6 +6148,23 @@ var IOClass = function(){
 			}
 
 		} );
+
+		$( "[data-st-css-selector-to-fade-in]" ).on( "click", function( event ) {
+			IO.blurHack();
+			var $target = $( event.target ),
+				$value = $( $target.data( "st-css-selector-to-fade-in" ) );
+
+			if( $target.hasClass( "stOnOffButton" ) ) {
+				if( $value.hasClass( "fadeIn" ) ) {
+					$target.addClass( "active" );
+				} else {
+					$target.removeClass( "active" );
+				}
+			}
+
+		} );
+
+		$( ".regularButton" ).on( "click", IO.blurHack );
 
 		//TODO: fix so that all cancelButtons use this class, and remove there id, and event-listener :)
 		$( ".dialogCancelButton" ).click( function( event ) {
