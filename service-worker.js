@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.12.87",
+		version: "1.12.88",
 		urls: [
 			"/",
 			"/index.html",
@@ -40,7 +40,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.7.10",
+		version: "1.7.11",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
