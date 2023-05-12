@@ -1536,7 +1536,6 @@ function clickSongList_NEW( event ) {
 			$( "#headArea" ).addClass( data.color );
 			$( "#songlistIcon" ).addClass( data.icon || "fa-users" );
 			$( "#songlistName" ).text( data.name );
-			console.log( "x1", data.info);
 			$( "#songlistInfo" ).removeClass( "hidden" ).text( data.info );
 		}
 	}
@@ -1773,6 +1772,9 @@ function initSongTable() {
 			"className": "preventSongLoad secondaryColor",
 			"orderable": false,
 			"defaultContent": '<div class="checkbox"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>'
+		}, {
+			"targets": DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ),
+			"className": "min-w-200-on-attached secondaryColor",
 		}, {
 			"targets": DATA_TABLE_COLUMNS.getPos( "EDIT" ),
 			"data": null,
@@ -3984,7 +3986,6 @@ var TroffClass = function(){
 						$( "#headArea" ).addClass( songListData.color );
 						$( "#songlistIcon" ).addClass( songListData.icon );
 						$( "#songlistName" ).text( songListData.name );
-						console.log( "x2 ", songListData)
 						$( "#songlistInfo" )
 							.removeClass( "hidden" )
 							.text( songListData.info );
