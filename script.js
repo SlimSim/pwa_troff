@@ -23,31 +23,17 @@
 /*
 saker jag vill göra
 
-16) KLAR när man importerar en låt, med en aktiv låtlista
-	så frågar den om man vill lägga till låten.
-		jag svarade "JA" och fick en exception :(
-
-16.2 KLAR när jag tar remove song får jag exception
-
 
 17) iOS, hur fungerar det där??? ska man ens FÅ logga in?
 			det verkar funka, men svårt att testa....
 			funkar INTE på min telefon, men funkar på alla andra ställej jag testat, typ?
 
 
+13) KLAR  och en inloggnings-knapp någon stanns!
 
-
-13) och en inloggnings-knapp någon stanns!
-Så, flytta ut find-new-songs-knappen och lägg allt annat i en tooltip som visas på en hover-grejj
-
-och hover-grejjen är troff-ikonen???
-			eller något annat så man fattar att man kan hovra, kanske en hambörjare???
-
-kom också ihåg att lägga färg och ikon underst i låtliste dialogen.
-för det viktigaste är ju att kunna lägga till / ta bort folk,
-och sen lägga till / ta bort låtar. (INTE ändra färj och ikon...)
-
-Japp, lägger det i i en tool-tip bakom en hambörjare!
+KLAR kom också ihåg att lägga färg och ikon underst i låtliste dialogen.
+	för det viktigaste är ju att kunna lägga till / ta bort folk,
+	och sen lägga till / ta bort låtar. (INTE ändra färj och ikon...)
 
 (men! släpp detta till prod med en hidden-shar-knapp!
 	så att jag kan testa det utan att andra testar,
@@ -1544,11 +1530,14 @@ function clickSongList_NEW( event ) {
 		$( "#headArea" ).removeClassStartingWith( "bg-" );
 		$( "#songlistIcon" ).removeClassStartingWith( "fa-" );
 		$( "#songlistName" ).text( "" );
+		$( "#songlistInfo" ).text( "" ).addClass( "hidden" );
 
 		if( data && data.firebaseGroupDocId ) {
 			$( "#headArea" ).addClass( data.color );
 			$( "#songlistIcon" ).addClass( data.icon || "fa-users" );
 			$( "#songlistName" ).text( data.name );
+			console.log( "x1", data.info);
+			$( "#songlistInfo" ).removeClass( "hidden" ).text( data.info );
 		}
 	}
 
@@ -3995,6 +3984,10 @@ var TroffClass = function(){
 						$( "#headArea" ).addClass( songListData.color );
 						$( "#songlistIcon" ).addClass( songListData.icon );
 						$( "#songlistName" ).text( songListData.name );
+						console.log( "x2 ", songListData)
+						$( "#songlistInfo" )
+							.removeClass( "hidden" )
+							.text( songListData.info );
 					}
 				});
 
