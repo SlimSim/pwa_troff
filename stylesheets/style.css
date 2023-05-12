@@ -1124,6 +1124,10 @@ table.dataTable .dataTables_empty{
 	max-width: 239px;
 }
 
+#songPickerAttachedArea .min-w-200-on-attached {
+	min-width: 200px;
+}
+
 .font-size-exact-19 {
 	font-size: 19px;
 }
