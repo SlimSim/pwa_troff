@@ -91,19 +91,9 @@
 	<section id="songsSection" class="flexCol">
 		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
 			<nav class="flexCol center justify-content-between">
-				<!--
-				<i class="tooltip fa fa-user">
-					<div class="tooltiptext">
-						<div id="userName" class="p-3 small"></div>
-							<button id="signOut" class="btn regularButton hidden">Sign out</button>
-					</div>
-				</i>
-				-->
-
 
 				<button class="svgButt special regularButton bg-transparent text-inherit showUploadSongToServerDialog tooltip"
-								type="button"
-								title="Share this song to friends via link">
+								type="button">
 					<i class="fa-share" ></i>
 					<div class="tooltiptext p-3 small left-100p top-35">
 						Share this song to friends via link
@@ -129,8 +119,6 @@
 			<div id="mediaInfoBox" class="flexCol halfMarginParent">
 
 				<input type="file" id="fileUploader" class="hidden" name="files[]" multiple />
-
-				<input type="button" id="pwaAddToHomeScreen" class="hidden regularButton special ml-2" value="Install Troff" />
 
 				<div class="m-0 tooltip">
 					<i id="songlistIcon"></i>
@@ -205,9 +193,16 @@
 						</button>
 						<button
 							class="regularButton svgButt regularButton onClickReload"
-							title="Reload browser!">
+							title="Restart Troff!">
 							<i class="fa-reload"></i>
 						</button>
+						<input
+							type="button"
+							id="pwaAddToHomeScreen"
+							class="hidden svgButt regularButton normal special w-exact-89"
+							title="Install Troff to get an icon on your home screen!"
+							value="Install Troff" />
+
 					</div>
 				</div>
 
