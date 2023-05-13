@@ -133,12 +133,14 @@
 				<div id="currentSong"></div>
 				<div id="currentAlbum"></div>
 				<div id="currentPath" class="hidden"></div>
-				<div class="dataOutput center flexRow hideOnPicture">
-					<div class="flexRow marginLR moodColorizedText bold">
-						<div class="secondsLeft marginLR">0</div>
-						<div class="loopTimesLeft marginLR">1</div>
+				<div class="dataOutput center flexRow hideOnPicture pt-1">
+					<div
+						id="infoSectionSmall"
+						class="flexRow marginLR info-round moodColorizedText bold hidden">
+						<div class="secondsLeft info-round--content marginLR ml-0">0</div>
+						<div class="loopTimesLeft info-round--content marginLR mr-0">1</div>
 					</div>
-					<div class="marginLR">
+					<div class="marginLR info-round--content">
 						<div id="time"><p>0:00</p></div>/<div id="maxTime">0:00</div>
 					</div>
 				</div>
@@ -162,7 +164,7 @@
 
 			<nav class="flexCol center justify-content-between">
 				<div class="tooltip svgButt fa fa-menu h-exact-20">
-					<div class="tooltiptext">
+					<div class="tooltiptext pb-3">
 						<div
 							id="userName"
 							class="p-3 small hide-on-sign-out"
@@ -229,7 +231,7 @@
 			<input type="button" value="States" id="statesTab"  class="stOnOffButton hideOnPicture" section-to-hide="#stateSection"/>
 			<input type="button" value="Settings" id="settingsTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#timeSection"/>
 			<input type="button" value="Info" id="infoTab"  class="active stOnOffButton" section-to-hide="#userNoteSection"/>
-			<input type="button" value="Countdown" id="countTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#infoSection"/>
+			<input type="button" value="Countdown" id="countTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#infoSection, #infoSectionSmall"/>
 		</div>
 		<div id="areaParent" class="flexRow areaParent negative-my-4px flex-one h-0" >
 			<span class="flexOne"></span>
