@@ -112,11 +112,14 @@ p{
 
 
 
+:root {
+	--primaryColor : #f0f0f0;
+}
 
 /* primaryColor */
 .primaryColor,
 .bgEasyRead {
-	background-color: #fcfcfc;
+	background-color: #f0f0f0;
 	background: #f0f0f0;
 	color: #545454;
 }

@@ -23,13 +23,18 @@
 /*
 saker jag vill göra
 
+13) KLAR  och en inloggnings-knapp någon stanns!
 
 17) iOS, hur fungerar det där??? ska man ens FÅ logga in?
 			det verkar funka, men svårt att testa....
 			funkar INTE på min telefon, men funkar på alla andra ställej jag testat, typ?
 
 
-13) KLAR  och en inloggnings-knapp någon stanns!
+18) KLAR färjerna för nedräknings-siffrorna
+	bredvid tiden (uppe i vänstra rutan)
+	fixa att dom ser bra ut
+	ELLER, så tar jag bort "#infoSectionSmall" när "#infoSection" visas :)
+
 
 KLAR kom också ihåg att lägga färg och ikon underst i låtliste dialogen.
 	för det viktigaste är ju att kunna lägga till / ta bort folk,
@@ -3654,6 +3659,7 @@ var TroffClass = function(){
 		$('#userNoteSection').toggleClass("hidden", !abAreas[2]);
 		$('#countTab').toggleClass("active", abAreas[3]);
 		$('#infoSection').toggleClass("hidden", !abAreas[3]);
+		$('#infoSectionSmall').toggleClass("hidden", abAreas[3]);
 	};
 
 	this.setInfo = function(info){

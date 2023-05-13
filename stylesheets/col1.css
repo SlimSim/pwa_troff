@@ -103,6 +103,9 @@ p{
 
 
 
+:root {
+	--primaryColor : #c2dde6;
+}
 
 /* primaryColor */
 .primaryColor,

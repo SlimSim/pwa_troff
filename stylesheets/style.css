@@ -1094,7 +1094,7 @@ table.dataTable .dataTables_empty{
 	width: 38.5px !important;
 }
 .w-exact-89 {
-	width: 89px !important;
+	width: 89.4px !important;
 }
 
 .logo-h-w {
@@ -1141,23 +1141,16 @@ table.dataTable .dataTables_empty{
 	background-color: Burlywood;
 }
 
-/* Songlist colors */
-.bg-black-3 .pause .secondsLeft,
-.bg-black-3 .pause .loopTimesLeft,
-.bg-black-4 .pause .secondsLeft,
-.bg-black-4 .pause .loopTimesLeft,
-.bg-black-5 .pause .secondsLeft,
-.bg-black-5 .pause .loopTimesLeft	{ color: #fff; }
-.bg-red-1 .pause .secondsLeft,
-.bg-red-1 .pause .loopTimesLeft  	{ color: #000;}
-.bg-red-2 .pause .secondsLeft,
-.bg-red-2 .pause .loopTimesLeft  	{ color: #fff;}
-.bg-red-3 .pause .secondsLeft,
-.bg-red-3 .pause .loopTimesLeft  	{ color: #fff;}
-.bg-red-4 .pause .secondsLeft,
-.bg-red-4 .pause .loopTimesLeft  	{ color: #fff;}
-.bg-red-5 .pause .secondsLeft,
-.bg-red-5 .pause .loopTimesLeft  	{ color: #fff;}
+.info-round {
+	border: 10px solid var(--primaryColor, #c2dde6);
+    border-radius: 10px;
+    height: 0;
+    margin-top: -10px;
+}
+
+.info-round--content {
+    margin-top: -7px;
+}
 
 .bg-blue-1 a		{ color: #003b6f; }
 .bg-blue-2 a		{ color: #ffdc00; }

@@ -103,6 +103,9 @@ p{
 
 
 
+:root {
+	--primaryColor : #93C47D;
+}
 
 /* primaryColor 500 */
 .primaryColor,
