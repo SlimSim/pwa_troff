@@ -4136,17 +4136,20 @@ var TroffClass = function(){
 		for(var i=0; i<astrState.length; i++){
 			var oState = JSON.parse(astrState[i]);
 
-			$('<div>')
+			$('<div class="flexRow">')
 				.append(
-					$('<input>')
+					$('<button>')
 					.attr('type', 'button')
 					.addClass('small regularButton')
-					.val('R')
+					.append(
+						$( "<i>" )
+						.addClass( "fa-trash")
+					)
 					.click(Troff.removeState))
 				.append(
 					$('<input>')
 					.attr('type', 'button')
-					.addClass('regularButton')
+					.addClass('regularButton flex-one text-left')
 					.val(oState.name)
 					.click(Troff.setState))
 				.attr('strState', astrState[i])
