@@ -267,23 +267,26 @@
 
 					<div id="ControlMarker" class="flexCol end">
 						<h2>Marker</h2>
-						<div>
+						<div class="w-100">
 							<input
 									type="button"
 									title="Add a marker to the song timeline (key: m)"
-									class="important"
+									class="important w-100"
 									id="buttMarker"
 									data-hot-key="M"
-									value="Add M&#818;arker!" />
+									value="add m&#818;arker!" />
 						</div>
-						<input
-							type="button"
-							title="Move, delete, stretch, import or export the markers"
-							class="stOnOffButton"
-							value="advanced"
-							data-st-css-selector-to-toggle="#extraMarkerFunctions"
-							/>
-						<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
+						<div class="w-100">
+							<input
+								type="button"
+								title="Move, delete, stretch, import or export the markers"
+								class="stOnOffButton w-100"
+								value="advanced"
+								data-st-css-selector-to-toggle="#extraMarkerFunctions"
+								/>
+						</div>
+						<div id="extraMarkerFunctions" class="w-100 p-1 hidden">
+							<div class="border-1 w-100 flexCol px-1">
 							<input
 								type="button"
 								class="regularButton full-width"
@@ -320,16 +323,17 @@
 								data-st-css-selector-to-toggle="#stretchMarkersDialog"
 								value="stretch markers"
 								/>
+							</div>
 						</div>
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Select first and last markers (key: u)"
-								class="regularButton"
+								class="regularButton w-100"
 								value="play fu&#818;ll song"
 								id="buttUnselectMarkers" />
 						</div>
-						<div id="zoomParent" class="flexRow">
+						<div id="zoomParent" class="flexRow w-100">
 							<input
 								type="button"
 								title="Zoom out to see the whole song"
@@ -339,11 +343,11 @@
 							<input
 								type="button"
 								title="Zoom to the selected play region (the purple part of the timeline)"
-								class="regularButton"
+								class="regularButton flex-one"
 								value="z&#818;oom"
 								id="buttZoom" />
 							</div>
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Toggle; start a few seconds before the start marker (key: b)"
@@ -353,7 +357,7 @@
 								data-hot-key="B"
 								data-hot-key-increments="#startBefore"
 								id="buttStartBefore"
-								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active"/>
+								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active w-100"/>
 							<input
 								type="number"
 								class="numberWide"
@@ -365,7 +369,7 @@
 								id="startBefore" />
 						</div>
 
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Toggle; stop a few seconds after the stop marker (key: a)"
@@ -375,7 +379,7 @@
 								data-hot-key="A"
 								data-hot-key-increments="#stopAfter"
 								id="buttStopAfter"
-								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active" />
+								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active w-100" />
 							<input
 								type="number"
 								class="numberWide"
@@ -390,7 +394,7 @@
 
 					<div id="ControlLoop" class="flexCol end">
 						<h2>Loop</h2>
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Toggle; wait a few seconds before song starts to play (key: p)"
@@ -400,7 +404,7 @@
 								data-hot-key="P"
 								data-hot-key-increments="#pauseBeforeStart"
 								id="buttPauseBefStart"
-								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active" />
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active flex-one" />
 							<input
 								type="number"
 								class="numberWide"
@@ -411,9 +415,9 @@
 								id="pauseBeforeStart" />
 						</div>
 
-						<div class="XLoopOff">
+						<div class="XLoopOff w-100">
 							<input type="button"
-								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active"
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active flex-one"
 								value="w&#818;ait between"
 								data-save-on-song-toggle-class="active"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON"
@@ -428,7 +432,7 @@
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE"
 								id="waitBetweenLoops"  />
 						</div>
-						<label class="flexRow">
+						<label class="flexRow w-100">
 							<input
 								type="button"
 								title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
@@ -436,7 +440,7 @@
 								value="increment until"
 								id="buttIncrementUntil"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
-								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active">
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active flex-one">
 
 							<input
 								type="number"
@@ -464,22 +468,22 @@
 					</div> <!-- ControlLoop -->
 
 				</div>
-				<div class="full-height">
+				<div class="full-height w-100">
 					<h1 class="d-sm-none">Settings</h1>
 					<div class="doubleSliders flexOne">
-						<div id="volumeParent" class="sliderInfo">
+						<div id="volumeParent" class="sliderInfo flex-one px-1">
 							<input
-									class="button small regularButton"
+									class="button regularButton w-100"
 									type="button"
 									title="Set volume to 100% (key: v)"
-									value="V&#818;olume:"
+									value="v&#818;olume:"
 									data-hot-key="V"
 									data-hot-key-increments="#volumeBar"
 									data-hot-key-increment-amount="5"
 									id="buttResetVolume" />
-							<div class="plusMinusButton" id="plusMinusButtons">
-								<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
-								<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
+							<div class="plusMinusButton w-100">
+								<input class="button flex-one regularButton ml-0" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
+								<input class="button flex-one regularButton mr-0" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
 							</div>
 							<label for="volumeBar" class="dataOutput" id="volumeDataOutput">
 								<span id="volume">75</span><span>%</span>
@@ -496,19 +500,19 @@
 								value="75"/>
 						</div> <!-- sliderInfo -->
 
-						<div class="sliderInfo">
+						<div class="sliderInfo flex-one px-1">
 							<input
-									class="button small regularButton"
+									class="button regularButton w-100"
 									type="button"
 									title="Set speed to 100% (key: s)"
-									value="S&#x332;peed:"
+									value="s&#x332;peed:"
 									data-hot-key="S"
 									data-hot-key-increments="#speedBar"
 									data-hot-key-increment-amount="5"
 									id="buttResetSpeed" />
-							<div class="plusMinusButton">
-								<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
-								<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
+							<div class="plusMinusButton w-100">
+								<input class="button flex-one regularButton ml-0" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
+								<input class="button flex-one regularButton mr-0" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
 							</div>
 							<label for="speedBar" class="dataOutput">
 								<span id="speed">100</span><span>%</span>

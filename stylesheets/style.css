@@ -403,24 +403,15 @@ input[type=number].numberWider{
 }
 
 #loopButtons input[type="button"]{
-		width: 28px;
-	 /* padding: 1px 10px; */
-
+	flex: 1;
 }
-
-/*
-#loopOld{
-		width: 100%;
-		flex-direction: column;
-}
-*/
 
 #loopButtons{
-		flex-direction: row;
-		display: flex;
-		flex-wrap: wrap;
-		width: 100px;
-		justify-content: space-around;
+	flex-direction: row;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	width: 138px;
 }
 
 
@@ -443,7 +434,7 @@ input[type=number].numberWider{
 }
 
 #songPickerAttachedArea #dataSongTable_filter input[type=search]{
-	max-width: 173px;
+	max-width: 166px;
 }
 .attached-configure-button .fa-music {
 	left: 5px;
