@@ -109,7 +109,9 @@ p{
 
 
 
-
+:root {
+	--primaryColor : #9E9E9E;
+}
 
 /* primaryColor */
 .primaryColor,
@@ -117,6 +119,8 @@ p{
 .bgEasyRead {
 	background-color: #9E9E9E;
 	background: #9E9E9E;
+	background-color: var(--primaryColor, #9E9E9E);
+	background:  var(--primaryColor, #9E9E9E);
 	color: black;
 }
 .primaryColor a {
@@ -144,10 +148,13 @@ li[isdirectory="true"]:not(:first-child) {
 }
 
 
-
+#root {
+	--accentColor: #FFEB3B;
+}
 
 
 /* accentColor1 */
+.groupIndication,
 .drop-active.selected{
 	border-color: #FFEB3B; /* accentColor1 */
 }

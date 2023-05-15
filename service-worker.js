@@ -25,7 +25,7 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.12",
+		version: "1.12.94",
 		urls: [
 			"/",
 			"/index.html",
@@ -40,7 +40,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'style-assets',
-		version: "1.7",
+		version: "1.8",
 		urls: [
 			"/stylesheets/style.css",
 			"/stylesheets/col1.css",
@@ -53,14 +53,14 @@ var newAppCaches = [
 	},
 	{
 		name: 'include-assets',
-		version: "1.1",
+		version: "1.2",
 		urls: [
 			"/includes/quick-help.html",
 		]
 	},
 	{
 		name: 'app-assets',
-		version: "1.7",
+		version: "1.8",
 		urls: [
 			"/assets/logos/favicon.ico",
 			"/assets/logos/logo.svg",
@@ -87,7 +87,7 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.4",
+		version: "1.5",
 		urls: [
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
@@ -101,18 +101,20 @@ var newAppCaches = [
 	},
 	{
 		name: 'external-assets',
-		version: "1.3",
+		version: "1.4",
 		urls: [
 			"/assets/external/checkbox.css",
 			"/assets/external/jquery-3.6.0.min.js",
 			"/assets/external/reset.css",
 			"/assets/external/notify-js/notify.min.js",
-			"/assets/external/Fontello-2023-01-31/css/troff-icon-pack.css",
-			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.eot?2742147",
-			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.svg?2742147",
-			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.ttf?2742147",
-			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff?2742147",
-			"/assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff2?2742147",
+			"/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css",
+			"/assets/external/Fontello-2023-05-08/font/troff-icon-pack.eot?2742147",
+			"/assets/external/Fontello-2023-05-08/font/troff-icon-pack.svg?2742147",
+			"/assets/external/Fontello-2023-05-08/font/troff-icon-pack.ttf?2742147",
+			"/assets/external/Fontello-2023-05-08/font/troff-icon-pack.woff?2742147",
+			"/assets/external/Fontello-2023-05-08/font/troff-icon-pack.woff2?2742147",
+			"/assets/external/signInLogos/google-logo.svg",
+			"/assets/external/signInLogos/facebook-logo.svg",
 			"/assets/external/browserLogos/chrome-logo.svg",
 			"/assets/external/browserLogos/chromium-logo.svg",
 			"/assets/external/browserLogos/edge-logo.svg",

@@ -412,6 +412,7 @@ textarea {
 .pl-4, .px-4 {	padding-left:	15px	!important;	}
 .pl-5, .px-5 {	padding-left:	20px	!important;	}
 
+.ml-n4 	{	margin-left:	-15px	!important;	}
 
 /* Alignment */
 .text-left           { text-align: left !important; }
@@ -436,6 +437,9 @@ textarea {
 }
 .text-light-gray {
 	color: #ccc !important;
+}
+.text-inherit {
+	color: inherit !important;
 }
 
 .bg-danger	{	background-color: #dc3545 !important;	}
@@ -485,6 +489,7 @@ textarea {
 .flex-grow-1{ ms-flex-grow: 1!important; flex-grow: 1!important;}
 
 
+
 /* Tooltip */
 /* Tooltip container */
 .tooltip {
@@ -529,6 +534,14 @@ textarea {
 		-ms-flex: 0 0 20%;
 		flex: 0 0 20%;
 		max-width: 20%;
+	}
+
+	.flex-sm-col {
+		flex-direction: column !important;
+	}
+
+	.flex-sm-row {
+		flex-direction: row !important;
 	}
 
 }

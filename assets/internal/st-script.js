@@ -214,6 +214,13 @@ $( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
 	$( $target.data( "st-css-selector-to-toggle" ) ).toggleClass( "hidden" );
 } );
 
+$( "[data-st-css-selector-to-fade-in]" ).on( "click", function( event ) {
+	let $target = $( event.target )
+		.closest( "[data-st-css-selector-to-fade-in]" );
+
+		$( $target.data( "st-css-selector-to-fade-in" ) ).toggleClass( "fadeIn" );
+} );
+
 $("[data-st-save-current-value]").change( dataSaveValue );
 
 $( "[data-st-save-current-value]" ).each( function( i, element ){

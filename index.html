@@ -42,8 +42,7 @@
 	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
 	<link
-			rel="preload"
-			href="assets/external/Fontello-2023-01-31/font/troff-icon-pack.woff2?2742147"
+			href="assets/external/Fontello-2023-05-08/font/troff-icon-pack.woff2?2742147"
 			as="font"
 			type="font/woff2"
 			crossorigin>
@@ -91,21 +90,14 @@
 
 	<section id="songsSection" class="flexCol">
 		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
-			<nav class="flexCol center">
-				<!--
-				<i class="tooltip fa fa-user">
-					<div class="tooltiptext">
-						<div id="userName" class="p-3 small"></div>
-							<button id="signOut" class="btn regularButton hidden">Sign out</button>
-					</div>					
-				</i>
-				-->
+			<nav class="flexCol center justify-content-between">
 
-				
-				<button class="svgButt special regularButton showUploadSongToServerDialog"
-								type="button"
-								title="Share this song to friends via link">
+				<button class="svgButt special regularButton bg-transparent text-inherit showUploadSongToServerDialog tooltip"
+								type="button">
 					<i class="fa-share" ></i>
+					<div class="tooltiptext p-3 small left-100p top-35">
+						Share this song to friends via link
+					</div>
 				</button>
 				<button class="svgButt d-block d-sm-none special regularButton onClickToggleFullScreen"
 								type="button"
@@ -128,34 +120,57 @@
 
 				<input type="file" id="fileUploader" class="hidden" name="files[]" multiple />
 
-				<input type="button" id="pwaAddToHomeScreen" class="hidden regularButton special ml-2" value="Install Troff" />
-
-				<div id="playerParent"></div>
+				<div class="m-0 tooltip">
+					<i id="songlistIcon"></i>
+					<span id="songlistName"></span>
+					<div id="songlistInfo" class="tooltiptext p-3 small">
+						This is the songlist info
+					</div>
+				</div>
 				<div id="currentArtist">
 					Please select a song or movie from the songs area
 				</div>
 				<div id="currentSong"></div>
 				<div id="currentAlbum"></div>
 				<div id="currentPath" class="hidden"></div>
-				<div class="dataOutput center flexRow hideOnPicture">
-					<div class="flexRow marginLR moodColorizedText bold">
-						<div class="secondsLeft marginLR">0</div>
-						<div class="loopTimesLeft marginLR">1</div>
+				<div class="dataOutput center flexRow hideOnPicture pt-2">
+					<div
+						id="infoSectionSmall"
+						class="flexRow marginLR info-round moodColorizedText bold hidden">
+						<div class="secondsLeft info-round--content marginLR ml-0">0</div>
+						<div class="loopTimesLeft info-round--content marginLR mr-0">1</div>
 					</div>
-					<div class="marginLR">
+					<div class="marginLR info-round--content">
 						<div id="time"><p>0:00</p></div>/<div id="maxTime">0:00</div>
 					</div>
 				</div>
+
+				<div id="currentGroupsParent" class="pt-1 hidden">
+					<span class="currentNrGroups"></span>
+					<span
+						class="tooltip fa fa-users pl-4 ml-n4">
+						<div class="tooltiptext p-4 w-exact-200 flex-column">
+							<span>
+								This song belongs to
+								<span class="currentNrGroups"></span><br />
+								shared songlist<span id="currentNrGroupsPluralS">s</span>:
+							</span>
+							<ul class="pt-2" id="currentGroups"></ul>
+						</div>
+					</span>
+				</div>
+
 			</div>
-			<nav class="flexCol center">
-				<div class="tooltip fa fa-user hide-on-sign-out hidden">
-					<div class="tooltiptext">
-						<div 
+
+			<nav class="flexCol center justify-content-between">
+				<div class="tooltip svgButt fa fa-menu h-exact-20">
+					<div class="tooltiptext pb-3">
+						<div
 							id="userName"
-							class="p-3 small"
+							class="p-3 small hide-on-sign-out"
 							title="You are signed in, welcome!"
 							></div>
-						<button 
+						<button
 							class="svgButt regularButton buttSettingsDialog"
 							type="button"
 							title="Open the global settings dialogue">
@@ -167,41 +182,35 @@
 							title="Get tips on how to get the most out of Troff">
 							<i class="fa-question cursor-help"></i>
 						</button>
-						<a 
-							href="/find.html" 
-							target="_blank"
-							class="position-relative top-exact--6">
-							<button class="svgButt fa-stack regularButton"
-								type="button"
-								title="Find new songs and choreographies online!">
-								<i class="fa-music fa-stack-10x m-relative-3 font-size-relative-8" ></i>
-								<i class="fa-search fa-stack-10x mt-relative-5 ml-relative-11 font-size-relative-1" ></i>
-							</button>
-						</a>
-						<button 
+						<button
+							class="regularButton svgButt googleSignIn regularButton hide-on-sign-in"
+							title="Sign in with Google acount!">
+							<i class="fa-login"></i>
+						</button>
+						<button
 							id="signOut"
-							class="regularButton svgButt regularButton"
+							class="regularButton svgButt regularButton hide-on-sign-out"
 							title="Sign out!">
 							<i class="fa-logout"></i>
 						</button>
-					</div>					
-				</div>
-				<div class="flex-one hide-on-sign-out hidden"></div>
+						<button
+							class="regularButton svgButt regularButton onClickReload"
+							title="Restart Troff!">
+							<i class="fa-reload"></i>
+						</button>
+						<input
+							type="button"
+							id="pwaAddToHomeScreen"
+							class="hidden svgButt regularButton normal special w-exact-89"
+							title="Install Troff to get an icon on your home screen!"
+							value="Install Troff" />
 
-				<button 
-					class="svgButt regularButton buttSettingsDialog hide-on-sign-in"
-					type="button"
-					title="Open the global settings dialogue">
-					<i class="fa-cog"></i>
-				</button>
-				<button class="svgButt regularButton cursor-help hide-on-sign-in"
-					data-href="help.html"
-					type="button"
-					title="Get tips on how to get the most out of Troff">
-					<i class="fa-question cursor-help"></i>
-				</button>
+					</div>
+				</div>
+
+
 				<a href="/find.html" target="_blank">
-					<button class="svgButt fa-stack regularButton hide-on-sign-in"
+					<button class="svgButt fa-stack regularButton"
 						type="button"
 						title="Find new songs and choreographies online!">
 						<i class="fa-music fa-stack-10x m-relative-3 font-size-relative-8" ></i>
@@ -222,7 +231,7 @@
 			<input type="button" value="States" id="statesTab"  class="stOnOffButton hideOnPicture" section-to-hide="#stateSection"/>
 			<input type="button" value="Settings" id="settingsTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#timeSection"/>
 			<input type="button" value="Info" id="infoTab"  class="active stOnOffButton" section-to-hide="#userNoteSection"/>
-			<input type="button" value="Countdown" id="countTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#infoSection"/>
+			<input type="button" value="Countdown" id="countTab"  class="active stOnOffButton hideOnPicture" section-to-hide="#infoSection, #infoSectionSmall"/>
 		</div>
 		<div id="areaParent" class="flexRow areaParent negative-my-4px flex-one h-0" >
 			<span class="flexOne"></span>
@@ -247,7 +256,9 @@
 
 			</div> <!-- stateArea -->
 
-			<div id="timeSection" class="flexCol end vScroll hideOnPicture mw-fit-content-on-mobile">
+			<div
+				id="timeSection"
+				class="flexCol end vScroll hideOnPicture mw-fit-content-on-mobile groupIndicationDiv">
 				<div class="h-100 h-fit-content-on-not-mobile overflow-y-auto-on-mobile mw-fit-content-on-mobile">
 					<h1 class="hidden-on-mobile">Settings</h1>
 					<div id="ControlTime" class="flexCol end">
@@ -256,23 +267,26 @@
 
 					<div id="ControlMarker" class="flexCol end">
 						<h2>Marker</h2>
-						<div>
+						<div class="w-100">
 							<input
 									type="button"
 									title="Add a marker to the song timeline (key: m)"
-									class="important"
+									class="important w-100"
 									id="buttMarker"
 									data-hot-key="M"
-									value="Add M&#818;arker!" />
+									value="add m&#818;arker!" />
 						</div>
-						<input
-							type="button"
-							title="Move, delete, stretch, import or export the markers"
-							class="stOnOffButton"
-							value="advanced"
-							data-st-css-selector-to-toggle="#extraMarkerFunctions"
-							/>
-						<div id="extraMarkerFunctions" class="flexCol border-1 p-2 hidden">
+						<div class="w-100">
+							<input
+								type="button"
+								title="Move, delete, stretch, import or export the markers"
+								class="stOnOffButton w-100"
+								value="advanced"
+								data-st-css-selector-to-toggle="#extraMarkerFunctions"
+								/>
+						</div>
+						<div id="extraMarkerFunctions" class="w-100 p-1 hidden">
+							<div class="border-1 w-100 flexCol px-1">
 							<input
 								type="button"
 								class="regularButton full-width"
@@ -309,16 +323,17 @@
 								data-st-css-selector-to-toggle="#stretchMarkersDialog"
 								value="stretch markers"
 								/>
+							</div>
 						</div>
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Select first and last markers (key: u)"
-								class="regularButton"
+								class="regularButton w-100"
 								value="play fu&#818;ll song"
 								id="buttUnselectMarkers" />
 						</div>
-						<div id="zoomParent" class="flexRow">
+						<div id="zoomParent" class="flexRow w-100">
 							<input
 								type="button"
 								title="Zoom out to see the whole song"
@@ -328,11 +343,11 @@
 							<input
 								type="button"
 								title="Zoom to the selected play region (the purple part of the timeline)"
-								class="regularButton"
+								class="regularButton flex-one"
 								value="z&#818;oom"
 								id="buttZoom" />
 							</div>
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Toggle; start a few seconds before the start marker (key: b)"
@@ -342,7 +357,7 @@
 								data-hot-key="B"
 								data-hot-key-increments="#startBefore"
 								id="buttStartBefore"
-								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active"/>
+								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active w-100"/>
 							<input
 								type="number"
 								class="numberWide"
@@ -354,7 +369,7 @@
 								id="startBefore" />
 						</div>
 
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Toggle; stop a few seconds after the stop marker (key: a)"
@@ -364,7 +379,7 @@
 								data-hot-key="A"
 								data-hot-key-increments="#stopAfter"
 								id="buttStopAfter"
-								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active" />
+								class="buttWidthStandard stOnOffButton gray-out-next-on-non-active w-100" />
 							<input
 								type="number"
 								class="numberWide"
@@ -379,7 +394,7 @@
 
 					<div id="ControlLoop" class="flexCol end">
 						<h2>Loop</h2>
-						<div>
+						<div class="w-100">
 							<input
 								type="button"
 								title="Toggle; wait a few seconds before song starts to play (key: p)"
@@ -389,7 +404,7 @@
 								data-hot-key="P"
 								data-hot-key-increments="#pauseBeforeStart"
 								id="buttPauseBefStart"
-								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active" />
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active flex-one" />
 							<input
 								type="number"
 								class="numberWide"
@@ -400,9 +415,9 @@
 								id="pauseBeforeStart" />
 						</div>
 
-						<div class="XLoopOff">
+						<div class="XLoopOff w-100">
 							<input type="button"
-								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active"
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active active flex-one"
 								value="w&#818;ait between"
 								data-save-on-song-toggle-class="active"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON"
@@ -417,7 +432,7 @@
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE"
 								id="waitBetweenLoops"  />
 						</div>
-						<label class="flexRow">
+						<label class="flexRow w-100">
 							<input
 								type="button"
 								title="Toggle; increment the speed of the song for every loop until this value (requires more than 1 loop)"
@@ -425,7 +440,7 @@
 								value="increment until"
 								id="buttIncrementUntil"
 								data-troff-css-selector-to-get-default="#TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON"
-								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active">
+								class="buttWidthMedium-small stOnOffButton gray-out-next-on-non-active flex-one">
 
 							<input
 								type="number"
@@ -453,22 +468,22 @@
 					</div> <!-- ControlLoop -->
 
 				</div>
-				<div class="full-height">
+				<div class="full-height w-100">
 					<h1 class="d-sm-none">Settings</h1>
 					<div class="doubleSliders flexOne">
-						<div id="volumeParent" class="sliderInfo">
+						<div id="volumeParent" class="sliderInfo flex-one px-1">
 							<input
-									class="button small regularButton"
+									class="button regularButton w-100"
 									type="button"
 									title="Set volume to 100% (key: v)"
-									value="V&#818;olume:"
+									value="v&#818;olume:"
 									data-hot-key="V"
 									data-hot-key-increments="#volumeBar"
 									data-hot-key-increment-amount="5"
 									id="buttResetVolume" />
-							<div class="plusMinusButton" id="plusMinusButtons">
-								<input class="button small regularButton" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
-								<input class="button small regularButton" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
+							<div class="plusMinusButton w-100">
+								<input class="button flex-one regularButton ml-0" type="button" title="Decrease volume (key: alt v)" value="-" id="volumeMinus" />
+								<input class="button flex-one regularButton mr-0" type="button" title="Increase volume (key: shift v)" value="+" id="volumePlus" />
 							</div>
 							<label for="volumeBar" class="dataOutput" id="volumeDataOutput">
 								<span id="volume">75</span><span>%</span>
@@ -485,19 +500,19 @@
 								value="75"/>
 						</div> <!-- sliderInfo -->
 
-						<div class="sliderInfo">
+						<div class="sliderInfo flex-one px-1">
 							<input
-									class="button small regularButton"
+									class="button regularButton w-100"
 									type="button"
 									title="Set speed to 100% (key: s)"
-									value="S&#x332;peed:"
+									value="s&#x332;peed:"
 									data-hot-key="S"
 									data-hot-key-increments="#speedBar"
 									data-hot-key-increment-amount="5"
 									id="buttResetSpeed" />
-							<div class="plusMinusButton">
-								<input class="button small regularButton" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
-								<input class="button small regularButton" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
+							<div class="plusMinusButton w-100">
+								<input class="button flex-one regularButton ml-0" type="button" title="Decrease speed (key: alt s)" value="-" id="speedMinus" />
+								<input class="button flex-one regularButton mr-0" type="button" title="Increase speed (key: shift s)" value="+" id="speedPlus" />
 							</div>
 							<label for="speedBar" class="dataOutput">
 								<span id="speed">100</span><span>%</span>
@@ -532,7 +547,9 @@
 
 
 	<section id="markerSectionParent">
-		<div id="markerSection" class="secondaryColor full-height margin noVMargin hideOnPicture">
+		<div
+			id="markerSection"
+			class="secondaryColor full-height margin noVMargin hideOnPicture groupIndicationDiv">
 			<div id="activePlayRegion" class="accentColor1"></div>
 			<label id="timeBarDiv">
 				<input
@@ -951,9 +968,14 @@
 				<div class="flexOne"></div>
 				<div class="flexRow hideOnSongsDialogFloatingState pl-1">
 
+					<button class="mr-2 regularButton buttNewGroup"
+						type="button"
+						title="create new songlist">
+						<i class="fa-users"></i>
+					</button>
 					<button class="mr-2 stOnOffButton"
 						type="button"
-						title="show Songlists"
+						title="show songlists"
 						id="buttAttachedSongListToggle" >
 						<i class="fa-columns"></i>
 					</button>
@@ -968,11 +990,6 @@
 						type="button"
 						title="open the songs dialog in floating window">
 						<i class="fa-window-maximize"></i>
-					</button>
-					<button class="regularButton mr-2 buttCloseSongsDialog"
-						type="button"
-						title="close the songs dialog window">
-						<i class="fa-window-close"></i>
 					</button>
 				</div>
 			</div>
@@ -1296,6 +1313,417 @@
 			<span class="flexRow">
 				<input type="button" id="addAddedSongsToSongList_doNotAdd" class="regularButton flex-none emptyAddAddedSongsToSongList_songs dialogCancelButton" value="Don't add songs" />
 				<input type="button" id="addAddedSongsToSongList_done" class="regularButton flex-none hidden emptyAddAddedSongsToSongList_songs dialogCancelButton ml-2" value="Done" />
+			</span>
+		</div>
+	</div>
+
+	<div id="groupDialogOwnerRowTemplate" class="hidden">
+		<div class="form-group row">
+			<div class="col-sm">
+				<div class="input-group mb-1">
+					<input
+						type="text"
+						class="allow-tab form-control writableField groupDialogOwner"
+						value="" />
+					<div class="input-group-append pt-1">
+						<button
+							type="button"
+							title="Remove this owner"
+							class="regularButton groupDialogRemoveOwner">
+							<i class="fa fa-window-close" ></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="groupDialogSongRowTemplate" class="hidden">
+		<div class="form-group row">
+			<div class="col-sm">
+				<div class="input-group mb-1">
+					<input
+						type="text"
+						class="allow-tab form-control writableField groupDialogSong"
+						value="" />
+					<div class="input-group-append pt-1">
+						<button
+							type="button"
+							title="Remove this song"
+							class="regularButton groupDialogRemoveSong">
+							<i class="fa fa-window-close" ></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="groupDialog" class="outerDialog hidden">
+		<div class="innerDialog flexCol mh-100">
+
+			<form class="vScroll mh-100 pr-4">
+				<div class="form-group row">
+					<label
+						for="groupDialogName"
+						class="col-sm col-form-label flexRow">
+						<h2 class="paragraph text-inherit">Songlist</h2>
+						<i
+							class="pl-3 fa showOnSharedSonglist hidden"
+							id="groupDialogSonglistIcon"></i>
+					</label>
+					<div class="col-sm">
+						<input
+							type="text"
+							class="allow-tab form-control writableField"
+							id="groupDialogName"
+							placeholder="Songlist name"
+							value="" />
+					</div>
+					<input
+						type="checkbox"
+						class="hidden"
+						id="groupDialogIsGroup" />
+
+				</div>
+				<div class="form-group row">
+					<div class="col-sm">
+						<textarea
+							class="allow-tab
+								form-control
+								writableField
+								h-exact-120"
+							placeholder="Songlist specific info here"
+							id="groupDialogInfo" ></textarea>
+					</div>
+				</div>
+
+				<div class="form-group hidden pt-4 showOnSharedSonglist">
+					<span>This songlist is shared with:</span>
+					<div id="groupOwnerParent">
+					</div>
+					<button
+						type="button"
+						id="groupAddOwnerButt"
+						title="Add someone who will get these songs and all the updates to them!"
+						class="fa-plus regularButton">
+						Add new person to share with
+					</button>
+					<a
+						class="float-right"
+						target="_blank"
+						href="/help.html#shareSonglist">
+						Read more about sharing songlists
+					</a>
+				</div>
+				<div class="form-group pt-4">
+					<span>Songs in this songlist:</span>
+					<div id="groupSongParent">
+					</div>
+					<button
+						type="button"
+						data-st-css-selector-to-fade-in="#possible-songs-to-add"
+						title="Add a new song to this songlist"
+						class="fa-plus rotate-on-active stOnOffButton">
+						Add new songs to songlist
+					</button>
+					<ul class="fadedOut" id="possible-songs-to-add"></ul>
+				</div>
+
+				<div class="form-group row showOnSharedSonglist hidden">
+					<div class="col-sm">
+						<h3 class="text-inherit pt-4">Songlist color</h3>
+						<div class="flexCol flex-sm-row" id="songlistColorPicker">
+							<input type="hidden" id="groupDialogColor" />
+							<div class="flexCol flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 colorPickerSelected backgroundColorNone secondaryColor" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-blue-1" title="Blue 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-2" title="Blue 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-3" title="Blue 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-4" title="Blue 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-blue-5" title="Blue 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-green-1" title="Green 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-2" title="Green 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-3" title="Green 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-4" title="Green 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-green-5" title="Green 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-1" title="Yellow 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-2" title="Yellow 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-3" title="Yellow 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-4" title="Yellow 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-yellow-5" title="Yellow 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-1" title="Oragne 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-2" title="Oragne 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-3" title="Oragne 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-4" title="Oragne 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-oragne-5" title="Oragne 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-red-1" title="Red 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-2" title="Red 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-3" title="Red 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-4" title="Red 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-red-5" title="Red 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-purple-1" title="Purple 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-2" title="Purple 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-3" title="Purple 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-4" title="Purple 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-purple-5" title="Purple 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-brown-1" title="Brown 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-2" title="Brown 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-3" title="Brown 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-4" title="Brown 4" />
+								<input type="button" value="" class="colorPicker m-1 bg-brown-5" title="Brown 5" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-white-1" title="White" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-2" title="Gray 1" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-3" title="Gray 2" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-4" title="Gray 3" />
+								<input type="button" value="" class="colorPicker m-1 bg-white-5" title="Gray 4" />
+							</div>
+							<div class="flexRow flex-sm-col">
+								<input type="button" value="" class="colorPicker m-1 bg-black-1" title="Gray 5" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-2" title="Gray 6" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-3" title="Gray 7" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-4" title="Gray 8" />
+								<input type="button" value="" class="colorPicker m-1 bg-black-5" title="Black" />
+							</div>
+						</div>
+					</div>
+					<div class="col-sm flex-two">
+
+						<h3 class="text-inherit  pt-4">Songlist icon</h3>
+						<div id="songlistIconPicker" class="flexRow">
+							<input type="hidden" id="groupDialogIcon" />
+							<div>
+								<button class="stOnOffButton m-1 selected" type="button" title="Group" id="defaultIcon">
+									<i class="fa fa-users"></i>
+								</button>
+							</div>
+							<div>
+								<button class="stOnOffButton m-1" type="button" title="Lindy hop">
+									<i class="fa fa-lindy-hop"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Balboa">
+									<i class="fa fa-balboa"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Blues">
+									<i class="fa fa-blues"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Salsa">
+									<i class="fa fa-salsa"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Tango">
+									<i class="fa fa-tango"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Swedish folk dance">
+									<i class="fa fa-swedish-folk-dance"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Jump">
+									<i class="fa fa-hop"></i>
+								</button>
+
+
+								<button class="stOnOffButton m-1" type="button" title="Hip hop">
+									<i class="fa fa-hip-hop"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Modern">
+									<i class="fa fa-modern-dance"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Tap">
+									<i class="fa fa-tap"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Ballet">
+									<i class="fa fa-ballet"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Party">
+									<i class="fa fa-party"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Disco man">
+									<i class="fa fa-disco-man"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Disco woman">
+									<i class="fa fa-disco-woman"></i>
+								</button>
+
+
+								<button class="stOnOffButton m-1" type="button" title="Trombone">
+									<i class="fa fa-trombone"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Saxophone">
+									<i class="fa fa-saxophone"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Trumpet">
+									<i class="fa fa-trumpet"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Clarinette">
+									<i class="fa fa-clarinet"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Oboe">
+									<i class="fa fa-oboe"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Piano">
+									<i class="fa fa-piano"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Drums">
+									<i class="fa fa-drums"></i>
+								</button>
+
+
+								<button class="stOnOffButton m-1" type="button" title="Guitar">
+									<i class="fa fa-guitar"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Violin">
+									<i class="fa fa-violin"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Banjo">
+									<i class="fa fa-banjo"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Double bass">
+									<i class="fa fa-double-bass"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Electric guitar">
+									<i class="fa fa-electric-guitar"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Ukelele">
+									<i class="fa fa-ukelele"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Harp">
+									<i class="fa fa-harp"></i>
+								</button>
+
+
+								<button class="stOnOffButton m-1" type="button" title="Mic">
+									<i class="fa fa-mic"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Note">
+									<i class="fa fa-note"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Notes">
+									<i class="fa fa-note-beamed"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Speech bubble">
+									<i class="fa fa-chat"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Paw">
+									<i class="fa fa-paw"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title="Tux">
+									<i class="fa fa-linux"></i>
+								</button>
+								<button class="stOnOffButton m-1" type="button" title=":)">
+									<i class="fa fa-rebel"></i>
+								</button>
+
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="flexRow pt-4 flexRowWrap">
+					<input
+						type="submit"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						id="groupDialogSave"
+						value="Save" />
+					<input
+						type="button"
+						class="regularButton buttWidthStandard dialogCancelButton"
+						value="Cancel" />
+						<div class="flex-one"></div>
+
+					<div>
+						<input
+							type="button"
+							class="regularButton"
+							id="removeSongList"
+							value="Remove">
+
+						<input
+							type="button"
+							style="display: none;"
+							class="regularButton"
+							id="shareSonglist"
+							title="Share this songlist with your freinds, and they will receive updated you make to the songs in this songlist, and vice versa!"
+							value="Share!">
+
+						<input
+							type="button"
+							class="regularButton"
+							id="leaveGroup"
+							title="Stop sharing this songlist with with the others."
+							value="Stop sharing">
+					</div>
+
+
+				</div>
+			</form>
+
+		</div>
+
+	</div>
+
+	<div id="shareInstructionDialog" class="outerDialog hidden">
+		<div class="innerDialog mediumDialog marginDialog flexCol">
+			<h2 class="paragraph">
+				You have to sign in to share a songlist!
+			</h2>
+			<div>
+				<p class="paragraph normalSize">
+					With shared songlist, any changes you make to a song will
+					be uploaded and shared to all the members of the songlist.
+					Therefore, you have to sign in to share songlists.
+				</p>
+				<p class="d-block">
+					<button
+						title="Sign in using Google"
+						class="regularButton googleSignIn flexRow center">
+						<img
+							class="height-15 mr-3"
+							src="assets/external/signInLogos/google-logo.svg"
+							alt="Google logo" />
+						Sign In
+					</button>
+					<!-- TODO: implement facebook sign in! -->
+					<!--button
+						title="Sign in using Facebook"
+						class="regularButton facebookSignIn flexRow center">
+						<img
+							class="height-15 mr-3"
+							src="assets/external/signInLogos/facebook-logo.svg"
+							alt="Facebook logo" />
+						Sign In
+					</button -->
+				</p>
+				<p class="paragraph normalSize">
+					Read more at
+						<a
+						target="_blank"
+						href="/help.html#shareSonglist">
+						Share songlists
+					</a>
+				</p>
+			</div>
+
+			<span class="flexRow">
+				<input
+					class="regularButton dialogCancelButton"
+					type="button"
+					value="Cancel" />
 			</span>
 		</div>
 	</div>
@@ -1742,7 +2170,7 @@
 
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/checkbox.css" />
 
-	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-01-31/css/troff-icon-pack.css" />
+	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/Fontello-2023-05-08/css/troff-icon-pack.css" />
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/internal/fontello-extra.css" />
 
 
@@ -1769,8 +2197,8 @@
 	<script defer src="assets/internal/extend-jquery.js"></script>
 	<script defer src="pwa.js"></script>
 	<script defer src="file.js"></script>
-	<script defer src="script.js"></script>
 	<script defer src="assets/internal/st-script.js"></script>
+	<script defer src="script.js"></script>
 	<script defer src="assets/internal/common.js"></script>
 
 	<script defer type="text/javascript" src="FileApiImplementation.js"></script>

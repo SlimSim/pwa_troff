@@ -112,11 +112,14 @@ p{
 
 
 
+:root {
+	--primaryColor : #f0f0f0;
+}
 
 /* primaryColor */
 .primaryColor,
 .bgEasyRead {
-	background-color: #fcfcfc;
+	background-color: #f0f0f0;
 	background: #f0f0f0;
 	color: #545454;
 }
@@ -196,6 +199,7 @@ li[isdirectory="true"]:not(:first-child) {
 .roundButt, .roundButt2,
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
+.groupIndication,
 .selected.important {
 	border-color: #231F20; /* accentColor2 */
 }

@@ -206,65 +206,86 @@ $(function () {
 
 	};
 
-	fileHandler.sendFile = async function( fileKey, oSongTroffInfo ) {
+	fileHandler.sendFileToFirebase = async function(
+		fileKey,
+		storageDir
+		) {
+
 		if( await cacheImplementation.isSongV2( fileKey ) ) {
 			throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
-            we apologize for the inconvenience.
-            Please add the file "${fileKey}" to troff again,
-            reload the page and try to upload it again` );
+			we apologize for the inconvenience.
+			Please add the file "${fileKey}" to troff again,
+			reload the page and try to upload it again` );
 		}
 
-		const strSongTroffInfo = JSON.stringify( oSongTroffInfo );
+		const cachedResponse = await caches.match( fileKey );
+		if ( cachedResponse === undefined ) {
+			throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
+			Please add the song to Troff and try to upload it again.` );
+		}
 
-		return caches.match( fileKey ).then(cachedResponse => {
-			if ( cachedResponse === undefined ) {
-				throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
-                Please add the song to Troff and try to upload it again.` );
-			}
+		const myBlob = await cachedResponse.blob();
 
-			return cachedResponse.blob().then( async myBlob => {
+		const file = new File(
+			[myBlob],
+			fileKey,
+			{type: myBlob.type}
+		);
 
-				var file = new File(
-					[myBlob],
-					fileKey,
-					{type: myBlob.type}
-				);
+		const fileHash = await hashFile( file );
 
-        let fileHash = await hashFile( file );
-
-				const fileUrl = await firebaseWrapper.uploadFile( fileHash, file )
-					.catch( error => {
-						if( error instanceof ShowUserException ) {
-							throw error;
-						}
-					});
-
-				const troffData = {
-					//id: - to be added after hashing
-					fileName: file.name,
-					fileType: file.type,
-					fileSize: file.size,
-					fileUrl: fileUrl,
-					troffDataPublic : true,
-					troffDataUploadedMillis : (new Date()).getTime(),
-					markerJsonString: strSongTroffInfo
-				};
-
-        troffData.id = crc32Hash( JSON.stringify( troffData ) );
-
-				return firebaseWrapper.uploadTroffData( troffData ).then( retVal => {
-					return {
-						id: troffData.id,
-						fileName: troffData.fileName
-						//fileType: troffData.fileType,
-						//fileSize: troffData.fileSize,
-						//fileId: troffData.fileId,
-						//markerJsonString: troffData.markerJsonString
-					};
-				});
-
+		const fileUrl = await firebaseWrapper
+			.uploadFile( fileHash, file, storageDir )
+			.catch( error => {
+				if( error instanceof ShowUserException ) {
+					throw error;
+				}
 			});
-    });
+
+		return [fileUrl, file];
+	}
+
+	/**
+	 * Sends both the file and the TroffData to Firebase
+	 * @param {string} fileKey
+	 * @param {TroffData-object} oSongTroffInfo
+	 * @param {string} storageDir
+	 * @returns {} object with troffData id, url and fileName
+	 */
+	fileHandler.sendFile = async function(
+		fileKey,
+		oSongTroffInfo,
+		storageDir = "TroffFiles" ) {
+
+		const [fileUrl, file] = await fileHandler
+			.sendFileToFirebase( fileKey, storageDir );
+
+		const strSongTroffInfo = JSON.stringify( oSongTroffInfo );
+		const troffData = {
+			//id: - to be added after hashing
+			fileName: file.name,
+			fileType: file.type,
+			fileSize: file.size,
+			fileUrl: fileUrl,
+			troffDataPublic : true,
+			troffDataUploadedMillis : (new Date()).getTime(),
+			markerJsonString: strSongTroffInfo
+		};
+
+		troffData.id = crc32Hash( JSON.stringify( troffData ) );
+
+		return firebaseWrapper.uploadTroffData( troffData ).then( retVal => {
+			return {
+				id: troffData.id,
+				fileUrl: troffData.fileUrl,
+				fileName: troffData.fileName
+				//fileType: troffData.fileType,
+				//fileSize: troffData.fileSize,
+				//fileId: troffData.fileId,
+				//markerJsonString: troffData.markerJsonString
+			};
+		});
+
 	};
 
 	fileHandler.handleFiles = async function( files, callbackFunk ) {
@@ -283,11 +304,14 @@ $(function () {
 		}
 	};
 
-	firebaseWrapper.uploadFile = async function( fileId, file ) {
+	firebaseWrapper.uploadFile = async function(
+		fileId,
+		file,
+		storageDir = "TroffFiles" ) {
 
-    const storageRef = firebase.storage().ref( "TroffFiles" );
-    const fileRef = storageRef.child( fileId );
-    const task = fileRef.put( file );
+		const storageRef = firebase.storage().ref( storageDir );
+		const fileRef = storageRef.child( fileId );
+		const task = fileRef.put( file );
 
 		return new Promise((resolve, reject) => {
 

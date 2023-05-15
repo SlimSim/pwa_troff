@@ -103,6 +103,9 @@ p{
 
 
 
+:root {
+	--primaryColor : #93C47D;
+}
 
 /* primaryColor 500 */
 .primaryColor,
@@ -185,6 +188,7 @@ p{
 .roundButt, .roundButt2,
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
+.groupIndication,
 .selected.important {
 	border-color: #D42626; /* accentColor2 */
 }

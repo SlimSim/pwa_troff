@@ -19,8 +19,45 @@
 // - what could possibly go wrong?
 // "use strict";
 
+
+/*
+saker jag vill göra
+
+13) KLAR  och en inloggnings-knapp någon stanns!
+
+17) iOS, hur fungerar det där??? ska man ens FÅ logga in?
+			det verkar funka, men svårt att testa....
+			funkar INTE på min telefon, men funkar på alla andra ställej jag testat, typ?
+
+
+18) KLAR färjerna för nedräknings-siffrorna
+	bredvid tiden (uppe i vänstra rutan)
+	fixa att dom ser bra ut
+	ELLER, så tar jag bort "#infoSectionSmall" när "#infoSection" visas :)
+
+
+KLAR kom också ihåg att lägga färg och ikon underst i låtliste dialogen.
+	för det viktigaste är ju att kunna lägga till / ta bort folk,
+	och sen lägga till / ta bort låtar. (INTE ändra färj och ikon...)
+
+(men! släpp detta till prod med en hidden-shar-knapp!
+	så att jag kan testa det utan att andra testar,
+	och se att firebase lirar med reglerna o så...
+)
+
+When deploying to prod;
+
+If the rules do not work: follow Sam Olsens comment:
+https://stackoverflow.com/questions/75897502/how-to-enabling-cross-service-communication-in-firebase?noredirect=1#comment133876950_75897502
+
+Firebaser here! It's possible to check if the permission is set up correctly. First, navigate to the Cloud Console IAM page for your project. Check the checkbox titled "Include Google-provided role grants." Look for a service account ending in @gcp-sa-firebasestorage.iam.gserviceaccount.com. This service account should have Firebase Rules Firestore Service Agent listed under the "Role" column. –
+Sam Olsen
+
+(Det fungerade efter en dag när jag testade :) )
+*/
+
 window.alert = function( alert){
-	console.warn("Alert:", alert);
+	//console.warn("Alert:", alert);
 }
 
 let firebaseUser = null;
@@ -96,9 +133,180 @@ const DATA_TABLE_COLUMNS = {
   }
 }
 
-const app = firebase.initializeApp(environment.firebaseConfig),
-	auth = app.auth(),
-	storage = app.storage();
+
+class SongToGroup {
+	static #map = {};
+
+	static #onSongAdded = [];
+
+	static get(){
+		return this.#map;
+	}
+
+	static getSongGroupList(songKey){
+		return this.#map[songKey];
+	};
+
+	static onSongAdded( callback ) {
+		this.#onSongAdded.push( callback );
+	}
+
+	static add(
+		groupDocId,
+		songDocId,
+		songKey,
+		fileUrl) {
+		this.quickAdd(groupDocId, songDocId, songKey, fileUrl);
+		this.saveToDb();
+	}
+
+	static quickAdd(
+		groupDocId,
+		songDocId,
+		songKey,
+		fileUrl) {
+
+		const myGroups = this.#map;
+		var thisSong = myGroups[ songKey ];
+
+		if( thisSong == undefined ) {
+			thisSong = [];
+		}
+
+		const thisSongIsInThisGroup = thisSong.some( o =>
+			o.groupDocId == groupDocId && o.songDocId == songDocId );
+
+		if( thisSongIsInThisGroup ) {
+			return;
+		}
+		thisSong.push( {
+			"groupDocId": groupDocId,
+			"songDocId": songDocId,
+			"fileUrl" : fileUrl
+		} );
+		myGroups[ songKey ] = thisSong;
+
+		this.#map = myGroups;
+
+		this.#onSongAdded.forEach( funk => {
+			funk({
+				detail : {
+					groupDocId : groupDocId,
+					songDocId : songDocId,
+					songKey : songKey,
+					fileUrl : fileUrl}
+			});
+		});
+
+	};
+
+	static remove(
+		songDocId,
+		groupDocId
+		) {
+
+		const myGroups = this.#map;
+
+		Object.entries( myGroups ).forEach( v => {
+			let idObjectList = v[1];
+			idObjectList = idObjectList
+				.filter(
+					o => o.songDocId != songDocId
+					&& o.groupDocId != groupDocId
+				);
+			if( idObjectList.length == 0 ) {
+				delete myGroups[v[0]];
+			} else {
+				myGroups[v[0]] = idObjectList;
+			}
+		});
+
+		this.#map = myGroups;
+		this.saveToDb();
+	};
+
+	static getNrOfGroupsThisSongIsIn( songKey ) {
+		let myGroups = this.#map;
+
+		const firestoreIdentifierList = myGroups[ songKey ];
+		if( firestoreIdentifierList == undefined ) {
+			return 0;
+		}
+		return firestoreIdentifierList.length;
+	};
+
+	static saveToDb() {
+		nDB.set( "TROFF_SONG_GROUP_MAP", this.#map );
+	};
+
+	static initiateFromDb() {
+		this.#map = nDB.get( "TROFF_SONG_GROUP_MAP" ) || {};
+	};
+
+	static clearMap() {
+		this.#map = {};
+	}
+
+	static songKeyToFileUrl = function( songKey, docId, songDocId ) {
+		const myGroups = this.#map;
+		const firestoreIdentifierList = myGroups[ songKey ];
+		return firestoreIdentifierList?.find( fi =>
+			fi.groupDocId == docId
+			&& fi.songDocId == songDocId )?.fileUrl;
+	}
+
+	static getFileNameFromSongDocId(songDocId) {
+
+		const myGroups = this.#map;
+		const myGroupsE = Object.entries( myGroups );
+
+		for( let i = 0; i < myGroupsE.length; i++ ) {
+			let groupWithSongList = myGroupsE[i][1]
+				.filter( idObject => idObject.songDocId == songDocId);
+
+			if( groupWithSongList.length == 0 ) {
+				continue;
+			}
+			return myGroupsE[i][0];
+		}
+		console.info( `getFileNameFromSongDocId: songDocId (${songDocId})`
+			` did not return any fileName!`);
+		return "undefined";
+	}
+}
+
+	const app = firebase.initializeApp(environment.firebaseConfig),
+		auth = app.auth(),
+		storage = app.storage();
+
+SongToGroup.initiateFromDb();
+
+SongToGroup.onSongAdded( (event)=> {
+	const songKey = event.detail.songKey;
+
+	$( "#dataSongTable" )
+		.find( `[data-song-key="${songKey}"]` )
+		.addClass( "groupIndication" );
+
+	if( Troff.getCurrentSong() == songKey ) {
+		$( ".groupIndicationDiv" )
+			.addClass( "groupIndication" );
+	}
+
+});
+
+const googleSignIn = function() {
+	if ( isSafari ) {
+		IO.alert(
+			"Safari and iOS does not support sign in",
+			"If you want to sign in and use shared songlists and more, " +
+			"please switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />" +
+			"Best of luck!"
+		);
+		return;
+	}
+	auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+};
 
 const signOut = function() {
 	auth.signOut().then().catch((error) => {
@@ -106,15 +314,835 @@ const signOut = function() {
 	});
 };
 
+const initiateAllFirebaseGroups = async function() {
+	firebase.firestore()
+		.collection( 'Groups' )
+		.where( "owners", "array-contains", firebaseUser.email)
+		.get()
+		.then( initiateCollections );
+}
+
+const initiateCollections = async function( querySnapshot ) {
+
+	if( querySnapshot.metadata.fromCache ) {
+		// If the result is from the cache,
+		// we dont want to update the DB with the result!
+		return;
+	}
+
+	SongToGroup.clearMap();
+
+	await Promise.all( querySnapshot.docs.map( async doc => {
+		const subCollection = await doc.ref.collection( "Songs" ).get();
+
+		doc.ref.onSnapshot( groupDocUpdate );
+		const group = doc.data();
+
+		const songListObject = {
+			name : group.name,
+			firebaseGroupDocId : doc.id,
+			owners : group.owners,
+			color : group.color,
+			icon : group.icon,
+			songs : []
+		};
+
+		subCollection.forEach( songDoc => {
+			songListObject.songs.push({
+				galleryId : 'pwa-galleryId',
+				fullPath : songDoc.data().songKey,
+				firebaseSongDocId : songDoc.id
+			});
+
+			SongToGroup.quickAdd(
+				doc.id,
+				songDoc.id,
+				songDoc.data().songKey,
+				songDoc.data().fileUrl
+			);
+
+			songDoc.ref.onSnapshot( songDocUpdate );
+		});
+
+		const exists = $("#songListList")
+			.find( `[data-firebase-group-doc-id="${doc.id}"]` )
+			.length;
+
+		if( exists == 0 ) {
+			Troff.addSonglistToHTML_NEW( songListObject );
+		} else {
+			Troff.updateSongListInHTML( songListObject );
+		}
+		DB.saveSonglists_new();
+
+		$("#songListList")
+			.find( `[data-firebase-group-doc-id="${doc.id}"]` )
+			.addClass( "verrified-in-firebase" );
+
+	} ) );
+
+	$("#songListList")
+		.find( `[data-firebase-group-doc-id]` )
+		.not( `.verrified-in-firebase`)
+		.each( (i, v) => {
+			const groupDocId = $( v ).data( "firebase-group-doc-id" );
+			setGroupAsSonglist(groupDocId);
+		} );
+
+	SongToGroup.saveToDb();
+
+}
+
+const setGroupAsSonglist = function(groupDocId) {
+	SongToGroup.remove( undefined, groupDocId);
+
+	DB.setSonglistAsNotGroup( groupDocId );
+
+	const $target = $("#songListList")
+		.find( `[data-firebase-group-doc-id="${groupDocId}"]` );
+	if( $target.length == 0 ) {
+		return;
+	}
+
+	$target.removeClass( "groupIndication" );
+	$target.attr( "data-firebase-group-doc-id", null);
+
+	const songList = $target.data( "songList" );
+	if( songList == undefined ) {
+		return;
+	}
+
+	delete songList.firebaseGroupDocId;
+	delete songList.owners;
+	$target.data( "songList", songList );
+
+}
+
+const groupDocUpdate = function( doc ) {
+
+	if( !doc.exists ) {
+		setGroupAsSonglist(doc.id);
+		return;
+	}
+
+	const group = doc.data();
+	const $target = $("#songListList")
+		.find( `[data-firebase-group-doc-id="${doc.id}"]` );
+
+	if( !group.owners.includes( firebaseUser.email ) ) {
+		setGroupAsSonglist(doc.id);
+
+		$.notify(
+			`You have been removed from the group "${$target.text()}".
+			It has been converted to a songlist`,
+			"info"
+		);
+		return;
+	}
+
+	const songListObject = $target.data( "songList" );
+
+	Object.entries(group).forEach(([key, value]) => {
+		songListObject[key] = value
+	});
+
+	Troff.updateSongListInHTML( songListObject );
+
+	DB.saveSonglists_new();
+
+}
+
+// onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
+const songDocUpdate = async function( doc ) {
+
+	const songDocId = doc.id;
+	const groupDocId = doc.ref.parent.parent.id;
+
+	if( !doc.exists ) {
+		const fileName = SongToGroup.getFileNameFromSongDocId( songDocId );
+		const groupName = $( `[group-id="${groupDocId}"]`).text()
+		$.notify(
+			`The song "${fileName}" has been removed from the group
+			${groupName}
+			\nBut the song and markers are still saved on your computer!`,
+			"info"
+		);
+
+		SongToGroup.remove(songDocId, undefined);
+		removeGroupIndicationIfSongInNoGroup( fileName );
+		return;
+	}
+
+	const songData = doc.data();
+	const songKey = songData.songKey;
+
+	const fileUrl = songData.fileUrl;
+	const existingMarkerInfo = nDB.get( songKey );
+	const newMarkerInfo = JSON.parse( songData.jsonDataInfo );
+
+
+
+	const existingUploadTime = existingMarkerInfo?.latestUploadToFirebase;
+	const firebaseUploadTime = newMarkerInfo.latestUploadToFirebase;
+
+	const songHaveLocalChanges = DB.popSongWithLocalChanges(
+		groupDocId,
+		songDocId,
+		songKey
+	);
+
+	if( existingUploadTime == firebaseUploadTime ) {
+		// firestore does NOT have any new updates:
+
+		if( songHaveLocalChanges ) {
+			// But there is local updates that should be pushed to firestore:
+			saveSongDataToFirebaseGroup(
+				songKey,
+				groupDocId,
+				songDocId
+			);
+		}
+
+		return;
+
+	}
+
+	if( Troff.getCurrentSong() == songKey ) {
+		if( !doc.metadata.hasPendingWrites ) {
+			// The update has troffData that is not from this computer
+			// should replace the current troffData without interupting
+			// the current activity
+			replaceTroffDataWithoutInterupt( songData );
+		}
+	}
+
+	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
+
+	if( songHaveLocalChanges ) {
+		$.notify(
+			`The song ${songKey} had local changes that where overwritten`,
+			{
+				className: 'info',
+				autoHide: false,
+				clickToHide: true
+			}
+		);
+		// (och kanske spara undan dom markörerna i en temp-grejj om man vill ta in dom igen??? eller för komplicerat?)
+	}
+
+	nDB.set( songKey, newMarkerInfo );
+
+	SongToGroup.add(groupDocId, songDocId, songKey, fileUrl);
+
+	if( !(await fileHandler.doesFileExistInCache( songKey ) ) ) {
+		try {
+			await fileHandler.fetchAndSaveResponse(
+				songData.fileUrl,
+				songKey );
+		} catch ( error ) {
+			return errorHandler.fileHandler_fetchAndSaveResponse(
+				error,
+				songKey
+				);
+		}
+		addItem_NEW_2( songKey );
+		$.notify( songKey + " was successfully added" );
+	}
+
+}
+
+const replaceTroffDataWithoutInterupt = function( songData ) {
+	const serverTroffData = JSON.parse( songData.jsonDataInfo );
+
+	// Update tempo:
+	$( "#tapTempo" ).val( serverTroffData.TROFF_VALUE_tapTempo );
+
+	// Update the states:
+	Troff.clearAllStates();
+	Troff.addButtonsOfStates(serverTroffData.aStates);
+
+	// Update the markers:
+	const currentMarkerId = $( '.currentMarker' ).attr('id');
+	const currentStopMarkerId = $( '.currentStopMarker' ).attr('id');
+	$( "#markerList" ).children().remove();
+	Troff.addMarkers(serverTroffData.markers);
+	$( '.currentMarker' ).removeClass( "currentMarker" );
+	$( '.currentStopMarker' ).removeClass( "currentStopMarker" );
+	$( "#" + currentMarkerId ).addClass( "currentMarker" );
+	$( "#" + currentStopMarkerId ).addClass( "currentStopMarker" );
+	Troff.setAppropriateActivePlayRegion();
+
+	// Update the Song info:
+	if( !$( "#songInfoArea").is( ":focus" ) ) {
+		Troff.setInfo( serverTroffData.info );
+	}
+
+	// Update the current marker info:
+	if( !$( "#markerInfoArea").is( ":focus" ) ) {
+		$( "#markerInfoArea")
+			.val( $("#" + currentMarkerId )[0].info );
+	}
+}
+
+const removeGroupIndicationIfSongInNoGroup = function( songKey ) {
+	if( SongToGroup.getNrOfGroupsThisSongIsIn( songKey ) > 0 ) {
+		return;
+	}
+
+	$( "#dataSongTable" )
+		.find( `[data-song-key="${songKey}"]` )
+		.removeClass( "groupIndication" );
+
+	if( Troff.getCurrentSong() != songKey ) {
+		return;
+	}
+
+	$( ".groupIndicationDiv" )
+		.removeClass( "groupIndication" );
+}
+
+const populateExampleSongsInGroupDialog = function( songs ) {
+	// TODO: fixa bättre sätt att lägga på låtarna!
+	let dataInfo = $('#dataSongTable')
+		.DataTable()
+		.column( DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) )
+		.data();
+
+	const fullPathList = songs.map( song => song.fullPath );
+	dataInfo.each( v => {
+		const fullPath = JSON.parse( v ).fullPath;
+		if (fullPathList.includes( fullPath ) ) {
+			return;
+		}
+		$( "#possible-songs-to-add" ).append($(
+			"<li>").addClass("py-1").append(
+				$( "<button>")
+					.text( fullPath )
+					.addClass( "regularButton")
+					.attr( "type", "button" )
+					.data( "fullPath", fullPath )
+					.click( onClickAddNewSongToGroup )
+
+			)
+		)
+	} );
+
+
+}
+
+const openGroupDialog = async function( songListObject ) {
+
+	emptyGroupDialog();
+
+	const isGroup = songListObject.firebaseGroupDocId !== undefined;
+
+	if (isGroup) {
+		$( "#leaveGroup" ).removeClass( "hidden" );
+		$( ".showOnSharedSonglist" ).removeClass( "hidden" );
+		if( !songListObject.icon ) {
+			songListObject.icon = "fa-users";
+		}
+
+		$( "#groupDialog" )
+			.find( ".innerDialog" )
+			.addClass( songListObject.color );
+
+		$( "#groupDialogSonglistIcon" )
+			.addClass( songListObject.icon );
+
+		$( "#groupDialogColor" ).val( songListObject.color );
+		$( "#groupDialogIcon" ).val( songListObject.icon );
+
+		$( "#songlistColorPicker" )
+			.find( "." + (songListObject.color || "backgroundColorNone") )
+			.addClass( "colorPickerSelected" );
+
+		$( "#songlistIconPicker" )
+			.find( "." + songListObject.icon )
+			.parent()
+			.addClass( "selected" );
+	} else {
+		$( "#shareSonglist" ).removeClass( "hidden" );
+	}
+
+	$( "#groupDialogName" ).val( songListObject.name );
+	$( "#groupDialogName" ).data( "songListObjectId", songListObject.id );
+	$( "#groupDialogName" )
+		.data( "groupDocId", songListObject.firebaseGroupDocId );
+
+
+	$( "#groupDialogIsGroup" ).prop('checked', isGroup);
+
+	$( "#groupDialogInfo" ).val( songListObject.info );
+
+	songListObject.owners?.forEach( addGroupOwnerRow );
+
+	songListObject.songs.forEach( addGroupSongRow_NEW );
+
+	populateExampleSongsInGroupDialog( songListObject.songs );
+
+	$( "#groupDialog" ).removeClass( "hidden" );
+
+}
+
+const emptyGroupDialog = function() {
+
+	$("#groupDialog").find( "form" ).trigger("reset");
+
+	$( "#groupOwnerParent" ).empty();
+	$( "#groupSongParent" ).empty();
+	$( "#possible-songs-to-add" ).empty();
+
+	$( "#groupDialogName" ).val( "" );
+	$( "#groupDialogName" ).removeData();
+
+	$( "#leaveGroup" ).addClass( "hidden" );
+	$( "#shareSonglist" ).addClass( "hidden" );
+	$( ".showOnSharedSonglist" ).addClass( "hidden" );
+
+	$( "#groupDialog" ).find( ".innerDialog" )
+		.removeClassStartingWith( "bg-" );
+
+	$( "#groupDialogSonglistIcon" )
+		.removeClassStartingWith( "fa-" );
+
+	$( "#songlistIconPicker" ).find( "button" )
+		.removeClass( "selected" );
+
+	$( "#songlistColorPicker" )
+		.find( ".colorPickerSelected" )
+		.removeClass( "colorPickerSelected" );
+
+}
+
+const newGroupDialog = function( event ) {
+	emptyGroupDialog();
+	$( "#groupDialog" ).removeClass( "hidden" );
+};
+
+const removeOwnerRow = function( event ) {
+	const row = $( event.target ).closest( ".form-group.row" );
+	const owner = row.find( ".groupDialogOwner" ).val();
+
+	notifyUndo( owner + " was removed.", function() {
+		addGroupOwnerRow( owner );
+	} );
+
+	row.remove();
+};
+
+const removeSongRow = function( event ) {
+	const row = $( event.target ).closest( ".form-group.row" );
+	row.find( ".groupDialogSong" ).addClass( "bg-danger removed");
+/*
+	notifyUndo( song + " was removed.", function() {
+		addGroupOwnerRow( song );
+	} );
+	*/
+
+	//row.remove();
+};
+
+const onClickAddNewSongToGroup = function( event ) {
+	const target = $( event.target );
+	addGroupSongRow(
+		undefined,
+		{songKey : target.data( "fullPath") }
+	);
+	target.remove();
+
+};
+
+
+const addGroupSongRow = function( songDocId, song ) {
+
+	const songRow = $("#groupDialogSongRowTemplate")
+		.children()
+		.clone( true, true );
+
+	songRow
+		.find(".groupDialogRemoveSong" )
+		.on( "click", removeSongRow );
+	songRow
+		.find( ".groupDialogSong" )
+		.attr( "readonly", true )
+		.addClass( "form-control-plaintext" )
+		.attr( "songDocId", songDocId )
+		.val( song?.songKey );
+
+	$( "#groupSongParent" ).append( songRow );
+}
+
+const addGroupSongRow_NEW = function( songIdObject ) {
+
+	const songRow = $("#groupDialogSongRowTemplate")
+		.children()
+		.clone( true, true );
+
+	songRow
+		.find( ".groupDialogRemoveSong" )
+		.on( "click", removeSongRow );
+	songRow
+		.find( ".groupDialogSong" )
+		.attr( "readonly", true )
+		.addClass( "form-control-plaintext" )
+		.addClass( "text-inherit" )
+		.data( "galleryId", songIdObject.galleryId )
+		.data( "firebaseSongDocId", songIdObject.firebaseSongDocId )
+		.val( songIdObject.fullPath );
+
+	$( "#groupSongParent" ).append( songRow );
+}
+
+
+const addGroupOwnerRow = function( owner ) {
+	const ownerRow = $("#groupDialogOwnerRowTemplate")
+		.children()
+		.clone( true, true );
+
+	ownerRow
+		.find(".groupDialogRemoveOwner")
+		.on( "click", removeOwnerRow );
+	ownerRow
+		.find( ".groupDialogOwner" )
+		.val( owner );
+	$( "#groupOwnerParent" ).append( ownerRow );
+};
+
+/**
+ * Gets the data in the group that is sent to firebase!
+ * IE it does NOT include the songLIstObjectId,
+ * because that is
+ */
+const getFirebaseGroupDataFromDialog = function( forceUserEmail ) {
+
+	const owners = [];
+	$("#groupOwnerParent" ).find(".groupDialogOwner")
+		.each( (i, v) => {
+			owners.push( $( v ).val() );
+	} );
+
+	if( forceUserEmail && !owners.includes( firebaseUser.email ) ) {
+		owners.push( firebaseUser.email );
+	}
+
+	const groupData = {
+		name : $( "#groupDialogName" ).val(),
+		owners : owners
+	};
+
+	return groupData;
+
+}
+
+const groupDialogSave = async function( event ) {
+
+	if ( !$( "#buttAttachedSongListToggle").hasClass( "active" ) ) {
+		$( "#buttAttachedSongListToggle").click();
+	}
+
+	const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
+	let groupDocId = $( "#groupDialogName" ).data( "groupDocId" );
+
+	const songListObject = {
+		id : $( "#groupDialogName" ).data( "songListObjectId" ),
+		name : $( "#groupDialogName" ).val(),
+		color : $( "#groupDialogColor" ).val(),
+		icon : $( "#groupDialogIcon" ).val(),
+		info : $( "#groupDialogInfo" ).val(),
+	};
+
+	if( isGroup ) {
+		const owners = [];
+		$("#groupOwnerParent" ).find(".groupDialogOwner")
+			.each( (i, v) => {
+				owners.push( $( v ).val() );
+		} );
+
+		if( !owners.includes( firebaseUser.email ) ) {
+			owners.push( firebaseUser.email );
+		}
+		songListObject.owners = owners;
+
+		// copying songListObject to groupData without references!
+		const groupData = JSON.parse(JSON.stringify(songListObject));
+		delete groupData.id;
+
+		if( groupDocId != null ) {
+			await firebase.firestore()
+				.collection( 'Groups' )
+				.doc( groupDocId )
+				.set( groupData );
+		} else {
+			const groupRef = await firebase.firestore()
+				.collection( 'Groups' )
+				.add( groupData );
+
+			groupRef.onSnapshot( groupDocUpdate );
+
+			groupDocId = groupRef.id;
+		}
+
+
+		songListObject.firebaseGroupDocId = groupDocId;
+
+	}
+
+	const songs = [];
+	$( "#groupSongParent" ).find( "input" ).each( async ( i, v ) => {
+		const songKey = $( v ).val();
+
+
+		const galleryId = $( v ).data( "galleryId" );
+		const songDocId = $( v ).data( "firebaseSongDocId" );
+
+		const songIdObject = {
+			fullPath : songKey,
+			galleryId : galleryId,
+			firebaseSongDocId : songDocId
+		}
+
+		if( songKey == "" ) {
+			return;
+		}
+
+
+		if (isGroup) {
+			if( $( v ).hasClass( "removed" ) ) {
+				if( songDocId == undefined ) {
+					return;
+				}
+				removeSongFromFirebaseGroup(songKey, groupDocId, songDocId);
+				return;
+			}
+			saveSongDataToFirebaseGroup( songKey, groupDocId, songDocId );
+		}
+		if ( $( v ).hasClass( "removed" )  ) {
+			return;
+		}
+
+		songs.push(  songIdObject );
+	} );
+	songListObject.songs = songs;
+
+	if ( songListObject.id == undefined ) {
+		Troff.addSonglistToHTML_NEW( songListObject );
+	} else {
+		Troff.updateSongListInHTML( songListObject );
+	}
+	DB.saveSonglists_new();
+}
+
+const removeSongFileFromFirebaseGroupStorage = async function (
+	groupDocId,
+	storageFileName) {
+	return new Promise( function( resolve, reject) {
+		let storageRef = firebase.storage()
+			.ref("Groups/" + groupDocId + "/" + storageFileName);
+
+		storageRef.delete().then(() => {
+			resolve();
+			}).catch((error) => {
+				console.error(
+					storageFileName + " could not be deleted!",
+					error );
+				reject();
+			});
+	});
+
+}
+
+const removeSongDataFromFirebaseGroup = function(
+	groupDocId,
+	songDocId) {
+
+	return firebase.firestore()
+		.collection( 'Groups' )
+		.doc( groupDocId )
+		.collection( "Songs" )
+		.doc( songDocId )
+		.delete();
+}
+
+const removeSongFromFirebaseGroup = async function(
+	songKey,
+	groupDocId,
+	songDocId) {
+
+	return new Promise( async function( resolve, reject) {
+		await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
+
+		const fileUrl = SongToGroup.songKeyToFileUrl(
+			songKey,
+			groupDocId,
+			songDocId );
+
+		const storageFileName = fileUrlToStorageFileName( fileUrl );
+
+		await removeSongFileFromFirebaseGroupStorage( groupDocId, storageFileName );
+		resolve();
+	} );
+};
+
+const onOnline = function() {
+
+	// this timeOut is because I want to wait untill possible existing
+	// firestore updates get synced to the ego-computer.
+	// because then Ego-offline-changes should be overwritten.
+	setTimeout( () => {
+		const changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
+
+		// This is to send local changes IF the server does NOT
+		// have new updates
+		changedSongList.forEach( changedSong => {
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( changedSong.groupDocId )
+				.collection( "Songs" )
+				.doc( changedSong.songDocId )
+				.get()
+				.then( songDocUpdate );
+			// There is 2 callbacks,
+			// it is because firebase is beign updated and the
+			// it sends out the update-calblack, so all in good order!
+		});
+	}, 42);
+
+};
+
+const saveSongDataToFirebaseGroup = async function(
+	songKey,
+	groupDocId,
+	songDocId ) {
+
+	const publicData = Troff.removeLocalInfo( nDB.get( songKey ) );
+
+	publicData.latestUploadToFirebase = Date.now();
+
+	const songData = {
+		songKey : songKey,
+		jsonDataInfo : JSON.stringify( publicData )
+	};
+
+	if( songDocId != undefined ) {
+
+		songData.fileUrl = SongToGroup.songKeyToFileUrl(
+			songKey,
+			groupDocId,
+			songDocId);
+
+		if( navigator.onLine ) {
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( groupDocId )
+				.collection( "Songs" )
+				.doc( songDocId )
+				.set( songData );
+		} else {
+			$.notify(
+				"You are offline, your changes will be synced online once you come online!",
+				{
+					className: 'info',
+					autoHide: false,
+					clickToHide: true
+				}
+			);
+
+			DB.pushSongWithLocalChanges( groupDocId, songDocId, songKey );
+		}
+
+	} else {
+		songData.fileUrl = await uploadSongToFirebaseGroup(
+			groupDocId,
+			songKey
+			);
+
+
+		// TODO! kolla att jag är online!
+		//songData.latestUploadToFirebase = Date.now();
+
+
+		let docRef = await firebase.firestore()
+			.collection( 'Groups' )
+			.doc( groupDocId )
+			.collection( "Songs" )
+			.add( songData );
+
+		SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
+
+		docRef.onSnapshot( songDocUpdate );
+		const songList = $( "#songListList" )
+			.find(`[data-firebase-group-doc-id="${groupDocId}"]`)
+			.data( "songList" );
+
+		songList.songs.forEach( song => {
+			if( song.fullPath == songKey ) {
+				song.firebaseSongDocId = docRef.id
+			}
+		});
+
+		$( "#songListList" )
+			.find(`[data-firebase-group-doc-id="${groupDocId}"]`)
+			.data( "songList", songList );
+
+	}
+};
+
+const uploadSongToFirebaseGroup = async function(
+	groupId,
+	songKey ) {
+
+	const [fileUrl, file] = await fileHandler
+		.sendFileToFirebase( songKey, "Groups/"+ groupId );
+	return fileUrl;
+
+}
+
+/*
+vilka låtar har fileUrl?
+
+de låtar som jag laddar upp?
+	- nej
+låtar som jag laddar ner
+	- ja!
+*/
+
+
+
+/*
+ * If this sing is in a group,
+ * update the info in firestore for that gruop
+ */
+const ifGroupSongUpdateFirestore = function( songKey ) {
+	const firestoreIdentifierList = SongToGroup.getSongGroupList(songKey);
+	if( firestoreIdentifierList == undefined ) {
+		return;
+	}
+
+	// If this song is in no groups =>
+	// firestoreIdentifierList will be undefined and
+	// ?. will simply return undefined instead of craching...
+	firestoreIdentifierList?.forEach( fi => {
+		saveSongDataToFirebaseGroup(
+			songKey,
+			fi.groupDocId,
+			fi.songDocId);
+	});
+
+}
+
+
 const setUiToNotSignIn = function( user ) {
 	$( ".hide-on-sign-out" ).addClass("hidden");
 	$( ".hide-on-sign-in" ).removeClass("hidden");
+	nDB.set( "TROFF_FIREBASE_PREVIOUS_SIGNED_IN", false);
 }
 
 const setUiToSignIn = async function( user ) {
 	$("#userName").text( user.displayName );
 	$(".hide-on-sign-out").removeClass("hidden");
 	$(".hide-on-sign-in").addClass("hidden");
+	nDB.set( "TROFF_FIREBASE_PREVIOUS_SIGNED_IN", true);
 }
 
 auth.onAuthStateChanged( user => {
@@ -126,7 +1154,16 @@ auth.onAuthStateChanged( user => {
 
 	// The signed-in user info.
 	setUiToSignIn( firebaseUser );
+	initiateAllFirebaseGroups();
 });
+
+const fileUrlToStorageFileName = function( downloadUrl ) {
+	const urlNoParameters = downloadUrl.split("?")[0];
+	const partList = urlNoParameters.split( "%2F" );
+
+	// return last part, which is the file-name!
+	return partList[ partList.length -1 ];
+};
 
 const mergeSongHistorys = function( song1, song2 ) {
 	if( song1 == null ) return song2;
@@ -159,7 +1196,7 @@ const mergeSongListHistorys = function( songList1, songList2 ){
 		mergedSongList.push( mergeSongHistorys( song1, song2) );
 	});
 
-	// adding the songs from songList2 that was not in songList1 
+	// adding the songs from songList2 that was not in songList1
 	// (and thus not handled in the above forEach):
 	songList2.forEach( song2 => {
 		const song1 = songList1
@@ -191,19 +1228,19 @@ const updateUploadedHistory = async function() {
 	const uploadedHistory = userData.uploadedHistory || [];
 	const localHistory = nDB
 		.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" ) || [];
-	const totalList = mergeSongListHistorys( 
+	const totalList = mergeSongListHistorys(
 		uploadedHistory, localHistory
 	);
 
 	const nrIdsInTotalList = nrIdsInHistoryList( totalList );
 	const nrIdsInUploadedHistory = nrIdsInHistoryList( uploadedHistory );
-	
-	// om total är längre än uploadedHistory, så ska 
+
+	// om total är längre än uploadedHistory, så ska
 	// firebase uppdateras!
 	if( nrIdsInTotalList > nrIdsInUploadedHistory ) {
 		// totalList kanske ska ränsa totalList från onödiga saker???
 		// beroende på hur mycket plats det tar upp i firebase...
-		userData.uploadedHistory = totalList; 
+		userData.uploadedHistory = totalList;
 		firebase.firestore()
 			.collection( 'UserData' )
 			.doc( firebaseUser.uid )
@@ -404,7 +1441,41 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
 	updateVersionLink( path );
 
+	updateGroupNotification( path );
 } //end setSong2
+
+function updateGroupNotification( songKey ) {
+	const nrGroups = SongToGroup.getNrOfGroupsThisSongIsIn( songKey )
+	if( nrGroups == 0 ) {
+		$( "#currentGroupsParent" ).addClass( "hidden" );
+		$( ".groupIndicationDiv" ).removeClass( "groupIndication" );
+		return;
+	}
+	$( "#currentGroupsParent" ).removeClass( "hidden" );
+
+	$( ".groupIndicationDiv" ).addClass( "groupIndication" );
+
+	$( ".currentNrGroups" ).text( nrGroups );
+
+	const groups = SongToGroup.getSongGroupList(songKey);
+
+	const groupNames = groups.map( group => {
+		return $( "#songListList" )
+			.find( `[data-firebase-group-doc-id="${group.groupDocId}"]` )
+			.text();
+	});
+
+	$( "#currentNrGroupsPluralS" ).toggleClass( "hidden", nrGroups == 1 );
+
+	$( "#currentGroups" ).empty();
+	groupNames.forEach( name => {
+		$( "#currentGroups" ).append(
+			$( "<li>" ).addClass("pt-2").text( name )
+		);
+	});
+
+
+};
 
 function updateVersionLink( path ) {
 	const fileNameUri = encodeURI( path );
@@ -431,7 +1502,8 @@ function updateVersionLink( path ) {
 		return hideVersionLink( 1 );
 	}
 
-	$( ".nr-of-versions-in-history" ).text( hist[0].troffDataIdObjectList.length );
+	$( ".nr-of-versions-in-history" )
+		.text( hist[0].troffDataIdObjectList.length );
 	$( ".nr-of-versions-in-history-parent" )
 		.attr( "href", "find.html#f=my&id=" + fileNameUri )
 		.removeClass( "hidden" );
@@ -468,6 +1540,18 @@ function clickSongList_NEW( event ) {
 	} else {
 		$( "#songListsList" ).find( "button" ).removeClass("selected").removeClass("active");
 		$target.addClass( "selected" );
+
+		$( "#headArea" ).removeClassStartingWith( "bg-" );
+		$( "#songlistIcon" ).removeClassStartingWith( "fa-" );
+		$( "#songlistName" ).text( "" );
+		$( "#songlistInfo" ).text( "" ).addClass( "hidden" );
+
+		if( data && data.firebaseGroupDocId ) {
+			$( "#headArea" ).addClass( data.color );
+			$( "#songlistIcon" ).addClass( data.icon || "fa-users" );
+			$( "#songlistName" ).text( data.name );
+			$( "#songlistInfo" ).removeClass( "hidden" ).text( data.info );
+		}
 	}
 
 	Troff.saveCurrentStateOfSonglists();
@@ -505,9 +1589,11 @@ function getFilterDataList(){
 		if( innerData ) {
 			$.each(innerData.songs, function(i, vi) {
 				if( vi.isDirectory ) {
-					list.push( "^{\"galleryId\":\"" + vi.galleryId + "\"" );
+					const galleryId = vi.galleryId || vi.data.galleryId;
+					list.push( "^{\"galleryId\":\"" + galleryId + "\"" );
 				} else {
-					list.push( "\"fullPath\":\"" + escapeRegExp(vi.fullPath) + "\"}$" );
+					const fullPath = vi.fullPath || vi.data.fullPath;
+					list.push( "\"fullPath\":\"" + escapeRegExp(fullPath) + "\"}$" );
 				}
 			} );
 		}
@@ -642,6 +1728,9 @@ function addItem_NEW_2( key ) {
 
 		// todo: remove DATA_INFO and use this data-song-key instead!
 		$( newRow ).attr( "data-song-key", key );
+		if( SongToGroup.getNrOfGroupsThisSongIsIn( key ) > 0 ) {
+			$( newRow ).addClass( "groupIndication" );
+		}
 
 		if(selected_path == key && selected_galleryId == galleryId){
 			$("#dataSongTable").find("tbody tr").removeClass("selected");
@@ -698,6 +1787,9 @@ function initSongTable() {
 			"orderable": false,
 			"defaultContent": '<div class="checkbox"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>'
 		}, {
+			"targets": DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ),
+			"className": "min-w-200-on-attached secondaryColor",
+		}, {
 			"targets": DATA_TABLE_COLUMNS.getPos( "EDIT" ),
 			"data": null,
 			"className": "preventSongLoad secondaryColor onClickOpenEditSongDialog",
@@ -715,10 +1807,10 @@ function initSongTable() {
 		if( event.dataTransfer === undefined ) {
 			event.dataTransfer = event.originalEvent.dataTransfer;
 		}
-		var jsonDataInfo = JSON.stringify({
-			name : dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ],
-			data : JSON.parse( dataSongTable.row( $(this) ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
-		});
+
+		var jsonDataInfo = dataSongTable
+				.row( $(this) )
+				.data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ]
 
 		event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
 	})
@@ -825,26 +1917,27 @@ function onChangeSongListSelector( event ) {
 	var $target = $( event.target ),
 		$selected = $target.find(":selected"),
 		$checkedRows = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
-		songs = getSelectedSongs();
+		songDataInfoList = getSelectedSongs_NEW();
 
 	var $songlist = $("#songListList").find( '[data-songlist-id="'+$selected.val()+'"]' );
 
 	if( $selected.val() == "+" ) {
-		createSongList_NEW( songs );
+		openGroupDialog( { songs : songDataInfoList } );
 	} else if( $selected.val() == "--remove" ) {
-		IO.confirm( "Remove songs?", "Remove songs: <br />" + songs.map( s => s.name ).join( "<br />") +
+		IO.confirm( "Remove songs?", "Remove songs: <br />" + songDataInfoList.map( s => s.fullPath || s.name ).join( "<br />") +
 			"?<br /><br />Can not be undone.", () => {
-			songs.forEach( song => {
-				cacheImplementation.removeSong( song.data.fullPath );
-			});
+				songDataInfoList.forEach( song => {
+					const fullPath = song.fullPath || song.data.fullPath;
+					cacheImplementation.removeSong( fullPath );
+				});
 			$checkedRows.closest("tr").each( (i, row ) => {
 				$('#dataSongTable').DataTable().row( row ).remove().draw();
 			} );
 		});
 	} else if( $selected.parent().attr( "id" ) == "songListSelectorAddToSonglist" ) {
-		addSongsToSonglist( songs, $songlist );
+		addSongsToSonglist( songDataInfoList, $songlist );
 	} else if(  $selected.parent().attr( "id" ) == "songListSelectorRemoveFromSonglist" ){
-		removeSongsFromSonglist( songs, $songlist );
+		removeSongsFromSonglist( songDataInfoList, $songlist );
 	} else {
 		console.error("something wrong");
 	}
@@ -853,73 +1946,40 @@ function onChangeSongListSelector( event ) {
 
 }
 
-function getSelectedSongs() {
+/**
+ * returns a list of the checked visible songs in the SongTable
+ * AND ALSO unchecks the songs!
+ * @returns List of songDataInfoObjects {galleryId, fullPath}
+ */
+function getSelectedSongs_NEW() {
 
-	var $checkboxes = $( "#dataSongTable" ).find( "td" ).find( "input[type=checkbox]:checked" ),
-		checkedVisibleSongs = $checkboxes.closest("tr").map( function(i, v) {
-			return {
-				name : $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" )],
-				data : JSON.parse( $('#dataSongTable').DataTable().row( v ).data()[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] )
-			};
-		}),
-		i,
-		songs = [];
+	const $checkboxes = $( "#dataSongTable" )
+		.find( "td" )
+		.find( "input[type=checkbox]:checked" );
+	const checkedVisibleSongs = $checkboxes
+		.closest("tr")
+		.map( (i, v) => JSON.parse(
+			$('#dataSongTable').DataTable().row( v ).data()[
+				DATA_TABLE_COLUMNS.getPos( "DATA_INFO" )
+			]
+		) ).get();
 
-	for( i = 0; i < checkedVisibleSongs.length; i++ ){
-		songs.push( checkedVisibleSongs[i] );
-	}
 	$checkboxes.prop("checked", false);
-	return songs;
-
+	return checkedVisibleSongs;
 }
 
 function clickButtNewSongList( event ) {
-	var songs = getSelectedSongs();
-	createSongList_NEW( songs );
+	var songs = getSelectedSongs_NEW();
+	openGroupDialog( { songs: songs } );
 }
 
-function createSongList_NEW( songDataList ) {
-
-	var songs = songDataList.map(x => x.data);
-
-	$( "#newSonglistNrSongs" ).text( songs.length );
-	$("#createSongListDialog").removeClass("hidden");
-
-	var saveSongList = function( event ) {
-		var clearCreateSongList = function(){
-			IO.blurHack();
-			$("#createSongListName").val("");
-			$("#createSongListDialog").addClass("hidden");
-			$('#createSongListSave').off( "click.saveSongList" );
-			IO.clearEnterFunction();
-		};
-
-		if( $( "#createSongListName" ).val() === "" ) {
-			clearCreateSongList();
-			return;
-		}
-
-		var newSongList = {
-			id : Troff.getUniqueSonglistId(),
-			name : $( "#createSongListName" ).val(),
-			songs : songs
-		};
-
-		Troff.addSonglistToHTML_NEW( newSongList );
-		DB.saveSonglists_new();
-		gtag('event', 'Save Songlist', { 'event_category' : 'Adding Button' } );
-
-
-		clearCreateSongList();
-	}
-
-	IO.setEnterFunction(function(event){
-		saveSongList();
-		return false;
-	});
-	$("#createSongListSave").on( "click.saveSongList", saveSongList );
-	$( "#createSongListName" ).focus();
-
+function songListDialogOpenExisting( event ) {
+	openGroupDialog(
+		$( event.target )
+		.closest( "button")
+		.next()
+		.data( "songList" )
+	);
 }
 
 function onDragleave( ev ) {
@@ -953,16 +2013,13 @@ function dropSongOnSonglist( event ) {
 }
 
 function removeSongsFromSonglist( songs, $target ) {
+	let songDidNotExists;
 
-	var	i,
-		songDidNotExists,
-		songList = $target.data("songList");
-
-
+	const songList = $target.data("songList");
 
 	$.each( songs, function(i, song) {
 		var index,
-			dataInfo = song.data,
+			dataInfo = song.data || song,
 			value;
 		songDidNotExists = true;
 
@@ -975,7 +2032,7 @@ function removeSongsFromSonglist( songs, $target ) {
 		}
 
 		if( songDidNotExists ) {
-			$.notify( song.name + " did not exist in " + songList.name, "info" );
+			$.notify( dataInfo.fullPath + " did not exist in " + songList.name, "info" );
 			return;
 		}
 
@@ -992,30 +2049,37 @@ function removeSongsFromSonglist( songs, $target ) {
 	DB.saveSonglists_new();
 }
 
+/**
+ * Denna funktion används när envändaren själv lägger till låtar i en songList
+ * antingen via drag and drop, eller selecten
+ * Den används INTE om groupDialog sparas,
+ * eller om låtarna läggs till via en firebase update!
+ * @param {array of songs} songs
+ * @param {jQuery button} $target
+ */
 function addSongsToSonglist( songs, $target ) {
 	var	songAlreadyExists,
 		songList = $target.data("songList");
 
-
 	$.each( songs, function(i, song) {
-		var dataInfo = song.data;
+		var dataInfo = song.data || song;
 		songAlreadyExists = songList.songs.filter(function(value, index, arr){
 			return value.galleryId == dataInfo.galleryId &&
 				value.fullPath == dataInfo.fullPath;
 		} ).length > 0;
 
 		if( songAlreadyExists ) {
-			$.notify( song.name + " is already in " + songList.name, "info" );
+			$.notify( song.fullPath + " is already in " + songList.name, "info" );
 			return;
 		}
 
 
 		songList.isDirectory = false;
-		songList.songs.push( dataInfo );
+		songList.songs.push( song );
 
 		$target.data("songList", songList);
 
-		notifyUndo( song.name + " was added to " + songList.name, function(){
+		notifyUndo( dataInfo.fullPath + " was added to " + songList.name, function(){
 			var i,
 				undo_songList = $target.data("songList");
 
@@ -1026,6 +2090,14 @@ function addSongsToSonglist( songs, $target ) {
 
 			DB.saveSonglists_new();
 		} );
+		const groupDocId = $target.data( "firebaseGroupDocId");
+		if (groupDocId != undefined) {
+			const songDocId = undefined;
+			saveSongDataToFirebaseGroup(
+				dataInfo.fullPath,
+				groupDocId,
+				songDocId );
+		}
 	});
 	DB.saveSonglists_new();
 }
@@ -1281,10 +2353,15 @@ var TroffClass = function(){
 		return "#" + serverId + "&" + encodeURI( fileName )
 	}
 
+	/*Troff*/ this.removeLocalInfo = function( markerObject ) {
+		markerObject.localInformation = undefined;
+		return markerObject;
+	};
+
 	/*Troff*/ this.uploadSongToServer = async function( event ) {
 		"use strict";
 
-		// show a pop-up that says 
+		// show a pop-up that says
 		// "song is being uploaded, will let you know when it is done"
 		// alt 1, please do not close this app in the mean time
 		// alt 2, please do not switch song in the mean time....
@@ -1294,19 +2371,20 @@ var TroffClass = function(){
 		$( "#uploadSongToServerInProgressDialog" ).removeClass( "hidden" );
 		try {
 			const markerObject = nDB.get( songKey );
-			const fakeTroffData = { 
-				markerJsonString : JSON.stringify( markerObject ) 
+			const fakeTroffData = {
+				markerJsonString : JSON.stringify( markerObject )
 			}
 
 			//removing localInformation before sending it to server:
-			markerObject.localInformation = undefined;
+			const publicData = Troff.removeLocalInfo(markerObject);
 
-			let resp = await fileHandler.sendFile( songKey, markerObject );
+			let resp = await fileHandler.sendFile( songKey, publicData );
 
 			nDB.setOnSong( songKey, "serverId", resp.id );
+			nDB.setOnSong( songKey, "fileUrl", resp.fileUrl );
 
-			Troff.saveDownloadLinkHistory( 
-				resp.id, resp.fileName, fakeTroffData 
+			Troff.saveDownloadLinkHistory(
+				resp.id, resp.fileName, fakeTroffData
 			);
 
 			if( songKey == Troff.getCurrentSong() ) {
@@ -1446,7 +2524,7 @@ var TroffClass = function(){
 		Troff.selectSongInSongList( fileName );
 	};
 
-	/*Troff*/this.saveDownloadLinkHistory = function( 
+	/*Troff*/this.saveDownloadLinkHistory = function(
 				serverTroffDataId, fileName, troffData ) {
 
 		const fileNameUri = encodeURI( fileName );
@@ -1457,7 +2535,7 @@ var TroffClass = function(){
 
 		let displayName = fileName;
 		const nrMarkers = markerObject.markers.length;
-		const nrStates = 
+		const nrStates =
 			markerObject.aStates ? markerObject.aStates.length : 0;
 		const info = markerObject.info.substring( 0, 99 );
 		let genre = "";
@@ -1492,7 +2570,7 @@ var TroffClass = function(){
 
 		if( !serverSongs ) {
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, [ serverSong ] );
-			updateUploadedHistory();	
+			updateUploadedHistory();
 			return;
 		}
 
@@ -1501,14 +2579,14 @@ var TroffClass = function(){
 		if( !existingServerSong ) {
 			serverSongs.push( serverSong );
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
-			updateUploadedHistory();	
+			updateUploadedHistory();
 			return;
 		}
 
 		if( !existingServerSong.troffDataIdObjectList.some(td => td.troffDataId == serverTroffDataId ) ) {
 			existingServerSong.troffDataIdObjectList.push( troffDataIdObject );
 			nDB.set( TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs );
-			updateUploadedHistory();	
+			updateUploadedHistory();
 			return;
 		}
 
@@ -1656,6 +2734,7 @@ var TroffClass = function(){
 		IO.updateCellInDataTable( "TAGS", songObject.fileData.tags, key );
 
 		nDB.set( key, songObject );
+		ifGroupSongUpdateFirestore( key );
 	};
 
 	/*Troff*/this.onEditUpdateName = () => {
@@ -2355,7 +3434,7 @@ var TroffClass = function(){
 		$('#currentArtist, #currentAlbum').text( "" );
 	};
 
-	this.setCurrentSongInDB = function(){ //slim sim here
+	this.setCurrentSongInDB = function(){
 		DB.setCurrentSong(strCurrentSong, iCurrentGalleryId);
 	}; // end SetCurrentSong
 
@@ -2589,6 +3668,7 @@ var TroffClass = function(){
 		$('#userNoteSection').toggleClass("hidden", !abAreas[2]);
 		$('#countTab').toggleClass("active", abAreas[3]);
 		$('#infoSection').toggleClass("hidden", !abAreas[3]);
+		$('#infoSectionSmall').toggleClass("hidden", abAreas[3]);
 	};
 
 	this.setInfo = function(info){
@@ -2601,18 +3681,245 @@ var TroffClass = function(){
 		}
 	};
 
-	/*Troff*/this.addSonglistToHTML_NEW = function( oSongList ) {
+	this.setSonglistIcon = function( event ) {
 
-		removeSonglist_NEW = function( event ) {
-			$(event.target).closest( "li" ).remove();
-			$("#songListSelector").find("[value=\"" + oSongList.id + "\"]").remove()
-			DB.saveSonglists_new();
+		const button = event.target.tagName == "I" ?
+			event.target.parentElement :
+			event.target;
 
-			notifyUndo( "The songlist \"" + oSongList.name + "\" was removed", function() {
-				Troff.addSonglistToHTML_NEW( oSongList );
-				DB.saveSonglists_new();
-			} );
+		const element = button.firstElementChild;
+
+		const icon = [...element.classList]
+			.find( o => o.startsWith("fa-" ) );
+
+		$( "#songlistIconPicker" ).find( "button" ).removeClass( "selected" );
+
+		button.classList.add( "selected" );
+
+		$( "#groupDialogSonglistIcon" )
+			.removeClassStartingWith( "fa-" )
+			.addClass( icon );
+
+		$( "#groupDialogIcon" ).val( icon );
+	}
+
+	this.setSonglistColor = function( event ) {
+		const element = event.target;
+		const color = [...element.classList]
+			.find( o => o.startsWith("bg-" ) );
+
+		const dialog = $( "#groupDialog" ).find( ".innerDialog" )[0];
+
+		$( dialog )
+			.find( ".colorPickerSelected" )
+			.removeClass( "colorPickerSelected" );
+
+		$( dialog ).removeClassStartingWith( "bg-" );
+
+		element.classList.add( "colorPickerSelected" );
+		dialog.classList.add( color );
+
+		$( dialog ).find( "#groupDialogColor" ).val( color );
+	}
+
+
+	/*Troff*/this.leaveGroup = async function() {
+		$( "#groupDialog" ).addClass( "hidden" );
+		const groupDocId = $( "#groupDialogName" )
+			.data( "groupDocId" );
+		const groupData = getFirebaseGroupDataFromDialog( false );
+
+		groupData.owners = groupData.owners
+			.filter( o => o != firebaseUser.email );
+
+		if ( groupData.owners.length == 0) {
+			Troff.removeGroup();
+			return;
 		}
+
+		emptyGroupDialog();
+		await firebase.firestore()
+			.collection( 'Groups' )
+			.doc( groupDocId )
+			.set( groupData );
+	}
+
+	/*Troff*/this.onClickShareSonglist = function( event ) {
+
+		if( !firebaseUser ) {
+			$( "#shareInstructionDialog" ).removeClass( "hidden" );
+			return;
+		}
+
+		$( "#shareSonglist" ).addClass( "hidden" );
+		$(".showOnSharedSonglist").removeClass("hidden");
+		$( "#groupDialogIsGroup" ).prop('checked', true);
+		$( "#defaultIcon" ).click();
+		$( "#songlistColorPicker .backgroundColorNone" ).click();
+		addGroupOwnerRow( firebaseUser.email );
+	}
+
+	/*Troff*/this.onClickLeaveGroup = function( event ) {
+		IO.confirm(
+			"Stop sharing this songlist",
+			"Are you sure you want to stop sharing this songlist? Updates that you do will no longer be shared to the other members of this songlist.",
+			async () => {
+				Troff.leaveGroup();
+			},
+			() => {
+
+			},
+			"Yes, stop share",
+			"No, I want to continue sharing!"
+		);
+	}
+
+	/*Troff*/this.removeGroup = async function () {
+		$( "#groupDialog" ).addClass( "hidden" );
+			const groupDocId = $( "#groupDialogName" )
+				.data( "groupDocId" );
+
+			const storageRef = firebase.storage()
+				.ref(`Groups/${groupDocId}`);
+
+			await storageRef.listAll().then(async (listResults) => {
+				const promises = listResults.items.map((item) => {
+					return item.delete();
+				});
+				return await Promise.all(promises);
+			});
+
+			const songDocIds = [];
+			$( "#groupSongParent" )
+				.find(".groupDialogSong")
+				.each((i, s) => {
+					songDocIds.push($(s).data("firebaseSongDocId"));
+				});
+
+			emptyGroupDialog();
+
+			const removeDataPromise = [];
+			songDocIds.forEach( songDocId => {
+				removeDataPromise.push(
+					removeSongDataFromFirebaseGroup(
+						groupDocId, songDocId ) );
+			});
+			await Promise.all(removeDataPromise);
+
+			firebase.firestore()
+				.collection( 'Groups' )
+				.doc( groupDocId )
+				.delete();
+	}
+
+	/*Troff*/this.IO_removeSonglist = async function() {
+		const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
+		const songListObjectId = $( "#groupDialogName")
+			.data( "songListObjectId" );
+
+		if (isGroup) {
+			await Troff.leaveGroup();
+		}
+
+		Troff.removeSonglist_NEW( songListObjectId );
+		emptyGroupDialog();
+		$( "#groupDialog" ).addClass( "hidden" );
+	}
+
+	/*Troff*/this.onClickremoveSonglist = async function( event ) {
+		const isGroup = $( "#groupDialogIsGroup" ).is( ":checked" );
+		if( !isGroup ) {
+			Troff.IO_removeSonglist();
+			return;
+		}
+		IO.confirm(
+			"Remove Songlist?",
+			"This will remove this songlist and updates to songs will no longer be shared to the rest of the owners for this songlist",
+			Troff.IO_removeSonglist,
+			() => {},
+			"Yes, remove songlist",
+			"No, I like this songlist!");
+	}
+
+	/*Troff*/this.removeSonglist_NEW = function( songListId ) {
+
+		const songListObject = JSON.parse( nDB.get( "straoSongLists" ) )
+			.filter( sl => sl.id == songListId )[0];
+
+		$( "#songListList" )
+			.find(`[data-songlist-id="${songListId}"]`)
+			.closest( "li" )
+			.remove();
+		$( "#songListSelector" )
+			.find(`[value="${songListId}"]`)
+			.remove();
+
+		DB.saveSonglists_new();
+		if ( songListObject == undefined ) {
+			console.warn( `Trying to remove songList with id ${songListId}, but it is not in the Local dataBase`);
+			return;
+		}
+		notifyUndo( "The songlist \"" + songListObject.name + "\" was removed", function() {
+			Troff.addSonglistToHTML_NEW( songListObject );
+			DB.saveSonglists_new();
+		} );
+	}
+
+	/**
+	 * Denna funktion används när en låtlista uppdateras automatiskt
+	 * tex, när firebase uppdaterar låtlista,
+	 * eller när groupDialog sparas.
+	 * Den används INTE vid drag and dropp, eller selecten!
+	 * @param {Object of Songlist} songListObject
+	 * @param {jQuery button} $target
+	 */
+	/*Troff*/this.updateSongListInHTML = function( songListObject ) {
+
+		var $target = $("#songListList")
+			.find( '[data-songlist-id="'+songListObject.id+'"]' );
+		if( songListObject.id == undefined ) {
+			const groupId = songListObject.firebaseGroupDocId;
+			$target = $("#songListList")
+				.find( `[data-firebase-group-doc-id="${groupId}"]` );
+			songListObject.id = $target.data( "songlistId" );
+		}
+
+		$target.text( songListObject.name );
+		$target.data("songList", songListObject);
+
+		if( songListObject.firebaseGroupDocId != undefined ) {
+			$target.attr("data-firebase-group-doc-id", songListObject.firebaseGroupDocId );
+			$target.addClass( "groupIndication" );
+		} else {
+			songListObject.color = "";
+			songListObject.icon = "fa-pencil";
+		}
+
+		$target.parent().find( ".editSongList" )
+			.removeClassStartingWith( "bg-" )
+			.addClass( songListObject.color );
+
+		$target.parent().find( ".editSongList" ).find( "i" )
+			.removeClassStartingWith( "fa-" )
+			.addClass( songListObject.icon || "fa-users" );
+
+		if ( $target.hasClass( "selected" ) ) {
+			$target.click();
+		}
+		if ( $target.hasClass( "active" ) ) {
+			$target.click();
+			$target.click();
+		}
+	}
+
+	/*Troff*/this.addSonglistToHTML_NEW = function( oSongList ) {
+		if (oSongList.id == undefined ) {
+			oSongList.id = Troff.getUniqueSonglistId();
+		}
+
+		const groupDocId = oSongList.firebaseGroupDocId
+		const groupClass = groupDocId ? "groupIndication" : "";
+		const groupLogo = oSongList.icon || "fa-pencil";
 
 		$( "#songListList" )
 			.append(
@@ -2624,20 +3931,25 @@ var TroffClass = function(){
 						.append( $( "<button>" )
 							.addClass("small")
 							.addClass("regularButton")
+							.addClass("editSongList")
+							.addClass( oSongList.color )
 							.addClass( "mr-2" )
 							.append(
 								$( "<i>" )
-								.addClass( "fa")
-								.addClass( "fa-trash")
-							).on("click", removeSonglist_NEW )
+								.addClass( "fa" )
+								.addClass( groupLogo )
+							).on("click", songListDialogOpenExisting )
 						)
 						.append( $( "<button>" )
 							.addClass( "songlist" )
+							.addClass( groupClass )
 							.addClass( "stOnOffButton" )
 							.addClass( "flex-one" )
 							.addClass( "text-left" )
 							.data("songList", oSongList)
 							.attr("data-songlist-id", oSongList.id)
+								//  workaround to be able to select by for example $(" [data-songlist-id]")
+							.attr( "data-firebase-group-doc-id", groupDocId)
 							.text( oSongList.name )
 							.click(clickSongList_NEW)
 						)
@@ -2681,6 +3993,18 @@ var TroffClass = function(){
 				o.songListList.forEach(function(v, i){
 					$("#songListList").find("[data-songlist-id="+v+"]").addClass( indicatorClass );
 					$("#songListAll").removeClass( "selected" );
+
+					if( !isAdditiveSelect ) {
+						const songListData = $("#songListList")
+							.find("[data-songlist-id="+v+"]")
+							.data( "songList" );
+						$( "#headArea" ).addClass( songListData.color );
+						$( "#songlistIcon" ).addClass( songListData.icon );
+						$( "#songlistName" ).text( songListData.name );
+						$( "#songlistInfo" )
+							.removeClass( "hidden" )
+							.text( songListData.info );
+					}
 				});
 
 				filterSongTable( getFilterDataList() );
@@ -2821,17 +4145,20 @@ var TroffClass = function(){
 		for(var i=0; i<astrState.length; i++){
 			var oState = JSON.parse(astrState[i]);
 
-			$('<div>')
+			$('<div class="flexRow">')
 				.append(
-					$('<input>')
+					$('<button>')
 					.attr('type', 'button')
 					.addClass('small regularButton')
-					.val('R')
+					.append(
+						$( "<i>" )
+						.addClass( "fa-trash")
+					)
 					.click(Troff.removeState))
 				.append(
 					$('<input>')
 					.attr('type', 'button')
-					.addClass('regularButton')
+					.addClass('regularButton flex-one text-left')
 					.val(oState.name)
 					.click(Troff.setState))
 				.attr('strState', astrState[i])
@@ -2880,7 +4207,6 @@ var TroffClass = function(){
 		$('#' + oState.currentMarker).click();
 		$('#' + oState.currentStopMarker).click();
 
-		//DB.saveSongDataFromState(Troff.getCurrentSong(), oState);
 	};
 
 	/*Troff*/this.onSearchKeyup = function( event ) {
@@ -3881,6 +5207,10 @@ var TroffClass = function(){
 			Troff.setAppropriateMarkerDistance();
 		};
 
+		this.onTapTempoSavedToDb = function() {
+			ifGroupSongUpdateFirestore( Troff.getCurrentSong() );
+		};
+
 		this.tapTime = function(){
 				previousTime = time;
 				time = new Date().getTime() / 1000;
@@ -3903,14 +5233,8 @@ var TroffClass = function(){
 				}
 
 				$('#tapTempo')[0].dispatchEvent(new Event('input'));
+
 		};
-
-		this.setTempo = function( tempo ){
-				$('#tapTempo').val( tempo );
-		};
-
-
-
 
 		this.fixMarkerExtraExtendedColor = function() {
 			$( "#markerList" ).children().removeClassStartingWith("extend_");
@@ -4007,7 +5331,7 @@ var RateClass = function(){
 
 		Rate.checkToShowUserSurvey( aLastMonthUsage );
 		Rate.checkToShowRateDialog( oData.iRatedStatus, aLastMonthUsage, millis, oData.millisFirstTimeStartingApp);
-		
+
 	};
 
 	/*Rate*/this.checkToShowUserSurvey = function( aLastMonthUsage ) {
@@ -4100,6 +5424,53 @@ const nDBc = { //new data base callback
 
 
 var DBClass = function(){
+
+	/*DB*/this.popSongWithLocalChanges = function(
+		groupDocId,
+		songDocId,
+		songKey) {
+
+		function rightSong( o ) {
+			return o.groupDocId == groupDocId &&
+				o.songDocId == songDocId &&
+				o.songKey == songKey;
+		}
+
+		let changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
+
+		const songInGroupAlreadyExists = changedSongList.find( rightSong );
+
+		changedSongList = changedSongList.filter( o => !rightSong(o));
+
+		nDB.set( "TROFF_SONGS_WITH_LOCAL_CHANGES", changedSongList );
+		return songInGroupAlreadyExists;
+	};
+
+	/*DB*/this.pushSongWithLocalChanges = function(
+		groupDocId,
+		songDocId,
+		songKey) {
+
+		const changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
+
+		const songInGroupAlreadyExists = changedSongList.find( o =>
+			o.groupDocId == groupDocId &&
+			o.songDocId == songDocId &&
+			o.songKey == songKey
+		);
+
+		if( songInGroupAlreadyExists ) {
+			return;
+		}
+
+		changedSongList.push( {
+			groupDocId : groupDocId,
+			songDocId : songDocId,
+			songKey : songKey
+		} );
+
+		nDB.set( "TROFF_SONGS_WITH_LOCAL_CHANGES", changedSongList );
+	}
 
 	// deprecated: use nDB.set( key, value )
 	this.saveVal = function( key, value) {
@@ -4308,6 +5679,19 @@ var DBClass = function(){
 		});//end get all keys
 	};
 
+	/*DB*/this.setSonglistAsNotGroup = function( firebaseGroupDocId ) {
+		const allSonglists = JSON.parse( nDB.get( "straoSongLists" ) );
+		const currentSonglist = allSonglists
+			.find( g => g.firebaseGroupDocId == firebaseGroupDocId);
+		delete currentSonglist.firebaseGroupDocId;
+		delete currentSonglist.owners;
+		currentSonglist.songs.forEach( song => {
+			delete song.firebaseSongDocId;
+		});
+
+		nDB.set( "straoSongLists", JSON.stringify( allSonglists ) );
+	}
+
 	/*DB*/this.saveSonglists_new = function() {
 		var i,
 			aoSonglists = [],
@@ -4360,7 +5744,7 @@ var DBClass = function(){
 			if( straoSongLists == undefined ) {
 				straoSongLists = [];
 			}
-			//Troff.setSonglists(JSON.parse(straoSongLists)); //todo: ta bort denna setSonglists :)
+
 			Troff.setSonglists_NEW(JSON.parse(straoSongLists));
 		});
 	};
@@ -4415,6 +5799,10 @@ var DBClass = function(){
 
 		nDB.set( songId, song );
 		updateVersionLink( songId );
+
+
+		ifGroupSongUpdateFirestore( songId );
+
 	});
 	};// end updateMarker
 
@@ -4436,6 +5824,8 @@ var DBClass = function(){
 		Troff.setUrlToSong( undefined, null );
 
 		nDB.set( songId, song );
+
+		ifGroupSongUpdateFirestore( songId );
 		if( callback ) {
 			callback();
 		}
@@ -4485,6 +5875,7 @@ var DBClass = function(){
 
 		nDB.set( songId, song );
 
+		ifGroupSongUpdateFirestore( songId );
 		if( callback ) {
 			callback();
 		}
@@ -4517,6 +5908,8 @@ var DBClass = function(){
 		DB.setCurrent(songId, 'info', info, function() {
 			nDB.setOnSong( songId, "serverId", undefined );
 			Troff.setUrlToSong( undefined, null );
+
+			ifGroupSongUpdateFirestore( songId );
 			updateVersionLink( songId );
 		});
 	};
@@ -4583,7 +5976,9 @@ var DBClass = function(){
 				}
 
 				$target.val( value );
-				$target[0].dispatchEvent(new Event('input'));
+				if( $target.attr( "type" ) == "range" ) {
+					$target[0].dispatchEvent(new Event('input'));
+				}
 			});
 
 			Troff.setUrlToSong( song.serverId, songId );
@@ -4724,6 +6119,11 @@ var IOClass = function(){
 
 	/*IO*/this.startFunc = function() {
 
+		if( nDB.get( "TROFF_FIREBASE_PREVIOUS_SIGNED_IN" ) ) {
+			$(".hide-on-sign-out").removeClass("hidden");
+			$(".hide-on-sign-in").addClass("hidden");
+		}
+
 		document.addEventListener('keydown', IO.keyboardKeydown);
 		document.addEventListener('fullscreenchange', IO.fullScreenChange );
 
@@ -4747,6 +6147,7 @@ var IOClass = function(){
 
 
 		$( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
+			IO.blurHack();
 			var $target = $( event.target ),
 				$value = $( $target.data( "st-css-selector-to-toggle" ) );
 
@@ -4760,6 +6161,23 @@ var IOClass = function(){
 
 		} );
 
+		$( "[data-st-css-selector-to-fade-in]" ).on( "click", function( event ) {
+			IO.blurHack();
+			var $target = $( event.target ),
+				$value = $( $target.data( "st-css-selector-to-fade-in" ) );
+
+			if( $target.hasClass( "stOnOffButton" ) ) {
+				if( $value.hasClass( "fadeIn" ) ) {
+					$target.addClass( "active" );
+				} else {
+					$target.removeClass( "active" );
+				}
+			}
+
+		} );
+
+		$( ".regularButton" ).on( "click", IO.blurHack );
+
 		//TODO: fix so that all cancelButtons use this class, and remove there id, and event-listener :)
 		$( ".dialogCancelButton" ).click( function( event ) {
 			event.preventDefault();
@@ -4772,6 +6190,10 @@ var IOClass = function(){
 		$( ".showUploadSongToServerDialog" ).on( "click", Troff.showUploadSongToServerDialog )
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
+
+		$( ".buttNewGroup" ).on( "click", newGroupDialog );
+		$( "#groupDialogSave" ).on( "click", groupDialogSave );
+
 		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
 		$( "#songListAll" ).click( clickSongList_NEW );
 		$( "#clickSongListAll" ).click( () => $( "#songListAll" ).click() );
@@ -4839,6 +6261,13 @@ var IOClass = function(){
 
 		$("[data-save-on-song-toggle-class]").click( IO.saveOnSongToggleClass );
 
+		$( "#songlistColorPicker" ).find( "input" ).on(
+			"click",
+			Troff.setSonglistColor);
+		$( "#songlistIconPicker" ).find( "button" ).on(
+			"click",
+			Troff.setSonglistIcon);
+
 		// The jQuery version doesn't update as the user is typing:
 		$( "[data-save-on-song-value]" ).each( function( i, element ){
 			$( element )[0].addEventListener( "input", IO.saveOnSongValue );
@@ -4854,6 +6283,7 @@ var IOClass = function(){
 		$('#buttZoomOut').click(Troff.zoomOut);
 
 		$('#areaSelector >').click(Troff.toggleArea);
+		$(".onClickReload").click( () => window.location.reload());
 
 		$('#markerInfoArea').change(Troff.updateMarkerInfo);
 		$('#markerInfoArea').blur(Troff.exitMarkerInfo);
@@ -4865,7 +6295,10 @@ var IOClass = function(){
 		$('#newSongListName').click(Troff.enterSongListName);
 		$('#newSongListName').blur(Troff.exitSongListName);
 		$('#saveNewSongList').click(Troff.saveNewSongList);
-		$('#removeSongList').click(Troff.removeSonglist);
+		$('#removeSongList').click(Troff.onClickremoveSonglist);
+		$('#leaveGroup').click(Troff.onClickLeaveGroup);
+		$('#shareSonglist').click(Troff.onClickShareSonglist)
+
 		$('#cancelSongList').click(Troff.cancelSongList);
 
 		$('#buttUnselectMarkers').click(Troff.unselectMarkers);
@@ -4877,7 +6310,7 @@ var IOClass = function(){
 		$('#speedPlus, #speedPlusDemo').click(() => { Troff.incrementInput( "#speedBar", + 5 ); gtag('event', 'Increment Speed', { 'event_category' : 'Perform change', 'event_label': $("#speedBar").val() } ); } );
 
 		$('#buttTapTempo').click( Troff.tapTime );
-
+		$( '#tapTempo' ).on( "savedToDbEvent", Troff.onTapTempoSavedToDb );
 
 		$('#rateDialogNoThanks').click(Rate.rateDialogNoThanks);
 		$('#rateDialogAskLater').click(Rate.rateDialogAskLater);
@@ -4899,12 +6332,20 @@ var IOClass = function(){
 		$(".jsUploadSongButt").on("click", Troff.uploadSongToServer );
 
 		$( "#signOut" ).on( "click", signOut );
+		$( ".googleSignIn" ).on( "click", googleSignIn );
 
-		window.addEventListener('resize', function(){
+		$( "#groupAddOwnerButt" ).on( "click", () => {addGroupOwnerRow();} );
+		window.addEventListener('resize', function() {
 			Troff.setAppropriateMarkerDistance();
 		});
 
 		Troff.recallGlobalSettings();
+
+		window.addEventListener('online', onOnline );
+
+		if( navigator.onLine ) {
+			onOnline();
+		}
 
 	};//end startFunc
 
@@ -5522,34 +6963,19 @@ var IOClass = function(){
 			var textId = "textId" + time;
 			var innerId = "innerId" + time;
 			var outerId = "outerId" + time;
-			var outerDivStyle = ""+
-					"position: fixed; "+
-					"top: 0px;left: 0px; "+
-					"width: 100vw; "+
-					"height: 100%; "+
-					"background-color: rgba(0, 0, 0, 0.5);"+
-					"z-index: 99;"+
-					"display: flex;align-items: center;justify-content: center;";
-			var innerDivStyle = ""+
-					"width: 200px;"+
-					"padding: 10px 15px;";
-			var hStyle = "" +
-					"font-size: 18px;";
-			var pStyle = "" +
-					"font-size: 14px;";
 
 			if(textBox){
 					$("body").append($("<div id='"+outerId+"' class='outerDialog'>"+
-						"<div id='"+innerId+"' style='"+innerDivStyle+
-										 "' class='secondaryColor'><h2 style='"+hStyle+"'>" + textHead +
-										 "</h2><p class=\"full-width my-3\" style='"+pStyle+"' type='text' id='"+textId+
+						"<div id='"+innerId+"' "+
+										 " class='secondaryColor p-4 w-exact-200'><h2 class=\"Big\">" + textHead +
+										 "</h2><p class=\"full-width my-3 normalSize\" type='text' id='"+textId+
 										 "'>"+textBox+"</p> <input type='button' id='"+buttEnterId+
 										 "'class='regularButton' value='OK'/></div></div>"));
 					$("#"+textId).val(textBox).select();
 			} else {
 					$("body").append($("<div id='"+outerId+"' class='outerDialog'>"+
-						"<div id='"+innerId+"' style='"+innerDivStyle+
-									"' class='secondaryColor'><p style='"+pStyle+"'>" + textHead +
+						"<div id='"+innerId+"' "+
+									" class='secondaryColor p-4 w-exact-200'><p class=\"normalSize\" >" + textHead +
 									"</p><input type='button' id='"+buttEnterId+
 									"' class='regularButton' value='OK'/></div></div>"));
 			}
@@ -5582,6 +7008,7 @@ var IOClass = function(){
 
 		key = "TROFF_VALUE_" + id;
 		DB.setCurrent(Troff.getCurrentSong(), key, value );
+		event.target.dispatchEvent( new Event("savedToDbEvent") );
 	}
 
 	/*IO*/this.saveOnSongToggleClass = function( event ) {

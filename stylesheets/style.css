@@ -212,7 +212,6 @@ body section{
 
 .sliderRange{
 		-webkit-appearance: slider-vertical;
-		appearance: slider-vertical;
 		width: 15px;
 		min-height: 42px;
 }
@@ -234,6 +233,7 @@ body section{
 .min-height-9 {	min-height:	320px	!important;	}
 .min-height-10{	min-height:	640px	!important;	}
 
+.h-exact-120 { height: 120px; }
 
 .doubleSliders {
 	display: flex;
@@ -334,7 +334,6 @@ body section{
 #timeBar, .timeBarDemo{
 		-webkit-appearance: slider-vertical;
 		-moz-appearance: slider-vertical;
-		appearance: slider-vertical;
 		height: 98%;
 		height: calc(100% - 20px);
 		margin: 10px 0;
@@ -404,24 +403,15 @@ input[type=number].numberWider{
 }
 
 #loopButtons input[type="button"]{
-		width: 28px;
-	 /* padding: 1px 10px; */
-
+	flex: 1;
 }
-
-/*
-#loopOld{
-		width: 100%;
-		flex-direction: column;
-}
-*/
 
 #loopButtons{
-		flex-direction: row;
-		display: flex;
-		flex-wrap: wrap;
-		width: 100px;
-		justify-content: space-around;
+	flex-direction: row;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	width: 138px;
 }
 
 
@@ -444,7 +434,7 @@ input[type=number].numberWider{
 }
 
 #songPickerAttachedArea #dataSongTable_filter input[type=search]{
-	max-width: 173px;
+	max-width: 166px;
 }
 .attached-configure-button .fa-music {
 	left: 5px;
@@ -492,6 +482,13 @@ input[type=number].numberWider{
 	width: 200px;
 }
 
+.left-100p {
+	left: -100%;
+}
+
+.top-35 {
+	top: 35px;
+}
 
 .svgButt{
 	height: 31px;
@@ -506,7 +503,24 @@ rect.svg_rect_btn {
 	stroke-opacity:0;
 }
 
+.rotate-on-active::before {
+    transition: all 0.6s;
+}
 
+.active.rotate-on-active::before {
+    transform: rotate(45deg);
+}
+
+.fadedOut {
+	height: 0;
+	overflow: hidden;
+	transition: height 0.3s ease;
+}
+
+.fadeIn {
+	height: 206px;
+	overflow: auto;
+}
 
 input, button, .linkButton, .st-simple-on-off-button{
 	border-width: 0;
@@ -662,6 +676,28 @@ table {
 }
 .flex, .flexOne, .flex-one {
 	flex: 1;
+}
+
+.flex-two {
+	flex-grow: 2;
+}
+
+.fa-lindy-hop, .fa-hop, .fa-violin, .fa-trombone, .fa-saxophone {
+	margin-left: -5px;
+	margin-right: 5px;
+}
+
+.fa-hop {
+	margin-left: -6px;
+	margin-right: 6px;
+}
+.fa-trumpet, .fa-clarinet, .fa-ukelele {
+	margin-left: -4px;
+	margin-right: 4px;
+}
+.fa-guitar, .fa-banjo, .fa-oboe {
+	margin-left: -3px;
+	margin-right: 3px;
 }
 
 .rowBreak{
@@ -1048,6 +1084,9 @@ table.dataTable .dataTables_empty{
 .w-exact-38-5 {
 	width: 38.5px !important;
 }
+.w-exact-89 {
+	width: 89.4px !important;
+}
 
 .logo-h-w {
 	height: 45px;
@@ -1061,11 +1100,23 @@ table.dataTable .dataTables_empty{
 	min-width: 120px;
 }
 
+.w-exact-200 {
+	width: 200px !important;
+}
+
+.h-exact-20 {
+	height: 20px;
+}
+
 .h-exact-35 {
 	height: 35px;
 }
 .mw-exact-239{
 	max-width: 239px;
+}
+
+#songPickerAttachedArea .min-w-200-on-attached {
+	min-width: 200px;
 }
 
 .font-size-exact-19 {
@@ -1081,6 +1132,74 @@ table.dataTable .dataTables_empty{
 	background-color: Burlywood;
 }
 
+.info-round {
+    background-color: var(--primaryColor, #c2dde6);
+	border: 10px solid var(--primaryColor, #c2dde6);
+    border-radius: 10px;
+    height: 0;
+    margin-top: -8px;
+}
+
+.info-round--content {
+    margin-top: -7px;
+}
+
+.bg-blue-1 a		{ color: #003b6f; }
+.bg-blue-2 a		{ color: #ffdc00; }
+.bg-blue-3 a		{ color: #ffca28; }
+.bg-blue-4 a		{ color: #d50000; }
+.bg-blue-5 a		{ color: #c51162; }
+.bg-purple-1 a		{ color: #2962ff;}
+.bg-purple-2 a		{ color: #00c853;}
+.bg-purple-3 a		{ color: #ff4081;}
+.bg-purple-4 a		{ color: #f50057;}
+.bg-purple-5 a		{ color: #f44336;}
+
+.bg-blue-1		{ background-color: #99c1f1; color: #000;}
+.bg-blue-2		{ background-color: #62a0ea; color: #f6f5f4;}
+.bg-blue-3		{ background-color: #3584e4; color: #f6f5f4;}
+.bg-blue-4		{ background-color: #1c71d8; color: #f6f5f4;}
+.bg-blue-5		{ background-color: #1a5fb4; color: #f6f5f4;}
+.bg-green-1		{ background-color: #8ff0a4; color: #000;}
+.bg-green-2		{ background-color: #57e389; color: #000;}
+.bg-green-3		{ background-color: #33d17a; color: #000;}
+.bg-green-4		{ background-color: #2ec27e; color: #000;}
+.bg-green-5		{ background-color: #26a269; color: #f6f5f4;}
+.bg-yellow-1	{ background-color: #f9f06b; color: #000;}
+.bg-yellow-2	{ background-color: #f8e45c; color: #000;}
+.bg-yellow-3	{ background-color: #f6d32d; color: #000;}
+.bg-yellow-4	{ background-color: #f5c211; color: #000;}
+.bg-yellow-5	{ background-color: #e5a50a; color: #000;}
+.bg-oragne-1	{ background-color: #ffbe6f; color: #000;}
+.bg-oragne-2	{ background-color: #ffa348; color: #000;}
+.bg-oragne-3	{ background-color: #ff7800; color: #f6f5f4;}
+.bg-oragne-4	{ background-color: #e66100; color: #f6f5f4;}
+.bg-oragne-5	{ background-color: #c64600; color: #f6f5f4;}
+.bg-red-1		{ background-color: #f66151; color: #000;}
+.bg-red-2		{ background-color: #ed333b; color: #f6f5f4;}
+.bg-red-3		{ background-color: #e01b24; color: #f6f5f4;}
+.bg-red-4		{ background-color: #c01c28; color: #f6f5f4;}
+.bg-red-5		{ background-color: #a51d2d; color: #f6f5f4;}
+.bg-purple-1	{ background-color: #dc8add; color: #000;}
+.bg-purple-2	{ background-color: #c061cb; color: #000;}
+.bg-purple-3	{ background-color: #9141ac; color: #f6f5f4;}
+.bg-purple-4	{ background-color: #813d9c; color: #f6f5f4;}
+.bg-purple-5	{ background-color: #613583; color: #f6f5f4;}
+.bg-brown-1		{ background-color: #cdab8f; color: #000;}
+.bg-brown-2		{ background-color: #b5835a; color: #f6f5f4;}
+.bg-brown-3		{ background-color: #986a44; color: #f6f5f4;}
+.bg-brown-4		{ background-color: #865e3c; color: #f6f5f4;}
+.bg-brown-5		{ background-color: #63452c; color: #f6f5f4;}
+.bg-white-1		{ background-color: #ffffff; color: #333;}
+.bg-white-2		{ background-color: #f6f5f4; color: #000;}
+.bg-white-3		{ background-color: #deddda; color: #000;}
+.bg-white-4		{ background-color: #c0bfbc; color: #000;}
+.bg-white-5		{ background-color: #9a9996; color: #f6f5f4;}
+.bg-black-1		{ background-color: #77767b; color: #f6f5f4;}
+.bg-black-2		{ background-color: #5e5c64; color: #f6f5f4;}
+.bg-black-3		{ background-color: #3d3846; color: #f6f5f4;}
+.bg-black-4		{ background-color: #241f31; color: #f6f5f4;}
+.bg-black-5		{ background-color: #000000; color: #f6f5f4;}
 
 /* Marker color section */
 .backgroundColorAqua,
@@ -1195,6 +1314,14 @@ table.dataTable .dataTables_empty{
 	display: none !important;
 }
 
+.groupIndication {
+	border-left-style: solid;
+	border-left-width: 3px;
+}
+
+#dataSongTable .groupIndication {
+	border-left-width: 5px;
+}
 
 @media (min-width:576px){ /* ie width is GREATER than 576px */
 	/* NOT ON MOBILE-PHONES */
