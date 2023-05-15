@@ -296,6 +296,15 @@ SongToGroup.onSongAdded( (event)=> {
 });
 
 const googleSignIn = function() {
+	if ( isSafari ) {
+		IO.alert(
+			"Safari and iOS does not support sign in",
+			"If you want to sign in and use shared songlists and more, " +
+			"please switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />" +
+			"Best of luck!"
+		);
+		return;
+	}
 	auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
 };
 
@@ -6954,34 +6963,19 @@ var IOClass = function(){
 			var textId = "textId" + time;
 			var innerId = "innerId" + time;
 			var outerId = "outerId" + time;
-			var outerDivStyle = ""+
-					"position: fixed; "+
-					"top: 0px;left: 0px; "+
-					"width: 100vw; "+
-					"height: 100%; "+
-					"background-color: rgba(0, 0, 0, 0.5);"+
-					"z-index: 99;"+
-					"display: flex;align-items: center;justify-content: center;";
-			var innerDivStyle = ""+
-					"width: 200px;"+
-					"padding: 10px 15px;";
-			var hStyle = "" +
-					"font-size: 18px;";
-			var pStyle = "" +
-					"font-size: 14px;";
 
 			if(textBox){
 					$("body").append($("<div id='"+outerId+"' class='outerDialog'>"+
-						"<div id='"+innerId+"' style='"+innerDivStyle+
-										 "' class='secondaryColor'><h2 style='"+hStyle+"'>" + textHead +
-										 "</h2><p class=\"full-width my-3\" style='"+pStyle+"' type='text' id='"+textId+
+						"<div id='"+innerId+"' "+
+										 " class='secondaryColor p-4 w-exact-200'><h2 class=\"Big\">" + textHead +
+										 "</h2><p class=\"full-width my-3 normalSize\" type='text' id='"+textId+
 										 "'>"+textBox+"</p> <input type='button' id='"+buttEnterId+
 										 "'class='regularButton' value='OK'/></div></div>"));
 					$("#"+textId).val(textBox).select();
 			} else {
 					$("body").append($("<div id='"+outerId+"' class='outerDialog'>"+
-						"<div id='"+innerId+"' style='"+innerDivStyle+
-									"' class='secondaryColor'><p style='"+pStyle+"'>" + textHead +
+						"<div id='"+innerId+"' "+
+									" class='secondaryColor p-4 w-exact-200'><p class=\"normalSize\" >" + textHead +
 									"</p><input type='button' id='"+buttEnterId+
 									"' class='regularButton' value='OK'/></div></div>"));
 			}
