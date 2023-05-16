@@ -19,45 +19,8 @@
 // - what could possibly go wrong?
 // "use strict";
 
-
-/*
-saker jag vill göra
-
-13) KLAR  och en inloggnings-knapp någon stanns!
-
-17) iOS, hur fungerar det där??? ska man ens FÅ logga in?
-			det verkar funka, men svårt att testa....
-			funkar INTE på min telefon, men funkar på alla andra ställej jag testat, typ?
-
-
-18) KLAR färjerna för nedräknings-siffrorna
-	bredvid tiden (uppe i vänstra rutan)
-	fixa att dom ser bra ut
-	ELLER, så tar jag bort "#infoSectionSmall" när "#infoSection" visas :)
-
-
-KLAR kom också ihåg att lägga färg och ikon underst i låtliste dialogen.
-	för det viktigaste är ju att kunna lägga till / ta bort folk,
-	och sen lägga till / ta bort låtar. (INTE ändra färj och ikon...)
-
-(men! släpp detta till prod med en hidden-shar-knapp!
-	så att jag kan testa det utan att andra testar,
-	och se att firebase lirar med reglerna o så...
-)
-
-When deploying to prod;
-
-If the rules do not work: follow Sam Olsens comment:
-https://stackoverflow.com/questions/75897502/how-to-enabling-cross-service-communication-in-firebase?noredirect=1#comment133876950_75897502
-
-Firebaser here! It's possible to check if the permission is set up correctly. First, navigate to the Cloud Console IAM page for your project. Check the checkbox titled "Include Google-provided role grants." Look for a service account ending in @gcp-sa-firebasestorage.iam.gserviceaccount.com. This service account should have Firebase Rules Firestore Service Agent listed under the "Role" column. –
-Sam Olsen
-
-(Det fungerade efter en dag när jag testade :) )
-*/
-
-window.alert = function( alert){
-	//console.warn("Alert:", alert);
+window.alert = function( alert ) {
+	console.warn("Alert:", alert);
 }
 
 let firebaseUser = null;
