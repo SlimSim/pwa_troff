@@ -678,10 +678,6 @@ const emptyGroupDialog = function() {
 
 }
 
-const newGroupDialog = function( event ) {
-	emptyGroupDialog();
-	$( "#groupDialog" ).removeClass( "hidden" );
-};
 
 const removeOwnerRow = function( event ) {
 	const row = $( event.target ).closest( ".form-group.row" );
@@ -6154,7 +6150,6 @@ var IOClass = function(){
 		$( "#buttCopyUrlToClipboard" ).on( "click", Troff.buttCopyUrlToClipboard );
 		$( ".onClickCopyTextToClipboard" ).on( "click", IO.onClickCopyTextToClipboard );
 
-		$( ".buttNewGroup" ).on( "click", newGroupDialog );
 		$( "#groupDialogSave" ).on( "click", groupDialogSave );
 
 		$( "#buttNewSongList" ).on( "click", clickButtNewSongList );
