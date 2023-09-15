@@ -15,7 +15,7 @@ h4,
 h5,
 h6,
 p{
-	color: rgb(50, 50, 50);
+	color: inherit;
 }
 
 .table-row-selectable tr:hover{
@@ -26,24 +26,24 @@ p{
 	background-color: transparent;
 }
 .drop-active {
-	border-color: lightgray;
+	border-color: var(--drop-active, lightgray);
 }
 .stOnOffButton,
 .loopButt{
-	outline-color: lightgray;
-	--box-shadow-color: lightgray;
+	outline-color: var(--drop-active, lightgray);
+	--box-shadow-color: var(--drop-active, lightgray);
 }
 .stOnOffButton,
 .loopButt{
-	background-color: lightgray;
+	background-color: var(--drop-active, lightgray);
 }
 
 
 
 /* oddballs */
 .textareaStandard{
-	background: lightblue;
-	border-color: lightblue;
+	background: var(--text-area, lightblue);
+	border-color: var(--text-area, lightblue);
 }
 
 .textareaEdit{
@@ -63,7 +63,7 @@ p{
 	background-color: rgba(0, 0, 0, 0.5);
 }
 
-.helpText{
+.helpText {
 		color: #696969;
 }
 
@@ -71,7 +71,7 @@ p{
 	border-color: black;
 }
 .colorPickerSelected{
-	border-color: purple;
+	border-color: var(--accent-color-1, #431c5d);
 }
 
 
@@ -83,35 +83,45 @@ p{
 /* the background */
 .backgroundColor,
 .extraBorder{
-	background-color: #bccbde;
+	background-color: var(--body-background, #bccbde);
+	color: var(--on-body-background, black)
 }
 
+.backgroundColor a {
+	color: var(--body-link-color, #0051A8);;
+}
 
 
 /* regularButton */
 .regularButton:focus,
 .regularButton:hover,
 .regularButton:active{
-	outline-color: #b0bec5; /*regularButton*/
-	--box-shadow-color: #b0bec5; /*regularButton*/
+	outline-color: var(--regular-buton-color,#b0bec5); /*regularButton*/
+	--box-shadow-color: var(--regular-buton-color,#b0bec5); /*regularButton*/
 }
 .regularButton{
-	background-color: #b0bec5; /*regularButton*/
+	background-color: var(--regular-buton-color,#b0bec5); /*regularButton*/
+	color: var(--on-regular-buton-color, black);
 }
 
-
-
-
-
-:root {
-	--primaryColor : #c2dde6;
-}
 
 /* primaryColor */
 .primaryColor,
 .bgEasyRead {
-	background-color: #c2dde6;
-	background: #c2dde6;
+	background-color: var(--primary-color,#c2dde6);
+	background: var(--primary-color,#c2dde6);
+
+	color: var(--on-primary-color, black);
+}
+.primaryColor a {
+	color: var(--on-primary-color-link, #0051A8);
+}
+
+
+.dataTables_empty{
+	background-color: var(--data-tables-empty,white);
+	background: var(--data-tables-empty,white);
+	color: var(--on-data-tables-empty, black);
 }
 
 
@@ -122,21 +132,22 @@ p{
 .areaParent > div,
 .popUpSquare,
 .innerDialog {
-	background-color: #e6e9f0;
+	background-color: var(--secondary-color,#e6e9f0);
+	color: var(--on-secondary-color, black);
 }
 
 .marker-parent li {
-	border-top-color: #e6e9f0;
+	border-top-color: var(--secondary-color, #e6e9f0);
 }
 
 .tertiaryColor {
-	background-color: #ced8e8;
+	background-color: var( --tertiary-color, #ced8e8);
 }
 
 
 /* accentColor1 */
 .drop-active.selected{
-	border-color: #431c5d; /* accentColor1 */
+	border-color: var(--accent-color-1,#431c5d); /* accentColor1 */
 }
 
 .selected:hover,
@@ -149,8 +160,8 @@ p{
 .currentLoop:active,
 .currentMarker:active,
 .currentStopMarker:active {
-  outline-color: #431c5d;
-  --box-shadow-color: #431c5d;
+  outline-color: var(--accent-color-1,#431c5d);
+  --box-shadow-color: var(--accent-color-1,#431c5d);
 }  /* accentColor1 */
 
 .accentColor1,
@@ -161,12 +172,12 @@ p{
 .currentStopMarker,
 #dataSongTable tr.selected td,
 .selected.important {
-	background-color: #431c5d; /* accentColor1 */
-	color: white;
+	background-color: var(--accent-color-1,#431c5d); /* accentColor1 */
+	color: var(--on-accent-color-1, white);
 }
 .play .secondsLeft,
 .play .loopTimesLeft{
-		color: #431c5d; /* accentColor1 - IF GREEN ISH (or works for that... */
+		color: var(--accent-color-green-ish, #431c5d); /* accentColor1 - IF GREEN ISH (or works for that... */
 }
 
 
@@ -179,40 +190,48 @@ p{
 .important:active,
 .special:hover,
 .special:active{
-	outline-color: #dd2c00;  /* accentColor2 */
-	--box-shadow-color: #dd2c00;
+	outline-color: var(--accent-color-2, #dd2c00);  /* accentColor2 */
+	--box-shadow-color: var(--accent-color-2, #dd2c00);
 }
 
 .roundButt, .roundButt2,
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
-.groupIndication,
 .selected.important {
-	border-color: #dd2c00; /* accentColor2 */
+	border-color: var(--accent-color-2, #dd2c00); /* accentColor2 */
 }
+
+.groupIndication{
+	border-color: var(--group-indication, #dd2c00);
+}
+
 
 .accentColor2,
 .important,
 .important td {
-	background-color: #dd2c00; /* accentColor2 */
+	background-color: var(--accent-color-2, #dd2c00); /* accentColor2 */
 }
 .pause .secondsLeft,
 .importantInverse,
 .pause .loopTimesLeft{
-		color: #dd2c00; /* accentColor2 - IF RED ISH... */
+	color: var(--accent-color-red-ish, #dd2c00); /* accentColor2 - IF RED ISH... */
 }
 
 
 .important{
-	color: #fff;
+	color: var(--on-accent-color-2, #fff);
 }
 
 
 .important td {
-	color: #fff;
+	color: var(--on-accent-color-2, #fff);
 	text-shadow: none;
 }
 
+
+#activePlayRegion{
+	background-color: var(--active-play-region, #431c5d);
+}
 
 
 
@@ -221,30 +240,34 @@ p{
 /* accentColor3 */
 .active:hover,
 .active:active{
-	outline-color: #787B1E; /* accentColor3 */
-	--box-shadow-color: #787B1E; /* accentColor3 */
+	outline-color: var(--accent-color-3, #787B1E); /* accentColor3 */
+	--box-shadow-color: var(--accent-color-3, #787B1E); /* accentColor3 */
 }
 
 .accentColor3,
 .active{
-	background-color: #787B1E; /* accentColor3 */
-	color: white;
+	background-color: var(--accent-color-3, #787B1E); /* accentColor3 */
+	color: var(--on-accent-color-3, #fff);;
 }
 .wait .secondsLeft,
 .wait .loopTimesLeft{
-	color: #787B1E; /* accentColor3 - IF YELLOW ISH... */
+	color: var(--accent-color-yellow-ish, #787B1E);; /* accentColor3 - IF YELLOW ISH... */
 }
 
 .gray-out-next-on-non-active:not(.active) ~*,
 .grayOut{
-	color: #595959;
-	background-color: lightgray;
+	color: var(--on-gray-out, #595959);
+	background-color: var(--gray-out, lightgray);
 }
 
 /* end "Anton & Irene" color scheeme */
 
 
 
+
+#markerSection {
+	padding-left: var(--marker-section-padding-left, 0) !important;
+}
 
 
 
