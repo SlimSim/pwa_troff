@@ -21,6 +21,166 @@
 	 https://developer.mozilla.org/en-US/docs/Web/CSS/flex
 */
 
+.theme-col1 {
+
+	--primary-color: #c2dde6;
+	--secondary-color: #e6e9f0;
+	--tertiary-color: #ced8e8;
+	--accent-color-1: #431c5d;
+	--accent-color-2: #dd2c00;
+	--accent-color-3: #787B1E;
+
+	--on-primary-color: black;
+	--on-primary-color-link: #0051A8;
+	--on-secondary-color: rgb(50, 50, 50);
+
+
+	--regular-buton-color: #b0bec5;
+	--on-regular-buton-color: black;
+	--data-tables-empty: white;
+	--on-data-tables-empty: black;
+
+	--gray-out: lightgray;
+	--on-gray-out: #595959;
+	--body-background: #bccbde;
+	--on-body-background: black;
+	--body-link-color: #0051A8;
+	--text-area: lightblue;
+	--drop-active: lightgray;
+
+	--active-play-region: var(--accent-color-1);
+	--group-indication: var(--accent-color-2);
+
+	--on-accent-color-1: white;
+	--on-accent-color-2: white;
+	--on-accent-color-2-td: white;
+	--on-accent-color-3: white;
+
+
+	--accent-color-green-ish: var(--accent-color-1, #431c5d );
+	--accent-color-red-ish: var(--accent-color-2, #dd2c00 );
+	--accent-color-yellow-ish: var(--accent-color-3, #787B1E );
+}
+
+.theme-col2 {
+
+	--primary-color: #93C47D;
+	--secondary-color: #C9E2BE;
+	--tertiary-color: #ced8e8; /*usage in find.html???*/
+	--accent-color-1: #25d200;
+	--accent-color-2: #D42626;
+	--accent-color-3: #FFCF53;
+
+	--on-primary-color: black;
+	--on-primary-color-link: #0051A8;
+	--on-secondary-color: rgb(50, 50, 50);
+
+
+	--regular-buton-color: #b0bec5;
+	--on-regular-buton-color: black;
+	--data-tables-empty: white;
+	--on-data-tables-empty: black;
+	
+	--gray-out: lightgray;
+	--on-gray-out: #595959;
+	--body-background: #F2F8EF;
+	--on-body-background: black;
+	--body-link-color: #0051A8;
+	--text-area: #DFEDD8;
+	--drop-active: lightgray;
+
+	--active-play-region: var(--accent-color-1);
+	--group-indication: var(--accent-color-2);
+
+	--on-accent-color-1: black;
+	--on-accent-color-2: white;
+	--on-accent-color-2-td: black;
+	--on-accent-color-3: black;
+
+	--accent-color-green-ish : var(--accent-color-1, #25d200 );
+	--accent-color-red-ish: var(--accent-color-2, #D42626 );
+	--accent-color-yellow-ish: var(--accent-color-3, #FFCF53 );
+}
+.theme-col3 {
+
+	--primary-color: #9E9E9E;
+	--secondary-color: #616161;
+	--tertiary-color: #; /*usage???*/
+	--accent-color-1: #FFEB3B;
+	--accent-color-2: #000;
+	--accent-color-3: #F5F5F5;
+
+	--on-primary-color: black;
+	--on-primary-color-link: white;
+	--on-secondary-color: white;
+
+	--regular-buton-color: #E0E0E0;
+	--on-regular-buton-color: black;
+	--data-tables-empty: var(--primary-color, #9E9E9E);
+	--on-data-tables-empty: black;
+	
+	--gray-out: lightgray;
+	--on-gray-out: #595959;
+	--body-background: black;
+	--on-body-background: white;
+	--body-link-color: lightgray;
+	--text-area: #FFFDE7;
+	--drop-active: lightgray;
+
+	--active-play-region: black;
+	--group-indication: var(--accent-color-1);
+
+	--on-accent-color-1: black;
+	--on-accent-color-2: #fff;
+	--on-accent-color-2-td: #fff;
+	--on-accent-color-3: black;
+
+	--accent-color-green-ish : var(--accent-color-3, #F5F5F5 );
+	--accent-color-red-ish: var(--accent-color-2, #000 );
+	--accent-color-yellow-ish: var(--accent-color-1, #FFEB3B );
+
+	--marker-section-padding-left: 4px;
+}
+.theme-col4 {
+
+	--primary-color: #f0f0f0;
+	--secondary-color: #fcfcfc;
+	--tertiary-color: #; /*usage???*/
+	--accent-color-1: #AD974F;
+	--accent-color-2: #231F20;
+	--accent-color-3: #8E793E;
+
+	--on-primary-color: #545454;
+	--on-primary-color-link: #0051A8;
+	--on-secondary-color: #545454;
+
+	--regular-buton-color: #E0E0E0;
+	--on-regular-buton-color: black;
+	--data-tables-empty: var(--primary-color, #9E9E9E);
+	--on-data-tables-empty: black;
+	
+	--gray-out: lightgray;
+	--on-gray-out: #595959;
+	--body-background: #EAEAEA;
+	--on-body-background: 545454;
+	--body-link-color: blue;
+	--text-area: #f6f4ed;
+	--drop-active: #BDBDBD;
+
+	--active-play-region: black;
+	--group-indication: var(--accent-color-2);
+
+	--on-accent-color-1: white;
+	--on-accent-color-2: #fff;
+	--on-accent-color-2-td: #fff;
+	--on-accent-color-3: black;
+
+	--accent-color-green-ish : var(--accent-color-1, #F5F5F5 );
+	--accent-color-red-ish: var(--accent-color-2, #000 );
+	--accent-color-yellow-ish: var(--accent-color-3, #FFEB3B );
+
+}
+
 .textareaEdit{
 	z-index: 99;
 }
@@ -866,7 +1026,7 @@ table {
 	z-index: 1;
 }
 
-a { color: #0051A8; }
+a { color: var(--body-link-color, #0051A8);  }
 
 .centerRoundButtCommon{
 	position: relative;

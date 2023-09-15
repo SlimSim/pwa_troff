@@ -20,6 +20,10 @@
 	width: 100%;
 }
 
+.notifyjs-corner .notifyjs-html-info-base a {
+	color: #0051A8;
+}
+
 .notifyjs-corner .notifyjs-html-info-base,
 .notifyjs-corner .notifyjs-html-success-base {
 	opacity: 1;
