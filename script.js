@@ -2809,21 +2809,13 @@ var TroffClass = function(){
 
 		DB.saveVal( TROFF_SETTING_SET_THEME, theme);
 
-		//hack to reload css variables:
-		var links = document.getElementsByTagName("link"); for (var i = 0; i < links.length;i++) { var link = links[i]; if (link.rel === "stylesheet") {link.href += "?"; }}
 	};
 
 	/*Troff*/this.updateHrefForTheme = function( theme ) {
 		"use strict";
-		const href = $("#colorScheme").attr("href"),
-			startIndex = href.indexOf("col"),
-			endIndex = href.indexOf(".css"),
-			firstPart = href.substr(0, startIndex),
-			lastPart = href.substr(endIndex),
-			finalHref = firstPart + theme + lastPart;
-		if( finalHref != href ) {
-			$("#colorScheme").attr("href", finalHref);
-		}
+		$( "body" )
+			.removeClassStartingWith( "theme-" )
+			.addClass( "theme-" + theme );
 	};
 
 	this.recallGlobalSettings = function(){
