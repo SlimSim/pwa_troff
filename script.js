@@ -23,6 +23,11 @@ window.alert = function( alert ) {
 	console.warn("Alert:", alert);
 }
 
+function gtag(){
+	// console.log("gtag -> arguments:", arguments);
+	// TODO: should perhaps gather statistics in the future :)
+};
+
 let firebaseUser = null;
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];
@@ -238,9 +243,9 @@ class SongToGroup {
 	}
 }
 
-	const app = firebase.initializeApp(environment.firebaseConfig),
-		auth = app.auth(),
-		storage = app.storage();
+const app = firebase.initializeApp(environment.firebaseConfig),
+	auth = app.auth(),
+	storage = app.storage();
 
 SongToGroup.initiateFromDb();
 
@@ -268,12 +273,27 @@ const googleSignIn = function() {
 		);
 		return;
 	}
-	auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+
+	auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+		.then(result => {
+			// Signed in successfully
+			firebaseUser = result.user;
+			setUiToSignIn(firebaseUser);
+			initiateAllFirebaseGroups();
+		})
+		.catch(error => {
+			// Handle Errors here.
+			console.error('Error during sign-in:', error);
+		});
 };
 
 const signOut = function() {
-	auth.signOut().then().catch((error) => {
+	auth.signOut().then(() => {
+		// Sign-out successful
+		// ui will be reset by the auth.onAuthStateChanged-function
+	}).catch(error => {
 		// An error happened.
+		console.error('Error during sign-out:', error);
 	});
 };
 
