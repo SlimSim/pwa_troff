@@ -35,7 +35,17 @@ $(document).ready( async function() {
 	//firebase.firestore().enablePersistence();
 
 	const googleSignIn = function() {
-		auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+		auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+			.then(result => {
+				// Signed in successfully
+				firebaseUser = result.user;
+				setUiToSignIn(firebaseUser);
+				initiateAllFirebaseGroups();
+			})
+			.catch(error => {
+				// Handle Errors here.
+				console.error('Error during sign-in:', error);
+			});
 	};
 
 	const signOut = function() {
