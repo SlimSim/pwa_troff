@@ -23,6 +23,11 @@ window.alert = function( alert ) {
 	console.warn("Alert:", alert);
 }
 
+function gtag(){
+	// console.log("gtag -> arguments:", arguments);
+	// TODO: should perhaps gather statistics in the future :)
+};
+
 let firebaseUser = null;
 
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'png', 'svg', 'xbm', 'webp'];

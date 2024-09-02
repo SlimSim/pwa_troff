@@ -15,11 +15,6 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
-function gtag(){
-	// console.log("gtag -> arguments:", arguments);
-	// TODO: should perhaps gather statistics in the future :)
-};
-
 (function(){
 
 document.addEventListener("DOMContentLoaded", function(event){
