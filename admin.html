@@ -104,9 +104,21 @@
 	<article class="hidden showForLoggedInUsers" >
 		<h2>Files</h2>
 
-		<p>Total Size: <span class="totalSize"></span></p>
+		<p>Total Size: <span class="totalSize"></span> / 5GB</p>
 		<p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
 		<p class="pl-2">Nr of deleted files: <span class="nrOfDeletedFiles"></span></p>
+		
+		<input type="button" class="stOnOffButton toggleNext" value="Firebase Info" />
+		<div class="container flex-row p-1 my-1">
+			<p>On the free tier, once you reach the 5GB limit, you won't be able to store additional data without upgrading</p>
+			<p>The storage limit is per project, not per account</p>
+			<p>Other limitations:</p>
+			<ul>
+				<li>50,000 download operations per day</li>
+				<li>1 GB/day of downloaded data</li>
+				<li>20,000 upload operations per day</li>
+			</ul>
+		</div>
 		<div>
 			<button class="btn regularButton" id="sortUpdatedDesc">Newest first</button>
 			<button class="btn regularButton" id="sortUpdatedAsc">...last</button>
