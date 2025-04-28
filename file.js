@@ -145,7 +145,7 @@ $(function () {
 	fileHandler.fetchAndSaveResponse = async function( fileUrl, songKey ) {
 		const response = await fetch( fileUrl );
 		if( !response.ok ) {
-			throw response;
+			throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
 		}
 		const contentLength = +response.headers.get('Content-Length');
 		const reader = response.body.getReader();

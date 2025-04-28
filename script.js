@@ -437,13 +437,12 @@ const groupDocUpdate = function( doc ) {
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
-
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
 
 	if( !doc.exists ) {
 		const fileName = SongToGroup.getFileNameFromSongDocId( songDocId );
-		const groupName = $( `[group-id="${groupDocId}"]`).text()
+		const groupName = $( `[group-id="${groupDocId}"]`).text();
 		$.notify(
 			`The song "${fileName}" has been removed from the group
 			${groupName}
@@ -458,6 +457,23 @@ const songDocUpdate = async function( doc ) {
 
 	const songData = doc.data();
 	const songKey = songData.songKey;
+
+	const songExists = await fileHandler.doesFileExistInCache( songKey );
+
+	if( !(songExists ) ) {
+		try {
+			await fileHandler.fetchAndSaveResponse(
+				songData.fileUrl,
+				songKey );
+		} catch ( error ) {
+			return errorHandler.fileHandler_fetchAndSaveResponse(
+				error,
+				songKey
+				);
+		}
+		addItem_NEW_2( songKey );
+		$.notify( songKey + " was successfully added" );
+	}
 
 	const fileUrl = songData.fileUrl;
 	const existingMarkerInfo = nDB.get( songKey );
@@ -476,7 +492,6 @@ const songDocUpdate = async function( doc ) {
 
 	if( existingUploadTime == firebaseUploadTime ) {
 		// firestore does NOT have any new updates:
-
 		if( songHaveLocalChanges ) {
 			// But there is local updates that should be pushed to firestore:
 			saveSongDataToFirebaseGroup(
@@ -500,7 +515,6 @@ const songDocUpdate = async function( doc ) {
 	}
 
 	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
-
 	if( songHaveLocalChanges ) {
 		$.notify(
 			`The song ${songKey} had local changes that where overwritten`,
@@ -516,21 +530,6 @@ const songDocUpdate = async function( doc ) {
 	nDB.set( songKey, newMarkerInfo );
 
 	SongToGroup.add(groupDocId, songDocId, songKey, fileUrl);
-
-	if( !(await fileHandler.doesFileExistInCache( songKey ) ) ) {
-		try {
-			await fileHandler.fetchAndSaveResponse(
-				songData.fileUrl,
-				songKey );
-		} catch ( error ) {
-			return errorHandler.fileHandler_fetchAndSaveResponse(
-				error,
-				songKey
-				);
-		}
-		addItem_NEW_2( songKey );
-		$.notify( songKey + " was successfully added" );
-	}
 
 }
 
@@ -964,13 +963,11 @@ const removeSongFromFirebaseGroup = async function(
 };
 
 const onOnline = function() {
-
 	// this timeOut is because I want to wait untill possible existing
 	// firestore updates get synced to the ego-computer.
 	// because then Ego-offline-changes should be overwritten.
 	setTimeout( () => {
 		const changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
-
 		// This is to send local changes IF the server does NOT
 		// have new updates
 		changedSongList.forEach( changedSong => {
@@ -2304,6 +2301,7 @@ var TroffClass = function(){
 					Troff.selectSongInSongList( key );
 					createSongAudio( key );
 				}
+				
 				$.notify( key + " was successfully added" );
 			} );
 		});
@@ -2643,6 +2641,7 @@ var TroffClass = function(){
 		if( serverId == troffDataFromCache.serverId ) {
 			await createSongAudio( fileName );
 			addItem_NEW_2( fileName );
+			
 			$.notify( fileName + " was successfully added" );
 		} else {
 			Troff.showImportData( fileName, serverId );
