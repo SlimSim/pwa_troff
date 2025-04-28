@@ -209,6 +209,7 @@ class SongToGroup {
 
 	static initiateFromDb() {
 		this.#map = nDB.get( "TROFF_SONG_GROUP_MAP" ) || {};
+		console.log("SongToGroup map initialized:", this.#map);
 	};
 
 	static clearMap() {
@@ -298,6 +299,7 @@ const signOut = function() {
 };
 
 const initiateAllFirebaseGroups = async function() {
+	console.log("initiateAllFirebaseGroups ->");
 	firebase.firestore()
 		.collection( 'Groups' )
 		.where( "owners", "array-contains", firebaseUser.email)
@@ -331,6 +333,7 @@ const initiateCollections = async function( querySnapshot ) {
 		};
 
 		subCollection.forEach( songDoc => {
+			console.log(`initiateCollections: Attaching snapshot listener for songDoc: ${songDoc.id}, songKey: ${songDoc.data().songKey}`);
 			songListObject.songs.push({
 				galleryId : 'pwa-galleryId',
 				fullPath : songDoc.data().songKey,
@@ -344,6 +347,7 @@ const initiateCollections = async function( querySnapshot ) {
 				songDoc.data().fileUrl
 			);
 
+			console.log( "initiateCollections: -> songDocUpdate")
 			songDoc.ref.onSnapshot( songDocUpdate );
 		});
 
@@ -437,10 +441,12 @@ const groupDocUpdate = function( doc ) {
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
+	console.log( "songDocUpdate -> doc:", doc );
 
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
 
+	console.log( "songDocUpdate: doc.exists:", doc.exists );
 	if( !doc.exists ) {
 		const fileName = SongToGroup.getFileNameFromSongDocId( songDocId );
 		const groupName = $( `[group-id="${groupDocId}"]`).text()
@@ -517,7 +523,11 @@ const songDocUpdate = async function( doc ) {
 
 	SongToGroup.add(groupDocId, songDocId, songKey, fileUrl);
 
-	if( !(await fileHandler.doesFileExistInCache( songKey ) ) ) {
+	const songExists = await fileHandler.doesFileExistInCache( songKey );
+
+	console.log( "songDocUpdate: " + songKey + " songExists: " + songExists );
+
+	if( !(songExists ) ) {
 		try {
 			await fileHandler.fetchAndSaveResponse(
 				songData.fileUrl,
@@ -529,6 +539,7 @@ const songDocUpdate = async function( doc ) {
 				);
 		}
 		addItem_NEW_2( songKey );
+		console.log( "songDocUpdate: " + songKey + " was successfully added" );
 		$.notify( songKey + " was successfully added" );
 	}
 
@@ -964,23 +975,27 @@ const removeSongFromFirebaseGroup = async function(
 };
 
 const onOnline = function() {
-
+	console.log("onOnline: App is online, checking for songs to sync");
 	// this timeOut is because I want to wait untill possible existing
 	// firestore updates get synced to the ego-computer.
 	// because then Ego-offline-changes should be overwritten.
 	setTimeout( () => {
 		const changedSongList = nDB.get( "TROFF_SONGS_WITH_LOCAL_CHANGES" ) || [];
-
+		console.log("onOnline: Songs with local changes:", changedSongList);
 		// This is to send local changes IF the server does NOT
 		// have new updates
 		changedSongList.forEach( changedSong => {
+			console.log(`onOnline: Checking song: ${changedSong.songKey}`);
 			firebase.firestore()
 				.collection( 'Groups' )
 				.doc( changedSong.groupDocId )
 				.collection( "Songs" )
 				.doc( changedSong.songDocId )
 				.get()
-				.then( songDocUpdate );
+				.then(() => {
+					console.log(`onOnline: Triggering songDocUpdate for ${changedSong.songKey}`);
+					songDocUpdate();
+				}  );
 			// There is 2 callbacks,
 			// it is because firebase is beign updated and the
 			// it sends out the update-calblack, so all in good order!
@@ -1126,6 +1141,7 @@ const setUiToSignIn = async function( user ) {
 
 auth.onAuthStateChanged( user => {
 	firebaseUser = user;
+	console.log(`auth.onAuthStateChanged: Auth state changed: user=${user ? user.email : 'null'}`);
 	if( user == null ) {
 		setUiToNotSignIn();
 		return;
@@ -2304,6 +2320,8 @@ var TroffClass = function(){
 					Troff.selectSongInSongList( key );
 					createSongAudio( key );
 				}
+				
+				console.log( "initFileApiImplementation: " + key + " was successfully added" );
 				$.notify( key + " was successfully added" );
 			} );
 		});
@@ -2607,6 +2625,8 @@ var TroffClass = function(){
 
 		let fileDoesExists = await fileHandler.doesFileExistInCache( fileName );
 
+		console.log( "downloadSongFromServerButDataFromCacheExists: " + fileName + " fileDoesExists: " + fileDoesExists );
+
 		if( fileDoesExists ) {
 			if( serverId == troffDataFromCache.serverId ) {
 				const currentSongTroffData = nDB.get( Troff.getCurrentSong() );
@@ -2643,6 +2663,8 @@ var TroffClass = function(){
 		if( serverId == troffDataFromCache.serverId ) {
 			await createSongAudio( fileName );
 			addItem_NEW_2( fileName );
+			
+			console.log( "downloadSongFromServerButDataFromCacheExists: " + fileName + " was successfully added" );
 			$.notify( fileName + " was successfully added" );
 		} else {
 			Troff.showImportData( fileName, serverId );
@@ -2686,6 +2708,7 @@ var TroffClass = function(){
 		await createSongAudio( troffData.fileName );
 		Troff.askIfAddSongsToCurrentSongList( troffData.fileName )
 		addItem_NEW_2( troffData.fileName );
+		console.log( "downloadSongFromServer: " + troffData.fileName + " was successfully added" );
 		$.notify( troffData.fileName + " was successfully added" );
 	};
 

@@ -143,9 +143,10 @@ $(function () {
 	};
 
 	fileHandler.fetchAndSaveResponse = async function( fileUrl, songKey ) {
+		console.log(`fileHandler.fetchAndSaveResponse: Fetching ${songKey} from ${url}`);
 		const response = await fetch( fileUrl );
 		if( !response.ok ) {
-			throw response;
+			throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
 		}
 		const contentLength = +response.headers.get('Content-Length');
 		const reader = response.body.getReader();
@@ -166,6 +167,7 @@ $(function () {
 			}
     }
 		const blob = new Blob(chunks);
+		console.log(`fileHandler.fetchAndSaveResponse: calling saveResponse to save ${songKey} to cache`);
 		return fileHandler.saveResponse( new Response( blob, v3Init ), songKey );
 	};
 
