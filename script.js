@@ -441,15 +441,18 @@ const groupDocUpdate = function( doc ) {
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
-	console.log( "songDocUpdate -> doc:", doc );
+	const isHorse = doc.data().songKey == "A Horse.mp3";
+	const isHorse2 = doc.id == "bJjikrxsB1LTtCyt8bD3";
+	console.log( "songDocUpdate -> isHorse "+isHorse+ " isHorse2 "+ isHorse2 + " doc:", doc );
 
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
 
-	console.log( "songDocUpdate: doc.exists:", doc.exists );
+	isHorse && console.log( "songDocUpdate: "+ tempSongKey + "doc.exists:", doc.exists );
 	if( !doc.exists ) {
 		const fileName = SongToGroup.getFileNameFromSongDocId( songDocId );
-		const groupName = $( `[group-id="${groupDocId}"]`).text()
+		const groupName = $( `[group-id="${groupDocId}"]`).text();
+		isHorse && console.log( "songDocUpdate: in if! "+ tempSongKey + "fileName:", fileName, "groupName", groupName );
 		$.notify(
 			`The song "${fileName}" has been removed from the group
 			${groupName}
@@ -480,7 +483,10 @@ const songDocUpdate = async function( doc ) {
 		songKey
 	);
 
+	isHorse && console.log( "songDocUpdate: existingUploadTime "+ existingUploadTime + " firebaseUploadTime:", firebaseUploadTime );
+
 	if( existingUploadTime == firebaseUploadTime ) {
+		isHorse && console.log( "songDocUpdate: in if 2!!!" );
 		// firestore does NOT have any new updates:
 
 		if( songHaveLocalChanges ) {
@@ -507,7 +513,9 @@ const songDocUpdate = async function( doc ) {
 
 	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
 
+	isHorse && console.log( "songDocUpdate: songHaveLocalChanges:", songHaveLocalChanges );
 	if( songHaveLocalChanges ) {
+		isHorse && console.log( "songDocUpdate: in if 3!!!" );
 		$.notify(
 			`The song ${songKey} had local changes that where overwritten`,
 			{
@@ -525,9 +533,10 @@ const songDocUpdate = async function( doc ) {
 
 	const songExists = await fileHandler.doesFileExistInCache( songKey );
 
-	console.log( "songDocUpdate: " + songKey + " songExists: " + songExists );
+	isHorse && console.log( "songDocUpdate: " + songKey + " songExists: " + songExists );
 
 	if( !(songExists ) ) {
+		isHorse && console.log( "songDocUpdate: in if 4!!!" );
 		try {
 			await fileHandler.fetchAndSaveResponse(
 				songData.fileUrl,
@@ -539,7 +548,7 @@ const songDocUpdate = async function( doc ) {
 				);
 		}
 		addItem_NEW_2( songKey );
-		console.log( "songDocUpdate: " + songKey + " was successfully added" );
+		isHorse && console.log( "songDocUpdate: " + songKey + " was successfully added" );
 		$.notify( songKey + " was successfully added" );
 	}
 
