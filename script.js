@@ -442,17 +442,22 @@ const groupDocUpdate = function( doc ) {
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
 const songDocUpdate = async function( doc ) {
 	const isHorse = doc.data().songKey == "A Horse.mp3";
-	const isHorse2 = doc.id == "bJjikrxsB1LTtCyt8bD3";
-	console.log( "songDocUpdate -> isHorse "+isHorse+ " isHorse2 "+ isHorse2 + " doc:", doc );
+	if(isHorse) {
+		console.log( "songDocUpdate -> isHorse "+isHorse );
+	}
 
 	const songDocId = doc.id;
 	const groupDocId = doc.ref.parent.parent.id;
 
-	isHorse && console.log( "songDocUpdate: "+ tempSongKey + "doc.exists:", doc.exists );
+	if(isHorse) {
+		console.log( "songDocUpdate: before if 1" );
+	}
 	if( !doc.exists ) {
 		const fileName = SongToGroup.getFileNameFromSongDocId( songDocId );
 		const groupName = $( `[group-id="${groupDocId}"]`).text();
-		isHorse && console.log( "songDocUpdate: in if! "+ tempSongKey + "fileName:", fileName, "groupName", groupName );
+		if(isHorse) {
+			console.log( "songDocUpdate: in if! "+ tempSongKey + "fileName:", fileName, "groupName", groupName );
+		}
 		$.notify(
 			`The song "${fileName}" has been removed from the group
 			${groupName}
@@ -463,6 +468,9 @@ const songDocUpdate = async function( doc ) {
 		SongToGroup.remove(songDocId, undefined);
 		removeGroupIndicationIfSongInNoGroup( fileName );
 		return;
+	}
+	if(isHorse) {
+		console.log( "songDocUpdate: after if 1" );
 	}
 
 	const songData = doc.data();
@@ -482,11 +490,14 @@ const songDocUpdate = async function( doc ) {
 		songDocId,
 		songKey
 	);
-
-	isHorse && console.log( "songDocUpdate: existingUploadTime "+ existingUploadTime + " firebaseUploadTime:", firebaseUploadTime );
+	if(isHorse) {
+		console.log( "songDocUpdate: existingUploadTime "+ existingUploadTime + " firebaseUploadTime:", firebaseUploadTime );
+	}
 
 	if( existingUploadTime == firebaseUploadTime ) {
-		isHorse && console.log( "songDocUpdate: in if 2!!!" );
+		if(isHorse) {
+			console.log( "songDocUpdate: in if 2!!!" );
+		}
 		// firestore does NOT have any new updates:
 
 		if( songHaveLocalChanges ) {
@@ -512,10 +523,13 @@ const songDocUpdate = async function( doc ) {
 	}
 
 	newMarkerInfo.localInformation = existingMarkerInfo?.localInformation;
-
-	isHorse && console.log( "songDocUpdate: songHaveLocalChanges:", songHaveLocalChanges );
+	if(isHorse) {
+		console.log( "songDocUpdate: songHaveLocalChanges:", songHaveLocalChanges );
+	}
 	if( songHaveLocalChanges ) {
-		isHorse && console.log( "songDocUpdate: in if 3!!!" );
+		if(isHorse) {
+			console.log( "songDocUpdate: in if 3!!!" );
+		}
 		$.notify(
 			`The song ${songKey} had local changes that where overwritten`,
 			{
@@ -533,10 +547,14 @@ const songDocUpdate = async function( doc ) {
 
 	const songExists = await fileHandler.doesFileExistInCache( songKey );
 
-	isHorse && console.log( "songDocUpdate: " + songKey + " songExists: " + songExists );
+	if(isHorse) {
+		console.log( "songDocUpdate: " + songKey + " songExists: " + songExists );
+	}
 
 	if( !(songExists ) ) {
-		isHorse && console.log( "songDocUpdate: in if 4!!!" );
+		if(isHorse) {
+			console.log( "songDocUpdate: in if 4!!!" );
+		}
 		try {
 			await fileHandler.fetchAndSaveResponse(
 				songData.fileUrl,
@@ -548,7 +566,9 @@ const songDocUpdate = async function( doc ) {
 				);
 		}
 		addItem_NEW_2( songKey );
-		isHorse && console.log( "songDocUpdate: " + songKey + " was successfully added" );
+		if(isHorse) {
+			console.log( "songDocUpdate: " + songKey + " was successfully added" );
+		}
 		$.notify( songKey + " was successfully added" );
 	}
 
