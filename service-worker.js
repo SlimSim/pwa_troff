@@ -25,11 +25,14 @@
 var newAppCaches = [
 	{
 		name: 'core',
-		version: "1.15.4",
+		version: "1.15.5",
 		urls: [
 			"/",
 			"/index.html",
+			"/script0.js",
 			"/script.js",
+			"/script2.js",
+			"/scriptTroffClass.js",
 			"/pwa.js",
 			"/file.js",
 			"/help.html",
@@ -84,8 +87,9 @@ var newAppCaches = [
 	},
 	{
 		name: 'internal-assets',
-		version: "1.6",
+		version: "1.6.1",
 		urls: [
+			"/utils/log.js",
 			"/assets/internal/common.js",
 			"/assets/internal/cookie_consent.js",
 			"/assets/internal/st-script.js",

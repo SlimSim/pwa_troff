@@ -212,6 +212,7 @@
 			</nav>
 		</div> <!-- end headArea -->
 		<div id="banner" class="hidden center text-white bg-danger my-2 flexRow">
+			<input type="button" value="Logs" class="stOnOffButton" data-st-css-selector-to-toggle="#debuggingLog"/>
 			<div class="app-version-number"></div>
 			<div id="banner-text" class="p-2"></div>
 			<div class="app-core-version-number"></div>
@@ -227,6 +228,10 @@
 		</div>
 		<div id="areaParent" class="flexRow areaParent negative-my-4px flex-one h-0" >
 			<span class="flexOne"></span>
+			<div id="debuggingLog" class="hidden">
+				<h1>Debugging Log</h1>
+				<textarea id="debuggingLogContent" class="h-100"></textarea>
+			</div>
 			<div id="songPickerAttachedArea" class="flexCol start w-min-content hidden">
 			</div>
 			<div id="stateSection" class="flexCol hideOnPicture">
@@ -2178,11 +2183,16 @@
 	<!-- skipping for now, add Google Add later :) script src="assets/buy.js"></script-->
 
 
+	<script defer src="utils/log.js"></script>
+
 	<script defer src="assets/internal/environment.js"></script>
 	<script defer src="assets/internal/extend-jquery.js"></script>
 	<script defer src="pwa.js"></script>
 	<script defer src="file.js"></script>
 	<script defer src="assets/internal/st-script.js"></script>
+	<script defer src="script0.js"></script>
+	<script defer src="scriptTroffClass.js"></script>
+	<script defer src="script2.js"></script>
 	<script defer src="script.js"></script>
 	<script defer src="assets/internal/common.js"></script>
 

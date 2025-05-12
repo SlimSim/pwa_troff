@@ -44,7 +44,7 @@ $(document).ready( async function() {
 			})
 			.catch(error => {
 				// Handle Errors here.
-				console.error('Error during sign-in:', error);
+				log.e('Error during sign-in:', error);
 			});
 	};
 
@@ -76,7 +76,7 @@ $(document).ready( async function() {
 		var token = credential.accessToken;
 		*/
 	}).catch((error) => {
-		console.error( "auth.getRedirectResult error", error);
+		log.e( "auth.getRedirectResult error", error);
 		// Handle Errors here.
 		var errorCode = error.code;
 		var errorMessage = error.message;
