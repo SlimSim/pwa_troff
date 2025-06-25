@@ -7,3 +7,7 @@ CNAME
 /assets/screenshots/extra/
 /assets/screenshots/gimp/
 /assets/screenshots/unfinished screengrabs/
+
+
+# Node ignored files
+node_modules/
