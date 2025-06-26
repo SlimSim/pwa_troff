@@ -733,7 +733,7 @@ $(document).ready( async function() {
 		orderByAsc = orderByAsc === undefined ? true : orderByAsc;
 		var $fileList = $( "#fileList" );
 
-		$fileList.children().sort(function (a, b) {
+		$fileList.children().sort((a, b) => {
 			if( orderByAsc ) {
 				return $(a).data( cssToSort ) - $(b).data( cssToSort );
 			}

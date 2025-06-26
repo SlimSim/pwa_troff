@@ -2,7 +2,9 @@ const fileHandler = {};
 const backendService = {};
 const firebaseWrapper = {};
 
-$(function () {
+import { ShowUserException } from "./script2.js";
+
+$(() => {
   "use strict";
 
   /************************************************
@@ -13,7 +15,7 @@ $(function () {
 
   const v3Init = { status: 200, statusText: "version-3", responseType: "cors" };
 
-  const crc32Hash = function (r) {
+  const crc32Hash = (r) => {
     for (var a, o = [], c = 0; c < 256; c++) {
       a = c;
       for (var f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
@@ -24,10 +26,10 @@ $(function () {
     return (-1 ^ n) >>> 0;
   };
 
-  const hashFile = async function (file) {
+  const hashFile = async (file) => {
     return new Promise((resolve, reject) => {
       let reader = new FileReader();
-      reader.onload = async function (event) {
+      reader.onload = async (event) => {
         const data = event.target.result;
         const fileHash = await sha256Hash(data);
         resolve(fileHash);
@@ -37,7 +39,7 @@ $(function () {
     });
   };
 
-  const sha256Hash = async function (object) {
+  const sha256Hash = async (object) => {
     const msgUint8 = new TextEncoder().encode(JSON.stringify(object));
     const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -47,9 +49,9 @@ $(function () {
     return hashHex;
   };
 
-  const readFileTypeAndExtension = function (file, callbackFunk) {
+  const readFileTypeAndExtension = (file, callbackFunk) => {
     var reader = new FileReader();
-    reader.addEventListener("load", function (e) {
+    reader.addEventListener("load", (e) => {
       const arr = new Uint8Array(e.target.result).subarray(0, 22);
       let extension = "",
         type = "",
@@ -115,7 +117,7 @@ $(function () {
     reader.readAsArrayBuffer(file);
   };
 
-  const handleFileWithFileType = function (file, callbackFunk) {
+  const handleFileWithFileType = (file, callbackFunk) => {
     // Only process image, audio and video files.
     if (
       !(
@@ -162,7 +164,7 @@ $(function () {
 	/*           Public methods:
 	/************************************************/
 
-  backendService.getTroffData = async function (troffDataId, fileName) {
+  backendService.getTroffData = async (troffDataId, fileName) => {
     const db = firebase.firestore();
     const troffDataReference = db.collection("TroffData").doc(troffDataId);
 
@@ -175,7 +177,7 @@ $(function () {
     });
   };
 
-  fileHandler.fetchAndSaveResponse = async function (fileUrl, songKey) {
+  fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
     const response = await fetch(fileUrl);
     if (!response.ok) {
       throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
@@ -203,14 +205,14 @@ $(function () {
   };
 
   //private?
-  fileHandler.saveResponse = async function (response, url) {
+  fileHandler.saveResponse = async (response, url) => {
     return caches.open(nameOfCache).then((cache) => {
       return cache.put(url, response);
     });
   };
 
   //private?
-  fileHandler.saveFile = async function (file, callbackFunk) {
+  fileHandler.saveFile = async (file, callbackFunk) => {
     const url = file.name;
     return fileHandler
       .saveResponse(new Response(file, v3Init), url)
@@ -220,7 +222,7 @@ $(function () {
   };
 
   //private?
-  fileHandler.getObjectUrlFromResponse = async function (response, songKey) {
+  fileHandler.getObjectUrlFromResponse = async (response, songKey) => {
     if (response === undefined) {
       throw new ShowUserException(`Can not upload the song "${songKey}" because it appears to not exist in the app.
 				 Please add the song to Troff and try to upload it again.`);
@@ -228,18 +230,18 @@ $(function () {
     return response.blob().then(URL.createObjectURL);
   };
 
-  fileHandler.getObjectUrlFromFile = async function (songKey) {
+  fileHandler.getObjectUrlFromFile = async (songKey) => {
     return caches.match(songKey).then((cachedResponse) => {
       return fileHandler.getObjectUrlFromResponse(cachedResponse, songKey);
     });
   };
 
-  fileHandler.doesFileExistInCache = async function (url) {
+  fileHandler.doesFileExistInCache = async (url) => {
     let response = await caches.match(url);
     return response !== undefined;
   };
 
-  fileHandler.sendFileToFirebase = async function (fileKey, storageDir) {
+  fileHandler.sendFileToFirebase = async (fileKey, storageDir) => {
     if (await cacheImplementation.isSongV2(fileKey)) {
       throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
 			we apologize for the inconvenience.
@@ -277,11 +279,11 @@ $(function () {
    * @param {string} storageDir
    * @returns {} object with troffData id, url and fileName
    */
-  fileHandler.sendFile = async function (
+  fileHandler.sendFile = async (
     fileKey,
     oSongTroffInfo,
     storageDir = "TroffFiles"
-  ) {
+  ) => {
     const [fileUrl, file] = await fileHandler.sendFileToFirebase(
       fileKey,
       storageDir
@@ -314,13 +316,13 @@ $(function () {
     });
   };
 
-  fileHandler.handleFiles = async function (files, callbackFunk) {
+  fileHandler.handleFiles = async (files, callbackFunk) => {
     let i = 0;
 
     // Loop through the FileList and render the files as appropriate.
     for (let file; (file = files[i]); i++) {
       if (file.type == "") {
-        readFileTypeAndExtension(file, function (fileWithType) {
+        readFileTypeAndExtension(file, (fileWithType) => {
           handleFileWithFileType(fileWithType, callbackFunk);
         });
         continue;
@@ -329,11 +331,11 @@ $(function () {
     }
   };
 
-  firebaseWrapper.uploadFile = async function (
+  firebaseWrapper.uploadFile = async (
     fileId,
     file,
     storageDir = "TroffFiles"
-  ) {
+  ) => {
     const storageRef = firebase.storage().ref(storageDir);
     const fileRef = storageRef.child(fileId);
     const task = fileRef.put(file);
@@ -373,7 +375,7 @@ $(function () {
     });
   };
 
-  firebaseWrapper.uploadTroffData = function (troffData) {
+  firebaseWrapper.uploadTroffData = (troffData) => {
     const db = firebase.firestore();
 
     return db
@@ -400,3 +402,6 @@ $(function () {
   //const app = firebase.initializeApp(environment.firebaseConfig);
   //const analytics = getAnalytics(app);
 });
+
+
+export { fileHandler, backendService, firebaseWrapper };

@@ -2183,18 +2183,23 @@
 	<!-- skipping for now, add Google Add later :) script src="assets/buy.js"></script-->
 
 
-	<script defer src="utils/log.js"></script>
+	<!-- <script defer src="utils/log.js"></script> -->
 
-	<script defer src="assets/internal/environment.js"></script>
+	<!-- TODO: kanske byta ut till en index.js-modul (eller script.js??? :) )? 
+	 som anropar det den behöver?
+	 kolla med chat om det är en bra idé :)
+	 -->
+
+
+	<script defer type="module" src="assets/internal/environment.js"></script>
 	<script defer src="assets/internal/extend-jquery.js"></script>
-	<script defer src="pwa.js"></script>
-	<script defer src="file.js"></script>
-	<script defer src="assets/internal/st-script.js"></script>
-	<script defer src="script0.js"></script>
-	<script defer src="scriptTroffClass.js"></script>
-	<script defer src="script2.js"></script>
-	<script defer src="script.js"></script>
-	<script defer src="assets/internal/common.js"></script>
+	<script defer type="module" src="pwa.js"></script>
+	<script defer type="module" src="file.js"></script>
+	<script defer type="module" src="assets/internal/st-script.js"></script>
+	<script defer type="module" src="script0.js"></script>
+	<script defer type="module" src="scriptTroffClass.js"></script>
+	<script defer type="module" src="script2.js"></script>
+	<script defer type="module" src="script.js"></script>
 
 	<script defer type="text/javascript" src="FileApiImplementation.js"></script>
 	<script defer type="text/javascript" src="assets/internal/cookie_consent.js"></script>

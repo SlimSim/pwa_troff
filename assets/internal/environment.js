@@ -64,3 +64,6 @@ const environment = {};
       );
   }
 })();
+
+
+export { environment };

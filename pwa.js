@@ -16,8 +16,8 @@ if ("serviceWorker" in navigator) {
 
 var PWA = {};
 
-PWA.listenForInstallPrompt = function () {
-  window.addEventListener("beforeinstallprompt", function (e) {
+PWA.listenForInstallPrompt = () => {
+  window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault(); // Prevents prompt display
 
     if ($("#pwaAddToHomeScreen").length === 0) {
@@ -28,7 +28,7 @@ PWA.listenForInstallPrompt = function () {
     }
 
     $("#pwaAddToHomeScreen").removeClass("hidden");
-    $("#pwaAddToHomeScreen").on("click", function () {
+    $("#pwaAddToHomeScreen").on("click", () => {
       PWA.showPrompt(e);
     });
     // The event was re-dispatched in response to our request
@@ -36,7 +36,7 @@ PWA.listenForInstallPrompt = function () {
   });
 };
 
-PWA.listenForBroadcastChannel = function () {
+PWA.listenForBroadcastChannel = () => {
   if (typeof BroadcastChannel === "undefined") {
     return;
   }
@@ -72,7 +72,7 @@ PWA.listenForBroadcastChannel = function () {
               ).append(
                 $("<button>")
                   .text("RELOAD")
-                  .on("click", function () {
+                  .on("click", () => {
                     $(this).trigger("notify-hide");
                     window.location.reload();
                     return false;
@@ -90,17 +90,17 @@ PWA.listenForBroadcastChannel = function () {
   });
 };
 
-PWA.showPrompt = function (e) {
+PWA.showPrompt = (e) => {
   e.prompt(); // Throws if called more than once or default not prevented
 
   e.userChoice.then(
-    function (choiceResult) {
+    (choiceResult) => {
       if (choiceResult.outcome === "accepted") {
         $("#pwaAddToHomeScreen").addClass("hidden");
         $.notify("Thank you for installing Troff.\nHave fun!", "success");
       }
     },
-    function (err) {
+    (err) => {
       log.e("err", err);
     }
   );

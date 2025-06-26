@@ -19,6 +19,19 @@
 // - what could possibly go wrong?
 // "use strict";
 
+import log from "./utils/log.js";
+import { setUiToSignIn, setUiToNotSignIn } from "./ui.js";
+import { nDB } from "./assets/internal/db.js";
+import { SongToGroup } from "./scriptASimple.js";
+import { environment } from "./assets/internal/environment.js";
+import { TroffClass } from "./scriptTroffClass.js";
+import { errorHandler } from "./script2.js";
+import DBClass from "./scriptDBClass.js";
+import IOClass from "./scriptIOClass.js";
+import RateClass from "./scriptRateClass.js";
+
+import { firebaseWrapper, fileHandler } from "./file.js";
+import { ShowUserException } from "./script2.js";
 
 let firebaseUser = null;
 
@@ -488,10 +501,10 @@ const groupDialogSave = async function( event ) {
 	DB.saveSonglists_new();
 }
 
-const removeSongFileFromFirebaseGroupStorage = async function (
+const removeSongFileFromFirebaseGroupStorage = async (
 	groupDocId,
-	storageFileName) {
-	return new Promise( function( resolve, reject) {
+	storageFileName) => {
+	return new Promise( ( resolve, reject) => {
 		let storageRef = firebase.storage()
 			.ref("Groups/" + groupDocId + "/" + storageFileName);
 
@@ -507,9 +520,9 @@ const removeSongFileFromFirebaseGroupStorage = async function (
 
 }
 
-const removeSongDataFromFirebaseGroup = function(
+const removeSongDataFromFirebaseGroup = (
 	groupDocId,
-	songDocId) {
+	songDocId) => {
 
 	return firebase.firestore()
 		.collection( 'Groups' )
@@ -890,7 +903,7 @@ function updateVersionLink( path ) {
 		return;
 	}
 
-	dbHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
+	const dbHistory = nDB.get( "TROFF_TROFF_DATA_ID_AND_FILE_NAME" );
 	if( dbHistory == null ) {
 		return hideVersionLink( 0 );
 	}
@@ -912,50 +925,6 @@ function updateVersionLink( path ) {
 		.attr( "href", "find.html#f=my&id=" + fileNameUri )
 		.removeClass( "hidden" );
 }
-
-
-function clickSongList_NEW( event ) {
-	IO.blurHack();
-	var $target = $(event.target),
-		data = $target.data("songList"),
-		galleryId = $target.attr("data-gallery-id"),
-		fullPath = $target.attr("data-full-path");
-
-	$( "#songListAll" ).removeClass( "selected" );
-
-	if( $("#TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT").hasClass( "active" ) ) {
-
-		if( data || galleryId ) {
-			$target.toggleClass( "active" );
-			$( "#songListsList" ).find( "button" ).removeClass("selected");
-		} else {
-			// It only enters here IF the All songs-button is pressed :)
-			$( "#songListsList" ).find( "button" ).removeClass("selected").removeClass("active");
-			$target.addClass("selected");
-		}
-	} else {
-		$( "#songListsList" ).find( "button" ).removeClass("selected").removeClass("active");
-		$target.addClass( "selected" );
-
-		$( "#headArea" ).removeClassStartingWith( "bg-" );
-		$( "#songlistIcon" ).removeClassStartingWith( "fa-" );
-		$( "#songlistName" ).text( "" );
-		$( "#songlistInfo" ).text( "" ).addClass( "hidden" );
-
-		if( data && data.firebaseGroupDocId ) {
-			$( "#headArea" ).addClass( data.color );
-			$( "#songlistIcon" ).addClass( data.icon || "fa-users" );
-			$( "#songlistName" ).text( data.name );
-			$( "#songlistInfo" ).removeClass( "hidden" ).text( data.info );
-		}
-	}
-
-	Troff.saveCurrentStateOfSonglists();
-
-	filterSongTable( getFilterDataList() );
-
-}
-
 
 async function createSongAudio( path ) {
 	let songIsV2;
@@ -1156,7 +1125,7 @@ var DB = new DBClass();
 var IO = new IOClass();
 var Rate = new RateClass();
 
-loadExternalHtml = function(includes, callback) {
+function loadExternalHtml(includes, callback) {
 	if( includes.length == 0 ) {
 		return callback();
 	}
@@ -1233,10 +1202,31 @@ function initEnvironment() {
 	}
 }
 
-$.fn.removeClassStartingWith = function (filter) {
-	$(this).removeClass(function (index, className) {
-		return (className.match(new RegExp("\\S*" + filter + "\\S*", 'g')) || []).join(' ')
-	});
-	return this;
+//note, in this case we want "function", NOT short hand "() =>"
+$.fn.removeClassStartingWith = function(filter) {
+    this.each(function() {
+        const $this = $(this);
+        const classesToRemove = ($this.attr("class") || "")
+            .split(" ")
+            .filter(className => className.startsWith(filter))
+            .join(" ");
+        $this.removeClass(classesToRemove);
+    });
+    return this; // Ensure chaining works
 };
 
+export { 
+	Troff,
+	DB,
+	IO,
+	Rate,
+	googleSignIn,
+	onOnline,
+	createSongAudio,
+	addItem_NEW_2,
+	ifGroupSongUpdateFirestore,
+	updateVersionLink,
+	groupDialogSave,
+	getFirebaseGroupDataFromDialog,
+	firebaseUser,
+}

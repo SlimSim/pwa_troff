@@ -15,12 +15,17 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
-window.alert = function (alert) {
+import { SongToGroup } from "./scriptASimple.js";
+import { nDB } from "./assets/internal/db.js";
+import { DB, Troff, createSongAudio, IO} from "./script.js";
+import log from "./utils/log.js";
+
+window.alert = (alert) => {
   log.w("Alert:", alert);
 };
 
 function gtag() {
-  // console.log("gtag -> arguments:", arguments);
+  // log.d("gtag -> arguments:", arguments);
   // TODO: should perhaps gather statistics in the future :)
 }
 
@@ -50,52 +55,52 @@ var vidFormats = [
   "ogg",
 ];
 
-var TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
-var TROFF_SETTING_EXTENDED_MARKER_COLOR = "TROFF_SETTING_EXTENDED_MARKER_COLOR";
-var TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR =
+window.TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
+window.TROFF_SETTING_EXTENDED_MARKER_COLOR = "TROFF_SETTING_EXTENDED_MARKER_COLOR";
+window.TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR =
   "TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR";
-var TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR =
+window.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR =
   "TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR";
-var TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR =
+window.TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR =
   "TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR";
-var TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR =
+window.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR =
   "TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR";
-var TROFF_SETTING_ENTER_RESET_COUNTER = "TROFF_SETTING_ENTER_RESET_COUNTER";
-var TROFF_SETTING_SPACE_RESET_COUNTER = "TROFF_SETTING_SPACE_RESET_COUNTER";
-var TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER =
+window.TROFF_SETTING_ENTER_RESET_COUNTER = "TROFF_SETTING_ENTER_RESET_COUNTER";
+window.TROFF_SETTING_SPACE_RESET_COUNTER = "TROFF_SETTING_SPACE_RESET_COUNTER";
+window.TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER =
   "TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER";
-var TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR =
+window.TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR =
   "TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR";
-var TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR =
+window.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR =
   "TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR";
-var TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR =
+window.TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR =
   "TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR";
-var TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON =
+window.TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON =
   "TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON";
-var TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER =
+window.TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER =
   "TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER";
-var TROFF_SETTING_CONFIRM_DELETE_MARKER = "TROFF_SETTING_CONFIRM_DELETE_MARKER";
-var TROFF_SETTING_UI_ARTIST_SHOW = "TROFF_SETTING_UI_ARTIST_SHOW";
-var TROFF_SETTING_UI_TITLE_SHOW = "TROFF_SETTING_UI_TITLE_SHOW";
-var TROFF_SETTING_UI_ALBUM_SHOW = "TROFF_SETTING_UI_ALBUM_SHOW";
-var TROFF_SETTING_UI_PATH_SHOW = "TROFF_SETTING_UI_PATH_SHOW";
-var TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW =
+window.TROFF_SETTING_CONFIRM_DELETE_MARKER = "TROFF_SETTING_CONFIRM_DELETE_MARKER";
+window.TROFF_SETTING_UI_ARTIST_SHOW = "TROFF_SETTING_UI_ARTIST_SHOW";
+window.TROFF_SETTING_UI_TITLE_SHOW = "TROFF_SETTING_UI_TITLE_SHOW";
+window.TROFF_SETTING_UI_ALBUM_SHOW = "TROFF_SETTING_UI_ALBUM_SHOW";
+window.TROFF_SETTING_UI_PATH_SHOW = "TROFF_SETTING_UI_PATH_SHOW";
+window.TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW =
   "TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW";
-var TROFF_SETTING_UI_ZOOM_SHOW = "TROFF_SETTING_UI_ZOOM_SHOW";
-var TROFF_SETTING_UI_LOOP_BUTTONS_SHOW = "TROFF_SETTING_UI_LOOP_BUTTONS_SHOW";
-var TROFF_SETTING_SONG_COLUMN_TOGGLE = "TROFF_SETTING_SONG_COLUMN_TOGGLE";
-var TROFF_SETTING_SONG_LISTS_LIST_SHOW = "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
-var TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
-var TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
-const TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME";
+window.TROFF_SETTING_UI_ZOOM_SHOW = "TROFF_SETTING_UI_ZOOM_SHOW";
+window.TROFF_SETTING_UI_LOOP_BUTTONS_SHOW = "TROFF_SETTING_UI_LOOP_BUTTONS_SHOW";
+window.TROFF_SETTING_SONG_COLUMN_TOGGLE = "TROFF_SETTING_SONG_COLUMN_TOGGLE";
+window.TROFF_SETTING_SONG_LISTS_LIST_SHOW = "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
+window.TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
+window.TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
+window.TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME";
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 const isIphone = navigator.userAgent.indexOf("iPhone") !== -1;
 const isIpad = navigator.userAgent.indexOf("iPad") !== -1;
 
-var MARKER_COLOR_PREFIX = "markerColor";
+window.MARKER_COLOR_PREFIX = "markerColor";
 
-const DATA_TABLE_COLUMNS = {
+window.DATA_TABLE_COLUMNS = {
   list: [
     { id: "CHECKBOX", header: "Checkbox", default: true },
     { id: "EDIT", header: "Edit", default: true },
@@ -122,9 +127,9 @@ const DATA_TABLE_COLUMNS = {
     { id: "EXTENSION", header: "File type", default: false },
     { id: "DATA_INFO", header: "dataInfo", default: false, hideFromUser: true },
   ],
-  getPos: function (id) {
-    for (let i = 0; i < this.list.length; i++) {
-      if (id == this.list[i].id) {
+  getPos: (id) => {
+    for (let i = 0; i < window.DATA_TABLE_COLUMNS.list.length; i++) {
+      if (id == window.DATA_TABLE_COLUMNS.list[i].id) {
         return i;
       }
     }
@@ -132,135 +137,7 @@ const DATA_TABLE_COLUMNS = {
   },
 };
 
-class SongToGroup {
-  static #map = {};
-
-  static #onSongAdded = [];
-
-  static get() {
-    return this.#map;
-  }
-
-  static getSongGroupList(songKey) {
-    return this.#map[songKey];
-  }
-
-  static onSongAdded(callback) {
-    this.#onSongAdded.push(callback);
-  }
-
-  static add(groupDocId, songDocId, songKey, fileUrl) {
-    this.quickAdd(groupDocId, songDocId, songKey, fileUrl);
-    this.saveToDb();
-  }
-
-  static quickAdd(groupDocId, songDocId, songKey, fileUrl) {
-    const myGroups = this.#map;
-    var thisSong = myGroups[songKey];
-
-    if (thisSong == undefined) {
-      thisSong = [];
-    }
-
-    const thisSongIsInThisGroup = thisSong.some(
-      (o) => o.groupDocId == groupDocId && o.songDocId == songDocId
-    );
-
-    if (thisSongIsInThisGroup) {
-      return;
-    }
-    thisSong.push({
-      groupDocId: groupDocId,
-      songDocId: songDocId,
-      fileUrl: fileUrl,
-    });
-    myGroups[songKey] = thisSong;
-
-    this.#map = myGroups;
-
-    this.#onSongAdded.forEach((funk) => {
-      funk({
-        detail: {
-          groupDocId: groupDocId,
-          songDocId: songDocId,
-          songKey: songKey,
-          fileUrl: fileUrl,
-        },
-      });
-    });
-  }
-
-  static remove(songDocId, groupDocId) {
-    const myGroups = this.#map;
-
-    Object.entries(myGroups).forEach((v) => {
-      let idObjectList = v[1];
-      idObjectList = idObjectList.filter(
-        (o) => o.songDocId != songDocId && o.groupDocId != groupDocId
-      );
-      if (idObjectList.length == 0) {
-        delete myGroups[v[0]];
-      } else {
-        myGroups[v[0]] = idObjectList;
-      }
-    });
-
-    this.#map = myGroups;
-    this.saveToDb();
-  }
-
-  static getNrOfGroupsThisSongIsIn(songKey) {
-    let myGroups = this.#map;
-
-    const firestoreIdentifierList = myGroups[songKey];
-    if (firestoreIdentifierList == undefined) {
-      return 0;
-    }
-    return firestoreIdentifierList.length;
-  }
-
-  static saveToDb() {
-    nDB.set("TROFF_SONG_GROUP_MAP", this.#map);
-  }
-
-  static initiateFromDb() {
-    this.#map = nDB.get("TROFF_SONG_GROUP_MAP") || {};
-  }
-
-  static clearMap() {
-    this.#map = {};
-  }
-
-  static songKeyToFileUrl = function (songKey, docId, songDocId) {
-    const myGroups = this.#map;
-    const firestoreIdentifierList = myGroups[songKey];
-    return firestoreIdentifierList?.find(
-      (fi) => fi.groupDocId == docId && fi.songDocId == songDocId
-    )?.fileUrl;
-  };
-
-  static getFileNameFromSongDocId(songDocId) {
-    const myGroups = this.#map;
-    const myGroupsE = Object.entries(myGroups);
-
-    for (let i = 0; i < myGroupsE.length; i++) {
-      let groupWithSongList = myGroupsE[i][1].filter(
-        (idObject) => idObject.songDocId == songDocId
-      );
-
-      if (groupWithSongList.length == 0) {
-        continue;
-      }
-      return myGroupsE[i][0];
-    }
-    console.info(
-      `getFileNameFromSongDocId: songDocId (${songDocId})`` did not return any fileName!`
-    );
-    return "undefined";
-  }
-}
-
-const populateExampleSongsInGroupDialog = function (songs) {
+const populateExampleSongsInGroupDialog = (songs) => {
   // TODO: fixa bättre sätt att lägga på låtarna!
   let dataInfo = $("#dataSongTable")
     .DataTable()
@@ -288,7 +165,7 @@ const populateExampleSongsInGroupDialog = function (songs) {
   });
 };
 
-const openGroupDialog = async function (songListObject) {
+const openGroupDialog = async (songListObject) => {
   emptyGroupDialog();
 
   const isGroup = songListObject.firebaseGroupDocId !== undefined;
@@ -336,7 +213,7 @@ const openGroupDialog = async function (songListObject) {
   $("#groupDialog").removeClass("hidden");
 };
 
-const emptyGroupDialog = function () {
+const emptyGroupDialog = () => {
   $("#groupDialog").find("form").trigger("reset");
 
   $("#groupOwnerParent").empty();
@@ -361,18 +238,18 @@ const emptyGroupDialog = function () {
     .removeClass("colorPickerSelected");
 };
 
-const removeOwnerRow = function (event) {
+const removeOwnerRow = (event) => {
   const row = $(event.target).closest(".form-group.row");
   const owner = row.find(".groupDialogOwner").val();
 
-  notifyUndo(owner + " was removed.", function () {
+  notifyUndo(owner + " was removed.", () => {
     addGroupOwnerRow(owner);
   });
 
   row.remove();
 };
 
-const removeSongRow = function (event) {
+const removeSongRow = (event) => {
   const row = $(event.target).closest(".form-group.row");
   row.find(".groupDialogSong").addClass("bg-danger removed");
   /*
@@ -384,13 +261,13 @@ const removeSongRow = function (event) {
   //row.remove();
 };
 
-const onClickAddNewSongToGroup = function (event) {
+const onClickAddNewSongToGroup = (event) => {
   const target = $(event.target);
   addGroupSongRow(undefined, { songKey: target.data("fullPath") });
   target.remove();
 };
 
-const addGroupSongRow = function (songDocId, song) {
+const addGroupSongRow = (songDocId, song) => {
   const songRow = $("#groupDialogSongRowTemplate").children().clone(true, true);
 
   songRow.find(".groupDialogRemoveSong").on("click", removeSongRow);
@@ -404,7 +281,7 @@ const addGroupSongRow = function (songDocId, song) {
   $("#groupSongParent").append(songRow);
 };
 
-const addGroupSongRow_NEW = function (songIdObject) {
+const addGroupSongRow_NEW = (songIdObject) => {
   const songRow = $("#groupDialogSongRowTemplate").children().clone(true, true);
 
   songRow.find(".groupDialogRemoveSong").on("click", removeSongRow);
@@ -420,7 +297,7 @@ const addGroupSongRow_NEW = function (songIdObject) {
   $("#groupSongParent").append(songRow);
 };
 
-const addGroupOwnerRow = function (owner) {
+const addGroupOwnerRow = (owner) => {
   const ownerRow = $("#groupDialogOwnerRowTemplate")
     .children()
     .clone(true, true);
@@ -430,20 +307,7 @@ const addGroupOwnerRow = function (owner) {
   $("#groupOwnerParent").append(ownerRow);
 };
 
-const setUiToNotSignIn = function (user) {
-  $(".hide-on-sign-out").addClass("hidden");
-  $(".hide-on-sign-in").removeClass("hidden");
-  nDB.set("TROFF_FIREBASE_PREVIOUS_SIGNED_IN", false);
-};
-
-const setUiToSignIn = async function (user) {
-  $("#userName").text(user.displayName);
-  $(".hide-on-sign-out").removeClass("hidden");
-  $(".hide-on-sign-in").addClass("hidden");
-  nDB.set("TROFF_FIREBASE_PREVIOUS_SIGNED_IN", true);
-};
-
-const nrIdsInHistoryList = function (historyList) {
+const nrIdsInHistoryList = (historyList) => {
   if (!historyList) return 0;
   let nrIds = 0;
   historyList.forEach((historyObject) => {
@@ -452,7 +316,7 @@ const nrIdsInHistoryList = function (historyList) {
   return nrIds;
 };
 
-const updateUploadedHistory = async function () {
+const updateUploadedHistory = async () => {
   if (firebaseUser == null) return;
   const snapshot = await firebase
     .firestore()
@@ -506,7 +370,7 @@ function addImageToContentDiv() {
 function addAudioToContentDiv() {
   var content_div = document.getElementById("content");
   var audio = document.createElement("audio");
-  audio.addEventListener("loadedmetadata", function (e) {
+  audio.addEventListener("loadedmetadata", (e) => {
     Troff.setMetadata(audio);
     Troff.setAudioVideoLayout();
   });
@@ -532,7 +396,7 @@ function addVideoToContentDiv() {
 
   videoBox.setAttribute("id", "videoBox");
 
-  video.addEventListener("loadedmetadata", function (e) {
+  video.addEventListener("loadedmetadata", (e) => {
     Troff.setMetadata(video);
     Troff.setAudioVideoLayout();
   });
@@ -627,11 +491,11 @@ function getFilterDataList() {
   $("#songListsList")
     .find("button")
     .filter(".active, .selected")
-    .each(function (i, v) {
+    .each((i, v) => {
       var innerData = $(v).data("songList");
 
       if (innerData) {
-        $.each(innerData.songs, function (i, vi) {
+        $.each(innerData.songs, (i, vi) => {
           if (vi.isDirectory) {
             const galleryId = vi.galleryId || vi.data.galleryId;
             list.push('^{"galleryId":"' + galleryId + '"');
@@ -718,7 +582,7 @@ function removeSongsFromSonglist(songs, $target) {
 
   const songList = $target.data("songList");
 
-  $.each(songs, function (i, song) {
+  $.each(songs, (i, song) => {
     var index,
       dataInfo = song.data || song,
       value;
@@ -745,7 +609,7 @@ function removeSongsFromSonglist(songs, $target) {
 
     $target.data("songList", songList);
 
-    notifyUndo(song.name + " was removed from " + songList.name, function () {
+    notifyUndo(song.name + " was removed from " + songList.name, () => {
       var undo_songList = $target.data("songList");
 
       undo_songList.songs.push(dataInfo);
@@ -850,7 +714,7 @@ function dataTableColumnPicker(event) {
 
   $("#columnToggleParent")
     .children()
-    .map(function (i, v) {
+    .map((i, v) => {
       const dataColumn = $(v).data("column");
       const columnId = DATA_TABLE_COLUMNS.list[dataColumn].id;
       columnVisibilityObject[columnId] = $(v).hasClass("active");
@@ -865,7 +729,7 @@ function dataTableColumnPicker(event) {
 function dataTableShowOnlyColumnsForAttachedState() {
   $("#columnToggleParent")
     .children()
-    .each(function (i, v) {
+    .each((i, v) => {
       if (DATA_TABLE_COLUMNS.list[$(v).data("column")].showOnAttachedState) {
         $("#dataSongTable")
           .DataTable()
@@ -883,7 +747,7 @@ function dataTableShowOnlyColumnsForAttachedState() {
 function dataTableShowColumnsForFloatingState() {
   $("#columnToggleParent")
     .children()
-    .each(function (i, v) {
+    .each((i, v) => {
       if ($(v).hasClass("active")) {
         $("#dataSongTable")
           .DataTable()
@@ -904,7 +768,7 @@ function initSongTable() {
       '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>'
     );
 
-  selectAllCheckbox.click(function (event) {
+  selectAllCheckbox.click((event) => {
     var headerCheckbox = $("#dataSongTable")
         .find("th")
         .find("input[type=checkbox]"),
@@ -952,7 +816,7 @@ function initSongTable() {
       },
       fixedHeader: true,
       paging: false,
-      createdRow: function (row, data, dataIndex) {
+      createdRow: (row, data, dataIndex) => {
         $(row).attr("draggable", "true");
       },
       columnDefs: [
@@ -986,7 +850,7 @@ function initSongTable() {
         },
       ],
     })
-    .on("dragstart", "tr", function (event) {
+    .on("dragstart", "tr", (event) => {
       //function dragSongToSonglist(event){
       if (event.dataTransfer === undefined) {
         event.dataTransfer = event.originalEvent.dataTransfer;
@@ -999,8 +863,12 @@ function initSongTable() {
       event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
     })
     .on("click", "tbody tr", function (event) {
+      log.d("this", $(this));
+      log.d("event", $(event.currentTarget));
       let $td = $(event.target).closest("td, th");
-      const songKey = $(this).data("song-key");
+      
+      const songKey = $(event.currentTarget).data("song-key");
+
 
       if ($td.hasClass("onClickOpenEditSongDialog")) {
         openEditSongDialog(songKey);
@@ -1016,11 +884,11 @@ function initSongTable() {
         .nodes()
         .to$()
         .removeClass("selected");
-      $(this).addClass("selected");
+      $(event.currentTarget).addClass("selected");
 
       gtag("event", "Change Song", { event_category: "Perform change" });
 
-      createSongAudio($(this).data("song-key"));
+      createSongAudio(songKey);
     });
 
   /*
@@ -1060,7 +928,7 @@ function initSongTable() {
   };
 
   // Callback function to execute when mutations are observed
-  var songListsObserverCallback = function (mutationsList, observer) {
+  var songListsObserverCallback = (mutationsList, observer) => {
     for (var mutation of mutationsList) {
       if (mutation.attributeName === "class") {
         var classList = mutation.target.className;
@@ -1146,3 +1014,79 @@ function onChangeSongListSelector(event) {
 
   $target.val("-");
 }
+
+
+export { 
+  updateUploadedHistory,
+  addGroupOwnerRow,
+  emptyGroupDialog,
+  SongToGroup,
+  isSafari,
+  isIpad,
+  isIphone,
+  songListDialogOpenExisting,
+  openGroupDialog,
+  initSongTable,
+  dropSongOnSonglist,
+  allowDrop,
+  onDragleave,
+  clickButtNewSongList,
+  onChangeSongListSelector,
+  closeSongDialog,
+  openSongDialog,
+  clickSongsDialog,
+  minimizeSongPicker,
+  maximizeSongPicker,
+  clickAttachedSongListToggle,
+  clickToggleFloatingSonglists,
+  reloadSongsButtonActive,
+  dataTableColumnPicker,
+  moveSongPickerToAttachedState,
+  getFileExtension,
+  filterSongTable,
+  getFilterDataList,
+  getFileTypeFaIcon,
+  getFileType,
+  sortAndValue,
+  clearContentDiv,
+  addImageToContentDiv,
+  addAudioToContentDiv,
+  gtag,
+  addVideoToContentDiv,
+  escapeRegExp
+ };
+
+window.SongToGroup = SongToGroup;
+window.isSafari = isSafari;
+window.isIpad = isIpad;
+window.isIphone = isIphone;
+window.songListDialogOpenExisting = songListDialogOpenExisting;
+window.openGroupDialog = openGroupDialog;
+window.initSongTable = initSongTable;
+window.dropSongOnSonglist = dropSongOnSonglist;
+window.allowDrop = allowDrop;
+window.onDragleave = onDragleave;
+window.clickButtNewSongList = clickButtNewSongList;
+window.onChangeSongListSelector = onChangeSongListSelector;
+window.closeSongDialog = closeSongDialog;
+window.openSongDialog = openSongDialog;
+window.clickSongsDialog = clickSongsDialog;
+window.minimizeSongPicker = minimizeSongPicker;
+window.maximizeSongPicker = maximizeSongPicker;
+window.clickAttachedSongListToggle = clickAttachedSongListToggle;
+window.clickToggleFloatingSonglists = clickToggleFloatingSonglists;
+window.reloadSongsButtonActive = reloadSongsButtonActive;
+window.dataTableColumnPicker = dataTableColumnPicker;
+window.moveSongPickerToAttachedState = moveSongPickerToAttachedState;
+window.getFileExtension = getFileExtension;
+window.filterSongTable = filterSongTable;
+window.getFilterDataList = getFilterDataList;
+window.getFileTypeFaIcon = getFileTypeFaIcon;
+window.getFileType = getFileType;
+window.sortAndValue = sortAndValue;
+window.clearContentDiv = clearContentDiv;
+window.addImageToContentDiv = addImageToContentDiv;
+window.addAudioToContentDiv = addAudioToContentDiv;
+window.gtag = gtag;
+window.addVideoToContentDiv = addVideoToContentDiv;
+window.escapeRegExp = escapeRegExp;
