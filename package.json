@@ -4,7 +4,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "vitest": "^1.0.0",
-    "jsdom": "^24.0.0"
+    "@vitest/coverage-v8": "^1.6.1",
+    "vitest": "^1.0.0"
   }
 }
