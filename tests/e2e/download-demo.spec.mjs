@@ -1,57 +1,16 @@
 // E2E test: Download demo-video after dialog & consent
 import { test, expect } from '@playwright/test';
-
-const APP_URL = 'http://localhost:8000';
-
-// --- Reuse helpers from dialog-consent-screenshot.spec.mjs ---
-async function closeWelcomeDialog(page) {
-  const dialog = page.locator('#firstTimeUserDialog');
-  if (await dialog.isVisible().catch(() => false)) {
-    console.log("closeWelcomeDialog: firstTimeUserDialog is visible!");
-    let okBtn = dialog.locator('button, input[type="button"]', { hasText: /^ok$/i });
-    let okBtnCount = await okBtn.count();
-    if (okBtnCount === 0) {
-      console.log("closeWelcomeDialog: no OK button found by text");
-      okBtn = dialog.locator('input[type="button"][value="OK"]');
-      okBtnCount = await okBtn.count();
-    }
-    if (okBtnCount > 0) {
-      console.log("closeWelcomeDialog: found OK button");
-      const btn = okBtn.first();
-      await btn.scrollIntoViewIfNeeded().catch(() => {});
-      await page.waitForTimeout(100);
-      await btn.click({ force: true });
-      await page.waitForTimeout(300);
-    }
-  }
-}
-
-async function consentNotification(page) {
-  const consentBtn = page.locator('button, input[type="button"]', { hasText: /consent/i });
-  if (await consentBtn.isVisible().catch(() => false)) {
-    console.log("consentNotification: found consent button");
-    await consentBtn.scrollIntoViewIfNeeded().catch(() => {});
-    await page.waitForTimeout(100);
-    await consentBtn.click({ force: true });
-    await page.waitForTimeout(300);
-  }
-}
+import { closeWelcomeDialog, consentNotification } from './helpers.mjs';
+import { APP_URL, LION_PATH } from './constants.mjs';
 
 test.describe('Download demo', () => {
   test('should load app, handle dialogs, download demo-video, screenshot', async ({ page }) => {
-    page.on('console', msg => {
-        console.log(`[browser:${msg.type()}] ${msg.text()}`);
-    });
     await page.goto(APP_URL);
-    await page.screenshot({ path: 'test-artifacts/DD_a.png', fullPage: true });
     await closeWelcomeDialog(page);
-    await page.screenshot({ path: 'test-artifacts/DD_b_after_closeWelcomeDialog.png', fullPage: true });
     await consentNotification(page);
-    await page.screenshot({ path: 'test-artifacts/DD_c_after_consentNotification.png', fullPage: true });
 
     // Go directly to the lion mp3 URL
-    const lionUrl = 'http://localhost:8000/#1115399907&A%20Lion.mp3';
-    console.log('Playwright: navigating to lion mp3 URL:', lionUrl);
+    const lionUrl = APP_URL + LION_PATH;
     await page.goto(lionUrl);
     await page.screenshot({ path: 'test-artifacts/DD_d_after_lion_url.png', fullPage: true });
 
@@ -80,23 +39,18 @@ test.describe('Download demo', () => {
     }
     await page.screenshot({ path: 'test-artifacts/DD_g_after_audio_loadedmetadata.png', fullPage: true });
 
-    // 1. Assert: check addVideoToContentDiv was called (by inspecting browser logs)
-    const logs = [];
-    page.on('console', msg => {
-      if (msg.type() === 'log') logs.push(msg.text());
-    });
     // Wait a small moment for logs to flush
     await page.waitForTimeout(500);
 
-    // 2. Assert: div with id="timeSection" is visible
+    // Assert: div with id="timeSection" is visible
     const timeSection = await page.locator('#timeSection');
     await expect(timeSection).toBeVisible();
 
-    // 3. Assert: div with id="currentSong" contains 'A Lion'
+    // Assert: div with id="currentSong" contains 'A Lion'
     const currentSong = await page.locator('#currentSong');
     await expect(currentSong).toContainText('A Lion');
 
-    // 4-6. Assert: #markerList contains buttons with values 'Start', 'edit', and 'End'
+    // Assert: #markerList contains buttons with values 'Start', 'edit', and 'End'
     const markerList = await page.locator('#markerList');
     await expect(markerList).toBeVisible();
     // Find button with value="Start"

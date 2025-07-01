@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-const APP_URL = 'http://localhost:8000';
+import { APP_URL } from './constants.mjs';
 
 /**
  * Helper to close the first-time user dialog if it is present and visible.
