@@ -11,3 +11,9 @@ CNAME
 
 # Node ignored files
 node_modules/
+
+# Test Coverage reports
+coverage/
+# Playwright test outputs
+test-artifacts/
+test-results/
