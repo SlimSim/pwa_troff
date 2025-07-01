@@ -1,9 +1,9 @@
 // E2E test: Download demo-video after dialog & consent
 import { test, expect } from "@playwright/test";
-import { assertSongLoadedUI } from "./assertions-feature.mjs";
-import { waitForAudioLoaded } from "./assertions-atomic.mjs";
-import { closeWelcomeDialog, consentNotification } from "./helpers.mjs";
-import { APP_URL, LION_PATH } from "./constants.mjs";
+import { assertSongLoadedUI } from "./helpers/assertions-feature.mjs";
+import { waitForAudioLoaded } from "./helpers/assertions-atomic.mjs";
+import { closeWelcomeDialog, consentNotification } from "./helpers/helpers.mjs";
+import { APP_URL, LION_PATH } from "./helpers/constants.mjs";
 
 test.describe("Download demo", () => {
   test("should load app, handle dialogs, download demo-video, screenshot", async ({
