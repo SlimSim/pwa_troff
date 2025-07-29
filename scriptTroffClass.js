@@ -1,4 +1,5 @@
 import { nDB } from "./assets/internal/db.js";
+import { st } from "./assets/internal/st-script.js";
 import { DB, IO, createSongAudio } from "./script.js";
 import { addItem_NEW_2, Troff, ifGroupSongUpdateFirestore, firebaseUser, getFirebaseGroupDataFromDialog } from "./script.js";
 import { fileHandler, backendService } from "./file.js";

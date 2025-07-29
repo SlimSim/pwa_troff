@@ -20,6 +20,7 @@
 // "use strict";
 
 import log from "./utils/log.js";
+import { st } from "./assets/internal/st-script.js";
 import { setUiToSignIn, setUiToNotSignIn } from "./ui.js";
 import { nDB } from "./assets/internal/db.js";
 import { SongToGroup } from "./scriptASimple.js";

@@ -245,7 +245,3 @@ $( ".toggleNext" ).on( "click", ( e ) => { $( e.target ).closest( ".toggleNext" 
 
 
 export { st };
-export default st; // for backwards compatibility, remove in future versions
-
-
-window.st = st; // for backwards compatibility, remove in future versions
