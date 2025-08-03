@@ -1,7 +1,5 @@
 const st = {};
 
-import { IO } from "/script.js";
-
 
 $( document ).ready( function() {
 
@@ -117,8 +115,12 @@ $( document ).ready( function() {
 
 	},
 
+	blurHack = function() {
+		document.getElementById( "blur-hack" ).focus({ preventScroll: true });
+	},
+
 	dataSaveValue = function() {
-		IO.blurHack();
+		blurHack();
 		var $target = $( event.target ),
 			id = $target.attr( "id" ),
 			value = $target.val();

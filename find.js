@@ -15,6 +15,10 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+import { st } from "./assets/internal/st-script.js";
+import { environment } from "./assets/internal/environment.js";
+import { nDB } from "./assets/internal/db.js";
+
 
 $(document).ready( async function() {
 	"use strict";

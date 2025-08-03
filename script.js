@@ -1126,7 +1126,7 @@ var DB = new DBClass();
 var IO = new IOClass();
 var Rate = new RateClass();
 
-function loadExternalHtml(includes, callback) {
+const loadExternalHtml = (includes, callback) => {
 	if( includes.length == 0 ) {
 		return callback();
 	}
