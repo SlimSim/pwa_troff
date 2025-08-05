@@ -1022,9 +1022,9 @@ function addItem_NEW_2( key ) {
 
 		columns[ DATA_TABLE_COLUMNS.getPos( "DATA_INFO" ) ] = strDataInfo,
     columns[ DATA_TABLE_COLUMNS.getPos( "TYPE" ) ] = sortAndValue(faType, "<i class=\"fa " + faType + "\"></i>"),//type
-    columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,//Duration
+    columns[ DATA_TABLE_COLUMNS.getPos( "DURATION" ) ] = duration,
     columns[ DATA_TABLE_COLUMNS.getPos( "DISPLAY_NAME" ) ] = titleOrFileName,
-    columns[ DATA_TABLE_COLUMNS.getPos( "CUSTOM_NAME" ) ] = customName,
+    columns[ DATA_TABLE_COLUMNS.getPos( "CUSTOM_NAME" ) ] = customName || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "CHOREOGRAPHY" ) ] = choreography || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "CHOREOGRAPHER" ) ] = choreographer || "",
     columns[ DATA_TABLE_COLUMNS.getPos( "TITLE" ) ] = title || "",
@@ -1036,7 +1036,8 @@ function addItem_NEW_2( key ) {
     columns[ DATA_TABLE_COLUMNS.getPos( "LAST_MODIFIED" ) ] = lastModified,
     columns[ DATA_TABLE_COLUMNS.getPos( "FILE_SIZE" ) ] = size,
     columns[ DATA_TABLE_COLUMNS.getPos( "INFO" ) ] = info,
-    columns[ DATA_TABLE_COLUMNS.getPos( "EXTENSION" ) ] = "." + extension
+    columns[ DATA_TABLE_COLUMNS.getPos( "EXTENSION" ) ] = "." + extension;
+	
 		var newRow = $('#dataSongTable').DataTable().row.add( columns )
 		//.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
 		//						onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
