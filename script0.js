@@ -1020,6 +1020,7 @@ export {
   updateUploadedHistory,
   addGroupOwnerRow,
   emptyGroupDialog,
+  moveSongPickerToFloatingState,
   SongToGroup,
   isSafari,
   isIpad,

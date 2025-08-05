@@ -846,9 +846,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 		newElem.load();
 		newElem.pause();
 	} else {
-		log.d( "in else");
-		log.d("songData " + (typeof songData))
-		log.d("songData " + songData, nDB)
 		//för vanlig linux, bäst att använda songData hela tiden :)
 		newElem.setAttribute('src', songData );
 	}
