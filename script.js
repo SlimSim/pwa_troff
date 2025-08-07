@@ -766,7 +766,7 @@ const mergeSongListHistorys = function( songList1, songList2 ){
 
 function setSong2(/*fullPath, galleryId*/ path, type, songData ){
 
-	Troff.pauseSong();
+	Troff.pauseSong( false );
 
 	if( $( "#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT" ).hasClass( "active" ) ) {
 		$("#dataSongTable_filter").find( "input" ).val('');

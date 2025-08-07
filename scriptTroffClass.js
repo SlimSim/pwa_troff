@@ -1383,7 +1383,7 @@ class TroffClass {
 
   setWaitForLoad = (path, iGalleryId) => {
     if (this.strCurrentSong) {
-      this.pauseSong();
+      this.pauseSong(false);
       this.clearAllMarkers();
       this.clearAllStates();
     }
