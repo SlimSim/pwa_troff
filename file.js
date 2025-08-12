@@ -3,6 +3,7 @@ const backendService = {};
 const firebaseWrapper = {};
 
 import { ShowUserException } from "./script2.js";
+import { isSafari } from "./utils/browserEnv.js";
 
 $(() => {
   "use strict";
@@ -402,6 +403,5 @@ $(() => {
   //const app = firebase.initializeApp(environment.firebaseConfig);
   //const analytics = getAnalytics(app);
 });
-
 
 export { fileHandler, backendService, firebaseWrapper };

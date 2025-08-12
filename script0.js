@@ -17,7 +17,7 @@
 
 import { SongToGroup } from "./scriptASimple.js";
 import { nDB } from "./assets/internal/db.js";
-import { DB, Troff, createSongAudio, IO} from "./script.js";
+import { DB, Troff, createSongAudio, IO } from "./script.js";
 import log from "./utils/log.js";
 
 window.alert = (alert) => {
@@ -56,7 +56,8 @@ var vidFormats = [
 ];
 
 window.TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
-window.TROFF_SETTING_EXTENDED_MARKER_COLOR = "TROFF_SETTING_EXTENDED_MARKER_COLOR";
+window.TROFF_SETTING_EXTENDED_MARKER_COLOR =
+  "TROFF_SETTING_EXTENDED_MARKER_COLOR";
 window.TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR =
   "TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR";
 window.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR =
@@ -79,7 +80,8 @@ window.TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON =
   "TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON";
 window.TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER =
   "TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER";
-window.TROFF_SETTING_CONFIRM_DELETE_MARKER = "TROFF_SETTING_CONFIRM_DELETE_MARKER";
+window.TROFF_SETTING_CONFIRM_DELETE_MARKER =
+  "TROFF_SETTING_CONFIRM_DELETE_MARKER";
 window.TROFF_SETTING_UI_ARTIST_SHOW = "TROFF_SETTING_UI_ARTIST_SHOW";
 window.TROFF_SETTING_UI_TITLE_SHOW = "TROFF_SETTING_UI_TITLE_SHOW";
 window.TROFF_SETTING_UI_ALBUM_SHOW = "TROFF_SETTING_UI_ALBUM_SHOW";
@@ -87,16 +89,14 @@ window.TROFF_SETTING_UI_PATH_SHOW = "TROFF_SETTING_UI_PATH_SHOW";
 window.TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW =
   "TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW";
 window.TROFF_SETTING_UI_ZOOM_SHOW = "TROFF_SETTING_UI_ZOOM_SHOW";
-window.TROFF_SETTING_UI_LOOP_BUTTONS_SHOW = "TROFF_SETTING_UI_LOOP_BUTTONS_SHOW";
+window.TROFF_SETTING_UI_LOOP_BUTTONS_SHOW =
+  "TROFF_SETTING_UI_LOOP_BUTTONS_SHOW";
 window.TROFF_SETTING_SONG_COLUMN_TOGGLE = "TROFF_SETTING_SONG_COLUMN_TOGGLE";
-window.TROFF_SETTING_SONG_LISTS_LIST_SHOW = "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
+window.TROFF_SETTING_SONG_LISTS_LIST_SHOW =
+  "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
 window.TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
 window.TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
 window.TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME";
-
-const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const isIphone = navigator.userAgent.indexOf("iPhone") !== -1;
-const isIpad = navigator.userAgent.indexOf("iPad") !== -1;
 
 window.MARKER_COLOR_PREFIX = "markerColor";
 
@@ -863,12 +863,9 @@ function initSongTable() {
       event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
     })
     .on("click", "tbody tr", function (event) {
-      log.d("this", $(this));
-      log.d("event", $(event.currentTarget));
       let $td = $(event.target).closest("td, th");
-      
-      const songKey = $(event.currentTarget).data("song-key");
 
+      const songKey = $(event.currentTarget).data("song-key");
 
       if ($td.hasClass("onClickOpenEditSongDialog")) {
         openEditSongDialog(songKey);
@@ -1015,16 +1012,12 @@ function onChangeSongListSelector(event) {
   $target.val("-");
 }
 
-
-export { 
+export {
   updateUploadedHistory,
   addGroupOwnerRow,
   emptyGroupDialog,
   moveSongPickerToFloatingState,
   SongToGroup,
-  isSafari,
-  isIpad,
-  isIphone,
   songListDialogOpenExisting,
   openGroupDialog,
   initSongTable,
@@ -1054,13 +1047,10 @@ export {
   addAudioToContentDiv,
   gtag,
   addVideoToContentDiv,
-  escapeRegExp
- };
+  escapeRegExp,
+};
 
 window.SongToGroup = SongToGroup;
-window.isSafari = isSafari;
-window.isIpad = isIpad;
-window.isIphone = isIphone;
 window.songListDialogOpenExisting = songListDialogOpenExisting;
 window.openGroupDialog = openGroupDialog;
 window.initSongTable = initSongTable;
