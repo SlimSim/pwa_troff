@@ -34,13 +34,12 @@ import {
   dropSongOnSonglist,
   allowDrop,
   onDragleave,
-  dataTableColumnPicker,
   moveSongPickerToAttachedState,
   filterSongTable,
   getFilterDataList,
   sortAndValue,
 } from "./script0.js";
-
+import { dataTableColumnPicker } from "./dataTable.js";
 import { gtag } from "./services/analytics.js";
 import { isSafari } from "./utils/browserEnv.js";
 import { errorHandler } from "./script2.js";
@@ -605,7 +604,7 @@ class TroffClass {
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
-      $.notify(fileName + " was successfully added" );
+      $.notify(fileName + " was successfully added");
     } else {
       this.showImportData(fileName, serverId);
     }

@@ -609,29 +609,6 @@ function moveSongPickerToFloatingState() {
   $(".hideOnSongsDialogAttachedState").removeClass("hidden");
 }
 
-function dataTableColumnPicker(event) {
-  var $target = $(event.target);
-  // Get the column API object
-  var column = $("#dataSongTable").DataTable().column($(this).data("column"));
-
-  $target.toggleClass("active");
-
-  const columnVisibilityObject = {};
-
-  $("#columnToggleParent")
-    .children()
-    .map((i, v) => {
-      const dataColumn = $(v).data("column");
-      const columnId = DATA_TABLE_COLUMNS.list[dataColumn].id;
-      columnVisibilityObject[columnId] = $(v).hasClass("active");
-    });
-
-  DB.saveVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, columnVisibilityObject);
-
-  // Toggle the visibility
-  column.visible(!column.visible());
-}
-
 function dataTableShowOnlyColumnsForAttachedState() {
   $("#columnToggleParent")
     .children()
@@ -939,7 +916,6 @@ export {
   clickAttachedSongListToggle,
   clickToggleFloatingSonglists,
   reloadSongsButtonActive,
-  dataTableColumnPicker,
   moveSongPickerToAttachedState,
   filterSongTable,
   getFilterDataList,
