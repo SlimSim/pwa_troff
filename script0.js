@@ -31,10 +31,10 @@ import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
 import { auth, db, doc, setDoc, getDoc } from "./services/firebaseClient.js";
 import { escapeRegExp, getFileExtension } from "./utils/utils.js";
 import {
-  TROFF_SETTING_SONG_COLUMN_TOGGLE,
   TROFF_SETTING_SHOW_SONG_DIALOG,
   DATA_TABLE_COLUMNS,
 } from "./constants/constants.js";
+import { addGroupSongRow } from "./groupManagement.js";
 
 window.alert = (alert) => {
   log.w("Alert:", alert);
@@ -125,7 +125,7 @@ const openGroupDialog = async (songListObject) => {
 
   songListObject.owners?.forEach(addGroupOwnerRow);
 
-  songListObject.songs.forEach(addGroupSongRow_NEW);
+  songListObject.songs.forEach(addGroupSongRow);
 
   populateExampleSongsInGroupDialog(songListObject.songs);
 
@@ -168,52 +168,11 @@ const removeOwnerRow = (event) => {
   row.remove();
 };
 
-const removeSongRow = (event) => {
-  const row = $(event.target).closest(".form-group.row");
-  row.find(".groupDialogSong").addClass("bg-danger removed");
-  /*
-	notifyUndo( song + " was removed.", function() {
-		addGroupOwnerRow( song );
-	} );
-	*/
-
-  //row.remove();
-};
-
 const onClickAddNewSongToGroup = (event) => {
+  console.log("onClickAddNewSongToGroup TEST TEST TEST ");
   const target = $(event.target);
-  addGroupSongRow(undefined, { songKey: target.data("fullPath") });
+  addGroupSongRow({ fullPath: target.data("fullPath") });
   target.remove();
-};
-
-const addGroupSongRow = (songDocId, song) => {
-  const songRow = $("#groupDialogSongRowTemplate").children().clone(true, true);
-
-  songRow.find(".groupDialogRemoveSong").on("click", removeSongRow);
-  songRow
-    .find(".groupDialogSong")
-    .attr("readonly", true)
-    .addClass("form-control-plaintext")
-    .attr("songDocId", songDocId)
-    .val(song?.songKey);
-
-  $("#groupSongParent").append(songRow);
-};
-
-const addGroupSongRow_NEW = (songIdObject) => {
-  const songRow = $("#groupDialogSongRowTemplate").children().clone(true, true);
-
-  songRow.find(".groupDialogRemoveSong").on("click", removeSongRow);
-  songRow
-    .find(".groupDialogSong")
-    .attr("readonly", true)
-    .addClass("form-control-plaintext")
-    .addClass("text-inherit")
-    .data("galleryId", songIdObject.galleryId)
-    .data("firebaseSongDocId", songIdObject.firebaseSongDocId)
-    .val(songIdObject.fullPath);
-
-  $("#groupSongParent").append(songRow);
 };
 
 const addGroupOwnerRow = (owner) => {
