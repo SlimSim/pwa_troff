@@ -1,7 +1,6 @@
 # Default ignored files
 /shelf/
 CNAME
-/.idea/workspace.xml
 /assets/screenshots/InkScape/
 /assets/screenshots/Mockups/
 /assets/screenshots/extra/
@@ -11,3 +10,11 @@ CNAME
 
 # Node ignored files
 node_modules/
+
+# Editors/IDE
+/.idea/workspace.xml
+.vscode/
+
+# Archives and binary assets
+*.zip
+*.xcf
