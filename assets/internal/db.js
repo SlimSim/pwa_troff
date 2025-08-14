@@ -1,14 +1,12 @@
 const nDB = {
   // new data base
   setOnSong: function (songId, keys, value) {
-    console.log("setOnSong -> songId", songId, "keys", keys, "value", value);
     if (typeof keys != "object") {
       keys = [keys];
     }
 
     let valObject = [];
     valObject[0] = nDB.get(songId);
-    console.log("valObject", valObject);
     if (valObject[0] == undefined) {
       console.error(
         "setOnSong: songId does no exist in database. You are trying to set " +
@@ -46,7 +44,6 @@ const nDB = {
       valObject[i + 1] = valObject[i][keys[i]];
     }
 
-    console.log("valObject[keys.length - 1]", valObject[keys.length - 1]);
     if (typeof valObject[keys.length - 1] != "object") {
       valObject[keys.length - 1] = {};
     }

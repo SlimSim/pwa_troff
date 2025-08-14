@@ -41,7 +41,6 @@ import {
 import {
   initSongTable,
   closeSongDialog,
-  getFileExtension,
   getFileTypeFaIcon,
   getFileType,
   sortAndValue,
@@ -50,7 +49,7 @@ import {
   addAudioToContentDiv,
   addVideoToContentDiv,
 } from "./script0.js";
-
+import { getFileExtension } from "./utils/utils.js";
 import log from "./utils/log.js";
 import { initiateAllFirebaseGroups } from "./firebase.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";

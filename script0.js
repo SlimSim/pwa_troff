@@ -29,6 +29,7 @@ import { gtag } from "./services/analytics.js";
 import { cacheImplementation } from "./FileApiImplementation.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
 import { auth, db, doc, setDoc, getDoc } from "./services/firebaseClient.js";
+import { escapeRegExp, getFileExtension } from "./utils/utils.js";
 import {
   TROFF_SETTING_SONG_COLUMN_TOGGLE,
   TROFF_SETTING_SHOW_SONG_DIALOG,
@@ -331,10 +332,6 @@ function addVideoToContentDiv() {
   return video;
 }
 
-function getFileExtension(filename) {
-  return filename.substr(filename.lastIndexOf(".") + 1).toLowerCase();
-}
-
 function getFileType(filename) {
   var ext = getFileExtension(filename);
   if (imgFormats.indexOf(ext) >= 0) return "image";
@@ -422,12 +419,6 @@ function getFilterDataList() {
       }
     });
   return list;
-}
-
-function escapeRegExp(string) {
-  return string
-    .replace('"', '\\"') // wierd extra escaping of > \" <
-    .replace(/[".*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
 /**
@@ -950,7 +941,6 @@ export {
   reloadSongsButtonActive,
   dataTableColumnPicker,
   moveSongPickerToAttachedState,
-  getFileExtension,
   filterSongTable,
   getFilterDataList,
   getFileTypeFaIcon,
@@ -960,5 +950,4 @@ export {
   addImageToContentDiv,
   addAudioToContentDiv,
   addVideoToContentDiv,
-  escapeRegExp,
 };
