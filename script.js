@@ -19,9 +19,49 @@
 // - what could possibly go wrong?
 // "use strict";
 
+import {
+  auth,
+  db,
+  storage,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  doc,
+  signOut,
+  setDoc,
+  deleteDoc,
+  onSnapshot,
+  collection,
+  getDocs,
+  getDoc,
+  addDoc,
+  ref,
+  deleteObject,
+} from "./services/firebaseClient.js";
+import {
+  initSongTable,
+  closeSongDialog,
+  getFileExtension,
+  getFileTypeFaIcon,
+  getFileType,
+  sortAndValue,
+  clearContentDiv,
+  addImageToContentDiv,
+  addAudioToContentDiv,
+  gtag,
+  addVideoToContentDiv,
+} from "./script0.js";
+
 import log from "./utils/log.js";
+import { initiateAllFirebaseGroups } from "./firebase.js";
+import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
+import { cacheImplementation } from "./FileApiImplementation.js";
 import { st } from "./assets/internal/st-script.js";
-import { setUiToSignIn, setUiToNotSignIn } from "./ui.js";
+import {
+  setUiToSignIn,
+  setUiToNotSignIn,
+  updateGroupNotification,
+} from "./ui.js";
 import { nDB } from "./assets/internal/db.js";
 import { SongToGroup } from "./scriptASimple.js";
 import { environment } from "./assets/internal/environment.js";
@@ -34,13 +74,11 @@ import RateClass from "./scriptRateClass.js";
 
 import { firebaseWrapper, fileHandler } from "./file.js";
 import { ShowUserException } from "./script2.js";
+import { DATA_TABLE_COLUMNS } from "./constants/constants.js";
 
 let firebaseUser = null;
 
-const app = firebase.initializeApp(environment.firebaseConfig),
-  auth = app.auth(),
-  storage = app.storage();
-
+// replace your current init:
 SongToGroup.initiateFromDb();
 
 SongToGroup.onSongAdded((event) => {
@@ -55,7 +93,7 @@ SongToGroup.onSongAdded((event) => {
   }
 });
 
-const googleSignIn = function () {
+const googleSignIn = async function () {
   if (isSafari) {
     IO.alert(
       "Safari and iOS does not support sign in",
@@ -66,23 +104,19 @@ const googleSignIn = function () {
     return;
   }
 
-  auth
-    .signInWithPopup(new firebase.auth.GoogleAuthProvider())
-    .then((result) => {
-      // Signed in successfully
-      firebaseUser = result.user;
-      setUiToSignIn(firebaseUser);
-      initiateAllFirebaseGroups();
-    })
-    .catch((error) => {
-      // Handle Errors here.
-      log.e("Error during sign-in:", error);
-    });
+  try {
+    const result = await signInWithPopup(auth, new GoogleAuthProvider());
+    firebaseUser = result.user;
+    setUiToSignIn(firebaseUser);
+    const snap = await initiateAllFirebaseGroups(firebaseUser.email);
+    initiateCollections(snap);
+  } catch (error) {
+    log.e("Error during sign-in:", error);
+  }
 };
 
-const signOut = function () {
-  auth
-    .signOut()
+const doSignOut = function () {
+  signOut(auth)
     .then(() => {
       // Sign-out successful
       // ui will be reset by the auth.onAuthStateChanged-function
@@ -91,15 +125,6 @@ const signOut = function () {
       // An error happened.
       log.e("Error during sign-out:", error);
     });
-};
-
-const initiateAllFirebaseGroups = async function () {
-  firebase
-    .firestore()
-    .collection("Groups")
-    .where("owners", "array-contains", firebaseUser.email)
-    .get()
-    .then(initiateCollections);
 };
 
 const initiateCollections = async function (querySnapshot) {
@@ -113,9 +138,11 @@ const initiateCollections = async function (querySnapshot) {
 
   await Promise.all(
     querySnapshot.docs.map(async (doc) => {
-      const subCollection = await doc.ref.collection("Songs").get();
+      const subCollection = await getDocs(collection(doc.ref, "Songs"));
+      // const subCollection = await doc.ref.collection("Songs").get();
 
-      doc.ref.onSnapshot(groupDocUpdate);
+      // doc.ref.onSnapshot(groupDocUpdate);
+      onSnapshot(doc.ref, groupDocUpdate);
       const group = doc.data();
 
       const songListObject = {
@@ -141,7 +168,8 @@ const initiateCollections = async function (querySnapshot) {
           songDoc.data().fileUrl
         );
 
-        songDoc.ref.onSnapshot(songDocUpdate);
+        onSnapshot(songDoc.ref, songDocUpdate);
+        // songDoc.ref.onSnapshot(songDocUpdate);
       });
 
       const exists = $("#songListList").find(
@@ -173,6 +201,11 @@ const initiateCollections = async function (querySnapshot) {
 };
 
 const setGroupAsSonglist = function (groupDocId) {
+  const songLists = JSON.parse(nDB.get("straoSongLists"));
+  if (!songLists.find((sl) => sl.firebaseGroupDocId == groupDocId)) {
+    return;
+  }
+
   SongToGroup.remove(undefined, groupDocId);
 
   DB.setSonglistAsNotGroup(groupDocId);
@@ -198,7 +231,7 @@ const setGroupAsSonglist = function (groupDocId) {
 };
 
 const groupDocUpdate = function (doc) {
-  if (!doc.exists) {
+  if (!doc.exists()) {
     setGroupAsSonglist(doc.id);
     return;
   }
@@ -235,7 +268,7 @@ const songDocUpdate = async function (doc) {
   const songDocId = doc.id;
   const groupDocId = doc.ref.parent.parent.id;
 
-  if (!doc.exists) {
+  if (!doc.exists()) {
     const fileName = SongToGroup.getFileNameFromSongDocId(songDocId);
     const groupName = $(`[group-id="${groupDocId}"]`).text();
     $.notify(
@@ -262,7 +295,7 @@ const songDocUpdate = async function (doc) {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, songKey);
     }
     addItem_NEW_2(songKey);
-    $.notify(songKey + " was successfully added");
+    $.notify(songKey + " was successfully added 1");
   }
 
   const fileUrl = songData.fileUrl;
@@ -419,18 +452,21 @@ const groupDialogSave = async function (event) {
     delete groupData.id;
 
     if (groupDocId != null) {
-      await firebase
-        .firestore()
-        .collection("Groups")
-        .doc(groupDocId)
-        .set(groupData);
+      // await firebase
+      //   .firestore()
+      //   .collection("Groups")
+      //   .doc(groupDocId)
+      //   .set(groupData);
+      await setDoc(doc(db, "Groups", groupDocId), groupData);
     } else {
-      const groupRef = await firebase
-        .firestore()
-        .collection("Groups")
-        .add(groupData);
+      // const groupRef = await firebase
+      //   .firestore()
+      //   .collection("Groups")
+      //   .add(groupData);
+      const groupRef = await addDoc(collection(db, "Groups"), groupData);
 
-      groupRef.onSnapshot(groupDocUpdate);
+      // groupRef.onSnapshot(groupDocUpdate);
+      onSnapshot(groupRef, groupDocUpdate);
 
       groupDocId = groupRef.id;
     }
@@ -487,31 +523,41 @@ const removeSongFileFromFirebaseGroupStorage = async (
   groupDocId,
   storageFileName
 ) => {
-  return new Promise((resolve, reject) => {
-    let storageRef = firebase
-      .storage()
-      .ref("Groups/" + groupDocId + "/" + storageFileName);
+  // todo: kolla om jag behöver returnera ett promise, eller eftersom jag bytt till en await funktion (ist för en callback) så kan jag ta bort det.!
+  return new Promise(async (resolve, reject) => {
+    // let storageRef = firebase
+    //   .storage()
+    //   .ref("Groups/" + groupDocId + "/" + storageFileName);
+    const storageRef = ref(storage, `Groups/${groupDocId}/${storageFileName}`);
 
-    storageRef
-      .delete()
-      .then(() => {
-        resolve();
-      })
-      .catch((error) => {
-        log.e(storageFileName + " could not be deleted!", error);
-        reject();
-      });
+    // storageRef
+    //   .delete()
+    //   .then(() => {
+    //     resolve();
+    //   })
+    //   .catch((error) => {
+    //     log.e(storageFileName + " could not be deleted!", error);
+    //     reject();
+    //   });
+    try {
+      await deleteObject(storageRef);
+    } catch (error) {
+      log.e(storageFileName + " could not be deleted!", error);
+      reject();
+    }
+    resolve();
   });
 };
 
 const removeSongDataFromFirebaseGroup = (groupDocId, songDocId) => {
-  return firebase
-    .firestore()
-    .collection("Groups")
-    .doc(groupDocId)
-    .collection("Songs")
-    .doc(songDocId)
-    .delete();
+  //   return firebase
+  //     .firestore()
+  //     .collection("Groups")
+  //     .doc(groupDocId)
+  //     .collection("Songs")
+  //     .doc(songDocId)
+  //     .delete();
+  return deleteDoc(doc(db, "Groups", groupDocId, "Songs", songDocId));
 };
 
 const removeSongFromFirebaseGroup = async function (
@@ -519,6 +565,7 @@ const removeSongFromFirebaseGroup = async function (
   groupDocId,
   songDocId
 ) {
+  // this can be re-written to not use new promise, se https://chatgpt.com/c/689c4317-5084-8321-817c-d43bb60e4865
   return new Promise(async function (resolve, reject) {
     await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
 
@@ -544,17 +591,26 @@ const onOnline = function () {
     // This is to send local changes IF the server does NOT
     // have new updates
     changedSongList.forEach((changedSong) => {
-      firebase
-        .firestore()
-        .collection("Groups")
-        .doc(changedSong.groupDocId)
-        .collection("Songs")
-        .doc(changedSong.songDocId)
-        .get()
-        .then(songDocUpdate);
+      // firebase
+      //   .firestore()
+      //   .collection("Groups")
+      //   .doc(changedSong.groupDocId)
+      //   .collection("Songs")
+      //   .doc(changedSong.songDocId)
+      //   .get()
+      //   .then(songDocUpdate);
       // There is 2 callbacks,
       // it is because firebase is beign updated and the
       // it sends out the update-calblack, so all in good order!
+      getDoc(
+        doc(
+          db,
+          "Groups",
+          changedSong.groupDocId,
+          "Songs",
+          changedSong.songDocId
+        )
+      ).then(songDocUpdate);
     });
   }, 42);
 };
@@ -581,13 +637,14 @@ const saveSongDataToFirebaseGroup = async function (
     );
 
     if (navigator.onLine) {
-      firebase
-        .firestore()
-        .collection("Groups")
-        .doc(groupDocId)
-        .collection("Songs")
-        .doc(songDocId)
-        .set(songData);
+      // firebase
+      //   .firestore()
+      //   .collection("Groups")
+      //   .doc(groupDocId)
+      //   .collection("Songs")
+      //   .doc(songDocId)
+      //   .set(songData);
+      await setDoc(doc(db, "Groups", groupDocId, "Songs", songDocId), songData);
     } else {
       $.notify(
         "You are offline, your changes will be synced online once you come online!",
@@ -606,16 +663,21 @@ const saveSongDataToFirebaseGroup = async function (
     // TODO! kolla att jag är online!
     //songData.latestUploadToFirebase = Date.now();
 
-    let docRef = await firebase
-      .firestore()
-      .collection("Groups")
-      .doc(groupDocId)
-      .collection("Songs")
-      .add(songData);
+    // let docRef = await firebase
+    //   .firestore()
+    //   .collection("Groups")
+    //   .doc(groupDocId)
+    //   .collection("Songs")
+    //   .add(songData);
+    const docRef = await addDoc(
+      collection(db, "Groups", groupDocId, "Songs"),
+      songData
+    );
 
     SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
 
-    docRef.onSnapshot(songDocUpdate);
+    // docRef.onSnapshot(songDocUpdate);
+    onSnapshot(docRef, songDocUpdate);
     const songList = $("#songListList")
       .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
       .data("songList");
@@ -667,7 +729,8 @@ const ifGroupSongUpdateFirestore = function (songKey) {
   });
 };
 
-auth.onAuthStateChanged((user) => {
+// auth.onAuthStateChanged((user) => {
+onAuthStateChanged(auth, async (user) => {
   firebaseUser = user;
   if (user == null) {
     setUiToNotSignIn();
@@ -676,7 +739,8 @@ auth.onAuthStateChanged((user) => {
 
   // The signed-in user info.
   setUiToSignIn(firebaseUser);
-  initiateAllFirebaseGroups();
+  const snap = await initiateAllFirebaseGroups(firebaseUser.email);
+  initiateCollections(snap);
 });
 
 const fileUrlToStorageFileName = function (downloadUrl) {
@@ -830,35 +894,6 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData) {
 
   updateGroupNotification(path);
 } //end setSong2
-
-function updateGroupNotification(songKey) {
-  const nrGroups = SongToGroup.getNrOfGroupsThisSongIsIn(songKey);
-  if (nrGroups == 0) {
-    $("#currentGroupsParent").addClass("hidden");
-    $(".groupIndicationDiv").removeClass("groupIndication");
-    return;
-  }
-  $("#currentGroupsParent").removeClass("hidden");
-
-  $(".groupIndicationDiv").addClass("groupIndication");
-
-  $(".currentNrGroups").text(nrGroups);
-
-  const groups = SongToGroup.getSongGroupList(songKey);
-
-  const groupNames = groups.map((group) => {
-    return $("#songListList")
-      .find(`[data-firebase-group-doc-id="${group.groupDocId}"]`)
-      .text();
-  });
-
-  $("#currentNrGroupsPluralS").toggleClass("hidden", nrGroups == 1);
-
-  $("#currentGroups").empty();
-  groupNames.forEach((name) => {
-    $("#currentGroups").append($("<li>").addClass("pt-2").text(name));
-  });
-}
 
 function updateVersionLink(path) {
   const fileNameUri = encodeURI(path);
@@ -1205,9 +1240,13 @@ $.fn.removeClassStartingWith = function (filter) {
 
 export {
   Troff,
+  addSongsToSonglist,
   DB,
   IO,
   Rate,
+  removeSongDataFromFirebaseGroup,
+  doSignOut,
+  mergeSongListHistorys,
   googleSignIn,
   onOnline,
   createSongAudio,

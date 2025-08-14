@@ -15,10 +15,24 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { SongToGroup } from "./scriptASimple.js";
 import { nDB } from "./assets/internal/db.js";
-import { DB, Troff, createSongAudio, IO } from "./script.js";
+import {
+  DB,
+  Troff,
+  createSongAudio,
+  IO,
+  addSongsToSonglist,
+  mergeSongListHistorys,
+} from "./script.js";
 import log from "./utils/log.js";
+import { cacheImplementation } from "./FileApiImplementation.js";
+import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
+import { auth, db, doc, setDoc, getDoc } from "./services/firebaseClient.js";
+import {
+  TROFF_SETTING_SONG_COLUMN_TOGGLE,
+  TROFF_SETTING_SHOW_SONG_DIALOG,
+  DATA_TABLE_COLUMNS,
+} from "./constants/constants.js";
 
 window.alert = (alert) => {
   log.w("Alert:", alert);
@@ -54,88 +68,6 @@ var vidFormats = [
   "wmv",
   "ogg",
 ];
-
-window.TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
-window.TROFF_SETTING_EXTENDED_MARKER_COLOR =
-  "TROFF_SETTING_EXTENDED_MARKER_COLOR";
-window.TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR =
-  "TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR";
-window.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR =
-  "TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR";
-window.TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR =
-  "TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR";
-window.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR =
-  "TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR";
-window.TROFF_SETTING_ENTER_RESET_COUNTER = "TROFF_SETTING_ENTER_RESET_COUNTER";
-window.TROFF_SETTING_SPACE_RESET_COUNTER = "TROFF_SETTING_SPACE_RESET_COUNTER";
-window.TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER =
-  "TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER";
-window.TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR =
-  "TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR";
-window.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR =
-  "TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR";
-window.TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR =
-  "TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR";
-window.TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON =
-  "TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON";
-window.TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER =
-  "TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER";
-window.TROFF_SETTING_CONFIRM_DELETE_MARKER =
-  "TROFF_SETTING_CONFIRM_DELETE_MARKER";
-window.TROFF_SETTING_UI_ARTIST_SHOW = "TROFF_SETTING_UI_ARTIST_SHOW";
-window.TROFF_SETTING_UI_TITLE_SHOW = "TROFF_SETTING_UI_TITLE_SHOW";
-window.TROFF_SETTING_UI_ALBUM_SHOW = "TROFF_SETTING_UI_ALBUM_SHOW";
-window.TROFF_SETTING_UI_PATH_SHOW = "TROFF_SETTING_UI_PATH_SHOW";
-window.TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW =
-  "TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW";
-window.TROFF_SETTING_UI_ZOOM_SHOW = "TROFF_SETTING_UI_ZOOM_SHOW";
-window.TROFF_SETTING_UI_LOOP_BUTTONS_SHOW =
-  "TROFF_SETTING_UI_LOOP_BUTTONS_SHOW";
-window.TROFF_SETTING_SONG_COLUMN_TOGGLE = "TROFF_SETTING_SONG_COLUMN_TOGGLE";
-window.TROFF_SETTING_SONG_LISTS_LIST_SHOW =
-  "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
-window.TROFF_CURRENT_STATE_OF_SONG_LISTS = "TROFF_CURRENT_STATE_OF_SONG_LISTS";
-window.TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
-window.TROFF_TROFF_DATA_ID_AND_FILE_NAME = "TROFF_TROFF_DATA_ID_AND_FILE_NAME";
-
-window.MARKER_COLOR_PREFIX = "markerColor";
-
-window.DATA_TABLE_COLUMNS = {
-  list: [
-    { id: "CHECKBOX", header: "Checkbox", default: true },
-    { id: "EDIT", header: "Edit", default: true },
-    { id: "TYPE", header: "Type", default: true },
-    { id: "DURATION", header: "Duration", default: true },
-    {
-      id: "DISPLAY_NAME",
-      header: "Name",
-      default: true,
-      showOnAttachedState: true,
-    },
-    { id: "CUSTOM_NAME", header: "Custom Name", default: false },
-    { id: "CHOREOGRAPHY", header: "Choreography", default: false },
-    { id: "CHOREOGRAPHER", header: "Choreographer", default: false },
-    { id: "TITLE", header: "Title", default: false },
-    { id: "ARTIST", header: "Artist", default: true },
-    { id: "ALBUM", header: "Album", default: true },
-    { id: "TEMPO", header: "Tempo", default: true },
-    { id: "GENRE", header: "Genre", default: true },
-    { id: "TAGS", header: "Tags", default: false },
-    { id: "LAST_MODIFIED", header: "Modified", default: false },
-    { id: "FILE_SIZE", header: "Size", default: false },
-    { id: "INFO", header: "Song info", default: false },
-    { id: "EXTENSION", header: "File type", default: false },
-    { id: "DATA_INFO", header: "dataInfo", default: false, hideFromUser: true },
-  ],
-  getPos: (id) => {
-    for (let i = 0; i < window.DATA_TABLE_COLUMNS.list.length; i++) {
-      if (id == window.DATA_TABLE_COLUMNS.list[i].id) {
-        return i;
-      }
-    }
-    return -1;
-  },
-};
 
 const populateExampleSongsInGroupDialog = (songs) => {
   // TODO: fixa bättre sätt att lägga på låtarna!
@@ -317,13 +249,9 @@ const nrIdsInHistoryList = (historyList) => {
 };
 
 const updateUploadedHistory = async () => {
-  if (firebaseUser == null) return;
-  const snapshot = await firebase
-    .firestore()
-    .collection("UserData")
-    .doc(firebaseUser.uid)
-    .get();
-  let userData = snapshot.exists ? snapshot.data() : {};
+  if (auth.currentUser == null) return;
+  const snapshot = await getDoc(doc(db, "UserData", auth.currentUser.uid));
+  let userData = snapshot.exists() ? snapshot.data() : {};
 
   const uploadedHistory = userData.uploadedHistory || [];
   const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
@@ -338,11 +266,7 @@ const updateUploadedHistory = async () => {
     // totalList kanske ska ränsa totalList från onödiga saker???
     // beroende på hur mycket plats det tar upp i firebase...
     userData.uploadedHistory = totalList;
-    firebase
-      .firestore()
-      .collection("UserData")
-      .doc(firebaseUser.uid)
-      .set(userData);
+    await setDoc(doc(db, "UserData", auth.currentUser.uid), userData);
   }
 };
 
@@ -856,7 +780,7 @@ function initSongTable() {
         event.dataTransfer = event.originalEvent.dataTransfer;
       }
 
-      var jsonDataInfo = dataSongTable.row($(this)).data()[
+      const jsonDataInfo = dataSongTable.row($(event.currentTarget)).data()[
         DATA_TABLE_COLUMNS.getPos("DATA_INFO")
       ];
 
@@ -1017,7 +941,6 @@ export {
   addGroupOwnerRow,
   emptyGroupDialog,
   moveSongPickerToFloatingState,
-  SongToGroup,
   songListDialogOpenExisting,
   openGroupDialog,
   initSongTable,
@@ -1049,35 +972,3 @@ export {
   addVideoToContentDiv,
   escapeRegExp,
 };
-
-window.SongToGroup = SongToGroup;
-window.songListDialogOpenExisting = songListDialogOpenExisting;
-window.openGroupDialog = openGroupDialog;
-window.initSongTable = initSongTable;
-window.dropSongOnSonglist = dropSongOnSonglist;
-window.allowDrop = allowDrop;
-window.onDragleave = onDragleave;
-window.clickButtNewSongList = clickButtNewSongList;
-window.onChangeSongListSelector = onChangeSongListSelector;
-window.closeSongDialog = closeSongDialog;
-window.openSongDialog = openSongDialog;
-window.clickSongsDialog = clickSongsDialog;
-window.minimizeSongPicker = minimizeSongPicker;
-window.maximizeSongPicker = maximizeSongPicker;
-window.clickAttachedSongListToggle = clickAttachedSongListToggle;
-window.clickToggleFloatingSonglists = clickToggleFloatingSonglists;
-window.reloadSongsButtonActive = reloadSongsButtonActive;
-window.dataTableColumnPicker = dataTableColumnPicker;
-window.moveSongPickerToAttachedState = moveSongPickerToAttachedState;
-window.getFileExtension = getFileExtension;
-window.filterSongTable = filterSongTable;
-window.getFilterDataList = getFilterDataList;
-window.getFileTypeFaIcon = getFileTypeFaIcon;
-window.getFileType = getFileType;
-window.sortAndValue = sortAndValue;
-window.clearContentDiv = clearContentDiv;
-window.addImageToContentDiv = addImageToContentDiv;
-window.addAudioToContentDiv = addAudioToContentDiv;
-window.gtag = gtag;
-window.addVideoToContentDiv = addVideoToContentDiv;
-window.escapeRegExp = escapeRegExp;

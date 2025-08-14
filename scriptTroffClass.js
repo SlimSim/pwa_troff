@@ -1,22 +1,69 @@
 import { nDB } from "./assets/internal/db.js";
 import { st } from "./assets/internal/st-script.js";
-import { DB, IO, createSongAudio } from "./script.js";
 import {
-  addItem_NEW_2,
+  db,
+  doc,
+  deleteDoc,
+  ref,
+  listAll,
+  deleteObject,
+  storage,
+  setDoc,
+} from "./services/firebaseClient.js";
+import {
   Troff,
+  addSongsToSonglist,
+  DB,
+  IO,
+  removeSongDataFromFirebaseGroup,
+  createSongAudio,
+  addItem_NEW_2,
   ifGroupSongUpdateFirestore,
-  firebaseUser,
   getFirebaseGroupDataFromDialog,
+  firebaseUser,
 } from "./script.js";
 import { fileHandler, backendService } from "./file.js";
+import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
+import { cacheImplementation } from "./FileApiImplementation.js";
 import {
-  moveSongPickerToFloatingState,
   updateUploadedHistory,
+  addGroupOwnerRow,
   emptyGroupDialog,
+  moveSongPickerToFloatingState,
+  songListDialogOpenExisting,
+  dropSongOnSonglist,
+  allowDrop,
+  onDragleave,
+  dataTableColumnPicker,
+  moveSongPickerToAttachedState,
+  filterSongTable,
+  getFilterDataList,
+  sortAndValue,
+  gtag,
 } from "./script0.js";
 import { isSafari } from "./utils/browserEnv.js";
 import { errorHandler } from "./script2.js";
 import log from "./utils/log.js";
+import {
+  TROFF_SETTING_SET_THEME,
+  TROFF_SETTING_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR,
+  TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR,
+  TROFF_SETTING_ENTER_RESET_COUNTER,
+  TROFF_SETTING_SPACE_RESET_COUNTER,
+  TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+  TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
+  TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER,
+  TROFF_SETTING_SONG_COLUMN_TOGGLE,
+  TROFF_CURRENT_STATE_OF_SONG_LISTS,
+  TROFF_TROFF_DATA_ID_AND_FILE_NAME,
+  MARKER_COLOR_PREFIX,
+  DATA_TABLE_COLUMNS,
+} from "./constants/constants.js";
 
 function clickSongList_NEW(event) {
   IO.blurHack();
@@ -171,7 +218,7 @@ class TroffClass {
           createSongAudio(key);
         }
 
-        $.notify(key + " was successfully added");
+        $.notify(key + " was successfully added 2");
       });
     });
 
@@ -558,7 +605,7 @@ class TroffClass {
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
-      $.notify(fileName + " was successfully added");
+      $.notify(fileName + " was successfully added 3");
     } else {
       this.showImportData(fileName, serverId);
     }
@@ -612,7 +659,7 @@ class TroffClass {
     await createSongAudio(troffData.fileName);
     this.askIfAddSongsToCurrentSongList(troffData.fileName);
     addItem_NEW_2(troffData.fileName);
-    $.notify(troffData.fileName + " was successfully added");
+    $.notify(troffData.fileName + " was successfully added 4");
   };
 
   editSongDialogSave = (event) => {
@@ -1699,11 +1746,7 @@ class TroffClass {
     }
 
     emptyGroupDialog();
-    await firebase
-      .firestore()
-      .collection("Groups")
-      .doc(groupDocId)
-      .set(groupData);
+    await setDoc(doc(db, "Groups", groupDocId), groupData);
   };
 
   onClickShareSonglist = (event) => {
@@ -1737,14 +1780,18 @@ class TroffClass {
     $("#groupDialog").addClass("hidden");
     const groupDocId = $("#groupDialogName").data("groupDocId");
 
-    const storageRef = firebase.storage().ref(`Groups/${groupDocId}`);
+    const folderRef = ref(storage, `Groups/${groupDocId}`);
 
-    await storageRef.listAll().then(async (listResults) => {
-      const promises = listResults.items.map((item) => {
-        return item.delete();
-      });
-      return await Promise.all(promises);
-    });
+    const { items, prefixes } = await listAll(folderRef);
+
+    // delete all objects in this folder
+    await Promise.all(items.map((itemRef) => deleteObject(itemRef)));
+
+    // OPTIONAL: if you might have subfolders, recurse into prefixes
+    for (const p of prefixes) {
+      const { items: subItems } = await listAll(p);
+      await Promise.all(subItems.map((r) => deleteObject(r)));
+    }
 
     const songDocIds = [];
     $("#groupSongParent")
@@ -1763,7 +1810,7 @@ class TroffClass {
     });
     await Promise.all(removeDataPromise);
 
-    firebase.firestore().collection("Groups").doc(groupDocId).delete();
+    await deleteDoc(doc(db, "Groups", groupDocId));
   };
 
   IO_removeSonglist = async () => {

@@ -4,6 +4,17 @@ const firebaseWrapper = {};
 
 import { ShowUserException } from "./script2.js";
 import { isSafari } from "./utils/browserEnv.js";
+import {
+  db,
+  getDoc,
+  doc,
+  setDoc,
+  storage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "./services/firebaseClient.js";
+import { cacheImplementation } from "./FileApiImplementation.js";
 
 $(() => {
   "use strict";
@@ -166,16 +177,15 @@ $(() => {
 	/************************************************/
 
   backendService.getTroffData = async (troffDataId, fileName) => {
-    const db = firebase.firestore();
-    const troffDataReference = db.collection("TroffData").doc(troffDataId);
-
-    return troffDataReference.get().then((doc) => {
-      if (!doc.exists) {
-        throw new ShowUserException(`Could not find song "${fileName}", with id "${troffDataId}", on the server,
-          perhaps the URL is wrong or the song has been removed`);
-      }
-      return doc.data();
-    });
+    const troffDocRef = doc(db, "TroffData", troffDataId);
+    const snapshot = await getDoc(troffDocRef);
+    if (!snapshot.exists()) {
+      throw new ShowUserException(
+        `Could not find song "${fileName}", with id "${troffDataId}", on the server,
+          perhaps the URL is wrong or the song has been removed`
+      );
+    }
+    return snapshot.data();
   };
 
   fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
@@ -261,7 +271,6 @@ $(() => {
     const file = new File([myBlob], fileKey, { type: myBlob.type });
 
     const fileHash = await hashFile(file);
-
     const fileUrl = await firebaseWrapper
       .uploadFile(fileHash, file, storageDir)
       .catch((error) => {
@@ -332,76 +341,90 @@ $(() => {
     }
   };
 
+  const checkUploadedFileAndGetURL = async (fileRef) => {
+    try {
+      // 1) If it already exists, this succeeds immediately
+      const existingUrl = await getDownloadURL(fileRef);
+      return existingUrl;
+    } catch (err) {
+      if (err.code !== "storage/object-not-found") {
+        // Not a "missing object" case; surface the real error
+        throw err;
+      }
+      return null;
+    }
+  };
+
   firebaseWrapper.uploadFile = async (
     fileId,
     file,
     storageDir = "TroffFiles"
   ) => {
-    const storageRef = firebase.storage().ref(storageDir);
-    const fileRef = storageRef.child(fileId);
-    const task = fileRef.put(file);
+    const fileRef = ref(storage, `${storageDir}/${fileId}`);
 
+    const existingUrl = await checkUploadedFileAndGetURL(fileRef);
+    if (existingUrl) {
+      return existingUrl;
+    }
+
+    const task = uploadBytesResumable(fileRef, file);
     return new Promise((resolve, reject) => {
       task.on(
         "state_changed",
         (snapshot) => {
-          // Observe state change events such as progress, pause, and resume
-          // Get task progress, including the number of bytes uploaded
-          // and the total number of bytes to be uploaded
-          if (typeof firebaseWrapper.onUploadProgressUpdate == "function") {
+          if (typeof firebaseWrapper.onUploadProgressUpdate === "function") {
             const progress =
               (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             firebaseWrapper.onUploadProgressUpdate(Math.floor(progress));
           }
         },
-        (error) => {
-          task.snapshot.ref
-            .getDownloadURL()
-            .then((downloadURL) => {
-              resolve(downloadURL);
-            })
-            .catch((x) => {
-              reject(
-                new ShowUserException(`Can not upload the file to the server.
-								The server says: "${error.code}"`)
-              );
-            });
-        },
-        () => {
-          task.snapshot.ref.getDownloadURL().then((downloadURL) => {
+        async (error) => {
+          try {
+            const downloadURL = await getDownloadURL(task.snapshot.ref);
             resolve(downloadURL);
-          });
+          } catch (x) {
+            log.e(error);
+            reject(
+              new ShowUserException(`Can not upload the file to the server.
+              The server says: "${error.code}"`)
+            );
+          }
+        },
+        async () => {
+          try {
+            const url = await getDownloadURL(task.snapshot.ref);
+            resolve(url);
+          } catch (e) {
+            reject(e);
+          }
         }
       );
     });
   };
 
-  firebaseWrapper.uploadTroffData = (troffData) => {
-    const db = firebase.firestore();
-
-    return db
-      .collection("TroffData")
-      .doc(String(troffData.id))
-      .set(troffData)
-      .then((x) => {
-        return troffData;
-      })
-      .catch((error) => {
-        return backendService
-          .getTroffData("" + troffData.id, troffData.fileName)
-          .then((troffDataInFirebase) => {
-            if (troffDataInFirebase) {
-              return troffDataInFirebase;
-            }
-            throw new ShowUserException(`Can not upload the markers and settings to the server.
-								The server says: "${error.message}"`);
-          });
-      });
+  firebaseWrapper.uploadTroffData = async (troffData) => {
+    try {
+      await setDoc(doc(db, "TroffData", String(troffData.id)), troffData);
+      return troffData;
+    } catch (error) {
+      log.e(error);
+      try {
+        const troffDataInFirebase = await backendService.getTroffData(
+          String(troffData.id),
+          troffData.fileName
+        );
+        if (troffDataInFirebase) {
+          return troffDataInFirebase;
+        }
+      } catch (_) {
+        // ignore and rethrow below
+      }
+      throw new ShowUserException(
+        `Can not upload the markers and settings to the server.
+								The server says: "${error.message}"`
+      );
+    }
   };
-
-  // Initialize Firebase:
-  //const app = firebase.initializeApp(environment.firebaseConfig);
-  //const analytics = getAnalytics(app);
 });
 
 export { fileHandler, backendService, firebaseWrapper };

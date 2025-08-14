@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 	This file is part of Troff.
 
@@ -16,150 +16,325 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<html lang="en-US" class="overflow-hidden" >
-<head>
+<html lang="en-US" class="overflow-hidden">
+  <head>
+    <title>Update Troff on iOS</title>
+    <meta charset="UTF-8" />
+    <meta
+      name="description"
+      content="How to update the music player Troff on iOS and Safari"
+    />
+    <meta
+      name="keywords"
+      content="Music player, Troff, Loop, Repeat, Training, How To"
+    />
 
-	<title>Update Troff on iOS</title>
-	<meta charset="UTF-8">
-	<meta name="description" content="How to update the music player Troff on iOS and Safari">
-	<meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, How To">
+    <link rel="icon" href="assets/logos/favicon.ico" />
 
-	<link rel="icon" href="assets/logos/favicon.ico">
+    <meta name="theme-color" content="#003366" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-	<meta name="theme-color" content="#003366"/>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      button,
+      input,
+      a,
+      abbr,
+      acronym,
+      address,
+      applet,
+      article,
+      aside,
+      audio,
+      b,
+      big,
+      blockquote,
+      body,
+      canvas,
+      caption,
+      center,
+      cite,
+      code,
+      dd,
+      del,
+      details,
+      dfn,
+      div,
+      dl,
+      dt,
+      em,
+      embed,
+      fieldset,
+      figcaption,
+      figure,
+      footer,
+      form,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      header,
+      hgroup,
+      html,
+      i,
+      iframe,
+      img,
+      ins,
+      kbd,
+      label,
+      legend,
+      li,
+      mark,
+      menu,
+      nav,
+      object,
+      ol,
+      output,
+      p,
+      pre,
+      q,
+      ruby,
+      s,
+      samp,
+      section,
+      small,
+      span,
+      strike,
+      strong,
+      sub,
+      summary,
+      sup,
+      table,
+      tbody,
+      td,
+      tfoot,
+      th,
+      thead,
+      time,
+      tr,
+      tt,
+      u,
+      ul,
+      var,
+      video {
+        font-weight: 400;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+      article,
+      aside,
+      details,
+      figcaption,
+      figure,
+      footer,
+      header,
+      hgroup,
+      menu,
+      nav,
+      section {
+        display: block;
+      }
+      body {
+        line-height: 1;
+      }
+      ol,
+      ul {
+        list-style: none;
+      }
+      blockquote,
+      q {
+        quotes: none;
+      }
+      blockquote:after,
+      blockquote:before,
+      q:after,
+      q:before {
+        content: "";
+        content: none;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="stylesheets/style-standard.css"
+    />
+    <link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
 
-	<style>
-		button,input,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{font-weight:400;margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
-	</style>
-	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
+    <script src="assets/internal/common.js"></script>
 
-	<script src="assets/internal/common.js"></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/assets/internal/fontello-extra.css"
+    />
 
-	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css" />
-	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
+    <script src="assets/external/jquery-3.6.0.min.js"></script>
+    <script>
+      $(function () {
+        loadExternalHtml = function (includes, callback) {
+          if (includes.length == 0) {
+            return callback();
+          }
+          const currentElement = includes.eq(-1);
+          includes.splice(includes.length - 1, 1);
 
-	<script src="assets/external/jquery-3.6.0.min.js"></script>
-	<script>
+          const file = $(currentElement).data("include");
+          $(currentElement).load(file, function () {
+            loadExternalHtml(includes, callback);
+          });
+        };
 
-		$(function () {
-			loadExternalHtml = function(includes, callback) {
-				if( includes.length == 0 ) {
-					return callback();
-				}
-				const currentElement = includes.eq(-1);
-				includes.splice( includes.length-1, 1);
+        const includes = $("[data-include]");
+        loadExternalHtml(includes);
+      });
+    </script>
+  </head>
 
-				const file = $( currentElement ).data('include');
-				$( currentElement ).load( file, function(){
-					loadExternalHtml( includes, callback );
-				} );
-			}
-
-			const includes = $('[data-include]');
-			loadExternalHtml(includes);
-		});
-	</script>
-
-</head>
-
-<body class="backgroundColor flexCol">
-	<input id="blur-hack" type="button"/>
-	<header class="m-2">
-		<!--span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
+  <body class="backgroundColor flexCol">
+    <input id="blur-hack" type="button" />
+    <header class="m-2">
+      <!--span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
 					data-toggle="collapse" data-target="#navigation">
 			<i class="fa-menu"></i>
 		</span-->
-		<img src="assets/logos/logo.svg" width="48" height="48" alt="logo"/>
-		<h1>Update Troff</h1>
-	</header>
+      <img src="assets/logos/logo.svg" width="48" height="48" alt="logo" />
+      <h1>Update Troff</h1>
+    </header>
 
-<div class="flexRow fill-height-minus-58">
-	<!--section id="navigation" class="flexCol flexScroll selfMaxWidth d-sm-flex d-none">
+    <div class="flexRow fill-height-minus-58">
+      <!--section id="navigation" class="flexCol flexScroll selfMaxWidth d-sm-flex d-none">
 	<nav class="flexCol flexScroll mt-0">
 		<a href="#updateOnIos">Update on iOS</a>
 		<a href="#updateOnDesktopAndAndroid">Update on desktop and Android</a>
 	</nav>
 	</section -->
-	<section class="flexCol flexScroll">
+      <section class="flexCol flexScroll">
+        <article id="updateOnIos" class="mt-0">
+          <h2>Update on iOS</h2>
+          <p>
+            If you have problems downloading songs on iOS you may need to update
+            your Troff version by clearing the website data.
+          </p>
+          <p class="note">
+            Note: This will remove all data from Troff, so make sure your
+            markers and songs are backed up somewhere so that you can extract
+            it!<br />
+            <a href="/help.html#exportImport" target="_blank"
+              >How to export and save your markers.</a
+            >
+          </p>
+          <h3 id="clearWebDataOnIos">How to clear webb data on iOS</h3>
+          <ol>
+            <li>Open the “Settings”</li>
+            <li>Tap on “Safari”</li>
+            <li>Scroll to the bottom and tap on “Advanced”</li>
+            <li>Tap “Website Data”</li>
+            <li>
+              Find troff.app in the list (if it is not in the list, you might
+              have to press "Show All Sites" at the bottom)
+            </li>
+            <li>Tap “Edit” in the upper right corner,</li>
+            <li>
+              Tap the red (-) minus symbol next to troff.app followed by the
+              “Delete” button".
+            </li>
+            <li>Go to Safari and reload you link to troff.app</li>
+          </ol>
+          <p>Happy training!</p>
+        </article>
+        <!-- updateOnIos -->
 
-	<article id="updateOnIos" class="mt-0">
-		<h2>Update on iOS</h2>
-		<p>
-			If you have problems downloading songs on iOS you may need to update your Troff version by
-			clearing the website data.
-		</p>
-		<p class="note">
-			Note: This will remove all data from Troff, so make sure your markers and
-			songs are backed up somewhere so that you can extract it!<br />
-			<a href="/help.html#exportImport" target="_blank">How to export and save your markers.</a>
-		</p>
-		<h3 id="clearWebDataOnIos">How to clear webb data on iOS</h3>
-		<ol>
-			<li>Open the “Settings”</li>
-			<li>Tap on “Safari”</li>
-			<li>Scroll to the bottom and tap on “Advanced”</li>
-			<li>Tap “Website Data”</li>
-			<li>Find troff.app in the list
-				(if it is not in the list, you might have to press "Show All Sites" at the bottom)</li>
-			<li>Tap “Edit” in the upper right corner, </li>
-			<li>Tap the red (-) minus symbol next to troff.app followed by the “Delete” button".</li>
-			<li>Go to Safari and reload you link to troff.app</li>
-		</ol>
-		<p>Happy training!</p>
-	</article> <!-- updateOnIos -->
+        <article id="updateOnDesktopAndAndroid">
+          <h2>Update on desktop and Android</h2>
+          <p>
+            It is generally easier to update Troff on Desktop and Android; when
+            there is an update, Troff will load the updated version the next
+            time you load the app. If this does not happen, you can try to
+            reload the page or app, restart the browser or restart your device.
+          </p>
+          <p class="note">
+            Note: This will not remove any data from Troff, however, the data
+            saved in Troff is managed by the browser. If the browser needs more
+            data and thinks that you Troff data is not regularly used, it may
+            remove it.<br />
+            Therefor it is always good to save your markers somewhere safe:<br />
+            <a href="/help.html#exportImport" target="_blank"
+              >How to export and save your markers.</a
+            >
+          </p>
+        </article>
+        <!-- updateOnDesktopAndAndroid -->
 
-	<article id="updateOnDesktopAndAndroid">
-		<h2>Update on desktop and Android</h2>
-		<p>
-			It is generally easier to update Troff on Desktop and Android;
-			when there is an update, Troff will load the updated version the next time you load the app.
-			If this does not happen, you can try to reload the page or app,
-			restart the browser or restart your device.
-		</p>
-		<p class="note">
-			Note: This will not remove any data from Troff, however,
-			the data saved in Troff is managed by the browser.
-			If the browser needs more data and thinks that you Troff data is not regularly used, it may remove it.<br />
-			Therefor it is always good to save your markers somewhere safe:<br />
-			<a href="/help.html#exportImport" target="_blank">How to export and save your markers.</a>
-		</p>
-	</article> <!-- updateOnDesktopAndAndroid -->
-
-	<footer id="footer" class="white flexRow">
-		<div class="flexCol">
-			<p>
-				Contact a human:
-				<a class="white" target=_blank rel="noopener" href="mailto:slimsimapps@gmail.com">
-					slimsimapps@gmail.com</a>.
-			</p>
-			<p>
-				Like us on
-				<a class="white" target=_blank rel="noopener"
-					href="https://www.facebook.com/troffmusic">facebook</a>!
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="LICENSE.html">LICENSE</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="privacy_policy.html">Privacy Policy</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="terms.html">Terms and conditions</a>.
-			</p>
-			<p>
-				Happy training!
-			</p>
-		</div>
-		<div class="flexCol white center flexOne">
-			<p class="white Big">Troff</p>
-			<p class="white Big textCenter">Training with music</p>
-		</div>
-	</footer>
-	</section>
-</div>
-</body>
+        <footer id="footer" class="white flexRow">
+          <div class="flexCol">
+            <p>
+              Contact a human:
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="mailto:slimsimapps@gmail.com"
+              >
+                slimsimapps@gmail.com</a
+              >.
+            </p>
+            <p>
+              Like us on
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="https://www.facebook.com/troffmusic"
+                >facebook</a
+              >!
+            </p>
+            <p>
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="LICENSE.html"
+                >LICENSE</a
+              >.
+            </p>
+            <p>
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="privacy_policy.html"
+                >Privacy Policy</a
+              >.
+            </p>
+            <p>
+              <a class="white" target="_blank" rel="noopener" href="terms.html"
+                >Terms and conditions</a
+              >.
+            </p>
+            <p>Happy training!</p>
+          </div>
+          <div class="flexCol white center flexOne">
+            <p class="white Big">Troff</p>
+            <p class="white Big textCenter">Training with music</p>
+          </div>
+        </footer>
+      </section>
+    </div>
+  </body>
 </html>

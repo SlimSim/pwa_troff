@@ -15,15 +15,12 @@ const originalLog = console.log;
 const originalWarn = console.warn;
 const originalError = console.error;
 
-
-
 const regularLog = {
-  stack: originalTrace.bind(console),
+  t: originalTrace.bind(console),
   d: originalLog.bind(console),
   w: originalWarn.bind(console),
   e: originalError.bind(console),
-}
-
+};
 
 const phoneLog = {
   t: (...args) => {

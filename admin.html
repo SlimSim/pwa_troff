@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--
 	This file is part of Troff.
 
@@ -16,204 +16,392 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<html lang="en-US" class="overflow-hidden" >
-<head>
+<html lang="en-US" class="overflow-hidden">
+  <head>
+    <title>Troff Admin</title>
+    <meta charset="UTF-8" />
+    <meta
+      name="description"
+      content="Tips, trix and tutoring for using the music player Troff. How to repeat parts of the song"
+    />
+    <meta
+      name="keywords"
+      content="Music player, Troff, Loop, Repeat, Training, How To"
+    />
 
-	<title>Troff Admin</title>
-	<meta charset="UTF-8">
-	<meta name="description" content="Tips, trix and tutoring for using the music player Troff. How to repeat parts of the song">
-	<meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, How To">
+    <link rel="icon" href="assets/logos/favicon.ico" />
 
-	<link rel="icon" href="assets/logos/favicon.ico">
+    <meta name="theme-color" content="#003366" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-	<meta name="theme-color" content="#003366"/>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      button,
+      input,
+      a,
+      abbr,
+      acronym,
+      address,
+      applet,
+      article,
+      aside,
+      audio,
+      b,
+      big,
+      blockquote,
+      body,
+      canvas,
+      caption,
+      center,
+      cite,
+      code,
+      dd,
+      del,
+      details,
+      dfn,
+      div,
+      dl,
+      dt,
+      em,
+      embed,
+      fieldset,
+      figcaption,
+      figure,
+      footer,
+      form,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      header,
+      hgroup,
+      html,
+      i,
+      iframe,
+      img,
+      ins,
+      kbd,
+      label,
+      legend,
+      li,
+      mark,
+      menu,
+      nav,
+      object,
+      ol,
+      output,
+      p,
+      pre,
+      q,
+      ruby,
+      s,
+      samp,
+      section,
+      small,
+      span,
+      strike,
+      strong,
+      sub,
+      summary,
+      sup,
+      table,
+      tbody,
+      td,
+      tfoot,
+      th,
+      thead,
+      time,
+      tr,
+      tt,
+      u,
+      ul,
+      var,
+      video {
+        font-weight: 400;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+      article,
+      aside,
+      details,
+      figcaption,
+      figure,
+      footer,
+      header,
+      hgroup,
+      menu,
+      nav,
+      section {
+        display: block;
+      }
+      body {
+        line-height: 1;
+      }
+      ol,
+      ul {
+        list-style: none;
+      }
+      blockquote,
+      q {
+        quotes: none;
+      }
+      blockquote:after,
+      blockquote:before,
+      q:after,
+      q:before {
+        content: "";
+        content: none;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="stylesheets/style-standard.css"
+    />
+    <link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
 
-	<style>
-		button,input,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{font-weight:400;margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
-	</style>
-	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
+    <!--script src="assets/internal/common.js"></script -->
 
-	<!--script src="assets/internal/common.js"></script -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/assets/internal/fontello-extra.css"
+    />
 
-	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css" />
-	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
+    <script src="assets/external/jquery-3.6.0.min.js"></script>
+    <script type="module" src="admin.js"></script>
+  </head>
 
-	<script src="assets/external/jquery-3.6.0.min.js"></script>
-	<script src="assets/internal/st-script.js"></script>
+  <body class="backgroundColor flexCol">
+    <input id="blur-hack" type="button" />
+    <header class="m-2">
+      <span
+        class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
+        data-toggle="collapse"
+        data-target="#navigation"
+      >
+        <i class="fa-menu"></i>
+      </span>
+      <img src="assets/logos/logo.svg" width="48" alt="logo" />
+      <h1>Troff - Admin</h1>
+    </header>
 
-	<script src="assets/internal/environment.js"></script>
+    <div class="flexRow fill-height-minus-58">
+      <section class="flexCol flexScroll">
+        <article id="signIn" class="showForNewUsers hidden flex-col">
+          <h2>Sign in</h2>
+          <p>You must be admin in to use these features!</p>
+          <div>
+            <button id="googleSignIn" class="btn regularButton">
+              Sign in with Google
+            </button>
+          </div>
+        </article>
+        <!-- signIn -->
 
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+        <article id="unauthorised" class="showForUnauthorised hidden">
+          <h2>Unauthorised</h2>
 
+          <p>You are not authorised to see this.</p>
+          <p>Happy training!</p>
+        </article>
+        <!-- signIn -->
 
-	<script src="admin.js"></script>
+        <article id="welcome" class="hidden showForLoggedInUsers">
+          <h2>Hello <span id="userName"></span></h2>
+          <p><span id="userEmail"></span></p>
+          <p><span id="userPhoneNumber"></span></p>
 
-</head>
+          <button id="signOut" class="btn regularButton">Sign out</button>
+        </article>
+        <!-- signIn -->
+        <article class="hidden showForLoggedInUsers">
+          <h2>Files</h2>
 
-<body class="backgroundColor flexCol">
-	<input id="blur-hack" type="button"/>
-	<header class="m-2">
-		<span class="d-flex d-sm-none center w-48 h-48 cursor-pointer toggle-navigation text-15"
-					data-toggle="collapse" data-target="#navigation">
-			<i class="fa-menu"></i>
-		</span>
-		<img src="assets/logos/logo.svg" width="48" alt="logo"/>
-		<h1>Troff - Admin</h1>
-	</header>
+          <p>Total Size: <span class="totalSize"></span> / 5GB</p>
+          <p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
+          <p class="pl-2">
+            Nr of deleted files: <span class="nrOfDeletedFiles"></span>
+          </p>
 
-<div class="flexRow fill-height-minus-58">
-	<section class="flexCol flexScroll">
+          <input
+            type="button"
+            class="stOnOffButton toggleNext"
+            value="Firebase Info"
+          />
+          <div class="container flex-row p-1 my-1">
+            <p>
+              On the free tier, once you reach the 5GB limit, you won't be able
+              to store additional data without upgrading
+            </p>
+            <p>The storage limit is per project, not per account</p>
+            <p>Other limitations:</p>
+            <ul>
+              <li>50,000 download operations per day</li>
+              <li>1 GB/day of downloaded data</li>
+              <li>20,000 upload operations per day</li>
+            </ul>
+          </div>
+          <div>
+            <button class="btn regularButton" id="sortUpdatedDesc">
+              Newest first
+            </button>
+            <button class="btn regularButton" id="sortUpdatedAsc">
+              ...last
+            </button>
+            <button class="ml-3 btn regularButton" id="sortSizeDesc">
+              Biggest First
+            </button>
+            <button class="btn regularButton" id="sortSizeAsc">...last</button>
+          </div>
 
+          <div id="fileList" class="flexCol"></div>
 
-	<article id="signIn" class="showForNewUsers hidden flex-col">
-		<h2>Sign in</h2>
-		<p>
-			You must be admin in to use these features!
-		</p>
-		<div>
-			<button id="googleSignIn" class="btn regularButton">Sign in with Google</button>
-		</div>
-	</article> <!-- signIn -->
+          <div id="template" class="hidden">
+            <div class="bg-Burlywood container flex-row p-2 my-1">
+              <div class="row">
+                <div class="col-sm">
+                  <h3><a href="#" target="_blank" class="fileName"></a></h3>
+                  <p>
+                    <span class="fileType"></span>,
+                    <span class="fileSize"></span>
+                  </p>
+                  <p>
+                    TroffData: <span class="troffData"></span>, Public:
+                    <span class="troffDataPublic"></span>, Private:
+                    <span class="troffDataPrivate"></span>
+                  </p>
+                  <p>Updated: <span class="updated"></span></p>
+                </div>
+                <div class="col-sm flex-grow-0">
+                  <button class="removeFile regularButton">Remove</button>
+                  <span class="hidden grayOut removedText">Removed</span>
+                  <button class="makeAllPrivate regularButton mt-2">
+                    Make All Private
+                  </button>
+                  <button class="makeAllPublic regularButton mt-2">
+                    Make All Public
+                  </button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm">
+                  <input
+                    type="button"
+                    class="stOnOffButton toggleNext"
+                    value="Show Markers"
+                  />
+                  <div class="container flex-row p-1 my-1 markerList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-	<article id="unauthorised" class="showForUnauthorised hidden">
-		<h2>Unauthorised</h2>
+          <div id="troffDataTemplate" class="hidden">
+            <div class="row">
+              <div class="col-sm">
+                <button class="troffDataMakePrivate regularButton float-right">
+                  Make Private
+                </button>
+                <button
+                  class="troffDataMakePublic regularButton float-right hidden"
+                >
+                  Make Public
+                </button>
+                <h4>
+                  <span class="troffDataPublicOrPrivate"></span>:
+                  <a href="#" target="_blank" class="troffDataId"></a>
+                </h4>
+                <p class="m-0">
+                  States: <span class="troffDataNrStates"></span>
+                </p>
+                <p class="m-0">
+                  Markers: <span class="troffDataNrMarkers"></span>
+                </p>
+                <p class="troffDataInfo text-truncate w-100"></p>
+              </div>
+            </div>
+          </div>
+        </article>
+        <!-- signIn -->
 
-		<p>
-			You are not authorised to see this.
-		</p>
-		<p>
-			Happy training!
-		</p>
-	</article> <!-- signIn -->
+        <footer id="footer" class="white flexRow">
+          <div class="flexCol">
+            <p>
+              Contact a human:
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="mailto:slimsimapps@gmail.com"
+              >
+                slimsimapps@gmail.com</a
+              >.
+            </p>
+            <p>
+              Like us on
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="https://www.facebook.com/troffmusic"
+                >facebook</a
+              >!
+            </p>
+            <p>
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="LICENSE.html"
+                >LICENSE</a
+              >.
+            </p>
+            <p>
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="privacy_policy.html"
+                >Privacy Policy</a
+              >.
+            </p>
+            <p>
+              <a class="white" target="_blank" rel="noopener" href="terms.html"
+                >Terms and conditions</a
+              >.
+            </p>
+            <p>Happy training!</p>
+          </div>
+          <div class="flexCol white center flexOne">
+            <p class="white Big">Troff</p>
+            <p class="white Big textCenter">Training with music</p>
+          </div>
+        </footer>
+      </section>
 
-
-	<article id="welcome" class="hidden showForLoggedInUsers" >
-		<h2>Hello <span id="userName"></span></h2>
-		<p><span id="userEmail"></span></p>
-		<p><span id="userPhoneNumber"></span></p>
-
-		<button id="signOut" class="btn regularButton">Sign out</button>
-	</article> <!-- signIn -->
-	<article class="hidden showForLoggedInUsers" >
-		<h2>Files</h2>
-
-		<p>Total Size: <span class="totalSize"></span> / 5GB</p>
-		<p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
-		<p class="pl-2">Nr of deleted files: <span class="nrOfDeletedFiles"></span></p>
-		
-		<input type="button" class="stOnOffButton toggleNext" value="Firebase Info" />
-		<div class="container flex-row p-1 my-1">
-			<p>On the free tier, once you reach the 5GB limit, you won't be able to store additional data without upgrading</p>
-			<p>The storage limit is per project, not per account</p>
-			<p>Other limitations:</p>
-			<ul>
-				<li>50,000 download operations per day</li>
-				<li>1 GB/day of downloaded data</li>
-				<li>20,000 upload operations per day</li>
-			</ul>
-		</div>
-		<div>
-			<button class="btn regularButton" id="sortUpdatedDesc">Newest first</button>
-			<button class="btn regularButton" id="sortUpdatedAsc">...last</button>
-			<button class="ml-3 btn regularButton" id="sortSizeDesc">Biggest First</button>
-			<button class="btn regularButton" id="sortSizeAsc">...last</button>
-		</div>
-
-		<div id="fileList" class="flexCol"></div>
-
-
-		<div id="template" class="hidden">
-			<div class="bg-Burlywood container flex-row p-2 my-1">
-				<div class="row">
-					<div class="col-sm">
-						<h3><a href="#" target="_blank" class="fileName"></a></h3>
-						<p><span class="fileType"></span>, <span class="fileSize"></span></p>
-						<p>TroffData: <span class="troffData"></span>,
-							Public: <span class="troffDataPublic"></span>,
-							Private: <span class="troffDataPrivate"></span></p>
-						<p>Updated: <span class="updated"></span></p>
-					</div>
-					<div class="col-sm flex-grow-0">
-						<button class="removeFile regularButton">Remove</button>
-						<span class="hidden grayOut removedText">Removed</span>
-						<button class="makeAllPrivate regularButton mt-2">Make All Private</button>
-						<button class="makeAllPublic regularButton mt-2">Make All Public</button>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-sm">
-						<input type="button" class="stOnOffButton toggleNext" value="Show Markers" />
-						<div class="container flex-row p-1 my-1 markerList">
-						</div>
-					</div>
-				</div>
-			</div>
-
-		</div>
-
-		<div id="troffDataTemplate" class="hidden">
-			<div class="row">
-				<div class="col-sm">
-					<button class="troffDataMakePrivate regularButton float-right">Make Private</button>
-					<button class="troffDataMakePublic regularButton float-right hidden">Make Public</button>
-					<h4><span class="troffDataPublicOrPrivate"></span>: <a href="#" target="_blank" class="troffDataId"></a></h4>
-					<p class="m-0">States: <span class="troffDataNrStates"></span></p>
-					<p class="m-0">Markers: <span class="troffDataNrMarkers"></span></p>
-					<p class="troffDataInfo text-truncate w-100"></p>
-				</div>
-			</div>
-		</div>
-
-	</article> <!-- signIn -->
-
-
-	<footer id="footer" class="white flexRow">
-		<div class="flexCol">
-			<p>
-				Contact a human:
-				<a class="white" target=_blank rel="noopener" href="mailto:slimsimapps@gmail.com">
-					slimsimapps@gmail.com</a>.
-			</p>
-			<p>
-				Like us on
-				<a class="white" target=_blank rel="noopener"
-					href="https://www.facebook.com/troffmusic">facebook</a>!
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="LICENSE.html">LICENSE</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="privacy_policy.html">Privacy Policy</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="terms.html">Terms and conditions</a>.
-			</p>
-			<p>
-				Happy training!
-			</p>
-		</div>
-		<div class="flexCol white center flexOne">
-			<p class="white Big">Troff</p>
-			<p class="white Big textCenter">Training with music</p>
-		</div>
-	</footer>
-	</section>
-
-	<div  id="alertDialog" class="outerDialog p-3 hidden">
-		<div class="innerDialog largeDialog flexCol scroll mh-100">
-			<h2 id="alertHeader"></h2>
-			<div id="alertText"></div>
-		</div>
-	</div>
-
-</div>
-
-</body>
+      <div id="alertDialog" class="outerDialog p-3 hidden">
+        <div class="innerDialog largeDialog flexCol scroll mh-100">
+          <h2 id="alertHeader"></h2>
+          <div id="alertText"></div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
