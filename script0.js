@@ -25,6 +25,7 @@ import {
   mergeSongListHistorys,
 } from "./script.js";
 import log from "./utils/log.js";
+import { gtag } from "./services/analytics.js";
 import { cacheImplementation } from "./FileApiImplementation.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
 import { auth, db, doc, setDoc, getDoc } from "./services/firebaseClient.js";
@@ -37,11 +38,6 @@ import {
 window.alert = (alert) => {
   log.w("Alert:", alert);
 };
-
-function gtag() {
-  // log.d("gtag -> arguments:", arguments);
-  // TODO: should perhaps gather statistics in the future :)
-}
 
 var imgFormats = [
   "png",
@@ -968,7 +964,6 @@ export {
   clearContentDiv,
   addImageToContentDiv,
   addAudioToContentDiv,
-  gtag,
   addVideoToContentDiv,
   escapeRegExp,
 };

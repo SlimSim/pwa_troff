@@ -41,10 +41,10 @@ import {
   clearContentDiv,
   addImageToContentDiv,
   addAudioToContentDiv,
-  gtag,
   addVideoToContentDiv,
   escapeRegExp,
 } from "./script0.js";
+import { gtag } from "./services/analytics.js";
 import { clickSongList_NEW } from "./scriptTroffClass.js";
 import log from "./utils/log.js";
 import {

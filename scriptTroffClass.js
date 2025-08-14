@@ -39,8 +39,8 @@ import {
   filterSongTable,
   getFilterDataList,
   sortAndValue,
-  gtag,
 } from "./script0.js";
+import { gtag } from "./services/analytics.js";
 import { isSafari } from "./utils/browserEnv.js";
 import { errorHandler } from "./script2.js";
 import log from "./utils/log.js";

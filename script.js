@@ -48,7 +48,6 @@ import {
   clearContentDiv,
   addImageToContentDiv,
   addAudioToContentDiv,
-  gtag,
   addVideoToContentDiv,
 } from "./script0.js";
 
