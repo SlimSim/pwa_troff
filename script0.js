@@ -39,17 +39,7 @@ window.alert = (alert) => {
   log.w("Alert:", alert);
 };
 
-var imgFormats = [
-  "png",
-  "bmp",
-  "jpeg",
-  "jpg",
-  "gif",
-  "png",
-  "svg",
-  "xbm",
-  "webp",
-];
+var imgFormats = ["png", "bmp", "jpeg", "jpg", "gif", "svg", "xbm", "webp"];
 var audFormats = ["wav", "mp3", "m4a"];
 var vidFormats = [
   "avi",
@@ -245,24 +235,29 @@ const nrIdsInHistoryList = (historyList) => {
 };
 
 const updateUploadedHistory = async () => {
-  if (auth.currentUser == null) return;
-  const snapshot = await getDoc(doc(db, "UserData", auth.currentUser.uid));
-  let userData = snapshot.exists() ? snapshot.data() : {};
+  try {
+    if (auth.currentUser == null) return;
 
-  const uploadedHistory = userData.uploadedHistory || [];
-  const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
-  const totalList = mergeSongListHistorys(uploadedHistory, localHistory);
+    const snapshot = await getDoc(doc(db, "UserData", auth.currentUser.uid));
+    let userData = snapshot.exists() ? snapshot.data() : {};
 
-  const nrIdsInTotalList = nrIdsInHistoryList(totalList);
-  const nrIdsInUploadedHistory = nrIdsInHistoryList(uploadedHistory);
+    const uploadedHistory = userData.uploadedHistory || [];
+    const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
+    const totalList = mergeSongListHistorys(uploadedHistory, localHistory);
 
-  // om total är längre än uploadedHistory, så ska
-  // firebase uppdateras!
-  if (nrIdsInTotalList > nrIdsInUploadedHistory) {
-    // totalList kanske ska ränsa totalList från onödiga saker???
-    // beroende på hur mycket plats det tar upp i firebase...
-    userData.uploadedHistory = totalList;
-    await setDoc(doc(db, "UserData", auth.currentUser.uid), userData);
+    const nrIdsInTotalList = nrIdsInHistoryList(totalList);
+    const nrIdsInUploadedHistory = nrIdsInHistoryList(uploadedHistory);
+
+    // om total är längre än uploadedHistory, så ska
+    // firebase uppdateras!
+    if (nrIdsInTotalList > nrIdsInUploadedHistory) {
+      // totalList kanske ska ränsa totalList från onödiga saker???
+      // beroende på hur mycket plats det tar upp i firebase...
+      userData.uploadedHistory = totalList;
+      await setDoc(doc(db, "UserData", auth.currentUser.uid), userData);
+    }
+  } catch (error) {
+    log.e("updateUploadedHistory: error", error);
   }
 };
 

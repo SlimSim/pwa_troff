@@ -40,6 +40,7 @@ import {
   getFilterDataList,
   sortAndValue,
 } from "./script0.js";
+
 import { gtag } from "./services/analytics.js";
 import { isSafari } from "./utils/browserEnv.js";
 import { errorHandler } from "./script2.js";
@@ -218,7 +219,7 @@ class TroffClass {
           createSongAudio(key);
         }
 
-        $.notify(key + " was successfully added 2");
+        $.notify(key + " was successfully added");
       });
     });
 
@@ -250,8 +251,8 @@ class TroffClass {
   };
 
   removeLocalInfo = (markerObject) => {
-    markerObject.localInformation = undefined;
-    return markerObject;
+    const { localInformation, ...payload } = markerObject;
+    return payload;
   };
 
   uploadSongToServer = async (event) => {
@@ -379,8 +380,7 @@ class TroffClass {
     markers.localInformation = oldMarkers.localInformation;
 
     try {
-      let saveToDBResponse = nDB.set(troffData.fileName, markers);
-      let doneSaveToDB = await saveToDBResponse;
+      nDB.set(troffData.fileName, markers);
     } catch (error) {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
@@ -605,7 +605,7 @@ class TroffClass {
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
-      $.notify(fileName + " was successfully added 3");
+      $.notify(fileName + " was successfully added" );
     } else {
       this.showImportData(fileName, serverId);
     }
@@ -659,7 +659,7 @@ class TroffClass {
     await createSongAudio(troffData.fileName);
     this.askIfAddSongsToCurrentSongList(troffData.fileName);
     addItem_NEW_2(troffData.fileName);
-    $.notify(troffData.fileName + " was successfully added 4");
+    $.notify(troffData.fileName + " was successfully added");
   };
 
   editSongDialogSave = (event) => {

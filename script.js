@@ -269,7 +269,7 @@ const songDocUpdate = async function (doc) {
 
   if (!doc.exists()) {
     const fileName = SongToGroup.getFileNameFromSongDocId(songDocId);
-    const groupName = $(`[group-id="${groupDocId}"]`).text();
+    const groupName = $(`[group-id="${groupDocId}"]`).text(); // TODO: fix this ($(`[group-id="${groupDocId}"]`) does not exist)
     $.notify(
       `The song "${fileName}" has been removed from the group
 			${groupName}
@@ -294,7 +294,7 @@ const songDocUpdate = async function (doc) {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, songKey);
     }
     addItem_NEW_2(songKey);
-    $.notify(songKey + " was successfully added 1");
+    $.notify(songKey + " was successfully added");
   }
 
   const fileUrl = songData.fileUrl;
@@ -564,21 +564,16 @@ const removeSongFromFirebaseGroup = async function (
   groupDocId,
   songDocId
 ) {
-  // this can be re-written to not use new promise, se https://chatgpt.com/c/689c4317-5084-8321-817c-d43bb60e4865
-  return new Promise(async function (resolve, reject) {
-    await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
+  await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
 
-    const fileUrl = SongToGroup.songKeyToFileUrl(
-      songKey,
-      groupDocId,
-      songDocId
-    );
+  const fileUrl = SongToGroup.songKeyToFileUrl(songKey, groupDocId, songDocId);
 
-    const storageFileName = fileUrlToStorageFileName(fileUrl);
+  if (!fileUrl) {
+    return;
+  }
 
-    await removeSongFileFromFirebaseGroupStorage(groupDocId, storageFileName);
-    resolve();
-  });
+  const storageFileName = fileUrlToStorageFileName(fileUrl);
+  await removeSongFileFromFirebaseGroupStorage(groupDocId, storageFileName);
 };
 
 const onOnline = function () {
