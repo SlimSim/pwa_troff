@@ -26,7 +26,7 @@ import {
 } from "./script.js";
 import log from "./utils/log.js";
 import { gtag } from "./services/analytics.js";
-import { cacheImplementation } from "./FileApiImplementation.js";
+import { cacheImplementation } from "./services/FileApiImplementation.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
 import { auth, db, doc, setDoc, getDoc } from "./services/firebaseClient.js";
 import { escapeRegExp, getFileExtension } from "./utils/utils.js";
@@ -34,7 +34,7 @@ import {
   TROFF_SETTING_SHOW_SONG_DIALOG,
   DATA_TABLE_COLUMNS,
 } from "./constants/constants.js";
-import { addGroupSongRow } from "./groupManagement.js";
+import { addGroupSongRow } from "./features/groupManagement.js";
 
 window.alert = (alert) => {
   log.w("Alert:", alert);

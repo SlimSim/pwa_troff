@@ -14,7 +14,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from "./services/firebaseClient.js";
-import { cacheImplementation } from "./FileApiImplementation.js";
+import { cacheImplementation } from "./services/FileApiImplementation.js";
 
 $(() => {
   "use strict";

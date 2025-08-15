@@ -7,8 +7,8 @@ import {
   googleSignIn,
   onOnline,
   doSignOut,
-  groupDialogSave,
 } from "./script.js";
+import { groupDialogSave } from "./features/groupManagement.js";
 import {
   addGroupOwnerRow,
   clickButtNewSongList,

@@ -51,10 +51,17 @@ import {
 } from "./script0.js";
 import { getFileExtension } from "./utils/utils.js";
 import log from "./utils/log.js";
-import { initiateAllFirebaseGroups } from "./firebase.js";
+import {
+  initiateAllFirebaseGroups,
+  saveSongDataToFirebaseGroup,
+} from "./services/firebase.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
-import { cacheImplementation } from "./FileApiImplementation.js";
+import { cacheImplementation } from "./services/FileApiImplementation.js";
 import { st } from "./assets/internal/st-script.js";
+import {
+  groupDocUpdate,
+  setGroupAsSonglist,
+} from "./features/groupManagement.js";
 import {
   setUiToSignIn,
   setUiToNotSignIn,
@@ -139,7 +146,6 @@ const initiateCollections = async function (querySnapshot) {
       const subCollection = await getDocs(collection(doc.ref, "Songs"));
       // const subCollection = await doc.ref.collection("Songs").get();
 
-      // doc.ref.onSnapshot(groupDocUpdate);
       onSnapshot(doc.ref, groupDocUpdate);
       const group = doc.data();
 
@@ -196,69 +202,6 @@ const initiateCollections = async function (querySnapshot) {
     });
 
   SongToGroup.saveToDb();
-};
-
-const setGroupAsSonglist = function (groupDocId) {
-  const songLists = JSON.parse(nDB.get("straoSongLists"));
-  if (!songLists.find((sl) => sl.firebaseGroupDocId == groupDocId)) {
-    return;
-  }
-
-  SongToGroup.remove(undefined, groupDocId);
-
-  DB.setSonglistAsNotGroup(groupDocId);
-
-  const $target = $("#songListList").find(
-    `[data-firebase-group-doc-id="${groupDocId}"]`
-  );
-  if ($target.length == 0) {
-    return;
-  }
-
-  $target.removeClass("groupIndication");
-  $target.attr("data-firebase-group-doc-id", null);
-
-  const songList = $target.data("songList");
-  if (songList == undefined) {
-    return;
-  }
-
-  delete songList.firebaseGroupDocId;
-  delete songList.owners;
-  $target.data("songList", songList);
-};
-
-const groupDocUpdate = function (doc) {
-  if (!doc.exists()) {
-    setGroupAsSonglist(doc.id);
-    return;
-  }
-
-  const group = doc.data();
-  const $target = $("#songListList").find(
-    `[data-firebase-group-doc-id="${doc.id}"]`
-  );
-
-  if (!group.owners.includes(firebaseUser.email)) {
-    setGroupAsSonglist(doc.id);
-
-    $.notify(
-      `You have been removed from the group "${$target.text()}".
-			It has been converted to a songlist`,
-      "info"
-    );
-    return;
-  }
-
-  const songListObject = $target.data("songList");
-
-  Object.entries(group).forEach(([key, value]) => {
-    songListObject[key] = value;
-  });
-
-  Troff.updateSongListInHTML(songListObject);
-
-  DB.saveSonglists_new();
 };
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
@@ -416,165 +359,6 @@ const getFirebaseGroupDataFromDialog = function (forceUserEmail) {
   return groupData;
 };
 
-const groupDialogSave = async function (event) {
-  if (!$("#buttAttachedSongListToggle").hasClass("active")) {
-    $("#buttAttachedSongListToggle").click();
-  }
-
-  const isGroup = $("#groupDialogIsGroup").is(":checked");
-  let groupDocId = $("#groupDialogName").data("groupDocId");
-
-  const songListObject = {
-    id: $("#groupDialogName").data("songListObjectId"),
-    name: $("#groupDialogName").val(),
-    color: $("#groupDialogColor").val(),
-    icon: $("#groupDialogIcon").val(),
-    info: $("#groupDialogInfo").val(),
-  };
-
-  if (isGroup) {
-    const owners = [];
-    $("#groupOwnerParent")
-      .find(".groupDialogOwner")
-      .each((i, v) => {
-        owners.push($(v).val());
-      });
-
-    if (!owners.includes(firebaseUser.email)) {
-      owners.push(firebaseUser.email);
-    }
-    songListObject.owners = owners;
-
-    // copying songListObject to groupData without references!
-    const groupData = JSON.parse(JSON.stringify(songListObject));
-    delete groupData.id;
-
-    if (groupDocId != null) {
-      // await firebase
-      //   .firestore()
-      //   .collection("Groups")
-      //   .doc(groupDocId)
-      //   .set(groupData);
-      await setDoc(doc(db, "Groups", groupDocId), groupData);
-    } else {
-      // const groupRef = await firebase
-      //   .firestore()
-      //   .collection("Groups")
-      //   .add(groupData);
-      const groupRef = await addDoc(collection(db, "Groups"), groupData);
-
-      // groupRef.onSnapshot(groupDocUpdate);
-      onSnapshot(groupRef, groupDocUpdate);
-
-      groupDocId = groupRef.id;
-    }
-
-    songListObject.firebaseGroupDocId = groupDocId;
-  }
-
-  const songs = [];
-  $("#groupSongParent")
-    .find("input")
-    .each(async (i, v) => {
-      const songKey = $(v).val();
-
-      const galleryId = $(v).data("galleryId");
-      const songDocId = $(v).data("firebaseSongDocId");
-
-      const songIdObject = {
-        fullPath: songKey,
-        galleryId: galleryId,
-        firebaseSongDocId: songDocId,
-      };
-
-      if (songKey == "") {
-        return;
-      }
-
-      if (isGroup) {
-        if ($(v).hasClass("removed")) {
-          if (songDocId == undefined) {
-            return;
-          }
-          removeSongFromFirebaseGroup(songKey, groupDocId, songDocId);
-          return;
-        }
-        saveSongDataToFirebaseGroup(songKey, groupDocId, songDocId);
-      }
-      if ($(v).hasClass("removed")) {
-        return;
-      }
-
-      songs.push(songIdObject);
-    });
-  songListObject.songs = songs;
-
-  if (songListObject.id == undefined) {
-    Troff.addSonglistToHTML_NEW(songListObject);
-  } else {
-    Troff.updateSongListInHTML(songListObject);
-  }
-  DB.saveSonglists_new();
-};
-
-const removeSongFileFromFirebaseGroupStorage = async (
-  groupDocId,
-  storageFileName
-) => {
-  // todo: kolla om jag behöver returnera ett promise, eller eftersom jag bytt till en await funktion (ist för en callback) så kan jag ta bort det.!
-  return new Promise(async (resolve, reject) => {
-    // let storageRef = firebase
-    //   .storage()
-    //   .ref("Groups/" + groupDocId + "/" + storageFileName);
-    const storageRef = ref(storage, `Groups/${groupDocId}/${storageFileName}`);
-
-    // storageRef
-    //   .delete()
-    //   .then(() => {
-    //     resolve();
-    //   })
-    //   .catch((error) => {
-    //     log.e(storageFileName + " could not be deleted!", error);
-    //     reject();
-    //   });
-    try {
-      await deleteObject(storageRef);
-    } catch (error) {
-      log.e(storageFileName + " could not be deleted!", error);
-      reject();
-    }
-    resolve();
-  });
-};
-
-const removeSongDataFromFirebaseGroup = (groupDocId, songDocId) => {
-  //   return firebase
-  //     .firestore()
-  //     .collection("Groups")
-  //     .doc(groupDocId)
-  //     .collection("Songs")
-  //     .doc(songDocId)
-  //     .delete();
-  return deleteDoc(doc(db, "Groups", groupDocId, "Songs", songDocId));
-};
-
-const removeSongFromFirebaseGroup = async function (
-  songKey,
-  groupDocId,
-  songDocId
-) {
-  await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
-
-  const fileUrl = SongToGroup.songKeyToFileUrl(songKey, groupDocId, songDocId);
-
-  if (!fileUrl) {
-    return;
-  }
-
-  const storageFileName = fileUrlToStorageFileName(fileUrl);
-  await removeSongFileFromFirebaseGroupStorage(groupDocId, storageFileName);
-};
-
 const onOnline = function () {
   // this timeOut is because I want to wait untill possible existing
   // firestore updates get synced to the ego-computer.
@@ -606,93 +390,6 @@ const onOnline = function () {
       ).then(songDocUpdate);
     });
   }, 42);
-};
-
-const saveSongDataToFirebaseGroup = async function (
-  songKey,
-  groupDocId,
-  songDocId
-) {
-  const publicData = Troff.removeLocalInfo(nDB.get(songKey));
-
-  publicData.latestUploadToFirebase = Date.now();
-
-  const songData = {
-    songKey: songKey,
-    jsonDataInfo: JSON.stringify(publicData),
-  };
-
-  if (songDocId != undefined) {
-    songData.fileUrl = SongToGroup.songKeyToFileUrl(
-      songKey,
-      groupDocId,
-      songDocId
-    );
-
-    if (navigator.onLine) {
-      // firebase
-      //   .firestore()
-      //   .collection("Groups")
-      //   .doc(groupDocId)
-      //   .collection("Songs")
-      //   .doc(songDocId)
-      //   .set(songData);
-      await setDoc(doc(db, "Groups", groupDocId, "Songs", songDocId), songData);
-    } else {
-      $.notify(
-        "You are offline, your changes will be synced online once you come online!",
-        {
-          className: "info",
-          autoHide: false,
-          clickToHide: true,
-        }
-      );
-
-      DB.pushSongWithLocalChanges(groupDocId, songDocId, songKey);
-    }
-  } else {
-    songData.fileUrl = await uploadSongToFirebaseGroup(groupDocId, songKey);
-
-    // TODO! kolla att jag är online!
-    //songData.latestUploadToFirebase = Date.now();
-
-    // let docRef = await firebase
-    //   .firestore()
-    //   .collection("Groups")
-    //   .doc(groupDocId)
-    //   .collection("Songs")
-    //   .add(songData);
-    const docRef = await addDoc(
-      collection(db, "Groups", groupDocId, "Songs"),
-      songData
-    );
-
-    SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
-
-    // docRef.onSnapshot(songDocUpdate);
-    onSnapshot(docRef, songDocUpdate);
-    const songList = $("#songListList")
-      .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
-      .data("songList");
-
-    songList.songs.forEach((song) => {
-      if (song.fullPath == songKey) {
-        song.firebaseSongDocId = docRef.id;
-      }
-    });
-
-    $("#songListList")
-      .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
-      .data("songList", songList);
-  }
-};
-
-const uploadSongToFirebaseGroup = async function (groupId, songKey) {
-  const [fileUrl, file] = await fileHandler.sendFileToFirebase(
-    songKey,
-    "Groups/" + groupId
-  );
-  return fileUrl;
 };
 
 /*
@@ -735,14 +432,6 @@ onAuthStateChanged(auth, async (user) => {
   const snap = await initiateAllFirebaseGroups(firebaseUser.email);
   initiateCollections(snap);
 });
-
-const fileUrlToStorageFileName = function (downloadUrl) {
-  const urlNoParameters = downloadUrl.split("?")[0];
-  const partList = urlNoParameters.split("%2F");
-
-  // return last part, which is the file-name!
-  return partList[partList.length - 1];
-};
 
 const mergeSongHistorys = function (song1, song2) {
   if (song1 == null) return song2;
@@ -1237,7 +926,6 @@ export {
   DB,
   IO,
   Rate,
-  removeSongDataFromFirebaseGroup,
   doSignOut,
   mergeSongListHistorys,
   googleSignIn,
@@ -1246,7 +934,7 @@ export {
   addItem_NEW_2,
   ifGroupSongUpdateFirestore,
   updateVersionLink,
-  groupDialogSave,
+  songDocUpdate,
   getFirebaseGroupDataFromDialog,
   firebaseUser,
 };

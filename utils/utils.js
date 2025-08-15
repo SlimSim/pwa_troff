@@ -10,4 +10,12 @@ function getFileExtension(filename) {
   return filename.substr(filename.lastIndexOf(".") + 1).toLowerCase();
 }
 
-export { escapeRegExp, getFileExtension };
+const fileUrlToStorageFileName = function (downloadUrl) {
+  const urlNoParameters = downloadUrl.split("?")[0];
+  const partList = urlNoParameters.split("%2F");
+
+  // return last part, which is the file-name!
+  return partList[partList.length - 1];
+};
+
+export { escapeRegExp, getFileExtension, fileUrlToStorageFileName };
