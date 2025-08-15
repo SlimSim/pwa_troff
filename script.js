@@ -66,7 +66,7 @@ import {
   setUiToSignIn,
   setUiToNotSignIn,
   updateGroupNotification,
-} from "./ui.js";
+} from "./ui/ui.js";
 import { nDB } from "./assets/internal/db.js";
 import { SongToGroup } from "./scriptASimple.js";
 import { environment } from "./assets/internal/environment.js";
@@ -74,10 +74,10 @@ import { TroffClass } from "./scriptTroffClass.js";
 import { errorHandler } from "./script2.js";
 import DBClass from "./scriptDBClass.js";
 import { isSafari, isIphone, isIpad } from "./utils/browserEnv.js";
-import IOClass from "./scriptIOClass.js";
+import IOClass from "./ui/scriptIOClass.js";
 import RateClass from "./scriptRateClass.js";
 
-import { firebaseWrapper, fileHandler } from "./file.js";
+import { firebaseWrapper, fileHandler } from "./services/file.js";
 import { ShowUserException } from "./script2.js";
 import { DATA_TABLE_COLUMNS } from "./constants/constants.js";
 

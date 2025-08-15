@@ -2,8 +2,8 @@ const fileHandler = {};
 const backendService = {};
 const firebaseWrapper = {};
 
-import { ShowUserException } from "./script2.js";
-import { isSafari } from "./utils/browserEnv.js";
+import { ShowUserException } from "../script2.js";
+import { isSafari } from "../utils/browserEnv.js";
 import {
   db,
   getDoc,
@@ -13,8 +13,8 @@ import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-} from "./services/firebaseClient.js";
-import { cacheImplementation } from "./services/FileApiImplementation.js";
+} from "./firebaseClient.js";
+import { cacheImplementation } from "./FileApiImplementation.js";
 
 $(() => {
   "use strict";

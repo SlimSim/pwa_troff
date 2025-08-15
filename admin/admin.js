@@ -15,9 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { environment } from "./assets/internal/environment.js";
-import { st } from "./assets/internal/st-script.js";
-import log from "./utils/log.js";
+import { st } from "../assets/internal/st-script.js";
+import log from "../utils/log.js";
 import {
   auth,
   db,
@@ -33,8 +32,7 @@ import {
   ref,
   deleteObject,
   signOut,
-} from "./services/firebaseClient.js";
-import { initiateAllFirebaseGroups } from "./firebase.js";
+} from "../services/firebaseClient.js";
 
 $(document).ready(async function () {
   "use strict";

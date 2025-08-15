@@ -1,5 +1,5 @@
-import { nDB } from "./assets/internal/db.js";
-import { st } from "./assets/internal/st-script.js";
+import { nDB } from "../assets/internal/db.js";
+import { st } from "../assets/internal/st-script.js";
 import {
   DB,
   Troff,
@@ -7,8 +7,8 @@ import {
   googleSignIn,
   onOnline,
   doSignOut,
-} from "./script.js";
-import { groupDialogSave } from "./features/groupManagement.js";
+} from "../script.js";
+import { groupDialogSave } from "../features/groupManagement.js";
 import {
   addGroupOwnerRow,
   clickButtNewSongList,
@@ -20,14 +20,14 @@ import {
   clickAttachedSongListToggle,
   clickToggleFloatingSonglists,
   reloadSongsButtonActive,
-} from "./script0.js";
-import { gtag } from "./services/analytics.js";
-import { clickSongList_NEW } from "./scriptTroffClass.js";
-import log from "./utils/log.js";
+} from "../script0.js";
+import { gtag } from "../services/analytics.js";
+import { clickSongList_NEW } from "../scriptTroffClass.js";
+import log from "../utils/log.js";
 import {
   TROFF_SETTING_CONFIRM_DELETE_MARKER,
   DATA_TABLE_COLUMNS,
-} from "./constants/constants.js";
+} from "../constants/constants.js";
 
 class IOClass {
   constructor() {

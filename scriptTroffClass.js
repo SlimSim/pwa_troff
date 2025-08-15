@@ -22,7 +22,7 @@ import {
   firebaseUser,
 } from "./script.js";
 import { removeSongDataFromFirebaseGroup } from "./services/firebase.js";
-import { fileHandler, backendService } from "./file.js";
+import { fileHandler, backendService } from "./services/file.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
 import { cacheImplementation } from "./services/FileApiImplementation.js";
 import {

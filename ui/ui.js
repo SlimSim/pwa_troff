@@ -1,7 +1,7 @@
 // UI-related functions
 
-import { nDB } from "./assets/internal/db.js";
-import { SongToGroup } from "./scriptASimple.js";
+import { nDB } from "../assets/internal/db.js";
+import { SongToGroup } from "../scriptASimple.js";
 
 const setUiToSignIn = async (user) => {
   $("#userName").text(user.displayName);
