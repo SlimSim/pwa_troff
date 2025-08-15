@@ -2,12 +2,12 @@
 
 import { getFileExtension } from "./utils/utils.js";
 import { getFileTypeFaIcon } from "./script0.js";
-import { sortAndValue } from "./utils/utils.js";
+import { sortAndValue } from "./script0.js";
 import { DATA_TABLE_COLUMNS } from "./constants/constants.js";
 import { Troff } from "./script.js";
 import { DB } from "./script.js";
 import { st } from "./assets/internal/st-script.js";
-import { SongToGroup } from "./songToGroup.js";
+import { SongToGroup } from "./scriptASimple.js";
 
 function addItem_NEW_2(key) {
   var galleryId = "pwa-galleryId";
@@ -33,7 +33,7 @@ function addItem_NEW_2(key) {
     return;
   }
 
-  DB.getVal(key, (song) => {
+  DB.getVal(key, function (song) {
     var tempo = "",
       info = "",
       duration = sortAndValue(0, ""),
@@ -90,10 +90,10 @@ function addItem_NEW_2(key) {
       (columns[DATA_TABLE_COLUMNS.getPos("TYPE")] = sortAndValue(
         faType,
         '<i class="fa ' + faType + '"></i>'
-      )),
+      )), //type
       (columns[DATA_TABLE_COLUMNS.getPos("DURATION")] = duration),
       (columns[DATA_TABLE_COLUMNS.getPos("DISPLAY_NAME")] = titleOrFileName),
-      (columns[DATA_TABLE_COLUMNS.getPos("CUSTOM_NAME")] = customName),
+      (columns[DATA_TABLE_COLUMNS.getPos("CUSTOM_NAME")] = customName || ""),
       (columns[DATA_TABLE_COLUMNS.getPos("CHOREOGRAPHY")] = choreography || ""),
       (columns[DATA_TABLE_COLUMNS.getPos("CHOREOGRAPHER")] =
         choreographer || ""),
@@ -107,12 +107,16 @@ function addItem_NEW_2(key) {
       (columns[DATA_TABLE_COLUMNS.getPos("FILE_SIZE")] = size),
       (columns[DATA_TABLE_COLUMNS.getPos("INFO")] = info),
       (columns[DATA_TABLE_COLUMNS.getPos("EXTENSION")] = "." + extension);
+
     var newRow = $("#dataSongTable")
       .DataTable()
       .row.add(columns)
+      //.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
+      //						onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
       .draw(false)
       .node();
 
+    // todo: remove DATA_INFO and use this data-song-key instead!
     $(newRow).attr("data-song-key", key);
     if (SongToGroup.getNrOfGroupsThisSongIsIn(key) > 0) {
       $(newRow).addClass("groupIndication");
@@ -122,7 +126,7 @@ function addItem_NEW_2(key) {
       $("#dataSongTable").find("tbody tr").removeClass("selected");
       $(newRow).addClass("selected");
     }
-  });
+  }); // end DB.getVal
 }
 
 export { addItem_NEW_2 };

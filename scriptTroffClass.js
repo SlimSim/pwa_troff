@@ -16,11 +16,11 @@ import {
   DB,
   IO,
   createSongAudio,
-  addItem_NEW_2,
   ifGroupSongUpdateFirestore,
   getFirebaseGroupDataFromDialog,
   firebaseUser,
 } from "./script.js";
+import { addItem_NEW_2 } from "./songManagement.js";
 import { removeSongDataFromFirebaseGroup } from "./services/firebase.js";
 import { fileHandler, backendService } from "./services/file.js";
 import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
