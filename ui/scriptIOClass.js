@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 import { nDB } from "../assets/internal/db.js";
 import { st } from "../assets/internal/st-script.js";
 import {
@@ -79,7 +80,7 @@ class IOClass {
       .data(value);
   };
 
-  fullScreenChange = (event) => {
+  fullScreenChange = () => {
     if (document.fullscreenElement) {
       $(".toggleFullScreenExpandIcon").addClass("hidden");
       $(".toggleFullScreenCompressIcon").removeClass("hidden");
@@ -90,7 +91,7 @@ class IOClass {
   };
 
   openWindow = (event) => {
-    let $button = $(event.target).closest("[data-href]");
+    const $button = $(event.target).closest("[data-href]");
     window.open($button.data("href"), $button.data("target"));
   };
 
@@ -102,7 +103,7 @@ class IOClass {
     (await caches.keys())
       .sort((c1, c2) => c1.split("-v")[0].length - c2.split("-v")[0].length)
       .forEach((cacheName) => {
-        let [name, versionNumber] = cacheName.split("-v");
+        var [name, versionNumber] = cacheName.split("-v");
 
         if (name.includes("songCache")) {
           return;
@@ -145,10 +146,10 @@ class IOClass {
     this.addCacheVersionToAdvancedSetting();
 
     // this is to not change volume or speed when scrolling horizontally on mobile (require https://j11y.io/javascript/special-scroll-events-for-jquery/)
-    $(document).on("scrollStart", (e) => {
+    $(document).on("scrollStart", () => {
       $(".sliderRange, #timeBar").prop("disabled", true);
     });
-    $(document).on("scrollStop", (e) => {
+    $(document).on("scrollStop", () => {
       $(".sliderRange, #timeBar").prop("disabled", false);
       $("#volumeBar").val(Number($("#volume").text()));
       $("#speedBar").val(Number($("#speed").text()));
@@ -454,14 +455,13 @@ class IOClass {
 
     try {
       var successful = document.execCommand("copy");
-      var msg = successful ? "successful" : "unsuccessful";
 
       if (successful) {
         this.copyToClipboardSuccessful(text);
       } else {
         this.copyToClipboardFailed(text);
       }
-    } catch (err) {
+    } catch {
       this.copyToClipboardFailed(text);
     }
 
@@ -753,7 +753,7 @@ class IOClass {
       $("<h2>").append(strHeader)
     );
 
-    let $markerName = $("<input>", {
+    const $markerName = $("<input>", {
       type: "text",
       value: markerName,
       class: "ml-2",
@@ -763,7 +763,7 @@ class IOClass {
       .append($("<p>").append("Name:"))
       .append($markerName);
 
-    let $markerTime = $("<input>", {
+    const $markerTime = $("<input>", {
       type: "number",
       value: markerTime,
       class: "w-auto p-2 ml-3 text-left",
@@ -774,7 +774,7 @@ class IOClass {
       .append($markerTime)
       .append($("<p>").append("seconds"));
 
-    let $markerInfo = $("<textarea>", {
+    const $markerInfo = $("<textarea>", {
       placeholder: "Put extra marker info here",
       text: markerInfo,
       rows: 6,
@@ -785,7 +785,7 @@ class IOClass {
       .append($("<p>").append("Info:"))
       .append($markerInfo);
 
-    let $colorText = $("<div>", { class: "flexCol flex" })
+    const $colorText = $("<div>", { class: "flexCol flex" })
       .append($("<p>").append("Color:"))
       .append($("<span>").append(""));
 
@@ -816,7 +816,7 @@ class IOClass {
       .append(buttOK)
       .append(buttCancel);
 
-    let $outerDialog = $("<div>", { class: "outerDialog" }).append(
+    const $outerDialog = $("<div>", { class: "outerDialog" }).append(
       $("<div>", {
         class: "innerDialog secondaryColor w-auto mw-100 vScroll mh-100",
       })
@@ -993,10 +993,10 @@ class IOClass {
     confirmButtonText = st.defaultFor(confirmButtonText, "OK");
     declineButtonText = st.defaultFor(declineButtonText, "Cancel");
 
-    let outerDiv = $("<div>").addClass("outerDialog onTop");
-    let innerDiv = $("<div>").addClass("innerDialog m-4");
+    const outerDiv = $("<div>").addClass("outerDialog onTop");
+    const innerDiv = $("<div>").addClass("innerDialog m-4");
 
-    let clickCancel = () => {
+    const clickCancel = () => {
       if (funcCancel) funcCancel();
       outerDiv.remove();
       this.IOEnterFunction = false;
@@ -1008,7 +1008,7 @@ class IOClass {
       this.IOEnterFunction = false;
     };
 
-    let buttRow = $("<div>")
+    const buttRow = $("<div>")
       .append(
         $("<input>")
           .addClass("regularButton")
@@ -1114,7 +1114,6 @@ class IOClass {
     this.blurHack();
 
     var $target = $(event.target),
-      targetHasClass,
       id = $target.attr("id"),
       classToToggleAndSave = $target.data("save-on-song-toggle-class");
 

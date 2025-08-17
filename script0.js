@@ -15,6 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* eslint eqeqeq: "off" */
+
 import { nDB } from "./assets/internal/db.js";
 import {
   DB,
@@ -58,7 +60,7 @@ var vidFormats = [
 
 const populateExampleSongsInGroupDialog = (songs) => {
   // TODO: fixa bättre sätt att lägga på låtarna!
-  let dataInfo = $("#dataSongTable")
+  const dataInfo = $("#dataSongTable")
     .DataTable()
     .column(DATA_TABLE_COLUMNS.getPos("DATA_INFO"))
     .data();
@@ -199,7 +201,7 @@ const updateUploadedHistory = async () => {
     if (auth.currentUser == null) return;
 
     const snapshot = await getDoc(doc(db, "UserData", auth.currentUser.uid));
-    let userData = snapshot.exists() ? snapshot.data() : {};
+    const userData = snapshot.exists() ? snapshot.data() : {};
 
     const uploadedHistory = userData.uploadedHistory || [];
     const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
@@ -342,7 +344,7 @@ function filterSongTable(list) {
     "hidden",
     $("#songListAll").hasClass("selected")
   );
-  let $songLists = $("#songListList .selected, #songListList .active");
+  const $songLists = $("#songListList .selected, #songListList .active");
   if ($songLists.length == 1) {
     $("#songlistSelectedWarningName").text(' "' + $songLists.text() + '"');
   } else {
@@ -536,7 +538,7 @@ function maximizeSongPicker() {
 }
 
 function clickToggleFloatingSonglists(event) {
-  let shouldOpenSongDialog = $("#buttSongsDialog").hasClass("active");
+  const shouldOpenSongDialog = $("#buttSongsDialog").hasClass("active");
   closeSongDialog();
   if ($("#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG").hasClass("active")) {
     moveSongPickerToFloatingState();
@@ -705,7 +707,7 @@ function initSongTable() {
       event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
     })
     .on("click", "tbody tr", function (event) {
-      let $td = $(event.target).closest("td, th");
+      const $td = $(event.target).closest("td, th");
 
       const songKey = $(event.currentTarget).data("song-key");
 

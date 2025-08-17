@@ -144,7 +144,7 @@ $(document).ready(async function () {
         .addClass("regularButton")
         .on("click", removePopUp);
 
-      let outer = $("<div>")
+      const outer = $("<div>")
         .addClass("outerDialog")
         .append(
           $("<div>")
@@ -171,7 +171,7 @@ $(document).ready(async function () {
     );
     mergeWithServerSongListHistory(savedServerSongListFromServer);
 
-    let filter = new URLSearchParams(window.location.hash.slice(1)).get("f");
+    const filter = new URLSearchParams(window.location.hash.slice(1)).get("f");
     if (filter == "my") {
       $("#sortMoreInfoSwitch").prop("checked", true);
       if (!$("#filterOnlyHistoryButt").hasClass("active")) {
@@ -189,7 +189,7 @@ $(document).ready(async function () {
     allPublicTroffDataFromServer = docs
       .map((doc) => doc.data())
       .filter(troffDataExistsInLocalHistoryOrIsPublic);
-    let latestServerSongListFromServer = troffDataListToServerSongList(
+    const latestServerSongListFromServer = troffDataListToServerSongList(
       allPublicTroffDataFromServer
     );
     nDB.set(
@@ -214,7 +214,7 @@ $(document).ready(async function () {
     const savedServerSongListFromServer = nDB.get(
       "TROFF_SERVER_SONG_LIST_FROM_SERVER"
     );
-    let latestServerSongListFromServer =
+    const latestServerSongListFromServer =
       await getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
 
     const listsAreEqual = listOfServerSongsAreEqual(
@@ -254,11 +254,11 @@ $(document).ready(async function () {
   };
 
   const scrollToUrlSong = function () {
-    let id = new URLSearchParams(window.location.hash.slice(1)).get("id");
+    const id = new URLSearchParams(window.location.hash.slice(1)).get("id");
 
     if (!id) return;
 
-    let element = document.getElementById(fileNameToId(decodeURI(id)));
+    const element = document.getElementById(fileNameToId(decodeURI(id)));
 
     if (!element) return;
 
@@ -298,7 +298,7 @@ $(document).ready(async function () {
 
   const getPrivateOnlineHistoryList = async function (user) {
     const snapshot = await getDoc(doc(db, "UserData", user.uid));
-    let userData = snapshot.exists() ? snapshot.data() : {};
+    const userData = snapshot.exists() ? snapshot.data() : {};
 
     const uploadedHistory = userData.uploadedHistory || [];
     const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
@@ -425,12 +425,12 @@ $(document).ready(async function () {
   };
 
   const troffDataListToServerSongList = function (troffDataList) {
-    let serverSongList = [];
+    const serverSongList = [];
 
     for (const troffData of troffDataList) {
       const fileNameUri = encodeURI(troffData.fileName);
 
-      let currentServerSong = serverSongList.find(
+      const currentServerSong = serverSongList.find(
         (ss) => ss.fileNameUri == fileNameUri
       );
 
@@ -466,7 +466,7 @@ $(document).ready(async function () {
     let nrOfHistorySongs = 0;
 
     $.each(serverSongListHistory, (i, serverSong) => {
-      let newDiv = $("#serverSongTemplate").children().clone(true, true);
+      const newDiv = $("#serverSongTemplate").children().clone(true, true);
 
       const fileName = decodeURI(serverSong.fileNameUri);
       newDiv.attr("id", fileNameToId(fileName));
@@ -505,7 +505,7 @@ $(document).ready(async function () {
         }
         addNewDiv = true;
 
-        let newTroffDataDiv = getFullTroffDataDiv(
+        const newTroffDataDiv = getFullTroffDataDiv(
           troffDataIdObject,
           serverSong.fileNameUri
         );
@@ -514,7 +514,7 @@ $(document).ready(async function () {
       if (!addNewDiv) {
         return;
       }
-      if (!!serverSong.deleted) {
+      if (serverSong.deleted) {
         $("#showDeletedButt").removeClass("hidden");
         $("#deletedFileList").append(newDiv);
       } else {
@@ -568,7 +568,7 @@ $(document).ready(async function () {
     var songTime = $("#markerList").data("songLength");
 
     while (child) {
-      let markerTime = Number($(child).data("time"));
+      const markerTime = Number($(child).data("time"));
       var myRowHeight = child.clientHeight;
 
       var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
@@ -642,7 +642,7 @@ $(document).ready(async function () {
 
     songData.currentStartMarker;
     songData.markers.forEach((marker) => {
-      let markerSpan = $("#markerTemplate").children().clone(true, true);
+      const markerSpan = $("#markerTemplate").children().clone(true, true);
       markerSpan.data("time", marker.time);
 
       markerSpan
@@ -715,7 +715,7 @@ $(document).ready(async function () {
   };
 
   const getFullTroffDataDiv = function (troffDataIdObject, fileNameUri) {
-    let newTroffData = $("#troffDataTemplate").children().clone(true, true);
+    const newTroffData = $("#troffDataTemplate").children().clone(true, true);
     const downloadText = troffDataIdObject.fromServer
       ? "for the first time"
       : "again";
@@ -765,7 +765,7 @@ $(document).ready(async function () {
   };
 
   const pathToName = function (filepath) {
-    let lastIndex = filepath.lastIndexOf(".");
+    const lastIndex = filepath.lastIndexOf(".");
     if (lastIndex == -1) {
       return filepath;
     }
@@ -786,11 +786,11 @@ $(document).ready(async function () {
   };
 
   const getSearchableFields = function (troffDataIdObject) {
-    let customName = "";
-    let choreography = "";
-    let displayName = troffDataIdObject.displayName || "";
-    let genre = troffDataIdObject.genre || "";
-    let tags = troffDataIdObject.tags || "";
+    const customName = "";
+    const choreography = "";
+    const displayName = troffDataIdObject.displayName || "";
+    const genre = troffDataIdObject.genre || "";
+    const tags = troffDataIdObject.tags || "";
     return [customName, choreography, displayName, genre, tags];
   };
 

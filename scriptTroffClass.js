@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 import { nDB } from "./assets/internal/db.js";
 import { st } from "./assets/internal/st-script.js";
 import {
@@ -128,7 +129,7 @@ class TroffClass {
     $("#addAddedSongsToSongList_doNotAdd").addClass("hidden");
     $("#addAddedSongsToSongList_done").removeClass("hidden");
 
-    let songs = [];
+    const songs = [];
 
     songKeys.each((i, songKey) => {
       songs.push({
@@ -167,7 +168,7 @@ class TroffClass {
     $("#addAddedSongsToSongList_songs").append($("<li>").text(key));
     $("#addAddedSongsToSongList_currentSongLists").empty();
 
-    let songKeys = $("#addAddedSongsToSongList_songs")
+    const songKeys = $("#addAddedSongsToSongList_songs")
       .children()
       .map((i, v) => $(v).text());
 
@@ -198,7 +199,7 @@ class TroffClass {
     $("#fileUploader").on("change", (event) => {
       fileHandler.handleFiles(event.target.files, (key, file) => {
         if (nDB.get(key) == null) {
-          let newSongObject = DB.fixSongObject();
+          const newSongObject = DB.fixSongObject();
           newSongObject.localInformation = {
             addedFromThisDevice: true,
           };
@@ -274,7 +275,7 @@ class TroffClass {
       //removing localInformation before sending it to server:
       const publicData = this.removeLocalInfo(markerObject);
 
-      let resp = await fileHandler.sendFile(songKey, publicData);
+      const resp = await fileHandler.sendFile(songKey, publicData);
 
       nDB.setOnSong(songKey, "serverId", resp.id);
       nDB.setOnSong(songKey, "fileUrl", resp.fileUrl);
@@ -301,7 +302,7 @@ class TroffClass {
   };
 
   buttCopyUrlToClipboard = () => {
-    let url = $("#doneUploadingSongToServerDialog").find("#shareSongUrl").val();
+    const url = $("#doneUploadingSongToServerDialog").find("#shareSongUrl").val();
 
     IO.copyTextToClipboard(url);
   };
@@ -372,10 +373,10 @@ class TroffClass {
 
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
 
-    let markers = JSON.parse(troffData.markerJsonString);
+    const markers = JSON.parse(troffData.markerJsonString);
     markers.serverId = serverId;
     markers.fileUrl = troffData.fileUrl;
-    let oldMarkers = nDB.get(troffData.fileName) || {};
+    const oldMarkers = nDB.get(troffData.fileName) || {};
     markers.localInformation = oldMarkers.localInformation;
 
     try {
@@ -402,7 +403,7 @@ class TroffClass {
     const markersFromCache = nDB.get(fileName);
     let markersFromServer;
     try {
-      let troffDataFromServer = await backendService.getTroffData(
+      const troffDataFromServer = await backendService.getTroffData(
         serverId,
         fileName
       );
@@ -435,7 +436,7 @@ class TroffClass {
       );
     }
 
-    let oImport = {};
+    const oImport = {};
     oImport.strSongInfo = markersFromServer.info;
     oImport.aoStates = aoStates;
     oImport.aoMarkers = markersFromServer.markers;
@@ -445,9 +446,8 @@ class TroffClass {
     }, 42);
   };
 
-  importTroffDataToExistingSong_keepExisting = async (event) => {
+  importTroffDataToExistingSong_keepExisting = async () => {
     const fileName = $("#importTroffDataToExistingSong_fileName").val();
-    const serverId = $("#importTroffDataToExistingSong_serverId").val();
 
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
@@ -558,7 +558,7 @@ class TroffClass {
   ) => {
     "use strict";
 
-    let fileDoesExists = await fileHandler.doesFileExistInCache(fileName);
+    const fileDoesExists = await fileHandler.doesFileExistInCache(fileName);
 
     if (fileDoesExists) {
       if (serverId == troffDataFromCache.serverId) {
@@ -642,7 +642,7 @@ class TroffClass {
     }
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
 
-    let markers = JSON.parse(troffData.markerJsonString);
+    const markers = JSON.parse(troffData.markerJsonString);
     markers.serverId = serverId;
     markers.fileUrl = troffData.fileUrl;
 
@@ -661,7 +661,7 @@ class TroffClass {
     $.notify(troffData.fileName + " was successfully added");
   };
 
-  editSongDialogSave = (event) => {
+  editSongDialogSave = () => {
     const key = $("#editSongFile").val();
     const songObject = nDB.get(key);
 
@@ -770,7 +770,7 @@ class TroffClass {
     });
   };
 
-  toggleExtendedMarkerColor = (event) => {
+  toggleExtendedMarkerColor = () => {
     if ($("#markerList").hasClass("extended-color")) {
       $("#markerList").removeClass("extended-color");
       $("#toggleExtendedMarkerColor").removeClass("active");
@@ -791,7 +791,7 @@ class TroffClass {
     });
   };
 
-  toggleExtraExtendedMarkerColor = (event) => {
+  toggleExtraExtendedMarkerColor = () => {
     if ($("#markerList").hasClass("extra-extended")) {
       $("#markerList").removeClass("extra-extended");
       $("#toggleExtraExtendedMarkerColor").removeClass("active");
@@ -851,10 +851,10 @@ class TroffClass {
     });
   };
 
-  closeSettingsDialog = (event) => {
+  closeSettingsDialog = () => {
     $("#outerSettingPopUpSquare").addClass("hidden");
   };
-  openSettingsDialog = (event) => {
+  openSettingsDialog = () => {
     $("#outerSettingPopUpSquare").removeClass("hidden");
     gtag("event", "Open Settings", { event_category: "Clicking Button" });
   };
@@ -934,7 +934,7 @@ class TroffClass {
    * it should thus do the things that conect player to this...
    */
   setMetadata = (media) => {
-    let key = this.getCurrentSong();
+    const key = this.getCurrentSong();
 
     let songObject = nDB.get(key);
 
@@ -953,7 +953,6 @@ class TroffClass {
       );
     }
 
-    var songLength = media.duration;
     document.getElementById("timeBar").max = media.duration;
     $("#maxTime")[0].innerHTML = this.secToDisp(media.duration);
 
@@ -975,7 +974,7 @@ class TroffClass {
     IO.removeLoadScreen();
   };
 
-  setMetadataImage = (media) => {
+  setMetadataImage = () => {
     IO.removeLoadScreen();
     DB.getImageMetaDataOf(this.getCurrentSong());
   };
@@ -1065,7 +1064,6 @@ class TroffClass {
 
     if (sliderVal > this.getStopTime()) {
       var aFirstAndLast = this.getFirstAndLastMarkers();
-      var firstMarkerId = aFirstAndLast[0];
       var lastMarkerId = aFirstAndLast[1] + "S";
 
       if (sliderVal < $("#" + lastMarkerId)[0].timeValue)
@@ -1084,12 +1082,11 @@ class TroffClass {
             oMarker.info = "";
             oMarker.id = this.getNewMarkerId();
 
-            aMarkers = [oMarker];
+            const aMarkers = [oMarker];
             this.addMarkers(aMarkers); // adds marker to html
             DB.saveMarkers(this.getCurrentSong()); // saves end marker to DB
 
             var aFirstAndLast = this.getFirstAndLastMarkers();
-            var firstMarkerId = aFirstAndLast[0];
             var lastMarkerId = aFirstAndLast[1] + "S";
             this.selectStopMarker(lastMarkerId);
             document.querySelector("audio, video").currentTime = sliderVal;
@@ -1199,7 +1196,6 @@ class TroffClass {
   atEndOfLoop = () => {
     var audio = document.querySelector("audio, video");
     this.goToStartMarker();
-    var dTime = audio.currentTime;
     audio.pause();
 
     if (this.isLoopInfinite()) {
@@ -1335,7 +1331,7 @@ class TroffClass {
     if (this.stopTimeout) clearInterval(this.stopTimeout);
     this.setMood("wait");
 
-    let localPlayAndSetMood = () => {
+    const localPlayAndSetMood = () => {
       if (this.getMood() == "pause") return;
       audio.play();
       this.setMood("play");
@@ -1394,7 +1390,7 @@ class TroffClass {
   };
 
   setMood = (mood) => {
-    let infoSectionClasses =
+    const infoSectionClasses =
       "overFilm bg-transparent position-absolute align-items-center w-100 flexCol";
     $("#infoSection, .moodColorizedText")
       .removeClass("play pause wait")
@@ -1441,7 +1437,7 @@ class TroffClass {
   }; // end SetCurrentSong
 
   pathToName = (filepath) => {
-    let lastIndex = filepath.lastIndexOf(".");
+    const lastIndex = filepath.lastIndexOf(".");
     if (lastIndex == -1) {
       return filepath;
     }
@@ -1625,9 +1621,6 @@ class TroffClass {
     will then call the add- and save- Marker
  */
   createMarker = () => {
-    var time = document.querySelector("audio, video").currentTime;
-    var songSRC = $("audio, video").attr("src");
-    var iMarkers = $("#markerList li").length + 1;
 
     var quickTimeout = setTimeout(() => {
       var oFI = {};
@@ -1748,7 +1741,7 @@ class TroffClass {
     await setDoc(doc(db, "Groups", groupDocId), groupData);
   };
 
-  onClickShareSonglist = (event) => {
+  onClickShareSonglist = () => {
     if (!firebaseUser) {
       $("#shareInstructionDialog").removeClass("hidden");
       return;
@@ -1762,7 +1755,7 @@ class TroffClass {
     addGroupOwnerRow(firebaseUser.email);
   };
 
-  onClickLeaveGroup = (event) => {
+  onClickLeaveGroup = () => {
     IO.confirm(
       "Stop sharing this songlist",
       "Are you sure you want to stop sharing this songlist? Updates that you do will no longer be shared to the other members of this songlist.",
@@ -1825,7 +1818,7 @@ class TroffClass {
     $("#groupDialog").addClass("hidden");
   };
 
-  onClickremoveSonglist = async (event) => {
+  onClickremoveSonglist = async () => {
     const isGroup = $("#groupDialogIsGroup").is(":checked");
     if (!isGroup) {
       this.IO_removeSonglist();
@@ -1984,7 +1977,7 @@ class TroffClass {
 
         $("#songListAll").removeClass("selected");
 
-        o.directoryList.forEach((v, i) => {
+        o.directoryList.forEach((v) => {
           $("#directoryList")
             .find("[data-gallery-id=" + v.galleryId + "]")
             .each((inner_index, inner_value) => {
@@ -1994,13 +1987,13 @@ class TroffClass {
               }
             });
         });
-        o.galleryList.forEach((v, i) => {
+        o.galleryList.forEach((v) => {
           $("#galleryList")
             .find("[data-gallery-id=" + v + "]")
             .addClass(indicatorClass);
           $("#songListAll").removeClass("selected");
         });
-        o.songListList.forEach((v, i) => {
+        o.songListList.forEach((v) => {
           $("#songListList")
             .find("[data-songlist-id=" + v + "]")
             .addClass(indicatorClass);
@@ -2057,7 +2050,7 @@ class TroffClass {
   };
 
   enterSongListName = () => {
-    IO.setEnterFunction((event) => {
+    IO.setEnterFunction(() => {
       IO.blurHack();
       this.saveNewSongList();
       return false;
@@ -2300,7 +2293,7 @@ class TroffClass {
     );
   };
 
-  exitSerachDataTableSongList = (event) => {
+  exitSerachDataTableSongList = () => {
     $("#dataSongTable")
       .DataTable()
       .rows(".important")
@@ -2312,7 +2305,7 @@ class TroffClass {
     IO.blurHack();
   };
 
-  showSearchAndActivate = (event) => {
+  showSearchAndActivate = () => {
     if (!$("#buttSongsDialog").hasClass("active")) {
       $("#buttSongsDialog").trigger("click").select();
     }
@@ -2385,7 +2378,6 @@ class TroffClass {
 
       if (oMarker.time == "max" || time > maxTime) {
         time = maxTime;
-        var song = this.getCurrentSong();
       }
 
       var button = document.createElement("input");
@@ -2519,7 +2511,6 @@ class TroffClass {
   unselectStartMarker = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
     var startMarkerId = aFirstAndLast[0];
-    var stopMarkerId = aFirstAndLast[1] + "S";
 
     $(".currentMarker").removeClass("currentMarker");
     $("#" + startMarkerId).addClass("currentMarker");
@@ -2532,7 +2523,6 @@ class TroffClass {
 
   unselectStopMarker = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
-    var startMarkerId = aFirstAndLast[0];
     var stopMarkerId = aFirstAndLast[1] + "S";
 
     $(".currentStopMarker").removeClass("currentStopMarker");
@@ -2554,7 +2544,6 @@ class TroffClass {
     if (stopTime <= startTime + 0.5) {
       $(".currentStopMarker").removeClass("currentStopMarker");
       var aFirstAndLast = this.getFirstAndLastMarkers();
-      var firstMarkerId = aFirstAndLast[0];
       var lastMarkerId = aFirstAndLast[1] + "S";
 
       $("#" + lastMarkerId).addClass("currentStopMarker");
@@ -2589,7 +2578,6 @@ class TroffClass {
     if (startTime + 0.5 >= stopTime) {
       var aFirstAndLast = this.getFirstAndLastMarkers();
       var firstMarkerId = aFirstAndLast[0];
-      var lastMarkerId = aFirstAndLast[1] + "S";
 
       $(".currentMarker").removeClass("currentMarker");
       $("#" + firstMarkerId).addClass("currentMarker");
@@ -2768,7 +2756,7 @@ class TroffClass {
     );
     $("#copyMarkersNrOfMarkers").text(this.getNrOfSelectedMarkers());
     $("#copyMarkersNumber").select();
-    IO.setEnterFunction((event) => {
+    IO.setEnterFunction(() => {
       IO.blurHack();
       this.copyMarkers();
       return false;
@@ -2776,20 +2764,13 @@ class TroffClass {
   };
 
   copyMarkers = () => {
-    let aAllMarkers = nDB.get(this.getCurrentSong()).markers,
-      i,
-      timeToAddToMarkers,
-      timeForFirstMarker = Number($("#copyMarkersNumber").val()),
-      startNumber,
-      endNumber,
-      newMarker,
-      nrMarkersToCopy;
-
+    const aAllMarkers = nDB.get(this.getCurrentSong()).markers,
+      timeForFirstMarker = Number($("#copyMarkersNumber").val());
+    let i,
+      newMarker;
     const strMarkersBeforeCopy = JSON.stringify(aAllMarkers);
-
-    [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
-
-    timeToAddToMarkers = timeForFirstMarker - aAllMarkers[startNumber].time;
+    const [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
+    const timeToAddToMarkers = timeForFirstMarker - aAllMarkers[startNumber].time;
 
     for (i = startNumber; i < endNumber; i++) {
       newMarker = aAllMarkers[i];
@@ -2839,7 +2820,7 @@ class TroffClass {
   };
 
   getNrOfSelectedMarkers = () => {
-    let [startMarkerNr, endMarkerNr] = this.getStartAndEndMarkerNr(0, 1);
+    const [startMarkerNr, endMarkerNr] = this.getStartAndEndMarkerNr(0, 1);
     return endMarkerNr - startMarkerNr;
   };
 
@@ -2851,15 +2832,11 @@ class TroffClass {
       startNr = 0,
       endNr = aAllMarkers.length,
       selectedId = $(".currentMarker").attr("id"),
-      selectedStopId = $(".currentStopMarker").attr("id"),
-      nextAttrId,
-      attrId;
+      selectedStopId = $(".currentStopMarker").attr("id");
 
     for (var k = 0; k < aAllMarkers.length; k++) {
       if (selectedId == aAllMarkers.eq(k).attr("id")) startNr = k;
 
-      nextAttrId = aAllMarkers.eq(k).next().attr("id");
-      attrId = aAllMarkers.eq(k).attr("id");
       if (selectedStopId == aAllMarkers.eq(k).next().attr("id")) endNr = k;
     }
     return [startNr + addToStartNr, endNr + addToEndNr];
@@ -2873,7 +2850,7 @@ class TroffClass {
       endNumber = markers.length - 1;
 
     if (bDeleteSelected) {
-      var [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
+      [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
     }
 
     if (markers.length - (endNumber - startNumber) < 2) {
@@ -2970,7 +2947,6 @@ class TroffClass {
     var oldMarkerColor = $("#" + markerId)[0].color;
     var oldMarkerClass = MARKER_COLOR_PREFIX + oldMarkerColor;
 
-    var text = "Please enter new marker name here";
     IO.promptEditMarker(
       markerId,
       (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
@@ -3123,7 +3099,7 @@ class TroffClass {
     var songTime = audioVideo.duration;
 
     if (!isFinite(songTime)) {
-      troffData = nDB.get(this.getCurrentSong());
+      const troffData = nDB.get(this.getCurrentSong());
       if (
         troffData.fileData != undefined &&
         troffData.fileData.duration != undefined
@@ -3265,7 +3241,7 @@ class TroffClass {
     var height = 100 * zd;
     var marginTop = -mt;
 
-    let marginTopPX = (winHeightPX * marginTop) / 100;
+    const marginTopPX = (winHeightPX * marginTop) / 100;
 
     $("#markerSection").css("height", height + "%");
     $("#markerSection").css("margin-top", marginTopPX + "px");
@@ -3289,7 +3265,7 @@ class TroffClass {
       this.nrTaps++;
     }
 
-    let currTempo = Math.round(
+    const currTempo = Math.round(
       (this.nrTaps * 60) / (this.time - this.startTime)
     );
 
@@ -3322,7 +3298,7 @@ class TroffClass {
 
   /* standAlone Functions */
   getClassStartsWith = (classes, startString) => {
-    var r = $.grep(classes.split(" "), (classes, r) => {
+    var r = $.grep(classes.split(" "), (classes) => {
       return 0 === classes.indexOf(startString);
     }).join();
     return r || !1;

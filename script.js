@@ -15,6 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* eslint eqeqeq: "off" */
+
 // todo: try to use the strict mode! :)
 // - what could possibly go wrong?
 // "use strict";
@@ -523,7 +525,7 @@ function setSong2(/*fullPath, galleryId*/ path, type, songData) {
   if (isSafari && false) {
     log.d("isSafari", isSafari, nDB);
 
-    let troffData = nDB.get(path);
+    const troffData = nDB.get(path);
     if (
       troffData.localInformation &&
       troffData.localInformation.addedFromThisDevice
@@ -592,7 +594,7 @@ function updateVersionLink(path) {
     return hideVersionLink(0);
   }
 
-  let hist = dbHistory.filter((h) => h.fileNameUri == fileNameUri);
+  const hist = dbHistory.filter((h) => h.fileNameUri == fileNameUri);
 
   if (
     hist.length == 0 ||
@@ -638,7 +640,7 @@ async function createSongAudio(path) {
     }
   } else {
     try {
-      let v3SongObjectUrl = await fileHandler.getObjectUrlFromFile(path);
+      const v3SongObjectUrl = await fileHandler.getObjectUrlFromFile(path);
       setSong2(path, "audio", v3SongObjectUrl);
     } catch (e) {
       errorHandler.fileHandler_sendFile(e);

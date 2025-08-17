@@ -130,7 +130,7 @@ $(document).ready(async function () {
     const docs = snapshot.docs;
     const allTroffData = docs.map((doc) => doc.data());
 
-    let fileList = [];
+    const fileList = [];
 
     let totalSize = 0;
     let nrOfFiles = 0;
@@ -141,7 +141,7 @@ $(document).ready(async function () {
         0,
         troffData.fileUrl.indexOf("?")
       );
-      let currentFile = fileList.find((x) => x.fileUrl == fileUrl);
+      const currentFile = fileList.find((x) => x.fileUrl == fileUrl);
 
       if (currentFile == undefined) {
         const fileData =
@@ -149,7 +149,7 @@ $(document).ready(async function () {
             ? JSON.parse(troffData.markerJsonString).fileData
             : {}) || {};
 
-        let file = {
+        const file = {
           fileName: troffData.fileName,
           fileUrl: fileUrl,
           fileType: troffData.fileType,
@@ -182,7 +182,7 @@ $(document).ready(async function () {
     fileList.sort((a, b) => (a.updated < b.updated ? 1 : -1));
 
     $.each(fileList, (i, file) => {
-      let newDiv = $("#template").children().clone(true, true);
+      const newDiv = $("#template").children().clone(true, true);
       let atLeastOneTroffDataIsDeleted = false;
       let atLeastOneTroffDataIsNotDeleted = false;
       let nrTroffDataPublic = 0;
@@ -215,7 +215,7 @@ $(document).ready(async function () {
           return;
         }
 
-        let newTroffData = $("#troffDataTemplate").children().clone(true, true);
+        const newTroffData = $("#troffDataTemplate").children().clone(true, true);
 
         if (troffData.deleted) {
           atLeastOneTroffDataIsDeleted = true;

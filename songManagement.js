@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 // Song management functions
 
 import { getFileExtension } from "./utils/utils.js";
@@ -84,7 +85,7 @@ function addItem_NEW_2(key) {
     titleOrFileName =
       customName || choreography || title || Troff.pathToName(key);
 
-    let columns = [];
+    const columns = [];
 
     (columns[DATA_TABLE_COLUMNS.getPos("DATA_INFO")] = strDataInfo),
       (columns[DATA_TABLE_COLUMNS.getPos("TYPE")] = sortAndValue(

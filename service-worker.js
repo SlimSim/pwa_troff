@@ -146,7 +146,7 @@ self.addEventListener("install", (event) => {
     caches.keys().then(function (existingKeys) {
       return Promise.all(
         newAppCaches.map(function (appCache) {
-          let appCacheKey = createCacheKey(appCache.name, appCache.version);
+          const appCacheKey = createCacheKey(appCache.name, appCache.version);
           if (existingKeys.indexOf(appCacheKey) === -1) {
             return caches.open(appCacheKey).then(function (cache) {
               appCache.urls.forEach((url) => addToCache(cache, url));
@@ -210,7 +210,7 @@ self.addEventListener("fetch", (event) => {
           .then((response) => {
             return response;
           })
-          .catch((error) => {
+          .catch(() => {
             return Response.error();
           });
       }

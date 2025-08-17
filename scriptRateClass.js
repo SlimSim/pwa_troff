@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 import { nDB } from "./assets/internal/db.js";
 import { IO } from "/script.js";
 import { Troff, Rate } from "/script.js";

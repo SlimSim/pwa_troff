@@ -1,3 +1,5 @@
+/* eslint eqeqeq: "off" */
+
 const fileHandler = {};
 const backendService = {};
 const firebaseWrapper = {};
@@ -14,6 +16,8 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from "./firebaseClient.js";
+import { IO } from "../script.js";
+import { log } from "../utils/log.js";
 import { cacheImplementation } from "./FileApiImplementation.js";
 
 $(() => {
@@ -40,7 +44,7 @@ $(() => {
 
   const hashFile = async (file) => {
     return new Promise((resolve, reject) => {
-      let reader = new FileReader();
+      const reader = new FileReader();
       reader.onload = async (event) => {
         const data = event.target.result;
         const fileHash = await sha256Hash(data);
@@ -196,7 +200,7 @@ $(() => {
     const contentLength = +response.headers.get("Content-Length");
     const reader = response.body.getReader();
     let receivedLength = 0; // received that many bytes at the moment
-    let chunks = []; // array of received binary chunks (comprises the body)
+    const chunks = []; // array of received binary chunks (comprises the body)
     while (true) {
       const { done, value } = await reader.read();
 
@@ -248,7 +252,7 @@ $(() => {
   };
 
   fileHandler.doesFileExistInCache = async (url) => {
-    let response = await caches.match(url);
+    const response = await caches.match(url);
     return response !== undefined;
   };
 
@@ -313,7 +317,7 @@ $(() => {
 
     troffData.id = crc32Hash(JSON.stringify(troffData));
 
-    return firebaseWrapper.uploadTroffData(troffData).then((retVal) => {
+    return firebaseWrapper.uploadTroffData(troffData).then(() => {
       return {
         id: troffData.id,
         fileUrl: troffData.fileUrl,
@@ -382,7 +386,7 @@ $(() => {
           try {
             const downloadURL = await getDownloadURL(task.snapshot.ref);
             resolve(downloadURL);
-          } catch (x) {
+          } catch {
             log.e(error);
             reject(
               new ShowUserException(`Can not upload the file to the server.
@@ -416,7 +420,7 @@ $(() => {
         if (troffDataInFirebase) {
           return troffDataInFirebase;
         }
-      } catch (_) {
+      } catch {
         // ignore and rethrow below
       }
       throw new ShowUserException(

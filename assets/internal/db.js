@@ -5,7 +5,7 @@ const nDB = {
       keys = [keys];
     }
 
-    let valObject = [];
+    const valObject = [];
     valObject[0] = nDB.get(songId);
     if (valObject[0] == undefined) {
       console.error(

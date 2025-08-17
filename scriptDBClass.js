@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 import { nDB, nDBc } from "./assets/internal/db.js";
 import { DB, createSongAudio } from "./script.js";
 import { IO, ifGroupSongUpdateFirestore, updateVersionLink } from "./script.js";

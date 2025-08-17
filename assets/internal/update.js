@@ -33,7 +33,7 @@ function addToCache(cache, url) {
 
 caches.keys().then( async function(names) {
 	console.log( "names", names);
-	for (let name of names) {
+	for (const name of names) {
 
 		if( name.includes( "songCache" ) ) {
 			console.log( "skipping name", name );
@@ -45,7 +45,7 @@ caches.keys().then( async function(names) {
 		console.log( "deleting name", name );
 		caches.delete( name );
 
-		let cache = await caches.open( name );
+		const cache = await caches.open( name );
 		console.log( name + " is open as ", cache );
 
 		urls.forEach( url => addToCache( cache, url ) );
@@ -61,7 +61,7 @@ caches.keys().then( async function(names) {
 
   		navigator.serviceWorker.getRegistrations().then(function(registrations) {
   			console.log( "registrations", registrations);
-  			for(let registration of registrations) {
+  			for(const registration of registrations) {
   				registration.unregister();
   			}
   		});

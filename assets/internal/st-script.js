@@ -4,22 +4,22 @@ const st = {};
 $( document ).ready( function() {
 
 	st.confirm = function(textHead, textBox, funcOk, funcCancel) {
-		let outerDiv = $( "<div>" ).addClass("outerDialog onTop");
-		let innerDiv = $( "<div>" ).addClass("innerDialog m-4");
+		const outerDiv = $( "<div>" ).addClass("outerDialog onTop");
+		const innerDiv = $( "<div>" ).addClass("innerDialog m-4");
 
-		let clickOk = function() {
+		const clickOk = function() {
 			if( funcOk ) funcOk();
 			document.removeEventListener('keydown', onKeyDown );
 			outerDiv.remove();
 		};
 
-		let clickCancel = function() {
+		const clickCancel = function() {
 			if( funcCancel ) funcCancel();
 			document.removeEventListener('keydown', onKeyDown );
 			outerDiv.remove();
 		};
 
-		let buttRow = $( "<div>" )
+		const buttRow = $( "<div>" )
 			.append(
 				$("<input>" )
 					.addClass( "regularButton" )
@@ -143,12 +143,12 @@ $( document ).ready( function() {
 */
 
 $( "[data-st-css-selector-to-toggle]" ).on( "click", function( event ) {
-	let $target = $( event.target ).closest( "[data-st-css-selector-to-toggle]" );
+	const $target = $( event.target ).closest( "[data-st-css-selector-to-toggle]" );
 	$( $target.data( "st-css-selector-to-toggle" ) ).toggleClass( "hidden" );
 } );
 
 $( "[data-st-css-selector-to-fade-in]" ).on( "click", function( event ) {
-	let $target = $( event.target )
+	const $target = $( event.target )
 		.closest( "[data-st-css-selector-to-fade-in]" );
 
 		$( $target.data( "st-css-selector-to-fade-in" ) ).toggleClass( "fadeIn" );

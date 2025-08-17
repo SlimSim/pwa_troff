@@ -20,7 +20,7 @@ export const cacheImplementation = {
       }
       // Note, with the version 2,
       // every song was cached with the status text "SuperSmashingGreat!"
-      return cachedResponse.statusText == "SuperSmashingGreat!";
+      return cachedResponse.statusText === "SuperSmashingGreat!";
     });
   },
 

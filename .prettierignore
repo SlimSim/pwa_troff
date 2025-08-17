@@ -1,0 +1,4 @@
+node_modules/
+assets/external/**
+dist/
+build/

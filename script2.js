@@ -15,6 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* eslint eqeqeq: "off" */
+
 import log from "./utils/log.js";
 
 import { IO } from "./script.js";

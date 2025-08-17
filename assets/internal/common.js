@@ -40,7 +40,7 @@
       window.open(link);
     }
 
-    let toggleNavigation = document.querySelectorAll(".toggle-navigation");
+    const toggleNavigation = document.querySelectorAll(".toggle-navigation");
 
     toggleNavigation.forEach(function (item, index) {
       item.addEventListener("click", function () {

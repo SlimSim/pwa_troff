@@ -78,7 +78,7 @@ class SongToGroup {
   }
 
   static getNrOfGroupsThisSongIsIn(songKey) {
-    let myGroups = this.#map;
+    const myGroups = this.#map;
 
     const firestoreIdentifierList = myGroups[songKey];
     if (firestoreIdentifierList == undefined) {
@@ -112,7 +112,7 @@ class SongToGroup {
     const myGroupsE = Object.entries(myGroups);
 
     for (let i = 0; i < myGroupsE.length; i++) {
-      let groupWithSongList = myGroupsE[i][1].filter(
+      const groupWithSongList = myGroupsE[i][1].filter(
         (idObject) => idObject.songDocId == songDocId
       );
 

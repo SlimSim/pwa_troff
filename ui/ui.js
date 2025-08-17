@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 // UI-related functions
 
 import { nDB } from "../assets/internal/db.js";
@@ -10,7 +11,7 @@ const setUiToSignIn = async (user) => {
   nDB.set("TROFF_FIREBASE_PREVIOUS_SIGNED_IN", true);
 };
 
-const setUiToNotSignIn = (user) => {
+const setUiToNotSignIn = () => {
   $(".hide-on-sign-out").addClass("hidden");
   $(".hide-on-sign-in").removeClass("hidden");
   nDB.set("TROFF_FIREBASE_PREVIOUS_SIGNED_IN", false);

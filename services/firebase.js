@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 // Firebase-related functions
 
 import {
@@ -131,7 +132,7 @@ const saveSongDataToFirebaseGroup = async function (
 };
 
 const uploadSongToFirebaseGroup = async function (groupId, songKey) {
-  const [fileUrl, file] = await fileHandler.sendFileToFirebase(
+  const [fileUrl] = await fileHandler.sendFileToFirebase(
     songKey,
     "Groups/" + groupId
   );
