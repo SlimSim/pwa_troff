@@ -15,14 +15,16 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { st } from "./assets/internal/st-script.js";
-import { environment } from "./assets/internal/environment.js";
-import { nDB } from "./assets/internal/db.js";
+/* eslint eqeqeq: "off" */
+
+import { st } from './assets/internal/st-script.js';
+import './assets/external/notify-js/notify.min.js';
+import './assets/internal/notify-js/notify.config.js';
+import './assets/external/DataTables/js/jquery.dataTables.min.js';
+import { nDB } from './assets/internal/db.js';
 import {
-  app,
   auth,
   db,
-  storage,
   // Auth helpers
   GoogleAuthProvider,
   signInWithPopup,
@@ -32,23 +34,15 @@ import {
   // Firestore helpers
   doc,
   setDoc,
-  deleteDoc,
   collection,
   getDocs,
   getDoc,
-  query,
-  where,
-  updateDoc,
-  addDoc,
-  // Storage helpers
-  ref,
-  listAll,
-  deleteObject,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "./services/firebaseClient.js";
+} from './services/firebaseClient.js';
+import { initiateAllFirebaseGroups } from './services/firebase.js';
+import log from './utils/log.js';
+
 $(document).ready(async function () {
-  "use strict";
+  'use strict';
 
   /************************************************
 	/*           Private methods and variables:
@@ -65,14 +59,14 @@ $(document).ready(async function () {
       setUiToSignIn(firebaseUser);
       initiateAllFirebaseGroups();
     } catch (error) {
-      log.e("Error during sign-in:", error);
+      log.e('Error during sign-in:', error);
     }
   };
 
   const doSignOut = function () {
     signOut(auth)
       .then()
-      .catch((error) => {
+      .catch(() => {
         // An error happened.
       });
   };
@@ -101,61 +95,46 @@ $(document).ready(async function () {
 		*/
     })
     .catch((error) => {
-      log.e("auth.getRedirectResult error", error);
+      log.e('auth.getRedirectResult error', error);
       // Handle Errors here.
-      var errorCode = error.code;
       var errorMessage = error.message;
-      // The email of the user's account used.
-      var email = error.email;
       // The firebase.auth.AuthCredential type that was used.
-      var credential = error.credential;
-      $("#alertDialog").removeClass("hidden");
-      $("#alertHeader").text("Error");
-      $("#alertText").text(
-        "could not authenticate: " + error.code + ", " + errorMessage
-      );
+      $('#alertDialog').removeClass('hidden');
+      $('#alertHeader').text('Error');
+      $('#alertText').text('could not authenticate: ' + error.code + ', ' + errorMessage);
     });
 
-  const setUiToNotSignIn = function (user) {
-    $("#userName").addClass("hidden").text("");
-    $("#userPhoto").addClass("hidden").attr("src", "");
-    $("#googleSignIn").removeClass("hidden");
-    $("#signOut").addClass("hidden");
+  const setUiToNotSignIn = function () {
+    $('#userName').addClass('hidden').text('');
+    $('#userPhoto').addClass('hidden').attr('src', '');
+    $('#googleSignIn').removeClass('hidden');
+    $('#signOut').addClass('hidden');
   };
 
   const setUiToSignIn = async function (user) {
-    $("#userName").removeClass("hidden").text(user.displayName);
-    $("#userPhoto").removeClass("hidden").attr("src", user.photoURL);
-    $("#googleSignIn").addClass("hidden");
-    $("#signOut").removeClass("hidden");
+    $('#userName').removeClass('hidden').text(user.displayName);
+    $('#userPhoto').removeClass('hidden').attr('src', user.photoURL);
+    $('#googleSignIn').addClass('hidden');
+    $('#signOut').removeClass('hidden');
   };
-  $("#googleSignIn").on("click", googleSignIn);
-  $("#signOut").on("click", doSignOut);
+  $('#googleSignIn').on('click', googleSignIn);
+  $('#signOut').on('click', doSignOut);
 
   const IO = {
     alert: function (headline, message) {
-      const head = $("<h2>").text(headline);
-      const body = $("<p>").text(message);
+      const head = $('<h2>').text(headline);
+      const body = $('<p>').text(message);
       const removePopUp = () => {
         outer.remove();
       };
-      const okButton = $("<button>")
-        .text("OK")
-        .addClass("regularButton")
-        .on("click", removePopUp);
+      const okButton = $('<button>').text('OK').addClass('regularButton').on('click', removePopUp);
 
-      const outer = $("<div>")
-        .addClass("outerDialog")
-        .append(
-          $("<div>")
-            .addClass("innerDialog")
-            .append(head)
-            .append(body)
-            .append(okButton)
-        )
-        .on("click", removePopUp);
+      const outer = $('<div>')
+        .addClass('outerDialog')
+        .append($('<div>').addClass('innerDialog').append(head).append(body).append(okButton))
+        .on('click', removePopUp);
 
-      $("body").append(outer);
+      $('body').append(outer);
     },
   };
 
@@ -165,17 +144,15 @@ $(document).ready(async function () {
   };
 
   const populateFromMemory = function () {
-    serverSongListHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME");
-    const savedServerSongListFromServer = nDB.get(
-      "TROFF_SERVER_SONG_LIST_FROM_SERVER"
-    );
+    serverSongListHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
+    const savedServerSongListFromServer = nDB.get('TROFF_SERVER_SONG_LIST_FROM_SERVER');
     mergeWithServerSongListHistory(savedServerSongListFromServer);
 
-    const filter = new URLSearchParams(window.location.hash.slice(1)).get("f");
-    if (filter == "my") {
-      $("#sortMoreInfoSwitch").prop("checked", true);
-      if (!$("#filterOnlyHistoryButt").hasClass("active")) {
-        $("#filterOnlyHistoryButt").click();
+    const filter = new URLSearchParams(window.location.hash.slice(1)).get('f');
+    if (filter == 'my') {
+      $('#sortMoreInfoSwitch').prop('checked', true);
+      if (!$('#filterOnlyHistoryButt').hasClass('active')) {
+        $('#filterOnlyHistoryButt').click();
       }
     }
 
@@ -184,7 +161,7 @@ $(document).ready(async function () {
   };
 
   const getLatestPublicTroffDataFromFireBaseAndSaveLocaly = async function () {
-    const snapshot = await getDocs(collection(db, "TroffData"));
+    const snapshot = await getDocs(collection(db, 'TroffData'));
     const docs = snapshot.docs;
     allPublicTroffDataFromServer = docs
       .map((doc) => doc.data())
@@ -192,10 +169,7 @@ $(document).ready(async function () {
     const latestServerSongListFromServer = troffDataListToServerSongList(
       allPublicTroffDataFromServer
     );
-    nDB.set(
-      "TROFF_SERVER_SONG_LIST_FROM_SERVER",
-      latestServerSongListFromServer
-    );
+    nDB.set('TROFF_SERVER_SONG_LIST_FROM_SERVER', latestServerSongListFromServer);
     return latestServerSongListFromServer;
   };
 
@@ -211,9 +185,7 @@ $(document).ready(async function () {
   };
 
   const repopulateFromFirebase = async function () {
-    const savedServerSongListFromServer = nDB.get(
-      "TROFF_SERVER_SONG_LIST_FROM_SERVER"
-    );
+    const savedServerSongListFromServer = nDB.get('TROFF_SERVER_SONG_LIST_FROM_SERVER');
     const latestServerSongListFromServer =
       await getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
 
@@ -234,13 +206,11 @@ $(document).ready(async function () {
     // if troffData is public, return true;
     if (troffData.troffDataPublic) return true;
 
-    const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME");
+    const localHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
     // if troffData is not public and we have no local history:
     if (!localHistory) return false;
 
-    const correctSong = localHistory.find(
-      (td) => td.fileNameUri == encodeURI(troffData.fileName)
-    );
+    const correctSong = localHistory.find((td) => td.fileNameUri == encodeURI(troffData.fileName));
 
     // if troffData is not public and this file is NOT in our local history:
     if (!correctSong) return false;
@@ -254,7 +224,7 @@ $(document).ready(async function () {
   };
 
   const scrollToUrlSong = function () {
-    const id = new URLSearchParams(window.location.hash.slice(1)).get("id");
+    const id = new URLSearchParams(window.location.hash.slice(1)).get('id');
 
     if (!id) return;
 
@@ -263,21 +233,18 @@ $(document).ready(async function () {
     if (!element) return;
 
     element.scrollIntoView();
-    element.querySelector(".toggleNext").click();
+    element.querySelector('.toggleNext').click();
   };
 
   const fileNameToId = function (fileName) {
-    return fileName.split(" ").join("_");
+    return fileName.split(' ').join('_');
   };
 
   const serverSongEqual = function (ss1, ss2) {
     if (ss1.fileNameUri != ss2.fileNameUri) return false;
-    if (ss1.troffDataIdObjectList.length != ss2.troffDataIdObjectList.length)
-      return false;
+    if (ss1.troffDataIdObjectList.length != ss2.troffDataIdObjectList.length) return false;
     return ss1.troffDataIdObjectList.every((tdio1) =>
-      ss2.troffDataIdObjectList.some(
-        (tdio2) => tdio1.troffDataId == tdio2.troffDataId
-      )
+      ss2.troffDataIdObjectList.some((tdio2) => tdio1.troffDataId == tdio2.troffDataId)
     );
   };
 
@@ -290,18 +257,12 @@ $(document).ready(async function () {
     return nrIds;
   };
 
-  const serverSongContainsId = function (serverSong, id) {
-    return serverSong.troffDataIdObjectList.some(
-      (tdio) => tdio.troffDataId == htdio.troffDataId
-    );
-  };
-
   const getPrivateOnlineHistoryList = async function (user) {
-    const snapshot = await getDoc(doc(db, "UserData", user.uid));
+    const snapshot = await getDoc(doc(db, 'UserData', user.uid));
     const userData = snapshot.exists() ? snapshot.data() : {};
 
     const uploadedHistory = userData.uploadedHistory || [];
-    const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
+    const localHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME') || [];
     const totalList = mergeSongListHistorys(uploadedHistory, localHistory);
 
     const nrIdsInTotalList = nrIdsInHistoryList(totalList);
@@ -312,7 +273,7 @@ $(document).ready(async function () {
     // 1) TROFF_TROFF_DATA_ID_AND_FILE_NAME uppdateras
     // 2) sen ska UIt laddas om
     if (nrIdsInTotalList > nrIdsInLocalHistory) {
-      nDB.set("TROFF_TROFF_DATA_ID_AND_FILE_NAME", totalList);
+      nDB.set('TROFF_TROFF_DATA_ID_AND_FILE_NAME', totalList);
       populateFromMemory();
       getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
     }
@@ -323,7 +284,7 @@ $(document).ready(async function () {
       // totalList kanske ska ränsa totalList från onödiga saker???
       // beroende på hur mycket plats det tar upp i firebase...
       userData.uploadedHistory = totalList;
-      await setDoc(doc(db, "UserData", user.uid), userData);
+      await setDoc(doc(db, 'UserData', user.uid), userData);
     }
   };
 
@@ -384,20 +345,13 @@ $(document).ready(async function () {
 
       if (ssHistory == undefined) {
         ssFromServer.fromServer = true;
-        ssFromServer.troffDataIdObjectList.forEach(
-          (tdio) => (tdio.fromServer = true)
-        );
+        ssFromServer.troffDataIdObjectList.forEach((tdio) => (tdio.fromServer = true));
         serverSongListHistory.push(ssFromServer);
       } else {
-        ssHistory.deleted = [ssHistory.deleted, ssFromServer.deleted].some(
-          (a) => a
-        );
+        ssHistory.deleted = [ssHistory.deleted, ssFromServer.deleted].some((a) => a);
         ssHistory.size = ssHistory.size || ssFromServer.size;
         ssHistory.type = ssHistory.type || ssFromServer.type;
-        ssHistory.uploaded = getEarliestTime(
-          ssHistory.uploaded,
-          ssFromServer.uploaded
-        );
+        ssHistory.uploaded = getEarliestTime(ssHistory.uploaded, ssFromServer.uploaded);
 
         ssFromServer.troffDataIdObjectList.forEach((tdioFromServer) => {
           const tdioHistory = ssHistory.troffDataIdObjectList.find(
@@ -410,12 +364,9 @@ $(document).ready(async function () {
           } else {
             tdioHistory.firstTimeLoaded =
               tdioHistory.firstTimeLoaded || tdioFromServer.firstTimeLoaded;
-            tdioHistory.displayName =
-              tdioHistory.displayName || tdioFromServer.displayName;
-            tdioHistory.nrMarkers =
-              tdioHistory.nrMarkers || tdioFromServer.nrMarkers;
-            tdioHistory.infoBeginning =
-              tdioHistory.infoBeginning || tdioFromServer.infoBeginning;
+            tdioHistory.displayName = tdioHistory.displayName || tdioFromServer.displayName;
+            tdioHistory.nrMarkers = tdioHistory.nrMarkers || tdioFromServer.nrMarkers;
+            tdioHistory.infoBeginning = tdioHistory.infoBeginning || tdioFromServer.infoBeginning;
             tdioHistory.genre = tdioHistory.genre || tdioFromServer.genre;
             tdioHistory.tags = tdioHistory.tags || tdioFromServer.tags;
           }
@@ -430,9 +381,7 @@ $(document).ready(async function () {
     for (const troffData of troffDataList) {
       const fileNameUri = encodeURI(troffData.fileName);
 
-      const currentServerSong = serverSongList.find(
-        (ss) => ss.fileNameUri == fileNameUri
-      );
+      const currentServerSong = serverSongList.find((ss) => ss.fileNameUri == fileNameUri);
 
       if (currentServerSong == undefined) {
         const serverSong = {
@@ -452,9 +401,7 @@ $(document).ready(async function () {
           currentServerSong.uploaded,
           troffData.troffDataUploadedMillis
         );
-        currentServerSong.troffDataIdObjectList.push(
-          troffDataToTroffDataIdObject(troffData)
-        );
+        currentServerSong.troffDataIdObjectList.push(troffDataToTroffDataIdObject(troffData));
       }
     }
 
@@ -462,70 +409,63 @@ $(document).ready(async function () {
   };
 
   const repopulateFileListDivs = function () {
-    $("#fileList, #deletedFileList").empty();
+    $('#fileList, #deletedFileList').empty();
     let nrOfHistorySongs = 0;
 
     $.each(serverSongListHistory, (i, serverSong) => {
-      const newDiv = $("#serverSongTemplate").children().clone(true, true);
+      const newDiv = $('#serverSongTemplate').children().clone(true, true);
 
       const fileName = decodeURI(serverSong.fileNameUri);
-      newDiv.attr("id", fileNameToId(fileName));
+      newDiv.attr('id', fileNameToId(fileName));
       if (serverSong.fromServer) {
-        newDiv.addClass("fromServer");
+        newDiv.addClass('fromServer');
       } else {
         nrOfHistorySongs++;
       }
-      newDiv.data("fileName", fileName);
-      newDiv.data("uploaded", new Date(serverSong.uploaded || 0).getTime());
-      newDiv.data("fileSize", serverSong.size || 0);
-      newDiv.find(".fileName").text(fileName);
-      newDiv.find(".newSong").toggleClass("hidden", !serverSong.fromServer);
-      newDiv.find(".uploaded").text(st.millisToDisp(serverSong.uploaded));
-      newDiv.find(".fileType").text(serverSong.type);
-      newDiv.find(".fileSize").text(st.byteToDisp(serverSong.size));
-      if (serverSong.type != "" && serverSong.type != null) {
-        newDiv.find(".fileTypeSizeSeparator").removeClass("hidden");
+      newDiv.data('fileName', fileName);
+      newDiv.data('uploaded', new Date(serverSong.uploaded || 0).getTime());
+      newDiv.data('fileSize', serverSong.size || 0);
+      newDiv.find('.fileName').text(fileName);
+      newDiv.find('.newSong').toggleClass('hidden', !serverSong.fromServer);
+      newDiv.find('.uploaded').text(st.millisToDisp(serverSong.uploaded));
+      newDiv.find('.fileType').text(serverSong.type);
+      newDiv.find('.fileSize').text(st.byteToDisp(serverSong.size));
+      if (serverSong.type != '' && serverSong.type != null) {
+        newDiv.find('.fileTypeSizeSeparator').removeClass('hidden');
       }
 
-      newDiv
-        .find(".troffDataLength")
-        .text(serverSong.troffDataIdObjectList.length);
-      newDiv.toggleClass("grayOut", !!serverSong.deleted); // <-- !! converts undefined and null to false :)
+      newDiv.find('.troffDataLength').text(serverSong.troffDataIdObjectList.length);
+      newDiv.toggleClass('grayOut', !!serverSong.deleted); // <-- !! converts undefined and null to false :)
 
       let addNewDiv = false;
       let defaultValue = false;
-      if (fileName.toLowerCase().includes($("#search").val().toLowerCase())) {
+      if (fileName.toLowerCase().includes($('#search').val().toLowerCase())) {
         defaultValue = true;
       }
       $.each(serverSong.troffDataIdObjectList, (tdIndex, troffDataIdObject) => {
-        if (
-          !includesSearch($("#search").val(), troffDataIdObject, defaultValue)
-        ) {
+        if (!includesSearch($('#search').val(), troffDataIdObject, defaultValue)) {
           return;
         }
         addNewDiv = true;
 
-        const newTroffDataDiv = getFullTroffDataDiv(
-          troffDataIdObject,
-          serverSong.fileNameUri
-        );
-        newDiv.find(".markerList").append(newTroffDataDiv);
+        const newTroffDataDiv = getFullTroffDataDiv(troffDataIdObject, serverSong.fileNameUri);
+        newDiv.find('.markerList').append(newTroffDataDiv);
       });
       if (!addNewDiv) {
         return;
       }
       if (serverSong.deleted) {
-        $("#showDeletedButt").removeClass("hidden");
-        $("#deletedFileList").append(newDiv);
+        $('#showDeletedButt').removeClass('hidden');
+        $('#deletedFileList').append(newDiv);
       } else {
-        $("#fileList").append(newDiv);
+        $('#fileList').append(newDiv);
       }
     });
 
-    $("#nrOfHistorySongs").text(nrOfHistorySongs);
+    $('#nrOfHistorySongs').text(nrOfHistorySongs);
 
-    $("#loadingArticle").addClass("hidden");
-    $("#mainArticle").removeClass("hidden");
+    $('#loadingArticle').addClass('hidden');
+    $('#mainArticle').removeClass('hidden');
   };
 
   const getEarliestTime = function (m1, m2) {
@@ -534,11 +474,7 @@ $(document).ready(async function () {
     if ((m1 == undefined || m1 < 162431283500) && m2 > 162431283500) return m2;
     if ((m2 == undefined || m2 < 162431283500) && m1 > 162431283500) return m1;
 
-    if (
-      (m1 == undefined || m1 < 162431283500) &&
-      (m2 == undefined || m2 < 162431283500)
-    )
-      return 0;
+    if ((m1 == undefined || m1 < 162431283500) && (m2 == undefined || m2 < 162431283500)) return 0;
     return Math.min(m1, m2);
   };
 
@@ -558,17 +494,16 @@ $(document).ready(async function () {
   };
 
   const setAppropriateMarkerDistance = function () {
-    var child = $("#markerList li:first-child")[0];
+    var child = $('#markerList li:first-child')[0];
 
-    var timeBarHeight =
-      $("#markerList").height() - $("#markerList").find("li").height();
+    var timeBarHeight = $('#markerList').height() - $('#markerList').find('li').height();
     var totalDistanceTop = 4;
 
-    var barMarginTop = parseInt($("#markerList").css("margin-top"));
-    var songTime = $("#markerList").data("songLength");
+    var barMarginTop = parseInt($('#markerList').css('margin-top'));
+    var songTime = $('#markerList').data('songLength');
 
     while (child) {
-      const markerTime = Number($(child).data("time"));
+      const markerTime = Number($(child).data('time'));
       var myRowHeight = child.clientHeight;
 
       var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
@@ -577,13 +512,13 @@ $(document).ready(async function () {
       totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
 
       if (marginTop > 0) {
-        $(child).css("border-top-width", marginTop + "px");
-        $(child).css("border-top-style", "solid");
-        $(child).css("margin-top", "");
+        $(child).css('border-top-width', marginTop + 'px');
+        $(child).css('border-top-style', 'solid');
+        $(child).css('margin-top', '');
       } else {
-        $(child).css("border-top-width", "");
-        $(child).css("border-top-style", "");
-        $(child).css("margin-top", marginTop + "px");
+        $(child).css('border-top-width', '');
+        $(child).css('border-top-style', '');
+        $(child).css('margin-top', marginTop + 'px');
       }
       child = child.nextSibling;
     }
@@ -591,44 +526,35 @@ $(document).ready(async function () {
   }; // end setAppropriateMarkerDistance
 
   const selectMarkerSpan = function (markerSpan, markerInfo) {
-    $("#markerList").children().find(".markerName").removeClass("selected");
-    markerSpan.find(".markerName").addClass("selected");
-    $("#markerInfo").text(markerInfo);
+    $('#markerList').children().find('.markerName').removeClass('selected');
+    markerSpan.find('.markerName').addClass('selected');
+    $('#markerInfo').text(markerInfo);
   };
 
   const showMoreAboutVersionPopUpFor = function (troffDataId) {
-    $("#moreAboutVersionDialog").removeClass("hidden");
-    $("#moreAboutVersionDialog").data("troffDataId", troffDataId);
+    $('#moreAboutVersionDialog').removeClass('hidden');
+    $('#moreAboutVersionDialog').data('troffDataId', troffDataId);
 
-    const troffData = allPublicTroffDataFromServer.find(
-      (td) => td.id == troffDataId
-    );
+    const troffData = allPublicTroffDataFromServer.find((td) => td.id == troffDataId);
     if (!troffData) {
-      $("#moreAboutVersionDialog").addClass("hidden");
+      $('#moreAboutVersionDialog').addClass('hidden');
       IO.alert(
-        "This version is not on the server any more!",
-        "We apologize for the inconvenience."
+        'This version is not on the server any more!',
+        'We apologize for the inconvenience.'
       );
       return;
     }
     const songData = troffData.songData;
-    $("#moreAboutVersionDownload").attr(
-      "href",
-      "/#" + troffDataId + "&" + troffData.fileName
-    );
-    $("#fileName").text(troffData.fileName);
+    $('#moreAboutVersionDownload').attr('href', '/#' + troffDataId + '&' + troffData.fileName);
+    $('#fileName').text(troffData.fileName);
 
-    $("#moreAoutVersionChoreographer").text(
-      songData?.fileData?.choreographer || ""
-    );
-    $("#moreAboutVersionChoreography").text(
-      songData?.fileData?.choreography || ""
-    );
+    $('#moreAoutVersionChoreographer').text(songData?.fileData?.choreographer || '');
+    $('#moreAboutVersionChoreography').text(songData?.fileData?.choreography || '');
 
-    $("#moreAoutVersionAlbum").text(songData?.fileData?.album || "");
-    $("#moreAboutVersionArtist").text(songData?.fileData?.artist || "");
+    $('#moreAoutVersionAlbum').text(songData?.fileData?.album || '');
+    $('#moreAboutVersionArtist').text(songData?.fileData?.artist || '');
 
-    $("#songInfo").text(songData.info);
+    $('#songInfo').text(songData.info);
 
     // if fileData does not exist, use the time for the final marker as
     // songLength instead
@@ -636,46 +562,41 @@ $(document).ready(async function () {
       ? songData.fileData.duration
       : songData.markers[songData.markers.length - 1].time;
 
-    let previousColor = "None";
-    $("#markerList").empty();
-    $("#markerList").data("songLength", songLength);
+    let previousColor = 'None';
+    $('#markerList').empty();
+    $('#markerList').data('songLength', songLength);
 
     songData.currentStartMarker;
     songData.markers.forEach((marker) => {
-      const markerSpan = $("#markerTemplate").children().clone(true, true);
-      markerSpan.data("time", marker.time);
+      const markerSpan = $('#markerTemplate').children().clone(true, true);
+      markerSpan.data('time', marker.time);
 
       markerSpan
-        .find(".markerName, .markerInfoIndicator")
+        .find('.markerName, .markerInfoIndicator')
         .val(marker.name)
-        .on("click", () => selectMarkerSpan(markerSpan, marker.info));
+        .on('click', () => selectMarkerSpan(markerSpan, marker.info));
 
       if (songData.currentStartMarker === marker.id) {
         selectMarkerSpan(markerSpan, marker.info);
       }
-      markerSpan
-        .find(".markerTime")
-        .text(st.secToDisp(marker.time))
-        .attr("timeValue", marker.time);
+      markerSpan.find('.markerTime').text(st.secToDisp(marker.time)).attr('timeValue', marker.time);
 
-      markerSpan
-        .find(".markerInfoIndicator")
-        .toggleClass("hidden", marker.info === "");
+      markerSpan.find('.markerInfoIndicator').toggleClass('hidden', marker.info === '');
 
-      if (marker.color !== "None") {
+      if (marker.color !== 'None') {
         previousColor = marker.color;
       }
 
-      markerSpan.addClass("markerColor" + previousColor);
-      markerSpan.css("border-top-width", +"px");
+      markerSpan.addClass('markerColor' + previousColor);
+      markerSpan.css('border-top-width', +'px');
 
-      $("#markerList").append(markerSpan);
+      $('#markerList').append(markerSpan);
     });
     setAppropriateMarkerDistance();
 
     //$( "#markerParent" ).text( songData.markerParent );
-    $("#nrStates").text(songData.nrStates);
-    $("#nrTimesLoaded").text(songData?.localInformation?.nrTimesLoaded);
+    $('#nrStates').text(songData.nrStates);
+    $('#nrTimesLoaded').text(songData?.localInformation?.nrTimesLoaded);
     //$( "#statesParent" ).text( songData.statesParent );
 
     /*
@@ -702,70 +623,51 @@ $(document).ready(async function () {
       firstTimeLoaded: getFirstTimeLoadedFromTroffData(troffData),
       displayName: getDisplayNameFromTroffData(troffData),
       nrMarkers: troffData.songData.markers.length,
-      nrStates: troffData.songData.aStates
-        ? troffData.songData.aStates.length
-        : 0,
+      nrStates: troffData.songData.aStates ? troffData.songData.aStates.length : 0,
       infoBeginning: troffData.songData.info.substring(0, 99),
-      genre:
-        (troffData.songData.fileData && troffData.songData.fileData.genre) ||
-        "",
-      tags:
-        (troffData.songData.fileData && troffData.songData.fileData.tags) || "",
+      genre: (troffData.songData.fileData && troffData.songData.fileData.genre) || '',
+      tags: (troffData.songData.fileData && troffData.songData.fileData.tags) || '',
     };
   };
 
   const getFullTroffDataDiv = function (troffDataIdObject, fileNameUri) {
-    const newTroffData = $("#troffDataTemplate").children().clone(true, true);
-    const downloadText = troffDataIdObject.fromServer
-      ? "for the first time"
-      : "again";
+    const newTroffData = $('#troffDataTemplate').children().clone(true, true);
+    const downloadText = troffDataIdObject.fromServer ? 'for the first time' : 'again';
     newTroffData
-      .find(".troffDataId")
-      .text(
-        "Download this version " +
-          downloadText +
-          " (" +
-          troffDataIdObject.troffDataId +
-          ")"
-      )
+      .find('.troffDataId')
+      .text('Download this version ' + downloadText + ' (' + troffDataIdObject.troffDataId + ')')
       .attr(
-        "href",
-        window.location.origin +
-          "/#" +
-          troffDataIdObject.troffDataId +
-          "&" +
-          fileNameUri
+        'href',
+        window.location.origin + '/#' + troffDataIdObject.troffDataId + '&' + fileNameUri
       );
 
     if (troffDataIdObject.fromServer) {
-      newTroffData.addClass("fromServer");
+      newTroffData.addClass('fromServer');
     }
 
-    newTroffData.find(".moreAboutVersion").on("click", () => {
+    newTroffData.find('.moreAboutVersion').on('click', () => {
       showMoreAboutVersionPopUpFor(troffDataIdObject.troffDataId);
     });
-    newTroffData.find(".troffDataInfo").text(troffDataIdObject.infoBeginning);
+    newTroffData.find('.troffDataInfo').text(troffDataIdObject.infoBeginning);
     if (!troffDataIdObject.nrMarkers) {
-      newTroffData.find(".troffDataNrMarkersParent").addClass("hidden");
+      newTroffData.find('.troffDataNrMarkersParent').addClass('hidden');
     }
-    newTroffData.find(".troffDataNrMarkers").text(troffDataIdObject.nrMarkers);
+    newTroffData.find('.troffDataNrMarkers').text(troffDataIdObject.nrMarkers);
     if (troffDataIdObject.nrStates > 0) {
-      newTroffData.find(".troffDataNrStatesParent").removeClass("hidden");
+      newTroffData.find('.troffDataNrStatesParent').removeClass('hidden');
     }
-    newTroffData.find(".troffDataNrStates").text(troffDataIdObject.nrStates);
+    newTroffData.find('.troffDataNrStates').text(troffDataIdObject.nrStates);
     newTroffData
-      .find(".troffDataFirstTimeLoaded")
+      .find('.troffDataFirstTimeLoaded')
       .text(st.millisToDisp(troffDataIdObject.firstTimeLoaded));
-    newTroffData
-      .find(".troffDataDisplayName")
-      .text(troffDataIdObject.displayName);
-    newTroffData.find(".troffDataGenre").text(troffDataIdObject.genre);
-    newTroffData.find(".troffDataTags").text(troffDataIdObject.tags);
+    newTroffData.find('.troffDataDisplayName').text(troffDataIdObject.displayName);
+    newTroffData.find('.troffDataGenre').text(troffDataIdObject.genre);
+    newTroffData.find('.troffDataTags').text(troffDataIdObject.tags);
     return newTroffData;
   };
 
   const pathToName = function (filepath) {
-    const lastIndex = filepath.lastIndexOf(".");
+    const lastIndex = filepath.lastIndexOf('.');
     if (lastIndex == -1) {
       return filepath;
     }
@@ -786,19 +688,19 @@ $(document).ready(async function () {
   };
 
   const getSearchableFields = function (troffDataIdObject) {
-    const customName = "";
-    const choreography = "";
-    const displayName = troffDataIdObject.displayName || "";
-    const genre = troffDataIdObject.genre || "";
-    const tags = troffDataIdObject.tags || "";
+    const customName = '';
+    const choreography = '';
+    const displayName = troffDataIdObject.displayName || '';
+    const genre = troffDataIdObject.genre || '';
+    const tags = troffDataIdObject.tags || '';
     return [customName, choreography, displayName, genre, tags];
   };
 
   const includesSearch = function (text, troffDataIdObject, defaultValue) {
-    if (text == "") return true;
+    if (text == '') return true;
     text = text.toLowerCase();
     const searchableFields = getSearchableFields(troffDataIdObject);
-    if (searchableFields.every((f) => f == "")) {
+    if (searchableFields.every((f) => f == '')) {
       return defaultValue;
     }
 
@@ -811,7 +713,7 @@ $(document).ready(async function () {
 
   const sortFileList = function (cssToSort, orderByAsc) {
     orderByAsc = orderByAsc === undefined ? true : orderByAsc;
-    var $fileList = $("#fileList");
+    var $fileList = $('#fileList');
 
     $fileList
       .children()
@@ -824,55 +726,52 @@ $(document).ready(async function () {
       .appendTo($fileList);
   };
 
-  $(".stOnOffButton").on("click", (e) => {
-    $(e.target).closest(".stOnOffButton").toggleClass("active");
+  $('.stOnOffButton').on('click', (e) => {
+    $(e.target).closest('.stOnOffButton').toggleClass('active');
   });
-  $("#sortUploadedAsc").on("click", () => {
-    sortFileList("uploaded", true);
+  $('#sortUploadedAsc').on('click', () => {
+    sortFileList('uploaded', true);
   });
-  $("#sortUploadedDesc").on("click", () => {
-    sortFileList("uploaded", false);
+  $('#sortUploadedDesc').on('click', () => {
+    sortFileList('uploaded', false);
   });
-  $("#sortSizeAsc").on("click", () => {
-    sortFileList("fileSize", true);
+  $('#sortSizeAsc').on('click', () => {
+    sortFileList('fileSize', true);
   });
-  $("#sortSizeDesc").on("click", () => {
-    sortFileList("fileSize", false);
+  $('#sortSizeDesc').on('click', () => {
+    sortFileList('fileSize', false);
   });
-  $("#showDeletedButt").on("click", () => {
-    $("#deletedFileListParent").toggleClass("hidden");
+  $('#showDeletedButt').on('click', () => {
+    $('#deletedFileListParent').toggleClass('hidden');
   });
-  $("#filterOnlyHistoryButt").on("click", () =>
-    $("#fileList, #deletedFileList").toggleClass(
-      "hideFromServer",
-      $("#filterOnlyHistoryButt").hasClass("active")
+  $('#filterOnlyHistoryButt').on('click', () =>
+    $('#fileList, #deletedFileList').toggleClass(
+      'hideFromServer',
+      $('#filterOnlyHistoryButt').hasClass('active')
     )
   );
-  $(".outerDialog").click(function (event) {
-    if (
-      $(event.target).hasClass("outerDialog") &&
-      !$(event.target).hasClass("noCloseOnClick")
-    ) {
-      $(event.target).addClass("hidden");
+  $('.outerDialog').click(function (event) {
+    if ($(event.target).hasClass('outerDialog') && !$(event.target).hasClass('noCloseOnClick')) {
+      $(event.target).addClass('hidden');
     }
   });
-  $(".dialogCancelButton").click(function (event) {
+  $('.dialogCancelButton').click(function (event) {
     event.preventDefault();
-    $(event.target).closest(".outerDialog").addClass("hidden");
+    $(event.target).closest('.outerDialog').addClass('hidden');
   });
 
-  $("#buttSearch").on("click", repopulateFileListDivs);
+  $('#buttSearch').on('click', repopulateFileListDivs);
 
-  $("#search").keyup(function (event) {
+  $('#search').keyup(function (event) {
     if (event.keyCode === 13) {
-      $("#buttSearch").click();
+      $('#buttSearch').click();
     }
   });
 
   initiateApp();
-  window.addEventListener("resize", function () {
-    if ($("#moreAboutVersionDialog").hasClass("hidden")) return;
-    const troffDataId = $("#moreAboutVersionDialog").data("troffDataId");
+  window.addEventListener('resize', function () {
+    if ($('#moreAboutVersionDialog').hasClass('hidden')) return;
+    const troffDataId = $('#moreAboutVersionDialog').data('troffDataId');
     showMoreAboutVersionPopUpFor(troffDataId);
   });
 });

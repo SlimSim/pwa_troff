@@ -1,28 +1,28 @@
 const nDB = {
   // new data base
   setOnSong: function (songId, keys, value) {
-    if (typeof keys != "object") {
+    if (typeof keys != 'object') {
       keys = [keys];
     }
 
     const valObject = [];
     valObject[0] = nDB.get(songId);
-    if (valObject[0] == undefined) {
+    if (valObject[0] == null) {
       console.error(
-        "setOnSong: songId does no exist in database. You are trying to set " +
+        'setOnSong: songId does no exist in database. You are trying to set ' +
           value +
-          " on the property " +
+          ' on the property ' +
           keys[0] +
-          " on the song " +
+          ' on the song ' +
           songId +
-          ", but that song does not exist in the DB, RETURNING"
+          ', but that song does not exist in the DB, RETURNING'
       );
       return;
     }
 
     for (let i = 0; i < keys.length - 1; i++) {
-      if (typeof valObject[i] != "object") {
-        if (i == 1) {
+      if (typeof valObject[i] != 'object') {
+        if (i === 1) {
           console.warn(
             'setOnSong: Adding key to songObject, the object does not have the key "' +
               keys[i - 1] +
@@ -44,11 +44,11 @@ const nDB = {
       valObject[i + 1] = valObject[i][keys[i]];
     }
 
-    if (typeof valObject[keys.length - 1] != "object") {
+    if (typeof valObject[keys.length - 1] != 'object') {
       valObject[keys.length - 1] = {};
     }
     if (
-      typeof valObject[keys.length - 1] != "object" ||
+      typeof valObject[keys.length - 1] != 'object' ||
       valObject[keys.length - 1][keys[keys.length - 1]] === undefined
     ) {
       console.warn(

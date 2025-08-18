@@ -70,8 +70,7 @@ function clickSongList_NEW(event) {
   IO.blurHack();
   var $target = $(event.target),
     data = $target.data("songList"),
-    galleryId = $target.attr("data-gallery-id"),
-    fullPath = $target.attr("data-full-path");
+    galleryId = $target.attr("data-gallery-id");
 
   $("#songListAll").removeClass("selected");
 
@@ -185,7 +184,6 @@ class TroffClass {
       );
     });
 
-    const songListName = $(".songlist.selected").text();
   };
 
   emptyAddAddedSongsToSongList_songs = (event) => {
@@ -255,7 +253,7 @@ class TroffClass {
     return payload;
   };
 
-  uploadSongToServer = async (event) => {
+  uploadSongToServer = async () => {
     "use strict";
 
     // show a pop-up that says
@@ -349,7 +347,7 @@ class TroffClass {
     $('[data-song-key="' + fileName + '"]').addClass("selected");
   };
 
-  importTroffDataToExistingSong_importNew = async (event) => {
+  importTroffDataToExistingSong_importNew = async () => {
     const fileName = $("#importTroffDataToExistingSong_fileName").val();
     const serverId = $("#importTroffDataToExistingSong_serverId").val();
 
@@ -389,7 +387,7 @@ class TroffClass {
     this.selectSongInSongList(troffData.fileName);
   };
 
-  importTroffDataToExistingSong_merge = async (event) => {
+  importTroffDataToExistingSong_merge = async () => {
     const fileName = $("#importTroffDataToExistingSong_fileName").val();
     const serverId = $("#importTroffDataToExistingSong_serverId").val();
 
@@ -400,7 +398,6 @@ class TroffClass {
       event_label: hash,
     });
 
-    const markersFromCache = nDB.get(fileName);
     let markersFromServer;
     try {
       const troffDataFromServer = await backendService.getTroffData(
@@ -440,6 +437,10 @@ class TroffClass {
     oImport.strSongInfo = markersFromServer.info;
     oImport.aoStates = aoStates;
     oImport.aoMarkers = markersFromServer.markers;
+
+    $("#something").click( (a, b) => {
+      return b+1;
+    });
 
     setTimeout(() => {
       this.doImportStuff(oImport);

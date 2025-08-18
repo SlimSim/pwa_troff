@@ -1,52 +1,41 @@
 /* eslint eqeqeq: "off" */
-import { nDB, nDBc } from "./assets/internal/db.js";
-import { DB, createSongAudio } from "./script.js";
-import { IO, ifGroupSongUpdateFirestore, updateVersionLink } from "./script.js";
-import { Troff } from "./script.js";
-import log from "./utils/log.js";
+import { nDB, nDBc } from './assets/internal/db.js';
+import { DB, createSongAudio } from './script.js';
+import { IO, ifGroupSongUpdateFirestore, updateVersionLink } from './script.js';
+import { Troff } from './script.js';
+import log from './utils/log.js';
 import {
   TROFF_SETTING_SONG_COLUMN_TOGGLE,
   TROFF_CURRENT_STATE_OF_SONG_LISTS,
   TROFF_SETTING_SHOW_SONG_DIALOG,
   DATA_TABLE_COLUMNS,
-} from "./constants/constants.js";
+} from './constants/constants.js';
 
-import {
-  closeSongDialog,
-  openSongDialog,
-  clickAttachedSongListToggle,
-} from "./script0.js";
+import { closeSongDialog, openSongDialog, clickAttachedSongListToggle } from './script0.js';
 
 class DBClass {
   constructor() {}
 
   popSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
     const rightSong = (o) => {
-      return (
-        o.groupDocId == groupDocId &&
-        o.songDocId == songDocId &&
-        o.songKey == songKey
-      );
+      return o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey;
     };
 
-    let changedSongList = nDB.get("TROFF_SONGS_WITH_LOCAL_CHANGES") || [];
+    let changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
 
     const songInGroupAlreadyExists = changedSongList.find(rightSong);
 
     changedSongList = changedSongList.filter((o) => !rightSong(o));
 
-    nDB.set("TROFF_SONGS_WITH_LOCAL_CHANGES", changedSongList);
+    nDB.set('TROFF_SONGS_WITH_LOCAL_CHANGES', changedSongList);
     return songInGroupAlreadyExists;
   };
 
   pushSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
-    const changedSongList = nDB.get("TROFF_SONGS_WITH_LOCAL_CHANGES") || [];
+    const changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
 
     const songInGroupAlreadyExists = changedSongList.find(
-      (o) =>
-        o.groupDocId == groupDocId &&
-        o.songDocId == songDocId &&
-        o.songKey == songKey
+      (o) => o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey
     );
 
     if (songInGroupAlreadyExists) {
@@ -59,7 +48,7 @@ class DBClass {
       songKey: songKey,
     });
 
-    nDB.set("TROFF_SONGS_WITH_LOCAL_CHANGES", changedSongList);
+    nDB.set('TROFF_SONGS_WITH_LOCAL_CHANGES', changedSongList);
   };
 
   // deprecated: use nDB.set( key, value )
@@ -73,7 +62,7 @@ class DBClass {
   };
 
   cleanSong = (songId, songObject) => {
-    if (typeof songObject !== "object" || songId.indexOf("TROFF_") === 0) {
+    if (typeof songObject !== 'object' || songId.indexOf('TROFF_') === 0) {
       return; // this object should not be a song, and should not be cleaned
     }
 
@@ -96,63 +85,59 @@ class DBClass {
 
     var songLength;
     try {
-      songLength = Number(document.getElementById("timeBar").max);
-    } catch (e) {
+      songLength = Number(document.getElementById('timeBar').max);
+    } catch {
       log.e(
-        "getElementById('timeBar') does not exist." +
-          " Tried to call fixSongObject without it...."
+        "getElementById('timeBar') does not exist." + ' Tried to call fixSongObject without it....'
       );
-      songLength = "max";
+      songLength = 'max';
     }
     if (setMaxSongLength) {
-      songLength = "max";
+      songLength = 'max';
     }
 
     var oMarkerStart = {};
-    oMarkerStart.name = "Start";
+    oMarkerStart.name = 'Start';
     oMarkerStart.time = 0;
     oMarkerStart.info = Troff.getStandardMarkerInfo();
-    oMarkerStart.color = "None";
-    oMarkerStart.id = "markerNr0";
+    oMarkerStart.color = 'None';
+    oMarkerStart.id = 'markerNr0';
     var oMarkerEnd = {};
-    oMarkerEnd.name = "End";
+    oMarkerEnd.name = 'End';
     oMarkerEnd.time = songLength;
-    oMarkerEnd.info = "";
-    oMarkerEnd.color = "None";
-    oMarkerEnd.id = "markerNr1";
+    oMarkerEnd.info = '';
+    oMarkerEnd.color = 'None';
+    oMarkerEnd.id = 'markerNr1';
 
     const updateAttr = (oldName, newName0, newName1) => {
-      if (!songObject.hasOwnProperty(oldName)) {
+      if (!Object.prototype.hasOwnProperty.call(songObject, oldName)) {
         return;
       }
       if (newName1) {
-        songObject["TROFF_CLASS_TO_TOGGLE_" + newName0] =
-          songObject[oldName][0];
-        songObject["TROFF_VALUE_" + newName1] = songObject[oldName][1];
+        songObject['TROFF_CLASS_TO_TOGGLE_' + newName0] = songObject[oldName][0];
+        songObject['TROFF_VALUE_' + newName1] = songObject[oldName][1];
       } else {
-        songObject["TROFF_VALUE_" + newName0] = songObject[oldName];
+        songObject['TROFF_VALUE_' + newName0] = songObject[oldName];
       }
       delete songObject[oldName];
     };
 
-    updateAttr("speed", "speedBar");
-    updateAttr("volume", "volumeBar");
-    updateAttr("startBefore", "buttStartBefore", "startBefore");
-    updateAttr("pauseBefStart", "buttStartBefore", "pauseBeforeStart");
-    updateAttr("stopAfter", "buttStopAfter", "stopAfter");
-    updateAttr("iWaitBetweenLoops", "buttWaitBetweenLoops", "waitBetweenLoops");
-    updateAttr("wait", "buttWaitBetweenLoops", "waitBetweenLoops");
-    updateAttr("tempo", "tapTempo");
+    updateAttr('speed', 'speedBar');
+    updateAttr('volume', 'volumeBar');
+    updateAttr('startBefore', 'buttStartBefore', 'startBefore');
+    updateAttr('pauseBefStart', 'buttStartBefore', 'pauseBeforeStart');
+    updateAttr('stopAfter', 'buttStopAfter', 'stopAfter');
+    updateAttr('iWaitBetweenLoops', 'buttWaitBetweenLoops', 'waitBetweenLoops');
+    updateAttr('wait', 'buttWaitBetweenLoops', 'waitBetweenLoops');
+    updateAttr('tempo', 'tapTempo');
 
-    if (!songObject.info) songObject.info = "";
+    if (!songObject.info) songObject.info = '';
     if (songObject.aStates === undefined) songObject.aStates = [];
     if (!songObject.zoomStartTime) songObject.zoomStartTime = 0;
     if (!songObject.markers) songObject.markers = [oMarkerStart, oMarkerEnd];
     if (!songObject.abAreas) songObject.abAreas = [false, true, true, true];
-    if (!songObject.currentStartMarker)
-      songObject.currentStartMarker = oMarkerStart.id;
-    if (!songObject.currentStopMarker)
-      songObject.currentStopMarker = oMarkerEnd.id + "S";
+    if (!songObject.currentStartMarker) songObject.currentStartMarker = oMarkerStart.id;
+    if (!songObject.currentStopMarker) songObject.currentStopMarker = oMarkerEnd.id + 'S';
 
     return songObject;
   };
@@ -162,9 +147,9 @@ class DBClass {
       nDB.set(key, valIsTrue);
 
       if (valIsTrue) {
-        $("#" + key).addClass("active");
+        $('#' + key).addClass('active');
       } else {
-        $("#" + key).removeClass("active");
+        $('#' + key).removeClass('active');
       }
     }
   };
@@ -177,16 +162,16 @@ class DBClass {
       }
 
       // These is for the first time Troff is started:
-      if (allKeys.indexOf("straoSongLists") === -1) DB.saveSonglists_new();
-      if (allKeys.indexOf("zoomDontShowAgain") === -1) {
-        nDB.set("zoomDontShowAgain", false);
+      if (allKeys.indexOf('straoSongLists') === -1) DB.saveSonglists_new();
+      if (allKeys.indexOf('zoomDontShowAgain') === -1) {
+        nDB.set('zoomDontShowAgain', false);
       }
 
       DB.fixDefaultValue(allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true);
 
       const columnToggleList = {};
-      DATA_TABLE_COLUMNS.list.forEach((v, i) => {
-        columnToggleList[v.id] = v.default == "true" || v.default == true;
+      DATA_TABLE_COLUMNS.list.forEach((v) => {
+        columnToggleList[v.id] = v.default == 'true' || v.default == true;
       });
 
       /*
@@ -194,12 +179,8 @@ class DBClass {
 				Can be removed after user have opened the app with this code once...
 			*/
       if (nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE) != null) {
-        if (
-          nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE).constructor.name == "Array"
-        ) {
-          const previousColumnToggleList = nDB.get(
-            TROFF_SETTING_SONG_COLUMN_TOGGLE
-          );
+        if (nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE).constructor.name == 'Array') {
+          const previousColumnToggleList = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
 
           const newColumnToggle = {};
           newColumnToggle.CHECKBOX = previousColumnToggleList[0];
@@ -220,11 +201,7 @@ class DBClass {
         }
       }
 
-      DB.fixDefaultValue(
-        allKeys,
-        TROFF_SETTING_SONG_COLUMN_TOGGLE,
-        columnToggleList
-      );
+      DB.fixDefaultValue(allKeys, TROFF_SETTING_SONG_COLUMN_TOGGLE, columnToggleList);
 
       if (allKeys.indexOf(TROFF_CURRENT_STATE_OF_SONG_LISTS) == -1) {
         Troff.saveCurrentStateOfSonglists();
@@ -241,7 +218,7 @@ class DBClass {
         }
       };
 
-      ifExistsPrepAndThenRemove("iCurrentSonglist", (key, val) => {
+      ifExistsPrepAndThenRemove('iCurrentSonglist', (key, val) => {
         var o = {};
         o.songListList = val == 0 ? [] : [val.toString()];
         o.galleryList = [];
@@ -249,7 +226,7 @@ class DBClass {
         DB.saveVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, o);
       });
 
-      ifExistsPrepAndThenRemove("abGeneralAreas", (key, val) => {
+      ifExistsPrepAndThenRemove('abGeneralAreas', (key, val) => {
         var abGeneralAreas = JSON.parse(val);
         var showSongListArea = abGeneralAreas[0];
         var showSongArea = abGeneralAreas[1];
@@ -264,45 +241,43 @@ class DBClass {
         }
       });
 
-      ifExistsPrepAndThenRemove("TROFF_CORE_VERSION_NUMBER");
-      ifExistsPrepAndThenRemove("TROFF_STYLE_ASSETS_VERSION_NUMBER");
-      ifExistsPrepAndThenRemove("TROFF_INCLUDE_ASSETS_VERSION_NUMBER");
-      ifExistsPrepAndThenRemove("TROFF_APP_ASSETS_VERSION_NUMBER");
-      ifExistsPrepAndThenRemove("TROFF_INTERNAL_ASSETS_VERSION_NUMBER");
-      ifExistsPrepAndThenRemove("TROFF_EXTERNAL_ASSETS_VERSION_NUMBER");
+      ifExistsPrepAndThenRemove('TROFF_CORE_VERSION_NUMBER');
+      ifExistsPrepAndThenRemove('TROFF_STYLE_ASSETS_VERSION_NUMBER');
+      ifExistsPrepAndThenRemove('TROFF_INCLUDE_ASSETS_VERSION_NUMBER');
+      ifExistsPrepAndThenRemove('TROFF_APP_ASSETS_VERSION_NUMBER');
+      ifExistsPrepAndThenRemove('TROFF_INTERNAL_ASSETS_VERSION_NUMBER');
+      ifExistsPrepAndThenRemove('TROFF_EXTERNAL_ASSETS_VERSION_NUMBER');
 
-      allKeys.forEach((key, i) => {
+      allKeys.forEach((key) => {
         DB.cleanSong(key, nDB.get(key));
       });
     }); //end get all keys
   };
 
   setSonglistAsNotGroup = (firebaseGroupDocId) => {
-    const allSonglists = JSON.parse(nDB.get("straoSongLists"));
+    const allSonglists = JSON.parse(nDB.get('straoSongLists'));
 
-    const currentSonglist = allSonglists.find(
-      (g) => g.firebaseGroupDocId == firebaseGroupDocId
-    );
+    const currentSonglist = allSonglists.find((g) => g.firebaseGroupDocId == firebaseGroupDocId);
     delete currentSonglist.firebaseGroupDocId;
     delete currentSonglist.owners;
     currentSonglist.songs.forEach((song) => {
       delete song.firebaseSongDocId;
     });
 
-    nDB.set("straoSongLists", JSON.stringify(allSonglists));
+    nDB.set('straoSongLists', JSON.stringify(allSonglists));
   };
 
   saveSonglists_new = () => {
     var i,
       aoSonglists = [],
-      aDOMSonglist = $("#songListList").find("button[data-songlist-id]");
+      aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
 
     for (i = 0; i < aDOMSonglist.length; i++) {
-      aoSonglists.push(aDOMSonglist.eq(i).data("songList"));
+      aoSonglists.push(aDOMSonglist.eq(i).data('songList'));
     }
 
     var straoSonglists = JSON.stringify(aoSonglists);
-    nDB.set("straoSongLists", straoSonglists);
+    nDB.set('straoSongLists', straoSonglists);
   };
 
   setCurrentAreas = (songId) => {
@@ -312,10 +287,10 @@ class DBClass {
         return;
       }
       song.abAreas = [
-        $("#statesTab").hasClass("active"),
-        $("#settingsTab").hasClass("active"),
-        $("#infoTab").hasClass("active"),
-        $("#countTab").hasClass("active"),
+        $('#statesTab').hasClass('active'),
+        $('#settingsTab').hasClass('active'),
+        $('#infoTab').hasClass('active'),
+        $('#countTab').hasClass('active'),
       ];
 
       nDB.set(songId, song);
@@ -324,22 +299,22 @@ class DBClass {
 
   setCurrentSong = (path, galleryId) => {
     var stroSong = JSON.stringify({ strPath: path, iGalleryId: galleryId });
-    nDB.set("stroCurrentSongPathAndGalleryId", stroSong);
+    nDB.set('stroCurrentSongPathAndGalleryId', stroSong);
   };
 
   setZoomDontShowAgain = () => {
-    nDB.set("zoomDontShowAgain", true);
+    nDB.set('zoomDontShowAgain', true);
   };
 
   getZoomDontShowAgain = () => {
-    nDBc.get("zoomDontShowAgain", (value) => {
+    nDBc.get('zoomDontShowAgain', (value) => {
       var bZoomDontShowAgain = value || false;
       Troff.dontShowZoomInstructions = bZoomDontShowAgain;
     });
   };
 
   getAllSonglists = () => {
-    nDBc.get("straoSongLists", (straoSongLists) => {
+    nDBc.get('straoSongLists', (straoSongLists) => {
       if (straoSongLists == undefined) {
         straoSongLists = [];
       }
@@ -365,7 +340,7 @@ class DBClass {
   };
 
   getCurrentSong = () => {
-    nDBc.get("stroCurrentSongPathAndGalleryId", (stroSong) => {
+    nDBc.get('stroCurrentSongPathAndGalleryId', (stroSong) => {
       if (!stroSong) {
         Troff.setAreas([false, false, false, false]);
         IO.removeLoadScreen();
@@ -380,8 +355,7 @@ class DBClass {
 
   updateMarker = (markerId, newName, newInfo, newColor, newTime, songId) => {
     nDBc.get(songId, (song) => {
-      if (!song)
-        log.e('Error "updateMarker, noSong" occurred, songId=' + songId);
+      if (!song) log.e('Error "updateMarker, noSong" occurred, songId=' + songId);
       for (var i = 0; i < song.markers.length; i++) {
         if (song.markers[i].id == markerId) {
           song.markers[i].name = newName;
@@ -407,7 +381,7 @@ class DBClass {
       var aAllStates = Troff.getCurrentStates();
       var aStates = [];
       for (var i = 0; i < aAllStates.length; i++) {
-        aStates[i] = aAllStates.eq(i).attr("strState");
+        aStates[i] = aAllStates.eq(i).attr('strState');
       }
       if (!song) {
         log.e('Error "saveState, noSong" occurred, songId=' + songId);
@@ -462,8 +436,8 @@ class DBClass {
         song.markers = [];
       }
 
-      song.currentStartMarker = $(".currentMarker")[0].id;
-      song.currentStopMarker = $(".currentStopMarker")[0].id;
+      song.currentStartMarker = $('.currentMarker')[0].id;
+      song.currentStopMarker = $('.currentStopMarker')[0].id;
       song.markers = aMarkers;
       song.serverId = undefined;
       Troff.setUrlToSong(undefined, null);
@@ -480,11 +454,7 @@ class DBClass {
   setCurrentStartAndStopMarker = (startMarkerId, stopMarkerId, songId) => {
     nDBc.get(songId, (song) => {
       if (!song) {
-        log.e(
-          'Error "setStartAndStopMarker, noSong" occurred,' +
-            " songId=" +
-            songId
-        );
+        log.e('Error "setStartAndStopMarker, noSong" occurred,' + ' songId=' + songId);
         return;
       }
       song.currentStartMarker = startMarkerId;
@@ -494,14 +464,14 @@ class DBClass {
   }; //end setCurrentStartAndStopMarker
 
   setCurrentStartMarker = (name, songId) => {
-    DB.setCurrent(songId, "currentStartMarker", name);
+    DB.setCurrent(songId, 'currentStartMarker', name);
   };
   setCurrentStopMarker = (name, songId) => {
-    DB.setCurrent(songId, "currentStopMarker", name);
+    DB.setCurrent(songId, 'currentStopMarker', name);
   };
   setCurrentSongInfo = (info, songId) => {
-    DB.setCurrent(songId, "info", info, () => {
-      nDB.setOnSong(songId, "serverId", undefined);
+    DB.setCurrent(songId, 'info', info, () => {
+      nDB.setOnSong(songId, 'serverId', undefined);
       Troff.setUrlToSong(undefined, null);
 
       ifGroupSongUpdateFirestore(songId);
@@ -510,20 +480,14 @@ class DBClass {
   };
 
   setCurrentTempo = (tempo, songId) => {
-    DB.setCurrent(songId, "tempo", tempo);
+    DB.setCurrent(songId, 'tempo', tempo);
   };
 
   setCurrent = (songId, key, value, callback) => {
     nDBc.get(songId, (song) => {
       if (!song) {
         log.e(
-          'Error, "noSong" occurred;\n' +
-            "songId=" +
-            songId +
-            ", key=" +
-            key +
-            ", value=" +
-            value
+          'Error, "noSong" occurred;\n' + 'songId=' + songId + ', key=' + key + ', value=' + value
         );
         return;
       }
@@ -548,15 +512,15 @@ class DBClass {
 
   getSongMetaDataOf = (songId) => {
     const loadSongMetadata = (song, songId) => {
-      $("[data-save-on-song-toggle-class]").each((i, element) => {
+      $('[data-save-on-song-toggle-class]').each((i, element) => {
         var $target = $(element),
-          classToToggleAndSave = $target.data("save-on-song-toggle-class"),
-          key = "TROFF_CLASS_TO_TOGGLE_" + $target.attr("id"),
+          classToToggleAndSave = $target.data('save-on-song-toggle-class'),
+          key = 'TROFF_CLASS_TO_TOGGLE_' + $target.attr('id'),
           defaultElementId,
           value = song[key];
 
         if (value === undefined) {
-          defaultElementId = $target.data("troff-css-selector-to-get-default");
+          defaultElementId = $target.data('troff-css-selector-to-get-default');
           value = $(defaultElementId).hasClass(classToToggleAndSave);
         }
 
@@ -567,21 +531,19 @@ class DBClass {
         }
       });
 
-      $("[data-save-on-song-value]").each((i, element) => {
+      $('[data-save-on-song-value]').each((i, element) => {
         var $target = $(element),
-          key = "TROFF_VALUE_" + $target.attr("id"),
+          key = 'TROFF_VALUE_' + $target.attr('id'),
           value = song[key];
 
         if (value === undefined) {
-          const defaultElementId = $target.data(
-            "troff-css-selector-to-get-default"
-          );
+          const defaultElementId = $target.data('troff-css-selector-to-get-default');
           value = $(defaultElementId).val();
         }
 
         $target.val(value);
-        if ($target.attr("type") == "range") {
-          $target[0].dispatchEvent(new Event("input"));
+        if ($target.attr('type') == 'range') {
+          $target[0].dispatchEvent(new Event('input'));
         }
       });
 
@@ -590,12 +552,10 @@ class DBClass {
       Troff.addMarkers(song.markers);
       Troff.selectMarker(song.currentStartMarker);
       Troff.selectStopMarker(song.currentStopMarker);
-      Troff.setMood("pause");
+      Troff.setMood('pause');
       Troff.setLoopTo(song.loopTimes);
-      if (song.bPlayInFullscreen !== undefined)
-        Troff.setPlayInFullscreen(song.bPlayInFullscreen);
-      if (song.bMirrorImage !== undefined)
-        Troff.setMirrorImage(song.bMirrorImage);
+      if (song.bPlayInFullscreen !== undefined) Troff.setPlayInFullscreen(song.bPlayInFullscreen);
+      if (song.bMirrorImage !== undefined) Troff.setMirrorImage(song.bMirrorImage);
 
       Troff.setInfo(song.info);
       Troff.addButtonsOfStates(song.aStates);
@@ -618,8 +578,8 @@ class DBClass {
   }; // end getSongMetadata
 
   getImageMetaDataOf = (songId) => {
-    var loadImageMetadata = (song, songId) => {
-      Troff.setMood("pause");
+    var loadImageMetadata = (song) => {
+      Troff.setMood('pause');
       Troff.setInfo(song.info);
       Troff.addButtonsOfStates(song.aStates);
       Troff.setAreas(song.abAreas);

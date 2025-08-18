@@ -6,9 +6,23 @@ const prettier = require('eslint-plugin-prettier');
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 module.exports = [
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      'assets/external/**',
+      '**/*.min.js',
+      // 'making list longer to avoid single row
+      // 'assets/external/notify-js/notify.min.js',
+      // 'assets/external/jquery-3.6.0.min.js',
+      // 'assets/external/DataTables/js/jquery.dataTables.min.js',
+      // 'assets/external/DataTables/js/jquery.dataTables.js',
+    ],
+  },
   js.configs.recommended,
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', 'assets/internal/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module', // your scripts load via <script> tags
@@ -16,9 +30,7 @@ module.exports = [
         ...globals.browser,
         ...globals.es2021,
         $: 'readonly',
-        // Add your known app globals here as needed to avoid no-undef:
-        // scriptTroffClass: 'writable',
-        // firebase: 'readonly',
+        jQuery: 'readonly',
       },
     },
     plugins: {
@@ -26,14 +38,23 @@ module.exports = [
       prettier,
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          argsIgnorePattern: '^_',
+          args: 'after-used',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
       'no-undef': 'error',
       'no-redeclare': 'error',
       'no-implied-eval': 'error',
       eqeqeq: ['error', 'smart'],
       'prefer-const': 'warn',
       'prettier/prettier': 'off',
+      'unused-imports/no-unused-imports': 'error',
     },
-    ignores: ['node_modules/', 'assets/external/**', 'dist/', 'build/'],
   },
 ];

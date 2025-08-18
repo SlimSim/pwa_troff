@@ -15,16 +15,18 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+import '../../external/notify-js/notify.min.js';
+
 // notify-js is from http://notifyjs.jpillora.com/
 let notifyUndoLocal;
 (function () {
   var standardHtmlNodify =
-    "" +
-    "<div>" +
+    '' +
+    '<div>' +
     "<div class='clearfix'>" +
     "<span class='title full-width' data-notify-html='title'/>" +
-    "</div>" +
-    "</div>";
+    '</div>' +
+    '</div>';
 
   $.notify.defaults({
     // whether to hide the notification on click
@@ -40,18 +42,18 @@ let notifyUndoLocal;
     // position defines the notification position though uses the defaults below
     position: null,
     // default positions
-    elementPosition: "bottom left",
-    globalPosition: "top right",
+    elementPosition: 'bottom left',
+    globalPosition: 'top right',
     // default style
-    style: "bootstrap",
+    style: 'bootstrap',
     // default class (string or [string])
-    className: "success",
+    className: 'success',
     // show animation
-    showAnimation: "slideDown",
+    showAnimation: 'slideDown',
     // show animation duration
     showDuration: 100,
     // hide animation
-    hideAnimation: "slideUp",
+    hideAnimation: 'slideUp',
     // hide animation duration
     hideDuration: 50,
     // padding between element and notification
@@ -63,18 +65,18 @@ let notifyUndoLocal;
 	because I have yet not have a case for that function...
 	BUT this style is used by cookie_consent.js :)
 	*/
-  $.notify.addStyle("html-info", { html: standardHtmlNodify });
-  $.notify.addStyle("html-success", { html: standardHtmlNodify });
+  $.notify.addStyle('html-info', { html: standardHtmlNodify });
+  $.notify.addStyle('html-success', { html: standardHtmlNodify });
 
   notifyUndoLocal = function (infoText, callback) {
     var span = $('<span class="full-width">')
-      .append($("<p>").text(infoText))
+      .append($('<p>').text(infoText))
       .append(
-        $("<button>")
-          .text("undo")
+        $('<button>')
+          .text('undo')
           .click(function () {
             callback();
-            $(this).trigger("notify-hide");
+            $(this).trigger('notify-hide');
           })
       );
 
@@ -83,7 +85,7 @@ let notifyUndoLocal;
         title: span,
       },
       {
-        style: "html-success",
+        style: 'html-success',
         //		autoHide: true,
         autoHideDelay: 7000,
         clickToHide: true,

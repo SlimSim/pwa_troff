@@ -16,7 +16,7 @@
 */
 
 (function () {
-  document.addEventListener("DOMContentLoaded", function (event) {
+  document.addEventListener("DOMContentLoaded", function () {
     var shareButtons = document.querySelectorAll(".shareClass");
     for (var i = 0; i < shareButtons.length; i++) {
       shareButtons[i].addEventListener("click", sendMail);
@@ -42,7 +42,7 @@
 
     const toggleNavigation = document.querySelectorAll(".toggle-navigation");
 
-    toggleNavigation.forEach(function (item, index) {
+    toggleNavigation.forEach(function (item) {
       item.addEventListener("click", function () {
         const navigation = document.getElementById("navigation");
         if (!navigation) {

@@ -1,83 +1,71 @@
-export const TROFF_SETTING_SET_THEME = "TROFF_SETTING_SET_THEME";
-export const TROFF_SETTING_EXTENDED_MARKER_COLOR =
-  "TROFF_SETTING_EXTENDED_MARKER_COLOR";
+export const TROFF_SETTING_SET_THEME = 'TROFF_SETTING_SET_THEME';
+export const TROFF_SETTING_EXTENDED_MARKER_COLOR = 'TROFF_SETTING_EXTENDED_MARKER_COLOR';
 export const TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR =
-  "TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR";
+  'TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR';
 export const TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR =
-  "TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR";
-export const TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR =
-  "TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR";
+  'TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR';
+export const TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR = 'TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR';
 export const TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR =
-  "TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR";
-export const TROFF_SETTING_ENTER_RESET_COUNTER =
-  "TROFF_SETTING_ENTER_RESET_COUNTER";
-export const TROFF_SETTING_SPACE_RESET_COUNTER =
-  "TROFF_SETTING_SPACE_RESET_COUNTER";
+  'TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR';
+export const TROFF_SETTING_ENTER_RESET_COUNTER = 'TROFF_SETTING_ENTER_RESET_COUNTER';
+export const TROFF_SETTING_SPACE_RESET_COUNTER = 'TROFF_SETTING_SPACE_RESET_COUNTER';
 export const TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER =
-  "TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER";
-export const TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR =
-  "TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR";
+  'TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER';
+export const TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR = 'TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR';
 export const TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR =
-  "TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR";
+  'TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR';
 export const TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR =
-  "TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR";
-export const TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON =
-  "TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON";
+  'TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR';
+export const TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON = 'TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON';
 export const TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER =
-  "TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER";
-export const TROFF_SETTING_CONFIRM_DELETE_MARKER =
-  "TROFF_SETTING_CONFIRM_DELETE_MARKER";
-export const TROFF_SETTING_UI_ARTIST_SHOW = "TROFF_SETTING_UI_ARTIST_SHOW";
-export const TROFF_SETTING_UI_TITLE_SHOW = "TROFF_SETTING_UI_TITLE_SHOW";
-export const TROFF_SETTING_UI_ALBUM_SHOW = "TROFF_SETTING_UI_ALBUM_SHOW";
-export const TROFF_SETTING_UI_PATH_SHOW = "TROFF_SETTING_UI_PATH_SHOW";
+  'TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER';
+export const TROFF_SETTING_CONFIRM_DELETE_MARKER = 'TROFF_SETTING_CONFIRM_DELETE_MARKER';
+export const TROFF_SETTING_UI_ARTIST_SHOW = 'TROFF_SETTING_UI_ARTIST_SHOW';
+export const TROFF_SETTING_UI_TITLE_SHOW = 'TROFF_SETTING_UI_TITLE_SHOW';
+export const TROFF_SETTING_UI_ALBUM_SHOW = 'TROFF_SETTING_UI_ALBUM_SHOW';
+export const TROFF_SETTING_UI_PATH_SHOW = 'TROFF_SETTING_UI_PATH_SHOW';
 export const TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW =
-  "TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW";
-export const TROFF_SETTING_UI_ZOOM_SHOW = "TROFF_SETTING_UI_ZOOM_SHOW";
-export const TROFF_SETTING_UI_LOOP_BUTTONS_SHOW =
-  "TROFF_SETTING_UI_LOOP_BUTTONS_SHOW";
-export const TROFF_SETTING_SONG_COLUMN_TOGGLE =
-  "TROFF_SETTING_SONG_COLUMN_TOGGLE";
-export const TROFF_SETTING_SONG_LISTS_LIST_SHOW =
-  "TROFF_SETTING_SONG_LISTS_LIST_SHOW";
-export const TROFF_CURRENT_STATE_OF_SONG_LISTS =
-  "TROFF_CURRENT_STATE_OF_SONG_LISTS";
-export const TROFF_SETTING_SHOW_SONG_DIALOG = "TROFF_SETTING_SHOW_SONG_DIALOG";
-export const TROFF_TROFF_DATA_ID_AND_FILE_NAME =
-  "TROFF_TROFF_DATA_ID_AND_FILE_NAME";
+  'TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW';
+export const TROFF_SETTING_UI_ZOOM_SHOW = 'TROFF_SETTING_UI_ZOOM_SHOW';
+export const TROFF_SETTING_UI_LOOP_BUTTONS_SHOW = 'TROFF_SETTING_UI_LOOP_BUTTONS_SHOW';
+export const TROFF_SETTING_SONG_COLUMN_TOGGLE = 'TROFF_SETTING_SONG_COLUMN_TOGGLE';
+export const TROFF_SETTING_SONG_LISTS_LIST_SHOW = 'TROFF_SETTING_SONG_LISTS_LIST_SHOW';
+export const TROFF_CURRENT_STATE_OF_SONG_LISTS = 'TROFF_CURRENT_STATE_OF_SONG_LISTS';
+export const TROFF_SETTING_SHOW_SONG_DIALOG = 'TROFF_SETTING_SHOW_SONG_DIALOG';
+export const TROFF_TROFF_DATA_ID_AND_FILE_NAME = 'TROFF_TROFF_DATA_ID_AND_FILE_NAME';
 
-export const MARKER_COLOR_PREFIX = "markerColor";
+export const MARKER_COLOR_PREFIX = 'markerColor';
 
 export const DATA_TABLE_COLUMNS = {
   list: [
-    { id: "CHECKBOX", header: "Checkbox", default: true },
-    { id: "EDIT", header: "Edit", default: true },
-    { id: "TYPE", header: "Type", default: true },
-    { id: "DURATION", header: "Duration", default: true },
+    { id: 'CHECKBOX', header: 'Checkbox', default: true },
+    { id: 'EDIT', header: 'Edit', default: true },
+    { id: 'TYPE', header: 'Type', default: true },
+    { id: 'DURATION', header: 'Duration', default: true },
     {
-      id: "DISPLAY_NAME",
-      header: "Name",
+      id: 'DISPLAY_NAME',
+      header: 'Name',
       default: true,
       showOnAttachedState: true,
     },
-    { id: "CUSTOM_NAME", header: "Custom Name", default: false },
-    { id: "CHOREOGRAPHY", header: "Choreography", default: false },
-    { id: "CHOREOGRAPHER", header: "Choreographer", default: false },
-    { id: "TITLE", header: "Title", default: false },
-    { id: "ARTIST", header: "Artist", default: true },
-    { id: "ALBUM", header: "Album", default: true },
-    { id: "TEMPO", header: "Tempo", default: true },
-    { id: "GENRE", header: "Genre", default: true },
-    { id: "TAGS", header: "Tags", default: false },
-    { id: "LAST_MODIFIED", header: "Modified", default: false },
-    { id: "FILE_SIZE", header: "Size", default: false },
-    { id: "INFO", header: "Song info", default: false },
-    { id: "EXTENSION", header: "File type", default: false },
-    { id: "DATA_INFO", header: "dataInfo", default: false, hideFromUser: true },
+    { id: 'CUSTOM_NAME', header: 'Custom Name', default: false },
+    { id: 'CHOREOGRAPHY', header: 'Choreography', default: false },
+    { id: 'CHOREOGRAPHER', header: 'Choreographer', default: false },
+    { id: 'TITLE', header: 'Title', default: false },
+    { id: 'ARTIST', header: 'Artist', default: true },
+    { id: 'ALBUM', header: 'Album', default: true },
+    { id: 'TEMPO', header: 'Tempo', default: true },
+    { id: 'GENRE', header: 'Genre', default: true },
+    { id: 'TAGS', header: 'Tags', default: false },
+    { id: 'LAST_MODIFIED', header: 'Modified', default: false },
+    { id: 'FILE_SIZE', header: 'Size', default: false },
+    { id: 'INFO', header: 'Song info', default: false },
+    { id: 'EXTENSION', header: 'File type', default: false },
+    { id: 'DATA_INFO', header: 'dataInfo', default: false, hideFromUser: true },
   ],
   getPos: (id) => {
     for (let i = 0; i < DATA_TABLE_COLUMNS.list.length; i++) {
-      if (id == DATA_TABLE_COLUMNS.list[i].id) {
+      if (id === DATA_TABLE_COLUMNS.list[i].id) {
         return i;
       }
     }

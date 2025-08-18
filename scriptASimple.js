@@ -1,3 +1,4 @@
+/* eslint eqeqeq: "off" */
 import { nDB } from "./assets/internal/db.js";
 
 class SongToGroup {

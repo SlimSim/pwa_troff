@@ -4,8 +4,8 @@ const fileHandler = {};
 const backendService = {};
 const firebaseWrapper = {};
 
-import { ShowUserException } from "../script2.js";
-import { isSafari } from "../utils/browserEnv.js";
+import { ShowUserException } from '../script2.js';
+import { isSafari } from '../utils/browserEnv.js';
 import {
   db,
   getDoc,
@@ -15,21 +15,21 @@ import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-} from "./firebaseClient.js";
-import { IO } from "../script.js";
-import { log } from "../utils/log.js";
-import { cacheImplementation } from "./FileApiImplementation.js";
+} from './firebaseClient.js';
+import { IO } from '../script.js';
+import log from '../utils/log.js';
+import { cacheImplementation } from './FileApiImplementation.js';
 
 $(() => {
-  "use strict";
+  'use strict';
 
   /************************************************
 	/*           Private methods and variables:
 	/************************************************/
 
-  const nameOfCache = "songCache-v1.0";
+  const nameOfCache = 'songCache-v1.0';
 
-  const v3Init = { status: 200, statusText: "version-3", responseType: "cors" };
+  const v3Init = { status: 200, statusText: 'version-3', responseType: 'cors' };
 
   const crc32Hash = (r) => {
     for (var a, o = [], c = 0; c < 256; c++) {
@@ -37,8 +37,7 @@ $(() => {
       for (var f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
       o[c] = a;
     }
-    for (var n = -1, t = 0; t < r.length; t++)
-      n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];
+    for (var n = -1, t = 0; t < r.length; t++) n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];
     return (-1 ^ n) >>> 0;
   };
 
@@ -57,75 +56,66 @@ $(() => {
 
   const sha256Hash = async (object) => {
     const msgUint8 = new TextEncoder().encode(JSON.stringify(object));
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
   };
 
   const readFileTypeAndExtension = (file, callbackFunk) => {
     var reader = new FileReader();
-    reader.addEventListener("load", (e) => {
+    reader.addEventListener('load', (e) => {
       const arr = new Uint8Array(e.target.result).subarray(0, 22);
-      let extension = "",
-        type = "",
-        h = "";
+      let extension = '',
+        type = '',
+        h = '';
 
       for (var i = 0; i < arr.length; i++) {
         h += arr[i].toString(16).toUpperCase();
       }
 
       if (
-        h.startsWith("494433") ||
-        h.startsWith("FFFB") ||
-        h.startsWith("FFF3") ||
-        h.startsWith("FFF2")
+        h.startsWith('494433') ||
+        h.startsWith('FFFB') ||
+        h.startsWith('FFF3') ||
+        h.startsWith('FFF2')
       ) {
-        [type, extension] = ["audio/mpeg", "mp3"];
-      } else if (h.startsWith("00020667479704D3441")) {
-        [type, extension] = ["audio/x-m4a", "m4a"];
-      } else if (h.startsWith("52494646") && h.indexOf("57415645") != -1) {
-        [type, extension] = ["audio/wav", "wav"];
-      } else if (h.startsWith("4F676753")) {
-        [type, extension] = ["audio/ogg", "ogg"];
-      } else if (h.startsWith("52494646") && h.indexOf("41564920") != -1) {
-        [type, extension] = ["video/x-msvideo", "avi"];
-      } else if (h.startsWith("464C56")) {
-        [type, extension] = ["video/x-flv", "flv"];
-      } else if (h.indexOf("667479703367") != -1) {
-        [type, extension] = ["video/3gpp", "3gp"];
-      } else if (h.indexOf("46674797") != -1) {
-        [type, extension] = ["video/quicktime", "mov"];
-      } else if (
-        h.startsWith("47") ||
-        h.startsWith("001BA") ||
-        h.startsWith("001B3")
-      ) {
-        [type, extension] = ["video/mpeg", "mpeg"];
-      } else if (h.indexOf("6674797069736F6D") != -1) {
-        [type, extension] = ["video/mp4", "mp4"];
-      } else if (h.startsWith("1A45DFA3")) {
-        [type, extension] = ["video/webm", "webm"];
-      } else if (
-        h.startsWith("3026B2758E66CF11") ||
-        h.startsWith("A6D900AA0062CE6C")
-      ) {
-        [type, extension] = ["video/x-ms-wmv", "wmv"];
-      } else if (h.startsWith("89504E47")) {
-        [type, extension] = ["image/png", "png"];
-      } else if (h.startsWith("52494646") && h.indexOf("57454250") != -1) {
-        [type, extension] = ["image/webp", "webp"];
-      } else if (h.startsWith("FFD8FF")) {
-        [type, extension] = ["image/jpeg", "jpeg"];
-      } else if (h.startsWith("474946383761") || h.startsWith("474946383961")) {
-        [type, extension] = ["image/gif", "gif"];
-      } else if (h.startsWith("424D")) {
-        [type, extension] = ["image/bmp", "bmp"];
+        [type, extension] = ['audio/mpeg', 'mp3'];
+      } else if (h.startsWith('00020667479704D3441')) {
+        [type, extension] = ['audio/x-m4a', 'm4a'];
+      } else if (h.startsWith('52494646') && h.indexOf('57415645') != -1) {
+        [type, extension] = ['audio/wav', 'wav'];
+      } else if (h.startsWith('4F676753')) {
+        [type, extension] = ['audio/ogg', 'ogg'];
+      } else if (h.startsWith('52494646') && h.indexOf('41564920') != -1) {
+        [type, extension] = ['video/x-msvideo', 'avi'];
+      } else if (h.startsWith('464C56')) {
+        [type, extension] = ['video/x-flv', 'flv'];
+      } else if (h.indexOf('667479703367') != -1) {
+        [type, extension] = ['video/3gpp', '3gp'];
+      } else if (h.indexOf('46674797') != -1) {
+        [type, extension] = ['video/quicktime', 'mov'];
+      } else if (h.startsWith('47') || h.startsWith('001BA') || h.startsWith('001B3')) {
+        [type, extension] = ['video/mpeg', 'mpeg'];
+      } else if (h.indexOf('6674797069736F6D') != -1) {
+        [type, extension] = ['video/mp4', 'mp4'];
+      } else if (h.startsWith('1A45DFA3')) {
+        [type, extension] = ['video/webm', 'webm'];
+      } else if (h.startsWith('3026B2758E66CF11') || h.startsWith('A6D900AA0062CE6C')) {
+        [type, extension] = ['video/x-ms-wmv', 'wmv'];
+      } else if (h.startsWith('89504E47')) {
+        [type, extension] = ['image/png', 'png'];
+      } else if (h.startsWith('52494646') && h.indexOf('57454250') != -1) {
+        [type, extension] = ['image/webp', 'webp'];
+      } else if (h.startsWith('FFD8FF')) {
+        [type, extension] = ['image/jpeg', 'jpeg'];
+      } else if (h.startsWith('474946383761') || h.startsWith('474946383961')) {
+        [type, extension] = ['image/gif', 'gif'];
+      } else if (h.startsWith('424D')) {
+        [type, extension] = ['image/bmp', 'bmp'];
       }
 
-      const renamedFile = new File([file], file.name + "." + extension, {
+      const renamedFile = new File([file], file.name + '.' + extension, {
         type: type,
       });
       callbackFunk(renamedFile);
@@ -135,44 +125,34 @@ $(() => {
 
   const handleFileWithFileType = (file, callbackFunk) => {
     // Only process image, audio and video files.
-    if (
-      !(
-        file.type.match("image.*") ||
-        file.type.match("audio.*") ||
-        file.type.match("video.*")
-      )
-    ) {
+    if (!(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*'))) {
       if (isSafari) {
         IO.alert(
-          "Safari can not recognize this file",
-          "Troff only supports audios, videos and images, " +
-            "if this file is on of those, " +
-            "you can try to use a different browser such as Firefox Chromium or Chrome<br /><br />" +
-            "Happy training!"
+          'Safari can not recognize this file',
+          'Troff only supports audios, videos and images, ' +
+            'if this file is on of those, ' +
+            'you can try to use a different browser such as Firefox Chromium or Chrome<br /><br />' +
+            'Happy training!'
         );
       } else {
         IO.alert(
-          "Unrecognized file",
-          "Troff only supports audios, videos and images, " +
-            "this file seems to be a <br /><br />" +
+          'Unrecognized file',
+          'Troff only supports audios, videos and images, ' +
+            'this file seems to be a <br /><br />' +
             file.type +
-            "<br /><br />If this file is an audio-, video- or image-file, " +
-            "we are deeply sorry, please contact us and describe your problem<br /><br />" +
-            "Happy training!"
+            '<br /><br />If this file is an audio-, video- or image-file, ' +
+            'we are deeply sorry, please contact us and describe your problem<br /><br />' +
+            'Happy training!'
         );
       }
-      log.e("handleFileWithFileType: unrecognized type! file: ", file);
+      log.e('handleFileWithFileType: unrecognized type! file: ', file);
       return;
     }
 
     try {
       fileHandler.saveFile(file, callbackFunk);
     } catch (exception) {
-      log.e(
-        "Exception in fileHandler.saveFile, file and exception:",
-        file,
-        exception
-      );
+      log.e('Exception in fileHandler.saveFile, file and exception:', file, exception);
     }
   };
 
@@ -181,7 +161,7 @@ $(() => {
 	/************************************************/
 
   backendService.getTroffData = async (troffDataId, fileName) => {
-    const troffDocRef = doc(db, "TroffData", troffDataId);
+    const troffDocRef = doc(db, 'TroffData', troffDataId);
     const snapshot = await getDoc(troffDocRef);
     if (!snapshot.exists()) {
       throw new ShowUserException(
@@ -197,7 +177,7 @@ $(() => {
     if (!response.ok) {
       throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
     }
-    const contentLength = +response.headers.get("Content-Length");
+    const contentLength = +response.headers.get('Content-Length');
     const reader = response.body.getReader();
     let receivedLength = 0; // received that many bytes at the moment
     const chunks = []; // array of received binary chunks (comprises the body)
@@ -210,7 +190,7 @@ $(() => {
       chunks.push(value);
       receivedLength += value.length;
 
-      if (typeof firebaseWrapper.onDownloadProgressUpdate == "function") {
+      if (typeof firebaseWrapper.onDownloadProgressUpdate == 'function') {
         const progress = (receivedLength / contentLength) * 100;
         firebaseWrapper.onDownloadProgressUpdate(Math.floor(progress));
       }
@@ -229,11 +209,9 @@ $(() => {
   //private?
   fileHandler.saveFile = async (file, callbackFunk) => {
     const url = file.name;
-    return fileHandler
-      .saveResponse(new Response(file, v3Init), url)
-      .then(() => {
-        callbackFunk(url, file);
-      });
+    return fileHandler.saveResponse(new Response(file, v3Init), url).then(() => {
+      callbackFunk(url, file);
+    });
   };
 
   //private?
@@ -275,13 +253,11 @@ $(() => {
     const file = new File([myBlob], fileKey, { type: myBlob.type });
 
     const fileHash = await hashFile(file);
-    const fileUrl = await firebaseWrapper
-      .uploadFile(fileHash, file, storageDir)
-      .catch((error) => {
-        if (error instanceof ShowUserException) {
-          throw error;
-        }
-      });
+    const fileUrl = await firebaseWrapper.uploadFile(fileHash, file, storageDir).catch((error) => {
+      if (error instanceof ShowUserException) {
+        throw error;
+      }
+    });
 
     return [fileUrl, file];
   };
@@ -293,15 +269,8 @@ $(() => {
    * @param {string} storageDir
    * @returns {} object with troffData id, url and fileName
    */
-  fileHandler.sendFile = async (
-    fileKey,
-    oSongTroffInfo,
-    storageDir = "TroffFiles"
-  ) => {
-    const [fileUrl, file] = await fileHandler.sendFileToFirebase(
-      fileKey,
-      storageDir
-    );
+  fileHandler.sendFile = async (fileKey, oSongTroffInfo, storageDir = 'TroffFiles') => {
+    const [fileUrl, file] = await fileHandler.sendFileToFirebase(fileKey, storageDir);
 
     const strSongTroffInfo = JSON.stringify(oSongTroffInfo);
     const troffData = {
@@ -335,7 +304,7 @@ $(() => {
 
     // Loop through the FileList and render the files as appropriate.
     for (let file; (file = files[i]); i++) {
-      if (file.type == "") {
+      if (file.type == '') {
         readFileTypeAndExtension(file, (fileWithType) => {
           handleFileWithFileType(fileWithType, callbackFunk);
         });
@@ -351,7 +320,7 @@ $(() => {
       const existingUrl = await getDownloadURL(fileRef);
       return existingUrl;
     } catch (err) {
-      if (err.code !== "storage/object-not-found") {
+      if (err.code !== 'storage/object-not-found') {
         // Not a "missing object" case; surface the real error
         throw err;
       }
@@ -359,11 +328,7 @@ $(() => {
     }
   };
 
-  firebaseWrapper.uploadFile = async (
-    fileId,
-    file,
-    storageDir = "TroffFiles"
-  ) => {
+  firebaseWrapper.uploadFile = async (fileId, file, storageDir = 'TroffFiles') => {
     const fileRef = ref(storage, `${storageDir}/${fileId}`);
 
     const existingUrl = await checkUploadedFileAndGetURL(fileRef);
@@ -374,11 +339,10 @@ $(() => {
     const task = uploadBytesResumable(fileRef, file);
     return new Promise((resolve, reject) => {
       task.on(
-        "state_changed",
+        'state_changed',
         (snapshot) => {
-          if (typeof firebaseWrapper.onUploadProgressUpdate === "function") {
-            const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (typeof firebaseWrapper.onUploadProgressUpdate === 'function') {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             firebaseWrapper.onUploadProgressUpdate(Math.floor(progress));
           }
         },
@@ -408,7 +372,7 @@ $(() => {
 
   firebaseWrapper.uploadTroffData = async (troffData) => {
     try {
-      await setDoc(doc(db, "TroffData", String(troffData.id)), troffData);
+      await setDoc(doc(db, 'TroffData', String(troffData.id)), troffData);
       return troffData;
     } catch (error) {
       log.e(error);

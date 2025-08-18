@@ -17,7 +17,8 @@
 
 /* eslint eqeqeq: "off" */
 
-import { nDB } from "./assets/internal/db.js";
+import './assets/external/DataTables/js/jquery.dataTables.min.js';
+import { nDB } from './assets/internal/db.js';
 import {
   DB,
   Troff,
@@ -25,44 +26,29 @@ import {
   IO,
   addSongsToSonglist,
   mergeSongListHistorys,
-} from "./script.js";
-import log from "./utils/log.js";
-import { gtag } from "./services/analytics.js";
-import { cacheImplementation } from "./services/FileApiImplementation.js";
-import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
-import { auth, db, doc, setDoc, getDoc } from "./services/firebaseClient.js";
-import { escapeRegExp, getFileExtension } from "./utils/utils.js";
-import {
-  TROFF_SETTING_SHOW_SONG_DIALOG,
-  DATA_TABLE_COLUMNS,
-} from "./constants/constants.js";
-import { addGroupSongRow } from "./features/groupManagement.js";
+} from './script.js';
+import log from './utils/log.js';
+import { gtag } from './services/analytics.js';
+import { cacheImplementation } from './services/FileApiImplementation.js';
+import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
+import { auth, db, doc, setDoc, getDoc } from './services/firebaseClient.js';
+import { escapeRegExp, getFileExtension } from './utils/utils.js';
+import { TROFF_SETTING_SHOW_SONG_DIALOG, DATA_TABLE_COLUMNS } from './constants/constants.js';
+import { addGroupSongRow } from './features/groupManagement.js';
 
 window.alert = (alert) => {
-  log.w("Alert:", alert);
+  log.w('Alert:', alert);
 };
 
-var imgFormats = ["png", "bmp", "jpeg", "jpg", "gif", "svg", "xbm", "webp"];
-var audFormats = ["wav", "mp3", "m4a"];
-var vidFormats = [
-  "avi",
-  "3gp",
-  "3gpp",
-  "flv",
-  "mov",
-  "mpeg",
-  "mpeg4",
-  "mp4",
-  "webm",
-  "wmv",
-  "ogg",
-];
+var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'svg', 'xbm', 'webp'];
+var audFormats = ['wav', 'mp3', 'm4a'];
+var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
 
 const populateExampleSongsInGroupDialog = (songs) => {
   // TODO: fixa bättre sätt att lägga på låtarna!
-  const dataInfo = $("#dataSongTable")
+  const dataInfo = $('#dataSongTable')
     .DataTable()
-    .column(DATA_TABLE_COLUMNS.getPos("DATA_INFO"))
+    .column(DATA_TABLE_COLUMNS.getPos('DATA_INFO'))
     .data();
 
   const fullPathList = songs.map((song) => song.fullPath);
@@ -71,15 +57,15 @@ const populateExampleSongsInGroupDialog = (songs) => {
     if (fullPathList.includes(fullPath)) {
       return;
     }
-    $("#possible-songs-to-add").append(
-      $("<li>")
-        .addClass("py-1")
+    $('#possible-songs-to-add').append(
+      $('<li>')
+        .addClass('py-1')
         .append(
-          $("<button>")
+          $('<button>')
             .text(fullPath)
-            .addClass("regularButton")
-            .attr("type", "button")
-            .data("fullPath", fullPath)
+            .addClass('regularButton')
+            .attr('type', 'button')
+            .data('fullPath', fullPath)
             .click(onClickAddNewSongToGroup)
         )
     );
@@ -92,38 +78,38 @@ const openGroupDialog = async (songListObject) => {
   const isGroup = songListObject.firebaseGroupDocId !== undefined;
 
   if (isGroup) {
-    $("#leaveGroup").removeClass("hidden");
-    $(".showOnSharedSonglist").removeClass("hidden");
+    $('#leaveGroup').removeClass('hidden');
+    $('.showOnSharedSonglist').removeClass('hidden');
     if (!songListObject.icon) {
-      songListObject.icon = "fa-users";
+      songListObject.icon = 'fa-users';
     }
 
-    $("#groupDialog").find(".innerDialog").addClass(songListObject.color);
+    $('#groupDialog').find('.innerDialog').addClass(songListObject.color);
 
-    $("#groupDialogSonglistIcon").addClass(songListObject.icon);
+    $('#groupDialogSonglistIcon').addClass(songListObject.icon);
 
-    $("#groupDialogColor").val(songListObject.color);
-    $("#groupDialogIcon").val(songListObject.icon);
+    $('#groupDialogColor').val(songListObject.color);
+    $('#groupDialogIcon').val(songListObject.icon);
 
-    $("#songlistColorPicker")
-      .find("." + (songListObject.color || "backgroundColorNone"))
-      .addClass("colorPickerSelected");
+    $('#songlistColorPicker')
+      .find('.' + (songListObject.color || 'backgroundColorNone'))
+      .addClass('colorPickerSelected');
 
-    $("#songlistIconPicker")
-      .find("." + songListObject.icon)
+    $('#songlistIconPicker')
+      .find('.' + songListObject.icon)
       .parent()
-      .addClass("selected");
+      .addClass('selected');
   } else {
-    $("#shareSonglist").removeClass("hidden");
+    $('#shareSonglist').removeClass('hidden');
   }
 
-  $("#groupDialogName").val(songListObject.name);
-  $("#groupDialogName").data("songListObjectId", songListObject.id);
-  $("#groupDialogName").data("groupDocId", songListObject.firebaseGroupDocId);
+  $('#groupDialogName').val(songListObject.name);
+  $('#groupDialogName').data('songListObjectId', songListObject.id);
+  $('#groupDialogName').data('groupDocId', songListObject.firebaseGroupDocId);
 
-  $("#groupDialogIsGroup").prop("checked", isGroup);
+  $('#groupDialogIsGroup').prop('checked', isGroup);
 
-  $("#groupDialogInfo").val(songListObject.info);
+  $('#groupDialogInfo').val(songListObject.info);
 
   songListObject.owners?.forEach(addGroupOwnerRow);
 
@@ -131,39 +117,37 @@ const openGroupDialog = async (songListObject) => {
 
   populateExampleSongsInGroupDialog(songListObject.songs);
 
-  $("#groupDialog").removeClass("hidden");
+  $('#groupDialog').removeClass('hidden');
 };
 
 const emptyGroupDialog = () => {
-  $("#groupDialog").find("form").trigger("reset");
+  $('#groupDialog').find('form').trigger('reset');
 
-  $("#groupOwnerParent").empty();
-  $("#groupSongParent").empty();
-  $("#possible-songs-to-add").empty();
+  $('#groupOwnerParent').empty();
+  $('#groupSongParent').empty();
+  $('#possible-songs-to-add').empty();
 
-  $("#groupDialogName").val("");
-  $("#groupDialogName").removeData();
+  $('#groupDialogName').val('');
+  $('#groupDialogName').removeData();
 
-  $("#leaveGroup").addClass("hidden");
-  $("#shareSonglist").addClass("hidden");
-  $(".showOnSharedSonglist").addClass("hidden");
+  $('#leaveGroup').addClass('hidden');
+  $('#shareSonglist').addClass('hidden');
+  $('.showOnSharedSonglist').addClass('hidden');
 
-  $("#groupDialog").find(".innerDialog").removeClassStartingWith("bg-");
+  $('#groupDialog').find('.innerDialog').removeClassStartingWith('bg-');
 
-  $("#groupDialogSonglistIcon").removeClassStartingWith("fa-");
+  $('#groupDialogSonglistIcon').removeClassStartingWith('fa-');
 
-  $("#songlistIconPicker").find("button").removeClass("selected");
+  $('#songlistIconPicker').find('button').removeClass('selected');
 
-  $("#songlistColorPicker")
-    .find(".colorPickerSelected")
-    .removeClass("colorPickerSelected");
+  $('#songlistColorPicker').find('.colorPickerSelected').removeClass('colorPickerSelected');
 };
 
 const removeOwnerRow = (event) => {
-  const row = $(event.target).closest(".form-group.row");
-  const owner = row.find(".groupDialogOwner").val();
+  const row = $(event.target).closest('.form-group.row');
+  const owner = row.find('.groupDialogOwner').val();
 
-  notifyUndo(owner + " was removed.", () => {
+  notifyUndo(owner + ' was removed.', () => {
     addGroupOwnerRow(owner);
   });
 
@@ -171,20 +155,18 @@ const removeOwnerRow = (event) => {
 };
 
 const onClickAddNewSongToGroup = (event) => {
-  console.log("onClickAddNewSongToGroup TEST TEST TEST ");
+  console.log('onClickAddNewSongToGroup TEST TEST TEST ');
   const target = $(event.target);
-  addGroupSongRow({ fullPath: target.data("fullPath") });
+  addGroupSongRow({ fullPath: target.data('fullPath') });
   target.remove();
 };
 
 const addGroupOwnerRow = (owner) => {
-  const ownerRow = $("#groupDialogOwnerRowTemplate")
-    .children()
-    .clone(true, true);
+  const ownerRow = $('#groupDialogOwnerRowTemplate').children().clone(true, true);
 
-  ownerRow.find(".groupDialogRemoveOwner").on("click", removeOwnerRow);
-  ownerRow.find(".groupDialogOwner").val(owner);
-  $("#groupOwnerParent").append(ownerRow);
+  ownerRow.find('.groupDialogRemoveOwner').on('click', removeOwnerRow);
+  ownerRow.find('.groupDialogOwner').val(owner);
+  $('#groupOwnerParent').append(ownerRow);
 };
 
 const nrIdsInHistoryList = (historyList) => {
@@ -200,11 +182,11 @@ const updateUploadedHistory = async () => {
   try {
     if (auth.currentUser == null) return;
 
-    const snapshot = await getDoc(doc(db, "UserData", auth.currentUser.uid));
+    const snapshot = await getDoc(doc(db, 'UserData', auth.currentUser.uid));
     const userData = snapshot.exists() ? snapshot.data() : {};
 
     const uploadedHistory = userData.uploadedHistory || [];
-    const localHistory = nDB.get("TROFF_TROFF_DATA_ID_AND_FILE_NAME") || [];
+    const localHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME') || [];
     const totalList = mergeSongListHistorys(uploadedHistory, localHistory);
 
     const nrIdsInTotalList = nrIdsInHistoryList(totalList);
@@ -216,27 +198,27 @@ const updateUploadedHistory = async () => {
       // totalList kanske ska ränsa totalList från onödiga saker???
       // beroende på hur mycket plats det tar upp i firebase...
       userData.uploadedHistory = totalList;
-      await setDoc(doc(db, "UserData", auth.currentUser.uid), userData);
+      await setDoc(doc(db, 'UserData', auth.currentUser.uid), userData);
     }
   } catch (error) {
-    log.e("updateUploadedHistory: error", error);
+    log.e('updateUploadedHistory: error', error);
   }
 };
 
 function addImageToContentDiv() {
-  var content_div = document.getElementById("content");
-  var videoBox = document.createElement("div");
-  var image = document.createElement("img");
+  var content_div = document.getElementById('content');
+  var videoBox = document.createElement('div');
+  var image = document.createElement('img');
 
-  videoBox.setAttribute("id", "videoBox");
-  image.classList.add("contain-object");
-  image.classList.add("full-width");
+  videoBox.setAttribute('id', 'videoBox');
+  image.classList.add('contain-object');
+  image.classList.add('full-width');
   Troff.setMetadataImage(image);
   Troff.setImageLayout();
 
-  var fsButton = document.createElement("button");
-  fsButton.addEventListener("click", Troff.forceFullscreenChange);
-  fsButton.appendChild(document.createTextNode("Fullscreen (F)"));
+  var fsButton = document.createElement('button');
+  fsButton.addEventListener('click', Troff.forceFullscreenChange);
+  fsButton.appendChild(document.createTextNode('Fullscreen (F)'));
   content_div.appendChild(fsButton);
   videoBox.appendChild(image);
   content_div.appendChild(videoBox);
@@ -245,9 +227,9 @@ function addImageToContentDiv() {
 }
 
 function addAudioToContentDiv() {
-  var content_div = document.getElementById("content");
-  var audio = document.createElement("audio");
-  audio.addEventListener("loadedmetadata", (e) => {
+  var content_div = document.getElementById('content');
+  var audio = document.createElement('audio');
+  audio.addEventListener('loadedmetadata', () => {
     Troff.setMetadata(audio);
     Troff.setAudioVideoLayout();
   });
@@ -256,24 +238,24 @@ function addAudioToContentDiv() {
 }
 
 function addVideoToContentDiv() {
-  var content_div = document.getElementById("content");
-  var videoBox = document.createElement("div");
-  var video = document.createElement("video");
+  var content_div = document.getElementById('content');
+  var videoBox = document.createElement('div');
+  var video = document.createElement('video');
 
-  var fsButton = document.createElement("button");
+  var fsButton = document.createElement('button');
 
-  var margin = "4px";
+  var margin = '4px';
   video.style.marginTop = margin;
   video.style.marginBottom = margin;
 
-  fsButton.addEventListener("click", Troff.playInFullscreenChanged);
-  fsButton.appendChild(document.createTextNode("Play in Fullscreen"));
-  fsButton.setAttribute("id", "playInFullscreenButt");
-  fsButton.setAttribute("class", "stOnOffButton mt-2 mr-2");
+  fsButton.addEventListener('click', Troff.playInFullscreenChanged);
+  fsButton.appendChild(document.createTextNode('Play in Fullscreen'));
+  fsButton.setAttribute('id', 'playInFullscreenButt');
+  fsButton.setAttribute('class', 'stOnOffButton mt-2 mr-2');
 
-  videoBox.setAttribute("id", "videoBox");
+  videoBox.setAttribute('id', 'videoBox');
 
-  video.addEventListener("loadedmetadata", (e) => {
+  video.addEventListener('loadedmetadata', () => {
     Troff.setMetadata(video);
     Troff.setAudioVideoLayout();
   });
@@ -281,11 +263,11 @@ function addVideoToContentDiv() {
   content_div.appendChild(fsButton);
 
   content_div.appendChild(
-    $("<button>")
-      .text("Mirror Image")
-      .attr("id", "mirrorImageButt")
+    $('<button>')
+      .text('Mirror Image')
+      .attr('id', 'mirrorImageButt')
       .click(Troff.mirrorImageChanged)
-      .addClass("stOnOffButton mt-2 mr-2")[0]
+      .addClass('stOnOffButton mt-2 mr-2')[0]
   );
 
   videoBox.appendChild(video);
@@ -295,9 +277,9 @@ function addVideoToContentDiv() {
 
 function getFileType(filename) {
   var ext = getFileExtension(filename);
-  if (imgFormats.indexOf(ext) >= 0) return "image";
-  else if (audFormats.indexOf(ext) >= 0) return "audio";
-  else if (vidFormats.indexOf(ext) >= 0) return "video";
+  if (imgFormats.indexOf(ext) >= 0) return 'image';
+  else if (audFormats.indexOf(ext) >= 0) return 'audio';
+  else if (vidFormats.indexOf(ext) >= 0) return 'video';
   else return null;
 }
 
@@ -305,55 +287,51 @@ function getFileTypeFaIcon(filename) {
   var type = getFileType(filename);
 
   switch (type) {
-    case "image":
-      return "fa-image";
-    case "audio":
-      return "fa-music";
-    case "video":
-      return "fa-film";
+    case 'image':
+      return 'fa-image';
+    case 'audio':
+      return 'fa-music';
+    case 'video':
+      return 'fa-film';
   }
-  return "fa-question";
+  return 'fa-question';
 }
 
 function clearContentDiv() {
-  var content_div = document.getElementById("content");
+  var content_div = document.getElementById('content');
   while (content_div.childNodes.length >= 1) {
     content_div.removeChild(content_div.firstChild);
   }
 }
 
 function sortAndValue(sortValue, stringValue) {
-  if (sortValue === undefined) return '<i class="hidden">' + 0 + "</i>"; //<i class=\"fa " + faType + "\"></i>",
-  if (typeof String.prototype.padStart == "function") {
+  if (sortValue === undefined) return '<i class="hidden">' + 0 + '</i>'; //<i class=\"fa " + faType + "\"></i>",
+  if (typeof String.prototype.padStart == 'function') {
     sortValue = sortValue.toString().padStart(16, 0);
   }
-  return '<i class="hidden">' + sortValue + "</i>" + stringValue;
+  return '<i class="hidden">' + sortValue + '</i>' + stringValue;
 }
 
 function filterSongTable(list) {
-  var regex = list.join("|") || false;
+  var regex = list.join('|') || false;
   if (
-    $("#directoryList, #galleryList, #songListsList")
-      .find("button")
-      .filter(".active, .selected").length == 0
+    $('#directoryList, #galleryList, #songListsList').find('button').filter('.active, .selected')
+      .length == 0
   ) {
-    $("#songListAll").addClass("selected");
-    regex = "";
+    $('#songListAll').addClass('selected');
+    regex = '';
   }
-  $("#songlistSelectedWarning").toggleClass(
-    "hidden",
-    $("#songListAll").hasClass("selected")
-  );
-  const $songLists = $("#songListList .selected, #songListList .active");
+  $('#songlistSelectedWarning').toggleClass('hidden', $('#songListAll').hasClass('selected'));
+  const $songLists = $('#songListList .selected, #songListList .active');
   if ($songLists.length == 1) {
-    $("#songlistSelectedWarningName").text(' "' + $songLists.text() + '"');
+    $('#songlistSelectedWarningName').text(' "' + $songLists.text() + '"');
   } else {
-    $("#songlistSelectedWarningName").text("s");
+    $('#songlistSelectedWarningName').text('s');
   }
 
-  $("#dataSongTable")
+  $('#dataSongTable')
     .DataTable()
-    .columns(DATA_TABLE_COLUMNS.getPos("DATA_INFO"))
+    .columns(DATA_TABLE_COLUMNS.getPos('DATA_INFO'))
     .search(regex, true, false)
     .draw();
 }
@@ -361,11 +339,11 @@ function filterSongTable(list) {
 function getFilterDataList() {
   var list = [];
 
-  $("#songListsList")
-    .find("button")
-    .filter(".active, .selected")
+  $('#songListsList')
+    .find('button')
+    .filter('.active, .selected')
     .each((i, v) => {
-      var innerData = $(v).data("songList");
+      var innerData = $(v).data('songList');
 
       if (innerData) {
         $.each(innerData.songs, (i, vi) => {
@@ -388,57 +366,53 @@ function getFilterDataList() {
  * @returns List of songDataInfoObjects {galleryId, fullPath}
  */
 function getSelectedSongs_NEW() {
-  const $checkboxes = $("#dataSongTable")
-    .find("td")
-    .find("input[type=checkbox]:checked");
+  const $checkboxes = $('#dataSongTable').find('td').find('input[type=checkbox]:checked');
   const checkedVisibleSongs = $checkboxes
-    .closest("tr")
+    .closest('tr')
     .map((i, v) =>
       JSON.parse(
-        $("#dataSongTable").DataTable().row(v).data()[
-          DATA_TABLE_COLUMNS.getPos("DATA_INFO")
-        ]
+        $('#dataSongTable').DataTable().row(v).data()[DATA_TABLE_COLUMNS.getPos('DATA_INFO')]
       )
     )
     .get();
 
-  $checkboxes.prop("checked", false);
+  $checkboxes.prop('checked', false);
   return checkedVisibleSongs;
 }
 
-function clickButtNewSongList(event) {
+function clickButtNewSongList() {
   var songs = getSelectedSongs_NEW();
   openGroupDialog({ songs: songs });
 }
 
 function songListDialogOpenExisting(event) {
-  openGroupDialog($(event.target).closest("button").next().data("songList"));
+  openGroupDialog($(event.target).closest('button').next().data('songList'));
 }
 
 function onDragleave(ev) {
-  $(ev.target).removeClass("drop-active");
+  $(ev.target).removeClass('drop-active');
 }
 
 function allowDrop(ev) {
-  if ($(ev.target).hasClass("songlist")) {
-    $(ev.target).addClass("drop-active");
+  if ($(ev.target).hasClass('songlist')) {
+    $(ev.target).addClass('drop-active');
     ev.preventDefault();
   }
 }
 
 function dropSongOnSonglist(event) {
-  if (!$(event.target).hasClass("songlist")) {
+  if (!$(event.target).hasClass('songlist')) {
     return;
   }
   event.preventDefault();
 
-  $(event.target).removeClass("drop-active");
+  $(event.target).removeClass('drop-active');
 
   if (event.dataTransfer === undefined) {
     event.dataTransfer = event.originalEvent.dataTransfer;
   }
 
-  var dataInfo = JSON.parse(event.dataTransfer.getData("jsonDataInfo")),
+  var dataInfo = JSON.parse(event.dataTransfer.getData('jsonDataInfo')),
     $target = $(event.target);
 
   addSongsToSonglist([dataInfo], $target);
@@ -447,7 +421,7 @@ function dropSongOnSonglist(event) {
 function removeSongsFromSonglist(songs, $target) {
   let songDidNotExists;
 
-  const songList = $target.data("songList");
+  const songList = $target.data('songList');
 
   $.each(songs, (i, song) => {
     var index,
@@ -457,27 +431,21 @@ function removeSongsFromSonglist(songs, $target) {
 
     for (index = 0; index < songList.songs.length; index++) {
       value = songList.songs[index];
-      if (
-        value.galleryId == dataInfo.galleryId &&
-        value.fullPath == dataInfo.fullPath
-      ) {
+      if (value.galleryId == dataInfo.galleryId && value.fullPath == dataInfo.fullPath) {
         songDidNotExists = false;
         songList.songs.splice(index, 1);
       }
     }
 
     if (songDidNotExists) {
-      $.notify(
-        dataInfo.fullPath + " did not exist in " + songList.name,
-        "info"
-      );
+      $.notify(dataInfo.fullPath + ' did not exist in ' + songList.name, 'info');
       return;
     }
 
-    $target.data("songList", songList);
+    $target.data('songList', songList);
 
-    notifyUndo(song.name + " was removed from " + songList.name, () => {
-      var undo_songList = $target.data("songList");
+    notifyUndo(song.name + ' was removed from ' + songList.name, () => {
+      var undo_songList = $target.data('songList');
 
       undo_songList.songs.push(dataInfo);
 
@@ -487,42 +455,42 @@ function removeSongsFromSonglist(songs, $target) {
   DB.saveSonglists_new();
 }
 
-function clickAttachedSongListToggle(event) {
-  $("#toggleSonglistsId").trigger("click");
+function clickAttachedSongListToggle() {
+  $('#toggleSonglistsId').trigger('click');
 }
 
 function reloadSongsButtonActive(event) {
-  if (event == null || !$(event.target).hasClass("outerDialog")) {
+  if (event == null || !$(event.target).hasClass('outerDialog')) {
     return;
   }
-  if ($("#outerSongListPopUpSquare").hasClass("hidden")) {
+  if ($('#outerSongListPopUpSquare').hasClass('hidden')) {
     closeSongDialog();
   } else {
     openSongDialog();
   }
 }
 
-function closeSongDialog(event) {
-  $("#outerSongListPopUpSquare").addClass("hidden");
-  $("#songPickerAttachedArea").addClass("hidden");
-  $("#buttSongsDialog").removeClass("active");
+function closeSongDialog() {
+  $('#outerSongListPopUpSquare').addClass('hidden');
+  $('#songPickerAttachedArea').addClass('hidden');
+  $('#buttSongsDialog').removeClass('active');
   DB.saveVal(TROFF_SETTING_SHOW_SONG_DIALOG, false);
 }
 
-function openSongDialog(event) {
-  if ($("#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG").hasClass("active")) {
-    $("#outerSongListPopUpSquare").removeClass("hidden");
+function openSongDialog() {
+  if ($('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').hasClass('active')) {
+    $('#outerSongListPopUpSquare').removeClass('hidden');
   } else {
-    $("#songPickerAttachedArea").removeClass("hidden");
+    $('#songPickerAttachedArea').removeClass('hidden');
   }
 
-  $("#buttSongsDialog").addClass("active");
+  $('#buttSongsDialog').addClass('active');
 
   DB.saveVal(TROFF_SETTING_SHOW_SONG_DIALOG, true);
 }
 
 function clickSongsDialog(event) {
-  if ($(event.target).hasClass("active")) {
+  if ($(event.target).hasClass('active')) {
     closeSongDialog();
   } else {
     openSongDialog();
@@ -530,17 +498,17 @@ function clickSongsDialog(event) {
 }
 
 function minimizeSongPicker() {
-  $("#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG").click();
+  $('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').click();
 }
 
 function maximizeSongPicker() {
-  $("#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG").click();
+  $('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').click();
 }
 
-function clickToggleFloatingSonglists(event) {
-  const shouldOpenSongDialog = $("#buttSongsDialog").hasClass("active");
+function clickToggleFloatingSonglists() {
+  const shouldOpenSongDialog = $('#buttSongsDialog').hasClass('active');
   closeSongDialog();
-  if ($("#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG").hasClass("active")) {
+  if ($('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').hasClass('active')) {
     moveSongPickerToFloatingState();
   } else {
     moveSongPickerToAttachedState();
@@ -552,56 +520,38 @@ function clickToggleFloatingSonglists(event) {
 
 function moveSongPickerToAttachedState() {
   dataTableShowOnlyColumnsForAttachedState();
-  $("#newSearchParent, #songPicker")
-    .detach()
-    .appendTo($("#songPickerAttachedArea"));
-  $(".hideOnSongsDialogFloatingState").removeClass("hidden");
-  $(".hideOnSongsDialogAttachedState").addClass("hidden");
+  $('#newSearchParent, #songPicker').detach().appendTo($('#songPickerAttachedArea'));
+  $('.hideOnSongsDialogFloatingState').removeClass('hidden');
+  $('.hideOnSongsDialogAttachedState').addClass('hidden');
 }
 
 function moveSongPickerToFloatingState() {
-  $("#newSearchParent, #songPicker")
-    .detach()
-    .insertBefore("#songPickerFloatingBase");
+  $('#newSearchParent, #songPicker').detach().insertBefore('#songPickerFloatingBase');
   dataTableShowColumnsForFloatingState();
-  $("#songPickerAttachedArea, .hideOnSongsDialogFloatingState").addClass(
-    "hidden"
-  );
-  $(".hideOnSongsDialogAttachedState").removeClass("hidden");
+  $('#songPickerAttachedArea, .hideOnSongsDialogFloatingState').addClass('hidden');
+  $('.hideOnSongsDialogAttachedState').removeClass('hidden');
 }
 
 function dataTableShowOnlyColumnsForAttachedState() {
-  $("#columnToggleParent")
+  $('#columnToggleParent')
     .children()
     .each((i, v) => {
-      if (DATA_TABLE_COLUMNS.list[$(v).data("column")].showOnAttachedState) {
-        $("#dataSongTable")
-          .DataTable()
-          .column($(v).data("column"))
-          .visible(true);
+      if (DATA_TABLE_COLUMNS.list[$(v).data('column')].showOnAttachedState) {
+        $('#dataSongTable').DataTable().column($(v).data('column')).visible(true);
       } else {
-        $("#dataSongTable")
-          .DataTable()
-          .column($(v).data("column"))
-          .visible(false);
+        $('#dataSongTable').DataTable().column($(v).data('column')).visible(false);
       }
     });
 }
 
 function dataTableShowColumnsForFloatingState() {
-  $("#columnToggleParent")
+  $('#columnToggleParent')
     .children()
     .each((i, v) => {
-      if ($(v).hasClass("active")) {
-        $("#dataSongTable")
-          .DataTable()
-          .column($(v).data("column"))
-          .visible(true);
+      if ($(v).hasClass('active')) {
+        $('#dataSongTable').DataTable().column($(v).data('column')).visible(true);
       } else {
-        $("#dataSongTable")
-          .DataTable()
-          .column($(v).data("column"))
-          .visible(false);
+        $('#dataSongTable').DataTable().column($(v).data('column')).visible(false);
       }
     });
 }
@@ -612,122 +562,109 @@ function initSongTable() {
       '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>'
     );
 
-  selectAllCheckbox.click((event) => {
-    var headerCheckbox = $("#dataSongTable")
-        .find("th")
-        .find("input[type=checkbox]"),
-      allCheckboxes = $("#dataSongTable")
-        .find("td")
-        .find("input[type=checkbox]");
-    allCheckboxes.prop("checked", headerCheckbox.is(":checked"));
+  selectAllCheckbox.click(() => {
+    var headerCheckbox = $('#dataSongTable').find('th').find('input[type=checkbox]'),
+      allCheckboxes = $('#dataSongTable').find('td').find('input[type=checkbox]');
+    allCheckboxes.prop('checked', headerCheckbox.is(':checked'));
   });
 
   for (let i = 0; i < DATA_TABLE_COLUMNS.list.length; i++) {
-    $("#dataSongTable")
-      .find("thead")
-      .find("tr")
-      .append(
-        $("<th>")
-          .addClass("primaryColor")
-          .text(DATA_TABLE_COLUMNS.list[i].header)
-      );
+    $('#dataSongTable')
+      .find('thead')
+      .find('tr')
+      .append($('<th>').addClass('primaryColor').text(DATA_TABLE_COLUMNS.list[i].header));
   }
 
-  $("#dataSongTable")
-    .find("thead")
-    .find("tr")
+  $('#dataSongTable')
+    .find('thead')
+    .find('tr')
     .children()
-    .eq(DATA_TABLE_COLUMNS.getPos("CHECKBOX"))
-    .text("")
+    .eq(DATA_TABLE_COLUMNS.getPos('CHECKBOX'))
+    .text('')
     .append(selectAllCheckbox);
 
-  dataSongTable = $("#dataSongTable")
+  dataSongTable = $('#dataSongTable')
     .DataTable({
       language: {
         emptyTable:
           '<h1 class="lead">No files added!</h1>' +
           '<br /><a href="/#2582986745&demo.mp4">Download the demo-video</a>,' +
           '<br /><br />find new songs at <a href="/find.html">troff.app/find.html</a>' +
-          "<br /><br />or add your own songs by clicking the <br / >" +
-          "<label " +
+          '<br /><br />or add your own songs by clicking the <br / >' +
+          '<label ' +
           'title="Add songs, videos or pictures to Troff"' +
           'class="cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile"' +
           'for="fileUploader">' +
           '<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1"></i>' +
           '<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65"></i>' +
-          "</label>" +
-          "-button at the top<br />of the song-dialog",
+          '</label>' +
+          '-button at the top<br />of the song-dialog',
       },
       fixedHeader: true,
       paging: false,
-      createdRow: (row, data, dataIndex) => {
-        $(row).attr("draggable", "true");
+      createdRow: (row) => {
+        $(row).attr('draggable', 'true');
       },
       columnDefs: [
         {
-          targets: DATA_TABLE_COLUMNS.getPos("CHECKBOX"),
+          targets: DATA_TABLE_COLUMNS.getPos('CHECKBOX'),
           data: null,
-          className: "preventSongLoad secondaryColor",
+          className: 'preventSongLoad secondaryColor',
           orderable: false,
           defaultContent:
             '<div class="checkbox"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>',
         },
         {
-          targets: DATA_TABLE_COLUMNS.getPos("DISPLAY_NAME"),
-          className: "min-w-200-on-attached secondaryColor",
+          targets: DATA_TABLE_COLUMNS.getPos('DISPLAY_NAME'),
+          className: 'min-w-200-on-attached secondaryColor',
         },
         {
-          targets: DATA_TABLE_COLUMNS.getPos("EDIT"),
+          targets: DATA_TABLE_COLUMNS.getPos('EDIT'),
           data: null,
-          className: "preventSongLoad secondaryColor onClickOpenEditSongDialog",
+          className: 'preventSongLoad secondaryColor onClickOpenEditSongDialog',
           orderable: false,
           defaultContent:
             '<button class="regularButton"><i class="cr-icon fa fa-pencil"></i></button>',
         },
         {
-          targets: DATA_TABLE_COLUMNS.getPos("TYPE"),
-          className: "secondaryColor text-center",
+          targets: DATA_TABLE_COLUMNS.getPos('TYPE'),
+          className: 'secondaryColor text-center',
         },
         {
-          targets: ["_all"],
-          className: "secondaryColor",
+          targets: ['_all'],
+          className: 'secondaryColor',
         },
       ],
     })
-    .on("dragstart", "tr", (event) => {
+    .on('dragstart', 'tr', (event) => {
       //function dragSongToSonglist(event){
       if (event.dataTransfer === undefined) {
         event.dataTransfer = event.originalEvent.dataTransfer;
       }
 
       const jsonDataInfo = dataSongTable.row($(event.currentTarget)).data()[
-        DATA_TABLE_COLUMNS.getPos("DATA_INFO")
+        DATA_TABLE_COLUMNS.getPos('DATA_INFO')
       ];
 
-      event.dataTransfer.setData("jsonDataInfo", jsonDataInfo);
+      event.dataTransfer.setData('jsonDataInfo', jsonDataInfo);
     })
-    .on("click", "tbody tr", function (event) {
-      const $td = $(event.target).closest("td, th");
+    .on('click', 'tbody tr', function (event) {
+      const $td = $(event.target).closest('td, th');
 
-      const songKey = $(event.currentTarget).data("song-key");
+      const songKey = $(event.currentTarget).data('song-key');
 
-      if ($td.hasClass("onClickOpenEditSongDialog")) {
+      if ($td.hasClass('onClickOpenEditSongDialog')) {
         openEditSongDialog(songKey);
       }
 
-      if ($td.hasClass("preventSongLoad") || $td.hasClass("dataTables_empty")) {
+      if ($td.hasClass('preventSongLoad') || $td.hasClass('dataTables_empty')) {
         return;
       }
 
-      $("#dataSongTable")
-        .DataTable()
-        .rows(".selected")
-        .nodes()
-        .to$()
-        .removeClass("selected");
-      $(event.currentTarget).addClass("selected");
+      $('#dataSongTable').DataTable().rows('.selected').nodes().to$().removeClass('selected');
+      $(event.currentTarget).addClass('selected');
 
-      gtag("event", "Change Song", { event_category: "Perform change" });
+      gtag('event', 'Change Song', { event_category: 'Perform change' });
 
       createSongAudio(songKey);
     });
@@ -741,24 +678,24 @@ function initSongTable() {
 	*/
 
   //to make header primaryColor:
-  $("#dataSongTable thead th").removeClass("secondaryColor");
+  $('#dataSongTable thead th').removeClass('secondaryColor');
 
   // to move the searchbar away from the scrolling-area
-  $("#dataSongTable_filter").detach().prependTo($("#newSearchParent"));
-  $("#dataSongTable_filter")
-    .find("input")
-    .attr("placeholder", "Search (Ctrl + F)")
-    .addClass("form-control-sm")
+  $('#dataSongTable_filter').detach().prependTo($('#newSearchParent'));
+  $('#dataSongTable_filter')
+    .find('input')
+    .attr('placeholder', 'Search (Ctrl + F)')
+    .addClass('form-control-sm')
     .detach()
-    .prependTo($("#dataSongTable_filter"))
-    .on("click", Troff.enterSerachDataTableSongList)
-    .on("keyup", Troff.onSearchKeyup)
-    .on("blur", Troff.exitSerachDataTableSongList);
+    .prependTo($('#dataSongTable_filter'))
+    .on('click', Troff.enterSerachDataTableSongList)
+    .on('keyup', Troff.onSearchKeyup)
+    .on('blur', Troff.exitSerachDataTableSongList);
 
-  $("#dataSongTable_filter").find("label").remove();
+  $('#dataSongTable_filter').find('label').remove();
 
-  if ($("#toggleSonglistsId").hasClass("active")) {
-    $("#buttAttachedSongListToggle").addClass("active");
+  if ($('#toggleSonglistsId').hasClass('active')) {
+    $('#buttAttachedSongListToggle').addClass('active');
   }
 
   // Options for the observer (which mutations to observe)
@@ -769,14 +706,13 @@ function initSongTable() {
   };
 
   // Callback function to execute when mutations are observed
-  var songListsObserverCallback = (mutationsList, observer) => {
+  var songListsObserverCallback = (mutationsList) => {
     for (var mutation of mutationsList) {
-      if (mutation.attributeName === "class") {
-        var classList = mutation.target.className;
-        if ($(mutation.target).hasClass("active")) {
-          $("#buttAttachedSongListToggle").addClass("active");
+      if (mutation.attributeName === 'class') {
+        if ($(mutation.target).hasClass('active')) {
+          $('#buttAttachedSongListToggle').addClass('active');
         } else {
-          $("#buttAttachedSongListToggle").removeClass("active");
+          $('#buttAttachedSongListToggle').removeClass('active');
         }
         return;
       }
@@ -786,10 +722,7 @@ function initSongTable() {
   // Create an observer instance linked to the callback function
   var songListsObserver = new MutationObserver(songListsObserverCallback);
   // Start observing the target node for configured mutations
-  songListsObserver.observe(
-    $("#toggleSonglistsId")[0],
-    songListsObserverConfig
-  );
+  songListsObserver.observe($('#toggleSonglistsId')[0], songListsObserverConfig);
 }
 
 function openEditSongDialog(songKey) {
@@ -799,61 +732,55 @@ function openEditSongDialog(songKey) {
     fileData = DB.fixSongObject();
   }
 
-  $("#editSongDialog").removeClass("hidden");
+  $('#editSongDialog').removeClass('hidden');
 
-  $("#editSongFile").val(songKey);
-  $("#editSongCustomName").val(fileData.customName);
-  $("#editSongChoreography").val(fileData.choreography);
-  $("#editSongChoreographer").val(fileData.choreographer);
-  $("#editSongTitle").val(fileData.title);
-  $("#editSongArtist").val(fileData.artist);
-  $("#editSongAlbum").val(fileData.album);
-  $("#editSongGenre").val(fileData.genre);
-  $("#editSongTags").val(fileData.tags);
+  $('#editSongFile').val(songKey);
+  $('#editSongCustomName').val(fileData.customName);
+  $('#editSongChoreography').val(fileData.choreography);
+  $('#editSongChoreographer').val(fileData.choreographer);
+  $('#editSongTitle').val(fileData.title);
+  $('#editSongArtist').val(fileData.artist);
+  $('#editSongAlbum').val(fileData.album);
+  $('#editSongGenre').val(fileData.genre);
+  $('#editSongTags').val(fileData.tags);
   Troff.onEditUpdateName();
 }
 
 function onChangeSongListSelector(event) {
   var $target = $(event.target),
-    $selected = $target.find(":selected"),
-    $checkedRows = $("#dataSongTable")
-      .find("td")
-      .find("input[type=checkbox]:checked"),
+    $selected = $target.find(':selected'),
+    $checkedRows = $('#dataSongTable').find('td').find('input[type=checkbox]:checked'),
     songDataInfoList = getSelectedSongs_NEW();
 
-  var $songlist = $("#songListList").find(
-    '[data-songlist-id="' + $selected.val() + '"]'
-  );
+  var $songlist = $('#songListList').find('[data-songlist-id="' + $selected.val() + '"]');
 
-  if ($selected.val() == "+") {
+  if ($selected.val() == '+') {
     openGroupDialog({ songs: songDataInfoList });
-  } else if ($selected.val() == "--remove") {
+  } else if ($selected.val() == '--remove') {
     IO.confirm(
-      "Remove songs?",
-      "Remove songs: <br />" +
-        songDataInfoList.map((s) => s.fullPath || s.name).join("<br />") +
-        "?<br /><br />Can not be undone.",
+      'Remove songs?',
+      'Remove songs: <br />' +
+        songDataInfoList.map((s) => s.fullPath || s.name).join('<br />') +
+        '?<br /><br />Can not be undone.',
       () => {
         songDataInfoList.forEach((song) => {
           const fullPath = song.fullPath || song.data.fullPath;
           cacheImplementation.removeSong(fullPath);
         });
-        $checkedRows.closest("tr").each((i, row) => {
-          $("#dataSongTable").DataTable().row(row).remove().draw();
+        $checkedRows.closest('tr').each((i, row) => {
+          $('#dataSongTable').DataTable().row(row).remove().draw();
         });
       }
     );
-  } else if ($selected.parent().attr("id") == "songListSelectorAddToSonglist") {
+  } else if ($selected.parent().attr('id') == 'songListSelectorAddToSonglist') {
     addSongsToSonglist(songDataInfoList, $songlist);
-  } else if (
-    $selected.parent().attr("id") == "songListSelectorRemoveFromSonglist"
-  ) {
+  } else if ($selected.parent().attr('id') == 'songListSelectorRemoveFromSonglist') {
     removeSongsFromSonglist(songDataInfoList, $songlist);
   } else {
-    log.e("something wrong");
+    log.e('something wrong');
   }
 
-  $target.val("-");
+  $target.val('-');
 }
 
 export {
