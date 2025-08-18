@@ -34,6 +34,7 @@ import {
   signOut,
   onSnapshot,
   collection,
+  initiateAllFirebaseGroups,
   getDocs,
   getDoc,
 } from './services/firebaseClient.js';
@@ -47,7 +48,7 @@ import {
   addVideoToContentDiv,
 } from './script0.js';
 import log from './utils/log.js';
-import { initiateAllFirebaseGroups, saveSongDataToFirebaseGroup } from './services/firebase.js';
+import { saveSongDataToFirebaseGroup } from './services/firebase.js';
 import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { cacheImplementation } from './services/FileApiImplementation.js';
 import { groupDocUpdate, setGroupAsSonglist } from './features/groupManagement.js';

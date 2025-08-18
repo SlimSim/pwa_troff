@@ -17,6 +17,9 @@
 
 /* eslint eqeqeq: "off" */
 
+import './assets/external/jquery-3.6.0.min.js';
+import './assets/internal/cookie_consent.js';
+
 import { st } from './assets/internal/st-script.js';
 import './assets/external/notify-js/notify.min.js';
 import './assets/internal/notify-js/notify.config.js';
@@ -38,7 +41,7 @@ import {
   getDocs,
   getDoc,
 } from './services/firebaseClient.js';
-import { initiateAllFirebaseGroups } from './services/firebase.js';
+import { initiateAllFirebaseGroups } from './services/firebaseClient.js';
 import log from './utils/log.js';
 
 $(document).ready(async function () {
@@ -57,7 +60,7 @@ $(document).ready(async function () {
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
       firebaseUser = result.user;
       setUiToSignIn(firebaseUser);
-      initiateAllFirebaseGroups();
+      initiateAllFirebaseGroups(firebaseUser.email);
     } catch (error) {
       log.e('Error during sign-in:', error);
     }
@@ -85,6 +88,9 @@ $(document).ready(async function () {
 
   getRedirectResult(auth)
     .then((result) => {
+      if (result == null) {
+        return;
+      }
       if (!result.credential) {
         return setUiToNotSignIn();
       }

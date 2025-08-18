@@ -9,34 +9,18 @@ import {
   ref,
   storage,
   deleteObject,
-  query,
-  where,
-  getDocs,
   onSnapshot,
   setDoc,
   addDoc,
-} from "./firebaseClient.js";
-import { fileHandler } from "./file.js";
-import { Troff, DB, songDocUpdate } from "../script.js";
-import { nDB } from "../assets/internal/db.js";
-import log from "../utils/log.js";
-import { SongToGroup } from "../scriptASimple.js";
-import { fileUrlToStorageFileName } from "../utils/utils.js";
+} from './firebaseClient.js';
+import { fileHandler } from './file.js';
+import { songDocUpdate } from '../script.js';
+import { nDB } from '../assets/internal/db.js';
+import log from '../utils/log.js';
+import { SongToGroup } from '../scriptASimple.js';
+import { fileUrlToStorageFileName, removeLocalInfo } from '../utils/utils.js';
 
-async function initiateAllFirebaseGroups(firebaseUserEmail) {
-  const q = query(
-    collection(db, "Groups"),
-    where("owners", "array-contains", firebaseUserEmail)
-  );
-
-  return await getDocs(q);
-}
-
-const removeSongFromFirebaseGroup = async function (
-  songKey,
-  groupDocId,
-  songDocId
-) {
+const removeSongFromFirebaseGroup = async function (songKey, groupDocId, songDocId) {
   await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
 
   const fileUrl = SongToGroup.songKeyToFileUrl(songKey, groupDocId, songDocId);
@@ -50,28 +34,41 @@ const removeSongFromFirebaseGroup = async function (
 };
 
 const removeSongDataFromFirebaseGroup = (groupDocId, songDocId) => {
-  return deleteDoc(doc(db, "Groups", groupDocId, "Songs", songDocId));
+  return deleteDoc(doc(db, 'Groups', groupDocId, 'Songs', songDocId));
 };
 
-const removeSongFileFromFirebaseGroupStorage = async (
-  groupDocId,
-  storageFileName
-) => {
+const removeSongFileFromFirebaseGroupStorage = async (groupDocId, storageFileName) => {
   const storageRef = ref(storage, `Groups/${groupDocId}/${storageFileName}`);
   try {
     await deleteObject(storageRef);
   } catch (error) {
-    log.e(storageFileName + " could not be deleted!", error);
+    log.e(storageFileName + ' could not be deleted!', error);
     throw error;
   }
 };
 
-const saveSongDataToFirebaseGroup = async function (
-  songKey,
-  groupDocId,
-  songDocId
-) {
-  const publicData = Troff.removeLocalInfo(nDB.get(songKey));
+const pushSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
+  const changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+
+  const songInGroupAlreadyExists = changedSongList.find(
+    (o) => o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey
+  );
+
+  if (songInGroupAlreadyExists) {
+    return;
+  }
+
+  changedSongList.push({
+    groupDocId: groupDocId,
+    songDocId: songDocId,
+    songKey: songKey,
+  });
+
+  nDB.set('TROFF_SONGS_WITH_LOCAL_CHANGES', changedSongList);
+};
+
+const saveSongDataToFirebaseGroup = async function (songKey, groupDocId, songDocId) {
+  const publicData = removeLocalInfo(nDB.get(songKey));
 
   publicData.latestUploadToFirebase = Date.now();
 
@@ -81,25 +78,18 @@ const saveSongDataToFirebaseGroup = async function (
   };
 
   if (songDocId != undefined) {
-    songData.fileUrl = SongToGroup.songKeyToFileUrl(
-      songKey,
-      groupDocId,
-      songDocId
-    );
+    songData.fileUrl = SongToGroup.songKeyToFileUrl(songKey, groupDocId, songDocId);
 
     if (navigator.onLine) {
-      await setDoc(doc(db, "Groups", groupDocId, "Songs", songDocId), songData);
+      await setDoc(doc(db, 'Groups', groupDocId, 'Songs', songDocId), songData);
     } else {
-      $.notify(
-        "You are offline, your changes will be synced online once you come online!",
-        {
-          className: "info",
-          autoHide: false,
-          clickToHide: true,
-        }
-      );
+      $.notify('You are offline, your changes will be synced online once you come online!', {
+        className: 'info',
+        autoHide: false,
+        clickToHide: true,
+      });
 
-      DB.pushSongWithLocalChanges(groupDocId, songDocId, songKey);
+      pushSongWithLocalChanges(groupDocId, songDocId, songKey);
     }
   } else {
     songData.fileUrl = await uploadSongToFirebaseGroup(groupDocId, songKey);
@@ -107,17 +97,14 @@ const saveSongDataToFirebaseGroup = async function (
     // TODO! kolla att jag är online!
     //songData.latestUploadToFirebase = Date.now();
 
-    const docRef = await addDoc(
-      collection(db, "Groups", groupDocId, "Songs"),
-      songData
-    );
+    const docRef = await addDoc(collection(db, 'Groups', groupDocId, 'Songs'), songData);
 
     SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
 
     onSnapshot(docRef, songDocUpdate);
-    const songList = $("#songListList")
+    const songList = $('#songListList')
       .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
-      .data("songList");
+      .data('songList');
 
     songList.songs.forEach((song) => {
       if (song.fullPath == songKey) {
@@ -125,22 +112,18 @@ const saveSongDataToFirebaseGroup = async function (
       }
     });
 
-    $("#songListList")
+    $('#songListList')
       .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
-      .data("songList", songList);
+      .data('songList', songList);
   }
 };
 
 const uploadSongToFirebaseGroup = async function (groupId, songKey) {
-  const [fileUrl] = await fileHandler.sendFileToFirebase(
-    songKey,
-    "Groups/" + groupId
-  );
+  const [fileUrl] = await fileHandler.sendFileToFirebase(songKey, 'Groups/' + groupId);
   return fileUrl;
 };
 
 export {
-  initiateAllFirebaseGroups,
   removeSongDataFromFirebaseGroup,
   removeSongFromFirebaseGroup,
   saveSongDataToFirebaseGroup,

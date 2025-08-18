@@ -45,6 +45,7 @@ import { gtag } from "./services/analytics.js";
 import { isSafari } from "./utils/browserEnv.js";
 import { errorHandler } from "./script2.js";
 import log from "./utils/log.js";
+import { removeLocalInfo } from "./utils/utils.js";
 import {
   TROFF_SETTING_SET_THEME,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
@@ -248,11 +249,6 @@ class TroffClass {
     return "#" + serverId + "&" + encodeURI(fileName);
   };
 
-  removeLocalInfo = (markerObject) => {
-    const { localInformation, ...payload } = markerObject;
-    return payload;
-  };
-
   uploadSongToServer = async () => {
     "use strict";
 
@@ -271,7 +267,7 @@ class TroffClass {
       };
 
       //removing localInformation before sending it to server:
-      const publicData = this.removeLocalInfo(markerObject);
+      const publicData = removeLocalInfo(markerObject);
 
       const resp = await fileHandler.sendFile(songKey, publicData);
 

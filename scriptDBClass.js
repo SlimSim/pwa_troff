@@ -31,26 +31,6 @@ class DBClass {
     return songInGroupAlreadyExists;
   };
 
-  pushSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
-    const changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
-
-    const songInGroupAlreadyExists = changedSongList.find(
-      (o) => o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey
-    );
-
-    if (songInGroupAlreadyExists) {
-      return;
-    }
-
-    changedSongList.push({
-      groupDocId: groupDocId,
-      songDocId: songDocId,
-      songKey: songKey,
-    });
-
-    nDB.set('TROFF_SONGS_WITH_LOCAL_CHANGES', changedSongList);
-  };
-
   // deprecated: use nDB.set( key, value )
   saveVal = (key, value) => {
     nDB.set(key, value);
