@@ -1,6 +1,25 @@
+// @ts-check
+
+/**
+ * @typedef {Object} StApi
+ * @property {(textHead: string, textBox: string, funcOk?: () => void, funcCancel?: () => void) => void} confirm
+ * @property {(seconds: number) => string} secToDisp
+ * @property {(millis: number) => string} millisToDisp
+ * @property {(byte: number | null | undefined) => string} byteToDisp
+ * @property {<T>(arg: T | undefined, val: T) => T} defaultFor
+ */
+
+/** @type {Partial<StApi> & Record<string, any>} */
 const st = {};
 
 $(document).ready(function () {
+  /**
+   * Show a simple confirm dialog with OK/Cancel callbacks.
+   * @param {string} textHead
+   * @param {string} textBox
+   * @param {() => void} [funcOk]
+   * @param {() => void} [funcCancel]
+   */
   st.confirm = function (textHead, textBox, funcOk, funcCancel) {
     const outerDiv = $('<div>').addClass('outerDialog onTop');
     const innerDiv = $('<div>').addClass('innerDialog m-4');
@@ -40,6 +59,7 @@ $(document).ready(function () {
 
     document.addEventListener('keydown', onKeyDown);
 
+    /** @param {KeyboardEvent} event */
     function onKeyDown(event) {
       event.preventDefault();
       if (event.keyCode === 13) {
@@ -53,13 +73,16 @@ $(document).ready(function () {
     $('body').append(outerDiv.append(innerDiv));
   }; // end confirm
 
+  /** @param {number} seconds */
   st.secToDisp = function (seconds) {
+    /** @type {number | string} */
     var sec = (seconds | 0) % 60;
     if (sec < 10) sec = '0' + sec;
     var min = (seconds / 60) | 0;
     return min + ':' + sec;
   };
 
+  /** @param {number} millis */
   st.millisToDisp = function (millis) {
     if (!millis || millis < 162431283500) {
       return '';
@@ -77,6 +100,7 @@ $(document).ready(function () {
     return year + '-' + mm + '-' + dd;
   };
 
+  /** @param {number | null | undefined} byte */
   st.byteToDisp = function (byte) {
     if (byte == null) {
       return '';
@@ -87,35 +111,44 @@ $(document).ready(function () {
     while (byte >= 1000) {
       nrTimes++;
       byte = byte / 1000;
-      if (nrTimes > units.length) return byte;
+      if (nrTimes > units.length) return String(byte);
     }
 
-    return Math.round(byte * 10) / 10 + units[nrTimes];
+    // Ensure string result
+    return String(Math.round(byte * 10) / 10) + units[nrTimes];
   };
 
+  /** @template T @param {T | undefined} arg @param {T} val @returns {T} */
   st.defaultFor = function (arg, val) {
     return typeof arg !== 'undefined' ? arg : val;
   };
 
   var ST_DB = {
       // new data base
+      /** @param {string} key @param {any} value */
       set: function (key, value) {
         window.localStorage.setItem(key, JSON.stringify(value));
       },
+      /** @param {string} key @returns {any} */
       get: function (key) {
-        return JSON.parse(window.localStorage.getItem(key));
+        const raw = window.localStorage.getItem(key);
+        return raw == null ? null : JSON.parse(raw);
       },
     },
     ST_DBc = {
       //new data base callback
+      /** @param {string} key @param {(v:any)=>void} callback */
       get: function (key, callback) {
         callback(ST_DB.get(key));
       },
     },
+    /** @returns {void} */
     blurHack = function () {
-      document.getElementById('blur-hack').focus({ preventScroll: true });
+      const el = document.getElementById('blur-hack');
+      if (el) el.focus({ preventScroll: true });
     },
-    dataSaveValue = function () {
+    /** @param {any} event */
+    dataSaveValue = function (event) {
       blurHack();
       var $target = $(event.target),
         id = $target.attr('id'),
@@ -126,7 +159,7 @@ $(document).ready(function () {
         return;
       }
 
-      const key = 'TROFF_SAVE_VALUE_' + id;
+      const key = 'TROFF_SAVE_VALUE_' + /** @type {string} */ (id);
 
       ST_DB.set(key, value);
     };
@@ -137,11 +170,13 @@ $(document).ready(function () {
    * also functionality for saving that value in the DB :)
    */
 
+  /** @param {any} event */
   $('[data-st-css-selector-to-toggle]').on('click', function (event) {
     const $target = $(event.target).closest('[data-st-css-selector-to-toggle]');
     $($target.data('st-css-selector-to-toggle')).toggleClass('hidden');
   });
 
+  /** @param {any} event */
   $('[data-st-css-selector-to-fade-in]').on('click', function (event) {
     const $target = $(event.target).closest('[data-st-css-selector-to-fade-in]');
 
@@ -150,6 +185,7 @@ $(document).ready(function () {
 
   $('[data-st-save-current-value]').change(dataSaveValue);
 
+  /** @param {number} i @param {HTMLElement} element */
   $('[data-st-save-current-value]').each(function (i, element) {
     var $target = $(element),
       key = 'TROFF_SAVE_VALUE_' + $target.attr('id');
@@ -165,6 +201,7 @@ $(document).ready(function () {
     });
   });
 
+  /** @param {number} i @param {HTMLElement} v */
   $('.st-simple-on-off-button').each(function (i, v) {
     var $v = $(v),
       cssSelectorToHide = $v.data('st-css-selector-to-hide');
@@ -196,6 +233,7 @@ $(document).ready(function () {
     }
   });
 
+  /** @param {any} event */
   $('.st-simple-on-off-button').click(function (event) {
     var $target = $(event.target).closest('.st-simple-on-off-button'),
       cssSelectorToHide = $target.data('st-css-selector-to-hide'),
@@ -231,6 +269,7 @@ $(document).ready(function () {
 
   /* Hide and Save end */
 
+  /** @param {any} e */
   $('.toggleNext').on('click', (e) => {
     $(e.target).closest('.toggleNext').toggleClass('showNext');
   });

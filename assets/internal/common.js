@@ -15,15 +15,36 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+// @ts-check
+
+/**
+ * Optional IO API present on window in the main application.
+ * @typedef {Object} IOApi
+ * @property {() => void} blurHack
+ */
+
+/**
+ * Augment the Window type for this file's usage context.
+ * This is only for type checking; it does not change runtime behavior.
+ * @type {Window & { IO?: IOApi }}
+ */
+const _w = /** @type {any} */ (window);
+
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
+    /** @type {NodeListOf<HTMLElement>} */
     var shareButtons = document.querySelectorAll('.shareClass');
     for (var i = 0; i < shareButtons.length; i++) {
       shareButtons[i].addEventListener('click', sendMail);
     }
+    /**
+     * Open the default mail client with a prefilled message promoting Troff.
+     * Also invokes IO.blurHack() if available to remove focus artifacts.
+     * @returns {void}
+     */
     function sendMail() {
       console.log('sendMail 2 ->');
-      window.IO?.blurHack();
+      _w.IO?.blurHack();
       var subject = 'Troff is a great music player for practicing';
       var body =
         'Hello\r\n\r\n' +
@@ -39,6 +60,7 @@
       window.open(link);
     }
 
+    /** @type {NodeListOf<HTMLElement>} */
     const toggleNavigation = document.querySelectorAll('.toggle-navigation');
 
     toggleNavigation.forEach(function (item) {

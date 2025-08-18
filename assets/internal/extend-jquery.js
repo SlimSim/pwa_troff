@@ -1,4 +1,14 @@
+// @ts-check
 (function () {
+  /**
+   * A scroll handler invoked by jQuery for these special events.
+   * `this` is the scrolled element and `evt.type` is mutated to signal start/stop.
+   * @callback ScrollHandler
+   * @this {Element}
+   * @param {Event & { type: string }} evt
+   * @returns {void}
+   */
+  
   // from https://j11y.io/javascript/special-scroll-events-for-jquery/
   var special = jQuery.event.special,
     uid1 = 'D' + +new Date(),
@@ -6,7 +16,9 @@
 
   special.scrollStart = {
     setup: function () {
+      /** @type {ReturnType<typeof setTimeout> | null} */
       var timer,
+        /** @type {ScrollHandler} */
         handler = function (evt) {
           var _self = this,
             _args = arguments;
@@ -33,7 +45,9 @@
   special.scrollStop = {
     latency: 42,
     setup: function () {
+      /** @type {ReturnType<typeof setTimeout> | null} */
       var timer,
+        /** @type {ScrollHandler} */
         handler = function (evt) {
           var _self = this,
             _args = arguments;

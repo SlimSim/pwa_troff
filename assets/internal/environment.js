@@ -1,9 +1,22 @@
-const environment = {};
+// @ts-check
+/** @type {import('../../types/environment').Environment} */
+const environment = {
+  banner: { show: false, text: '', showLogs: false },
+  showHiddenInProd: false,
+  firebaseConfig: {
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: '',
+  },
+};
 
 (function main() {
   'use strict';
 
-  environment.banner = {};
+  // banner has default shape; specific values are set per-hostname below
 
   switch (window.location.hostname) {
     case 'localhost':

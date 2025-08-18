@@ -1,15 +1,35 @@
+// @ts-check
+
+/**
+ * Minimal localStorage-backed DB used for cookie consent state.
+ * @typedef {Object} CookieConsentDB
+ * @property {(key: string, value: any) => void} set
+ * @property {(key: string) => any} get
+ */
 $(document).ready(function () {
   var COOKIE_CONSENT_ACCEPTED = 'TROFF_COOKIE_CONSENT_ACCEPTED';
 
+  /** @type {CookieConsentDB} */
   const cookie_consent_DB = {
     set: function (key, value) {
       window.localStorage.setItem(key, JSON.stringify(value));
     },
     get: function (key) {
-      return JSON.parse(window.localStorage.getItem(key));
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn('cookie_consent_DB.get: Failed to parse JSON for key', key, e);
+        return null;
+      }
     },
   };
 
+  /**
+   * Render and show the cookie consent banner using notify.js
+   * @returns {void}
+   */
   function showCookieConsent() {
     $.notify(
       {
@@ -27,10 +47,13 @@ $(document).ready(function () {
               .append(
                 $('<button>')
                   .text('I consent')
-                  .on('click', function () {
-                    $(this).trigger('notify-hide');
-                    cookie_consent_DB.set(COOKIE_CONSENT_ACCEPTED, true);
-                  })
+                  .on(
+                    'click',
+                    /** @this {HTMLElement} */ function () {
+                      $(this).trigger('notify-hide');
+                      cookie_consent_DB.set(COOKIE_CONSENT_ACCEPTED, true);
+                    }
+                  )
               )
               .append(
                 $('<a>')
@@ -40,14 +63,19 @@ $(document).ready(function () {
               )
           ),
       },
-      {
+      /** @type {{style: string, autoHide: boolean, clickToHide: boolean}} */ ({
         style: 'html-info',
         autoHide: false,
         clickToHide: false,
-      }
+      })
     );
   } // end showCookieConsent();
 
+  /**
+   * Check persisted state and show the cookie consent banner when needed.
+   * Retries on transient storage errors.
+   * @returns {void}
+   */
   function checkToShowCookieConsent() {
     try {
       var cookieConsentAccepted = cookie_consent_DB.get(COOKIE_CONSENT_ACCEPTED); //, cookieConsentAccepted => {
