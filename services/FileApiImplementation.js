@@ -1,11 +1,11 @@
 export const cacheImplementation = {
-  nameOfCache: "songCache-v1.0",
+  nameOfCache: 'songCache-v1.0',
 
   saveSong: async function (songKey, songData) {
     var blob = new Blob([JSON.stringify(songData)], {
-        type: "application/json",
+        type: 'application/json',
       }),
-      init = { status: 200, statusText: "SuperSmashingGreat!" },
+      init = { status: 200, statusText: 'SuperSmashingGreat!' },
       myResponseObject = new Response(blob, init);
 
     return caches.open(this.nameOfCache).then((cache) => {
@@ -20,7 +20,7 @@ export const cacheImplementation = {
       }
       // Note, with the version 2,
       // every song was cached with the status text "SuperSmashingGreat!"
-      return cachedResponse.statusText === "SuperSmashingGreat!";
+      return cachedResponse.statusText === 'SuperSmashingGreat!';
     });
   },
 
@@ -43,9 +43,7 @@ export const cacheImplementation = {
     return caches.open(this.nameOfCache).then((cache) => {
       return cache
         .keys()
-        .then((keys) =>
-          keys.map((key) => decodeURIComponent(key.url.split("/").pop()))
-        );
+        .then((keys) => keys.map((key) => decodeURIComponent(key.url.split('/').pop())));
     });
   },
 };
@@ -54,7 +52,7 @@ $(document).ready(function () {
   // Check for the various File API support.
   if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
     alert(
-      "The File APIs are not fully supported in this browser.\nPlease use FireFox, Chrome or another modern browser."
+      'The File APIs are not fully supported in this browser.\nPlease use FireFox, Chrome or another modern browser.'
     );
   }
 });

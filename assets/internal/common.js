@@ -16,39 +16,38 @@
 */
 
 (function () {
-  document.addEventListener("DOMContentLoaded", function () {
-    var shareButtons = document.querySelectorAll(".shareClass");
+  document.addEventListener('DOMContentLoaded', function () {
+    var shareButtons = document.querySelectorAll('.shareClass');
     for (var i = 0; i < shareButtons.length; i++) {
-      shareButtons[i].addEventListener("click", sendMail);
+      shareButtons[i].addEventListener('click', sendMail);
     }
     function sendMail() {
-      console.log("sendMail 2 ->");
+      console.log('sendMail 2 ->');
       window.IO?.blurHack();
-      var subject = "Troff is a great music player for practicing";
+      var subject = 'Troff is a great music player for practicing';
       var body =
-        "Hello\r\n\r\n" +
-        "I found this great app that is perfect for practicing dancing or " +
-        "instruments to songs. " +
-        "It let you loop a part of a song, slow it down " +
-        "and create markers on the song timeline.\r\n" +
-        "It even supports movies!\r\n\r\n" +
-        "It is free to use and download here:\r\n" +
-        "https://troff.app/\r\n\r\n" +
-        "Best regards!";
-      var link =
-        "mailto:?subject=" + subject + "&body=" + encodeURIComponent(body);
+        'Hello\r\n\r\n' +
+        'I found this great app that is perfect for practicing dancing or ' +
+        'instruments to songs. ' +
+        'It let you loop a part of a song, slow it down ' +
+        'and create markers on the song timeline.\r\n' +
+        'It even supports movies!\r\n\r\n' +
+        'It is free to use and download here:\r\n' +
+        'https://troff.app/\r\n\r\n' +
+        'Best regards!';
+      var link = 'mailto:?subject=' + subject + '&body=' + encodeURIComponent(body);
       window.open(link);
     }
 
-    const toggleNavigation = document.querySelectorAll(".toggle-navigation");
+    const toggleNavigation = document.querySelectorAll('.toggle-navigation');
 
     toggleNavigation.forEach(function (item) {
-      item.addEventListener("click", function () {
-        const navigation = document.getElementById("navigation");
+      item.addEventListener('click', function () {
+        const navigation = document.getElementById('navigation');
         if (!navigation) {
           return;
         }
-        navigation.classList.toggle("d-none");
+        navigation.classList.toggle('d-none');
       });
     });
   });

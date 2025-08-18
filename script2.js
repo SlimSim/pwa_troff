@@ -17,9 +17,9 @@
 
 /* eslint eqeqeq: "off" */
 
-import log from "./utils/log.js";
+import log from './utils/log.js';
 
-import { IO } from "./script.js";
+import { IO } from './script.js';
 
 const errorHandler = {};
 
@@ -29,38 +29,34 @@ function ShowUserException(message) {
   this.stack = new Error().stack;
 }
 ShowUserException.prototype = new Error();
-ShowUserException.prototype.name = "ShowUserException";
+ShowUserException.prototype.name = 'ShowUserException';
 
 $(() => {
-  "use strict";
+  'use strict';
 
-  errorHandler.backendService_getTroffData = function (
-    error,
-    serverId,
-    fileName
-  ) {
+  errorHandler.backendService_getTroffData = function (error, serverId, fileName) {
     IO.removeLoadScreen();
-    $("#downloadSongFromServerInProgressDialog").addClass("hidden");
-    $("#downloadMarkersFromServerInProgressDialog").addClass("hidden");
+    $('#downloadSongFromServerInProgressDialog').addClass('hidden');
+    $('#downloadMarkersFromServerInProgressDialog').addClass('hidden');
     if (error.status == 0) {
       $.notify(
         `Could not connect to server. Please check your internet connection.
 					If your internet is working, please try again later.
 					If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.`,
         {
-          className: "error",
+          className: 'error',
           autoHide: false,
           clickToHide: true,
         }
       );
       return;
     }
-    if (error.status == "NOT_FOUND") {
+    if (error.status == 'NOT_FOUND') {
       $.notify(
         `Could not find song "${fileName}", with id "${serverId}", on the server,
 				perhaps the URL is wrong or the song has been removed`,
         {
-          className: "error",
+          className: 'error',
           autoHide: false,
           clickToHide: true,
         }
@@ -70,7 +66,7 @@ $(() => {
 
     if (error instanceof ShowUserException) {
       $.notify(error.message, {
-        className: "error",
+        className: 'error',
         autoHide: false,
         clickToHide: true,
       });
@@ -82,7 +78,7 @@ $(() => {
 			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
 			explaining what happened`,
       {
-        className: "error",
+        className: 'error',
         autoHide: false,
         clickToHide: true,
       }
@@ -93,15 +89,15 @@ $(() => {
 
   errorHandler.fileHandler_fetchAndSaveResponse = function (error, fileName) {
     IO.removeLoadScreen();
-    $("#downloadSongFromServerInProgressDialog").addClass("hidden");
-    $("#downloadMarkersFromServerInProgressDialog").addClass("hidden");
+    $('#downloadSongFromServerInProgressDialog').addClass('hidden');
+    $('#downloadMarkersFromServerInProgressDialog').addClass('hidden');
     if (error.status == 404) {
       $.notify(
         `The song "${fileName}", could not be found on the server, it has probably been removed
 				but the markers have been loaded, if you have the file named "${fileName}", you can
 				simply import it again and the markers will be connected with the file!`,
         {
-          className: "error",
+          className: 'error',
           autoHide: false,
           clickToHide: true,
         }
@@ -111,7 +107,7 @@ $(() => {
 
     if (error instanceof ShowUserException) {
       $.notify(error.message, {
-        className: "error",
+        className: 'error',
         autoHide: false,
         clickToHide: true,
       });
@@ -124,28 +120,25 @@ $(() => {
 			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
 			explaining what happened`,
       {
-        className: "error",
+        className: 'error',
         autoHide: false,
         clickToHide: true,
       }
     );
-    log.e(
-      `errorHandler.fileHandler_fetchAndSaveResponse: Full Error:\n`,
-      error
-    );
+    log.e(`errorHandler.fileHandler_fetchAndSaveResponse: Full Error:\n`, error);
     return;
   };
 
   errorHandler.fileHandler_sendFile = function (error, fileName) {
     IO.removeLoadScreen();
-    $("#uploadSongToServerInProgressDialog").addClass("hidden");
+    $('#uploadSongToServerInProgressDialog').addClass('hidden');
     if (error.status == 0) {
       $.notify(
         `Could not upload the song "${fileName}": could not connect to server. Please check your internet connection.
 					If your internet is working, please try again later.
 					If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com`,
         {
-          className: "error",
+          className: 'error',
           autoHide: false,
           clickToHide: true,
         }
@@ -155,7 +148,7 @@ $(() => {
 
     if (error instanceof ShowUserException) {
       $.notify(error.message, {
-        className: "error",
+        className: 'error',
         autoHide: false,
         clickToHide: true,
       });
@@ -167,7 +160,7 @@ $(() => {
 			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
 			explaining what happened`,
       {
-        className: "error",
+        className: 'error',
         autoHide: false,
         clickToHide: true,
       }

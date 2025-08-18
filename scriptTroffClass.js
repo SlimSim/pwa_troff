@@ -1,6 +1,6 @@
 /* eslint eqeqeq: "off" */
-import { nDB } from "./assets/internal/db.js";
-import { st } from "./assets/internal/st-script.js";
+import { nDB } from './assets/internal/db.js';
+import { st } from './assets/internal/st-script.js';
 import {
   db,
   doc,
@@ -10,7 +10,7 @@ import {
   deleteObject,
   storage,
   setDoc,
-} from "./services/firebaseClient.js";
+} from './services/firebaseClient.js';
 import {
   Troff,
   addSongsToSonglist,
@@ -20,12 +20,12 @@ import {
   ifGroupSongUpdateFirestore,
   getFirebaseGroupDataFromDialog,
   firebaseUser,
-} from "./script.js";
-import { addItem_NEW_2 } from "./songManagement.js";
-import { removeSongDataFromFirebaseGroup } from "./services/firebase.js";
-import { fileHandler, backendService } from "./services/file.js";
-import { notifyUndo } from "./assets/internal/notify-js/notify.config.js";
-import { cacheImplementation } from "./services/FileApiImplementation.js";
+} from './script.js';
+import { addItem_NEW_2 } from './songManagement.js';
+import { removeSongDataFromFirebaseGroup } from './services/firebase.js';
+import { fileHandler, backendService } from './services/file.js';
+import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
+import { cacheImplementation } from './services/FileApiImplementation.js';
 import {
   updateUploadedHistory,
   addGroupOwnerRow,
@@ -39,13 +39,13 @@ import {
   filterSongTable,
   getFilterDataList,
   sortAndValue,
-} from "./script0.js";
-import { dataTableColumnPicker } from "./dataTable.js";
-import { gtag } from "./services/analytics.js";
-import { isSafari } from "./utils/browserEnv.js";
-import { errorHandler } from "./script2.js";
-import log from "./utils/log.js";
-import { removeLocalInfo } from "./utils/utils.js";
+} from './script0.js';
+import { dataTableColumnPicker } from './dataTable.js';
+import { gtag } from './services/analytics.js';
+import { isSafari } from './utils/browserEnv.js';
+import { errorHandler } from './script2.js';
+import log from './utils/log.js';
+import { removeLocalInfo } from './utils/utils.js';
 import {
   TROFF_SETTING_SET_THEME,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
@@ -65,45 +65,39 @@ import {
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
   MARKER_COLOR_PREFIX,
   DATA_TABLE_COLUMNS,
-} from "./constants/constants.js";
+} from './constants/constants.js';
 
 function clickSongList_NEW(event) {
   IO.blurHack();
   var $target = $(event.target),
-    data = $target.data("songList"),
-    galleryId = $target.attr("data-gallery-id");
+    data = $target.data('songList'),
+    galleryId = $target.attr('data-gallery-id');
 
-  $("#songListAll").removeClass("selected");
+  $('#songListAll').removeClass('selected');
 
-  if ($("#TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT").hasClass("active")) {
+  if ($('#TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT').hasClass('active')) {
     if (data || galleryId) {
-      $target.toggleClass("active");
-      $("#songListsList").find("button").removeClass("selected");
+      $target.toggleClass('active');
+      $('#songListsList').find('button').removeClass('selected');
     } else {
       // It only enters here IF the All songs-button is pressed :)
-      $("#songListsList")
-        .find("button")
-        .removeClass("selected")
-        .removeClass("active");
-      $target.addClass("selected");
+      $('#songListsList').find('button').removeClass('selected').removeClass('active');
+      $target.addClass('selected');
     }
   } else {
-    $("#songListsList")
-      .find("button")
-      .removeClass("selected")
-      .removeClass("active");
-    $target.addClass("selected");
+    $('#songListsList').find('button').removeClass('selected').removeClass('active');
+    $target.addClass('selected');
 
-    $("#headArea").removeClassStartingWith("bg-");
-    $("#songlistIcon").removeClassStartingWith("fa-");
-    $("#songlistName").text("");
-    $("#songlistInfo").text("").addClass("hidden");
+    $('#headArea').removeClassStartingWith('bg-');
+    $('#songlistIcon').removeClassStartingWith('fa-');
+    $('#songlistName').text('');
+    $('#songlistInfo').text('').addClass('hidden');
 
     if (data && data.firebaseGroupDocId) {
-      $("#headArea").addClass(data.color);
-      $("#songlistIcon").addClass(data.icon || "fa-users");
-      $("#songlistName").text(data.name);
-      $("#songlistInfo").removeClass("hidden").text(data.info);
+      $('#headArea').addClass(data.color);
+      $('#songlistIcon').addClass(data.icon || 'fa-users');
+      $('#songlistName').text(data.name);
+      $('#songlistInfo').removeClass('hidden').text(data.info);
     }
   }
 
@@ -114,7 +108,7 @@ function clickSongList_NEW(event) {
 
 class TroffClass {
   constructor() {
-    this.strCurrentSong = "";
+    this.strCurrentSong = '';
     this.iCurrentGalleryId = 0;
     this.startTime = 0; // unused?
     this.previousTime = 0; // unused?
@@ -125,9 +119,9 @@ class TroffClass {
   }
 
   addAskedSongsToCurrentSongList = (event, songKeys, $songList) => {
-    $(event.target).addClass("active");
-    $("#addAddedSongsToSongList_doNotAdd").addClass("hidden");
-    $("#addAddedSongsToSongList_done").removeClass("hidden");
+    $(event.target).addClass('active');
+    $('#addAddedSongsToSongList_doNotAdd').addClass('hidden');
+    $('#addAddedSongsToSongList_done').removeClass('hidden');
 
     const songs = [];
 
@@ -135,7 +129,7 @@ class TroffClass {
       songs.push({
         name: songKey,
         data: {
-          galleryId: "pwa-galleryId",
+          galleryId: 'pwa-galleryId',
           fullPath: songKey,
         },
       });
@@ -143,59 +137,53 @@ class TroffClass {
 
     addSongsToSonglist(songs, $songList);
 
-    const nrPossibleSongListsToAddTo = $(
-      "#addAddedSongsToSongList_currentSongLists"
-    ).children().length;
-    const nrAlreadySongListsToAddTo = $(
-      "#addAddedSongsToSongList_currentSongLists .active"
-    ).length;
+    const nrPossibleSongListsToAddTo = $('#addAddedSongsToSongList_currentSongLists').children()
+      .length;
+    const nrAlreadySongListsToAddTo = $('#addAddedSongsToSongList_currentSongLists .active').length;
     if (nrPossibleSongListsToAddTo == nrAlreadySongListsToAddTo) {
-      $("#addAddedSongsToSongList_songs").empty();
-      $("#addAddedSongsToSongList").addClass("hidden");
+      $('#addAddedSongsToSongList_songs').empty();
+      $('#addAddedSongsToSongList').addClass('hidden');
     }
 
     filterSongTable(getFilterDataList());
   };
 
   askIfAddSongsToCurrentSongList = (key) => {
-    if ($("#songListAll").hasClass("selected")) {
+    if ($('#songListAll').hasClass('selected')) {
       return;
     }
 
-    $("#addAddedSongsToSongList_doNotAdd").removeClass("hidden");
-    $("#addAddedSongsToSongList_done").addClass("hidden");
-    $("#addAddedSongsToSongList").removeClass("hidden");
-    $("#addAddedSongsToSongList_songs").append($("<li>").text(key));
-    $("#addAddedSongsToSongList_currentSongLists").empty();
+    $('#addAddedSongsToSongList_doNotAdd').removeClass('hidden');
+    $('#addAddedSongsToSongList_done').addClass('hidden');
+    $('#addAddedSongsToSongList').removeClass('hidden');
+    $('#addAddedSongsToSongList_songs').append($('<li>').text(key));
+    $('#addAddedSongsToSongList_currentSongLists').empty();
 
-    const songKeys = $("#addAddedSongsToSongList_songs")
+    const songKeys = $('#addAddedSongsToSongList_songs')
       .children()
       .map((i, v) => $(v).text());
 
-    $(".songlist.selected, .songlist.active").each((i, songList) => {
-      $("#addAddedSongsToSongList_currentSongLists").append(
-        $("<li>").append(
-          $("<button>")
-            .addClass("regularButton")
+    $('.songlist.selected, .songlist.active').each((i, songList) => {
+      $('#addAddedSongsToSongList_currentSongLists').append(
+        $('<li>').append(
+          $('<button>')
+            .addClass('regularButton')
             .text('Add songs to "' + $(songList).text() + '"')
-            .click((event) =>
-              this.addAskedSongsToCurrentSongList(event, songKeys, $(songList))
-            )
+            .click((event) => this.addAskedSongsToCurrentSongList(event, songKeys, $(songList)))
         )
       );
     });
-
   };
 
   emptyAddAddedSongsToSongList_songs = (event) => {
-    if (!$(event.target).hasClass("emptyAddAddedSongsToSongList_songs")) {
+    if (!$(event.target).hasClass('emptyAddAddedSongsToSongList_songs')) {
       return;
     }
-    $("#addAddedSongsToSongList_songs").empty();
+    $('#addAddedSongsToSongList_songs').empty();
   };
 
   initFileApiImplementation = () => {
-    $("#fileUploader").on("change", (event) => {
+    $('#fileUploader').on('change', (event) => {
       fileHandler.handleFiles(event.target.files, (key, file) => {
         if (nDB.get(key) == null) {
           const newSongObject = DB.fixSongObject();
@@ -208,17 +196,17 @@ class TroffClass {
           };
           nDB.set(key, newSongObject);
         } else {
-          nDB.setOnSong(key, ["localInformation", "addedFromThisDevice"], true);
+          nDB.setOnSong(key, ['localInformation', 'addedFromThisDevice'], true);
         }
 
         this.askIfAddSongsToCurrentSongList(key);
         addItem_NEW_2(key);
-        if (!$("#dataSongTable_wrapper").find("tr").hasClass("selected")) {
+        if (!$('#dataSongTable_wrapper').find('tr').hasClass('selected')) {
           this.selectSongInSongList(key);
           createSongAudio(key);
         }
 
-        $.notify(key + " was successfully added");
+        $.notify(key + ' was successfully added');
       });
     });
 
@@ -229,28 +217,24 @@ class TroffClass {
   };
 
   setUrlToSong = (serverId, fileName) => {
-    "use strict";
+    'use strict';
     if (serverId === undefined) {
       if (!window.location.hash) {
         return;
       }
       // remove url-hash completely:
-      history.pushState(
-        "",
-        document.title,
-        window.location.pathname + window.location.search
-      );
+      history.pushState('', document.title, window.location.pathname + window.location.search);
       return;
     }
     window.location.hash = this.createHash(serverId, fileName);
   };
 
   createHash = (serverId, fileName) => {
-    return "#" + serverId + "&" + encodeURI(fileName);
+    return '#' + serverId + '&' + encodeURI(fileName);
   };
 
   uploadSongToServer = async () => {
-    "use strict";
+    'use strict';
 
     // show a pop-up that says
     // "song is being uploaded, will let you know when it is done"
@@ -259,7 +243,7 @@ class TroffClass {
 
     const songKey = this.getCurrentSong();
 
-    $("#uploadSongToServerInProgressDialog").removeClass("hidden");
+    $('#uploadSongToServerInProgressDialog').removeClass('hidden');
     try {
       const markerObject = nDB.get(songKey);
       const fakeTroffData = {
@@ -271,8 +255,8 @@ class TroffClass {
 
       const resp = await fileHandler.sendFile(songKey, publicData);
 
-      nDB.setOnSong(songKey, "serverId", resp.id);
-      nDB.setOnSong(songKey, "fileUrl", resp.fileUrl);
+      nDB.setOnSong(songKey, 'serverId', resp.id);
+      nDB.setOnSong(songKey, 'fileUrl', resp.fileUrl);
 
       this.saveDownloadLinkHistory(resp.id, resp.fileName, fakeTroffData);
 
@@ -280,77 +264,67 @@ class TroffClass {
         this.setUrlToSong(resp.id, resp.fileName);
       }
 
-      $("#uploadSongToServerInProgressDialog").addClass("hidden");
-      $("#shareSongUrl").val(
-        window.location.origin + this.createHash(resp.id, resp.fileName)
-      );
-      $("#doneUploadingSongToServerDialog_songName").text(songKey);
-      $("#doneUploadingSongToServerLink").attr(
-        "href",
-        "/find.html#id=" + resp.fileName
-      );
-      $("#doneUploadingSongToServerDialog").removeClass("hidden");
+      $('#uploadSongToServerInProgressDialog').addClass('hidden');
+      $('#shareSongUrl').val(window.location.origin + this.createHash(resp.id, resp.fileName));
+      $('#doneUploadingSongToServerDialog_songName').text(songKey);
+      $('#doneUploadingSongToServerLink').attr('href', '/find.html#id=' + resp.fileName);
+      $('#doneUploadingSongToServerDialog').removeClass('hidden');
     } catch (error) {
       return errorHandler.fileHandler_sendFile(error, songKey);
     }
   };
 
   buttCopyUrlToClipboard = () => {
-    const url = $("#doneUploadingSongToServerDialog").find("#shareSongUrl").val();
+    const url = $('#doneUploadingSongToServerDialog').find('#shareSongUrl').val();
 
     IO.copyTextToClipboard(url);
   };
 
   showUploadSongToServerDialog = () => {
     if (window.location.hash) {
-      $("#shareSongUrl").val(window.location.href);
-      $(".showOnUploadComplete").addClass("hidden");
-      $(".showOnSongAlreadyUploaded").removeClass("hidden");
+      $('#shareSongUrl').val(window.location.href);
+      $('.showOnUploadComplete').addClass('hidden');
+      $('.showOnSongAlreadyUploaded').removeClass('hidden');
 
-      $("#doneUploadingSongToServerDialog_songName").text(
-        this.getCurrentSong()
-      );
-      $("#doneUploadingSongToServerLink").attr(
-        "href",
-        "/find.html#id=" + this.getCurrentSong()
-      );
-      $("#doneUploadingSongToServerDialog").removeClass("hidden");
+      $('#doneUploadingSongToServerDialog_songName').text(this.getCurrentSong());
+      $('#doneUploadingSongToServerLink').attr('href', '/find.html#id=' + this.getCurrentSong());
+      $('#doneUploadingSongToServerDialog').removeClass('hidden');
     } else {
       if (!this.getCurrentSong()) {
         IO.alert(
-          "No Song",
-          "You do not have a song to upload yet.<br />Add a song to Troff and then try again!"
+          'No Song',
+          'You do not have a song to upload yet.<br />Add a song to Troff and then try again!'
         );
         return;
       }
 
       if (!window.navigator.onLine) {
         IO.alert(
-          "Offline",
-          "You appear to be offline, please wait until you have an internet connection and try again then."
+          'Offline',
+          'You appear to be offline, please wait until you have an internet connection and try again then.'
         );
         return;
       }
 
-      $(".showOnUploadComplete").removeClass("hidden");
-      $(".showOnSongAlreadyUploaded").addClass("hidden");
-      $("#uploadSongToServerDialog").removeClass("hidden");
+      $('.showOnUploadComplete').removeClass('hidden');
+      $('.showOnSongAlreadyUploaded').addClass('hidden');
+      $('#uploadSongToServerDialog').removeClass('hidden');
     }
   };
 
   selectSongInSongList = (fileName) => {
-    $("#dataSongTable").find("tbody tr").removeClass("selected");
-    $('[data-song-key="' + fileName + '"]').addClass("selected");
+    $('#dataSongTable').find('tbody tr').removeClass('selected');
+    $('[data-song-key="' + fileName + '"]').addClass('selected');
   };
 
   importTroffDataToExistingSong_importNew = async () => {
-    const fileName = $("#importTroffDataToExistingSong_fileName").val();
-    const serverId = $("#importTroffDataToExistingSong_serverId").val();
+    const fileName = $('#importTroffDataToExistingSong_fileName').val();
+    const serverId = $('#importTroffDataToExistingSong_serverId').val();
 
     this.showMarkersDownloadInProgressDialog(fileName);
-    const hash = "#" + serverId + "&" + encodeURI(fileName);
-    gtag("event", "Download Markers", {
-      event_category: "Perform change",
+    const hash = '#' + serverId + '&' + encodeURI(fileName);
+    gtag('event', 'Download Markers', {
+      event_category: 'Perform change',
       event_label: hash,
     });
 
@@ -358,11 +332,7 @@ class TroffClass {
     try {
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(
-        error,
-        serverId,
-        fileName
-      );
+      return errorHandler.backendService_getTroffData(error, serverId, fileName);
     }
 
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
@@ -384,35 +354,24 @@ class TroffClass {
   };
 
   importTroffDataToExistingSong_merge = async () => {
-    const fileName = $("#importTroffDataToExistingSong_fileName").val();
-    const serverId = $("#importTroffDataToExistingSong_serverId").val();
+    const fileName = $('#importTroffDataToExistingSong_fileName').val();
+    const serverId = $('#importTroffDataToExistingSong_serverId').val();
 
     this.showMarkersDownloadInProgressDialog(fileName);
-    const hash = "#" + serverId + "&" + encodeURI(fileName);
-    gtag("event", "Download Markers", {
-      event_category: "Perform change",
+    const hash = '#' + serverId + '&' + encodeURI(fileName);
+    gtag('event', 'Download Markers', {
+      event_category: 'Perform change',
       event_label: hash,
     });
 
     let markersFromServer;
     try {
-      const troffDataFromServer = await backendService.getTroffData(
-        serverId,
-        fileName
-      );
+      const troffDataFromServer = await backendService.getTroffData(serverId, fileName);
       markersFromServer = JSON.parse(troffDataFromServer.markerJsonString);
 
-      this.saveDownloadLinkHistory(
-        Number(serverId),
-        fileName,
-        troffDataFromServer
-      );
+      this.saveDownloadLinkHistory(Number(serverId), fileName, troffDataFromServer);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(
-        error,
-        serverId,
-        fileName
-      );
+      return errorHandler.backendService_getTroffData(error, serverId, fileName);
     }
 
     await createSongAudio(fileName);
@@ -422,10 +381,7 @@ class TroffClass {
     for (let i = 0; i < markersFromServer.aStates.length; i++) {
       const parsedState = JSON.parse(markersFromServer.aStates[i]);
       aoStates.push(
-        this.replaceMarkerIdWithMarkerTimeInState(
-          parsedState,
-          markersFromServer.markers
-        )
+        this.replaceMarkerIdWithMarkerTimeInState(parsedState, markersFromServer.markers)
       );
     }
 
@@ -434,8 +390,8 @@ class TroffClass {
     oImport.aoStates = aoStates;
     oImport.aoMarkers = markersFromServer.markers;
 
-    $("#something").click( (a, b) => {
-      return b+1;
+    $('#something').click((a, b) => {
+      return b + 1;
     });
 
     setTimeout(() => {
@@ -444,7 +400,7 @@ class TroffClass {
   };
 
   importTroffDataToExistingSong_keepExisting = async () => {
-    const fileName = $("#importTroffDataToExistingSong_fileName").val();
+    const fileName = $('#importTroffDataToExistingSong_fileName').val();
 
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
@@ -461,15 +417,11 @@ class TroffClass {
     const nrMarkers = markerObject.markers.length;
     const nrStates = markerObject.aStates ? markerObject.aStates.length : 0;
     const info = markerObject.info.substring(0, 99);
-    let genre = "";
-    let tags = "";
+    let genre = '';
+    let tags = '';
 
     if (fileData) {
-      displayName =
-        fileData.customName ||
-        fileData.choreography ||
-        fileData.title ||
-        displayName;
+      displayName = fileData.customName || fileData.choreography || fileData.title || displayName;
       genre = fileData.genre || genre;
       tags = fileData.tags || tags;
     }
@@ -498,9 +450,7 @@ class TroffClass {
       return;
     }
 
-    const existingServerSong = serverSongs.find(
-      (ss) => ss.fileNameUri == fileNameUri
-    );
+    const existingServerSong = serverSongs.find((ss) => ss.fileNameUri == fileNameUri);
 
     if (!existingServerSong) {
       serverSongs.push(serverSong);
@@ -510,9 +460,7 @@ class TroffClass {
     }
 
     if (
-      !existingServerSong.troffDataIdObjectList.some(
-        (td) => td.troffDataId == serverTroffDataId
-      )
+      !existingServerSong.troffDataIdObjectList.some((td) => td.troffDataId == serverTroffDataId)
     ) {
       existingServerSong.troffDataIdObjectList.push(troffDataIdObject);
       nDB.set(TROFF_TROFF_DATA_ID_AND_FILE_NAME, serverSongs);
@@ -522,38 +470,34 @@ class TroffClass {
   };
 
   showImportData = (fileName, serverId) => {
-    "use strict";
-    $("#importTroffDataToExistingSong_songName").text(fileName);
-    $("#importTroffDataToExistingSong_fileName").val(fileName);
-    $("#importTroffDataToExistingSong_serverId").val(serverId);
-    $("#downloadSongFromServerInProgressDialog").addClass("hidden");
-    $("#importTroffDataToExistingSongDialog").removeClass("hidden");
+    'use strict';
+    $('#importTroffDataToExistingSong_songName').text(fileName);
+    $('#importTroffDataToExistingSong_fileName').val(fileName);
+    $('#importTroffDataToExistingSong_serverId').val(serverId);
+    $('#downloadSongFromServerInProgressDialog').addClass('hidden');
+    $('#importTroffDataToExistingSongDialog').removeClass('hidden');
     IO.removeLoadScreen();
   };
 
   showMarkersDownloadInProgressDialog = (songName) => {
-    $(".downloadSongFromServerInProgressDialog_songName").text(songName);
-    $("#downloadSongFromServerInProgressDialog").removeClass("hidden");
-    $(".downloadSongFromServerInProgressDialog_song").addClass("hidden");
-    $(".downloadSongFromServerInProgressDialog_markers").removeClass("hidden");
+    $('.downloadSongFromServerInProgressDialog_songName').text(songName);
+    $('#downloadSongFromServerInProgressDialog').removeClass('hidden');
+    $('.downloadSongFromServerInProgressDialog_song').addClass('hidden');
+    $('.downloadSongFromServerInProgressDialog_markers').removeClass('hidden');
   };
 
   showDownloadSongFromServerInProgress = (songName) => {
-    "use strict";
-    $("#downloadPercentDone").text(0);
-    $(".downloadSongFromServerInProgressDialog_songName").text(songName);
-    $("#downloadSongFromServerInProgressDialog").removeClass("hidden");
-    $(".downloadSongFromServerInProgressDialog_song").removeClass("hidden");
-    $(".downloadSongFromServerInProgressDialog_markers").addClass("hidden");
+    'use strict';
+    $('#downloadPercentDone').text(0);
+    $('.downloadSongFromServerInProgressDialog_songName').text(songName);
+    $('#downloadSongFromServerInProgressDialog').removeClass('hidden');
+    $('.downloadSongFromServerInProgressDialog_song').removeClass('hidden');
+    $('.downloadSongFromServerInProgressDialog_markers').addClass('hidden');
     IO.removeLoadScreen();
   };
 
-  downloadSongFromServerButDataFromCacheExists = async (
-    fileName,
-    serverId,
-    troffDataFromCache
-  ) => {
-    "use strict";
+  downloadSongFromServerButDataFromCacheExists = async (fileName, serverId, troffDataFromCache) => {
+    'use strict';
 
     const fileDoesExists = await fileHandler.doesFileExistInCache(fileName);
 
@@ -572,9 +516,9 @@ class TroffClass {
     }
 
     this.showDownloadSongFromServerInProgress(fileName);
-    const hash = "#" + serverId + "&" + encodeURI(fileName);
-    gtag("event", "Download Song", {
-      event_category: "Perform change",
+    const hash = '#' + serverId + '&' + encodeURI(fileName);
+    gtag('event', 'Download Song', {
+      event_category: 'Perform change',
       event_label: hash,
     });
 
@@ -582,11 +526,7 @@ class TroffClass {
     try {
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(
-        error,
-        serverId,
-        fileName
-      );
+      return errorHandler.backendService_getTroffData(error, serverId, fileName);
     }
 
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
@@ -601,16 +541,16 @@ class TroffClass {
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
-      $.notify(fileName + " was successfully added");
+      $.notify(fileName + ' was successfully added');
     } else {
       this.showImportData(fileName, serverId);
     }
   };
 
   downloadSongFromServer = async (hash) => {
-    "use strict";
-    log.d("downloadSongFromServer -> hash:", hash);
-    const [serverId, fileNameURI] = hash.substr(1).split("&");
+    'use strict';
+    log.d('downloadSongFromServer -> hash:', hash);
+    const [serverId, fileNameURI] = hash.substr(1).split('&');
     const fileName = decodeURI(fileNameURI);
     const troffDataFromCache = nDB.get(fileName);
     let troffData;
@@ -623,19 +563,15 @@ class TroffClass {
       );
     }
     this.showDownloadSongFromServerInProgress(fileName);
-    gtag("event", "Download Song", {
-      event_category: "Perform change",
+    gtag('event', 'Download Song', {
+      event_category: 'Perform change',
       event_label: hash,
     });
 
     try {
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(
-        error,
-        serverId,
-        fileName
-      );
+      return errorHandler.backendService_getTroffData(error, serverId, fileName);
     }
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
 
@@ -655,47 +591,31 @@ class TroffClass {
     await createSongAudio(troffData.fileName);
     this.askIfAddSongsToCurrentSongList(troffData.fileName);
     addItem_NEW_2(troffData.fileName);
-    $.notify(troffData.fileName + " was successfully added");
+    $.notify(troffData.fileName + ' was successfully added');
   };
 
   editSongDialogSave = () => {
-    const key = $("#editSongFile").val();
+    const key = $('#editSongFile').val();
     const songObject = nDB.get(key);
 
-    songObject.fileData.customName = $("#editSongCustomName").val();
-    songObject.fileData.choreography = $("#editSongChoreography").val();
-    songObject.fileData.choreographer = $("#editSongChoreographer").val();
-    songObject.fileData.title = $("#editSongTitle").val();
-    songObject.fileData.artist = $("#editSongArtist").val();
-    songObject.fileData.album = $("#editSongAlbum").val();
-    songObject.fileData.genre = $("#editSongGenre").val();
-    songObject.fileData.tags = $("#editSongTags").val();
+    songObject.fileData.customName = $('#editSongCustomName').val();
+    songObject.fileData.choreography = $('#editSongChoreography').val();
+    songObject.fileData.choreographer = $('#editSongChoreographer').val();
+    songObject.fileData.title = $('#editSongTitle').val();
+    songObject.fileData.artist = $('#editSongArtist').val();
+    songObject.fileData.album = $('#editSongAlbum').val();
+    songObject.fileData.genre = $('#editSongGenre').val();
+    songObject.fileData.tags = $('#editSongTags').val();
 
-    IO.updateCellInDataTable(
-      "DISPLAY_NAME",
-      $("#editSongDisplayName").val(),
-      key
-    );
-    IO.updateCellInDataTable(
-      "CUSTOM_NAME",
-      songObject.fileData.customName,
-      key
-    );
-    IO.updateCellInDataTable(
-      "CHOREOGRAPHY",
-      songObject.fileData.choreography,
-      key
-    );
-    IO.updateCellInDataTable(
-      "CHOREOGRAPHER",
-      songObject.fileData.choreographer,
-      key
-    );
-    IO.updateCellInDataTable("TITLE", songObject.fileData.title, key);
-    IO.updateCellInDataTable("ARTIST", songObject.fileData.artist, key);
-    IO.updateCellInDataTable("ALBUM", songObject.fileData.album, key);
-    IO.updateCellInDataTable("GENRE", songObject.fileData.genre, key);
-    IO.updateCellInDataTable("TAGS", songObject.fileData.tags, key);
+    IO.updateCellInDataTable('DISPLAY_NAME', $('#editSongDisplayName').val(), key);
+    IO.updateCellInDataTable('CUSTOM_NAME', songObject.fileData.customName, key);
+    IO.updateCellInDataTable('CHOREOGRAPHY', songObject.fileData.choreography, key);
+    IO.updateCellInDataTable('CHOREOGRAPHER', songObject.fileData.choreographer, key);
+    IO.updateCellInDataTable('TITLE', songObject.fileData.title, key);
+    IO.updateCellInDataTable('ARTIST', songObject.fileData.artist, key);
+    IO.updateCellInDataTable('ALBUM', songObject.fileData.album, key);
+    IO.updateCellInDataTable('GENRE', songObject.fileData.genre, key);
+    IO.updateCellInDataTable('TAGS', songObject.fileData.tags, key);
 
     nDB.set(key, songObject);
     ifGroupSongUpdateFirestore(key);
@@ -703,11 +623,11 @@ class TroffClass {
 
   onEditUpdateName = () => {
     const displayName =
-      $("#editSongCustomName").val() ||
-      $("#editSongChoreography").val() ||
-      $("#editSongTitle").val() ||
-      this.pathToName($("#editSongFile").val());
-    $("#editSongDisplayName").val(displayName);
+      $('#editSongCustomName').val() ||
+      $('#editSongChoreography').val() ||
+      $('#editSongTitle').val() ||
+      this.pathToName($('#editSongFile').val());
+    $('#editSongDisplayName').val(displayName);
   };
 
   enterWritableField = () => {
@@ -726,7 +646,7 @@ class TroffClass {
   };
 
   recallFloatingDialog = () => {
-    DB.getVal("TROFF_SETTING_SONG_LIST_FLOATING_DIALOG", (floatingDialog) => {
+    DB.getVal('TROFF_SETTING_SONG_LIST_FLOATING_DIALOG', (floatingDialog) => {
       if (floatingDialog) {
         moveSongPickerToFloatingState();
       } else {
@@ -746,19 +666,17 @@ class TroffClass {
 
       DATA_TABLE_COLUMNS.list.forEach((v, i) => {
         if (v.hideFromUser) {
-          const column = $("#dataSongTable")
-            .DataTable()
-            .column(DATA_TABLE_COLUMNS.getPos(v.id));
+          const column = $('#dataSongTable').DataTable().column(DATA_TABLE_COLUMNS.getPos(v.id));
           column.visible(false);
           return;
         }
 
-        $("#columnToggleParent").append(
-          $("<input>")
-            .attr("type", "button")
-            .attr("data-column", i)
-            .addClass("stOnOffButton")
-            .toggleClass("active", columnToggle[v.id])
+        $('#columnToggleParent').append(
+          $('<input>')
+            .attr('type', 'button')
+            .attr('data-column', i)
+            .addClass('stOnOffButton')
+            .toggleClass('active', columnToggle[v.id])
             .val(v.header)
             .click(dataTableColumnPicker)
         );
@@ -768,13 +686,13 @@ class TroffClass {
   };
 
   toggleExtendedMarkerColor = () => {
-    if ($("#markerList").hasClass("extended-color")) {
-      $("#markerList").removeClass("extended-color");
-      $("#toggleExtendedMarkerColor").removeClass("active");
+    if ($('#markerList').hasClass('extended-color')) {
+      $('#markerList').removeClass('extended-color');
+      $('#toggleExtendedMarkerColor').removeClass('active');
       DB.saveVal(TROFF_SETTING_EXTENDED_MARKER_COLOR, false);
     } else {
-      $("#markerList").addClass("extended-color");
-      $("#toggleExtendedMarkerColor").addClass("active");
+      $('#markerList').addClass('extended-color');
+      $('#toggleExtendedMarkerColor').addClass('active');
       DB.saveVal(TROFF_SETTING_EXTENDED_MARKER_COLOR, true);
     }
   };
@@ -782,20 +700,20 @@ class TroffClass {
   recallExtendedMarkerColor = () => {
     DB.getVal(TROFF_SETTING_EXTENDED_MARKER_COLOR, (extend) => {
       if (extend) {
-        $("#markerList").addClass("extended-color");
-        $("#toggleExtendedMarkerColor").addClass("active");
+        $('#markerList').addClass('extended-color');
+        $('#toggleExtendedMarkerColor').addClass('active');
       }
     });
   };
 
   toggleExtraExtendedMarkerColor = () => {
-    if ($("#markerList").hasClass("extra-extended")) {
-      $("#markerList").removeClass("extra-extended");
-      $("#toggleExtraExtendedMarkerColor").removeClass("active");
+    if ($('#markerList').hasClass('extra-extended')) {
+      $('#markerList').removeClass('extra-extended');
+      $('#toggleExtraExtendedMarkerColor').removeClass('active');
       DB.saveVal(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR, false);
     } else {
-      $("#markerList").addClass("extra-extended");
-      $("#toggleExtraExtendedMarkerColor").addClass("active");
+      $('#markerList').addClass('extra-extended');
+      $('#toggleExtraExtendedMarkerColor').addClass('active');
       DB.saveVal(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR, true);
     }
   };
@@ -803,27 +721,24 @@ class TroffClass {
   recallExtraExtendedMarkerColor = () => {
     DB.getVal(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR, (extend) => {
       if (extend || extend === null) {
-        $("#markerList").addClass("extra-extended");
-        $("#toggleExtraExtendedMarkerColor").addClass("active");
+        $('#markerList').addClass('extra-extended');
+        $('#toggleExtraExtendedMarkerColor').addClass('active');
       }
     });
   };
 
   updateHrefForTheme = (theme) => {
-    "use strict";
-    $("body")
-      .removeClassStartingWith("theme-")
-      .addClass("theme-" + theme);
+    'use strict';
+    $('body')
+      .removeClassStartingWith('theme-')
+      .addClass('theme-' + theme);
   };
 
   setTheme = (event) => {
     var $target = $(event.target),
-      theme = $target.data("theme");
-    $target
-      .closest("#themePickerParent")
-      .find(".selected")
-      .removeClass("selected");
-    $target.addClass("selected");
+      theme = $target.data('theme');
+    $target.closest('#themePickerParent').find('.selected').removeClass('selected');
+    $target.addClass('selected');
     this.updateHrefForTheme(theme);
 
     DB.saveVal(TROFF_SETTING_SET_THEME, theme);
@@ -840,91 +755,91 @@ class TroffClass {
 
   recallTheme = () => {
     DB.getVal(TROFF_SETTING_SET_THEME, (theme) => {
-      theme = theme || "col1";
-      $("#themePickerParent")
+      theme = theme || 'col1';
+      $('#themePickerParent')
         .find('[data-theme="' + theme + '"]')
-        .addClass("selected");
+        .addClass('selected');
       this.updateHrefForTheme(theme);
     });
   };
 
   closeSettingsDialog = () => {
-    $("#outerSettingPopUpSquare").addClass("hidden");
+    $('#outerSettingPopUpSquare').addClass('hidden');
   };
   openSettingsDialog = () => {
-    $("#outerSettingPopUpSquare").removeClass("hidden");
-    gtag("event", "Open Settings", { event_category: "Clicking Button" });
+    $('#outerSettingPopUpSquare').removeClass('hidden');
+    gtag('event', 'Open Settings', { event_category: 'Clicking Button' });
   };
 
   //Public variables:
   dontShowZoomInstructions = false;
 
   firstTimeUser = () => {
-    $("#firstTimeUserDialog").removeClass("hidden");
+    $('#firstTimeUserDialog').removeClass('hidden');
   };
 
   // this is regarding the "play in fullscreen" - button
   setPlayInFullscreen = (bPlayInFullscreen) => {
     if (bPlayInFullscreen) {
-      $("#playInFullscreenButt").addClass("active");
+      $('#playInFullscreenButt').addClass('active');
     } else {
-      $("#playInFullscreenButt").removeClass("active");
+      $('#playInFullscreenButt').removeClass('active');
     }
   };
 
   setMirrorImage = (bMirrorImage) => {
     if (bMirrorImage) {
-      $("#mirrorImageButt").addClass("active");
-      $("#videoBox").addClass("flip-horizontal");
+      $('#mirrorImageButt').addClass('active');
+      $('#videoBox').addClass('flip-horizontal');
     } else {
-      $("#mirrorImageButt").removeClass("active");
-      $("#videoBox").removeClass("flip-horizontal");
+      $('#mirrorImageButt').removeClass('active');
+      $('#videoBox').removeClass('flip-horizontal');
     }
   };
 
   // this is regarding the "play in fullscreen" - button
   playInFullscreenChanged = () => {
-    var butt = document.querySelector("#playInFullscreenButt");
-    butt.classList.toggle("active");
+    var butt = document.querySelector('#playInFullscreenButt');
+    butt.classList.toggle('active');
 
-    var bFullScreen = butt.classList.contains("active");
-    DB.setCurrent(this.strCurrentSong, "bPlayInFullscreen", bFullScreen);
+    var bFullScreen = butt.classList.contains('active');
+    DB.setCurrent(this.strCurrentSong, 'bPlayInFullscreen', bFullScreen);
 
     IO.blurHack();
   };
 
   mirrorImageChanged = (event) => {
-    var bMirrorImage = !$(event.target).hasClass("active");
-    DB.setCurrent(this.strCurrentSong, "bMirrorImage", bMirrorImage);
+    var bMirrorImage = !$(event.target).hasClass('active');
+    DB.setCurrent(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
     this.setMirrorImage(bMirrorImage);
 
     IO.blurHack();
   };
 
   setImageLayout = () => {
-    $("body").addClass("pictureActive");
+    $('body').addClass('pictureActive');
   };
   setAudioVideoLayout = () => {
-    $("body").removeClass("pictureActive");
+    $('body').removeClass('pictureActive');
   };
 
   // this is regarding the f-key, IE- the actual fullscreen
   forceFullscreenChange = () => {
-    var videoBox = document.querySelector("#videoBox");
+    var videoBox = document.querySelector('#videoBox');
     if (!videoBox) return;
     //		var infoSection = document.querySelector('#infoSection');
-    if (videoBox.classList.contains("fullscreen")) {
-      videoBox.classList.remove("fullscreen");
+    if (videoBox.classList.contains('fullscreen')) {
+      videoBox.classList.remove('fullscreen');
     } else {
-      videoBox.classList.add("fullscreen");
+      videoBox.classList.add('fullscreen');
     }
   };
 
   // this is regarding the f/esc-key, IE- the actual fullscreen
   forceNoFullscreen = () => {
-    var videoBox = document.querySelector("#videoBox");
+    var videoBox = document.querySelector('#videoBox');
     if (!videoBox) return;
-    videoBox.classList.remove("fullscreen");
+    videoBox.classList.remove('fullscreen');
   };
 
   /* this funciton is called when the full song/video is loaded,
@@ -945,29 +860,27 @@ class TroffClass {
       songObject.fileData.duration = media.duration;
       nDB.set(key, songObject);
       IO.updateCellInDataTable(
-        "DURATION",
+        'DURATION',
         sortAndValue(media.duration, this.secToDisp(media.duration))
       );
     }
 
-    document.getElementById("timeBar").max = media.duration;
-    $("#maxTime")[0].innerHTML = this.secToDisp(media.duration);
+    document.getElementById('timeBar').max = media.duration;
+    $('#maxTime')[0].innerHTML = this.secToDisp(media.duration);
 
     // TODO: Flytta allt i getSongMedaDataOf hit, där det hör hemma, jag har ju lixom songObject!
     DB.getSongMetaDataOf(key);
 
-    $("#currentArtist").text(
-      songObject.fileData.choreographer || songObject.fileData.artist
-    );
-    $("#currentSong").text(
+    $('#currentArtist').text(songObject.fileData.choreographer || songObject.fileData.artist);
+    $('#currentSong').text(
       songObject.fileData.customName ||
         songObject.fileData.choreography ||
         songObject.fileData.title ||
         this.pathToName(key)
     );
-    $("#currentAlbum").text(songObject.fileData.album);
+    $('#currentAlbum').text(songObject.fileData.album);
 
-    media.addEventListener("timeupdate", this.timeupdateAudio);
+    media.addEventListener('timeupdate', this.timeupdateAudio);
     IO.removeLoadScreen();
   };
 
@@ -978,26 +891,26 @@ class TroffClass {
 
   getStandardMarkerInfo = () => {
     return (
-      "This text is specific for every selected marker. " +
-      "Notes written here will be automatically saved." +
-      "\n\nUse this area for things regarding this marker."
+      'This text is specific for every selected marker. ' +
+      'Notes written here will be automatically saved.' +
+      '\n\nUse this area for things regarding this marker.'
     );
   };
 
   setWaitBetweenLoops = (bActive, iWait) => {
-    $("#waitBetweenLoops").val(iWait);
+    $('#waitBetweenLoops').val(iWait);
     if (bActive) {
-      $("#buttWaitBetweenLoops").addClass("active");
-      $("#waitBetweenLoops").removeClass("grayOut");
+      $('#buttWaitBetweenLoops').addClass('active');
+      $('#waitBetweenLoops').removeClass('grayOut');
     } else {
-      $("#buttWaitBetweenLoops").removeClass("active");
-      $("#waitBetweenLoops").addClass("grayOut");
+      $('#buttWaitBetweenLoops').removeClass('active');
+      $('#waitBetweenLoops').addClass('grayOut');
     }
   };
 
   getWaitBetweenLoops = () => {
-    if ($("#waitBetweenLoops").hasClass("grayOut")) return 0;
-    return $("#waitBetweenLoops").val();
+    if ($('#waitBetweenLoops').hasClass('grayOut')) return 0;
+    return $('#waitBetweenLoops').val();
   };
 
   getNewMarkerId = () => {
@@ -1009,74 +922,71 @@ class TroffClass {
     var aRet = [];
     var nr = 0;
     for (var i = 0; i < iNrOfIds; i++) {
-      while ($("#markerNr" + nr).length > 0 || a.indexOf(nr) != -1) {
+      while ($('#markerNr' + nr).length > 0 || a.indexOf(nr) != -1) {
         nr++;
       }
       a[i] = nr;
-      aRet[i] = "markerNr" + nr;
+      aRet[i] = 'markerNr' + nr;
     }
     return aRet;
   };
 
   updateStartBefore = () => {
-    var goToMarker = $(
-      "#" + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER
-    ).hasClass("active");
-    if ($("audio, video")[0].paused && goToMarker) this.goToStartMarker();
+    var goToMarker = $('#' + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER).hasClass('active');
+    if ($('audio, video')[0].paused && goToMarker) this.goToStartMarker();
     this.setAppropriateActivePlayRegion();
   };
 
   speedUpdate = () => {
-    var sliderVal = document.getElementById("speedBar").value;
-    $("#speed, #speedDemo").html(sliderVal);
-    $("audio, video")[0].playbackRate = sliderVal / 100;
+    var sliderVal = document.getElementById('speedBar').value;
+    $('#speed, #speedDemo').html(sliderVal);
+    $('audio, video')[0].playbackRate = sliderVal / 100;
   };
 
   setSpeed = (speed) => {
-    $("#speedBar").val(speed);
-    $("#speedBar")[0].dispatchEvent(new Event("input"));
-    gtag("event", "Change Speed", {
-      event_category: "Perform change",
+    $('#speedBar').val(speed);
+    $('#speedBar')[0].dispatchEvent(new Event('input'));
+    gtag('event', 'Change Speed', {
+      event_category: 'Perform change',
       event_label: speed,
     });
   };
 
   volumeUpdate = () => {
-    var sliderVal = document.getElementById("volumeBar").value;
-    $("#volume").html(sliderVal);
-    $("audio, video")[0].volume = sliderVal / 100;
+    var sliderVal = document.getElementById('volumeBar').value;
+    $('#volume').html(sliderVal);
+    $('audio, video')[0].volume = sliderVal / 100;
   };
 
   setVolume = (volume) => {
-    $("#volumeBar").val(volume);
-    $("#volumeBar")[0].dispatchEvent(new Event("input"));
+    $('#volumeBar').val(volume);
+    $('#volumeBar')[0].dispatchEvent(new Event('input'));
   };
 
   /* This is used when the value of the slider is changed,
    * to update the audio / video
    */
   timeUpdate = () => {
-    var sliderVal = document.getElementById("timeBar").value;
-    $("#time").html(this.secToDisp(sliderVal));
+    var sliderVal = document.getElementById('timeBar').value;
+    $('#time').html(this.secToDisp(sliderVal));
 
     if (sliderVal > this.getStopTime()) {
       var aFirstAndLast = this.getFirstAndLastMarkers();
-      var lastMarkerId = aFirstAndLast[1] + "S";
+      var lastMarkerId = aFirstAndLast[1] + 'S';
 
-      if (sliderVal < $("#" + lastMarkerId)[0].timeValue)
-        this.selectStopMarker(lastMarkerId);
+      if (sliderVal < $('#' + lastMarkerId)[0].timeValue) this.selectStopMarker(lastMarkerId);
       else {
         IO.confirm(
-          "Out of range",
-          "You pressed outside the playing region, " +
-            "do you want to add a marker to the end of the song?",
+          'Out of range',
+          'You pressed outside the playing region, ' +
+            'do you want to add a marker to the end of the song?',
           () => {
-            var songLength = Number(document.getElementById("timeBar").max);
+            var songLength = Number(document.getElementById('timeBar').max);
 
             var oMarker = {};
-            oMarker.name = "End";
+            oMarker.name = 'End';
             oMarker.time = songLength;
-            oMarker.info = "";
+            oMarker.info = '';
             oMarker.id = this.getNewMarkerId();
 
             const aMarkers = [oMarker];
@@ -1084,74 +994,68 @@ class TroffClass {
             DB.saveMarkers(this.getCurrentSong()); // saves end marker to DB
 
             var aFirstAndLast = this.getFirstAndLastMarkers();
-            var lastMarkerId = aFirstAndLast[1] + "S";
+            var lastMarkerId = aFirstAndLast[1] + 'S';
             this.selectStopMarker(lastMarkerId);
-            document.querySelector("audio, video").currentTime = sliderVal;
+            document.querySelector('audio, video').currentTime = sliderVal;
           }
         );
       }
     } // end if
 
-    document.querySelector("audio, video").currentTime = sliderVal;
+    document.querySelector('audio, video').currentTime = sliderVal;
   }; // end timeUpdate
 
   getStopTime = () => {
     var extraTime = 0;
 
-    if ($("audio, video").length === 0) {
+    if ($('audio, video').length === 0) {
       return 0;
     }
 
-    if ($("#buttStopAfter").hasClass("active"))
-      extraTime = $("#stopAfter").val() ? $("#stopAfter").val() : 0;
-    if ($(".currentStopMarker")[0])
+    if ($('#buttStopAfter').hasClass('active'))
+      extraTime = $('#stopAfter').val() ? $('#stopAfter').val() : 0;
+    if ($('.currentStopMarker')[0])
       return Math.min(
-        parseFloat($(".currentStopMarker")[0].timeValue) +
-          parseFloat(extraTime),
-        $("audio, video")[0].duration
+        parseFloat($('.currentStopMarker')[0].timeValue) + parseFloat(extraTime),
+        $('audio, video')[0].duration
       );
-    else return $("audio, video")[0].duration;
+    else return $('audio, video')[0].duration;
   };
 
   getStartTime = () => {
-    if ($(".currentMarker")[0]) {
+    if ($('.currentMarker')[0]) {
       //if there is a start marker
       var extraTime = 0;
-      if ($("#buttStartBefore").hasClass("active"))
-        extraTime = $("#startBefore").val() ? $("#startBefore").val() : 0;
-      return Math.max(
-        parseFloat($(".currentMarker")[0].timeValue) - parseFloat(extraTime),
-        0
-      );
+      if ($('#buttStartBefore').hasClass('active'))
+        extraTime = $('#startBefore').val() ? $('#startBefore').val() : 0;
+      return Math.max(parseFloat($('.currentMarker')[0].timeValue) - parseFloat(extraTime), 0);
     }
     return 0;
   };
 
   setLoopTo = (number) => {
     if (number === undefined) {
-      number = $("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON").hasClass(
-        "active"
-      )
+      number = $('#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON').hasClass('active')
         ? 0
-        : $("#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE").val();
+        : $('#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE').val();
     }
 
-    if (number === 0) number = "Inf";
+    if (number === 0) number = 'Inf';
 
-    $(".currentLoop").removeClass("currentLoop");
+    $('.currentLoop').removeClass('currentLoop');
     if (number) {
-      $("#buttLoop" + number).addClass("currentLoop");
+      $('#buttLoop' + number).addClass('currentLoop');
     } else {
-      $(this).addClass("currentLoop");
+      $(this).addClass('currentLoop');
     }
     this.updateLoopTimes();
   };
 
   setLoop = (mode) => {
-    $(".currentLoop").removeClass("currentLoop");
-    $(mode.currentTarget).addClass("currentLoop");
-    gtag("event", "Change loop", {
-      event_category: "Perform change",
+    $('.currentLoop').removeClass('currentLoop');
+    $(mode.currentTarget).addClass('currentLoop');
+    gtag('event', 'Change loop', {
+      event_category: 'Perform change',
       event_label: $(mode.target).val(),
     });
 
@@ -1160,38 +1064,37 @@ class TroffClass {
   };
 
   updateLoopTimes = () => {
-    var dbLoop = "";
-    if ($("#buttLoopInf").hasClass("currentLoop")) dbLoop = "Inf";
-    else dbLoop = $(".currentLoop").val();
+    var dbLoop = '';
+    if ($('#buttLoopInf').hasClass('currentLoop')) dbLoop = 'Inf';
+    else dbLoop = $('.currentLoop').val();
 
-    if (this.strCurrentSong)
-      DB.setCurrent(this.strCurrentSong, "loopTimes", dbLoop);
+    if (this.strCurrentSong) DB.setCurrent(this.strCurrentSong, 'loopTimes', dbLoop);
 
-    IO.loopTimesLeft($(".currentLoop").val());
+    IO.loopTimesLeft($('.currentLoop').val());
   }; // end updateLoopTimes
 
   getMood = () => {
-    if ($("#infoSection").hasClass("pause")) return "pause";
-    if ($("#infoSection").hasClass("wait")) return "wait";
-    if ($("#infoSection").hasClass("play")) return "play";
-    log.e("infoSection hase not correct class!");
+    if ($('#infoSection').hasClass('pause')) return 'pause';
+    if ($('#infoSection').hasClass('wait')) return 'wait';
+    if ($('#infoSection').hasClass('play')) return 'play';
+    log.e('infoSection hase not correct class!');
   };
 
   /* this is used every time the time changes in the audio / video */
   timeupdateAudio = () => {
-    var audio = document.querySelector("audio, video");
+    var audio = document.querySelector('audio, video');
     var dTime = audio.currentTime;
 
     if (dTime >= this.getStopTime()) {
       this.atEndOfLoop();
     }
 
-    $("#time").html(this.secToDisp(dTime));
-    document.getElementById("timeBar").value = dTime;
+    $('#time').html(this.secToDisp(dTime));
+    document.getElementById('timeBar').value = dTime;
   }; // end timeupdateAudio
 
   atEndOfLoop = () => {
-    var audio = document.querySelector("audio, video");
+    var audio = document.querySelector('audio, video');
     this.goToStartMarker();
     audio.pause();
 
@@ -1204,7 +1107,7 @@ class TroffClass {
         this.doIncrementSpeed();
         this.playSong(this.getWaitBetweenLoops() * 1000);
       } else {
-        IO.loopTimesLeft($("#loopTimes").val());
+        IO.loopTimesLeft($('#loopTimes').val());
         this.pauseSong();
       }
     } // end else
@@ -1215,19 +1118,19 @@ class TroffClass {
   //	};
 
   isLoopInfinite = () => {
-    return $("#buttLoopInf").hasClass("currentLoop");
+    return $('#buttLoopInf').hasClass('currentLoop');
   };
 
   doIncrementSpeed = () => {
-    if (!$("#buttIncrementUntil").hasClass("active")) {
+    if (!$('#buttIncrementUntil').hasClass('active')) {
       return;
     }
 
     var loopTimesLeft,
       speedDiffLeft,
       incrementSpeedBy,
-      incrementUntill = parseInt($("#incrementUntilValue").val()),
-      currentSpeed = $("audio, video")[0].playbackRate * 100;
+      incrementUntill = parseInt($('#incrementUntilValue').val()),
+      currentSpeed = $('audio, video')[0].playbackRate * 100;
 
     speedDiffLeft = incrementUntill - currentSpeed;
 
@@ -1238,12 +1141,12 @@ class TroffClass {
         incrementSpeedBy = speedDiffLeft > 0 ? 1 : -1;
       }
 
-      $("#speedBar").val(currentSpeed + incrementSpeedBy);
+      $('#speedBar').val(currentSpeed + incrementSpeedBy);
     } else {
       loopTimesLeft = parseInt(IO.loopTimesLeft());
       incrementSpeedBy = speedDiffLeft / loopTimesLeft;
 
-      $("#speedBar").val(currentSpeed + incrementSpeedBy);
+      $('#speedBar').val(currentSpeed + incrementSpeedBy);
     }
 
     this.speedUpdate();
@@ -1251,61 +1154,45 @@ class TroffClass {
 
   // goToStartMarker används när man updaterar startBefore / trycker på StartBefore  / trycker på en marker???
   goToStartMarker = () => {
-    document.querySelector("audio, video").currentTime = this.getStartTime();
+    document.querySelector('audio, video').currentTime = this.getStartTime();
   }; // end goToStartMarker
 
   enterKnappen = () => {
-    var goToMarker = $(
-        "#" + TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR
-      ).hasClass("active"),
-      updateLoopTimes = $("#" + TROFF_SETTING_ENTER_RESET_COUNTER).hasClass(
-        "active"
-      ),
-      useTimer = $("#" + TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR).hasClass(
-        "active"
-      );
+    var goToMarker = $('#' + TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR).hasClass('active'),
+      updateLoopTimes = $('#' + TROFF_SETTING_ENTER_RESET_COUNTER).hasClass('active'),
+      useTimer = $('#' + TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR).hasClass('active');
     this.spaceOrEnter(goToMarker, useTimer, updateLoopTimes);
   }; // end enterKnappen
 
   space = () => {
-    var goToMarker = $(
-        "#" + TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR
-      ).hasClass("active"),
-      updateLoopTimes = $("#" + TROFF_SETTING_SPACE_RESET_COUNTER).hasClass(
-        "active"
-      ),
-      useTimer = $("#" + TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR).hasClass(
-        "active"
-      );
+    var goToMarker = $('#' + TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR).hasClass('active'),
+      updateLoopTimes = $('#' + TROFF_SETTING_SPACE_RESET_COUNTER).hasClass('active'),
+      useTimer = $('#' + TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR).hasClass('active');
     this.spaceOrEnter(goToMarker, useTimer, updateLoopTimes);
   }; // end space()
 
   playUiButton = () => {
-    var goToMarker = $(
-        "#" + TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR
-      ).hasClass("active"),
-      updateLoopTimes = $(
-        "#" + TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER
-      ).hasClass("active"),
-      useTimer = $(
-        "#" + TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR
-      ).hasClass("active");
+    var goToMarker = $('#' + TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR).hasClass(
+        'active'
+      ),
+      updateLoopTimes = $('#' + TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER).hasClass('active'),
+      useTimer = $('#' + TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR).hasClass('active');
     this.spaceOrEnter(goToMarker, useTimer, updateLoopTimes);
   };
 
   spaceOrEnter = (goToMarker, useTimer, updateLoopTimes) => {
-    var audio = document.querySelector("audio, video");
+    var audio = document.querySelector('audio, video');
     if (!audio) {
-      log.e("no song loaded");
+      log.e('no song loaded');
       return;
     }
 
     if (goToMarker) {
       this.goToStartMarker();
     }
-    if (this.getMood() == "pause") {
-      if (useTimer && $("#buttPauseBefStart").hasClass("active")) {
-        this.playSong($("#pauseBeforeStart").val() * 1000);
+    if (this.getMood() == 'pause') {
+      if (useTimer && $('#buttPauseBefStart').hasClass('active')) {
+        this.playSong($('#pauseBeforeStart').val() * 1000);
       } else {
         this.playSong();
       }
@@ -1317,21 +1204,21 @@ class TroffClass {
 
   playSong = (wait) => {
     wait = wait || 0;
-    var audio = document.querySelector("audio, video");
+    var audio = document.querySelector('audio, video');
     if (!audio) return;
 
-    gtag("event", "Start song", { event_category: "Perform change" });
+    gtag('event', 'Start song', { event_category: 'Perform change' });
 
     var secondsLeft = wait / 1000;
-    $(".secondsLeft").html(secondsLeft);
+    $('.secondsLeft').html(secondsLeft);
 
     if (this.stopTimeout) clearInterval(this.stopTimeout);
-    this.setMood("wait");
+    this.setMood('wait');
 
     const localPlayAndSetMood = () => {
-      if (this.getMood() == "pause") return;
+      if (this.getMood() == 'pause') return;
       audio.play();
-      this.setMood("play");
+      this.setMood('play');
     };
 
     if (wait > 0) {
@@ -1348,27 +1235,27 @@ class TroffClass {
     // stopInterval is the counter
     if (this.stopInterval) clearInterval(this.stopInterval);
     this.stopInterval = setInterval(() => {
-      if (this.getMood() == "wait") {
+      if (this.getMood() == 'wait') {
         //audio.isPaused) {
         secondsLeft -= 1;
         if (secondsLeft <= 0) {
-          $(".secondsLeft").html(0);
+          $('.secondsLeft').html(0);
           clearInterval(this.stopInterval);
         } else {
-          $(".secondsLeft").html(secondsLeft);
+          $('.secondsLeft').html(secondsLeft);
         }
       } else {
         clearInterval(this.stopInterval);
-        $(".secondsLeft").html(0);
+        $('.secondsLeft').html(0);
       }
     }, 1000);
   }; // end playSong
 
   pauseSong = (updateLoopTimes) => {
     updateLoopTimes = updateLoopTimes !== undefined ? updateLoopTimes : true;
-    var audio = document.querySelector("audio, video");
+    var audio = document.querySelector('audio, video');
     if (audio) audio.pause();
-    this.setMood("pause");
+    this.setMood('pause');
     if (updateLoopTimes) {
       this.updateLoopTimes();
     }
@@ -1378,29 +1265,27 @@ class TroffClass {
   };
 
   updateSecondsLeft = () => {
-    if (this.getMood() != "pause") {
+    if (this.getMood() != 'pause') {
       return;
     }
-    if ($("#buttPauseBefStart").hasClass("active"))
-      $(".secondsLeft").html($("#pauseBeforeStart").val());
-    else $(".secondsLeft").html(0);
+    if ($('#buttPauseBefStart').hasClass('active'))
+      $('.secondsLeft').html($('#pauseBeforeStart').val());
+    else $('.secondsLeft').html(0);
   };
 
   setMood = (mood) => {
     const infoSectionClasses =
-      "overFilm bg-transparent position-absolute align-items-center w-100 flexCol";
-    $("#infoSection, .moodColorizedText")
-      .removeClass("play pause wait")
-      .addClass(mood);
-    if ($("#playInFullscreenButt").hasClass("active")) {
-      $("#videoBox").toggleClass("fullscreen", mood != "pause");
+      'overFilm bg-transparent position-absolute align-items-center w-100 flexCol';
+    $('#infoSection, .moodColorizedText').removeClass('play pause wait').addClass(mood);
+    if ($('#playInFullscreenButt').hasClass('active')) {
+      $('#videoBox').toggleClass('fullscreen', mood != 'pause');
     }
-    $("#infoSection").toggleClass(
+    $('#infoSection').toggleClass(
       infoSectionClasses,
-      mood == "wait" && $("#videoBox").hasClass("fullscreen")
+      mood == 'wait' && $('#videoBox').hasClass('fullscreen')
     );
-    $("#buttPlayUiButtonPlay").toggleClass("hidden", mood != "pause");
-    $("#buttPlayUiButtonPause").toggleClass("hidden", mood == "pause");
+    $('#buttPlayUiButtonPlay').toggleClass('hidden', mood != 'pause');
+    $('#buttPlayUiButtonPause').toggleClass('hidden', mood == 'pause');
     this.updateSecondsLeft();
   };
   // this. ...
@@ -1425,8 +1310,8 @@ class TroffClass {
     this.strCurrentSong = path;
     this.iCurrentGalleryId = iGalleryId;
 
-    $("#currentSong").text("Wait for song to load");
-    $("#currentArtist, #currentAlbum").text("");
+    $('#currentSong').text('Wait for song to load');
+    $('#currentArtist, #currentAlbum').text('');
   };
 
   setCurrentSongInDB = () => {
@@ -1434,7 +1319,7 @@ class TroffClass {
   }; // end SetCurrentSong
 
   pathToName = (filepath) => {
-    const lastIndex = filepath.lastIndexOf(".");
+    const lastIndex = filepath.lastIndexOf('.');
     if (lastIndex == -1) {
       return filepath;
     }
@@ -1442,14 +1327,14 @@ class TroffClass {
   };
 
   getCurrentStates = () => {
-    return $("#stateList").children();
+    return $('#stateList').children();
   };
 
   getCurrentMarkers = (bGetStopMarkers) => {
     if (bGetStopMarkers) {
-      return $("#markerList li input:nth-child(4)");
+      return $('#markerList li input:nth-child(4)');
     }
-    return $("#markerList li input:nth-child(3)");
+    return $('#markerList li input:nth-child(3)');
   };
 
   /*
@@ -1468,19 +1353,16 @@ class TroffClass {
         oTmp.color = aoMarkers[i].color;
         oExport.aoMarkers[i] = oTmp;
       }
-      var aState = $("#stateList").children();
+      var aState = $('#stateList').children();
       oExport.aoStates = [];
       for (i = 0; i < aState.length; i++) {
-        var oState = JSON.parse(aState.eq(i).attr("strstate"));
-        oExport.aoStates[i] = this.replaceMarkerIdWithMarkerTimeInState(
-          oState,
-          aoMarkers
-        );
+        var oState = JSON.parse(aState.eq(i).attr('strstate'));
+        oExport.aoStates[i] = this.replaceMarkerIdWithMarkerTimeInState(oState, aoMarkers);
       }
-      oExport.strSongInfo = $("#songInfoArea").val();
+      oExport.strSongInfo = $('#songInfoArea').val();
       var sExport = JSON.stringify(oExport);
 
-      IO.prompt("Copy the marked text to export your markers", sExport);
+      IO.prompt('Copy the marked text to export your markers', sExport);
     });
   }; // end exportStuff
 
@@ -1490,8 +1372,8 @@ class TroffClass {
   importStuff = () => {
     this.toggleImportExport();
     IO.prompt(
-      "Please paste the text you received to import the markers",
-      "Paste text here",
+      'Please paste the text you received to import the markers',
+      'Paste text here',
       (sImport) => {
         var oImport = JSON.parse(sImport);
         if (
@@ -1499,11 +1381,11 @@ class TroffClass {
           oImport.aoStates !== undefined &&
           oImport.aoMarkers !== undefined
         ) {
-          if ($("#markerList").children().length > 2) {
+          if ($('#markerList').children().length > 2) {
             IO.confirm(
-              "Delete existing markers?",
-              "Do you want to delete the existing markers before the import,<br />" +
-                "or do you want to merge the new markers with the existing ones?",
+              'Delete existing markers?',
+              'Do you want to delete the existing markers before the import,<br />' +
+                'or do you want to merge the new markers with the existing ones?',
               () => {
                 this.deleteAllMarkers();
                 this.doImportStuff(oImport);
@@ -1511,8 +1393,8 @@ class TroffClass {
               () => {
                 this.doImportStuff(oImport);
               },
-              "Delete existing markers",
-              "Merge markers"
+              'Delete existing markers',
+              'Merge markers'
             );
           } else {
             this.doImportStuff(oImport);
@@ -1531,13 +1413,10 @@ class TroffClass {
       if (oState.currentMarker == aoMarkers[i].id) {
         oState.currentMarkerTime = aoMarkers[i].time;
       }
-      if (oState.currentStopMarker == aoMarkers[i].id + "S") {
+      if (oState.currentStopMarker == aoMarkers[i].id + 'S') {
         oState.currentStopMarkerTime = aoMarkers[i].time;
       }
-      if (
-        oState.currentMarkerTime !== undefined &&
-        oState.currentStopMarkerTime !== undefined
-      ) {
+      if (oState.currentMarkerTime !== undefined && oState.currentStopMarkerTime !== undefined) {
         break;
       }
     }
@@ -1555,8 +1434,8 @@ class TroffClass {
       var tmpName = Object.keys(aMarkers[i])[0];
       aMarkers[i].name = aMarkers[i].name || tmpName;
       aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
-      aMarkers[i].info = aMarkers[i].info || "";
-      aMarkers[i].color = aMarkers[i].color || "None";
+      aMarkers[i].info = aMarkers[i].info || '';
+      aMarkers[i].color = aMarkers[i].color || 'None';
       //:allow for version 0.3.0 end here
 
       aMarkers[i].id = aMarkerId[i];
@@ -1576,7 +1455,7 @@ class TroffClass {
     });
 
     function importSonginfo(strSongInfo) {
-      $("#songInfoArea").val($("#songInfoArea").val() + strSongInfo);
+      $('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
     }
 
     function importStates(aoStates) {
@@ -1586,24 +1465,20 @@ class TroffClass {
         delete aoStates[i].currentMarkerTime;
         delete aoStates[i].currentStopMarkerTime;
         aoStates[i].currentMarker = getMarkerFromTime(strTimeStart);
-        aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + "S";
+        aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
       }
 
       function getMarkerFromTime(strTime) {
-        var aCurrMarkers = $("#markerList").children();
+        var aCurrMarkers = $('#markerList').children();
         for (var i = 0; i < aCurrMarkers.length; i++) {
           var currMarker = aCurrMarkers.eq(i).children().eq(2);
           if (currMarker[0].timeValue == strTime) {
-            return currMarker.attr("id");
+            return currMarker.attr('id');
           }
         }
 
-        log.e(
-          "Could not find a marker at the time " +
-            strTime +
-            "; returning the first marker"
-        );
-        return aCurrMarkers.eq(0).children().eq(2).attr("id");
+        log.e('Could not find a marker at the time ' + strTime + '; returning the first marker');
+        return aCurrMarkers.eq(0).children().eq(2).attr('id');
       }
 
       aoStates.map((s) => {
@@ -1618,69 +1493,65 @@ class TroffClass {
     will then call the add- and save- Marker
  */
   createMarker = () => {
-
     var quickTimeout = setTimeout(() => {
       var oFI = {};
-      oFI.strHead = "Please enter the marker name here";
-      var iMarkers = $("#markerList li").length + 1;
-      oFI.strInput = "marker nr " + iMarkers;
+      oFI.strHead = 'Please enter the marker name here';
+      var iMarkers = $('#markerList li').length + 1;
+      oFI.strInput = 'marker nr ' + iMarkers;
       oFI.bDouble = true;
-      oFI.strTextarea = "";
-      oFI.strTextareaPlaceholder = "Add extra info about the marker here.";
+      oFI.strTextarea = '';
+      oFI.strTextareaPlaceholder = 'Add extra info about the marker here.';
 
-      IO.promptEditMarker(
-        0,
-        (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
-          if (newMarkerName === "") return;
+      IO.promptEditMarker(0, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
+        if (newMarkerName === '') return;
 
-          var oMarker = {};
-          oMarker.name = newMarkerName;
-          oMarker.time = newTime;
-          oMarker.info = newMarkerInfo || "";
-          oMarker.color = newMarkerColor;
-          oMarker.id = this.getNewMarkerId();
+        var oMarker = {};
+        oMarker.name = newMarkerName;
+        oMarker.time = newTime;
+        oMarker.info = newMarkerInfo || '';
+        oMarker.color = newMarkerColor;
+        oMarker.id = this.getNewMarkerId();
 
-          var markers = [oMarker];
-          this.addMarkers(markers); // adds marker to html
-          DB.saveMarkers(this.getCurrentSong());
-          gtag("event", "Add Marker", { event_category: "Adding Button" });
-        }
-      );
+        var markers = [oMarker];
+        this.addMarkers(markers); // adds marker to html
+        DB.saveMarkers(this.getCurrentSong());
+        gtag('event', 'Add Marker', { event_category: 'Adding Button' });
+      });
       clearInterval(quickTimeout);
     }, 0);
   }; // end createMarker   ********/
 
   toggleImportExport = () => {
-    $("#outerImportExportPopUpSquare").toggleClass("hidden");
+    $('#outerImportExportPopUpSquare').toggleClass('hidden');
     IO.blurHack();
   };
 
   toggleArea = (event) => {
     IO.blurHack();
 
-    var sectionToHide = $(event.target).attr("section-to-hide");
+    var sectionToHide = $(event.target).attr('section-to-hide');
 
     if (sectionToHide) {
-      event.target.classList.toggle("active");
-      $(sectionToHide).toggleClass("hidden");
+      event.target.classList.toggle('active');
+      $(sectionToHide).toggleClass('hidden');
       DB.setCurrentAreas(this.getCurrentSong());
     }
   };
 
   setAreas = (abAreas) => {
-    $("#statesTab").toggleClass("active", abAreas[0]);
-    $("#stateSection").toggleClass("hidden", !abAreas[0]);
-    $("#settingsTab").toggleClass("active", abAreas[1]);
-    $("#timeSection").toggleClass("hidden", !abAreas[1]);
-    $("#infoTab").toggleClass("active", abAreas[2]);
-    $("#userNoteSection").toggleClass("hidden", !abAreas[2]);
-    $("#countTab").toggleClass("active", abAreas[3]);
-    $("#infoSection").toggleClass("hidden", !abAreas[3]);
-    $("#infoSectionSmall").toggleClass("hidden", abAreas[3]);
+    $('#statesTab').toggleClass('active', abAreas[0]);
+    $('#stateSection').toggleClass('hidden', !abAreas[0]);
+    $('#settingsTab').toggleClass('active', abAreas[1]);
+    $('#timeSection').toggleClass('hidden', !abAreas[1]);
+    $('#infoTab').toggleClass('active', abAreas[2]);
+    $('#userNoteSection').toggleClass('hidden', !abAreas[2]);
+    $('#countTab').toggleClass('active', abAreas[3]);
+    $('#infoSection').toggleClass('hidden', !abAreas[3]);
+    $('#infoSectionSmall').toggleClass('hidden', abAreas[3]);
   };
 
   setInfo = (info) => {
-    $("#songInfoArea").val(info);
+    $('#songInfoArea').val(info);
   };
 
   setSonglists_NEW = (aoSonglists) => {
@@ -1690,41 +1561,40 @@ class TroffClass {
   };
 
   setSonglistIcon = (event) => {
-    const button =
-      event.target.tagName == "I" ? event.target.parentElement : event.target;
+    const button = event.target.tagName == 'I' ? event.target.parentElement : event.target;
 
     const element = button.firstElementChild;
 
-    const icon = [...element.classList].find((o) => o.startsWith("fa-"));
+    const icon = [...element.classList].find((o) => o.startsWith('fa-'));
 
-    $("#songlistIconPicker").find("button").removeClass("selected");
+    $('#songlistIconPicker').find('button').removeClass('selected');
 
-    button.classList.add("selected");
+    button.classList.add('selected');
 
-    $("#groupDialogSonglistIcon").removeClassStartingWith("fa-").addClass(icon);
+    $('#groupDialogSonglistIcon').removeClassStartingWith('fa-').addClass(icon);
 
-    $("#groupDialogIcon").val(icon);
+    $('#groupDialogIcon').val(icon);
   };
 
   setSonglistColor = (event) => {
     const element = event.target;
-    const color = [...element.classList].find((o) => o.startsWith("bg-"));
+    const color = [...element.classList].find((o) => o.startsWith('bg-'));
 
-    const dialog = $("#groupDialog").find(".innerDialog")[0];
+    const dialog = $('#groupDialog').find('.innerDialog')[0];
 
-    $(dialog).find(".colorPickerSelected").removeClass("colorPickerSelected");
+    $(dialog).find('.colorPickerSelected').removeClass('colorPickerSelected');
 
-    $(dialog).removeClassStartingWith("bg-");
+    $(dialog).removeClassStartingWith('bg-');
 
-    element.classList.add("colorPickerSelected");
+    element.classList.add('colorPickerSelected');
     dialog.classList.add(color);
 
-    $(dialog).find("#groupDialogColor").val(color);
+    $(dialog).find('#groupDialogColor').val(color);
   };
 
   leaveGroup = async () => {
-    $("#groupDialog").addClass("hidden");
-    const groupDocId = $("#groupDialogName").data("groupDocId");
+    $('#groupDialog').addClass('hidden');
+    const groupDocId = $('#groupDialogName').data('groupDocId');
     const groupData = getFirebaseGroupDataFromDialog(false);
 
     groupData.owners = groupData.owners.filter((o) => o != firebaseUser.email);
@@ -1735,39 +1605,39 @@ class TroffClass {
     }
 
     emptyGroupDialog();
-    await setDoc(doc(db, "Groups", groupDocId), groupData);
+    await setDoc(doc(db, 'Groups', groupDocId), groupData);
   };
 
   onClickShareSonglist = () => {
     if (!firebaseUser) {
-      $("#shareInstructionDialog").removeClass("hidden");
+      $('#shareInstructionDialog').removeClass('hidden');
       return;
     }
 
-    $("#shareSonglist").addClass("hidden");
-    $(".showOnSharedSonglist").removeClass("hidden");
-    $("#groupDialogIsGroup").prop("checked", true);
-    $("#defaultIcon").click();
-    $("#songlistColorPicker .backgroundColorNone").click();
+    $('#shareSonglist').addClass('hidden');
+    $('.showOnSharedSonglist').removeClass('hidden');
+    $('#groupDialogIsGroup').prop('checked', true);
+    $('#defaultIcon').click();
+    $('#songlistColorPicker .backgroundColorNone').click();
     addGroupOwnerRow(firebaseUser.email);
   };
 
   onClickLeaveGroup = () => {
     IO.confirm(
-      "Stop sharing this songlist",
-      "Are you sure you want to stop sharing this songlist? Updates that you do will no longer be shared to the other members of this songlist.",
+      'Stop sharing this songlist',
+      'Are you sure you want to stop sharing this songlist? Updates that you do will no longer be shared to the other members of this songlist.',
       async () => {
         this.leaveGroup();
       },
       () => {},
-      "Yes, stop share",
-      "No, I want to continue sharing!"
+      'Yes, stop share',
+      'No, I want to continue sharing!'
     );
   };
 
   removeGroup = async () => {
-    $("#groupDialog").addClass("hidden");
-    const groupDocId = $("#groupDialogName").data("groupDocId");
+    $('#groupDialog').addClass('hidden');
+    const groupDocId = $('#groupDialogName').data('groupDocId');
 
     const folderRef = ref(storage, `Groups/${groupDocId}`);
 
@@ -1783,28 +1653,26 @@ class TroffClass {
     }
 
     const songDocIds = [];
-    $("#groupSongParent")
-      .find(".groupDialogSong")
+    $('#groupSongParent')
+      .find('.groupDialogSong')
       .each((i, s) => {
-        songDocIds.push($(s).data("firebaseSongDocId"));
+        songDocIds.push($(s).data('firebaseSongDocId'));
       });
 
     emptyGroupDialog();
 
     const removeDataPromise = [];
     songDocIds.forEach((songDocId) => {
-      removeDataPromise.push(
-        removeSongDataFromFirebaseGroup(groupDocId, songDocId)
-      );
+      removeDataPromise.push(removeSongDataFromFirebaseGroup(groupDocId, songDocId));
     });
     await Promise.all(removeDataPromise);
 
-    await deleteDoc(doc(db, "Groups", groupDocId));
+    await deleteDoc(doc(db, 'Groups', groupDocId));
   };
 
   IO_removeSonglist = async () => {
-    const isGroup = $("#groupDialogIsGroup").is(":checked");
-    const songListObjectId = $("#groupDialogName").data("songListObjectId");
+    const isGroup = $('#groupDialogIsGroup').is(':checked');
+    const songListObjectId = $('#groupDialogName').data('songListObjectId');
 
     if (isGroup) {
       await this.leaveGroup();
@@ -1812,41 +1680,36 @@ class TroffClass {
 
     this.removeSonglist_NEW(songListObjectId);
     emptyGroupDialog();
-    $("#groupDialog").addClass("hidden");
+    $('#groupDialog').addClass('hidden');
   };
 
   onClickremoveSonglist = async () => {
-    const isGroup = $("#groupDialogIsGroup").is(":checked");
+    const isGroup = $('#groupDialogIsGroup').is(':checked');
     if (!isGroup) {
       this.IO_removeSonglist();
       return;
     }
     IO.confirm(
-      "Remove Songlist?",
-      "This will remove this songlist and updates to songs will no longer be shared to the rest of the owners for this songlist",
+      'Remove Songlist?',
+      'This will remove this songlist and updates to songs will no longer be shared to the rest of the owners for this songlist',
       this.IO_removeSonglist,
       () => {},
-      "Yes, remove songlist",
-      "No, I like this songlist!"
+      'Yes, remove songlist',
+      'No, I like this songlist!'
     );
   };
 
   removeSonglist_NEW = (songListId) => {
-    const songListObject = JSON.parse(nDB.get("straoSongLists")).filter(
+    const songListObject = JSON.parse(nDB.get('straoSongLists')).filter(
       (sl) => sl.id == songListId
     )[0];
 
-    $("#songListList")
-      .find(`[data-songlist-id="${songListId}"]`)
-      .closest("li")
-      .remove();
-    $("#songListSelector").find(`[value="${songListId}"]`).remove();
+    $('#songListList').find(`[data-songlist-id="${songListId}"]`).closest('li').remove();
+    $('#songListSelector').find(`[value="${songListId}"]`).remove();
 
     DB.saveSonglists_new();
     if (songListObject == undefined) {
-      log.w(
-        `Trying to remove songList with id ${songListId}, but it is not in the Local dataBase`
-      );
+      log.w(`Trying to remove songList with id ${songListId}, but it is not in the Local dataBase`);
       return;
     }
     notifyUndo('The songlist "' + songListObject.name + '" was removed', () => {
@@ -1864,48 +1727,41 @@ class TroffClass {
    * @param {jQuery button} $target
    */
   updateSongListInHTML = (songListObject) => {
-    var $target = $("#songListList").find(
-      '[data-songlist-id="' + songListObject.id + '"]'
-    );
+    var $target = $('#songListList').find('[data-songlist-id="' + songListObject.id + '"]');
     if (songListObject.id == undefined) {
       const groupId = songListObject.firebaseGroupDocId;
-      $target = $("#songListList").find(
-        `[data-firebase-group-doc-id="${groupId}"]`
-      );
-      songListObject.id = $target.data("songlistId");
+      $target = $('#songListList').find(`[data-firebase-group-doc-id="${groupId}"]`);
+      songListObject.id = $target.data('songlistId');
     }
 
     $target.text(songListObject.name);
-    $target.data("songList", songListObject);
+    $target.data('songList', songListObject);
 
     if (songListObject.firebaseGroupDocId != undefined) {
-      $target.attr(
-        "data-firebase-group-doc-id",
-        songListObject.firebaseGroupDocId
-      );
-      $target.addClass("groupIndication");
+      $target.attr('data-firebase-group-doc-id', songListObject.firebaseGroupDocId);
+      $target.addClass('groupIndication');
     } else {
-      songListObject.color = "";
-      songListObject.icon = "fa-pencil";
+      songListObject.color = '';
+      songListObject.icon = 'fa-pencil';
     }
 
     $target
       .parent()
-      .find(".editSongList")
-      .removeClassStartingWith("bg-")
+      .find('.editSongList')
+      .removeClassStartingWith('bg-')
       .addClass(songListObject.color);
 
     $target
       .parent()
-      .find(".editSongList")
-      .find("i")
-      .removeClassStartingWith("fa-")
-      .addClass(songListObject.icon || "fa-users");
+      .find('.editSongList')
+      .find('i')
+      .removeClassStartingWith('fa-')
+      .addClass(songListObject.icon || 'fa-users');
 
-    if ($target.hasClass("selected")) {
+    if ($target.hasClass('selected')) {
       $target.click();
     }
-    if ($target.hasClass("active")) {
+    if ($target.hasClass('active')) {
       $target.click();
       $target.click();
     }
@@ -1917,94 +1773,94 @@ class TroffClass {
     }
 
     const groupDocId = oSongList.firebaseGroupDocId;
-    const groupClass = groupDocId ? "groupIndication" : "";
-    const groupLogo = oSongList.icon || "fa-pencil";
+    const groupClass = groupDocId ? 'groupIndication' : '';
+    const groupLogo = oSongList.icon || 'fa-pencil';
 
-    $("#songListList").append(
-      $("<li>")
-        .addClass("py-1")
+    $('#songListList').append(
+      $('<li>')
+        .addClass('py-1')
         .append(
-          $("<div>")
-            .addClass("flex-display")
-            .addClass("pr-2")
+          $('<div>')
+            .addClass('flex-display')
+            .addClass('pr-2')
             .append(
-              $("<button>")
-                .addClass("small")
-                .addClass("regularButton")
-                .addClass("editSongList")
+              $('<button>')
+                .addClass('small')
+                .addClass('regularButton')
+                .addClass('editSongList')
                 .addClass(oSongList.color)
-                .addClass("mr-2")
-                .append($("<i>").addClass("fa").addClass(groupLogo))
-                .on("click", songListDialogOpenExisting)
+                .addClass('mr-2')
+                .append($('<i>').addClass('fa').addClass(groupLogo))
+                .on('click', songListDialogOpenExisting)
             )
             .append(
-              $("<button>")
-                .addClass("songlist")
+              $('<button>')
+                .addClass('songlist')
                 .addClass(groupClass)
-                .addClass("stOnOffButton")
-                .addClass("flex-one")
-                .addClass("text-left")
-                .data("songList", oSongList)
-                .attr("data-songlist-id", oSongList.id)
+                .addClass('stOnOffButton')
+                .addClass('flex-one')
+                .addClass('text-left')
+                .data('songList', oSongList)
+                .attr('data-songlist-id', oSongList.id)
                 //  workaround to be able to select by for example $(" [data-songlist-id]")
-                .attr("data-firebase-group-doc-id", groupDocId)
+                .attr('data-firebase-group-doc-id', groupDocId)
                 .text(oSongList.name)
                 .click(clickSongList_NEW)
             )
         )
-        .on("drop", dropSongOnSonglist)
-        .on("dragover", allowDrop)
-        .on("dragleave", onDragleave)
+        .on('drop', dropSongOnSonglist)
+        .on('dragover', allowDrop)
+        .on('dragleave', onDragleave)
     );
 
-    var oAdd = $("<option>")
-      .text("Add to " + oSongList.name)
+    var oAdd = $('<option>')
+      .text('Add to ' + oSongList.name)
       .val(oSongList.id);
-    $("#songListSelectorAddToSonglist").append(oAdd);
-    var oRemove = $("<option>")
-      .text("Remove from " + oSongList.name)
+    $('#songListSelectorAddToSonglist').append(oAdd);
+    var oRemove = $('<option>')
+      .text('Remove from ' + oSongList.name)
       .val(oSongList.id);
-    $("#songListSelectorRemoveFromSonglist").append(oRemove);
+    $('#songListSelectorRemoveFromSonglist').append(oRemove);
   };
 
   recallCurrentStateOfSonglists = () => {
-    DB.getVal("TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT", (isAdditiveSelect) => {
+    DB.getVal('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT', (isAdditiveSelect) => {
       DB.getVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, (o) => {
-        var indicatorClass = isAdditiveSelect ? "active" : "selected";
+        var indicatorClass = isAdditiveSelect ? 'active' : 'selected';
 
-        $("#songListAll").removeClass("selected");
+        $('#songListAll').removeClass('selected');
 
         o.directoryList.forEach((v) => {
-          $("#directoryList")
-            .find("[data-gallery-id=" + v.galleryId + "]")
+          $('#directoryList')
+            .find('[data-gallery-id=' + v.galleryId + ']')
             .each((inner_index, inner_value) => {
-              if ($(inner_value).data("full-path") == v.fullPath) {
+              if ($(inner_value).data('full-path') == v.fullPath) {
                 $(inner_value).addClass(indicatorClass);
-                $("#songListAll").removeClass("selected");
+                $('#songListAll').removeClass('selected');
               }
             });
         });
         o.galleryList.forEach((v) => {
-          $("#galleryList")
-            .find("[data-gallery-id=" + v + "]")
+          $('#galleryList')
+            .find('[data-gallery-id=' + v + ']')
             .addClass(indicatorClass);
-          $("#songListAll").removeClass("selected");
+          $('#songListAll').removeClass('selected');
         });
         o.songListList.forEach((v) => {
-          $("#songListList")
-            .find("[data-songlist-id=" + v + "]")
+          $('#songListList')
+            .find('[data-songlist-id=' + v + ']')
             .addClass(indicatorClass);
-          $("#songListAll").removeClass("selected");
+          $('#songListAll').removeClass('selected');
 
           if (!isAdditiveSelect) {
-            const songListData = $("#songListList")
-              .find("[data-songlist-id=" + v + "]")
-              .data("songList");
+            const songListData = $('#songListList')
+              .find('[data-songlist-id=' + v + ']')
+              .data('songList');
             if (songListData != undefined) {
-              $("#headArea").addClass(songListData.color);
-              $("#songlistIcon").addClass(songListData.icon);
-              $("#songlistName").text(songListData.name);
-              $("#songlistInfo").removeClass("hidden").text(songListData.info);
+              $('#headArea').addClass(songListData.color);
+              $('#songlistIcon').addClass(songListData.icon);
+              $('#songlistName').text(songListData.name);
+              $('#songlistInfo').removeClass('hidden').text(songListData.info);
             }
           }
         });
@@ -2019,26 +1875,26 @@ class TroffClass {
       songListList = [],
       galleryList = [],
       directoryList = [];
-    $("#songListList")
-      .find(".active, .selected")
+    $('#songListList')
+      .find('.active, .selected')
       .each((i, v) => {
-        songListList.push($(v).attr("data-songlist-id"));
+        songListList.push($(v).attr('data-songlist-id'));
       });
     o.songListList = songListList;
 
-    $("#galleryList")
-      .find(".active, .selected")
+    $('#galleryList')
+      .find('.active, .selected')
       .each((i, v) => {
-        galleryList.push($(v).attr("data-gallery-id"));
+        galleryList.push($(v).attr('data-gallery-id'));
       });
     o.galleryList = galleryList;
 
-    $("#directoryList")
-      .find(".active, .selected")
+    $('#directoryList')
+      .find('.active, .selected')
       .each((i, v) => {
         directoryList.push({
-          galleryId: $(v).attr("data-gallery-id"),
-          fullPath: $(v).attr("data-full-path"),
+          galleryId: $(v).attr('data-gallery-id'),
+          fullPath: $(v).attr('data-full-path'),
         });
       });
     o.directoryList = directoryList;
@@ -2062,11 +1918,11 @@ class TroffClass {
     var iSonglistId = 1;
     var bFinniched = false;
 
-    var aDOMSonglist = $("#songListList").find("button[data-songlist-id]");
+    var aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
     while (true) {
       bFinniched = true;
       for (var i = 0; i < aDOMSonglist.length; i++) {
-        if (aDOMSonglist.eq(i).data("songList").id == iSonglistId) {
+        if (aDOMSonglist.eq(i).data('songList').id == iSonglistId) {
           iSonglistId++;
           bFinniched = false;
         }
@@ -2076,7 +1932,7 @@ class TroffClass {
   };
 
   enterSongInfo = () => {
-    $("#songInfoArea").addClass("textareaEdit");
+    $('#songInfoArea').addClass('textareaEdit');
     IO.setEnterFunction((event) => {
       if (event.ctrlKey == 1) {
         //Ctrl+Enter will exit
@@ -2088,55 +1944,51 @@ class TroffClass {
   };
 
   exitSongInfo = () => {
-    $("#songInfoArea").removeClass("textareaEdit");
+    $('#songInfoArea').removeClass('textareaEdit');
     IO.clearEnterFunction();
   };
 
   updateSongInfo = () => {
-    var strInfo = $("#songInfoArea")[0].value;
+    var strInfo = $('#songInfoArea')[0].value;
     var songId = this.getCurrentSong();
     DB.setCurrentSongInfo(strInfo, songId);
   };
 
   rememberCurrentState = () => {
-    if ($("#statesTab").hasClass("hidden")) return;
+    if ($('#statesTab').hasClass('hidden')) return;
 
     IO.blurHack();
-    var nrStates = $("#stateList").children().length + 1;
+    var nrStates = $('#stateList').children().length + 1;
     IO.prompt(
-      "Remember state of settings to be recalled later",
-      "State " + nrStates,
+      'Remember state of settings to be recalled later',
+      'State ' + nrStates,
       (stateName) => {
-        if (stateName === "") return;
+        if (stateName === '') return;
 
         var state = {};
         state.name = stateName;
-        state.currentLoop = $(".currentLoop").attr("id");
-        state.currentMarker = $(".currentMarker").attr("id");
-        state.currentStopMarker = $(".currentStopMarker").attr("id");
+        state.currentLoop = $('.currentLoop').attr('id');
+        state.currentMarker = $('.currentMarker').attr('id');
+        state.currentStopMarker = $('.currentStopMarker').attr('id');
 
-        $("[data-save-on-song-toggle-class]").each((i, element) => {
+        $('[data-save-on-song-toggle-class]').each((i, element) => {
           const $target = $(element),
-            id = $target.attr("id"),
-            classToToggleAndSave = $target.data("save-on-song-toggle-class");
+            id = $target.attr('id'),
+            classToToggleAndSave = $target.data('save-on-song-toggle-class');
           if (id == undefined) {
-            log.e(
-              "''id'' is required for elements with [data-save-on-song-toggle-class]"
-            );
+            log.e("''id'' is required for elements with [data-save-on-song-toggle-class]");
             return;
           }
 
           state[id] = $target.hasClass(classToToggleAndSave);
         });
-        $("[data-save-on-song-value]").each((i, element) => {
+        $('[data-save-on-song-value]').each((i, element) => {
           const $target = $(element),
-            id = $target.attr("id"),
+            id = $target.attr('id'),
             value = $target.val();
 
           if (id == undefined) {
-            log.e(
-              "''id'' is required for elements with [data-save-on-song-value]"
-            );
+            log.e("''id'' is required for elements with [data-save-on-song-value]");
             return;
           }
 
@@ -2145,7 +1997,7 @@ class TroffClass {
 
         this.addButtonsOfStates([JSON.stringify(state)]);
         DB.saveStates(this.getCurrentSong());
-        gtag("event", "Remember State", { event_category: "Adding Button" });
+        gtag('event', 'Remember State', { event_category: 'Adding Button' });
       }
     );
   };
@@ -2156,37 +2008,35 @@ class TroffClass {
 
       $('<div class="flexRow">')
         .append(
-          $("<button>")
-            .attr("type", "button")
-            .addClass("small regularButton")
-            .append($("<i>").addClass("fa-trash"))
+          $('<button>')
+            .attr('type', 'button')
+            .addClass('small regularButton')
+            .append($('<i>').addClass('fa-trash'))
             .click(this.removeState)
         )
         .append(
-          $("<input>")
-            .attr("type", "button")
-            .addClass("regularButton flex-one text-left")
+          $('<input>')
+            .attr('type', 'button')
+            .addClass('regularButton flex-one text-left')
             .val(oState.name)
             .click(this.setState)
         )
-        .attr("strState", astrState[i])
-        .appendTo("#stateList");
+        .attr('strState', astrState[i])
+        .appendTo('#stateList');
     }
-    if (astrState.length !== 0) $("#statesHelpText").hide();
+    if (astrState.length !== 0) $('#statesHelpText').hide();
   };
 
   setState = (stateWrapper) => {
-    var strState = $(stateWrapper.target).parent().attr("strState");
+    var strState = $(stateWrapper.target).parent().attr('strState');
     var oState = JSON.parse(strState);
-    $("#" + oState.currentLoop).click();
-    $("[data-save-on-song-toggle-class]").each((i, element) => {
+    $('#' + oState.currentLoop).click();
+    $('[data-save-on-song-toggle-class]').each((i, element) => {
       const $target = $(element),
-        id = $target.attr("id"),
-        classToToggleAndSave = $target.data("save-on-song-toggle-class");
+        id = $target.attr('id'),
+        classToToggleAndSave = $target.data('save-on-song-toggle-class');
       if (id == undefined) {
-        log.e(
-          "''id'' is required for elements with [data-save-on-song-toggle-class]"
-        );
+        log.e("''id'' is required for elements with [data-save-on-song-toggle-class]");
         return;
       }
       if (oState[id] == undefined) {
@@ -2194,12 +2044,12 @@ class TroffClass {
       }
 
       if ($target.hasClass(classToToggleAndSave) != oState[id]) {
-        $target.trigger("click");
+        $target.trigger('click');
       }
     });
-    $("[data-save-on-song-value]").each((i, element) => {
+    $('[data-save-on-song-value]').each((i, element) => {
       const $target = $(element),
-        id = $target.attr("id");
+        id = $target.attr('id');
 
       if (id == undefined) {
         log.e("''id'' is required for elements with [data-save-on-song-value]");
@@ -2210,32 +2060,32 @@ class TroffClass {
       }
 
       $target.val(oState[id]);
-      $target[0].dispatchEvent(new Event("input"));
+      $target[0].dispatchEvent(new Event('input'));
     });
 
-    $("#" + oState.currentMarker).click();
-    $("#" + oState.currentStopMarker).click();
+    $('#' + oState.currentMarker).click();
+    $('#' + oState.currentStopMarker).click();
   };
 
   onSearchKeyup = (event) => {
     if (event != undefined && [37, 38, 39, 40].indexOf(event.keyCode) != -1) {
       return;
     }
-    var tBody = $("#dataSongTable").find("tbody"),
-      importantEl = tBody.find("tr").filter(".important");
+    var tBody = $('#dataSongTable').find('tbody'),
+      importantEl = tBody.find('tr').filter('.important');
 
     if (importantEl.length === 0) {
-      tBody.find("tr").eq(0).addClass("important");
+      tBody.find('tr').eq(0).addClass('important');
     } else {
-      importantEl.slice(1).removeClass("important");
+      importantEl.slice(1).removeClass('important');
     }
   };
 
   enterSerachDataTableSongList = (event) => {
     const $input = $(event.target);
-    $input.addClass("textareaEdit");
+    $input.addClass('textareaEdit');
 
-    if (!$input.is(":focus")) {
+    if (!$input.is(':focus')) {
       $input.focus();
     }
 
@@ -2245,32 +2095,19 @@ class TroffClass {
       (event) => {
         if (event.ctrlKey == 1) {
           //Ctrl+Enter will exit
-          $input.val("").trigger("click");
+          $input.val('').trigger('click');
           IO.blurHack();
           return false;
         }
 
-        $("#dataSongTable")
-          .DataTable()
-          .rows(".important")
-          .nodes()
-          .to$()
-          .trigger("click");
-        $("#dataSongTable")
-          .DataTable()
-          .rows(".important")
-          .nodes()
-          .to$()
-          .removeClass("important");
+        $('#dataSongTable').DataTable().rows('.important').nodes().to$().trigger('click');
+        $('#dataSongTable').DataTable().rows('.important').nodes().to$().removeClass('important');
 
         IO.blurHack();
         return true;
       },
       (event) => {
-        var element = $("#dataSongTable")
-            .find("tbody")
-            .find("tr")
-            .filter(".important"),
+        var element = $('#dataSongTable').find('tbody').find('tr').filter('.important'),
           next;
 
         if (event.keyCode == 37 || event.keyCode == 39) return;
@@ -2283,45 +2120,34 @@ class TroffClass {
         }
 
         if (next.length) {
-          element.removeClass("important");
-          next.addClass("important");
+          element.removeClass('important');
+          next.addClass('important');
         }
       }
     );
   };
 
   exitSerachDataTableSongList = () => {
-    $("#dataSongTable")
-      .DataTable()
-      .rows(".important")
-      .nodes()
-      .to$()
-      .removeClass("important");
+    $('#dataSongTable').DataTable().rows('.important').nodes().to$().removeClass('important');
 
     IO.clearEnterFunction();
     IO.blurHack();
   };
 
   showSearchAndActivate = () => {
-    if (!$("#buttSongsDialog").hasClass("active")) {
-      $("#buttSongsDialog").trigger("click").select();
+    if (!$('#buttSongsDialog').hasClass('active')) {
+      $('#buttSongsDialog').trigger('click').select();
     }
 
-    if (
-      !$('[data-st-css-selector-to-hide="#dataSongTable_filter"]').hasClass(
-        "active"
-      )
-    ) {
-      $('[data-st-css-selector-to-hide="#dataSongTable_filter"]')
-        .trigger("click")
-        .select();
+    if (!$('[data-st-css-selector-to-hide="#dataSongTable_filter"]').hasClass('active')) {
+      $('[data-st-css-selector-to-hide="#dataSongTable_filter"]').trigger('click').select();
     }
 
-    $("#dataSongTable_filter").find("input").trigger("click").select();
+    $('#dataSongTable_filter').find('input').trigger('click').select();
   };
 
   enterMarkerInfo = () => {
-    $("#markerInfoArea").addClass("textareaEdit");
+    $('#markerInfoArea').addClass('textareaEdit');
     IO.setEnterFunction((event) => {
       if (event.ctrlKey == 1) {
         //Ctrl+Enter will exit
@@ -2332,19 +2158,19 @@ class TroffClass {
     });
   };
   exitMarkerInfo = () => {
-    $("#markerInfoArea").removeClass("textareaEdit");
+    $('#markerInfoArea').removeClass('textareaEdit');
     IO.clearEnterFunction();
   };
 
   updateMarkerInfo = () => {
-    var strInfo = $("#markerInfoArea")[0].value;
-    var color = $(".currentMarker")[0].color;
-    var markerId = $(".currentMarker").attr("id");
-    var time = $(".currentMarker")[0].timeValue;
-    var markerName = $(".currentMarker").val();
+    var strInfo = $('#markerInfoArea')[0].value;
+    var color = $('.currentMarker')[0].color;
+    var markerId = $('.currentMarker').attr('id');
+    var time = $('.currentMarker')[0].timeValue;
+    var markerName = $('.currentMarker').val();
     var songId = this.getCurrentSong();
 
-    $(".currentMarker")[0].info = strInfo;
+    $('.currentMarker')[0].info = strInfo;
 
     DB.updateMarker(markerId, markerName, strInfo, color, time, songId);
   };
@@ -2368,42 +2194,42 @@ class TroffClass {
       var name = oMarker.name;
       var time = Number(oMarker.time);
       var info = oMarker.info;
-      var color = oMarker.color || "None";
+      var color = oMarker.color || 'None';
       var nameId = oMarker.id;
 
-      var maxTime = Number(document.getElementById("timeBar").max);
+      var maxTime = Number(document.getElementById('timeBar').max);
 
-      if (oMarker.time == "max" || time > maxTime) {
+      if (oMarker.time == 'max' || time > maxTime) {
         time = maxTime;
       }
 
-      var button = document.createElement("input");
-      button.type = "button";
+      var button = document.createElement('input');
+      button.type = 'button';
       button.id = nameId;
       button.value = name;
-      button.classList.add("onOffButton");
+      button.classList.add('onOffButton');
       button.timeValue = time;
       button.info = info;
       button.color = color;
 
-      var buttonS = document.createElement("input");
-      buttonS.type = "button";
-      buttonS.id = nameId + "S";
-      buttonS.value = "Stop";
-      buttonS.classList.add("onOffButton");
+      var buttonS = document.createElement('input');
+      buttonS.type = 'button';
+      buttonS.id = nameId + 'S';
+      buttonS.value = 'Stop';
+      buttonS.classList.add('onOffButton');
       buttonS.timeValue = time;
 
-      var buttonE = $("<button>")
-        .addClass("small")
-        .addClass("regularButton")
-        .attr("id", nameId + "E")
-        .append($("<i>").addClass("fa-pencil"));
+      var buttonE = $('<button>')
+        .addClass('small')
+        .addClass('regularButton')
+        .attr('id', nameId + 'E')
+        .append($('<i>').addClass('fa-pencil'));
 
-      var p = document.createElement("b");
+      var p = document.createElement('b');
       p.innerHTML = this.secToDisp(time);
 
-      var docMarkerList = document.getElementById("markerList");
-      var listElement = document.createElement("li");
+      var docMarkerList = document.getElementById('markerList');
+      var listElement = document.createElement('li');
 
       listElement.appendChild(buttonE[0]);
       listElement.appendChild(p);
@@ -2411,7 +2237,7 @@ class TroffClass {
       listElement.appendChild(buttonS);
       $(listElement).addClass(MARKER_COLOR_PREFIX + color);
 
-      var child = $("#markerList li:first-child")[0];
+      var child = $('#markerList li:first-child')[0];
       var bInserted = false;
       var bContinue = false;
       while (child) {
@@ -2420,20 +2246,20 @@ class TroffClass {
           var markerId = child.childNodes[2].id;
 
           if (child.childNodes[2].info != info) {
-            var newMarkerInfo = child.childNodes[2].info + "\n\n" + info;
-            $("#" + markerId)[0].info = newMarkerInfo;
-            if ($(".currentMarker")[0].id == child.childNodes[2].id)
-              $("#markerInfoArea").val(newMarkerInfo);
+            var newMarkerInfo = child.childNodes[2].info + '\n\n' + info;
+            $('#' + markerId)[0].info = newMarkerInfo;
+            if ($('.currentMarker')[0].id == child.childNodes[2].id)
+              $('#markerInfoArea').val(newMarkerInfo);
           }
           if (child.childNodes[2].value != name) {
-            var newMarkerName = child.childNodes[2].value + ", " + name;
-            $("#" + markerId).val(newMarkerName);
+            var newMarkerName = child.childNodes[2].value + ', ' + name;
+            $('#' + markerId).val(newMarkerName);
           }
 
           bContinue = true;
           break;
         } else if (time < childTime) {
-          $("#markerList")[0].insertBefore(listElement, child);
+          $('#markerList')[0].insertBefore(listElement, child);
           bInserted = true;
           break;
         } else {
@@ -2446,9 +2272,9 @@ class TroffClass {
         docMarkerList.appendChild(listElement);
       }
 
-      document.getElementById(nameId).addEventListener("click", startM);
-      document.getElementById(nameId + "S").addEventListener("click", stopM);
-      document.getElementById(nameId + "E").addEventListener("click", editM);
+      document.getElementById(nameId).addEventListener('click', startM);
+      document.getElementById(nameId + 'S').addEventListener('click', stopM);
+      document.getElementById(nameId + 'E').addEventListener('click', editM);
     } //end for-loop
     this.setAppropriateMarkerDistance();
     this.fixMarkerExtraExtendedColor();
@@ -2459,7 +2285,7 @@ class TroffClass {
    * (note: latest marker without the 'S' for stop-id)
    */
   getFirstAndLastMarkers = () => {
-    var aOMarkers = $("#markerList > li > :nth-child(3)");
+    var aOMarkers = $('#markerList > li > :nth-child(3)');
     if (aOMarkers.length == 0) {
       return null;
     }
@@ -2487,31 +2313,27 @@ class TroffClass {
   unselectMarkers = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
     var startMarkerId = aFirstAndLast[0];
-    var stopMarkerId = aFirstAndLast[1] + "S";
+    var stopMarkerId = aFirstAndLast[1] + 'S';
 
-    $(".currentMarker").removeClass("currentMarker");
-    $("#" + startMarkerId).addClass("currentMarker");
-    $("#markerInfoArea").val($("#" + startMarkerId)[0].info);
-    $(".currentStopMarker").removeClass("currentStopMarker");
-    $("#" + stopMarkerId).addClass("currentStopMarker");
+    $('.currentMarker').removeClass('currentMarker');
+    $('#' + startMarkerId).addClass('currentMarker');
+    $('#markerInfoArea').val($('#' + startMarkerId)[0].info);
+    $('.currentStopMarker').removeClass('currentStopMarker');
+    $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
     IO.blurHack();
 
-    DB.setCurrentStartAndStopMarker(
-      startMarkerId,
-      stopMarkerId,
-      this.strCurrentSong
-    );
+    DB.setCurrentStartAndStopMarker(startMarkerId, stopMarkerId, this.strCurrentSong);
   };
 
   unselectStartMarker = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
     var startMarkerId = aFirstAndLast[0];
 
-    $(".currentMarker").removeClass("currentMarker");
-    $("#" + startMarkerId).addClass("currentMarker");
-    $("#markerInfoArea").val($("#" + startMarkerId)[0].info);
+    $('.currentMarker').removeClass('currentMarker');
+    $('#' + startMarkerId).addClass('currentMarker');
+    $('#markerInfoArea').val($('#' + startMarkerId)[0].info);
 
     this.setAppropriateActivePlayRegion();
     IO.blurHack();
@@ -2520,10 +2342,10 @@ class TroffClass {
 
   unselectStopMarker = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
-    var stopMarkerId = aFirstAndLast[1] + "S";
+    var stopMarkerId = aFirstAndLast[1] + 'S';
 
-    $(".currentStopMarker").removeClass("currentStopMarker");
-    $("#" + stopMarkerId).addClass("currentStopMarker");
+    $('.currentStopMarker').removeClass('currentStopMarker');
+    $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
     IO.blurHack();
@@ -2534,28 +2356,26 @@ class TroffClass {
         selectMarker - All, sets new Marker, sets playtime to markers playtime
     */
   selectMarker = (markerId) => {
-    var startTime = Number($("#" + markerId)[0].timeValue);
+    var startTime = Number($('#' + markerId)[0].timeValue);
     var stopTime = this.getStopTime();
 
     // if stopMarker befor Marker - unselect stopMarker:
     if (stopTime <= startTime + 0.5) {
-      $(".currentStopMarker").removeClass("currentStopMarker");
+      $('.currentStopMarker').removeClass('currentStopMarker');
       var aFirstAndLast = this.getFirstAndLastMarkers();
-      var lastMarkerId = aFirstAndLast[1] + "S";
+      var lastMarkerId = aFirstAndLast[1] + 'S';
 
-      $("#" + lastMarkerId).addClass("currentStopMarker");
+      $('#' + lastMarkerId).addClass('currentStopMarker');
     }
-    var stopMarker = $(".currentStopMarker").attr("id");
+    var stopMarker = $('.currentStopMarker').attr('id');
     stopMarker = stopMarker ? stopMarker : 0;
 
     //marks selected Marker:
-    $(".currentMarker").removeClass("currentMarker");
-    $("#" + markerId).addClass("currentMarker");
-    $("#markerInfoArea").val($("#" + markerId)[0].info);
+    $('.currentMarker').removeClass('currentMarker');
+    $('#' + markerId).addClass('currentMarker');
+    $('#markerInfoArea').val($('#' + markerId)[0].info);
 
-    if (
-      $("#" + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER).hasClass("active")
-    ) {
+    if ($('#' + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER).hasClass('active')) {
       this.goToStartMarker();
     }
 
@@ -2568,7 +2388,7 @@ class TroffClass {
         selectStopMarker - All, selects a marker to stop playing at
     */
   selectStopMarker = (markerId) => {
-    var stopTime = Number($("#" + markerId)[0].timeValue);
+    var stopTime = Number($('#' + markerId)[0].timeValue);
     var startTime = this.getStartTime();
 
     // if startMarker after stopMarker -> unselect startMarker:
@@ -2576,17 +2396,17 @@ class TroffClass {
       var aFirstAndLast = this.getFirstAndLastMarkers();
       var firstMarkerId = aFirstAndLast[0];
 
-      $(".currentMarker").removeClass("currentMarker");
-      $("#" + firstMarkerId).addClass("currentMarker");
-      $("#markerInfoArea").val($("#" + firstMarkerId)[0].info);
+      $('.currentMarker').removeClass('currentMarker');
+      $('#' + firstMarkerId).addClass('currentMarker');
+      $('#markerInfoArea').val($('#' + firstMarkerId)[0].info);
     }
 
-    var startMarker = $(".currentMarker").attr("id");
+    var startMarker = $('.currentMarker').attr('id');
     startMarker = startMarker ? startMarker : 0;
 
     //marks selected StopMarker:
-    $(".currentStopMarker").removeClass("currentStopMarker");
-    $("#" + markerId).addClass("currentStopMarker");
+    $('.currentStopMarker').removeClass('currentStopMarker');
+    $('#' + markerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
     DB.setCurrentStartAndStopMarker(startMarker, markerId, this.strCurrentSong);
@@ -2595,10 +2415,10 @@ class TroffClass {
   removeState = (event) => {
     // $().closest(".outerDialog ");
     // var that = this;
-    IO.confirm("Remove state", "This action can not be undone", () => {
+    IO.confirm('Remove state', 'This action can not be undone', () => {
       $(event.currentTarget).parent().remove();
       DB.saveStates(this.getCurrentSong());
-      if ($("#stateList >").length === 0) $("#statesHelpText").show();
+      if ($('#stateList >').length === 0) $('#statesHelpText').show();
     });
   };
 
@@ -2606,7 +2426,7 @@ class TroffClass {
         removeMarker, all, Tar bort en markÃ¶r frÃ¥n html och DB
     */
   removeMarker = (markerIdWithoutHash) => {
-    const markerId = "#" + markerIdWithoutHash;
+    const markerId = '#' + markerIdWithoutHash;
     var oMarker = {};
     oMarker.id = markerIdWithoutHash;
     oMarker.name = $(markerId).val();
@@ -2614,14 +2434,14 @@ class TroffClass {
     oMarker.info = $(markerId)[0].info;
     oMarker.color = $(markerId)[0].color;
 
-    notifyUndo("Marker " + oMarker.name + " was removed", () => {
+    notifyUndo('Marker ' + oMarker.name + ' was removed', () => {
       const aMarkers = [oMarker];
       this.addMarkers(aMarkers);
       DB.saveMarkers(this.getCurrentSong()); // saves end marker to DB
     });
 
     // Remove Marker from HTML
-    $(markerId).closest("li").remove();
+    $(markerId).closest('li').remove();
     this.setAppropriateMarkerDistance();
 
     // remove from DB
@@ -2629,7 +2449,7 @@ class TroffClass {
   }; // end removeMarker ******/
 
   toggleMoveMarkersMoreInfo = () => {
-    $("#moveMarkersMoreInfoDialog").toggleClass("hidden");
+    $('#moveMarkersMoreInfoDialog').toggleClass('hidden');
     IO.blurHack();
   };
 
@@ -2640,15 +2460,15 @@ class TroffClass {
     IO.setEnterFunction(() => {
       this.moveMarkers();
     });
-    $("#moveMarkersDialog").removeClass("hidden");
-    $("#moveMarkersNumber").select();
+    $('#moveMarkersDialog').removeClass('hidden');
+    $('#moveMarkersNumber').select();
   };
 
   /*
         hide the delete markers pop up dialog.
     */
   hideDeleteMarkersDialog = () => {
-    $("#deleteMarkersDialog").addClass("hidden");
+    $('#deleteMarkersDialog').addClass('hidden');
     IO.clearEnterFunction();
   };
 
@@ -2656,10 +2476,10 @@ class TroffClass {
         hide the move markers pop up dialog.
     */
   hideMoveMarkers = () => {
-    $("#moveMarkersDialog").addClass("hidden");
-    $("#moveMarkersMoreInfoDialog").addClass("hidden");
+    $('#moveMarkersDialog').addClass('hidden');
+    $('#moveMarkersMoreInfoDialog').addClass('hidden');
     //$('#moveMarkersMoreInfoDialog').hide();
-    $("#moveMarkersNumber").val(0);
+    $('#moveMarkersNumber').val(0);
     IO.clearEnterFunction();
   };
 
@@ -2679,7 +2499,7 @@ class TroffClass {
     [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
 
     this.stretchMarkers(
-      $("#stretchMarkersNumber").val(),
+      $('#stretchMarkersNumber').val(),
       aAllMarkers[startNumber].timeValue,
       startNumber,
       endNumber
@@ -2691,17 +2511,12 @@ class TroffClass {
       startNumber = 0,
       endNumber = this.getCurrentMarkers().length;
 
-    this.stretchMarkers(
-      $("#stretchMarkersNumber").val(),
-      baseValue,
-      startNumber,
-      endNumber
-    );
+    this.stretchMarkers($('#stretchMarkersNumber').val(), baseValue, startNumber, endNumber);
   };
 
   stretchMarkers = (stretchProcent, baseValue, startNr, endNr) => {
     var i,
-      maxTime = Number(document.getElementById("timeBar").max),
+      maxTime = Number(document.getElementById('timeBar').max),
       aAllMarkers = this.getCurrentMarkers(),
       newTime,
       markerId,
@@ -2709,8 +2524,8 @@ class TroffClass {
 
     if (stretchProcent == 100) {
       IO.alert(
-        "100% will not change markers",
-        "Stretching the markers to 100% of there original position will not change the marker position.<br /><br />" +
+        '100% will not change markers',
+        'Stretching the markers to 100% of there original position will not change the marker position.<br /><br />' +
           '<span class="small">Please change the %-value or close the Stretch markers dialog</span>.'
       );
       return;
@@ -2719,40 +2534,31 @@ class TroffClass {
     for (i = startNr; i < endNr; i++) {
       markerId = aAllMarkers[i].id;
 
-      calculatetTime =
-        ((aAllMarkers[i].timeValue - baseValue) * stretchProcent) / 100 +
-        baseValue;
+      calculatetTime = ((aAllMarkers[i].timeValue - baseValue) * stretchProcent) / 100 + baseValue;
       newTime = Math.max(0, Math.min(maxTime, calculatetTime));
 
-      this.checkIfMarkerIndexHasSameTimeAsOtherMarkers(
-        i,
-        markerId,
-        aAllMarkers,
-        newTime
-      );
+      this.checkIfMarkerIndexHasSameTimeAsOtherMarkers(i, markerId, aAllMarkers, newTime);
 
-      $("#" + markerId)[0].timeValue = newTime;
-      $("#" + markerId + "S")[0].timeValue = newTime;
-      $("#" + markerId)
+      $('#' + markerId)[0].timeValue = newTime;
+      $('#' + markerId + 'S')[0].timeValue = newTime;
+      $('#' + markerId)
         .prev()
         .html(this.secToDisp(newTime));
     }
 
     this.setAppropriateMarkerDistance();
     DB.saveMarkers(this.getCurrentSong());
-    $("#stretchMarkersDialog").addClass("hidden");
-    $("#stretchMarkersNumber").val(100);
+    $('#stretchMarkersDialog').addClass('hidden');
+    $('#stretchMarkersNumber').val(100);
   };
 
   /*
         copyMarkers
     */
   openCopyMarkersDialog = () => {
-    $("#copyMarkersNumber").val(
-      document.querySelector("audio, video").currentTime
-    );
-    $("#copyMarkersNrOfMarkers").text(this.getNrOfSelectedMarkers());
-    $("#copyMarkersNumber").select();
+    $('#copyMarkersNumber').val(document.querySelector('audio, video').currentTime);
+    $('#copyMarkersNrOfMarkers').text(this.getNrOfSelectedMarkers());
+    $('#copyMarkersNumber').select();
     IO.setEnterFunction(() => {
       IO.blurHack();
       this.copyMarkers();
@@ -2762,9 +2568,8 @@ class TroffClass {
 
   copyMarkers = () => {
     const aAllMarkers = nDB.get(this.getCurrentSong()).markers,
-      timeForFirstMarker = Number($("#copyMarkersNumber").val());
-    let i,
-      newMarker;
+      timeForFirstMarker = Number($('#copyMarkersNumber').val());
+    let i, newMarker;
     const strMarkersBeforeCopy = JSON.stringify(aAllMarkers);
     const [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
     const timeToAddToMarkers = timeForFirstMarker - aAllMarkers[startNumber].time;
@@ -2776,19 +2581,19 @@ class TroffClass {
       this.addMarkers([newMarker]); // adds marker to html
     }
     DB.saveMarkers(this.getCurrentSong());
-    gtag("event", "Copy Markers", { event_category: "Adding Button" });
+    gtag('event', 'Copy Markers', { event_category: 'Adding Button' });
 
-    $("#copyMarkersDialog").addClass("hidden");
+    $('#copyMarkersDialog').addClass('hidden');
     IO.clearEnterFunction();
 
-    notifyUndo("Copied " + (endNumber - startNumber) + " markers", () => {
+    notifyUndo('Copied ' + (endNumber - startNumber) + ' markers', () => {
       const oldMarkers = JSON.parse(strMarkersBeforeCopy);
       const startId = oldMarkers[startNumber].id;
       const endId = oldMarkers[endNumber - 1].id;
-      $("#markerList").children().remove(); // removes all marker from html
+      $('#markerList').children().remove(); // removes all marker from html
       this.addMarkers(oldMarkers); // adds marker to html
       this.selectMarker(startId);
-      this.selectStopMarker(endId + "S");
+      this.selectStopMarker(endId + 'S');
       DB.saveMarkers(this.getCurrentSong());
     });
   };
@@ -2797,14 +2602,14 @@ class TroffClass {
         move all or some markers.
     */
   moveAllMarkersUp = () => {
-    $("#moveMarkersNumber").val(-$("#moveMarkersNumber").val());
+    $('#moveMarkersNumber').val(-$('#moveMarkersNumber').val());
     this.moveMarkers(false, false);
   };
   moveAllMarkersDown = () => {
     this.moveMarkers(false, false);
   };
   moveSomeMarkersUp = () => {
-    $("#moveMarkersNumber").val(-$("#moveMarkersNumber").val());
+    $('#moveMarkersNumber').val(-$('#moveMarkersNumber').val());
     this.moveMarkers(true, false);
   };
   moveSomeMarkersDown = () => {
@@ -2812,7 +2617,7 @@ class TroffClass {
   };
 
   moveOneMarkerDown = (val) => {
-    $("#moveMarkersNumber").val(val);
+    $('#moveMarkersNumber').val(val);
     this.moveMarkers(true, true);
   };
 
@@ -2828,13 +2633,13 @@ class TroffClass {
     var aAllMarkers = this.getCurrentMarkers(),
       startNr = 0,
       endNr = aAllMarkers.length,
-      selectedId = $(".currentMarker").attr("id"),
-      selectedStopId = $(".currentStopMarker").attr("id");
+      selectedId = $('.currentMarker').attr('id'),
+      selectedStopId = $('.currentStopMarker').attr('id');
 
     for (var k = 0; k < aAllMarkers.length; k++) {
-      if (selectedId == aAllMarkers.eq(k).attr("id")) startNr = k;
+      if (selectedId == aAllMarkers.eq(k).attr('id')) startNr = k;
 
-      if (selectedStopId == aAllMarkers.eq(k).next().attr("id")) endNr = k;
+      if (selectedStopId == aAllMarkers.eq(k).next().attr('id')) endNr = k;
     }
     return [startNr + addToStartNr, endNr + addToEndNr];
   };
@@ -2843,7 +2648,7 @@ class TroffClass {
     var i,
       markerId,
       startNumber = 1,
-      markers = $("#markerList").children(),
+      markers = $('#markerList').children(),
       endNumber = markers.length - 1;
 
     if (bDeleteSelected) {
@@ -2851,12 +2656,12 @@ class TroffClass {
     }
 
     if (markers.length - (endNumber - startNumber) < 2) {
-      IO.alert("You must have at least 2 markers left");
+      IO.alert('You must have at least 2 markers left');
       return;
     }
 
     for (i = startNumber; i < endNumber; i++) {
-      markerId = markers.eq(i).find("input").attr("id");
+      markerId = markers.eq(i).find('input').attr('id');
       this.removeMarker(markerId);
     }
     this.hideDeleteMarkersDialog();
@@ -2866,11 +2671,11 @@ class TroffClass {
         move all markers.
     */
   moveMarkers = (bMoveSelected, bOneMarker) => {
-    $("#moveMarkersDialog").addClass("hidden");
+    $('#moveMarkersDialog').addClass('hidden');
     IO.clearEnterFunction();
 
-    var value = $("#moveMarkersNumber").val();
-    $("#moveMarkersNumber").val(0);
+    var value = $('#moveMarkersNumber').val();
+    $('#moveMarkersNumber').val(0);
 
     var aAllMarkers = this.getCurrentMarkers();
 
@@ -2878,7 +2683,7 @@ class TroffClass {
     var endNumber = aAllMarkers.length;
 
     if (bOneMarker) {
-      aAllMarkers = $(".currentMarker");
+      aAllMarkers = $('.currentMarker');
       endNumber = 1;
     } else if (bMoveSelected) {
       [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
@@ -2888,19 +2693,14 @@ class TroffClass {
       var markerId = aAllMarkers[i].id;
 
       var markerTime = Number(aAllMarkers[i].timeValue) + Number(value);
-      var maxTime = Number(document.getElementById("timeBar").max);
+      var maxTime = Number(document.getElementById('timeBar').max);
       var newTime = Math.max(0, Math.min(maxTime, markerTime));
 
-      this.checkIfMarkerIndexHasSameTimeAsOtherMarkers(
-        i,
-        markerId,
-        aAllMarkers,
-        newTime
-      );
+      this.checkIfMarkerIndexHasSameTimeAsOtherMarkers(i, markerId, aAllMarkers, newTime);
 
-      $("#" + markerId)[0].timeValue = newTime;
-      $("#" + markerId + "S")[0].timeValue = newTime;
-      $("#" + markerId)
+      $('#' + markerId)[0].timeValue = newTime;
+      $('#' + markerId + 'S')[0].timeValue = newTime;
+      $('#' + markerId)
         .prev()
         .html(this.secToDisp(newTime));
     }
@@ -2909,25 +2709,18 @@ class TroffClass {
     DB.saveMarkers(this.getCurrentSong());
   };
 
-  checkIfMarkerIndexHasSameTimeAsOtherMarkers = (
-    markerIndex,
-    markerId,
-    aAllMarkers,
-    newTime
-  ) => {
+  checkIfMarkerIndexHasSameTimeAsOtherMarkers = (markerIndex, markerId, aAllMarkers, newTime) => {
     for (var j = 0; j < markerIndex; j++) {
       if (Number(aAllMarkers[j].timeValue) == newTime) {
-        var newMarkerName = $("#" + markerId).val();
+        var newMarkerName = $('#' + markerId).val();
         if (newMarkerName != aAllMarkers.eq(j).val())
-          newMarkerName += ", " + aAllMarkers.eq(j).val();
-        $("#" + markerId).val(newMarkerName);
+          newMarkerName += ', ' + aAllMarkers.eq(j).val();
+        $('#' + markerId).val(newMarkerName);
 
-        var newMarkerInfo = $("#" + markerId)[0].info;
-        if (newMarkerInfo != aAllMarkers[j].info)
-          newMarkerInfo += "\n\n" + aAllMarkers[j].info;
-        $("#" + markerId)[0].info = newMarkerInfo;
-        if ($("#" + markerId).hasClass("currentMarker"))
-          $("#markerInfoArea").val(newMarkerInfo);
+        var newMarkerInfo = $('#' + markerId)[0].info;
+        if (newMarkerInfo != aAllMarkers[j].info) newMarkerInfo += '\n\n' + aAllMarkers[j].info;
+        $('#' + markerId)[0].info = newMarkerInfo;
+        if ($('#' + markerId).hasClass('currentMarker')) $('#markerInfoArea').val(newMarkerInfo);
 
         aAllMarkers.eq(j).parent().remove();
       }
@@ -2938,110 +2731,100 @@ class TroffClass {
         editMarker, all, Editerar en markÃ¶r i bÃ¥de html och DB
     */
   editMarker = (markerId) => {
-    var oldName = $("#" + markerId).val();
-    var oldTime = Number($("#" + markerId)[0].timeValue);
-    var oldMarkerInfo = $("#" + markerId)[0].info;
-    var oldMarkerColor = $("#" + markerId)[0].color;
+    var oldName = $('#' + markerId).val();
+    var oldTime = Number($('#' + markerId)[0].timeValue);
+    var oldMarkerInfo = $('#' + markerId)[0].info;
+    var oldMarkerColor = $('#' + markerId)[0].color;
     var oldMarkerClass = MARKER_COLOR_PREFIX + oldMarkerColor;
 
-    IO.promptEditMarker(
-      markerId,
-      (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
-        if (
-          newMarkerName === null ||
-          newMarkerName === "" ||
-          newTime === null ||
-          newTime === ""
-        ) {
-          return;
+    IO.promptEditMarker(markerId, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
+      if (newMarkerName === null || newMarkerName === '' || newTime === null || newTime === '') {
+        return;
+      }
+
+      if (newTime < 0) newTime = 0;
+      if (newTime > $('audio, video')[0].duration) newTime = $('audio, video')[0].duration;
+
+      var updated = false;
+
+      // Update HTML Name
+      if (newMarkerName != oldName) {
+        updated = true;
+        $('#' + markerId).val(newMarkerName);
+      }
+
+      // update HTML Info
+      if (newMarkerInfo != oldMarkerInfo) {
+        updated = true;
+        $('#' + markerId)[0].info = newMarkerInfo;
+
+        if ($('#' + markerId).hasClass('currentMarker')) $('#markerInfoArea').val(newMarkerInfo);
+      }
+      if (newMarkerColor != oldMarkerColor) {
+        updated = true;
+        $('#' + markerId)[0].color = newMarkerColor;
+        $('#' + markerId)
+          .parent()
+          .removeClass(oldMarkerClass);
+        $('#' + markerId)
+          .parent()
+          .addClass(MARKER_COLOR_PREFIX + newMarkerColor);
+      }
+
+      // update HTML Time
+      if (newTime != oldTime) {
+        updated = true;
+
+        $('#' + markerId)[0].timeValue = newTime;
+        $('#' + markerId + 'S')[0].timeValue = newTime;
+        this.setAppropriateMarkerDistance();
+
+        var startTime = Number($('.currentMarker')[0].timeValue);
+        var stopTime = Number($('.currentStopMarker')[0].timeValue);
+
+        if (startTime >= stopTime) {
+          $('.currentStopMarker').removeClass('currentStopMarker');
+          this.setAppropriateActivePlayRegion();
         }
+        $('#' + markerId)
+          .prev()
+          .html(this.secToDisp(newTime));
+      }
 
-        if (newTime < 0) newTime = 0;
-        if (newTime > $("audio, video")[0].duration)
-          newTime = $("audio, video")[0].duration;
-
-        var updated = false;
-
-        // Update HTML Name
-        if (newMarkerName != oldName) {
-          updated = true;
-          $("#" + markerId).val(newMarkerName);
-        }
-
-        // update HTML Info
-        if (newMarkerInfo != oldMarkerInfo) {
-          updated = true;
-          $("#" + markerId)[0].info = newMarkerInfo;
-
-          if ($("#" + markerId).hasClass("currentMarker"))
-            $("#markerInfoArea").val(newMarkerInfo);
-        }
-        if (newMarkerColor != oldMarkerColor) {
-          updated = true;
-          $("#" + markerId)[0].color = newMarkerColor;
-          $("#" + markerId)
-            .parent()
-            .removeClass(oldMarkerClass);
-          $("#" + markerId)
-            .parent()
-            .addClass(MARKER_COLOR_PREFIX + newMarkerColor);
-        }
-
-        // update HTML Time
-        if (newTime != oldTime) {
-          updated = true;
-
-          $("#" + markerId)[0].timeValue = newTime;
-          $("#" + markerId + "S")[0].timeValue = newTime;
-          this.setAppropriateMarkerDistance();
-
-          var startTime = Number($(".currentMarker")[0].timeValue);
-          var stopTime = Number($(".currentStopMarker")[0].timeValue);
-
-          if (startTime >= stopTime) {
-            $(".currentStopMarker").removeClass("currentStopMarker");
-            this.setAppropriateActivePlayRegion();
-          }
-          $("#" + markerId)
-            .prev()
-            .html(this.secToDisp(newTime));
-        }
-
-        // update name and time and info and color in DB, if nessessarry
-        if (updated) {
-          DB.updateMarker(
-            markerId,
-            newMarkerName,
-            newMarkerInfo,
-            newMarkerColor,
-            Number(newTime),
-            this.strCurrentSong
-          );
-          this.fixMarkerExtraExtendedColor();
-          /*
+      // update name and time and info and color in DB, if nessessarry
+      if (updated) {
+        DB.updateMarker(
+          markerId,
+          newMarkerName,
+          newMarkerInfo,
+          newMarkerColor,
+          Number(newTime),
+          this.strCurrentSong
+        );
+        this.fixMarkerExtraExtendedColor();
+        /*
             note: DB.updateMarker will also update the "currentStartMarker" and the
             currentStopMarker, if the updated marker is the start or stop marker.
             */
-        }
       }
-    ); // end prompt-Function
+    }); // end prompt-Function
   }; // end editMarker ******/
 
   /*
         clearAllStates - HTML, clears states
     */
   clearAllStates = () => {
-    $("#stateList").empty();
-    $("#statesHelpText").show();
+    $('#stateList').empty();
+    $('#statesHelpText').show();
   }; // end clearAllStates
 
   /*
         clearAllMarkers - HTML, clears markers
     */
   clearAllMarkers = () => {
-    $("#markerSection").css("height", "100%");
-    $("#markerSection").css("margin-top", 0);
-    var docMarkerList = document.getElementById("markerList");
+    $('#markerSection').css('height', '100%');
+    $('#markerSection').css('margin-top', 0);
+    var docMarkerList = document.getElementById('markerList');
     if (docMarkerList) {
       while (docMarkerList.firstChild) {
         docMarkerList.removeChild(docMarkerList.firstChild);
@@ -3058,54 +2841,48 @@ class TroffClass {
     }
 
     var firstMarkerId = aFirstAndLast[0];
-    var lastMarkerId = aFirstAndLast[1] + "S";
-    if ($(".currentMarker").length === 0) {
-      $("#" + firstMarkerId).addClass("currentMarker");
-      $("#markerInfoArea").val($("#" + firstMarkerId)[0].info);
+    var lastMarkerId = aFirstAndLast[1] + 'S';
+    if ($('.currentMarker').length === 0) {
+      $('#' + firstMarkerId).addClass('currentMarker');
+      $('#markerInfoArea').val($('#' + firstMarkerId)[0].info);
     }
-    if ($(".currentStopMarker").length === 0)
-      $("#" + lastMarkerId).addClass("currentStopMarker");
+    if ($('.currentStopMarker').length === 0) $('#' + lastMarkerId).addClass('currentStopMarker');
 
-    var timeBarHeight = $("#timeBar").height() - 12;
-    var barMarginTop = parseInt($("#timeBar").css("margin-top")) + 6;
+    var timeBarHeight = $('#timeBar').height() - 12;
+    var barMarginTop = parseInt($('#timeBar').css('margin-top')) + 6;
 
     var startTime = this.getStartTime();
     var stopTime = this.getStopTime();
-    var songTime = $("audio, video")[0].duration;
+    var songTime = $('audio, video')[0].duration;
 
     var height = ((stopTime - startTime) * timeBarHeight) / songTime;
     var top = (startTime * timeBarHeight) / songTime + barMarginTop;
 
-    $("#activePlayRegion").height(height);
-    $("#activePlayRegion").css("margin-top", top + "px");
+    $('#activePlayRegion').height(height);
+    $('#activePlayRegion').css('margin-top', top + 'px');
   }; // end setAppropriateActivePlayRegion
 
   setAppropriateMarkerDistance = () => {
-    $("#markerSection").removeClass("hidden");
-    var child = $("#markerList li:first-child")[0];
+    $('#markerSection').removeClass('hidden');
+    var child = $('#markerList li:first-child')[0];
 
-    var timeBarHeight = $("#timeBar").height() - 10;
+    var timeBarHeight = $('#timeBar').height() - 10;
     var totalDistanceTop = 4;
 
-    var barMarginTop = parseInt($("#timeBar").css("margin-top"));
-    var audioVideo = document.querySelector("audio, video");
+    var barMarginTop = parseInt($('#timeBar').css('margin-top'));
+    var audioVideo = document.querySelector('audio, video');
     if (audioVideo == null) {
-      log.e("there is no audio or video tag");
+      log.e('there is no audio or video tag');
       return;
     }
     var songTime = audioVideo.duration;
 
     if (!isFinite(songTime)) {
       const troffData = nDB.get(this.getCurrentSong());
-      if (
-        troffData.fileData != undefined &&
-        troffData.fileData.duration != undefined
-      ) {
+      if (troffData.fileData != undefined && troffData.fileData.duration != undefined) {
         songTime = troffData.fileData.duration;
       } else {
-        songTime = Number(
-          $("#markerList li:last-child")[0].childNodes[2].timeValue
-        );
+        songTime = Number($('#markerList li:last-child')[0].childNodes[2].timeValue);
       }
     }
 
@@ -3119,13 +2896,13 @@ class TroffClass {
       totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
 
       if (marginTop > 0) {
-        $(child).css("border-top-width", marginTop + "px");
-        $(child).css("border-top-style", "solid");
-        $(child).css("margin-top", "");
+        $(child).css('border-top-width', marginTop + 'px');
+        $(child).css('border-top-style', 'solid');
+        $(child).css('margin-top', '');
       } else {
-        $(child).css("border-top-width", "");
-        $(child).css("border-top-style", "");
-        $(child).css("margin-top", marginTop + "px");
+        $(child).css('border-top-width', '');
+        $(child).css('border-top-style', '');
+        $(child).css('margin-top', marginTop + 'px');
       }
       child = child.nextSibling;
     }
@@ -3133,14 +2910,12 @@ class TroffClass {
   }; // end setAppropriateMarkerDistance
 
   selectNext = (reverse) => {
-    var markers = $("#markerList").children();
+    var markers = $('#markerList').children();
 
-    var currentMarkerTime = Number($(".currentMarker")[0].timeValue, 10);
-    var currentStopTime = Number($(".currentStopMarker")[0].timeValue, 10);
+    var currentMarkerTime = Number($('.currentMarker')[0].timeValue, 10);
+    var currentStopTime = Number($('.currentStopMarker')[0].timeValue, 10);
     markers.sort((a, b) => {
-      return (
-        Number(a.childNodes[2].timeValue) - Number(b.childNodes[2].timeValue)
-      );
+      return Number(a.childNodes[2].timeValue) - Number(b.childNodes[2].timeValue);
     });
 
     var bSelectNext = false;
@@ -3175,20 +2950,20 @@ class TroffClass {
   };
 
   zoomDontShowAgain = () => {
-    $("#zoomInstructionDialog").addClass("hidden");
+    $('#zoomInstructionDialog').addClass('hidden');
     this.dontShowZoomInstructions = true;
     DB.setZoomDontShowAgain();
     IO.clearEnterFunction();
   };
 
   zoomDialogOK = () => {
-    $("#zoomInstructionDialog").addClass("hidden");
+    $('#zoomInstructionDialog').addClass('hidden');
     IO.clearEnterFunction();
   };
 
   zoomOut = () => {
     IO.blurHack();
-    this.zoom(0, Number(document.getElementById("timeBar").max));
+    this.zoom(0, Number(document.getElementById('timeBar').max));
   };
 
   zoomToMarker = () => {
@@ -3198,7 +2973,7 @@ class TroffClass {
     if (startTime === this.m_zoomStartTime && endTime == this.m_zoomEndTime) {
       if (!this.dontShowZoomInstructions) {
         IO.setEnterFunction(this.zoomDialogOK);
-        $("#zoomInstructionDialog").removeClass("hidden");
+        $('#zoomInstructionDialog').removeClass('hidden');
       }
     }
     this.zoom(startTime, endTime);
@@ -3216,9 +2991,9 @@ class TroffClass {
 
     DB.saveZoomTimes(this.strCurrentSong, startTime, endTime);
 
-    var winHeightPX = $("#markerSectionParent").height();
+    var winHeightPX = $('#markerSectionParent').height();
 
-    var mPX = parseInt($("#timeBar").css("marginTop"));
+    var mPX = parseInt($('#timeBar').css('marginTop'));
 
     var mDiv = 8; //parseInt($('#timeBar').css('marginTop'))
 
@@ -3227,7 +3002,7 @@ class TroffClass {
     var mT = 2 * m; //total margin
     var oh = oH - mT; //original Height of timebar
 
-    var tL = Number(document.getElementById("timeBar").max);
+    var tL = Number(document.getElementById('timeBar').max);
     var t1 = startTime / tL;
     var t2 = endTime / tL;
 
@@ -3240,8 +3015,8 @@ class TroffClass {
 
     const marginTopPX = (winHeightPX * marginTop) / 100;
 
-    $("#markerSection").css("height", height + "%");
-    $("#markerSection").css("margin-top", marginTopPX + "px");
+    $('#markerSection').css('height', height + '%');
+    $('#markerSection').css('margin-top', marginTopPX + 'px');
 
     this.setAppropriateMarkerDistance();
   };
@@ -3262,40 +3037,35 @@ class TroffClass {
       this.nrTaps++;
     }
 
-    const currTempo = Math.round(
-      (this.nrTaps * 60) / (this.time - this.startTime)
-    );
+    const currTempo = Math.round((this.nrTaps * 60) / (this.time - this.startTime));
 
     if (Number.isInteger(currTempo)) {
-      $("#tapTempo").val(currTempo);
-      IO.updateCellInDataTable("TEMPO", currTempo);
+      $('#tapTempo').val(currTempo);
+      IO.updateCellInDataTable('TEMPO', currTempo);
     } else {
-      $("#tapTempo").val("");
-      IO.updateCellInDataTable("TEMPO", "");
+      $('#tapTempo').val('');
+      IO.updateCellInDataTable('TEMPO', '');
     }
 
-    $("#tapTempo")[0].dispatchEvent(new Event("input"));
+    $('#tapTempo')[0].dispatchEvent(new Event('input'));
   };
 
   fixMarkerExtraExtendedColor = () => {
-    $("#markerList").children().removeClassStartingWith("extend_");
+    $('#markerList').children().removeClassStartingWith('extend_');
 
-    $("#markerList")
-      .children(":not(.markerColorNone)")
+    $('#markerList')
+      .children(':not(.markerColorNone)')
       .each((index, element) => {
-        const specialColorClass = this.getClassStartsWith(
-          $(element).attr("class"),
-          "markerColor"
-        );
+        const specialColorClass = this.getClassStartsWith($(element).attr('class'), 'markerColor');
         $(element)
-          .nextUntil(":not(.markerColorNone)")
-          .addClass("extend_" + specialColorClass);
+          .nextUntil(':not(.markerColorNone)')
+          .addClass('extend_' + specialColorClass);
       });
   };
 
   /* standAlone Functions */
   getClassStartsWith = (classes, startString) => {
-    var r = $.grep(classes.split(" "), (classes) => {
+    var r = $.grep(classes.split(' '), (classes) => {
       return 0 === classes.indexOf(startString);
     }).join();
     return r || !1;
@@ -3308,7 +3078,7 @@ class TroffClass {
   incrementInput = (identifier, amount) => {
     $(identifier).val(parseInt($(identifier).val()) + amount);
     $(identifier).each((i, element) => {
-      element.dispatchEvent(new Event("input"));
+      element.dispatchEvent(new Event('input'));
     });
   };
 
@@ -3316,11 +3086,11 @@ class TroffClass {
 
   checkHashAndGetSong = async () => {
     if (window.location.hash) {
-      log.d("checkHashAndGetSong, window.location.hash", window.location.hash);
+      log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
       try {
         await this.downloadSongFromServer(window.location.hash);
       } catch (e) {
-        log.e("error on downloadSongFromServer:", e);
+        log.e('error on downloadSongFromServer:', e);
         DB.getCurrentSong();
       }
     } else {

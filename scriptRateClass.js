@@ -1,7 +1,7 @@
 /* eslint eqeqeq: "off" */
-import { nDB } from "./assets/internal/db.js";
-import { IO } from "/script.js";
-import { Troff, Rate } from "/script.js";
+import { nDB } from './assets/internal/db.js';
+import { IO } from '/script.js';
+import { Troff, Rate } from '/script.js';
 
 class RateClass {
   constructor() {
@@ -15,9 +15,9 @@ class RateClass {
 
   startFunc = () => {
     var oData = {
-      millisFirstTimeStartingApp: nDB.get("millisFirstTimeStartingApp"),
-      iRatedStatus: nDB.get("iRatedStatus"),
-      straLastMonthUsage: nDB.get("straLastMonthUsage"),
+      millisFirstTimeStartingApp: nDB.get('millisFirstTimeStartingApp'),
+      iRatedStatus: nDB.get('iRatedStatus'),
+      straLastMonthUsage: nDB.get('straLastMonthUsage'),
     };
     // Check if it is the first time user starts the App
 
@@ -42,7 +42,7 @@ class RateClass {
       aLastMonthUsage.shift();
     }
 
-    nDB.set("straLastMonthUsage", JSON.stringify(aLastMonthUsage));
+    nDB.set('straLastMonthUsage', JSON.stringify(aLastMonthUsage));
 
     // return if no conection
     if (!navigator.onLine) return;
@@ -60,7 +60,7 @@ class RateClass {
     // return if user has used Troff less than 5 times durring the last month
     if (aLastMonthUsage.length < 5) return;
 
-    $("#linkToUserSurvey").removeClass("hidden");
+    $('#linkToUserSurvey').removeClass('hidden');
   };
 
   /*Rate*/ checkToShowRateDialog = (
@@ -70,8 +70,7 @@ class RateClass {
     millisFirstTimeStartingApp
   ) => {
     // return if user has used the app for less than 3 months
-    if (millis - millisFirstTimeStartingApp < 3 * this.MILLIS_IN_ONE_MONTH)
-      return;
+    if (millis - millisFirstTimeStartingApp < 3 * this.MILLIS_IN_ONE_MONTH) return;
 
     // return if user has used Troff less than 4 times durring the last month
     if (aLastMonthUsage.length < 4) return;
@@ -95,9 +94,9 @@ class RateClass {
     var millis = d.getTime();
     var aLastMonthUsage = [millis];
     var straLastMonthUsage = JSON.stringify(aLastMonthUsage);
-    nDB.set("millisFirstTimeStartingApp", millis);
-    nDB.set("iRatedStatus", this.RATED_STATUS_NOT_ASKED);
-    nDB.set("straLastMonthUsage", straLastMonthUsage);
+    nDB.set('millisFirstTimeStartingApp', millis);
+    nDB.set('iRatedStatus', this.RATED_STATUS_NOT_ASKED);
+    nDB.set('straLastMonthUsage', straLastMonthUsage);
   };
 
   showRateDialog = () => {
@@ -105,29 +104,29 @@ class RateClass {
       this.rateDialogRateNow();
     });
     if (navigator.onLine) {
-      $("#rateDialog").removeClass("hidden");
+      $('#rateDialog').removeClass('hidden');
     }
   };
 
   rateDialogNoThanks = () => {
     IO.blurHack();
     IO.clearEnterFunction();
-    $("#rateDialog").addClass("hidden");
-    nDB.set("iRatedStatus", this.RATED_STATUS_NO_THANKS);
+    $('#rateDialog').addClass('hidden');
+    nDB.set('iRatedStatus', this.RATED_STATUS_NO_THANKS);
   };
   rateDialogAskLater = () => {
     IO.blurHack();
     IO.clearEnterFunction();
-    $("#rateDialog").addClass("hidden");
-    nDB.set("iRatedStatus", this.RATED_STATUS_ASK_LATER);
+    $('#rateDialog').addClass('hidden');
+    nDB.set('iRatedStatus', this.RATED_STATUS_ASK_LATER);
   };
   rateDialogRateNow = () => {
     IO.blurHack();
     IO.clearEnterFunction();
-    $("#rateDialog").addClass("hidden");
-    nDB.set("iRatedStatus", this.RATED_STATUS_ALREADY_RATED);
+    $('#rateDialog').addClass('hidden');
+    nDB.set('iRatedStatus', this.RATED_STATUS_ALREADY_RATED);
 
-    window.open("https://www.facebook.com/troffmusic/");
+    window.open('https://www.facebook.com/troffmusic/');
   };
 } //End RateClass
 

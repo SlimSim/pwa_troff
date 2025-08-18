@@ -1,25 +1,25 @@
 // DataTable-related functions
 
-import { DATA_TABLE_COLUMNS } from "./constants/constants.js";
-import { TROFF_SETTING_SONG_COLUMN_TOGGLE } from "./constants/constants.js";
-import { DB } from "./script.js";
+import { DATA_TABLE_COLUMNS } from './constants/constants.js';
+import { TROFF_SETTING_SONG_COLUMN_TOGGLE } from './constants/constants.js';
+import { DB } from './script.js';
 
 function dataTableColumnPicker(event) {
-  console.log("dataTAbleColumnPicker ->");
+  console.log('dataTAbleColumnPicker ->');
   var $target = $(event.target);
   // Get the column API object
-  var column = $("#dataSongTable").DataTable().column($target.data("column"));
+  var column = $('#dataSongTable').DataTable().column($target.data('column'));
 
-  $target.toggleClass("active");
+  $target.toggleClass('active');
 
   const columnVisibilityObject = {};
 
-  $("#columnToggleParent")
+  $('#columnToggleParent')
     .children()
     .map((i, v) => {
-      const dataColumn = $(v).data("column");
+      const dataColumn = $(v).data('column');
       const columnId = DATA_TABLE_COLUMNS.list[dataColumn].id;
-      columnVisibilityObject[columnId] = $(v).hasClass("active");
+      columnVisibilityObject[columnId] = $(v).hasClass('active');
     });
 
   DB.saveVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, columnVisibilityObject);
