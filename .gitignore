@@ -13,7 +13,12 @@ node_modules/
 
 # Editors/IDE
 /.idea/workspace.xml
-.vscode/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/extensions.json
 
 # Archives and binary assets
 *.zip
