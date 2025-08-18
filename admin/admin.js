@@ -15,6 +15,9 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+import '../assets/external/jquery-3.6.0.min.js';
+import '../assets/external/notify-js/notify.min.js';
+
 import { st } from '../assets/internal/st-script.js';
 import log from '../utils/log.js';
 import {

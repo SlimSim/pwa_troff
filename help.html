@@ -38,31 +38,16 @@
 	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
 
 	<!-- TODO: kanske byta ut till en help.js-modul? som anropar det den behöver? -->
-	<script type="module" src="assets/internal/common.js"></script>
 
 	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css" />
 	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
 
-	<script src="assets/external/jquery-3.6.0.min.js"></script>
-	<script>
+    <script type="module">
+		import './assets/external/jquery-3.6.0.min.js';
+		import './assets/internal/common.js';
+		import { loadExternalHtml } from './utils/utils.js'; 
 
 		$(function () {
-			loadExternalHtml = function(includes, callback) {
-				if( includes.length == 0 ) {
-					if( typeof callback == "function" ) {
-						return callback();
-					}
-					return;
-				}
-				const currentElement = includes.eq(-1);
-				includes.splice( includes.length-1, 1);
-
-				const file = $( currentElement ).data('include');
-				$( currentElement ).load( file, function(){
-					loadExternalHtml( includes, callback );
-				} );
-			}
-
 			const includes = $('[data-include]');
 			loadExternalHtml(includes);
 		});

@@ -59,6 +59,7 @@ import { environment } from './assets/internal/environment.js';
 import { TroffClass } from './scriptTroffClass.js';
 import { errorHandler } from './script2.js';
 import DBClass from './scriptDBClass.js';
+import { loadExternalHtml } from './utils/utils.js';
 import { isSafari, isIphone, isIpad, treatSafariDifferent } from './utils/browserEnv.js';
 import IOClass from './ui/scriptIOClass.js';
 import RateClass from './scriptRateClass.js';
@@ -652,19 +653,6 @@ var Troff = new TroffClass();
 var DB = new DBClass();
 var IO = new IOClass();
 var Rate = new RateClass();
-
-const loadExternalHtml = (includes, callback) => {
-  if (includes.length == 0) {
-    return callback();
-  }
-  const currentElement = includes.eq(-1);
-  includes.splice(includes.length - 1, 1);
-
-  const file = $(currentElement).data('include');
-  $(currentElement).load(file, function () {
-    loadExternalHtml(includes, callback);
-  });
-};
 
 window.addEventListener('hashchange', Troff.checkHashAndGetSong);
 

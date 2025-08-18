@@ -1,5 +1,7 @@
 // Utility functions
 
+import '../assets/external/jquery-3.6.0.min.js';
+
 function escapeRegExp(string) {
   return string
     .replace('"', '\\"') // wierd extra escaping of > \" <
@@ -23,4 +25,26 @@ const removeLocalInfo = (markerObject) => {
   return payload;
 };
 
-export { escapeRegExp, getFileExtension, removeLocalInfo, fileUrlToStorageFileName };
+const loadExternalHtml = (includes, callback) => {
+  if (includes.length === 0) {
+    if (callback == null) {
+      return;
+    }
+    return callback();
+  }
+  const currentElement = includes.eq(-1);
+  includes.splice(includes.length - 1, 1);
+
+  const file = $(currentElement).data('include');
+  $(currentElement).load(file, function () {
+    loadExternalHtml(includes, callback);
+  });
+};
+
+export {
+  escapeRegExp,
+  loadExternalHtml,
+  getFileExtension,
+  removeLocalInfo,
+  fileUrlToStorageFileName,
+};

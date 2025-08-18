@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
 	This file is part of Troff.
 
@@ -20,14 +20,8 @@
   <head>
     <title>Update Troff on iOS</title>
     <meta charset="UTF-8" />
-    <meta
-      name="description"
-      content="How to update the music player Troff on iOS and Safari"
-    />
-    <meta
-      name="keywords"
-      content="Music player, Troff, Loop, Repeat, Training, How To"
-    />
+    <meta name="description" content="How to update the music player Troff on iOS and Safari" />
+    <meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, How To" />
 
     <link rel="icon" href="assets/logos/favicon.ico" />
 
@@ -154,7 +148,7 @@
       blockquote:before,
       q:after,
       q:before {
-        content: "";
+        content: '';
         content: none;
       }
       table {
@@ -162,45 +156,24 @@
         border-spacing: 0;
       }
     </style>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="stylesheets/style-standard.css"
-    />
+    <link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
     <link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
     <link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
     <link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
-
-    <script src="assets/internal/common.js"></script>
 
     <link
       rel="stylesheet"
       type="text/css"
       href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css"
     />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="/assets/internal/fontello-extra.css"
-    />
+    <link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
 
-    <script src="assets/external/jquery-3.6.0.min.js"></script>
-    <script>
+    <script type="module">
+      import './assets/external/jquery-3.6.0.min.js';
+      import { loadExternalHtml } from './utils/utils.js';
+
       $(function () {
-        loadExternalHtml = function (includes, callback) {
-          if (includes.length == 0) {
-            return callback();
-          }
-          const currentElement = includes.eq(-1);
-          includes.splice(includes.length - 1, 1);
-
-          const file = $(currentElement).data("include");
-          $(currentElement).load(file, function () {
-            loadExternalHtml(includes, callback);
-          });
-        };
-
-        const includes = $("[data-include]");
+        const includes = $('[data-include]');
         loadExternalHtml(includes);
       });
     </script>
@@ -228,13 +201,12 @@
         <article id="updateOnIos" class="mt-0">
           <h2>Update on iOS</h2>
           <p>
-            If you have problems downloading songs on iOS you may need to update
-            your Troff version by clearing the website data.
+            If you have problems downloading songs on iOS you may need to update your Troff version
+            by clearing the website data.
           </p>
           <p class="note">
-            Note: This will remove all data from Troff, so make sure your
-            markers and songs are backed up somewhere so that you can extract
-            it!<br />
+            Note: This will remove all data from Troff, so make sure your markers and songs are
+            backed up somewhere so that you can extract it!<br />
             <a href="/help.html#exportImport" target="_blank"
               >How to export and save your markers.</a
             >
@@ -246,13 +218,12 @@
             <li>Scroll to the bottom and tap on “Advanced”</li>
             <li>Tap “Website Data”</li>
             <li>
-              Find troff.app in the list (if it is not in the list, you might
-              have to press "Show All Sites" at the bottom)
+              Find troff.app in the list (if it is not in the list, you might have to press "Show
+              All Sites" at the bottom)
             </li>
             <li>Tap “Edit” in the upper right corner,</li>
             <li>
-              Tap the red (-) minus symbol next to troff.app followed by the
-              “Delete” button".
+              Tap the red (-) minus symbol next to troff.app followed by the “Delete” button".
             </li>
             <li>Go to Safari and reload you link to troff.app</li>
           </ol>
@@ -263,16 +234,15 @@
         <article id="updateOnDesktopAndAndroid">
           <h2>Update on desktop and Android</h2>
           <p>
-            It is generally easier to update Troff on Desktop and Android; when
-            there is an update, Troff will load the updated version the next
-            time you load the app. If this does not happen, you can try to
-            reload the page or app, restart the browser or restart your device.
+            It is generally easier to update Troff on Desktop and Android; when there is an update,
+            Troff will load the updated version the next time you load the app. If this does not
+            happen, you can try to reload the page or app, restart the browser or restart your
+            device.
           </p>
           <p class="note">
-            Note: This will not remove any data from Troff, however, the data
-            saved in Troff is managed by the browser. If the browser needs more
-            data and thinks that you Troff data is not regularly used, it may
-            remove it.<br />
+            Note: This will not remove any data from Troff, however, the data saved in Troff is
+            managed by the browser. If the browser needs more data and thinks that you Troff data is
+            not regularly used, it may remove it.<br />
             Therefor it is always good to save your markers somewhere safe:<br />
             <a href="/help.html#exportImport" target="_blank"
               >How to export and save your markers.</a
@@ -285,12 +255,7 @@
           <div class="flexCol">
             <p>
               Contact a human:
-              <a
-                class="white"
-                target="_blank"
-                rel="noopener"
-                href="mailto:slimsimapps@gmail.com"
-              >
+              <a class="white" target="_blank" rel="noopener" href="mailto:slimsimapps@gmail.com">
                 slimsimapps@gmail.com</a
               >.
             </p>
@@ -304,21 +269,9 @@
                 >facebook</a
               >!
             </p>
+            <p><a class="white" target="_blank" rel="noopener" href="LICENSE.html">LICENSE</a>.</p>
             <p>
-              <a
-                class="white"
-                target="_blank"
-                rel="noopener"
-                href="LICENSE.html"
-                >LICENSE</a
-              >.
-            </p>
-            <p>
-              <a
-                class="white"
-                target="_blank"
-                rel="noopener"
-                href="privacy_policy.html"
+              <a class="white" target="_blank" rel="noopener" href="privacy_policy.html"
                 >Privacy Policy</a
               >.
             </p>

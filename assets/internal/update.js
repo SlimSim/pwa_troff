@@ -15,6 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+import '../external/jquery-3.6.0.min.js';
+
 $(document).ready(() => {
   console.log('update.js ->');
 

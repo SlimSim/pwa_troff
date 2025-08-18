@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
 	This file is part of Troff.
 
@@ -24,10 +24,7 @@
       name="description"
       content="Tips, trix and tutoring for using the music player Troff. How to repeat parts of the song"
     />
-    <meta
-      name="keywords"
-      content="Music player, Troff, Loop, Repeat, Training, How To"
-    />
+    <meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, How To" />
 
     <link rel="icon" href="/assets/logos/favicon.ico" />
 
@@ -154,7 +151,7 @@
       blockquote:before,
       q:after,
       q:before {
-        content: "";
+        content: '';
         content: none;
       }
       table {
@@ -162,11 +159,7 @@
         border-spacing: 0;
       }
     </style>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="/stylesheets/style-standard.css"
-    />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/style-standard.css" />
     <link rel="stylesheet" type="text/css" href="/stylesheets/style.css" />
     <link rel="stylesheet" type="text/css" href="/stylesheets/col1.css" />
     <link rel="stylesheet" type="text/css" href="/stylesheets/help-style.css" />
@@ -176,18 +169,7 @@
       type="text/css"
       href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css"
     />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="/assets/internal/fontello-extra.css"
-    />
-
-    <script
-      defer
-      type="text/javascript"
-      src="../assets/external/notify-js/notify.min.js"
-    ></script>
-    <script src="/assets/external/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
     <script type="module" src="admin.js"></script>
   </head>
 
@@ -211,9 +193,7 @@
           <h2>Sign in</h2>
           <p>You must be admin in to use these features!</p>
           <div>
-            <button id="googleSignIn" class="btn regularButton">
-              Sign in with Google
-            </button>
+            <button id="googleSignIn" class="btn regularButton">Sign in with Google</button>
           </div>
         </article>
         <!-- signIn -->
@@ -239,19 +219,13 @@
 
           <p>Total Size: <span class="totalSize"></span> / 5GB</p>
           <p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
-          <p class="pl-2">
-            Nr of deleted files: <span class="nrOfDeletedFiles"></span>
-          </p>
+          <p class="pl-2">Nr of deleted files: <span class="nrOfDeletedFiles"></span></p>
 
-          <input
-            type="button"
-            class="stOnOffButton toggleNext"
-            value="Firebase Info"
-          />
+          <input type="button" class="stOnOffButton toggleNext" value="Firebase Info" />
           <div class="container flex-row p-1 my-1">
             <p>
-              On the free tier, once you reach the 5GB limit, you won't be able
-              to store additional data without upgrading
+              On the free tier, once you reach the 5GB limit, you won't be able to store additional
+              data without upgrading
             </p>
             <p>The storage limit is per project, not per account</p>
             <p>Other limitations:</p>
@@ -262,15 +236,9 @@
             </ul>
           </div>
           <div>
-            <button class="btn regularButton" id="sortUpdatedDesc">
-              Newest first
-            </button>
-            <button class="btn regularButton" id="sortUpdatedAsc">
-              ...last
-            </button>
-            <button class="ml-3 btn regularButton" id="sortSizeDesc">
-              Biggest First
-            </button>
+            <button class="btn regularButton" id="sortUpdatedDesc">Newest first</button>
+            <button class="btn regularButton" id="sortUpdatedAsc">...last</button>
+            <button class="ml-3 btn regularButton" id="sortSizeDesc">Biggest First</button>
             <button class="btn regularButton" id="sortSizeAsc">...last</button>
           </div>
 
@@ -295,21 +263,13 @@
                 <div class="col-sm flex-grow-0">
                   <button class="removeFile regularButton">Remove</button>
                   <span class="hidden grayOut removedText">Removed</span>
-                  <button class="makeAllPrivate regularButton mt-2">
-                    Make All Private
-                  </button>
-                  <button class="makeAllPublic regularButton mt-2">
-                    Make All Public
-                  </button>
+                  <button class="makeAllPrivate regularButton mt-2">Make All Private</button>
+                  <button class="makeAllPublic regularButton mt-2">Make All Public</button>
                 </div>
               </div>
               <div class="row">
                 <div class="col-sm">
-                  <input
-                    type="button"
-                    class="stOnOffButton toggleNext"
-                    value="Show Markers"
-                  />
+                  <input type="button" class="stOnOffButton toggleNext" value="Show Markers" />
                   <div class="container flex-row p-1 my-1 markerList"></div>
                 </div>
               </div>
@@ -319,24 +279,16 @@
           <div id="troffDataTemplate" class="hidden">
             <div class="row">
               <div class="col-sm">
-                <button class="troffDataMakePrivate regularButton float-right">
-                  Make Private
-                </button>
-                <button
-                  class="troffDataMakePublic regularButton float-right hidden"
-                >
+                <button class="troffDataMakePrivate regularButton float-right">Make Private</button>
+                <button class="troffDataMakePublic regularButton float-right hidden">
                   Make Public
                 </button>
                 <h4>
                   <span class="troffDataPublicOrPrivate"></span>:
                   <a href="#" target="_blank" class="troffDataId"></a>
                 </h4>
-                <p class="m-0">
-                  States: <span class="troffDataNrStates"></span>
-                </p>
-                <p class="m-0">
-                  Markers: <span class="troffDataNrMarkers"></span>
-                </p>
+                <p class="m-0">States: <span class="troffDataNrStates"></span></p>
+                <p class="m-0">Markers: <span class="troffDataNrMarkers"></span></p>
                 <p class="troffDataInfo text-truncate w-100"></p>
               </div>
             </div>
@@ -348,12 +300,7 @@
           <div class="flexCol">
             <p>
               Contact a human:
-              <a
-                class="white"
-                target="_blank"
-                rel="noopener"
-                href="mailto:slimsimapps@gmail.com"
-              >
+              <a class="white" target="_blank" rel="noopener" href="mailto:slimsimapps@gmail.com">
                 slimsimapps@gmail.com</a
               >.
             </p>
@@ -367,21 +314,9 @@
                 >facebook</a
               >!
             </p>
+            <p><a class="white" target="_blank" rel="noopener" href="LICENSE.html">LICENSE</a>.</p>
             <p>
-              <a
-                class="white"
-                target="_blank"
-                rel="noopener"
-                href="LICENSE.html"
-                >LICENSE</a
-              >.
-            </p>
-            <p>
-              <a
-                class="white"
-                target="_blank"
-                rel="noopener"
-                href="privacy_policy.html"
+              <a class="white" target="_blank" rel="noopener" href="privacy_policy.html"
                 >Privacy Policy</a
               >.
             </p>
