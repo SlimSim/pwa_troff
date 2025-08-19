@@ -1,6 +1,23 @@
 // Shared E2E test helpers for Playwright
 import { expect } from "@playwright/test";
 
+export async function clickSongInList(page, songName) {
+  const songRow = page.locator("#dataSongTable tbody tr", {
+    hasText: songName,
+  });
+  await songRow.scrollIntoViewIfNeeded().catch(() => {});
+  await page.waitForTimeout(100);
+  await songRow.click({ force: true });
+}
+
+export async function screenshot(page, testId, name) {
+  // Take screenshot for verification
+  await page.screenshot({
+    path: `test-artifacts/${testId}_${name}.png`,
+    fullPage: true,
+  });
+}
+
 /**
  * Helper to close the first-time user dialog by clicking "OK".
  */
@@ -32,10 +49,12 @@ export async function closeWelcomeDialog(page) {
  * @param {number} expectedCount - The expected number of rows
  */
 export async function assertDataSongTableHasRowCount(page, expectedCount) {
-  const table = page.locator("#dataSongTable tbody");
+  const table = await page.locator("#dataSongTable tbody");
   const rows = await table.locator("tr");
   const rowCount = await rows.count();
-  console.log("rowCount", rowCount);
+
+  console.log("rowCount = ", rowCount);
+  console.log("expectedCount = ", expectedCount);
   expect(
     rowCount,
     `songTable has ${rowCount} rows, expected to be ${expectedCount}`
@@ -59,7 +78,7 @@ export function getMP3Path(songName) {
 /**
  * Helper to click "I consent" in the notification up to the right
  */
-export async function consentNotification(page) {
+export async function closeConsentNotification(page) {
   const consentBtn = page.locator('button, input[type="button"]', {
     hasText: /consent/i,
   });

@@ -13,7 +13,13 @@ import { expect } from "@playwright/test";
  * @param {string} filePath - Path to the file to upload
  * @param {string} [artifactPrefix] - Optional prefix for screenshots
  */
-export async function uploadSongFile(page, filePath, artifactPrefix = "US") {
+export async function addLocalSongToTroff(
+  page,
+  filePath,
+  artifactPrefix = "US"
+) {
+  const startRowCount = await page.locator("#dataSongTable tbody tr").count();
+
   // Find the label(s)
   const allLabels = await page
     .locator('label[for="fileUploader"][title*="Add songs"]')
@@ -23,11 +29,6 @@ export async function uploadSongFile(page, filePath, artifactPrefix = "US") {
     if (await label.isVisible()) {
       await label.click({ force: true });
       found = true;
-      if (artifactPrefix)
-        await page.screenshot({
-          path: `test-artifacts/${artifactPrefix}_b_after_label_click_${i}.png`,
-          fullPage: true,
-        });
       break;
     }
   }
@@ -39,24 +40,22 @@ export async function uploadSongFile(page, filePath, artifactPrefix = "US") {
       });
     throw new Error("No visible upload label found!");
   }
-  if (artifactPrefix)
-    await page.screenshot({
-      path: `test-artifacts/${artifactPrefix}_b_after_label_click.png`,
-      fullPage: true,
-    });
+
   // Set the file input
   const input = await page.locator('input[type="file"]#fileUploader');
-  if (artifactPrefix)
-    await page.screenshot({
-      path: `test-artifacts/${artifactPrefix}_c_before_upload.png`,
-      fullPage: true,
-    });
+
   await input.setInputFiles(filePath);
-  if (artifactPrefix)
-    await page.screenshot({
-      path: `test-artifacts/${artifactPrefix}_c_after_upload.png`,
-      fullPage: true,
-    });
+
+  await page.waitForFunction(
+    (expectedCount) => {
+      return (
+        document.querySelectorAll("#dataSongTable tbody tr").length >=
+        expectedCount
+      );
+    },
+    startRowCount + 1, // <-- argument passed to the function
+    { timeout: 5000 }
+  );
 }
 
 export async function waitForAudioLoaded(page, timeoutMs = 15000) {
@@ -95,6 +94,27 @@ export async function waitForAudioLoaded(page, timeoutMs = 15000) {
     );
   }
   return audioEl;
+}
+
+export async function expectNotificationToHave(page, expectedNotificationText) {
+  // Assert: notification is visible in the top right with the correct text
+  const notify = page.locator(".notifyjs-corner");
+  await expect(notify, "Notification NOT visible").toBeVisible();
+  await expect(
+    notify,
+    `Notification NOT containing expected text:\nexpectedNotification:${expectedNotificationText}`
+  ).toContainText(expectedNotificationText);
+}
+
+export async function expectArtistToBe(page, expectedArtistText) {
+  const currentArtist = await page.locator("#currentArtist");
+  await expect(currentArtist, "Current artist NOT visible").toBeVisible();
+  await expect(
+    currentArtist,
+    `Current artist NOT containing expected text:\nexpectedArtist:${expectedArtistText}\nactualArtist:${await currentArtist.textContent()}`
+  ).toContainText(expectedArtistText, {
+    ignoreCase: true,
+  });
 }
 
 export async function assertMarkerExists(page, markerName) {
@@ -144,12 +164,34 @@ export async function assertSectionVisible(page, sectionButtonName) {
     `Section for button ${sectionButtonName} not found`
   ).toBeVisible();
 
-  const button = await page.locator(`#${buttonId}`);
+  await expectElementToHaveClass(page, `#${buttonId}`, "active");
+}
+
+export async function expectElementToNotHaveClass(page, locator, className) {
+  const button = await page.locator(locator);
+  const classAttr = await button.getAttribute("class");
+  // Only fail if the exact className is present as a class (not as a substring)
+  const classes = (classAttr || "").split(/\s+/);
+  await expect(classes, `${locator} contains class ${className}`).not.toContain(
+    className
+  );
+}
+
+export async function expectInputToHave(page, locator, value) {
+  const input = await page.locator(locator);
+  const inputValue = await input.inputValue();
+  await expect(inputValue, `${locator} does not contain value ${value}`).toBe(
+    value
+  );
+}
+
+export async function expectElementToHaveClass(page, locator, className) {
+  const button = await page.locator(locator);
   const classAttr = await button.getAttribute("class");
   await expect(
     classAttr,
-    `Button ${sectionButtonName} is not active`
-  ).toContain("active");
+    `${locator} does not contain class ${className}`
+  ).toContain(className);
 }
 
 export async function assertSongName(page, expectedSongText) {

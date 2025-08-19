@@ -24,3 +24,12 @@ who needs to practice dance-steps or instruments to music.
    ```
 
 Your tests are located in the `tests/` folder. Example tests are provided in `tests/basic.test.js`.
+
+
+##things to install:
+'''
+npm install -D @vitest/coverage-v8@1.6.1
+'''
+
+uppdatera coverage:
+npx vitest run --coverage
