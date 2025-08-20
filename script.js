@@ -68,6 +68,12 @@ import { addItem_NEW_2 } from './songManagement.js';
 import { firebaseWrapper, fileHandler } from './services/file.js';
 import { ShowUserException } from './script2.js';
 
+/**
+ * A minimal shape for the authenticated user used across the app.
+ * Extend as needed without pulling in external types.
+ * @typedef {{ email?: string }} FirebaseUserLike
+ */
+/** @type {FirebaseUserLike | null} */
 let firebaseUser = null;
 
 // replace your current init:

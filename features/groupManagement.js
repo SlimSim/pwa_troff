@@ -1,6 +1,30 @@
 // Group management functions
 
 /* eslint eqeqeq: "off" */
+// @ts-check
+
+/**
+ * @typedef {{
+ *   fullPath: string,
+ *   galleryId: any,
+ *   firebaseSongDocId?: string
+ * }} SongIdObject
+ */
+/**
+ * @typedef {{
+ *   id: any,
+ *   name: any,
+ *   color: any,
+ *   icon: any,
+ *   info: any,
+ *   owners?: string[],
+ *   firebaseGroupDocId?: string,
+ *   songs?: SongIdObject[]
+ * }} SongListObject
+ */
+/**
+ * @typedef {{ id: string, exists: () => boolean, data: () => any }} DocSnapshotLike
+ */
 
 import { db, setDoc, doc, addDoc, collection, onSnapshot } from '../services/firebaseClient.js';
 import { Troff, DB, firebaseUser } from '../script.js';
@@ -8,9 +32,13 @@ import { removeSongFromFirebaseGroup, saveSongDataToFirebaseGroup } from '../ser
 import { nDB } from '../assets/internal/db.js';
 import { SongToGroup } from '../scriptASimple.js';
 
+/**
+ * @param {string} groupDocId
+ */
 const setGroupAsSonglist = function (groupDocId) {
+  /** @type {SongListObject[]} */
   const songLists = JSON.parse(nDB.get('straoSongLists'));
-  if (!songLists.find((sl) => sl.firebaseGroupDocId == groupDocId)) {
+  if (!songLists.find((sl) => (/** @type {SongListObject} */ (sl)).firebaseGroupDocId == groupDocId)) {
     return;
   }
 
@@ -36,6 +64,9 @@ const setGroupAsSonglist = function (groupDocId) {
   $target.data('songList', songList);
 };
 
+/**
+ * @param {DocSnapshotLike} doc
+ */
 const groupDocUpdate = function (doc) {
   if (!doc.exists()) {
     setGroupAsSonglist(doc.id);
@@ -45,7 +76,7 @@ const groupDocUpdate = function (doc) {
   const group = doc.data();
   const $target = $('#songListList').find(`[data-firebase-group-doc-id="${doc.id}"]`);
 
-  if (!group.owners.includes(firebaseUser.email)) {
+  if (!group.owners.includes((/** @type {{email: string}} */ (firebaseUser)).email)) {
     setGroupAsSonglist(doc.id);
 
     $.notify(
@@ -59,7 +90,7 @@ const groupDocUpdate = function (doc) {
   const songListObject = $target.data('songList');
 
   Object.entries(group).forEach(([key, value]) => {
-    songListObject[key] = value;
+    (/** @type {any} */ (songListObject))[key] = value;
   });
 
   Troff.updateSongListInHTML(songListObject);
@@ -67,6 +98,9 @@ const groupDocUpdate = function (doc) {
   DB.saveSonglists_new();
 };
 
+/**
+ * @returns {Promise<void>}
+ */
 const groupDialogSave = async function () {
   if (!$('#buttAttachedSongListToggle').hasClass('active')) {
     $('#buttAttachedSongListToggle').click();
@@ -75,6 +109,7 @@ const groupDialogSave = async function () {
   const isGroup = $('#groupDialogIsGroup').is(':checked');
   let groupDocId = $('#groupDialogName').data('groupDocId');
 
+  /** @type {SongListObject} */
   const songListObject = {
     id: $('#groupDialogName').data('songListObjectId'),
     name: $('#groupDialogName').val(),
@@ -84,15 +119,16 @@ const groupDialogSave = async function () {
   };
 
   if (isGroup) {
+    /** @type {string[]} */
     const owners = [];
     $('#groupOwnerParent')
       .find('.groupDialogOwner')
-      .each((i, v) => {
+      .each(/** @param {number} i @param {HTMLElement} v */ (i, v) => {
         owners.push($(v).val());
       });
 
-    if (!owners.includes(firebaseUser.email)) {
-      owners.push(firebaseUser.email);
+    if (!owners.includes((/** @type {{email: string}} */ (firebaseUser)).email)) {
+      owners.push((/** @type {{email: string}} */ (firebaseUser)).email);
     }
     songListObject.owners = owners;
 
@@ -112,15 +148,17 @@ const groupDialogSave = async function () {
     songListObject.firebaseGroupDocId = groupDocId;
   }
 
+  /** @type {SongIdObject[]} */
   const songs = [];
   $('#groupSongParent')
     .find('input')
-    .each(async (i, v) => {
+    .each(/** @param {number} i @param {HTMLElement} v */ async (i, v) => {
       const songKey = $(v).val();
 
       const galleryId = $(v).data('galleryId');
       const songDocId = $(v).data('firebaseSongDocId');
 
+      /** @type {SongIdObject} */
       const songIdObject = {
         fullPath: songKey,
         galleryId: galleryId,
@@ -157,6 +195,9 @@ const groupDialogSave = async function () {
   DB.saveSonglists_new();
 };
 
+/**
+ * @param {SongIdObject} songIdObject
+ */
 const addGroupSongRow = (songIdObject) => {
   const songRow = $('#groupDialogSongRowTemplate').children().clone(true, true);
 
@@ -173,6 +214,9 @@ const addGroupSongRow = (songIdObject) => {
   $('#groupSongParent').append(songRow);
 };
 
+/**
+ * @param {Event} event
+ */
 const removeSongRow = (event) => {
   const row = $(event.target).closest('.form-group.row');
   row.find('.groupDialogSong').addClass('bg-danger removed');

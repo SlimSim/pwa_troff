@@ -1,5 +1,29 @@
 /* eslint eqeqeq: "off" */
+// @ts-check
 // Song management functions
+
+/**
+ * @typedef {{
+ *   duration?: number,
+ *   lastModified?: number,
+ *   size?: number,
+ *   customName?: string,
+ *   choreography?: string,
+ *   choreographer?: string,
+ *   title?: string,
+ *   artist?: string,
+ *   album?: string,
+ *   genre?: string,
+ *   tags?: string
+ * }} SongFileData
+ */
+/**
+ * @typedef {{
+ *   TROFF_VALUE_tapTempo?: string,
+ *   info?: string,
+ *   fileData?: SongFileData
+ * }} Song
+ */
 
 import { getFileExtension } from './utils/utils.js';
 import { getFileTypeFaIcon } from './script0.js';
@@ -10,6 +34,9 @@ import { DB } from './script.js';
 import { st } from './assets/internal/st-script.js';
 import { SongToGroup } from './scriptASimple.js';
 
+/**
+ * @param {string} key
+ */
 function addItem_NEW_2(key) {
   var galleryId = 'pwa-galleryId';
   var extension = getFileExtension(key);
@@ -34,24 +61,24 @@ function addItem_NEW_2(key) {
     return;
   }
 
-  DB.getVal(key, function (song) {
+  DB.getVal(key, function (/** @type {Song | undefined} */ song) {
     var tempo = '',
       info = '',
       duration = sortAndValue(0, ''),
       lastModified = '',
       size = '',
-      customName = '',
-      choreography = '',
-      choreographer = '',
-      title = '',
-      artist = '',
-      album = '',
-      genre = '',
-      tags = '',
+      /** @type {string | undefined} */ customName = '',
+      /** @type {string | undefined} */ choreography = '',
+      /** @type {string | undefined} */ choreographer = '',
+      /** @type {string | undefined} */ title = '',
+      /** @type {string | undefined} */ artist = '',
+      /** @type {string | undefined} */ album = '',
+      /** @type {string | undefined} */ genre = '',
+      /** @type {string | undefined} */ tags = '',
       titleOrFileName = '';
 
-    if (song != undefined) {
-      if (song.TROFF_VALUE_tapTempo != undefined) tempo = song.TROFF_VALUE_tapTempo;
+    if (song != null) {
+      if (song.TROFF_VALUE_tapTempo != null) tempo = song.TROFF_VALUE_tapTempo;
       if (song.info != undefined) info = song.info;
     }
 
@@ -60,10 +87,13 @@ function addItem_NEW_2(key) {
         duration = sortAndValue(song.fileData.duration, Troff.secToDisp(song.fileData.duration));
       }
       if (song.fileData.lastModified) {
-        lastModified = st.millisToDisp(song.fileData.lastModified);
+        lastModified = /** @type {any} */ (st).millisToDisp(song.fileData.lastModified);
       }
       if (song.fileData.size) {
-        size = sortAndValue(song.fileData.size, st.byteToDisp(song.fileData.size));
+        size = sortAndValue(
+          song.fileData.size,
+          /** @type {any} */ (st).byteToDisp(song.fileData.size)
+        );
       }
       customName = song.fileData.customName;
       choreography = song.fileData.choreography;
@@ -77,6 +107,7 @@ function addItem_NEW_2(key) {
 
     titleOrFileName = customName || choreography || title || Troff.pathToName(key);
 
+    /** @type {any[]} */
     const columns = [];
 
     ((columns[DATA_TABLE_COLUMNS.getPos('DATA_INFO')] = strDataInfo),
@@ -114,7 +145,7 @@ function addItem_NEW_2(key) {
       $(newRow).addClass('groupIndication');
     }
 
-    if (selected_path == key && selected_galleryId == galleryId) {
+    if (selected_path == key && /** @type {any} */ (selected_galleryId) == galleryId) {
       $('#dataSongTable').find('tbody tr').removeClass('selected');
       $(newRow).addClass('selected');
     }

@@ -148,7 +148,7 @@ $(document).ready(function () {
       if (el) el.focus({ preventScroll: true });
     },
     /** @param {any} event */
-    dataSaveValue = function (event) {
+    dataSaveValue = function (/** @type {Event} */ event) {
       blurHack();
       var $target = $(event.target),
         id = $target.attr('id'),
@@ -171,13 +171,13 @@ $(document).ready(function () {
    */
 
   /** @param {any} event */
-  $('[data-st-css-selector-to-toggle]').on('click', function (event) {
+  $('[data-st-css-selector-to-toggle]').on('click', function (/** @type {Event} */ event) {
     const $target = $(event.target).closest('[data-st-css-selector-to-toggle]');
     $($target.data('st-css-selector-to-toggle')).toggleClass('hidden');
   });
 
   /** @param {any} event */
-  $('[data-st-css-selector-to-fade-in]').on('click', function (event) {
+  $('[data-st-css-selector-to-fade-in]').on('click', function (/** @type {Event} */ event) {
     const $target = $(event.target).closest('[data-st-css-selector-to-fade-in]');
 
     $($target.data('st-css-selector-to-fade-in')).toggleClass('fadeIn');
@@ -186,7 +186,10 @@ $(document).ready(function () {
   $('[data-st-save-current-value]').change(dataSaveValue);
 
   /** @param {number} i @param {HTMLElement} element */
-  $('[data-st-save-current-value]').each(function (i, element) {
+  $('[data-st-save-current-value]').each(function (
+    /** @type {number} */ i,
+    /** @type {HTMLElement} */ element
+  ) {
     var $target = $(element),
       key = 'TROFF_SAVE_VALUE_' + $target.attr('id');
 
@@ -202,7 +205,10 @@ $(document).ready(function () {
   });
 
   /** @param {number} i @param {HTMLElement} v */
-  $('.st-simple-on-off-button').each(function (i, v) {
+  $('.st-simple-on-off-button').each(function (
+    /** @type {number} */ i,
+    /** @type {HTMLElement} */ v
+  ) {
     var $v = $(v),
       cssSelectorToHide = $v.data('st-css-selector-to-hide');
     if ($v.data('st-save-value-key')) {
@@ -234,14 +240,17 @@ $(document).ready(function () {
   });
 
   /** @param {any} event */
-  $('.st-simple-on-off-button').click(function (event) {
+  $('.st-simple-on-off-button').click(function (/** @type {Event} */ event) {
     var $target = $(event.target).closest('.st-simple-on-off-button'),
       cssSelectorToHide = $target.data('st-css-selector-to-hide'),
       selectKey = $target.data('st-select-key'),
       setActive = !$target.hasClass('active');
 
     if (selectKey) {
-      $('[data-st-select-key=' + selectKey + ']').each((i, v) => {
+      $('[data-st-select-key=' + selectKey + ']').each((
+        /** @type {number} */ i,
+        /** @type {HTMLElement} */ v
+      ) => {
         $(v).removeClass('active');
         ST_DB.set($(v).data('st-save-value-key'), false);
       });
@@ -270,7 +279,7 @@ $(document).ready(function () {
   /* Hide and Save end */
 
   /** @param {any} e */
-  $('.toggleNext').on('click', (e) => {
+  $('.toggleNext').on('click', (/** @type {Event} */ e) => {
     $(e.target).closest('.toggleNext').toggleClass('showNext');
   });
 }); // end document ready

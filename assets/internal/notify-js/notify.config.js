@@ -1,25 +1,32 @@
 /*
-	This file is part of Troff.
+		This file is part of Troff.
 
-	Troff is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License,
-	or (at your option) any later version.
+		Troff is free software: you can redistribute it and/or modify
+		it under the terms of the GNU General Public License as published by
+		the Free Software Foundation, either version 3 of the License,
+		or (at your option) any later version.
 
-	Troff is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-	GNU General Public License for more details.
+		Troff is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+		GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with Troff. If not, see <http://www.gnu.org/licenses/>.
-*/
+		You should have received a copy of the GNU General Public License
+		along with Troff. If not, see <http://www.gnu.org/licenses/>.
+	*/
+
+// @ts-check
 
 import '../../external/notify-js/notify.min.js';
 
-// notify-js is from http://notifyjs.jpillora.com/
+/**
+ * @typedef {(infoText: string, callback: () => void) => void} NotifyUndoFn
+ */
+
+/** @type {NotifyUndoFn} */
 let notifyUndoLocal;
 (function () {
+  /** @type {string} */
   var standardHtmlNodify =
     '' +
     '<div>' +
@@ -68,13 +75,19 @@ let notifyUndoLocal;
   $.notify.addStyle('html-info', { html: standardHtmlNodify });
   $.notify.addStyle('html-success', { html: standardHtmlNodify });
 
+  /**
+   * Shows a notification with an Undo button.
+   * @param {string} infoText - Info text to display in the notification.
+   * @param {() => void} callback - Callback executed when the user clicks Undo.
+   * @returns {void}
+   */
   notifyUndoLocal = function (infoText, callback) {
     var span = $('<span class="full-width">')
       .append($('<p>').text(infoText))
       .append(
         $('<button>')
           .text('undo')
-          .click(function () {
+          .click(/** @this {HTMLButtonElement} */ function () {
             callback();
             $(this).trigger('notify-hide');
           })
@@ -94,6 +107,7 @@ let notifyUndoLocal;
   };
 })();
 
+/** @type {NotifyUndoFn} */
 const notifyUndo = notifyUndoLocal;
 
 export { notifyUndo };

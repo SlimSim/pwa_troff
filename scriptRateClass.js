@@ -1,7 +1,16 @@
 /* eslint eqeqeq: "off" */
+// @ts-check
 import { nDB } from './assets/internal/db.js';
-import { IO } from '/script.js';
-import { Troff, Rate } from '/script.js';
+import { IO } from './script.js';
+import { Troff, Rate } from './script.js';
+
+/**
+ * @typedef {{
+ *   millisFirstTimeStartingApp?: number,
+ *   iRatedStatus?: number,
+ *   straLastMonthUsage?: string
+ * }} RateStoredData
+ */
 
 class RateClass {
   constructor() {
@@ -13,11 +22,17 @@ class RateClass {
     this.MILLIS_IN_ONE_MONTH = 2678400000; // nr of millisecunds in a month!
   }
 
+  /**
+   * Initializes usage tracking and triggers dialogs when appropriate.
+   * No params; reads persisted values from local DB.
+   * @returns {void}
+   */
   startFunc = () => {
+    /** @type {RateStoredData} */
     var oData = {
-      millisFirstTimeStartingApp: nDB.get('millisFirstTimeStartingApp'),
-      iRatedStatus: nDB.get('iRatedStatus'),
-      straLastMonthUsage: nDB.get('straLastMonthUsage'),
+      millisFirstTimeStartingApp: /** @type {any} */ (nDB.get('millisFirstTimeStartingApp')),
+      iRatedStatus: /** @type {any} */ (nDB.get('iRatedStatus')),
+      straLastMonthUsage: /** @type {any} */ (nDB.get('straLastMonthUsage')),
     };
     // Check if it is the first time user starts the App
 
@@ -27,7 +42,8 @@ class RateClass {
       return;
     }
 
-    var aLastMonthUsage = JSON.parse(oData.straLastMonthUsage);
+    /** @type {number[]} */
+    var aLastMonthUsage = JSON.parse(/** @type {string} */ (oData.straLastMonthUsage));
 
     var d = new Date();
     var millis = d.getTime();
@@ -49,13 +65,18 @@ class RateClass {
 
     Rate.checkToShowUserSurvey(aLastMonthUsage);
     Rate.checkToShowRateDialog(
-      oData.iRatedStatus,
+      /** @type {number} */ (oData.iRatedStatus),
       aLastMonthUsage,
-      millis,
-      oData.millisFirstTimeStartingApp
+      /** @type {number} */ (millis),
+      /** @type {number} */ (oData.millisFirstTimeStartingApp)
     );
   };
 
+  /**
+   * Show the survey link if the user has used the app sufficiently.
+   * @param {number[]} aLastMonthUsage
+   * @returns {void}
+   */
   /*Rate*/ checkToShowUserSurvey = (aLastMonthUsage) => {
     // return if user has used Troff less than 5 times durring the last month
     if (aLastMonthUsage.length < 5) return;
@@ -63,6 +84,14 @@ class RateClass {
     $('#linkToUserSurvey').removeClass('hidden');
   };
 
+  /**
+   * Decide whether the rate dialog should be displayed.
+   * @param {number} iRatedStatus
+   * @param {number[]} aLastMonthUsage
+   * @param {number} millis
+   * @param {number} millisFirstTimeStartingApp
+   * @returns {void}
+   */
   /*Rate*/ checkToShowRateDialog = (
     iRatedStatus,
     aLastMonthUsage,
@@ -89,6 +118,10 @@ class RateClass {
     }
   };
 
+  /**
+   * Initialize persisted state on first app start.
+   * @returns {void}
+   */
   firstTimeStartingAppFunc = () => {
     var d = new Date();
     var millis = d.getTime();
@@ -99,6 +132,10 @@ class RateClass {
     nDB.set('straLastMonthUsage', straLastMonthUsage);
   };
 
+  /**
+   * Show rate dialog and wire Enter key to "Rate now".
+   * @returns {void}
+   */
   showRateDialog = () => {
     IO.setEnterFunction(() => {
       this.rateDialogRateNow();
@@ -108,18 +145,21 @@ class RateClass {
     }
   };
 
+  /** @returns {void} */
   rateDialogNoThanks = () => {
     IO.blurHack();
     IO.clearEnterFunction();
     $('#rateDialog').addClass('hidden');
     nDB.set('iRatedStatus', this.RATED_STATUS_NO_THANKS);
   };
+  /** @returns {void} */
   rateDialogAskLater = () => {
     IO.blurHack();
     IO.clearEnterFunction();
     $('#rateDialog').addClass('hidden');
     nDB.set('iRatedStatus', this.RATED_STATUS_ASK_LATER);
   };
+  /** @returns {void} */
   rateDialogRateNow = () => {
     IO.blurHack();
     IO.clearEnterFunction();

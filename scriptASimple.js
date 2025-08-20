@@ -104,7 +104,7 @@ class SongToGroup {
   }
 
   /**
-   * @param {string} songDocId
+   * @param {string | undefined} songDocId
    * @param {string} groupDocId
    * @returns {void}
    */
