@@ -9,7 +9,9 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p tsconfig.json",
     "format": "prettier --write .",
-    "validate": "npm run lint && npm run typecheck"
+    "validate": "npm run lint && npm run typecheck",
+    "build": "tsc -p tsconfig.build.json",
+    "build:check": "npm run lint && npm run typecheck && npm run build"
   },
   "keywords": [],
   "author": "",

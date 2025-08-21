@@ -23,3 +23,6 @@ node_modules/
 # Archives and binary assets
 *.zip
 *.xcf
+
+# GitHub Action Build stuff:
+dist/
