@@ -11,7 +11,12 @@
     "format": "prettier --write .",
     "validate": "npm run lint && npm run typecheck",
     "build": "tsc -p tsconfig.build.json",
-    "build:check": "npm run lint && npm run typecheck && npm run build"
+    "build:check": "npm run lint && npm run typecheck && npm run build",
+    "build:watch": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "copy": "cpy \"**/*\" \"!node_modules/**\" \"!.git/**\" \"!.github/**\" \"!dist/**\" \"!**/*.ts\" \"!tsconfig*.json\" \"!package*.json\" \"!vitest.config.*\" dist --parents --cwd=.",
+    "copy:watch": "chokidar \"**/*\" -i \"node_modules/**\" -i \".git/**\" -i \".github/**\" -i \"dist/**\" -i \"**/*.ts\" -i \"tsconfig*.json\" -i \"package*.json\" -i \"vitest.config.*\" -c \"npm run copy\" --initial --silent",
+    "serve": "live-server dist --host=localhost --port=8000",
+    "dev": "npm-run-all --parallel build:watch copy:watch serve"
   },
   "keywords": [],
   "author": "",
@@ -19,11 +24,16 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/node": "^24.3.0",
+    "chokidar-cli": "^3.0.0",
+    "cpx2": "^8.0.0",
+    "cpy-cli": "^6.0.0",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.3.0",
+    "live-server": "^1.2.2",
+    "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2"
   }
