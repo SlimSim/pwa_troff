@@ -1,12 +1,15 @@
-/* global module */
+/* global module, process */
+const clientsClaim = process.env.SW_CLIENTS_CLAIM === 'true';
+const skipWaiting = process.env.SW_SKIP_WAITING === 'true';
+
 module.exports = {
   mode: 'production',
   globDirectory: 'dist',
   globPatterns: ['**/*.{html,js,css,json,svg,png,webp,ico,woff2,ttf}'],
   maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8 MB
   swDest: 'dist/service-worker.js',
-  clientsClaim: false, // should be true for production
-  skipWaiting: false, // should be true for production
+  clientsClaim, // controlled by env
+  skipWaiting, // controlled by env
   // Optional: for multipage/offline navigation, uncomment:
   navigateFallback: 'index.html',
 
