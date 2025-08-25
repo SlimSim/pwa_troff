@@ -2,16 +2,11 @@ import log from './utils/log.js';
 import { nDB } from './assets/internal/db.js';
 
 if ('serviceWorker' in navigator) {
-  const serviceWorkerPath = '/service-worker.js';
+  const serviceWorkerPath = './service-worker.js';
   window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register(serviceWorkerPath)
-      .then((reg) => {
-        reg.update();
-      })
-      .catch((error) => {
-        log.e('service-worker.js failed to register:', error);
-      });
+    navigator.serviceWorker.register(serviceWorkerPath).catch((error) => {
+      log.e('service-worker.js failed to register:', error);
+    });
   });
 } else {
   log.e('No "serviceWorker" in navigator');

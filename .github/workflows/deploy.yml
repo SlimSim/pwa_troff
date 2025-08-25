@@ -46,6 +46,9 @@ jobs:
             --exclude '*.ts' \
             ./ dist/
 
+      - name: Generate Workbox service worker
+        run: npx workbox generateSW workbox-config.js
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

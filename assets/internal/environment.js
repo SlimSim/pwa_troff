@@ -21,7 +21,7 @@ const environment = {
   switch (window.location.hostname) {
     case 'localhost':
       environment.banner.show = true;
-      environment.banner.text = 'Welcome to development';
+      environment.banner.text = 'Welcome to development test';
       environment.banner.showLogs = true;
       environment.showHiddenInProd = true;
 
