@@ -12,3 +12,6 @@ who needs to practice dance-steps or instruments to music.
 ## run the app localy:
 
 'npm run dev'
+
+## test build
+'npm run build:check'
