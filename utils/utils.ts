@@ -1,6 +1,6 @@
 // Utility functions
 
-import { TroffObjectLocal } from 'types/troff.js';
+import { TroffObjectFirebase, TroffObjectLocal } from 'types/troff.js';
 import '../assets/external/jquery-3.6.0.min.js';
 
 function escapeRegExp(string: string): string {
@@ -26,19 +26,17 @@ const removeLocalInfo = (markerObject: TroffObjectLocal): TroffObjectFirebase =>
   return payload;
 };
 
-const loadExternalHtml = (includes: JQuery<HTMLElement>, callback: () => void) => {
+const loadExternalHtml = (includes: JQuery<HTMLElement>, callback?: () => void): void => {
   if (includes.length === 0) {
-    if (callback == null) {
-      return;
-    }
-    return callback();
+    callback?.();
+    return;
   }
   const currentElement = includes.eq(-1);
-  includes.splice(includes.length - 1, 1);
+  const remainingElements = includes.slice(0, -1);
 
   const file = $(currentElement).data('include');
   $(currentElement).load(file, function () {
-    loadExternalHtml(includes, callback);
+    loadExternalHtml(remainingElements, callback);
   });
 };
 

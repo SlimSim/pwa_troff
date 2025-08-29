@@ -2,20 +2,25 @@
 
 import 'jquery';
 
-// Globals
-declare const $: any;
-declare const jQuery: any;
+// Extend the global jQuery interface to include the notify plugin
+declare global {
+  interface JQueryStatic {
+    notify(message: string, type?: string): any;
+    notify(options: any): any;
+    notify(...args: any[]): any;
+  }
 
-// jQuery notify plugin augmentation
-interface JQueryStatic {
-  notify: (...args: any[]) => any;
+  // Also extend the jQuery instance interface if the plugin supports chaining
+  interface JQuery {
+    notify?(message: string, type?: string): JQuery;
+    notify?(options: any): JQuery;
+    notify?(...args: any[]): JQuery;
+  }
+
+  // Make sure $ and jQuery are available globally
+  const $: JQueryStatic;
+  const jQuery: JQueryStatic;
 }
 
-// If you want to also allow $(...).notify(...) chains (in case any plugin uses that style)
-
-// declare module 'jquery' {
-//   interface JQueryStatic {
-//     notify?: (...args: any[]) => any;
-//     // notify(message: string, type?: string): void;
-//   }
-// }
+// This is needed to make this file a module
+export {};

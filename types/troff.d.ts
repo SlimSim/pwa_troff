@@ -25,6 +25,10 @@ export interface TroffObjectLocal {
   zoomStartTime: number;
 }
 
+export type TroffObjectFirebase = Omit<TroffObjectLocal, 'localInformation'> & {
+  localInformation?: never;
+};
+
 // todo: interface for State!
 export interface State {
   buttPauseBefStart: boolean;
