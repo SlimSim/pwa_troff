@@ -46,5 +46,8 @@
     "typescript": "^5.9.2",
     "workbox-build": "^7.3.0",
     "workbox-cli": "^7.3.0"
+  },
+  "dependencies": {
+    "firebase": "^12.2.1"
   }
 }
