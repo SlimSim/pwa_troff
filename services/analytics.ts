@@ -1,4 +1,4 @@
-function gtag() {
+function gtag(): void {
   // log.d("gtag -> arguments:", arguments);
   // TODO: should perhaps gather statistics in the future :)
 }

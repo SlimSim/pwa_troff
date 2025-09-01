@@ -70,3 +70,31 @@ export interface TroffMarker {
   name: string;
   time: number;
 }
+
+export type TroffSongData = {
+  songKey: string;
+  jsonDataInfo: string;
+  fileUrl?: string;
+};
+
+export type TroffSongIdentifyer = {
+  groupDocId: string;
+  songDocId: string;
+  songKey: string;
+};
+
+export type TroffFirebaseGroupIdentifyer = {
+  color?: string;
+  firebaseGroupDocId: string;
+  icon?: string;
+  id: number;
+  name: string;
+  owners: string[];
+  songs: TroffFirebaseSongIdentifyer[];
+};
+
+export type TroffFirebaseSongIdentifyer = {
+  firebaseSongDocId: string;
+  fullPath: string;
+  galleryId: string;
+};

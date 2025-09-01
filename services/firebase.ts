@@ -19,8 +19,18 @@ import { nDB } from '../assets/internal/db.js';
 import log from '../utils/log.js';
 import { SongToGroup } from '../scriptASimple.js';
 import { fileUrlToStorageFileName, removeLocalInfo } from '../utils/utils.js';
+import {
+  TroffFirebaseGroupIdentifyer,
+  TroffSongData,
+  TroffSongIdentifyer,
+} from '../types/troff.js';
+import { TroffFileHandler } from 'types/file.js';
 
-const removeSongFromFirebaseGroup = async function (songKey, groupDocId, songDocId) {
+const removeSongFromFirebaseGroup = async function (
+  songKey: string,
+  groupDocId: string,
+  songDocId: string
+) {
   await removeSongDataFromFirebaseGroup(groupDocId, songDocId);
 
   const fileUrl = SongToGroup.songKeyToFileUrl(songKey, groupDocId, songDocId);
@@ -33,11 +43,14 @@ const removeSongFromFirebaseGroup = async function (songKey, groupDocId, songDoc
   await removeSongFileFromFirebaseGroupStorage(groupDocId, storageFileName);
 };
 
-const removeSongDataFromFirebaseGroup = (groupDocId, songDocId) => {
+const removeSongDataFromFirebaseGroup = (groupDocId: string, songDocId: string) => {
   return deleteDoc(doc(db, 'Groups', groupDocId, 'Songs', songDocId));
 };
 
-const removeSongFileFromFirebaseGroupStorage = async (groupDocId, storageFileName) => {
+const removeSongFileFromFirebaseGroupStorage = async (
+  groupDocId: string,
+  storageFileName: string
+) => {
   const storageRef = ref(storage, `Groups/${groupDocId}/${storageFileName}`);
   try {
     await deleteObject(storageRef);
@@ -47,8 +60,8 @@ const removeSongFileFromFirebaseGroupStorage = async (groupDocId, storageFileNam
   }
 };
 
-const pushSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
-  const changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+const pushSongWithLocalChanges = (groupDocId: string, songDocId: string, songKey: string) => {
+  const changedSongList: TroffSongIdentifyer[] = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
 
   const songInGroupAlreadyExists = changedSongList.find(
     (o) => o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey
@@ -67,12 +80,16 @@ const pushSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
   nDB.set('TROFF_SONGS_WITH_LOCAL_CHANGES', changedSongList);
 };
 
-const saveSongDataToFirebaseGroup = async function (songKey, groupDocId, songDocId) {
+const saveSongDataToFirebaseGroup = async function (
+  songKey: string,
+  groupDocId: string,
+  songDocId: string
+) {
   const publicData = removeLocalInfo(nDB.get(songKey));
 
   publicData.latestUploadToFirebase = Date.now();
 
-  const songData = {
+  const songData: TroffSongData = {
     songKey: songKey,
     jsonDataInfo: JSON.stringify(publicData),
   };
@@ -102,7 +119,7 @@ const saveSongDataToFirebaseGroup = async function (songKey, groupDocId, songDoc
     SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
 
     onSnapshot(docRef, songDocUpdate);
-    const songList = $('#songListList')
+    const songList: TroffFirebaseGroupIdentifyer = $('#songListList')
       .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
       .data('songList');
 
@@ -118,9 +135,15 @@ const saveSongDataToFirebaseGroup = async function (songKey, groupDocId, songDoc
   }
 };
 
-const uploadSongToFirebaseGroup = async function (groupId, songKey) {
-  const [fileUrl] = await fileHandler.sendFileToFirebase(songKey, 'Groups/' + groupId);
-  return fileUrl;
+const uploadSongToFirebaseGroup = async function (
+  groupId: string,
+  songKey: string
+): Promise<string> {
+  const [fileUrl] = await (fileHandler as TroffFileHandler).sendFileToFirebase(
+    songKey,
+    'Groups/' + groupId
+  );
+  return fileUrl as string;
 };
 
 export {
