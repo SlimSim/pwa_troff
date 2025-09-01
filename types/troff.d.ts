@@ -61,6 +61,7 @@ export interface TroffFileData {
   genre: string;
   tags: string;
   title: string;
+  lastModified?: number;
 }
 
 export interface TroffMarker {

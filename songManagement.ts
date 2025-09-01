@@ -33,12 +33,13 @@ import { Troff } from './script.js';
 import { DB } from './script.js';
 import { st } from './assets/internal/st-script.js';
 import { SongToGroup } from './scriptASimple.js';
+import { TroffObjectLocal } from 'types/troff.js';
 
 /**
  * @param {string} key
  */
-function addItem_NEW_2(key) {
-  var galleryId = 'pwa-galleryId';
+function addItem_NEW_2(key: string): void {
+  var galleryId: string = 'pwa-galleryId';
   var extension = getFileExtension(key);
   var faType = getFileTypeFaIcon(key);
 
@@ -51,7 +52,7 @@ function addItem_NEW_2(key) {
   };
 
   const strDataInfo = JSON.stringify(dataInfo);
-  const thisSongAlreadyAdded = $('#dataSongTable')
+  const thisSongAlreadyAdded = ($('#dataSongTable') as any)
     .DataTable()
     .column(DATA_TABLE_COLUMNS.getPos('DATA_INFO'))
     .data()
@@ -61,7 +62,7 @@ function addItem_NEW_2(key) {
     return;
   }
 
-  DB.getVal(key, function (/** @type {Song | undefined} */ song) {
+  DB.getVal(key, function (/** @type {Song | undefined} */ song: TroffObjectLocal) {
     var tempo = '',
       info = '',
       duration = sortAndValue(0, ''),
@@ -78,7 +79,7 @@ function addItem_NEW_2(key) {
       titleOrFileName = '';
 
     if (song != null) {
-      if (song.TROFF_VALUE_tapTempo != null) tempo = song.TROFF_VALUE_tapTempo;
+      if (song.TROFF_VALUE_tapTempo != null) tempo = song.TROFF_VALUE_tapTempo as string;
       if (song.info != undefined) info = song.info;
     }
 
@@ -87,13 +88,10 @@ function addItem_NEW_2(key) {
         duration = sortAndValue(song.fileData.duration, Troff.secToDisp(song.fileData.duration));
       }
       if (song.fileData.lastModified) {
-        lastModified = /** @type {any} */ (st).millisToDisp(song.fileData.lastModified);
+        lastModified = (st as any).millisToDisp(song.fileData.lastModified);
       }
       if (song.fileData.size) {
-        size = sortAndValue(
-          song.fileData.size,
-          /** @type {any} */ (st).byteToDisp(song.fileData.size)
-        );
+        size = sortAndValue(song.fileData.size, (st as any).byteToDisp(song.fileData.size));
       }
       customName = song.fileData.customName;
       choreography = song.fileData.choreography;
@@ -131,7 +129,7 @@ function addItem_NEW_2(key) {
       (columns[DATA_TABLE_COLUMNS.getPos('INFO')] = info),
       (columns[DATA_TABLE_COLUMNS.getPos('EXTENSION')] = '.' + extension));
 
-    var newRow = $('#dataSongTable')
+    var newRow = ($('#dataSongTable') as any)
       .DataTable()
       .row.add(columns)
       //.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
@@ -145,7 +143,7 @@ function addItem_NEW_2(key) {
       $(newRow).addClass('groupIndication');
     }
 
-    if (selected_path == key && /** @type {any} */ (selected_galleryId) == galleryId) {
+    if (selected_path == key && selected_galleryId == galleryId) {
       $('#dataSongTable').find('tbody tr').removeClass('selected');
       $(newRow).addClass('selected');
     }

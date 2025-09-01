@@ -109,7 +109,7 @@ function clickSongList_NEW(event) {
 class TroffClass {
   constructor() {
     this.strCurrentSong = '';
-    this.iCurrentGalleryId = 0;
+    this.strCurrentGalleryId = '';
     this.startTime = 0; // unused?
     this.previousTime = 0; // unused?
     this.time = 0; // unused?
@@ -1291,16 +1291,16 @@ class TroffClass {
   // this. ...
   setCurrentSongStrings = (currentSong, currentGalleryId) => {
     this.strCurrentSong = currentSong;
-    this.iCurrentGalleryId = currentGalleryId;
+    this.strCurrentGalleryId = currentGalleryId;
   };
   getCurrentSong = () => {
     return this.strCurrentSong;
   };
   getCurrentGalleryId = () => {
-    return this.iCurrentGalleryId;
+    return this.strCurrentGalleryId;
   };
 
-  setWaitForLoad = (path, iGalleryId) => {
+  setWaitForLoad = (path, strGalleryId) => {
     if (this.strCurrentSong) {
       this.pauseSong(false);
       this.clearAllMarkers();
@@ -1308,14 +1308,14 @@ class TroffClass {
     }
     this.setAreas([false, false, false, false]);
     this.strCurrentSong = path;
-    this.iCurrentGalleryId = iGalleryId;
+    this.strCurrentGalleryId = strGalleryId;
 
     $('#currentSong').text('Wait for song to load');
     $('#currentArtist, #currentAlbum').text('');
   };
 
   setCurrentSongInDB = () => {
-    DB.setCurrentSong(this.strCurrentSong, this.iCurrentGalleryId);
+    DB.setCurrentSong(this.strCurrentSong, this.strCurrentGalleryId);
   }; // end SetCurrentSong
 
   pathToName = (filepath) => {
