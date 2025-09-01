@@ -1,19 +1,21 @@
+import { TroffSongData } from 'types/troff';
+
 export const cacheImplementation = {
   nameOfCache: 'songCache-v1.0',
 
-  saveSong: async function (songKey, songData) {
-    var blob = new Blob([JSON.stringify(songData)], {
-        type: 'application/json',
-      }),
-      init = { status: 200, statusText: 'SuperSmashingGreat!' },
-      myResponseObject = new Response(blob, init);
+  // saveSong: async function (songKey: string, songData) {
+  //   var blob = new Blob([JSON.stringify(songData)], {
+  //       type: 'application/json',
+  //     }),
+  //     init = { status: 200, statusText: 'SuperSmashingGreat!' },
+  //     myResponseObject = new Response(blob, init);
 
-    return caches.open(this.nameOfCache).then((cache) => {
-      return cache.put(songKey, myResponseObject);
-    });
-  },
+  //   return caches.open(this.nameOfCache).then((cache) => {
+  //     return cache.put(songKey, myResponseObject);
+  //   });
+  // },
 
-  isSongV2: async function (songKey) {
+  isSongV2: async function (songKey: string) {
     return caches.match(songKey).then((cachedResponse) => {
       if (cachedResponse === undefined) {
         throw new Error(`songKey "${songKey}" does not exist in caches!`);
@@ -24,7 +26,7 @@ export const cacheImplementation = {
     });
   },
 
-  getSong: async function (songKey) {
+  getSong: async function (songKey: string) {
     return caches.match(songKey).then((cachedResponse) => {
       if (cachedResponse === undefined) {
         throw new Error(`songKey "${songKey}" does not exist in caches!`);
@@ -33,7 +35,7 @@ export const cacheImplementation = {
     });
   },
 
-  removeSong: async function (songKey) {
+  removeSong: async function (songKey: string) {
     return caches.open(this.nameOfCache).then((cache) => {
       return cache.delete(songKey);
     });
@@ -43,12 +45,12 @@ export const cacheImplementation = {
     return caches.open(this.nameOfCache).then((cache) => {
       return cache
         .keys()
-        .then((keys) => keys.map((key) => decodeURIComponent(key.url.split('/').pop())));
+        .then((keys) => keys.map((key) => decodeURIComponent(key.url.split('/').pop() || '')));
     });
   },
 };
 
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
   // Check for the various File API support.
   if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
     alert(

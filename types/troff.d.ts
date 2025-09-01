@@ -77,11 +77,30 @@ export type TroffSongData = {
   fileUrl?: string;
 };
 
-export type TroffSongIdentifyer = {
+export type TroffSongIdentifyer_sk = {
   groupDocId: string;
   songDocId: string;
   songKey: string;
 };
+
+export type TroffSongIdentifyer_fu = {
+  groupDocId: string;
+  songDocId: string;
+  fileUrl: string;
+};
+
+export type TroffSongIdentifyer = {
+  groupDocId: string;
+  songDocId: string;
+  songKey: string;
+  fileUrl: string;
+};
+
+export type TroffSongAddedEvent = {
+  detail: TroffSongIdentifyer;
+};
+
+export type TroffSongGroupMap = Record<string, TroffSongIdentifyer_fu[]>;
 
 export type TroffFirebaseGroupIdentifyer = {
   color?: string;

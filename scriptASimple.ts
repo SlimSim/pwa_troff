@@ -1,73 +1,29 @@
-/* eslint eqeqeq: "off" */
-// @ts-check
+import { TroffSongAddedEvent, TroffSongGroupMap, TroffSongIdentifyer_fu } from 'types/troff.js';
 import { nDB } from './assets/internal/db.js';
 
-/**
- * A single membership entry: a song in a specific group with a file URL.
- * @typedef {Object} SongGroupEntry
- * @property {string} groupDocId
- * @property {string} songDocId
- * @property {string} fileUrl
- */
-
-/** @typedef {Record<string, SongGroupEntry[]>} SongGroupMap */
-
-/**
- * Payload sent to `#onSongAdded` listeners.
- * @typedef {Object} SongAddedEvent
- * @property {{ groupDocId: string, songDocId: string, songKey: string, fileUrl: string }} detail
- */
-
 class SongToGroup {
-  /** @type {SongGroupMap} */
-  static #map = {};
+  static #map: TroffSongGroupMap = {};
 
-  /** @type {((evt: SongAddedEvent) => void)[]} */
-  static #onSongAdded = [];
+  static #onSongAdded: ((evt: TroffSongAddedEvent) => void)[] = [];
 
-  /**
-   * @returns {SongGroupMap}
-   */
-  static get() {
+  static get(): TroffSongGroupMap {
     return this.#map;
   }
 
-  /**
-   * @param {string} songKey
-   * @returns {SongGroupEntry[] | undefined}
-   */
-  static getSongGroupList(songKey) {
+  static getSongGroupList(songKey: string): TroffSongIdentifyer_fu[] | undefined {
     return this.#map[songKey];
   }
 
-  /**
-   * @param {(evt: SongAddedEvent) => void} callback
-   * @returns {void}
-   */
-  static onSongAdded(callback) {
+  static onSongAdded(callback: (evt: TroffSongAddedEvent) => void) {
     this.#onSongAdded.push(callback);
   }
 
-  /**
-   * @param {string} groupDocId
-   * @param {string} songDocId
-   * @param {string} songKey
-   * @param {string} fileUrl
-   * @returns {void}
-   */
-  static add(groupDocId, songDocId, songKey, fileUrl) {
+  static add(groupDocId: string, songDocId: string, songKey: string, fileUrl: string): void {
     this.quickAdd(groupDocId, songDocId, songKey, fileUrl);
     this.saveToDb();
   }
 
-  /**
-   * @param {string} groupDocId
-   * @param {string} songDocId
-   * @param {string} songKey
-   * @param {string} fileUrl
-   * @returns {void}
-   */
-  static quickAdd(groupDocId, songDocId, songKey, fileUrl) {
+  static quickAdd(groupDocId: string, songDocId: string, songKey: string, fileUrl: string): void {
     const myGroups = this.#map;
     var thisSong = myGroups[songKey];
 
@@ -103,12 +59,7 @@ class SongToGroup {
     });
   }
 
-  /**
-   * @param {string | undefined} songDocId
-   * @param {string} groupDocId
-   * @returns {void}
-   */
-  static remove(songDocId, groupDocId) {
+  static remove(songDocId: string | undefined, groupDocId: string): void {
     const myGroups = this.#map;
 
     Object.entries(myGroups).forEach((v) => {
@@ -127,11 +78,7 @@ class SongToGroup {
     this.saveToDb();
   }
 
-  /**
-   * @param {string} songKey
-   * @returns {number}
-   */
-  static getNrOfGroupsThisSongIsIn(songKey) {
+  static getNrOfGroupsThisSongIsIn(songKey: string): number {
     const myGroups = this.#map;
 
     const firestoreIdentifierList = myGroups[songKey];
@@ -156,13 +103,7 @@ class SongToGroup {
     this.#map = {};
   }
 
-  /**
-   * @param {string} songKey
-   * @param {string} docId
-   * @param {string} songDocId
-   * @returns {string | undefined}
-   */
-  static songKeyToFileUrl(songKey, docId, songDocId) {
+  static songKeyToFileUrl(songKey: string, docId: string, songDocId: string): string | undefined {
     const myGroups = this.#map;
     const firestoreIdentifierList = myGroups[songKey];
     return firestoreIdentifierList?.find(
@@ -170,11 +111,7 @@ class SongToGroup {
     )?.fileUrl;
   }
 
-  /**
-   * @param {string} songDocId
-   * @returns {string}
-   */
-  static getFileNameFromSongDocId(songDocId) {
+  static getFileNameFromSongDocId(songDocId: string): string {
     const myGroups = this.#map;
     const myGroupsE = Object.entries(myGroups);
 

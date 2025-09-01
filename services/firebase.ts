@@ -22,7 +22,7 @@ import { fileUrlToStorageFileName, removeLocalInfo } from '../utils/utils.js';
 import {
   TroffFirebaseGroupIdentifyer,
   TroffSongData,
-  TroffSongIdentifyer,
+  TroffSongIdentifyer_sk,
 } from '../types/troff.js';
 import { TroffFileHandler } from 'types/file.js';
 
@@ -61,7 +61,7 @@ const removeSongFileFromFirebaseGroupStorage = async (
 };
 
 const pushSongWithLocalChanges = (groupDocId: string, songDocId: string, songKey: string) => {
-  const changedSongList: TroffSongIdentifyer[] = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+  const changedSongList: TroffSongIdentifyer_sk[] = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
 
   const songInGroupAlreadyExists = changedSongList.find(
     (o) => o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey
