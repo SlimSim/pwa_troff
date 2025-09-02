@@ -62,6 +62,7 @@ export interface TroffFileData {
   tags: string;
   title: string;
   lastModified?: number;
+  size?: number;
 }
 
 export interface TroffMarker {

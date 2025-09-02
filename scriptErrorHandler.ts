@@ -20,21 +20,20 @@
 import log from './utils/log.js';
 
 import { IO } from './script.js';
-
-const errorHandler = {};
+import { ErrorHandler } from 'types/errorHandler.js';
 
 // Create an object type UserException
-function ShowUserException(message) {
-  this.message = message;
-  this.stack = new Error().stack;
+class ShowUserException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ShowUserException';
+    // Required for correct prototype chain in transpiled output (esp. ES5):
+    Object.setPrototypeOf(this, ShowUserException.prototype);
+  }
 }
-ShowUserException.prototype = new Error();
-ShowUserException.prototype.name = 'ShowUserException';
 
-$(() => {
-  'use strict';
-
-  errorHandler.backendService_getTroffData = function (error, serverId, fileName) {
+const errorHandler: ErrorHandler = {
+  backendService_getTroffData: function (error, serverId, fileName) {
     IO.removeLoadScreen();
     $('#downloadSongFromServerInProgressDialog').addClass('hidden');
     $('#downloadMarkersFromServerInProgressDialog').addClass('hidden');
@@ -85,17 +84,17 @@ $(() => {
     );
     log.e(`errorHandler.backendService_getTroffData: Full Error:\n`, error);
     return;
-  };
+  },
 
-  errorHandler.fileHandler_fetchAndSaveResponse = function (error, fileName) {
+  fileHandler_fetchAndSaveResponse: function (error, fileName) {
     IO.removeLoadScreen();
     $('#downloadSongFromServerInProgressDialog').addClass('hidden');
     $('#downloadMarkersFromServerInProgressDialog').addClass('hidden');
     if (error.status == 404) {
       $.notify(
         `The song "${fileName}", could not be found on the server, it has probably been removed
-				but the markers have been loaded, if you have the file named "${fileName}", you can
-				simply import it again and the markers will be connected with the file!`,
+          but the markers have been loaded, if you have the file named "${fileName}", you can
+          simply import it again and the markers will be connected with the file!`,
         {
           className: 'error',
           autoHide: false,
@@ -116,9 +115,9 @@ $(() => {
 
     $.notify(
       `An unknown error occurred with the song "${fileName}",
-			please try again later.
-			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
-			explaining what happened`,
+        please try again later.
+        If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
+        explaining what happened`,
       {
         className: 'error',
         autoHide: false,
@@ -127,16 +126,16 @@ $(() => {
     );
     log.e(`errorHandler.fileHandler_fetchAndSaveResponse: Full Error:\n`, error);
     return;
-  };
+  },
 
-  errorHandler.fileHandler_sendFile = function (error, fileName) {
+  fileHandler_sendFile: function (error, fileName) {
     IO.removeLoadScreen();
     $('#uploadSongToServerInProgressDialog').addClass('hidden');
     if (error.status == 0) {
       $.notify(
         `Could not upload the song "${fileName}": could not connect to server. Please check your internet connection.
-					If your internet is working, please try again later.
-					If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com`,
+            If your internet is working, please try again later.
+            If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com`,
         {
           className: 'error',
           autoHide: false,
@@ -157,8 +156,8 @@ $(() => {
 
     $.notify(
       `An unknown error occurred, please try again later.
-			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
-			explaining what happened`,
+        If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
+        explaining what happened`,
       {
         className: 'error',
         autoHide: false,
@@ -166,7 +165,7 @@ $(() => {
       }
     );
     log.e(`errorHandler.fileHandler_sendFile: Full Error:\n`, error);
-  };
-});
+  },
+};
 
 export { errorHandler, ShowUserException };
