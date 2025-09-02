@@ -43,7 +43,7 @@ import {
 import { dataTableColumnPicker } from './dataTable.js';
 import { gtag } from './services/analytics.js';
 import { isSafari } from './utils/browserEnv.js';
-import { errorHandler } from './script2.js';
+import { errorHandler } from './scriptErrorHandler.js';
 import log from './utils/log.js';
 import { removeLocalInfo } from './utils/utils.js';
 import {

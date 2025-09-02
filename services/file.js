@@ -4,7 +4,7 @@ const fileHandler = {};
 const backendService = {};
 const firebaseWrapper = {};
 
-import { ShowUserException } from '../script2.js';
+import { ShowUserException } from '../scriptErrorHandler.js';
 import { isSafari } from '../utils/browserEnv.js';
 import {
   db,

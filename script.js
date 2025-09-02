@@ -57,7 +57,7 @@ import { nDB } from './assets/internal/db.js';
 import { SongToGroup } from './scriptASimple.js';
 import { environment } from './assets/internal/environment.js';
 import { TroffClass } from './scriptTroffClass.js';
-import { errorHandler } from './script2.js';
+import { errorHandler, ShowUserException } from './scriptErrorHandler.js';
 import DBClass from './scriptDBClass.js';
 import { loadExternalHtml } from './utils/utils.js';
 import { isSafari, isIphone, isIpad, treatSafariDifferent } from './utils/browserEnv.js';
@@ -66,7 +66,6 @@ import RateClass from './scriptRateClass.js';
 import { addItem_NEW_2 } from './songManagement.js';
 
 import { firebaseWrapper, fileHandler } from './services/file.js';
-import { ShowUserException } from './script2.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
