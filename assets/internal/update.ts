@@ -1,4 +1,3 @@
-// @ts-check
 /*
 	This file is part of Troff.
 
@@ -21,10 +20,6 @@ import '../external/jquery-3.6.0.min.js';
 $(document).ready(() => {
   console.log('update.js ->');
 
-  /**
-   * @param {Cache} cache
-   * @param {string} url
-   */
   function addToCache(cache, url) {
     console.log('adding ' + url + ' to ', cache);
     cache.add(url).catch((e) => {
