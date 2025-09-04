@@ -1,5 +1,6 @@
 // Centralized Firebase initialization and exports for both main app and admin
 // v9 modular SDK via CDN
+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getAuth,
@@ -40,7 +41,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-async function initiateAllFirebaseGroups(firebaseUserEmail) {
+async function initiateAllFirebaseGroups(firebaseUserEmail: string) {
   const q = query(collection(db, 'Groups'), where('owners', 'array-contains', firebaseUserEmail));
 
   return await getDocs(q);
