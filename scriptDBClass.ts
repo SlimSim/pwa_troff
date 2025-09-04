@@ -13,6 +13,15 @@ import {
 } from './constants/constants.js';
 
 import { closeSongDialog, openSongDialog, clickAttachedSongListToggle } from './script0.js';
+import {
+  TroffFileData,
+  TroffHtmlMarkerElement,
+  TroffMarker,
+  TroffObjectLocal,
+  TroffSongIdentifyer_sk,
+  TroffStateOfSonglists,
+} from 'types/troff.js';
+import { ColumnToggleMap } from 'types/dataTables.js';
 
 /**
  * @typedef {Object} SongMarker
@@ -68,17 +77,12 @@ class DBClass {
    * @param {string} songKey
    * @returns {any | undefined}
    */
-  popSongWithLocalChanges = (groupDocId, songDocId, songKey) => {
-    /**
-     * @param {{ groupDocId: string; songDocId: string; songKey: string }} o
-     * @returns {boolean}
-     */
-    const rightSong = (o) => {
+  popSongWithLocalChanges = (groupDocId: string, songDocId: string, songKey: string) => {
+    const rightSong = (o: TroffSongIdentifyer_sk): boolean => {
       return o.groupDocId == groupDocId && o.songDocId == songDocId && o.songKey == songKey;
     };
 
-    /** @type {any[]} */
-    let changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+    let changedSongList: TroffSongIdentifyer_sk[] = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
 
     const songInGroupAlreadyExists = changedSongList.find(rightSong);
 
@@ -94,7 +98,7 @@ class DBClass {
    * @param {any} value
    * @returns {void}
    */
-  saveVal = (key, value) => {
+  saveVal = (key: string, value: any) => {
     nDB.set(key, value);
   };
 
@@ -104,7 +108,7 @@ class DBClass {
    * @param {(value: any) => void} returnFunction
    * @returns {void}
    */
-  getVal = (key, returnFunction) => {
+  getVal = (key: string, returnFunction: (value: any) => void) => {
     nDBc.get(key, returnFunction);
   };
 
@@ -114,12 +118,12 @@ class DBClass {
    * @param {any} songObject
    * @returns {void}
    */
-  cleanSong = (songId, songObject) => {
+  cleanSong = (songId: string, songObject: TroffObjectLocal) => {
     if (typeof songObject !== 'object' || songId.indexOf('TROFF_') === 0) {
       return; // this object should not be a song, and should not be cleaned
     }
 
-    songObject = DB.fixSongObject(/** @type {SongObject} */ (songObject));
+    songObject = DB.fixSongObject(/** @type {SongObject} */ songObject);
 
     nDB.set(songId, songObject);
   }; // end cleanSong
@@ -129,20 +133,30 @@ class DBClass {
    * @param {SongObject | undefined} [songObject]
    * @returns {SongObject}
    */
-  fixSongObject = (songObject) => {
+  fixSongObject = (songObject?: TroffObjectLocal): TroffObjectLocal => {
     let setMaxSongLength = false;
 
     if (songObject === undefined) {
-      songObject = {};
+      songObject = {} as TroffObjectLocal;
       setMaxSongLength = true;
     }
 
     if (songObject.fileData === undefined) {
-      songObject.fileData = {};
+      songObject.fileData = {
+        album: '',
+        artist: '',
+        choreographer: '',
+        choreography: '',
+        customName: '',
+        duration: 0,
+        genre: '',
+        tags: '',
+        title: '',
+      };
     }
 
     var songLength;
-    const maxTmp = /** @type {any} */ (document.getElementById('timeBar'))?.max;
+    const maxTmp = (document.getElementById('timeBar') as HTMLInputElement)?.max;
     songLength = Number(maxTmp) || 'max';
 
     if (setMaxSongLength) {
@@ -150,19 +164,21 @@ class DBClass {
     }
 
     /** @type {SongMarker} */
-    var oMarkerStart = {};
-    oMarkerStart.name = 'Start';
-    oMarkerStart.time = 0;
-    oMarkerStart.info = Troff.getStandardMarkerInfo();
-    oMarkerStart.color = 'None';
-    oMarkerStart.id = 'markerNr0';
+    var oMarkerStart: TroffMarker = {
+      name: 'Start',
+      time: 0,
+      info: Troff.getStandardMarkerInfo(),
+      color: 'None',
+      id: 'markerNr0',
+    };
     /** @type {SongMarker} */
-    var oMarkerEnd = {};
-    oMarkerEnd.name = 'End';
-    oMarkerEnd.time = songLength;
-    oMarkerEnd.info = '';
-    oMarkerEnd.color = 'None';
-    oMarkerEnd.id = 'markerNr1';
+    var oMarkerEnd: TroffMarker = {
+      name: 'End',
+      time: songLength,
+      info: '',
+      color: 'None',
+      id: 'markerNr1',
+    };
 
     /**
      * Rename legacy songObject keys to new schema.
@@ -171,23 +187,25 @@ class DBClass {
      * @param {string=} newName1
      * @returns {void}
      */
-    const updateAttr = (oldName, newName0, newName1) => {
+    const updateAttr = (oldName: string, newName0: string, newName1?: string) => {
       if (!Object.prototype.hasOwnProperty.call(songObject, oldName)) {
         return;
       }
+
+      const dyn = songObject as unknown as Record<string, unknown>;
+
+      const oldVal = dyn[oldName];
       if (newName1) {
-        /** @type {any} */ (songObject)['TROFF_CLASS_TO_TOGGLE_' + newName0] = /** @type {any} */ (
-          songObject
-        )[oldName][0];
-        /** @type {any} */ (songObject)['TROFF_VALUE_' + newName1] = /** @type {any} */ (
-          songObject
-        )[oldName][1];
+        // If you expect an array here, narrow it first:
+        const arr = Array.isArray(oldVal) ? (oldVal as unknown[]) : [];
+        const [cls, val] = arr;
+        dyn[`TROFF_CLASS_TO_TOGGLE_${newName0}`] = cls;
+        dyn[`TROFF_VALUE_${newName1}`] = val;
       } else {
-        /** @type {any} */ (songObject)['TROFF_VALUE_' + newName0] = /** @type {any} */ (
-          songObject
-        )[oldName];
+        dyn[`TROFF_VALUE_${newName0}`] = oldVal;
       }
-      delete (/** @type {any} */ (songObject)[oldName]);
+
+      delete dyn[oldName];
     };
 
     updateAttr('speed', 'speedBar');
@@ -207,16 +225,10 @@ class DBClass {
     if (!songObject.currentStartMarker) songObject.currentStartMarker = oMarkerStart.id;
     if (!songObject.currentStopMarker) songObject.currentStopMarker = oMarkerEnd.id + 'S';
 
-    return /** @type {SongObject} */ (songObject);
+    return /** @type {SongObject} */ songObject;
   };
 
-  /**
-   * @param {string[]} allKeys
-   * @param {string} key
-   * @param {any} valIsTrue
-   * @returns {void}
-   */
-  fixDefaultValue = (allKeys, key, valIsTrue) => {
+  fixDefaultValue = (allKeys: string[], key: string, valIsTrue: any): void => {
     if (allKeys.indexOf(key) === -1) {
       nDB.set(key, valIsTrue);
 
@@ -248,10 +260,9 @@ class DBClass {
       DB.fixDefaultValue(allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true);
 
       /** @type {ColumnToggleMap} */
-      const columnToggleList = {};
+      const columnToggleList: any = {};
       DATA_TABLE_COLUMNS.list.forEach((v) => {
-        columnToggleList[v.id] =
-          /** @type {any} */ (v).default == 'true' || /** @type {any} */ (v).default == true;
+        columnToggleList[v.id] = (v.default as any) == 'true' || v.default == true;
       });
 
       /*
@@ -264,20 +275,21 @@ class DBClass {
           const previousColumnToggleList = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
 
           /** @type {ColumnToggleMap & Record<string, boolean>} */
-          const newColumnToggle = {};
-          newColumnToggle.CHECKBOX = previousColumnToggleList[0];
-          newColumnToggle.TYPE = previousColumnToggleList[1];
-          newColumnToggle.DURATION = previousColumnToggleList[2];
-          newColumnToggle.DISPLAY_NAME = previousColumnToggleList[3];
-          newColumnToggle.TITLE = previousColumnToggleList[4];
-          newColumnToggle.ARTIST = previousColumnToggleList[5];
-          newColumnToggle.ALBUM = previousColumnToggleList[6];
-          newColumnToggle.TEMPO = previousColumnToggleList[7];
-          newColumnToggle.GENRE = previousColumnToggleList[8];
-          newColumnToggle.LAST_MODIFIED = previousColumnToggleList[10];
-          newColumnToggle.FILE_SIZE = previousColumnToggleList[11];
-          newColumnToggle.INFO = previousColumnToggleList[12];
-          newColumnToggle.EXTENSION = previousColumnToggleList[13];
+          const newColumnToggle: ColumnToggleMap = {
+            CHECKBOX: previousColumnToggleList[0],
+            TYPE: previousColumnToggleList[1],
+            DURATION: previousColumnToggleList[2],
+            DISPLAY_NAME: previousColumnToggleList[3],
+            TITLE: previousColumnToggleList[4],
+            ARTIST: previousColumnToggleList[5],
+            ALBUM: previousColumnToggleList[6],
+            TEMPO: previousColumnToggleList[7],
+            GENRE: previousColumnToggleList[8],
+            LAST_MODIFIED: previousColumnToggleList[10],
+            FILE_SIZE: previousColumnToggleList[11],
+            INFO: previousColumnToggleList[12],
+            EXTENSION: previousColumnToggleList[13],
+          };
 
           nDB.set(TROFF_SETTING_SONG_COLUMN_TOGGLE, newColumnToggle);
         }
@@ -294,7 +306,10 @@ class DBClass {
        * @param {(key: string, val: any) => void} [prepFunc]
        * @returns {void}
        */
-      const ifExistsPrepAndThenRemove = (key, prepFunc) => {
+      const ifExistsPrepAndThenRemove = (
+        key: string,
+        prepFunc?: (key: string, val: any) => void
+      ) => {
         var keyIndex = allKeys.indexOf(key);
         if (keyIndex !== -1) {
           if (prepFunc != null) {
@@ -306,15 +321,11 @@ class DBClass {
       };
 
       ifExistsPrepAndThenRemove('iCurrentSonglist', (key, val) => {
-        /** @type {{
-         * songListList: string[];
-         * galleryList: string[];
-         * directoryList: string[]
-         * }} */
-        var o = {};
-        o.songListList = val == 0 ? [] : [val.toString()];
-        o.galleryList = [];
-        o.directoryList = [];
+        var o: TroffStateOfSonglists = {
+          songListList: val == 0 ? [] : [val.toString()],
+          galleryList: [],
+          directoryList: [],
+        };
         DB.saveVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, o);
       });
 
@@ -340,7 +351,7 @@ class DBClass {
       ifExistsPrepAndThenRemove('TROFF_INTERNAL_ASSETS_VERSION_NUMBER');
       ifExistsPrepAndThenRemove('TROFF_EXTERNAL_ASSETS_VERSION_NUMBER');
 
-      allKeys.forEach((/** @type {string} */ key) => {
+      allKeys.forEach((key: string) => {
         DB.cleanSong(key, nDB.get(key));
       });
     }); //end get all keys
@@ -351,17 +362,15 @@ class DBClass {
    * @param {string} firebaseGroupDocId
    * @returns {void}
    */
-  setSonglistAsNotGroup = (firebaseGroupDocId) => {
-    const allSonglists = /** @type {SongList[]} */ (
-      JSON.parse(/** @type {string} */ (nDB.get('straoSongLists')))
-    );
+  setSonglistAsNotGroup = (firebaseGroupDocId: string) => {
+    const allSonglists = JSON.parse(nDB.get('straoSongLists'));
 
-    const currentSonglist = /** @type {SongList} */ (
-      allSonglists.find((g) => g.firebaseGroupDocId == firebaseGroupDocId)
+    const currentSonglist = allSonglists.find(
+      (g: any) => g.firebaseGroupDocId == firebaseGroupDocId
     );
     delete currentSonglist.firebaseGroupDocId;
     delete currentSonglist.owners;
-    currentSonglist.songs.forEach((song) => {
+    currentSonglist.songs.forEach((song: any) => {
       delete song.firebaseSongDocId;
     });
 
@@ -390,8 +399,8 @@ class DBClass {
    * @param {string} songId
    * @returns {void}
    */
-  setCurrentAreas = (songId) => {
-    nDBc.get(songId, (song) => {
+  setCurrentAreas = (songId: string) => {
+    nDBc.get(songId, (song: TroffObjectLocal) => {
       if (!song) {
         log.e('Error "setCurrentAreas, noSong" occurred, songId=' + songId);
         return;
@@ -414,7 +423,7 @@ class DBClass {
    * @param {number} galleryId
    * @returns {void}
    */
-  setCurrentSong = (path, galleryId) => {
+  setCurrentSong = (path: string, galleryId: number) => {
     var stroSong = JSON.stringify({ strPath: path, iGalleryId: galleryId });
     nDB.set('stroCurrentSongPathAndGalleryId', stroSong);
   };
@@ -439,7 +448,7 @@ class DBClass {
         straoSongLists = [];
       }
 
-      Troff.setSonglists_NEW(JSON.parse(/** @type {string} */ (straoSongLists)));
+      Troff.setSonglists_NEW(JSON.parse(/** @type {string} */ straoSongLists));
     });
   };
 
@@ -468,7 +477,7 @@ class DBClass {
         IO.removeLoadScreen();
         return;
       }
-      var oSong = JSON.parse(/** @type {string} */ (stroSong));
+      var oSong = JSON.parse(/** @type {string} */ stroSong);
       Troff.setCurrentSongStrings(oSong.strPath, oSong.iGalleryId);
 
       createSongAudio(oSong.strPath);
@@ -477,15 +486,15 @@ class DBClass {
 
   /**
    * Update a marker on a song and persist.
-   * @param {string} markerId
-   * @param {string} newName
-   * @param {string} newInfo
-   * @param {string} newColor
-   * @param {number|string} newTime
-   * @param {string} songId
-   * @returns {void}
    */
-  updateMarker = (markerId, newName, newInfo, newColor, newTime, songId) => {
+  updateMarker = (
+    markerId: string,
+    newName: string,
+    newInfo: string,
+    newColor: string,
+    newTime: number | string,
+    songId: string
+  ): void => {
     nDBc.get(songId, (song) => {
       if (!song) {
         log.e('Error "updateMarker, noSong" occurred, songId=' + songId);
@@ -514,11 +523,8 @@ class DBClass {
 
   /**
    * Save the current state buttons into the song.
-   * @param {string} songId
-   * @param {() => void} [callback]
-   * @returns {void}
    */
-  saveStates = (songId, callback) => {
+  saveStates = (songId: string, callback?: () => void): void => {
     nDBc.get(songId, (song) => {
       var aAllStates = Troff.getCurrentStates();
       var aStates = [];
@@ -545,12 +551,8 @@ class DBClass {
 
   /**
    * Persist zoom window for current song.
-   * @param {string} songId
-   * @param {number} startTime
-   * @param {number} endTime
-   * @returns {void}
    */
-  saveZoomTimes = (songId, startTime, endTime) => {
+  saveZoomTimes = (songId: string, startTime: number, endTime: number): void => {
     nDBc.get(songId, (song) => {
       if (!song) {
         log.e('Error "saveZoomTimes, noSong" occurred, songId=' + songId);
@@ -566,23 +568,21 @@ class DBClass {
 
   /**
    * Save markers from the UI into the song object.
-   * @param {string} songId
-   * @param {() => void} [callback]
-   * @returns {void}
    */
-  saveMarkers = (songId, callback) => {
+  saveMarkers = (songId: string, callback?: () => void): void => {
     nDBc.get(songId, (song) => {
-      var aAllMarkers = Troff.getCurrentMarkers();
+      var aAllMarkers = Troff.getCurrentMarkers() as JQuery<TroffHtmlMarkerElement>;
 
       var aMarkers = [];
       for (var i = 0; i < aAllMarkers.length; i++) {
         /** @type {SongMarker} */
-        var oMarker = {};
-        oMarker.name = aAllMarkers[i].value;
-        oMarker.time = Number(aAllMarkers[i].timeValue);
-        oMarker.info = aAllMarkers[i].info;
-        oMarker.color = aAllMarkers[i].color;
-        oMarker.id = aAllMarkers[i].id;
+        var oMarker: TroffMarker = {
+          name: aAllMarkers[i].value,
+          time: Number(aAllMarkers[i].timeValue),
+          info: aAllMarkers[i].info,
+          color: aAllMarkers[i].color,
+          id: aAllMarkers[i].id,
+        };
         aMarkers[i] = oMarker;
       }
       if (!song) {
@@ -590,8 +590,8 @@ class DBClass {
         song = DB.fixSongObject();
       }
 
-      song.currentStartMarker = /** @type {HTMLElement} */ ($('.currentMarker')[0]).id;
-      song.currentStopMarker = /** @type {HTMLElement} */ ($('.currentStopMarker')[0]).id;
+      song.currentStartMarker = /** @type {HTMLElement} */ $('.currentMarker')[0].id;
+      song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0].id;
       song.markers = aMarkers;
       song.serverId = undefined;
       Troff.setUrlToSong(undefined, null);
@@ -607,12 +607,12 @@ class DBClass {
 
   /**
    * Persist selected start/stop markers.
-   * @param {string} startMarkerId
-   * @param {string} stopMarkerId
-   * @param {string} songId
-   * @returns {void}
    */
-  setCurrentStartAndStopMarker = (startMarkerId, stopMarkerId, songId) => {
+  setCurrentStartAndStopMarker = (
+    startMarkerId: string,
+    stopMarkerId: string,
+    songId: string
+  ): void => {
     nDBc.get(songId, (song) => {
       if (!song) {
         log.e('Error "setStartAndStopMarker, noSong" occurred,' + ' songId=' + songId);
@@ -625,28 +625,13 @@ class DBClass {
     });
   }; //end setCurrentStartAndStopMarker
 
-  /**
-   * @param {string} name
-   * @param {string} songId
-   * @returns {void}
-   */
-  setCurrentStartMarker = (name, songId) => {
+  setCurrentStartMarker = (name: string, songId: string): void => {
     DB.setCurrent(songId, 'currentStartMarker', name);
   };
-  /**
-   * @param {string} name
-   * @param {string} songId
-   * @returns {void}
-   */
-  setCurrentStopMarker = (name, songId) => {
+  setCurrentStopMarker = (name: string, songId: string): void => {
     DB.setCurrent(songId, 'currentStopMarker', name);
   };
-  /**
-   * @param {string} info
-   * @param {string} songId
-   * @returns {void}
-   */
-  setCurrentSongInfo = (info, songId) => {
+  setCurrentSongInfo = (info: string, songId: string): void => {
     DB.setCurrent(songId, 'info', info, () => {
       nDB.setOnSong(songId, 'serverId', undefined);
       Troff.setUrlToSong(undefined, null);
@@ -656,24 +641,14 @@ class DBClass {
     });
   };
 
-  /**
-   * @param {number} tempo
-   * @param {string} songId
-   * @returns {void}
-   */
-  setCurrentTempo = (tempo, songId) => {
+  setCurrentTempo = (tempo: number, songId: string): void => {
     DB.setCurrent(songId, 'tempo', tempo);
   };
 
   /**
    * Set a dynamic key on the current song.
-   * @param {string} songId
-   * @param {string} key
-   * @param {any} value
-   * @param {() => void} [callback]
-   * @returns {void}
    */
-  setCurrent = (songId, key, value, callback) => {
+  setCurrent = (songId: string, key: string, value: any, callback?: () => void): void => {
     nDBc.get(songId, (song) => {
       if (!song) {
         log.e(
@@ -682,7 +657,7 @@ class DBClass {
         return;
         // TODO: replace return with song = DB.fixSongObject(); (and test)
       }
-      /** @type {any} */ (song)[key] = value;
+      /** @type {any} */ song[key] = value;
       nDB.set(songId, song);
 
       if (callback) {
@@ -691,12 +666,7 @@ class DBClass {
     });
   }; //end setCurrent
 
-  /**
-   * @param {string} songId
-   * @param {(markers: SongMarker[]) => void} funk
-   * @returns {void}
-   */
-  getMarkers = (songId, funk) => {
+  getMarkers = (songId: string, funk: (markers: TroffMarker[]) => void): void => {
     nDBc.get(songId, (song) => {
       if (!song || !song.markers) {
         // new song or no markers
@@ -709,22 +679,20 @@ class DBClass {
 
   /**
    * Load a song's metadata into the UI, creating defaults if missing.
-   * @param {string} songId
-   * @returns {void}
    */
-  getSongMetaDataOf = (songId) => {
+  getSongMetaDataOf = (songId: string): void => {
     /**
      * @param {SongObject} song
      * @param {string} songId
      */
-    const loadSongMetadata = (song, songId) => {
+    const loadSongMetadata = (song: TroffObjectLocal, songId: string) => {
       $('[data-save-on-song-toggle-class]').each(
         /** @type {(_: number, element: HTMLElement) => void} */ (_, element) => {
           var $target = $(element),
             classToToggleAndSave = $target.data('save-on-song-toggle-class'),
             key = 'TROFF_CLASS_TO_TOGGLE_' + $target.attr('id'),
             defaultElementId,
-            value = /** @type {any} */ (song)[key];
+            value = (song as any)[key];
 
           if (value === undefined) {
             defaultElementId = $target.data('troff-css-selector-to-get-default');
@@ -743,7 +711,7 @@ class DBClass {
         /** @type {(_: number, element: HTMLElement) => void} */ (_, element) => {
           var $target = $(element),
             key = 'TROFF_VALUE_' + $target.attr('id'),
-            value = /** @type {any} */ (song)[key];
+            value = (song as any)[key];
 
           if (value === undefined) {
             const defaultElementId = $target.data('troff-css-selector-to-get-default');
@@ -789,10 +757,8 @@ class DBClass {
 
   /**
    * Load an image song's metadata into the UI, creating defaults if missing.
-   * @param {string} songId
-   * @returns {void}
    */
-  getImageMetaDataOf = (songId) => {
+  getImageMetaDataOf = (songId: string): void => {
     nDBc.get(songId, (song) => {
       if (!song) {
         // new song:

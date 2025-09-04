@@ -23,6 +23,9 @@ export interface TroffObjectLocal {
   markers: TroffMarker[];
   zoomEndTime: number;
   zoomStartTime: number;
+  serverId?: string;
+  bPlayInFullscreen?: boolean;
+  bMirrorImage?: boolean;
 }
 
 export type TroffObjectFirebase = Omit<TroffObjectLocal, 'localInformation'> & {
@@ -70,7 +73,7 @@ export interface TroffMarker {
   id: string;
   info: string;
   name: string;
-  time: number;
+  time: number | string;
 }
 
 export type TroffSongData = {
@@ -114,8 +117,33 @@ export type TroffFirebaseGroupIdentifyer = {
   songs: TroffFirebaseSongIdentifyer[];
 };
 
+/**
+ * @typedef {Object} SongListSong
+ * @property {string} [firebaseSongDocId]
+ * @property {Record<string, unknown>} [meta]
+ */
+
+/**
+ * @typedef {Object} SongList
+ * @property {string} [firebaseGroupDocId]
+ * @property {string[]} [owners]
+ * @property {SongListSong[]} songs
+ */
+
 export type TroffFirebaseSongIdentifyer = {
   firebaseSongDocId: string;
   fullPath: string;
   galleryId: string;
 };
+
+export type TroffStateOfSonglists = {
+  songListList: string[];
+  galleryList: string[];
+  directoryList: string[];
+};
+
+export interface TroffHtmlMarkerElement extends HTMLInputElement {
+  timeValue: string | number;
+  info: string;
+  color: string;
+}
