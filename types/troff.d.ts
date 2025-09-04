@@ -147,3 +147,18 @@ export interface TroffHtmlMarkerElement extends HTMLInputElement {
   info: string;
   color: string;
 }
+
+export type BackendService = {
+  getTroffData: (troffDataId: string, fileName: string) => Promise<any>;
+};
+
+export type TroffData = {
+  id: number;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileUrl: string;
+  troffDataPublic: boolean;
+  troffDataUploadedMillis: number;
+  markerJsonString: string;
+};

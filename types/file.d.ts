@@ -1,6 +1,6 @@
 export interface TroffFileHandler {
-  fetchAndSaveResponse: (fileUrl: string, songKey: string) => Promise<Cache>;
-  saveResponse: (response: Response, url: string) => Promise<Cache>;
+  fetchAndSaveResponse: (fileUrl: string, songKey: string) => Promise<void>;
+  saveResponse: (response: Response, url: string) => Promise<void>;
   saveFile: (file: File, callbackFunk: (url: string, file: File) => void) => Promise<void>;
   getObjectUrlFromResponse: (response: Response, songKey: string) => Promise<string>;
   getObjectUrlFromFile: (songKey: string) => Promise<string>;
@@ -11,7 +11,7 @@ export interface TroffFileHandler {
     oSongTroffInfo: any, // Could be more specific if you have a type for TroffData
     storageDir?: string
   ) => Promise<{
-    id: string;
+    id: number;
     fileUrl: string;
     fileName: string;
   }>;

@@ -1,8 +1,8 @@
 /* eslint eqeqeq: "off" */
 
-const fileHandler = {};
-const backendService = {};
-const firebaseWrapper = {};
+const fileHandler = {} as TroffFileHandler;
+const backendService = {} as BackendService;
+const firebaseWrapper = {} as FirebaseWrapper;
 
 import { ShowUserException } from '../scriptErrorHandler.js';
 import { isSafari } from '../utils/browserEnv.js';
@@ -19,6 +19,10 @@ import {
 import { IO } from '../script.js';
 import log from '../utils/log.js';
 import { cacheImplementation } from './FileApiImplementation.js';
+import { TroffFileHandler } from 'types/file.js';
+import { FirebaseWrapper } from 'types/firebase.js';
+import { BackendService, TroffData } from 'types/troff.js';
+import { StorageError, StorageReference } from 'firebase/storage';
 
 $(() => {
   'use strict';
@@ -31,7 +35,7 @@ $(() => {
 
   const v3Init = { status: 200, statusText: 'version-3', responseType: 'cors' };
 
-  const crc32Hash = (r) => {
+  const crc32Hash = (r: string): number => {
     for (var a, o = [], c = 0; c < 256; c++) {
       a = c;
       for (var f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
@@ -41,10 +45,11 @@ $(() => {
     return (-1 ^ n) >>> 0;
   };
 
-  const hashFile = async (file) => {
+  const hashFile = async (file: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (event) => {
+        if (!event || !event.target) return;
         const data = event.target.result;
         const fileHash = await sha256Hash(data);
         resolve(fileHash);
@@ -54,7 +59,7 @@ $(() => {
     });
   };
 
-  const sha256Hash = async (object) => {
+  const sha256Hash = async (object: any) => {
     const msgUint8 = new TextEncoder().encode(JSON.stringify(object));
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -62,10 +67,14 @@ $(() => {
     return hashHex;
   };
 
-  const readFileTypeAndExtension = (file, callbackFunk) => {
+  const readFileTypeAndExtension = (
+    file: File,
+    callbackFunk: { (fileWithType: any): void; (arg0: File): void }
+  ) => {
     var reader = new FileReader();
     reader.addEventListener('load', (e) => {
-      const arr = new Uint8Array(e.target.result).subarray(0, 22);
+      if (!e || !e.target) return;
+      const arr = new Uint8Array(e.target.result as ArrayBuffer).subarray(0, 22);
       let extension = '',
         type = '',
         h = '';
@@ -123,7 +132,7 @@ $(() => {
     reader.readAsArrayBuffer(file);
   };
 
-  const handleFileWithFileType = (file, callbackFunk) => {
+  const handleFileWithFileType = (file: File, callbackFunk: (url: string, file: File) => void) => {
     // Only process image, audio and video files.
     if (!(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*'))) {
       if (isSafari) {
@@ -174,10 +183,10 @@ $(() => {
 
   fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
     const response = await fetch(fileUrl);
-    if (!response.ok) {
+    if (!response.ok || response.body == null || response.headers == null) {
       throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
     }
-    const contentLength = +response.headers.get('Content-Length');
+    const contentLength = Number(response.headers.get('Content-Length'));
     const reader = response.body.getReader();
     let receivedLength = 0; // received that many bytes at the moment
     const chunks = []; // array of received binary chunks (comprises the body)
@@ -225,6 +234,9 @@ $(() => {
 
   fileHandler.getObjectUrlFromFile = async (songKey) => {
     return caches.match(songKey).then((cachedResponse) => {
+      if (cachedResponse === undefined) {
+        throw new ShowUserException(`A problem occured with "${songKey}". Please try again.`);
+      }
       return fileHandler.getObjectUrlFromResponse(cachedResponse, songKey);
     });
   };
@@ -258,6 +270,11 @@ $(() => {
         throw error;
       }
     });
+    if (!fileUrl) {
+      throw new ShowUserException(
+        `A problem occured with the song "${fileKey}". Please try to upload it again.`
+      );
+    }
 
     return [fileUrl, file];
   };
@@ -273,7 +290,7 @@ $(() => {
     const [fileUrl, file] = await fileHandler.sendFileToFirebase(fileKey, storageDir);
 
     const strSongTroffInfo = JSON.stringify(oSongTroffInfo);
-    const troffData = {
+    const troffData: TroffData = {
       //id: - to be added after hashing
       fileName: file.name,
       fileType: file.type,
@@ -282,7 +299,7 @@ $(() => {
       troffDataPublic: true,
       troffDataUploadedMillis: new Date().getTime(),
       markerJsonString: strSongTroffInfo,
-    };
+    } as TroffData;
 
     troffData.id = crc32Hash(JSON.stringify(troffData));
 
@@ -300,6 +317,8 @@ $(() => {
   };
 
   fileHandler.handleFiles = async (files, callbackFunk) => {
+    if (files == null) return;
+
     let i = 0;
 
     // Loop through the FileList and render the files as appropriate.
@@ -314,12 +333,12 @@ $(() => {
     }
   };
 
-  const checkUploadedFileAndGetURL = async (fileRef) => {
+  const checkUploadedFileAndGetURL = async (fileRef: StorageReference) => {
     try {
       // 1) If it already exists, this succeeds immediately
       const existingUrl = await getDownloadURL(fileRef);
       return existingUrl;
-    } catch (err) {
+    } catch (err: any) {
       if (err.code !== 'storage/object-not-found') {
         // Not a "missing object" case; surface the real error
         throw err;
@@ -374,7 +393,7 @@ $(() => {
     try {
       await setDoc(doc(db, 'TroffData', String(troffData.id)), troffData);
       return troffData;
-    } catch (error) {
+    } catch (error: any) {
       log.e(error);
       try {
         const troffDataInFirebase = await backendService.getTroffData(
