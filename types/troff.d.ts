@@ -112,23 +112,11 @@ export type TroffFirebaseGroupIdentifyer = {
   firebaseGroupDocId: string;
   icon?: string;
   id: number;
+  info?: string;
   name: string;
   owners: string[];
   songs: TroffFirebaseSongIdentifyer[];
 };
-
-/**
- * @typedef {Object} SongListSong
- * @property {string} [firebaseSongDocId]
- * @property {Record<string, unknown>} [meta]
- */
-
-/**
- * @typedef {Object} SongList
- * @property {string} [firebaseGroupDocId]
- * @property {string[]} [owners]
- * @property {SongListSong[]} songs
- */
 
 export type TroffFirebaseSongIdentifyer = {
   firebaseSongDocId: string;
