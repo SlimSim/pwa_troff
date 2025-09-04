@@ -1,6 +1,7 @@
+import { Environment } from "types/environment";
+
 // @ts-check
-/** @type {import('../../types/environment').Environment} */
-const environment = {
+const environment: Environment = {
   banner: { show: false, text: '', showLogs: false },
   showHiddenInProd: false,
   firebaseConfig: {

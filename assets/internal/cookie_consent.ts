@@ -11,10 +11,10 @@ $(document).ready(function () {
 
   /** @type {CookieConsentDB} */
   const cookie_consent_DB = {
-    set: function (key, value) {
+    set: function (key: string, value: any) {
       window.localStorage.setItem(key, JSON.stringify(value));
     },
-    get: function (key) {
+    get: function (key: string) {
       const raw = window.localStorage.getItem(key);
       if (raw === null) return null;
       try {
@@ -28,9 +28,8 @@ $(document).ready(function () {
 
   /**
    * Render and show the cookie consent banner using notify.js
-   * @returns {void}
    */
-  function showCookieConsent() {
+  function showCookieConsent(): void {
     $.notify(
       {
         title: $('<span class="d-flex flex-column">')
@@ -63,30 +62,28 @@ $(document).ready(function () {
               )
           ),
       },
-      /** @type {{style: string, autoHide: boolean, clickToHide: boolean}} */ ({
+      /** @type {{style: string, autoHide: boolean, clickToHide: boolean}} */ {
         style: 'html-info',
         autoHide: false,
         clickToHide: false,
-      })
+      }
     );
   } // end showCookieConsent();
 
   /**
    * Check persisted state and show the cookie consent banner when needed.
    * Retries on transient storage errors.
-   * @returns {void}
    */
-  function checkToShowCookieConsent() {
+  function checkToShowCookieConsent(): void {
     try {
       var cookieConsentAccepted = cookie_consent_DB.get(COOKIE_CONSENT_ACCEPTED); //, cookieConsentAccepted => {
       if (cookieConsentAccepted === true) {
         return;
       }
       showCookieConsent();
-      //			});
     } catch (e) {
       console.info('cc / checkToShowCookieConsent: in catch, e:', e);
-      setTimeout(function () {
+      setTimeout(() => {
         checkToShowCookieConsent();
       }, 10);
     }

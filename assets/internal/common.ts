@@ -28,7 +28,7 @@
  * This is only for type checking; it does not change runtime behavior.
  * @type {Window & { IO?: IOApi }}
  */
-const _w = /** @type {any} */ (window);
+const _w: any = window;
 
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
@@ -42,7 +42,7 @@ const _w = /** @type {any} */ (window);
      * Also invokes IO.blurHack() if available to remove focus artifacts.
      * @returns {void}
      */
-    function sendMail() {
+    function sendMail(): void {
       console.log('sendMail 2 ->');
       _w.IO?.blurHack();
       var subject = 'Troff is a great music player for practicing';

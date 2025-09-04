@@ -1,42 +1,9 @@
 // @ts-check
 
-/**
- * Shared types for the nDB storage helpers
- *
- * @typedef {string} SongId
- * @typedef {string | string[]} KeyPath
- *
- * A synchronous callback signature used by the callback-based API.
- * @callback NDBValueCallback
- * @param {any} value
- * @returns {void}
- *
- * Represents the shape of the localStorage-backed database helper (sync API).
- * @typedef {Object} NDB
- * @property {(songId: SongId, keys: KeyPath, value: any) => void} setOnSong
- *   Set a deep property on a stored song object. Creates any missing objects along the path.
- * @property {(key: string, value: any) => void} set
- *   Store a JSON-serializable value under the provided key.
- * @property {(key: string) => (any | null)} get
- *   Retrieve a value and parse it from JSON. Returns null when not found.
- * @property {(key: string) => void} delete
- *   Remove a stored value.
- * @property {() => string[]} getAllKeys
- *   Get all keys currently stored in localStorage.
- * @property {() => void} clearAllStorage
- *   Clear the entire localStorage.
- *
- * Represents the shape of the callback-based wrapper API.
- * @typedef {Object} NDBc
- * @property {(key: string, callback: NDBValueCallback) => void} get
- *   Async-style wrapper around nDB.get.
- * @property {(callback: NDBValueCallback) => void} getAllKeys
- *   Async-style wrapper around nDB.getAllKeys.
- */
-
-/** @type {NDB} */
+/** nDB New Data Base */
 const nDB = {
   // new data base
+
   /**
    * Set a deep property on a song object identified by songId.
    * If intermediate objects in the path don't exist, they will be created.
@@ -45,12 +12,11 @@ const nDB = {
    *   setOnSong('mySong', ['fileData', 'artist'], 'ABBA')
    *   setOnSong('mySong', 'serverId', 123)
    *
-   * @param {SongId} songId
-   * @param {KeyPath} keys Path to set. Either a single key or an array of nested keys.
-   * @param {any} value Value to set at the targeted path.
-   * @returns {void}
+   * @param songId
+   * @param keys Path to set. Either a single key or an array of nested keys.
+   * @param value Value to set at the targeted path.
    */
-  setOnSong: function (songId, keys, value) {
+  setOnSong: function (songId: string, keys: string | string[], value: any) {
     if (typeof keys != 'object') {
       keys = [keys];
     }
@@ -120,19 +86,14 @@ const nDB = {
   },
   /**
    * Store a JSON-serializable value
-   * @param {string} key
-   * @param {any} value
-   * @returns {void}
    */
-  set: function (key, value) {
+  set: function (key: string, value: any): void {
     window.localStorage.setItem(key, JSON.stringify(value));
   },
   /**
    * Get a stored value parsed from JSON
-   * @param {string} key
-   * @returns {any | null}
    */
-  get: function (key) {
+  get: function (key: string): any | null {
     const raw = window.localStorage.getItem(key);
     if (raw === null) return null;
     try {
@@ -144,46 +105,32 @@ const nDB = {
   },
   /**
    * Remove a stored value
-   * @param {string} key
-   * @returns {void}
    */
-  delete: function (key) {
+  delete: function (key: string): void {
     window.localStorage.removeItem(key);
     // todo, add print if "key" do not exist
   },
   /**
    * Get all keys stored in localStorage
-   * @returns {string[]}
    */
-  getAllKeys: function () {
+  getAllKeys: function (): string[] {
     return Object.keys(localStorage);
   },
   /**
    * Clear all localStorage
-   * @returns {void}
    */
-  clearAllStorage: function () {
+  clearAllStorage: function (): void {
     localStorage.clear();
   },
 };
 
-/** @type {NDBc} */
 const nDBc = {
   //new data base callback
 
-  /**
-   * @param {string} key
-   * @param {NDBValueCallback} callback
-   * @returns {void}
-   */
-  get: function (key, callback) {
+  get: function (key: string, callback: (value: any) => void): void {
     callback(nDB.get(key));
   },
-  /**
-   * @param {NDBValueCallback} callback
-   * @returns {void}
-   */
-  getAllKeys: function (callback) {
+  getAllKeys: function (callback: (keys: string[]) => void): void {
     callback(nDB.getAllKeys());
   },
 };

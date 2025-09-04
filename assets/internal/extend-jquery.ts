@@ -1,4 +1,3 @@
-// @ts-check
 (function () {
   /**
    * A scroll handler invoked by jQuery for these special events.
@@ -8,7 +7,7 @@
    * @param {Event & { type: string }} evt
    * @returns {void}
    */
-  
+
   // from https://j11y.io/javascript/special-scroll-events-for-jquery/
   var special = jQuery.event.special,
     uid1 = 'D' + +new Date(),
@@ -16,23 +15,24 @@
 
   special.scrollStart = {
     setup: function () {
-      /** @type {ReturnType<typeof setTimeout> | null} */
-      var timer,
-        /** @type {ScrollHandler} */
-        handler = function (evt) {
+      var timer: null | number,
+        handler = function (this: EventTarget, event: JQuery.Event) {
           var _self = this,
             _args = arguments;
 
           if (timer) {
             clearTimeout(timer);
           } else {
-            evt.type = 'scrollStart';
-            jQuery.event.dispatch.apply(_self, _args);
+            event.type = 'scrollStart';
+            (jQuery.event as any).dispatch.apply(_self, _args);
           }
 
-          timer = setTimeout(function () {
-            timer = null;
-          }, special.scrollStop.latency);
+          timer = setTimeout(
+            function () {
+              timer = null;
+            },
+            (special.scrollStop as any).latency
+          );
         };
 
       jQuery(this).bind('scroll', handler).data(uid1, handler);
@@ -45,10 +45,8 @@
   special.scrollStop = {
     latency: 42,
     setup: function () {
-      /** @type {ReturnType<typeof setTimeout> | null} */
-      var timer,
-        /** @type {ScrollHandler} */
-        handler = function (evt) {
+      var timer: null | number,
+        handler = function (this: EventTarget, event: JQuery.Event) {
           var _self = this,
             _args = arguments;
 
@@ -56,11 +54,14 @@
             clearTimeout(timer);
           }
 
-          timer = setTimeout(function () {
-            timer = null;
-            evt.type = 'scrollStop';
-            jQuery.event.dispatch.apply(_self, _args);
-          }, special.scrollStop.latency);
+          timer = setTimeout(
+            function () {
+              timer = null;
+              event.type = 'scrollStop';
+              (jQuery.event as any).dispatch.apply(_self, _args);
+            },
+            (special.scrollStop as any).latency
+          );
         };
 
       jQuery(this).bind('scroll', handler).data(uid2, handler);
