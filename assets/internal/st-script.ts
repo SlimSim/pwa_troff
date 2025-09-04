@@ -1,26 +1,20 @@
-// @ts-check
+export interface StandardFuntions {
+  confirm: (
+    textHead: string,
+    textBox: string,
+    funcOk?: () => void,
+    funcCancel?: () => void
+  ) => void;
+  secToDisp: (seconds: number) => string;
+  millisToDisp: (millis: number) => string;
+  byteToDisp: (byte: number | null) => string;
+  defaultFor: <T>(arg: T | undefined, val: T) => T;
+}
 
-/**
- * @typedef {Object} StApi
- * @property {(textHead: string, textBox: string, funcOk?: () => void, funcCancel?: () => void) => void} confirm
- * @property {(seconds: number) => string} secToDisp
- * @property {(millis: number) => string} millisToDisp
- * @property {(byte: number | null | undefined) => string} byteToDisp
- * @property {<T>(arg: T | undefined, val: T) => T} defaultFor
- */
-
-/** @type {Partial<StApi> & Record<string, any>} */
-const st = {};
+const st = {} as StandardFuntions;
 
 $(document).ready(function () {
-  /**
-   * Show a simple confirm dialog with OK/Cancel callbacks.
-   * @param {string} textHead
-   * @param {string} textBox
-   * @param {() => void} [funcOk]
-   * @param {() => void} [funcCancel]
-   */
-  st.confirm = function (textHead, textBox, funcOk, funcCancel) {
+  st.confirm = function (textHead, textBox, funcOk?, funcCancel?) {
     const outerDiv = $('<div>').addClass('outerDialog onTop');
     const innerDiv = $('<div>').addClass('innerDialog m-4');
 
@@ -59,13 +53,12 @@ $(document).ready(function () {
 
     document.addEventListener('keydown', onKeyDown);
 
-    /** @param {KeyboardEvent} event */
-    function onKeyDown(event) {
+    function onKeyDown(event: KeyboardEvent) {
       event.preventDefault();
-      if (event.keyCode === 13) {
+      if (event.key === 'Enter') {
         clickOk();
       }
-      if (event.keyCode === 27) {
+      if (event.key === 'Escape') {
         clickCancel();
       }
     }
@@ -73,16 +66,13 @@ $(document).ready(function () {
     $('body').append(outerDiv.append(innerDiv));
   }; // end confirm
 
-  /** @param {number} seconds */
   st.secToDisp = function (seconds) {
-    /** @type {number | string} */
-    var sec = (seconds | 0) % 60;
+    var sec: number | string = (seconds | 0) % 60;
     if (sec < 10) sec = '0' + sec;
-    var min = (seconds / 60) | 0;
+    var min: number | string = (seconds / 60) | 0;
     return min + ':' + sec;
   };
 
-  /** @param {number} millis */
   st.millisToDisp = function (millis) {
     if (!millis || millis < 162431283500) {
       return '';
@@ -100,7 +90,6 @@ $(document).ready(function () {
     return year + '-' + mm + '-' + dd;
   };
 
-  /** @param {number | null | undefined} byte */
   st.byteToDisp = function (byte) {
     if (byte == null) {
       return '';
@@ -118,27 +107,22 @@ $(document).ready(function () {
     return String(Math.round(byte * 10) / 10) + units[nrTimes];
   };
 
-  /** @template T @param {T | undefined} arg @param {T} val @returns {T} */
-  st.defaultFor = function (arg, val) {
+  st.defaultFor = function <T>(arg: T | undefined, val: T): T {
     return typeof arg !== 'undefined' ? arg : val;
   };
 
   var ST_DB = {
-      // new data base
-      /** @param {string} key @param {any} value */
-      set: function (key, value) {
+      set: function (key: string, value: any): void {
         window.localStorage.setItem(key, JSON.stringify(value));
       },
-      /** @param {string} key @returns {any} */
-      get: function (key) {
+      get: function (key: string): any {
         const raw = window.localStorage.getItem(key);
         return raw == null ? null : JSON.parse(raw);
       },
     },
     ST_DBc = {
       //new data base callback
-      /** @param {string} key @param {(v:any)=>void} callback */
-      get: function (key, callback) {
+      get: function (key: string, callback: (v: any) => void): void {
         callback(ST_DB.get(key));
       },
     },
@@ -148,7 +132,7 @@ $(document).ready(function () {
       if (el) el.focus({ preventScroll: true });
     },
     /** @param {any} event */
-    dataSaveValue = function (/** @type {Event} */ event) {
+    dataSaveValue = function (event: JQuery.TriggeredEvent): void {
       blurHack();
       var $target = $(event.target),
         id = $target.attr('id'),
@@ -159,7 +143,7 @@ $(document).ready(function () {
         return;
       }
 
-      const key = 'TROFF_SAVE_VALUE_' + /** @type {string} */ (id);
+      const key = 'TROFF_SAVE_VALUE_' + /** @type {string} */ id;
 
       ST_DB.set(key, value);
     };
@@ -186,58 +170,56 @@ $(document).ready(function () {
   $('[data-st-save-current-value]').change(dataSaveValue);
 
   /** @param {number} i @param {HTMLElement} element */
-  $('[data-st-save-current-value]').each(function (
-    /** @type {number} */ i,
-    /** @type {HTMLElement} */ element
-  ) {
-    var $target = $(element),
-      key = 'TROFF_SAVE_VALUE_' + $target.attr('id');
+  $('[data-st-save-current-value]').each(
+    function (/** @type {number} */ i, /** @type {HTMLElement} */ element) {
+      var $target = $(element),
+        key = 'TROFF_SAVE_VALUE_' + $target.attr('id');
 
-    ST_DBc.get(key, function (value) {
-      //var value = ret[key];
+      ST_DBc.get(key, function (value) {
+        //var value = ret[key];
 
-      if (value === undefined || value === null) {
-        value = $target.data('st-save-current-value');
-      }
+        if (value === undefined || value === null) {
+          value = $target.data('st-save-current-value');
+        }
 
-      $target.val(value);
-    });
-  });
+        $target.val(value);
+      });
+    }
+  );
 
   /** @param {number} i @param {HTMLElement} v */
-  $('.st-simple-on-off-button').each(function (
-    /** @type {number} */ i,
-    /** @type {HTMLElement} */ v
-  ) {
-    var $v = $(v),
-      cssSelectorToHide = $v.data('st-css-selector-to-hide');
-    if ($v.data('st-save-value-key')) {
-      var key = $v.data('st-save-value-key');
-      ST_DBc.get(key, function (savedValue) {
-        //var savedValue = item[ key ];
+  $('.st-simple-on-off-button').each(
+    function (/** @type {number} */ i, /** @type {HTMLElement} */ v) {
+      var $v = $(v),
+        cssSelectorToHide = $v.data('st-css-selector-to-hide');
+      if ($v.data('st-save-value-key')) {
+        var key = $v.data('st-save-value-key');
+        ST_DBc.get(key, function (savedValue) {
+          //var savedValue = item[ key ];
 
-        if (savedValue === undefined || savedValue === null) {
-          if ($v.hasClass('active')) {
+          if (savedValue === undefined || savedValue === null) {
+            if ($v.hasClass('active')) {
+              $(cssSelectorToHide).removeClass('hidden');
+            } else {
+              $(cssSelectorToHide).addClass('hidden');
+            }
+          } else if (savedValue) {
+            $v.addClass('active');
             $(cssSelectorToHide).removeClass('hidden');
           } else {
+            $v.removeClass('active');
             $(cssSelectorToHide).addClass('hidden');
           }
-        } else if (savedValue) {
-          $v.addClass('active');
+        });
+      } else {
+        if ($v.hasClass('active')) {
           $(cssSelectorToHide).removeClass('hidden');
         } else {
-          $v.removeClass('active');
           $(cssSelectorToHide).addClass('hidden');
         }
-      });
-    } else {
-      if ($v.hasClass('active')) {
-        $(cssSelectorToHide).removeClass('hidden');
-      } else {
-        $(cssSelectorToHide).addClass('hidden');
       }
     }
-  });
+  );
 
   /** @param {any} event */
   $('.st-simple-on-off-button').click(function (/** @type {Event} */ event) {
@@ -247,13 +229,12 @@ $(document).ready(function () {
       setActive = !$target.hasClass('active');
 
     if (selectKey) {
-      $('[data-st-select-key=' + selectKey + ']').each((
-        /** @type {number} */ i,
-        /** @type {HTMLElement} */ v
-      ) => {
-        $(v).removeClass('active');
-        ST_DB.set($(v).data('st-save-value-key'), false);
-      });
+      $('[data-st-select-key=' + selectKey + ']').each(
+        (/** @type {number} */ i, /** @type {HTMLElement} */ v) => {
+          $(v).removeClass('active');
+          ST_DB.set($(v).data('st-save-value-key'), false);
+        }
+      );
     }
 
     if (setActive) {
