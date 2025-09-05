@@ -18,6 +18,15 @@
 import '../assets/external/jquery-3.6.0.min.js';
 import '../assets/external/notify-js/notify.min.js';
 
+import {
+  TroffFileData,
+  TroffHtmlMarkerElement,
+  TroffMarker,
+  TroffObjectLocal,
+  TroffSongIdentifyer_sk,
+  TroffStateOfSonglists,
+} from '../types/troff.js';
+
 import { st } from '../assets/internal/st-script.js';
 import log from '../utils/log.js';
 import {
@@ -133,7 +142,7 @@ $(document).ready(async function () {
     const docs = snapshot.docs;
     const allTroffData = docs.map((doc) => doc.data());
 
-    const fileList = [];
+    const fileList = [] as any[];
 
     let totalSize = 0;
     let nrOfFiles = 0;
@@ -197,7 +206,7 @@ $(document).ready(async function () {
       $('#fileList').append(newDiv);
 
       $.each(file.troffDataList, (i, troffData) => {
-        let songData = null;
+        let songData = {} as TroffObjectLocal;
         try {
           songData = JSON.parse(troffData.markerJsonString);
         } catch (e) {
@@ -265,7 +274,7 @@ $(document).ready(async function () {
       newDiv.find('.troffDataPrivate').text(nrTroffDataPrivate);
 
       newDiv.find('.removeFile').on('click', () => {
-        document.getElementById('blur-hack').focus({ preventScroll: true });
+        document.getElementById('blur-hack')?.focus({ preventScroll: true });
 
         st.confirm(
           'Delete file?',
@@ -280,7 +289,7 @@ $(document).ready(async function () {
         );
       });
       newDiv.find('.makeAllPrivate').on('click', () => {
-        document.getElementById('blur-hack').focus({ preventScroll: true });
+        document.getElementById('blur-hack')?.focus({ preventScroll: true });
         st.confirm(
           'Make All Private?',
           'Do you want to make all the troffData private for "' + file.fileName + '"?',
@@ -295,7 +304,7 @@ $(document).ready(async function () {
         );
       });
       newDiv.find('.makeAllPublic').on('click', () => {
-        document.getElementById('blur-hack').focus({ preventScroll: true });
+        document.getElementById('blur-hack')?.focus({ preventScroll: true });
         st.confirm(
           'REALLY? Make All PUBLIC?',
           'Do you want to make ALL the troffData PUBLIC for "' + file.fileName + '"?',
@@ -339,19 +348,21 @@ $(document).ready(async function () {
       });
   };
 
-  const sortFileList = function (cssToSort, orderByAsc) {
+  const sortFileList = function (cssToSort: string, orderByAsc?: boolean) {
     orderByAsc = orderByAsc === undefined ? true : orderByAsc;
     var $fileList = $('#fileList');
 
-    $fileList
+    const sortedChildren = $fileList
       .children()
+      .get()
       .sort(function (a, b) {
         if (orderByAsc) {
           return $(a).data(cssToSort) - $(b).data(cssToSort);
         }
         return $(b).data(cssToSort) - $(a).data(cssToSort);
-      })
-      .appendTo($fileList);
+      });
+
+    $(sortedChildren).appendTo($fileList);
   };
 
   $('#sortUpdatedAsc').on('click', () => {

@@ -15,8 +15,6 @@
 		along with Troff. If not, see <http://www.gnu.org/licenses/>.
 	*/
 
-// @ts-check
-
 import '../../external/notify-js/notify.min.js';
 
 /**
@@ -79,18 +77,19 @@ let notifyUndoLocal;
    * Shows a notification with an Undo button.
    * @param {string} infoText - Info text to display in the notification.
    * @param {() => void} callback - Callback executed when the user clicks Undo.
-   * @returns {void}
    */
-  notifyUndoLocal = function (infoText, callback) {
+  notifyUndoLocal = function (infoText: string, callback: () => void): void {
     var span = $('<span class="full-width">')
       .append($('<p>').text(infoText))
       .append(
         $('<button>')
           .text('undo')
-          .click(/** @this {HTMLButtonElement} */ function () {
-            callback();
-            $(this).trigger('notify-hide');
-          })
+          .click(
+            /** @this {HTMLButtonElement} */ function () {
+              callback();
+              $(this).trigger('notify-hide');
+            }
+          )
       );
 
     $.notify(

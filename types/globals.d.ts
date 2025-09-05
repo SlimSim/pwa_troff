@@ -2,12 +2,19 @@
 
 import 'jquery';
 
+// Define the notify function interface
+interface NotifyFunction {
+  (message: string, type?: string): any;
+  (options: any): any;
+  (...args: any[]): any;
+  defaults(options: any): void;
+  addStyle(name: string, style: any): void;
+}
+
 // Extend the global jQuery interface to include the notify plugin
 declare global {
   interface JQueryStatic {
-    notify(message: string, type?: string): any;
-    notify(options: any): any;
-    notify(...args: any[]): any;
+    notify: NotifyFunction;
   }
 
   // Also extend the jQuery instance interface if the plugin supports chaining

@@ -2,10 +2,6 @@
   /**
    * A scroll handler invoked by jQuery for these special events.
    * `this` is the scrolled element and `evt.type` is mutated to signal start/stop.
-   * @callback ScrollHandler
-   * @this {Element}
-   * @param {Event & { type: string }} evt
-   * @returns {void}
    */
 
   // from https://j11y.io/javascript/special-scroll-events-for-jquery/
