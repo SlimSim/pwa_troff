@@ -1902,18 +1902,6 @@ class TroffClass {
     DB.saveVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, o);
   };
 
-  enterSongListName = () => {
-    IO.setEnterFunction(() => {
-      IO.blurHack();
-      this.saveNewSongList();
-      return false;
-    });
-  };
-  exitSongListName = () => {
-    IO.clearEnterFunction();
-    IO.blurHack();
-  };
-
   getUniqueSonglistId = () => {
     var iSonglistId = 1;
     var bFinniched = false;

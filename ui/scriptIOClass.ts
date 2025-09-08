@@ -20,8 +20,12 @@ import { gtag } from '../services/analytics.js';
 import { clickSongList_NEW } from '../scriptTroffClass.js';
 import log from '../utils/log.js';
 import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../constants/constants.js';
+import { IOInput } from 'types/io.js';
 
 class IOClass {
+  IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
+  IOArrowFunction: boolean | ((event: KeyboardEvent) => any);
+
   constructor() {
     this.IOEnterFunction = false;
     this.IOArrowFunction = false;
@@ -31,8 +35,8 @@ class IOClass {
 		or in regular mode */
 
   toggleFullScreen = () => {
-    var doc = window.document;
-    var docEl = doc.documentElement;
+    var doc = window.document as any;
+    var docEl = doc.documentElement as any;
 
     var requestFullScreen =
       docEl.requestFullscreen ||
@@ -57,15 +61,15 @@ class IOClass {
     }
   };
 
-  updateCellInDataTable = (column, value, key) => {
+  updateCellInDataTable = (column: string, value: string, key: string) => {
     if (key == undefined) {
-      $('#dataSongTable')
+      ($('#dataSongTable') as any)
         .DataTable()
         .cell('.selected', DATA_TABLE_COLUMNS.getPos(column))
         .data(value);
       return;
     }
-    $('#dataSongTable')
+    ($('#dataSongTable') as any)
       .DataTable()
       .cell('[data-song-key="' + key + '"]', DATA_TABLE_COLUMNS.getPos(column))
       .data(value);
@@ -81,7 +85,7 @@ class IOClass {
     }
   };
 
-  openWindow = (event) => {
+  openWindow = (event: JQuery.TriggeredEvent) => {
     const $button = $(event.target).closest('[data-href]');
     window.open($button.data('href'), $button.data('target'));
   };
@@ -220,7 +224,7 @@ class IOClass {
     $('#speedBar').on('change', (e) => {
       gtag('event', 'Set Speed', {
         event_category: 'Perform change',
-        event_label: $(e.target).val(),
+        event_label: $(e.target).val() as string,
       });
     });
 
@@ -237,11 +241,11 @@ class IOClass {
     $('#okStretchSelectedMarkersDialog').click(Troff.stretchSelectedMarkers);
     $('#okStretchAllMarkersDialog').click(Troff.stretchAllMarkers);
 
-    $('#openExportGlobalSettingsDialog').on('click', Troff.openExportGlobalSettingsDialog);
-    $('#openExportAllDataDialog').on('click', Troff.openExportAllDataDialog);
-    $('#okImportAllDataDialog').on('click', Troff.okImportAllDataDialog);
-    $('#okClearAndImportAllDataDialog').on('click', Troff.okClearAndImportAllDataDialog);
-    $('#okImportGlobalSettingsDialog').on('click', Troff.okImportGlobalSettingsDialog);
+    // $('#openExportGlobalSettingsDialog').on('click', Troff.openExportGlobalSettingsDialog);
+    // $('#openExportAllDataDialog').on('click', Troff.openExportAllDataDialog);
+    // $('#okImportAllDataDialog').on('click', Troff.okImportAllDataDialog);
+    // $('#okClearAndImportAllDataDialog').on('click', Troff.okClearAndImportAllDataDialog);
+    // $('#okImportGlobalSettingsDialog').on('click', Troff.okImportGlobalSettingsDialog);
 
     $('.writableField').on('click', Troff.enterWritableField);
     $('.writableField').on('blur', Troff.exitWritableField);
@@ -292,14 +296,9 @@ class IOClass {
     $('#songInfoArea').change(Troff.updateSongInfo);
     $('#songInfoArea').blur(Troff.exitSongInfo);
     $('#songInfoArea').click(Troff.enterSongInfo);
-    $('#newSongListName').click(Troff.enterSongListName);
-    $('#newSongListName').blur(Troff.exitSongListName);
-    $('#saveNewSongList').click(Troff.saveNewSongList);
     $('#removeSongList').click(Troff.onClickremoveSonglist);
     $('#leaveGroup').click(Troff.onClickLeaveGroup);
     $('#shareSonglist').click(Troff.onClickShareSonglist);
-
-    $('#cancelSongList').click(Troff.cancelSongList);
 
     $('#buttUnselectMarkers').click(Troff.unselectMarkers);
     $('#buttResetVolume').click(() =>
@@ -318,14 +317,14 @@ class IOClass {
       Troff.incrementInput('#speedBar', -5);
       gtag('event', 'Increment Speed', {
         event_category: 'Perform change',
-        event_label: $('#speedBar').val(),
+        event_label: $('#speedBar').val() as string,
       });
     });
     $('#speedPlus, #speedPlusDemo').click(() => {
       Troff.incrementInput('#speedBar', +5);
       gtag('event', 'Increment Speed', {
         event_category: 'Perform change',
-        event_label: $('#speedBar').val(),
+        event_label: $('#speedBar').val() as string,
       });
     });
 
@@ -348,7 +347,7 @@ class IOClass {
     );
 
     $('.click-to-select-text').click((event) => {
-      event.target.select();
+      (event.target as HTMLInputElement).select();
     });
 
     $('.loopButt').click(Troff.setLoop);
@@ -375,14 +374,14 @@ class IOClass {
   }; //end startFunc
 
   blurHack = () => {
-    document.getElementById('blur-hack').focus({ preventScroll: true });
+    document.getElementById('blur-hack')?.focus({ preventScroll: true });
   };
 
-  onClickCopyTextToClipboard = (event) => {
+  onClickCopyTextToClipboard = (event: JQuery.ClickEvent) => {
     this.copyTextToClipboard($(event.target).val());
   };
 
-  copyTextToClipboard = async (text) => {
+  copyTextToClipboard = async (text: string) => {
     if (!navigator.clipboard) {
       this.fallbackCopyTextToClipboard(text);
       return;
@@ -398,7 +397,7 @@ class IOClass {
     );
   };
 
-  fallbackCopyTextToClipboard = (text) => {
+  fallbackCopyTextToClipboard = (text: string) => {
     var textArea = document.createElement('textarea');
     textArea.value = text;
 
@@ -426,7 +425,7 @@ class IOClass {
     document.body.removeChild(textArea);
   };
 
-  copyToClipboardSuccessful = (text) => {
+  copyToClipboardSuccessful = (text: string) => {
     $.notify(`Copied "${text}" to clipboard!`, {
       className: 'success',
       autoHide: true,
@@ -434,7 +433,7 @@ class IOClass {
     });
   };
 
-  copyToClipboardFailed = (text) => {
+  copyToClipboardFailed = (text: string) => {
     $.notify(`Could not copy "${text}" to clipboard, please copy the text manually`, {
       className: 'error',
       autoHide: false,
@@ -442,20 +441,20 @@ class IOClass {
     });
   };
 
-  keyboardKeydown = (event) => {
+  keyboardKeydown = (event: KeyboardEvent): void => {
     if (event.altKey) {
       event.preventDefault();
     }
 
-    if (this.IOEnterFunction) {
-      if (event.keyCode == 9 && $(event.target).hasClass('allow-tab')) {
+    if (typeof this.IOEnterFunction === 'function' && event != null) {
+      if (event.keyCode == 9 && event.target != null && $(event.target).hasClass('allow-tab')) {
         $(event.target).addClass('tab-activated');
       }
 
       if (event.keyCode == 13) {
         this.IOEnterFunction(event);
       }
-      if (this.IOArrowFunction) {
+      if (typeof this.IOArrowFunction === 'function') {
         if ([37, 38, 39, 40].indexOf(event.keyCode) != -1) {
           this.IOArrowFunction(event);
         }
@@ -497,7 +496,7 @@ class IOClass {
       Troff.setLoopTo(number);
       gtag('event', 'Change loop', {
         event_category: 'Perform change',
-        event_label: number || '∞',
+        event_label: String(number || '∞'),
       });
     }
 
@@ -518,7 +517,7 @@ class IOClass {
         return;
       }
 
-      if (event.shiftKey == 1 || event.altKey == 1) {
+      if (event.shiftKey || event.altKey) {
         if (incrementsSelector == undefined) {
           return;
         }
@@ -560,34 +559,34 @@ class IOClass {
         Troff.forceNoFullscreen();
         break;
       case 78: // N
-        if (event.shiftKey == 1) {
+        if (event.shiftKey) {
           Troff.selectNext(/*reverse = */ true);
         } else {
           Troff.selectNext(/*reverse = */ false);
         }
         break;
       case 40: // downArrow
-        if (event.shiftKey == 1 && event.altKey == 1) Troff.moveOneMarkerDown(shiftTime);
-        else if (event.shiftKey == 1) Troff.moveOneMarkerDown(regularTime);
+        if (event.shiftKey && event.altKey) Troff.moveOneMarkerDown(shiftTime);
+        else if (event.shiftKey) Troff.moveOneMarkerDown(regularTime);
         else if (event.altKey) Troff.moveOneMarkerDown(altTime);
         break;
       case 38: // uppArrow ?
-        if (event.shiftKey == 1 && event.altKey == 1) Troff.moveOneMarkerDown(-shiftTime);
-        else if (event.shiftKey == 1) Troff.moveOneMarkerDown(-regularTime);
+        if (event.shiftKey && event.altKey) Troff.moveOneMarkerDown(-shiftTime);
+        else if (event.shiftKey) Troff.moveOneMarkerDown(-regularTime);
         else if (event.altKey) Troff.moveOneMarkerDown(-altTime);
         break;
       case 39: // rightArrow
-        if (event.shiftKey == 1) $('audio, video')[0].currentTime += shiftTime;
-        else if (event.altKey == 1) $('audio, video')[0].currentTime += altTime;
-        else $('audio, video')[0].currentTime += regularTime;
+        if (event.shiftKey) ($('audio, video')[0] as any).currentTime += shiftTime;
+        else if (event.altKey) ($('audio, video')[0] as any).currentTime += altTime;
+        else ($('audio, video')[0] as any).currentTime += regularTime;
         break;
       case 37: // leftArrow
-        if (event.shiftKey == 1) $('audio, video')[0].currentTime -= shiftTime;
-        else if (event.altKey == 1) $('audio, video')[0].currentTime -= altTime;
-        else $('audio, video')[0].currentTime -= regularTime;
+        if (event.shiftKey) ($('audio, video')[0] as any).currentTime -= shiftTime;
+        else if (event.altKey) ($('audio, video')[0] as any).currentTime -= altTime;
+        else ($('audio, video')[0] as any).currentTime -= regularTime;
         break;
       case 70: // F
-        if (event.ctrlKey == 1) {
+        if (event.ctrlKey) {
           event.preventDefault();
           Troff.showSearchAndActivate();
         } else Troff.forceFullscreenChange();
@@ -596,12 +595,12 @@ class IOClass {
         Troff.goToStartMarker();
         break;
       case 85: // U
-        if (event.shiftKey == 1) Troff.unselectStartMarker();
-        else if (event.altKey == 1) Troff.unselectStopMarker();
+        if (event.shiftKey) Troff.unselectStartMarker();
+        else if (event.altKey) Troff.unselectStopMarker();
         else Troff.unselectMarkers();
         break;
       case 90: // Z
-        if (event.shiftKey == 1) Troff.zoomOut();
+        if (event.shiftKey) Troff.zoomOut();
         else Troff.zoomToMarker();
         break;
       //default:
@@ -609,7 +608,10 @@ class IOClass {
     } // end switch
   }; // end keyboardKeydown *****************/
 
-  setEnterFunction = (func, arrowFunc) => {
+  setEnterFunction = (
+    func: (event: KeyboardEvent) => any,
+    arrowFunc: (event: KeyboardEvent) => any
+  ) => {
     this.IOEnterFunction = func;
     if (arrowFunc !== undefined) this.IOArrowFunction = arrowFunc;
     else this.IOArrowFunction = false;
@@ -625,26 +627,30 @@ class IOClass {
     this.IOArrowFunction = false;
   };
 
-  promptEditMarker = (markerId, func, funcCancle) => {
+  promptEditMarker = (
+    markerId: string,
+    func: (name: string, info: string, color: string, time: number) => void,
+    funcCancle: () => void
+  ) => {
     'use strict';
 
     var markerName;
     var markerInfo;
-    var markerColor;
+    var markerColor: string;
     var markerTime;
     var strHeader;
 
     if (markerId) {
       markerName = $('#' + markerId).val();
-      markerInfo = $('#' + markerId)[0].info;
-      markerColor = $('#' + markerId)[0].color;
-      markerTime = Number($('#' + markerId)[0].timeValue);
+      markerInfo = ($('#' + markerId)[0] as any).info;
+      markerColor = ($('#' + markerId)[0] as any).color;
+      markerTime = Number(($('#' + markerId)[0] as any).timeValue);
       strHeader = 'Edit marker';
     } else {
       markerName = 'marker nr ' + ($('#markerList li').length + 1);
       markerInfo = '';
       markerColor = 'None';
-      markerTime = $('audio, video')[0].currentTime;
+      markerTime = ($('audio, video')[0] as any).currentTime;
       strHeader = 'Create new marker';
     }
 
@@ -666,14 +672,14 @@ class IOClass {
       value: 'Remove',
     });
 
-    const setColor = (event) => {
+    const setColor = (event: JQuery.ClickEvent) => {
       $('.colorPickerSelected').removeClass('colorPickerSelected');
       event.currentTarget.classList.add('colorPickerSelected');
       $colorText.find('span').html(event.currentTarget.getAttribute('color'));
       this.blurHack();
     };
 
-    const generateColorBut = (col) => {
+    const generateColorBut = (col: string) => {
       var clas = 'colorPicker backgroundColor' + col;
       if (col === markerColor) {
         clas += ' colorPickerSelected';
@@ -752,7 +758,7 @@ class IOClass {
           .append(butColor10)
       );
 
-    var row5 = '';
+    var row5: JQuery<HTMLElement> | string = '';
     if (markerId) {
       row5 = $('<span>', { class: 'oneRow' })
         .append($('<p>').append('Remove this marker:'))
@@ -774,16 +780,18 @@ class IOClass {
     this.IOEnterFunction = () => {
       if (func)
         func(
-          $markerName.val(),
-          $markerInfo.val(),
-          $('.colorPickerSelected').attr('color'),
-          $markerTime.val()
+          $markerName.val() as string,
+          $markerInfo.val() as string,
+          $('.colorPickerSelected').attr('color') as string,
+          $markerTime.val() as number
         );
       $outerDialog.remove();
       this.IOEnterFunction = false;
     };
 
-    buttOK.click(this.IOEnterFunction);
+    if (typeof this.IOEnterFunction === 'function') {
+      buttOK.click(this.IOEnterFunction as any);
+    }
     buttCancel.on('click', () => {
       if (funcCancle) funcCancle();
       $outerDialog.remove();
@@ -821,7 +829,11 @@ class IOClass {
     }, 0);
   }; // end promptEditMarker   *******************/
 
-  promptDouble = (oInput, func, funcCancle) => {
+  promptDouble = (
+    oInput: IOInput,
+    func?: (strInput: string, strTextarea: string) => void,
+    funcCancle?: () => void
+  ) => {
     var textHead = oInput.strHead;
     var textBox = oInput.strInput;
     var bDouble = oInput.bDouble;
@@ -894,11 +906,11 @@ class IOClass {
     }, 0);
 
     this.IOEnterFunction = () => {
-      if (func) func($('#' + textId).val(), $('#' + textareaId).val());
+      if (func) func($('#' + textId).val() as string, $('#' + textareaId).val() as string);
       $('#' + outerId).remove();
       this.IOEnterFunction = false;
     };
-    $('#' + buttEnterId).click(this.IOEnterFunction);
+    $('#' + buttEnterId).click(this.IOEnterFunction as any);
     $('#' + buttCancelId).click(() => {
       if (funcCancle) funcCancle();
       $('#' + outerId).remove();
@@ -906,8 +918,13 @@ class IOClass {
     });
   }; // end promptDouble
 
-  prompt = (textHead, textBox, func, funcCancle) => {
-    var oFI = {};
+  prompt = (
+    textHead: string,
+    textBox: string,
+    func?: (strInput: string, strTextarea: string) => void,
+    funcCancle?: () => void
+  ) => {
+    var oFI = {} as IOInput;
     oFI.strHead = textHead;
     oFI.strInput = textBox;
     oFI.bDouble = false;
@@ -916,7 +933,14 @@ class IOClass {
     this.promptDouble(oFI, func, funcCancle);
   }; // end prompt
 
-  confirm = (textHead, textBox, func, funcCancel, confirmButtonText, declineButtonText) => {
+  confirm = (
+    textHead: string,
+    textBox: string,
+    func?: () => void,
+    funcCancel?: () => void,
+    confirmButtonText?: string,
+    declineButtonText?: string
+  ) => {
     confirmButtonText = st.defaultFor(confirmButtonText, 'OK');
     declineButtonText = st.defaultFor(declineButtonText, 'Cancel');
 
@@ -941,7 +965,7 @@ class IOClass {
           .addClass('regularButton')
           .attr('type', 'button')
           .attr('value', confirmButtonText)
-          .on('click', this.IOEnterFunction)
+          .on('click', this.IOEnterFunction as any)
       )
       .append(
         $('<input>')
@@ -959,7 +983,7 @@ class IOClass {
     $('body').append(outerDiv.append(innerDiv));
   }; // end confirm
 
-  alert = (textHead, textBox, func) => {
+  alert = (textHead: string, textBox: string, func?: (test: string) => void) => {
     var time = Date.now();
     var buttEnterId = 'buttOkId' + time;
 
@@ -1008,21 +1032,22 @@ class IOClass {
       );
     }
     this.IOEnterFunction = () => {
-      if (func) func($('#' + textId).val());
+      if (func) func($('#' + textId).val() as string);
       $('#' + outerId).remove();
       this.IOEnterFunction = false;
     };
-    $('#' + buttEnterId).click(this.IOEnterFunction);
+    $('#' + buttEnterId).click(this.IOEnterFunction as any);
   }; // end alert
 
-  loopTimesLeft = (input) => {
+  loopTimesLeft = (input?: string) => {
     if (!input) return $('.loopTimesLeft').eq(0).text();
-    if (input == -1) $('.loopTimesLeft').html($('.loopTimesLeft').eq(0).text() - 1);
+    if (input == '-1')
+      $('.loopTimesLeft').html(String(Number($('.loopTimesLeft').eq(0).text()) - 1));
     else $('.loopTimesLeft').html(input);
   };
 
-  saveOnSongValue = (event) => {
-    var $target = $(event.target),
+  saveOnSongValue = (event: Event) => {
+    var $target = $(event.target as HTMLElement),
       id = $target.attr('id'),
       value = $target.val();
 
@@ -1033,10 +1058,10 @@ class IOClass {
 
     const key = 'TROFF_VALUE_' + id;
     DB.setCurrent(Troff.getCurrentSong(), key, value);
-    event.target.dispatchEvent(new Event('savedToDbEvent'));
+    event.target?.dispatchEvent(new Event('savedToDbEvent'));
   };
 
-  saveOnSongToggleClass = (event) => {
+  saveOnSongToggleClass = (event: JQuery.ClickEvent) => {
     this.blurHack();
 
     var $target = $(event.target),

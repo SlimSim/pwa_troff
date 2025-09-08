@@ -23,59 +23,11 @@ import {
 } from 'types/troff.js';
 import { ColumnToggleMap } from 'types/dataTables.js';
 
-/**
- * @typedef {Object} SongMarker
- * @property {string} id
- * @property {string} name
- * @property {number|string} time
- * @property {string} info
- * @property {string} color
- */
-
-/**
- * @typedef {Object} SongObject
- * @property {string} [info]
- * @property {string[]} [aStates]
- * @property {number} [zoomStartTime]
- * @property {number} [zoomEndTime]
- * @property {SongMarker[]} [markers]
- * @property {boolean[]} [abAreas]
- * @property {string} [currentStartMarker]
- * @property {string} [currentStopMarker]
- * @property {string|undefined} [serverId]
- * @property {number|undefined} [loopTimes]
- * @property {boolean|undefined} [bPlayInFullscreen]
- * @property {boolean|undefined} [bMirrorImage]
- * @property {number|undefined} [tempo]
- * @property {Record<string,unknown>} [fileData]
- */
-
-/**
- * @typedef {Object} SongListSong
- * @property {string} [firebaseSongDocId]
- * @property {Record<string, unknown>} [meta]
- */
-
-/**
- * @typedef {Object} SongList
- * @property {string} [firebaseGroupDocId]
- * @property {string[]} [owners]
- * @property {SongListSong[]} songs
- */
-
-/**
- * @typedef {Record<string, boolean>} ColumnToggleMap
- */
-
 class DBClass {
   constructor() {}
 
   /**
    * Remove and return a locally changed song entry for a specific group/song.
-   * @param {string} groupDocId
-   * @param {string} songDocId
-   * @param {string} songKey
-   * @returns {any | undefined}
    */
   popSongWithLocalChanges = (groupDocId: string, songDocId: string, songKey: string) => {
     const rightSong = (o: TroffSongIdentifyer_sk): boolean => {
@@ -92,21 +44,15 @@ class DBClass {
     return songInGroupAlreadyExists;
   };
 
-  // deprecated: use nDB.set( key, value )
   /**
-   * @param {string} key
-   * @param {any} value
-   * @returns {void}
+   * saveVal is deprecated: use nDB.set( key, value )
    */
   saveVal = (key: string, value: any) => {
     nDB.set(key, value);
   };
 
-  // deprecated: use nDB.get_callback( key, callback )
   /**
-   * @param {string} key
-   * @param {(value: any) => void} returnFunction
-   * @returns {void}
+   * deprecated: use nDB.get_callback( key, callback )
    */
   getVal = (key: string, returnFunction: (value: any) => void) => {
     nDBc.get(key, returnFunction);
