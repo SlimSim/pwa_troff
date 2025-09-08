@@ -365,11 +365,8 @@ class DBClass {
 
   /**
    * Set current song path and gallery id in DB.
-   * @param {string} path
-   * @param {number} galleryId
-   * @returns {void}
    */
-  setCurrentSong = (path: string, galleryId: number) => {
+  setCurrentSong = (path: string, galleryId: string) => {
     var stroSong = JSON.stringify({ strPath: path, iGalleryId: galleryId });
     nDB.set('stroCurrentSongPathAndGalleryId', stroSong);
   };

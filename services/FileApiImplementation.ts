@@ -26,7 +26,7 @@ export const cacheImplementation = {
     });
   },
 
-  getSong: async function (songKey: string) {
+  getSong: async function (songKey: string): Promise<string> {
     return caches.match(songKey).then((cachedResponse) => {
       if (cachedResponse === undefined) {
         throw new Error(`songKey "${songKey}" does not exist in caches!`);

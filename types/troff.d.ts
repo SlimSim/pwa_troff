@@ -124,6 +124,14 @@ export type TroffFirebaseSongIdentifyer = {
   galleryId: string;
 };
 
+export type SonglistSongInfo = {
+  name: string;
+  data: {
+    galleryId: string; // todo: denna är alltid 'pwa-galleryId', byta denna grejj till bara name och fullPath! (eller path)
+    fullPath: string;
+  };
+};
+
 export type TroffStateOfSonglists = {
   songListList: string[];
   galleryList: string[];
@@ -149,4 +157,20 @@ export type TroffData = {
   troffDataPublic: boolean;
   troffDataUploadedMillis: number;
   markerJsonString: string;
+};
+
+export type TroffHistoryList = {
+  fileNameUri: string;
+  troffDataIdObjectList: TroffDataIdObject[];
+};
+
+export type TroffDataIdObject = {
+  displayName: string;
+  firstTimeLoaded: number;
+  genre: string;
+  infoBeginning: string;
+  nrMarkers: number;
+  nrStates?: number;
+  tags: string;
+  troffDataId: number;
 };

@@ -66,14 +66,22 @@ import RateClass from './scriptRateClass.js';
 import { addItem_NEW_2 } from './songManagement.js';
 
 import { firebaseWrapper, fileHandler } from './services/file.js';
+import { User } from 'firebase/auth';
+import { DocumentData, DocumentSnapshot, QuerySnapshot } from 'firebase/firestore';
+import {
+  SonglistSongInfo,
+  TroffDataIdObject,
+  TroffFirebaseGroupIdentifyer,
+  TroffHistoryList,
+  TroffHtmlMarkerElement,
+  TroffSongIdentifyer_sk,
+} from 'types/troff.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
  * Extend as needed without pulling in external types.
- * @typedef {{ email?: string }} FirebaseUserLike
  */
-/** @type {FirebaseUserLike | null} */
-let firebaseUser = null;
+let firebaseUser: User | null = null;
 
 // replace your current init:
 SongToGroup.initiateFromDb();
@@ -122,7 +130,10 @@ const doSignOut = function () {
     });
 };
 
-const initiateCollections = async function (querySnapshot) {
+const initiateCollections = async function (querySnapshot?: QuerySnapshot<DocumentData>) {
+  if (!querySnapshot) {
+    return;
+  }
   if (querySnapshot.metadata.fromCache) {
     // If the result is from the cache,
     // we dont want to update the DB with the result!
@@ -139,8 +150,9 @@ const initiateCollections = async function (querySnapshot) {
       onSnapshot(doc.ref, groupDocUpdate);
       const group = doc.data();
 
-      const songListObject = {
+      const songListObject: TroffFirebaseGroupIdentifyer = {
         name: group.name,
+        id: group.id, // does not need, but type require it...
         firebaseGroupDocId: doc.id,
         owners: group.owners,
         color: group.color,
@@ -188,9 +200,13 @@ const initiateCollections = async function (querySnapshot) {
 };
 
 // onSongUpdate, onSongDocUpdate <- i keep searching for theese words so...
-const songDocUpdate = async function (doc) {
+const songDocUpdate = async function (doc: DocumentSnapshot) {
   const songDocId = doc.id;
-  const groupDocId = doc.ref.parent.parent.id;
+  const groupDocId = doc.ref.parent?.parent?.id;
+
+  if (!groupDocId) {
+    return;
+  }
 
   if (!doc.exists()) {
     const fileName = SongToGroup.getFileNameFromSongDocId(songDocId);
@@ -265,7 +281,7 @@ const songDocUpdate = async function (doc) {
   SongToGroup.add(groupDocId, songDocId, songKey, fileUrl);
 };
 
-const replaceTroffDataWithoutInterupt = function (songData) {
+const replaceTroffDataWithoutInterupt = function (songData: DocumentData) {
   const serverTroffData = JSON.parse(songData.jsonDataInfo);
 
   // Update tempo:
@@ -293,11 +309,11 @@ const replaceTroffDataWithoutInterupt = function (songData) {
 
   // Update the current marker info:
   if (!$('#markerInfoArea').is(':focus')) {
-    $('#markerInfoArea').val($('#' + currentMarkerId)[0].info);
+    $('#markerInfoArea').val(($('#' + currentMarkerId)[0] as TroffHtmlMarkerElement).info);
   }
 };
 
-const removeGroupIndicationIfSongInNoGroup = function (songKey) {
+const removeGroupIndicationIfSongInNoGroup = function (songKey: string) {
   if (SongToGroup.getNrOfGroupsThisSongIsIn(songKey) > 0) {
     return;
   }
@@ -316,15 +332,15 @@ const removeGroupIndicationIfSongInNoGroup = function (songKey) {
  * IE it does NOT include the songLIstObjectId,
  * because that is
  */
-const getFirebaseGroupDataFromDialog = function (forceUserEmail) {
-  const owners = [];
+const getFirebaseGroupDataFromDialog = function (forceUserEmail: boolean) {
+  const owners: string[] = [];
   $('#groupOwnerParent')
     .find('.groupDialogOwner')
     .each((i, v) => {
-      owners.push($(v).val());
+      owners.push($(v).val() as string);
     });
 
-  if (forceUserEmail && !owners.includes(firebaseUser.email)) {
+  if (forceUserEmail && firebaseUser?.email && !owners.includes(firebaseUser.email)) {
     owners.push(firebaseUser.email);
   }
 
@@ -341,7 +357,8 @@ const onOnline = function () {
   // firestore updates get synced to the ego-computer.
   // because then Ego-offline-changes should be overwritten.
   setTimeout(() => {
-    const changedSongList = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+    const changedSongList: TroffSongIdentifyer_sk[] =
+      nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
     // This is to send local changes IF the server does NOT
     // have new updates
     changedSongList.forEach((changedSong) => {
@@ -376,7 +393,7 @@ låtar som jag laddar ner
  * If this sing is in a group,
  * update the info in firestore for that gruop
  */
-const ifGroupSongUpdateFirestore = function (songKey) {
+const ifGroupSongUpdateFirestore = function (songKey: string) {
   const firestoreIdentifierList = SongToGroup.getSongGroupList(songKey);
   if (firestoreIdentifierList == undefined) {
     return;
@@ -393,7 +410,7 @@ const ifGroupSongUpdateFirestore = function (songKey) {
 // auth.onAuthStateChanged((user) => {
 onAuthStateChanged(auth, async (user) => {
   firebaseUser = user;
-  if (user == null) {
+  if (firebaseUser == null) {
     setUiToNotSignIn();
     return;
   }
@@ -404,16 +421,20 @@ onAuthStateChanged(auth, async (user) => {
   initiateCollections(snap);
 });
 
-const mergeSongHistorys = function (song1, song2) {
-  if (song1 == null) return song2;
+const mergeSongHistorys = function (
+  song1?: TroffHistoryList,
+  song2?: TroffHistoryList
+): TroffHistoryList {
+  if (song1 == null && song2 == null) throw new Error('song1 and song2 are null');
+  if (song1 == null) return song2 as TroffHistoryList;
   if (song2 == null) return song1;
 
-  const song = { fileNameUri: song1.fileNameUri };
+  const song = { fileNameUri: song1.fileNameUri } as TroffHistoryList;
 
   const tdioList = song1.troffDataIdObjectList;
 
-  song2.troffDataIdObjectList.forEach((tdio) => {
-    if (tdioList.some((td) => td.troffDataId === tdio.troffDataId)) {
+  song2.troffDataIdObjectList.forEach((tdio: TroffDataIdObject) => {
+    if (tdioList.some((td: TroffDataIdObject) => td.troffDataId === tdio.troffDataId)) {
       /* Troffdata already in troffDataIdObjectList */
       return;
     }
@@ -423,12 +444,15 @@ const mergeSongHistorys = function (song1, song2) {
   return song;
 };
 
-const mergeSongListHistorys = function (songList1, songList2) {
+const mergeSongListHistorys = function (
+  songList1: TroffHistoryList[],
+  songList2: TroffHistoryList[]
+) {
   if (songList1 == null && songList2 == null) return [];
   if (songList1 == null) return songList2;
   if (songList2 == null) return songList1;
 
-  const mergedSongList = [];
+  const mergedSongList: TroffHistoryList[] = [];
   songList1.forEach((song1) => {
     const song2 = songList2.find((s) => s.fileNameUri == song1.fileNameUri);
     mergedSongList.push(mergeSongHistorys(song1, song2));
@@ -446,12 +470,12 @@ const mergeSongListHistorys = function (songList1, songList2) {
   return mergedSongList;
 };
 
-function setSong2(/*fullPath, galleryId*/ path, songData) {
+function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {
     $('#dataSongTable_filter').find('input').val('');
-    $('#dataSongTable').DataTable().search('').draw();
+    ($('#dataSongTable') as any).DataTable().search('').draw();
   }
 
   var exitOnSelect = $('#TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT').hasClass('active'),
@@ -466,7 +490,7 @@ function setSong2(/*fullPath, galleryId*/ path, songData) {
   Troff.setWaitForLoad(path, 'pwa-galleryId');
   //fs.root.getFile(path, {create: false}, function(fileEntry) {
 
-  var newElem = null;
+  var newElem = {} as HTMLAudioElement | HTMLVideoElement | HTMLImageElement;
   // show the file data
   clearContentDiv();
   const type = getFileType(path); //varför gör jag detta? jag har ju redan type!!!
@@ -522,8 +546,10 @@ function setSong2(/*fullPath, galleryId*/ path, songData) {
     } else {
       newElem.setAttribute('src', songData);
     }
-    newElem.load();
-    newElem.pause();
+    if ('load' in newElem && 'pause' in newElem) {
+      (newElem as HTMLAudioElement).load();
+      (newElem as HTMLAudioElement).pause();
+    }
   } else {
     //för vanlig linux, bäst att använda songData hela tiden :)
     newElem.setAttribute('src', songData);
@@ -538,7 +564,7 @@ function setSong2(/*fullPath, galleryId*/ path, songData) {
   updateGroupNotification(path);
 } //end setSong2
 
-function updateVersionLink(path) {
+function updateVersionLink(path: string) {
   const fileNameUri = encodeURI(path);
 
   function hideVersionLink() {
@@ -547,7 +573,7 @@ function updateVersionLink(path) {
     return;
   }
 
-  const dbHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
+  const dbHistory: TroffHistoryList[] = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
   if (dbHistory == null) {
     return hideVersionLink();
   }
@@ -573,7 +599,7 @@ function updateVersionLink(path) {
     .removeClass('hidden');
 }
 
-async function createSongAudio(path) {
+async function createSongAudio(path: string) {
   let songIsV2;
   try {
     songIsV2 = await cacheImplementation.isSongV2(path);
@@ -581,7 +607,8 @@ async function createSongAudio(path) {
     return errorHandler.fileHandler_fetchAndSaveResponse(
       new ShowUserException(`The song "${path}" does not exist.
 			if you have the file named "${path}", you can
-			simply import it again and the markers will be connected with the file!`)
+			simply import it again and the markers will be connected with the file!`),
+      path
     );
   }
 
@@ -598,32 +625,32 @@ async function createSongAudio(path) {
       const v3SongObjectUrl = await fileHandler.getObjectUrlFromFile(path);
       setSong2(path, v3SongObjectUrl);
     } catch (e) {
-      errorHandler.fileHandler_sendFile(e);
+      errorHandler.fileHandler_sendFile(e, path);
     }
   }
 }
 
 /**
- * Denna funktion används när envändaren själv lägger till låtar i en songList
+ * Denna funktion används när användaren själv lägger till låtar i en songList
  * antingen via drag and drop, eller selecten
  * Den används INTE om groupDialog sparas,
  * eller om låtarna läggs till via en firebase update!
  * @param {array of songs} songs
  * @param {jQuery button} $target
  */
-function addSongsToSonglist(songs, $target) {
+function addSongsToSonglist(songs: SonglistSongInfo[], $target: JQuery) {
   var songAlreadyExists,
     songList = $target.data('songList');
 
   $.each(songs, function (i, song) {
-    var dataInfo = song.data || song;
+    var dataInfo = song.data || song; // todo: fixa detta!
     songAlreadyExists =
-      songList.songs.filter(function (value) {
+      songList.songs.filter(function (value: any) {
         return value.galleryId == dataInfo.galleryId && value.fullPath == dataInfo.fullPath;
       }).length > 0;
 
     if (songAlreadyExists) {
-      $.notify(song.fullPath + ' is already in ' + songList.name, 'info');
+      $.notify((song as any).fullPath + ' is already in ' + songList.name, 'info');
       return;
     }
 
@@ -635,7 +662,7 @@ function addSongsToSonglist(songs, $target) {
     notifyUndo(dataInfo.fullPath + ' was added to ' + songList.name, function () {
       var undo_songList = $target.data('songList');
 
-      undo_songList.songs = undo_songList.songs.filter(function (value) {
+      undo_songList.songs = undo_songList.songs.filter(function (value: any) {
         return !(value.galleryId == dataInfo.galleryId && value.fullPath == dataInfo.fullPath);
       });
 
@@ -719,7 +746,7 @@ function initEnvironment() {
 }
 
 //note, in this case we want "function", NOT short hand "() =>"
-$.fn.removeClassStartingWith = function (filter) {
+$.fn.removeClassStartingWith = function (filter: string) {
   this.each(function () {
     const $this = $(this);
     const classesToRemove = ($this.attr('class') || '')

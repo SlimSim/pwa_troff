@@ -22,6 +22,7 @@ declare global {
     notify?(message: string, type?: string): JQuery;
     notify?(options: any): JQuery;
     notify?(...args: any[]): JQuery;
+    removeClassStartingWith(filter: string): JQuery;
   }
 
   // Make sure $ and jQuery are available globally

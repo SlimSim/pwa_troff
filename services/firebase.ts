@@ -83,7 +83,7 @@ const pushSongWithLocalChanges = (groupDocId: string, songDocId: string, songKey
 const saveSongDataToFirebaseGroup = async function (
   songKey: string,
   groupDocId: string,
-  songDocId: string
+  songDocId?: string
 ) {
   const publicData = removeLocalInfo(nDB.get(songKey));
 

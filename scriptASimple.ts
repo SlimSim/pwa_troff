@@ -59,7 +59,7 @@ class SongToGroup {
     });
   }
 
-  static remove(songDocId: string | undefined, groupDocId: string): void {
+  static remove(songDocId: string | undefined, groupDocId?: string): void {
     const myGroups = this.#map;
 
     Object.entries(myGroups).forEach((v) => {

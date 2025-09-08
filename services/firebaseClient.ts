@@ -41,7 +41,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-async function initiateAllFirebaseGroups(firebaseUserEmail: string) {
+async function initiateAllFirebaseGroups(firebaseUserEmail: string | null) {
+  if (!firebaseUserEmail) {
+    return;
+  }
   const q = query(collection(db, 'Groups'), where('owners', 'array-contains', firebaseUserEmail));
 
   return await getDocs(q);
