@@ -109,17 +109,17 @@ export type TroffSongGroupMap = Record<string, TroffSongIdentifyer_fu[]>;
 
 export type TroffFirebaseGroupIdentifyer = {
   color?: string;
-  firebaseGroupDocId: string;
+  firebaseGroupDocId?: string;
   icon?: string;
-  id: number;
+  id?: number;
   info?: string;
-  name: string;
-  owners: string[];
+  name?: string;
+  owners?: string[];
   songs: TroffFirebaseSongIdentifyer[];
 };
 
 export type TroffFirebaseSongIdentifyer = {
-  firebaseSongDocId: string;
+  firebaseSongDocId?: string;
   fullPath: string;
   galleryId: string;
 };
