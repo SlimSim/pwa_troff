@@ -69,6 +69,7 @@ import { firebaseWrapper, fileHandler } from './services/file.js';
 import { User } from 'firebase/auth';
 import { DocumentData, DocumentSnapshot, QuerySnapshot } from 'firebase/firestore';
 import {
+  FullPathObject,
   SonglistSongInfo,
   TroffDataIdObject,
   TroffFirebaseGroupIdentifyer,
@@ -490,7 +491,7 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   Troff.setWaitForLoad(path, 'pwa-galleryId');
   //fs.root.getFile(path, {create: false}, function(fileEntry) {
 
-  var newElem = {} as HTMLAudioElement | HTMLVideoElement | HTMLImageElement;
+  var newElem = {} as HTMLAudioElement | HTMLVideoElement | HTMLImageElement | undefined;
   // show the file data
   clearContentDiv();
   const type = getFileType(path); //varför gör jag detta? jag har ju redan type!!!
@@ -638,12 +639,12 @@ async function createSongAudio(path: string) {
  * @param {array of songs} songs
  * @param {jQuery button} $target
  */
-function addSongsToSonglist(songs: SonglistSongInfo[], $target: JQuery) {
+function addSongsToSonglist(songs: SonglistSongInfo[] | FullPathObject[], $target: JQuery) {
   var songAlreadyExists,
     songList = $target.data('songList');
 
   $.each(songs, function (i, song) {
-    var dataInfo = song.data || song; // todo: fixa detta!
+    var dataInfo: FullPathObject = (song as SonglistSongInfo).data || song; // todo: fixa detta!
     songAlreadyExists =
       songList.songs.filter(function (value: any) {
         return value.galleryId == dataInfo.galleryId && value.fullPath == dataInfo.fullPath;

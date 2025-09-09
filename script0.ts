@@ -36,6 +36,8 @@ import { escapeRegExp, getFileExtension } from './utils/utils.js';
 import { TROFF_SETTING_SHOW_SONG_DIALOG, DATA_TABLE_COLUMNS } from './constants/constants.js';
 import { addGroupSongRow } from './features/groupManagement.js';
 import {
+  FullPathObject,
+  SonglistSongInfo,
   TroffFirebaseGroupIdentifyer,
   TroffFirebaseSongIdentifyer,
   TroffHistoryList,
@@ -377,7 +379,7 @@ function getFilterDataList(): string[] {
  * AND ALSO unchecks the songs!
  * @returns List of songDataInfoObjects {galleryId, fullPath}
  */
-function getSelectedSongs_NEW() {
+function getSelectedSongs_NEW(): FullPathObject[] {
   const $checkboxes = $('#dataSongTable').find('td').find('input[type=checkbox]:checked');
   const checkedVisibleSongs = $checkboxes
     .closest('tr')
@@ -395,7 +397,7 @@ function getSelectedSongs_NEW() {
 }
 
 function clickButtNewSongList() {
-  var songs = getSelectedSongs_NEW();
+  var songs: FullPathObject[] = getSelectedSongs_NEW();
   openGroupDialog({ songs: songs });
 }
 
@@ -432,14 +434,14 @@ function dropSongOnSonglist(event: JQuery.DragEvent) {
   addSongsToSonglist([dataInfo], $target);
 }
 
-function removeSongsFromSonglist(songs, $target) {
+function removeSongsFromSonglist(songs: FullPathObject[] | SonglistSongInfo[], $target: JQuery) {
   let songDidNotExists;
 
   const songList = $target.data('songList');
 
   $.each(songs, (i, song) => {
     var index,
-      dataInfo = song.data || song,
+      dataInfo: FullPathObject = (song as SonglistSongInfo).data || song,
       value;
     songDidNotExists = true;
 
@@ -458,13 +460,16 @@ function removeSongsFromSonglist(songs, $target) {
 
     $target.data('songList', songList);
 
-    notifyUndo(song.name + ' was removed from ' + songList.name, () => {
-      var undo_songList = $target.data('songList');
+    notifyUndo(
+      ((song as SonglistSongInfo).name || dataInfo.fullPath) + ' was removed from ' + songList.name,
+      () => {
+        var undo_songList = $target.data('songList');
 
-      undo_songList.songs.push(dataInfo);
+        undo_songList.songs.push(dataInfo);
 
-      DB.saveSonglists_new();
-    });
+        DB.saveSonglists_new();
+      }
+    );
   });
   DB.saveSonglists_new();
 }
@@ -473,7 +478,7 @@ function clickAttachedSongListToggle() {
   $('#toggleSonglistsId').trigger('click');
 }
 
-function reloadSongsButtonActive(event) {
+function reloadSongsButtonActive(event: JQuery.ClickEvent) {
   if (event == null || !$(event.target).hasClass('outerDialog')) {
     return;
   }
@@ -503,7 +508,7 @@ function openSongDialog() {
   DB.saveVal(TROFF_SETTING_SHOW_SONG_DIALOG, true);
 }
 
-function clickSongsDialog(event) {
+function clickSongsDialog(event: JQuery.ClickEvent) {
   if ($(event.target).hasClass('active')) {
     closeSongDialog();
   } else {
@@ -551,9 +556,9 @@ function dataTableShowOnlyColumnsForAttachedState() {
     .children()
     .each((i, v) => {
       if (DATA_TABLE_COLUMNS.list[$(v).data('column')].showOnAttachedState) {
-        $('#dataSongTable').DataTable().column($(v).data('column')).visible(true);
+        ($('#dataSongTable') as any).DataTable().column($(v).data('column')).visible(true);
       } else {
-        $('#dataSongTable').DataTable().column($(v).data('column')).visible(false);
+        ($('#dataSongTable') as any).DataTable().column($(v).data('column')).visible(false);
       }
     });
 }
@@ -563,15 +568,15 @@ function dataTableShowColumnsForFloatingState() {
     .children()
     .each((i, v) => {
       if ($(v).hasClass('active')) {
-        $('#dataSongTable').DataTable().column($(v).data('column')).visible(true);
+        ($('#dataSongTable') as any).DataTable().column($(v).data('column')).visible(true);
       } else {
-        $('#dataSongTable').DataTable().column($(v).data('column')).visible(false);
+        ($('#dataSongTable') as any).DataTable().column($(v).data('column')).visible(false);
       }
     });
 }
 
 function initSongTable() {
-  var dataSongTable,
+  var dataSongTable: any,
     selectAllCheckbox = $(
       '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>'
     );
@@ -597,7 +602,7 @@ function initSongTable() {
     .text('')
     .append(selectAllCheckbox);
 
-  dataSongTable = $('#dataSongTable')
+  dataSongTable = ($('#dataSongTable') as any)
     .DataTable({
       language: {
         emptyTable:
@@ -616,7 +621,7 @@ function initSongTable() {
       },
       fixedHeader: true,
       paging: false,
-      createdRow: (row) => {
+      createdRow: (row: string) => {
         $(row).attr('draggable', 'true');
       },
       columnDefs: [
@@ -650,7 +655,7 @@ function initSongTable() {
         },
       ],
     })
-    .on('dragstart', 'tr', (event) => {
+    .on('dragstart', 'tr', (event: any) => {
       //function dragSongToSonglist(event){
       if (event.dataTransfer === undefined) {
         event.dataTransfer = event.originalEvent.dataTransfer;
@@ -662,7 +667,7 @@ function initSongTable() {
 
       event.dataTransfer.setData('jsonDataInfo', jsonDataInfo);
     })
-    .on('click', 'tbody tr', function (event) {
+    .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
       const $td = $(event.target).closest('td, th');
 
       const songKey = $(event.currentTarget).data('song-key');
@@ -675,10 +680,15 @@ function initSongTable() {
         return;
       }
 
-      $('#dataSongTable').DataTable().rows('.selected').nodes().to$().removeClass('selected');
+      ($('#dataSongTable') as any)
+        .DataTable()
+        .rows('.selected')
+        .nodes()
+        .to$()
+        .removeClass('selected');
       $(event.currentTarget).addClass('selected');
 
-      gtag('event', 'Change Song', { event_category: 'Perform change' });
+      gtag('event', 'Change Song', { event_category: 'Perform change', event_label: '' });
 
       createSongAudio(songKey);
     });
@@ -720,7 +730,7 @@ function initSongTable() {
   };
 
   // Callback function to execute when mutations are observed
-  var songListsObserverCallback = (mutationsList) => {
+  var songListsObserverCallback = (mutationsList: MutationRecord[]) => {
     for (var mutation of mutationsList) {
       if (mutation.attributeName === 'class') {
         if ($(mutation.target).hasClass('active')) {
@@ -739,7 +749,7 @@ function initSongTable() {
   songListsObserver.observe($('#toggleSonglistsId')[0], songListsObserverConfig);
 }
 
-function openEditSongDialog(songKey) {
+function openEditSongDialog(songKey: string) {
   let fileData = nDB.get(songKey).fileData;
 
   if (fileData == undefined) {
@@ -760,11 +770,11 @@ function openEditSongDialog(songKey) {
   Troff.onEditUpdateName();
 }
 
-function onChangeSongListSelector(event) {
+function onChangeSongListSelector(event: JQuery.ChangeEvent) {
   var $target = $(event.target),
     $selected = $target.find(':selected'),
     $checkedRows = $('#dataSongTable').find('td').find('input[type=checkbox]:checked'),
-    songDataInfoList = getSelectedSongs_NEW();
+    songDataInfoList: FullPathObject[] = getSelectedSongs_NEW();
 
   var $songlist = $('#songListList').find('[data-songlist-id="' + $selected.val() + '"]');
 
@@ -774,15 +784,15 @@ function onChangeSongListSelector(event) {
     IO.confirm(
       'Remove songs?',
       'Remove songs: <br />' +
-        songDataInfoList.map((s) => s.fullPath || s.name).join('<br />') +
+        songDataInfoList.map((s) => s.fullPath || (s as any).name).join('<br />') +
         '?<br /><br />Can not be undone.',
       () => {
         songDataInfoList.forEach((song) => {
-          const fullPath = song.fullPath || song.data.fullPath;
+          const fullPath = song.fullPath || (song as any).fullPath;
           cacheImplementation.removeSong(fullPath);
         });
         $checkedRows.closest('tr').each((i, row) => {
-          $('#dataSongTable').DataTable().row(row).remove().draw();
+          ($('#dataSongTable') as any).DataTable().row(row).remove().draw();
         });
       }
     );
