@@ -66,8 +66,15 @@ import {
   MARKER_COLOR_PREFIX,
   DATA_TABLE_COLUMNS,
 } from './constants/constants.js';
+import {
+  SonglistSongInfo,
+  State,
+  State_WithTime,
+  TroffManualImportExport,
+  TroffMarker,
+} from 'types/troff.js';
 
-function clickSongList_NEW(event) {
+function clickSongList_NEW(event: JQuery.ClickEvent) {
   IO.blurHack();
   var $target = $(event.target),
     data = $target.data('songList'),
@@ -107,6 +114,15 @@ function clickSongList_NEW(event) {
 }
 
 class TroffClass {
+  strCurrentSong: string;
+  strCurrentGalleryId: string;
+  startTime: number;
+  previousTime: number;
+  time: number;
+  nrTaps: number;
+  m_zoomStartTime: number;
+  m_zoomEndTime: number | null;
+
   constructor() {
     this.strCurrentSong = '';
     this.strCurrentGalleryId = '';
@@ -118,12 +134,16 @@ class TroffClass {
     this.m_zoomEndTime = null;
   }
 
-  addAskedSongsToCurrentSongList = (event, songKeys, $songList) => {
+  addAskedSongsToCurrentSongList = (
+    event: JQuery.ClickEvent,
+    songKeys: JQuery<string>,
+    $songList: JQuery
+  ) => {
     $(event.target).addClass('active');
     $('#addAddedSongsToSongList_doNotAdd').addClass('hidden');
     $('#addAddedSongsToSongList_done').removeClass('hidden');
 
-    const songs = [];
+    const songs: SonglistSongInfo[] = [];
 
     songKeys.each((i, songKey) => {
       songs.push({
@@ -148,7 +168,7 @@ class TroffClass {
     filterSongTable(getFilterDataList());
   };
 
-  askIfAddSongsToCurrentSongList = (key) => {
+  askIfAddSongsToCurrentSongList = (key: string) => {
     if ($('#songListAll').hasClass('selected')) {
       return;
     }
@@ -175,7 +195,7 @@ class TroffClass {
     });
   };
 
-  emptyAddAddedSongsToSongList_songs = (event) => {
+  emptyAddAddedSongsToSongList_songs = (event: JQuery.ClickEvent) => {
     if (!$(event.target).hasClass('emptyAddAddedSongsToSongList_songs')) {
       return;
     }
@@ -184,16 +204,18 @@ class TroffClass {
 
   initFileApiImplementation = () => {
     $('#fileUploader').on('change', (event) => {
-      fileHandler.handleFiles(event.target.files, (key, file) => {
+      const files = (event.target as HTMLInputElement).files;
+      if (files == null) {
+        return;
+      }
+      fileHandler.handleFiles(files, (key, file) => {
         if (nDB.get(key) == null) {
           const newSongObject = DB.fixSongObject();
           newSongObject.localInformation = {
             addedFromThisDevice: true,
           };
-          newSongObject.fileData = {
-            lastModified: file.lastModified,
-            size: file.size,
-          };
+          newSongObject.fileData.lastModified = file.lastModified;
+          newSongObject.fileData.size = file.size;
           nDB.set(key, newSongObject);
         } else {
           nDB.setOnSong(key, ['localInformation', 'addedFromThisDevice'], true);
@@ -216,7 +238,7 @@ class TroffClass {
     });
   };
 
-  setUrlToSong = (serverId, fileName) => {
+  setUrlToSong = (serverId: string | undefined, fileName: string) => {
     'use strict';
     if (serverId === undefined) {
       if (!window.location.hash) {
@@ -229,7 +251,7 @@ class TroffClass {
     window.location.hash = this.createHash(serverId, fileName);
   };
 
-  createHash = (serverId, fileName) => {
+  createHash = (serverId: string | number, fileName: string) => {
     return '#' + serverId + '&' + encodeURI(fileName);
   };
 
@@ -261,7 +283,7 @@ class TroffClass {
       this.saveDownloadLinkHistory(resp.id, resp.fileName, fakeTroffData);
 
       if (songKey == this.getCurrentSong()) {
-        this.setUrlToSong(resp.id, resp.fileName);
+        this.setUrlToSong(String(resp.id), resp.fileName);
       }
 
       $('#uploadSongToServerInProgressDialog').addClass('hidden');
@@ -275,7 +297,7 @@ class TroffClass {
   };
 
   buttCopyUrlToClipboard = () => {
-    const url = $('#doneUploadingSongToServerDialog').find('#shareSongUrl').val();
+    const url = $('#doneUploadingSongToServerDialog').find('#shareSongUrl').val() as string;
 
     IO.copyTextToClipboard(url);
   };
@@ -312,14 +334,14 @@ class TroffClass {
     }
   };
 
-  selectSongInSongList = (fileName) => {
+  selectSongInSongList = (fileName: string) => {
     $('#dataSongTable').find('tbody tr').removeClass('selected');
     $('[data-song-key="' + fileName + '"]').addClass('selected');
   };
 
   importTroffDataToExistingSong_importNew = async () => {
-    const fileName = $('#importTroffDataToExistingSong_fileName').val();
-    const serverId = $('#importTroffDataToExistingSong_serverId').val();
+    const fileName = $('#importTroffDataToExistingSong_fileName').val() as string;
+    const serverId = $('#importTroffDataToExistingSong_serverId').val() as string;
 
     this.showMarkersDownloadInProgressDialog(fileName);
     const hash = '#' + serverId + '&' + encodeURI(fileName);
@@ -354,8 +376,8 @@ class TroffClass {
   };
 
   importTroffDataToExistingSong_merge = async () => {
-    const fileName = $('#importTroffDataToExistingSong_fileName').val();
-    const serverId = $('#importTroffDataToExistingSong_serverId').val();
+    const fileName = $('#importTroffDataToExistingSong_fileName').val() as string;
+    const serverId = $('#importTroffDataToExistingSong_serverId').val() as string;
 
     this.showMarkersDownloadInProgressDialog(fileName);
     const hash = '#' + serverId + '&' + encodeURI(fileName);
@@ -385,7 +407,7 @@ class TroffClass {
       );
     }
 
-    const oImport = {};
+    const oImport = {} as TroffManualImportExport;
     oImport.strSongInfo = markersFromServer.info;
     oImport.aoStates = aoStates;
     oImport.aoMarkers = markersFromServer.markers;
@@ -1251,7 +1273,7 @@ class TroffClass {
     }, 1000);
   }; // end playSong
 
-  pauseSong = (updateLoopTimes) => {
+  pauseSong = (updateLoopTimes?: boolean) => {
     updateLoopTimes = updateLoopTimes !== undefined ? updateLoopTimes : true;
     var audio = document.querySelector('audio, video');
     if (audio) audio.pause();
@@ -1343,10 +1365,10 @@ class TroffClass {
   exportStuff = () => {
     this.toggleImportExport();
     DB.getMarkers(this.strCurrentSong, (aoMarkers) => {
-      var oExport = {};
+      var oExport = {} as TroffManualImportExport;
       oExport.aoMarkers = [];
       for (var i = 0; i < aoMarkers.length; i++) {
-        var oTmp = {};
+        var oTmp = {} as TroffMarker;
         oTmp.name = aoMarkers[i].name;
         oTmp.time = aoMarkers[i].time;
         oTmp.info = aoMarkers[i].info;
@@ -1359,7 +1381,7 @@ class TroffClass {
         var oState = JSON.parse(aState.eq(i).attr('strstate'));
         oExport.aoStates[i] = this.replaceMarkerIdWithMarkerTimeInState(oState, aoMarkers);
       }
-      oExport.strSongInfo = $('#songInfoArea').val();
+      oExport.strSongInfo = $('#songInfoArea').val() as string;
       var sExport = JSON.stringify(oExport);
 
       IO.prompt('Copy the marked text to export your markers', sExport);
@@ -1408,7 +1430,8 @@ class TroffClass {
     );
   };
 
-  replaceMarkerIdWithMarkerTimeInState = (oState, aoMarkers) => {
+  replaceMarkerIdWithMarkerTimeInState = (oOriginalState: State, aoMarkers): State_WithTime => {
+    const oState: State_WithTime = oOriginalState as State_WithTime; // to not change the original state-object
     for (let i = 0; i < aoMarkers.length; i++) {
       if (oState.currentMarker == aoMarkers[i].id) {
         oState.currentMarkerTime = aoMarkers[i].time;
@@ -1425,7 +1448,7 @@ class TroffClass {
     return oState;
   };
 
-  importMarker = (aMarkers) => {
+  importMarker = (aMarkers: TroffMarker[]) => {
     var aMarkerId = this.getNewMarkerIds(aMarkers.length);
 
     for (var i = 0; i < aMarkers.length; i++) {
@@ -1433,7 +1456,7 @@ class TroffClass {
       //from version 0.3.0 and earlier:
       var tmpName = Object.keys(aMarkers[i])[0];
       aMarkers[i].name = aMarkers[i].name || tmpName;
-      aMarkers[i].time = aMarkers[i].time || Number(aMarkers[i][tmpName]) || 0;
+      aMarkers[i].time = aMarkers[i].time || Number((aMarkers[i] as any)[tmpName]) || 0;
       aMarkers[i].info = aMarkers[i].info || '';
       aMarkers[i].color = aMarkers[i].color || 'None';
       //:allow for version 0.3.0 end here
@@ -1443,7 +1466,7 @@ class TroffClass {
     this.addMarkers(aMarkers); // adds marker to html
   };
 
-  doImportStuff = (oImport) => {
+  doImportStuff = (oImport: TroffManualImportExport) => {
     this.importMarker(oImport.aoMarkers);
     importSonginfo(oImport.strSongInfo);
     importStates(oImport.aoStates);
@@ -1454,11 +1477,11 @@ class TroffClass {
       });
     });
 
-    function importSonginfo(strSongInfo) {
+    function importSonginfo(strSongInfo: string) {
       $('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
     }
 
-    function importStates(aoStates) {
+    function importStates(aoStates: State_WithTime[]) {
       for (var i = 0; i < aoStates.length; i++) {
         var strTimeStart = aoStates[i].currentMarkerTime;
         var strTimeStop = aoStates[i].currentStopMarkerTime;
@@ -1468,11 +1491,11 @@ class TroffClass {
         aoStates[i].currentStopMarker = getMarkerFromTime(strTimeStop) + 'S';
       }
 
-      function getMarkerFromTime(strTime) {
+      function getMarkerFromTime(strTime: string) {
         var aCurrMarkers = $('#markerList').children();
         for (var i = 0; i < aCurrMarkers.length; i++) {
           var currMarker = aCurrMarkers.eq(i).children().eq(2);
-          if (currMarker[0].timeValue == strTime) {
+          if ((currMarker[0] as any).timeValue == strTime) {
             return currMarker.attr('id');
           }
         }
@@ -1505,7 +1528,7 @@ class TroffClass {
       IO.promptEditMarker(0, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
         if (newMarkerName === '') return;
 
-        var oMarker = {};
+        var oMarker = {} as TroffMarker;
         oMarker.name = newMarkerName;
         oMarker.time = newTime;
         oMarker.info = newMarkerInfo || '';
@@ -1515,7 +1538,10 @@ class TroffClass {
         var markers = [oMarker];
         this.addMarkers(markers); // adds marker to html
         DB.saveMarkers(this.getCurrentSong());
-        gtag('event', 'Add Marker', { event_category: 'Adding Button' });
+        gtag('event', 'Add Marker', {
+          event_category: 'Adding Button',
+          event_label: newMarkerName,
+        });
       });
       clearInterval(quickTimeout);
     }, 0);
@@ -1526,7 +1552,7 @@ class TroffClass {
     IO.blurHack();
   };
 
-  toggleArea = (event) => {
+  toggleArea = (event: JQuery.ClickEvent) => {
     IO.blurHack();
 
     var sectionToHide = $(event.target).attr('section-to-hide');

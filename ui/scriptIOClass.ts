@@ -630,7 +630,7 @@ class IOClass {
   promptEditMarker = (
     markerId: string,
     func: (name: string, info: string, color: string, time: number) => void,
-    funcCancle: () => void
+    funcCancle?: () => void
   ) => {
     'use strict';
 

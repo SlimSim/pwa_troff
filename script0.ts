@@ -170,7 +170,7 @@ const onClickAddNewSongToGroup = (event: JQuery.ClickEvent) => {
   target.remove();
 };
 
-const addGroupOwnerRow = (owner: string) => {
+const addGroupOwnerRow = (owner: string = '') => {
   const ownerRow = $('#groupDialogOwnerRowTemplate').children().clone(true, true);
 
   ownerRow.find('.groupDialogRemoveOwner').on('click', removeOwnerRow);

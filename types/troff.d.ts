@@ -50,8 +50,16 @@ export interface State {
   waitBetweenLoops: number | string;
 }
 
+export type State_WithTime = Omit<State, 'currentStopMarker', 'currentMarker'> & {
+  currentStopMarker?: never;
+  currentMarker?: never;
+  currentMarkerTime?: number | string;
+  currentStopMarkerTime?: number | string;
+};
+
 export interface TroffLocalInformation {
-  nrTimesLoaded: number;
+  nrTimesLoaded?: number;
+  addedFromThisDevice?: boolean;
 }
 
 export interface TroffFileData {
@@ -126,10 +134,12 @@ export type TroffFirebaseSongIdentifyer = {
 
 export type SonglistSongInfo = {
   name: string;
-  data: {
-    galleryId: string; // todo: denna är alltid 'pwa-galleryId', byta denna grejj till bara name och fullPath! (eller path)
-    fullPath: string;
-  };
+  data: FullPathObject;
+};
+
+export type FullPathObject = {
+  galleryId: string;
+  fullPath: string; // todo: denna är alltid 'pwa-galleryId', byta denna grejj till bara name och fullPath! (eller path)
 };
 
 export type TroffStateOfSonglists = {
@@ -174,3 +184,10 @@ export type TroffDataIdObject = {
   tags: string;
   troffDataId: number;
 };
+
+export type TroffManualImportExport = {
+  strSongInfo: string;
+  aoStates: State_WithTime[];
+  aoMarkers: TroffMarker[];
+};
+
