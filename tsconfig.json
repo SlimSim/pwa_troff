@@ -13,6 +13,6 @@
     "lib": ["DOM", "ES2020"],
     "allowUmdGlobalAccess": true
   },
-  "include": ["**/*.js", "*.js", "**/*.d.ts"],
+  "include": ["**/*.js", "*.js", "**/*.d.ts", "**/*.ts"],
   "exclude": ["assets/external/**", "node_modules", "dist", "build"]
 }

@@ -175,7 +175,36 @@ export type TroffHistoryList = {
   troffDataIdObjectList: TroffDataIdObject[];
 };
 
+/**
+ * Used by find.html
+ */
+export type ServerSong = {
+  fromServer?: boolean;
+  deleted: boolean;
+  fileNameUri: string;
+  size: number;
+  troffDataIdObjectList: TroffDataIdObject[];
+  type: string;
+  uploaded: number;
+};
+
+/**
+ * Used by find.html
+ */
+export type PublicTroffDataFromServer = {
+  deleted?: boolean;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  id: number;
+  songData: TroffObjectLocal;
+  troffDataPublic: boolean;
+  troffDataUploadedMillis: number;
+};
+
 export type TroffDataIdObject = {
+  fromServer?: boolean;
   displayName: string;
   firstTimeLoaded: number;
   genre: string;

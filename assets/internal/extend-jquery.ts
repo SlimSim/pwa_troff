@@ -11,7 +11,7 @@
 
   special.scrollStart = {
     setup: function () {
-      var timer: null | number,
+      var timer: null | number | NodeJS.Timeout,
         handler = function (this: EventTarget, event: JQuery.Event) {
           var _self = this,
             _args = arguments;
@@ -41,7 +41,7 @@
   special.scrollStop = {
     latency: 42,
     setup: function () {
-      var timer: null | number,
+      var timer: null | number | NodeJS.Timeout,
         handler = function (this: EventTarget, event: JQuery.Event) {
           var _self = this,
             _args = arguments;

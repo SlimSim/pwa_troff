@@ -33,7 +33,6 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
-  getRedirectResult,
   // Firestore helpers
   doc,
   setDoc,
@@ -43,6 +42,15 @@ import {
 } from './services/firebaseClient.js';
 import { initiateAllFirebaseGroups } from './services/firebaseClient.js';
 import log from './utils/log.js';
+import { User } from 'firebase/auth';
+import {
+  PublicTroffDataFromServer,
+  ServerSong,
+  TroffData,
+  TroffDataIdObject,
+  TroffHistoryList,
+} from './types/troff.js';
+import { DocumentData } from 'firebase/firestore';
 
 $(document).ready(async function () {
   'use strict';
@@ -51,14 +59,17 @@ $(document).ready(async function () {
 	/*           Private methods and variables:
 	/************************************************/
 
-  let firebaseUser = null;
-  let serverSongListHistory;
-  let allPublicTroffDataFromServer;
+  let firebaseUser: User | null = null;
+  let serverSongListHistory: ServerSong[];
+  let allPublicTroffDataFromServer: PublicTroffDataFromServer[];
 
   const googleSignIn = async function () {
     try {
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
       firebaseUser = result.user;
+      if (firebaseUser == null) {
+        return;
+      }
       setUiToSignIn(firebaseUser);
       initiateAllFirebaseGroups(firebaseUser.email);
     } catch (error) {
@@ -76,7 +87,7 @@ $(document).ready(async function () {
 
   onAuthStateChanged(auth, (user) => {
     firebaseUser = user;
-    if (user == null) {
+    if (firebaseUser == null) {
       setUiToNotSignIn();
       return;
     }
@@ -86,30 +97,6 @@ $(document).ready(async function () {
     getPrivateOnlineHistoryList(firebaseUser);
   });
 
-  getRedirectResult(auth)
-    .then((result) => {
-      if (result == null) {
-        return;
-      }
-      if (!result.credential) {
-        return setUiToNotSignIn();
-      }
-      /** @type {firebase.auth.OAuthCredential} * /
-		var credential = result.credential;
-		// This gives you a Google Access Token. You can use it to access the Google API.
-		var token = credential.accessToken;
-		*/
-    })
-    .catch((error) => {
-      log.e('auth.getRedirectResult error', error);
-      // Handle Errors here.
-      var errorMessage = error.message;
-      // The firebase.auth.AuthCredential type that was used.
-      $('#alertDialog').removeClass('hidden');
-      $('#alertHeader').text('Error');
-      $('#alertText').text('could not authenticate: ' + error.code + ', ' + errorMessage);
-    });
-
   const setUiToNotSignIn = function () {
     $('#userName').addClass('hidden').text('');
     $('#userPhoto').addClass('hidden').attr('src', '');
@@ -117,8 +104,10 @@ $(document).ready(async function () {
     $('#signOut').addClass('hidden');
   };
 
-  const setUiToSignIn = async function (user) {
-    $('#userName').removeClass('hidden').text(user.displayName);
+  const setUiToSignIn = async function (user: User) {
+    $('#userName')
+      .removeClass('hidden')
+      .text(user.displayName || '');
     $('#userPhoto').removeClass('hidden').attr('src', user.photoURL);
     $('#googleSignIn').addClass('hidden');
     $('#signOut').removeClass('hidden');
@@ -127,7 +116,7 @@ $(document).ready(async function () {
   $('#signOut').on('click', doSignOut);
 
   const IO = {
-    alert: function (headline, message) {
+    alert: function (headline: string, message: string) {
       const head = $('<h2>').text(headline);
       const body = $('<p>').text(message);
       const removePopUp = () => {
@@ -151,7 +140,9 @@ $(document).ready(async function () {
 
   const populateFromMemory = function () {
     serverSongListHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
-    const savedServerSongListFromServer = nDB.get('TROFF_SERVER_SONG_LIST_FROM_SERVER');
+    const savedServerSongListFromServer: ServerSong[] = nDB.get(
+      'TROFF_SERVER_SONG_LIST_FROM_SERVER'
+    );
     mergeWithServerSongListHistory(savedServerSongListFromServer);
 
     const filter = new URLSearchParams(window.location.hash.slice(1)).get('f');
@@ -170,8 +161,9 @@ $(document).ready(async function () {
     const snapshot = await getDocs(collection(db, 'TroffData'));
     const docs = snapshot.docs;
     allPublicTroffDataFromServer = docs
-      .map((doc) => doc.data())
+      .map((doc) => doc.data() as PublicTroffDataFromServer)
       .filter(troffDataExistsInLocalHistoryOrIsPublic);
+    console.log('allPublicTroffDataFromServer', allPublicTroffDataFromServer);
     const latestServerSongListFromServer = troffDataListToServerSongList(
       allPublicTroffDataFromServer
     );
@@ -179,7 +171,7 @@ $(document).ready(async function () {
     return latestServerSongListFromServer;
   };
 
-  const listOfServerSongsAreEqual = function (list1, list2) {
+  const listOfServerSongsAreEqual = function (list1: ServerSong[], list2: ServerSong[]): boolean {
     // if any are null, they are not equal:
     if (list1 == null || list2 == null) return false;
 
@@ -191,7 +183,9 @@ $(document).ready(async function () {
   };
 
   const repopulateFromFirebase = async function () {
-    const savedServerSongListFromServer = nDB.get('TROFF_SERVER_SONG_LIST_FROM_SERVER');
+    const savedServerSongListFromServer: ServerSong[] = nDB.get(
+      'TROFF_SERVER_SONG_LIST_FROM_SERVER'
+    );
     const latestServerSongListFromServer =
       await getLatestPublicTroffDataFromFireBaseAndSaveLocaly();
 
@@ -208,15 +202,17 @@ $(document).ready(async function () {
     }
   };
 
-  const troffDataExistsInLocalHistoryOrIsPublic = function (troffData) {
+  const troffDataExistsInLocalHistoryOrIsPublic = function (troffData: DocumentData): boolean {
     // if troffData is public, return true;
     if (troffData.troffDataPublic) return true;
 
-    const localHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
+    const localHistory: TroffHistoryList[] = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME');
     // if troffData is not public and we have no local history:
     if (!localHistory) return false;
 
-    const correctSong = localHistory.find((td) => td.fileNameUri == encodeURI(troffData.fileName));
+    const correctSong: TroffHistoryList | undefined = localHistory.find(
+      (td) => td.fileNameUri == encodeURI(troffData.fileName)
+    );
 
     // if troffData is not public and this file is NOT in our local history:
     if (!correctSong) return false;
@@ -239,14 +235,14 @@ $(document).ready(async function () {
     if (!element) return;
 
     element.scrollIntoView();
-    element.querySelector('.toggleNext').click();
+    (element.querySelector('.toggleNext') as HTMLElement)?.click();
   };
 
-  const fileNameToId = function (fileName) {
+  const fileNameToId = function (fileName: string): string {
     return fileName.split(' ').join('_');
   };
 
-  const serverSongEqual = function (ss1, ss2) {
+  const serverSongEqual = function (ss1: ServerSong, ss2: ServerSong): boolean {
     if (ss1.fileNameUri != ss2.fileNameUri) return false;
     if (ss1.troffDataIdObjectList.length != ss2.troffDataIdObjectList.length) return false;
     return ss1.troffDataIdObjectList.every((tdio1) =>
@@ -254,7 +250,7 @@ $(document).ready(async function () {
     );
   };
 
-  const nrIdsInHistoryList = function (historyList) {
+  const nrIdsInHistoryList = function (historyList: TroffHistoryList[]): number {
     if (!historyList) return 0;
     let nrIds = 0;
     historyList.forEach((historyObject) => {
@@ -263,12 +259,12 @@ $(document).ready(async function () {
     return nrIds;
   };
 
-  const getPrivateOnlineHistoryList = async function (user) {
+  const getPrivateOnlineHistoryList = async function (user: User) {
     const snapshot = await getDoc(doc(db, 'UserData', user.uid));
     const userData = snapshot.exists() ? snapshot.data() : {};
 
-    const uploadedHistory = userData.uploadedHistory || [];
-    const localHistory = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME') || [];
+    const uploadedHistory: TroffHistoryList[] = userData.uploadedHistory || [];
+    const localHistory: TroffHistoryList[] = nDB.get('TROFF_TROFF_DATA_ID_AND_FILE_NAME') || [];
     const totalList = mergeSongListHistorys(uploadedHistory, localHistory);
 
     const nrIdsInTotalList = nrIdsInHistoryList(totalList);
@@ -294,11 +290,15 @@ $(document).ready(async function () {
     }
   };
 
-  const mergeSongHistorys = function (song1, song2) {
-    if (song1 == null) return song2;
+  const mergeSongHistorys = function (
+    song1: TroffHistoryList | null,
+    song2: TroffHistoryList | undefined
+  ): TroffHistoryList {
+    if (song1 == null && song2 == null) throw new Error('song1 and song2 are null');
+    if (song1 == null) return song2 as TroffHistoryList;
     if (song2 == null) return song1;
 
-    const song = { fileNameUri: song1.fileNameUri };
+    const song = { fileNameUri: song1.fileNameUri } as TroffHistoryList;
 
     const tdioList = song1.troffDataIdObjectList;
 
@@ -313,12 +313,15 @@ $(document).ready(async function () {
     return song;
   };
 
-  const mergeSongListHistorys = function (songList1, songList2) {
+  const mergeSongListHistorys = function (
+    songList1: TroffHistoryList[],
+    songList2: TroffHistoryList[]
+  ) {
     if (songList1 == null && songList2 == null) return [];
     if (songList1 == null) return songList2;
     if (songList2 == null) return songList1;
 
-    const mergedSongList = [];
+    const mergedSongList: TroffHistoryList[] = [];
     songList1.forEach((song1) => {
       const song2 = songList2.find((s) => s.fileNameUri == song1.fileNameUri);
       mergedSongList.push(mergeSongHistorys(song1, song2));
@@ -336,7 +339,7 @@ $(document).ready(async function () {
     return mergedSongList;
   };
 
-  const mergeWithServerSongListHistory = function (serverSongListFromServer) {
+  const mergeWithServerSongListHistory = function (serverSongListFromServer: ServerSong[]) {
     if (serverSongListFromServer == undefined) {
       return;
     }
@@ -351,7 +354,9 @@ $(document).ready(async function () {
 
       if (ssHistory == undefined) {
         ssFromServer.fromServer = true;
-        ssFromServer.troffDataIdObjectList.forEach((tdio) => (tdio.fromServer = true));
+        ssFromServer.troffDataIdObjectList.forEach(
+          (tdio: TroffDataIdObject) => (tdio.fromServer = true)
+        );
         serverSongListHistory.push(ssFromServer);
       } else {
         ssHistory.deleted = [ssHistory.deleted, ssFromServer.deleted].some((a) => a);
@@ -381,8 +386,8 @@ $(document).ready(async function () {
     });
   };
 
-  const troffDataListToServerSongList = function (troffDataList) {
-    const serverSongList = [];
+  const troffDataListToServerSongList = function (troffDataList: PublicTroffDataFromServer[]) {
+    const serverSongList: ServerSong[] = [];
 
     for (const troffData of troffDataList) {
       const fileNameUri = encodeURI(troffData.fileName);
@@ -390,7 +395,7 @@ $(document).ready(async function () {
       const currentServerSong = serverSongList.find((ss) => ss.fileNameUri == fileNameUri);
 
       if (currentServerSong == undefined) {
-        const serverSong = {
+        const serverSong: ServerSong = {
           fileNameUri: fileNameUri,
           deleted: troffData.deleted != undefined ? troffData.deleted : false,
           size: troffData.fileSize,
@@ -445,11 +450,11 @@ $(document).ready(async function () {
 
       let addNewDiv = false;
       let defaultValue = false;
-      if (fileName.toLowerCase().includes($('#search').val().toLowerCase())) {
+      if (fileName.toLowerCase().includes(($('#search').val() as string).toLowerCase())) {
         defaultValue = true;
       }
       $.each(serverSong.troffDataIdObjectList, (tdIndex, troffDataIdObject) => {
-        if (!includesSearch($('#search').val(), troffDataIdObject, defaultValue)) {
+        if (!includesSearch($('#search').val() as string, troffDataIdObject, defaultValue)) {
           return;
         }
         addNewDiv = true;
@@ -474,7 +479,7 @@ $(document).ready(async function () {
     $('#mainArticle').removeClass('hidden');
   };
 
-  const getEarliestTime = function (m1, m2) {
+  const getEarliestTime = function (m1: number, m2: number) {
     if (m1 == undefined && m2 == undefined) return 0;
 
     if ((m1 == undefined || m1 < 162431283500) && m2 > 162431283500) return m2;
@@ -484,7 +489,7 @@ $(document).ready(async function () {
     return Math.min(m1, m2);
   };
 
-  const getFirstTimeLoadedFromTroffData = function (troffData) {
+  const getFirstTimeLoadedFromTroffData = function (troffData: PublicTroffDataFromServer) {
     const millis = troffData.troffDataUploadedMillis;
     if (!(!millis || millis < 162431283500)) {
       return millis;
@@ -500,9 +505,10 @@ $(document).ready(async function () {
   };
 
   const setAppropriateMarkerDistance = function () {
-    var child = $('#markerList li:first-child')[0];
+    var child = $('#markerList li:first-child')[0] as ChildNode | HTMLElement | null;
 
-    var timeBarHeight = $('#markerList').height() - $('#markerList').find('li').height();
+    var timeBarHeight =
+      ($('#markerList').height() as any) - ($('#markerList').find('li').height() as any);
     var totalDistanceTop = 4;
 
     var barMarginTop = parseInt($('#markerList').css('margin-top'));
@@ -510,7 +516,7 @@ $(document).ready(async function () {
 
     while (child) {
       const markerTime = Number($(child).data('time'));
-      var myRowHeight = child.clientHeight;
+      var myRowHeight = (child as HTMLElement).clientHeight;
 
       var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
 
@@ -531,13 +537,13 @@ $(document).ready(async function () {
     //Troff.setAppropriateActivePlayRegion();
   }; // end setAppropriateMarkerDistance
 
-  const selectMarkerSpan = function (markerSpan, markerInfo) {
+  const selectMarkerSpan = function (markerSpan: JQuery<HTMLElement>, markerInfo: string) {
     $('#markerList').children().find('.markerName').removeClass('selected');
     markerSpan.find('.markerName').addClass('selected');
     $('#markerInfo').text(markerInfo);
   };
 
-  const showMoreAboutVersionPopUpFor = function (troffDataId) {
+  const showMoreAboutVersionPopUpFor = function (troffDataId: number) {
     $('#moreAboutVersionDialog').removeClass('hidden');
     $('#moreAboutVersionDialog').data('troffDataId', troffDataId);
 
@@ -585,7 +591,10 @@ $(document).ready(async function () {
       if (songData.currentStartMarker === marker.id) {
         selectMarkerSpan(markerSpan, marker.info);
       }
-      markerSpan.find('.markerTime').text(st.secToDisp(marker.time)).attr('timeValue', marker.time);
+      markerSpan
+        .find('.markerTime')
+        .text(st.secToDisp(marker.time as number))
+        .attr('timeValue', marker.time);
 
       markerSpan.find('.markerInfoIndicator').toggleClass('hidden', marker.info === '');
 
@@ -601,8 +610,8 @@ $(document).ready(async function () {
     setAppropriateMarkerDistance();
 
     //$( "#markerParent" ).text( songData.markerParent );
-    $('#nrStates').text(songData.nrStates);
-    $('#nrTimesLoaded').text(songData?.localInformation?.nrTimesLoaded);
+    $('#nrStates').text((songData as any).nrStates || '');
+    $('#nrTimesLoaded').text(songData?.localInformation?.nrTimesLoaded || '');
     //$( "#statesParent" ).text( songData.statesParent );
 
     /*
@@ -619,24 +628,29 @@ $(document).ready(async function () {
 		*/
   };
 
-  const troffDataToTroffDataIdObject = function (troffData) {
-    if (troffData.songData == undefined) {
-      troffData.songData = JSON.parse(troffData.markerJsonString);
-      delete troffData.markerJsonString;
+  const troffDataToTroffDataIdObject = function (
+    troffData: TroffData | PublicTroffDataFromServer
+  ): TroffDataIdObject {
+    if ((troffData as PublicTroffDataFromServer).songData == undefined) {
+      (troffData as PublicTroffDataFromServer).songData = JSON.parse(
+        (troffData as TroffData).markerJsonString
+      );
+      delete (troffData as any).markerJsonString;
     }
+    const troffDataP = troffData as PublicTroffDataFromServer;
     return {
       troffDataId: troffData.id,
-      firstTimeLoaded: getFirstTimeLoadedFromTroffData(troffData),
-      displayName: getDisplayNameFromTroffData(troffData),
-      nrMarkers: troffData.songData.markers.length,
-      nrStates: troffData.songData.aStates ? troffData.songData.aStates.length : 0,
-      infoBeginning: troffData.songData.info.substring(0, 99),
-      genre: (troffData.songData.fileData && troffData.songData.fileData.genre) || '',
-      tags: (troffData.songData.fileData && troffData.songData.fileData.tags) || '',
+      firstTimeLoaded: getFirstTimeLoadedFromTroffData(troffDataP),
+      displayName: getDisplayNameFromTroffData(troffDataP, 'Unknown'),
+      nrMarkers: troffDataP.songData.markers.length,
+      nrStates: troffDataP.songData.aStates ? troffDataP.songData.aStates.length : 0,
+      infoBeginning: troffDataP.songData.info.substring(0, 99),
+      genre: (troffDataP.songData.fileData && troffDataP.songData.fileData.genre) || '',
+      tags: (troffDataP.songData.fileData && troffDataP.songData.fileData.tags) || '',
     };
   };
 
-  const getFullTroffDataDiv = function (troffDataIdObject, fileNameUri) {
+  const getFullTroffDataDiv = function (troffDataIdObject: TroffDataIdObject, fileNameUri: string) {
     const newTroffData = $('#troffDataTemplate').children().clone(true, true);
     const downloadText = troffDataIdObject.fromServer ? 'for the first time' : 'again';
     newTroffData
@@ -659,10 +673,10 @@ $(document).ready(async function () {
       newTroffData.find('.troffDataNrMarkersParent').addClass('hidden');
     }
     newTroffData.find('.troffDataNrMarkers').text(troffDataIdObject.nrMarkers);
-    if (troffDataIdObject.nrStates > 0) {
+    if (troffDataIdObject.nrStates && troffDataIdObject.nrStates > 0) {
       newTroffData.find('.troffDataNrStatesParent').removeClass('hidden');
     }
-    newTroffData.find('.troffDataNrStates').text(troffDataIdObject.nrStates);
+    newTroffData.find('.troffDataNrStates').text(troffDataIdObject.nrStates || '');
     newTroffData
       .find('.troffDataFirstTimeLoaded')
       .text(st.millisToDisp(troffDataIdObject.firstTimeLoaded));
@@ -672,7 +686,7 @@ $(document).ready(async function () {
     return newTroffData;
   };
 
-  const pathToName = function (filepath) {
+  const pathToName = function (filepath: string) {
     const lastIndex = filepath.lastIndexOf('.');
     if (lastIndex == -1) {
       return filepath;
@@ -680,7 +694,10 @@ $(document).ready(async function () {
     return filepath.substr(0, lastIndex);
   };
 
-  const getDisplayNameFromTroffData = function (troffData, defaultValue) {
+  const getDisplayNameFromTroffData = function (
+    troffData: PublicTroffDataFromServer,
+    defaultValue: string
+  ) {
     let displayName = defaultValue || pathToName(troffData.fileName);
     if (troffData.songData && troffData.songData.fileData) {
       displayName =
@@ -693,7 +710,7 @@ $(document).ready(async function () {
     return displayName;
   };
 
-  const getSearchableFields = function (troffDataIdObject) {
+  const getSearchableFields = function (troffDataIdObject: TroffDataIdObject) {
     const customName = '';
     const choreography = '';
     const displayName = troffDataIdObject.displayName || '';
@@ -702,7 +719,11 @@ $(document).ready(async function () {
     return [customName, choreography, displayName, genre, tags];
   };
 
-  const includesSearch = function (text, troffDataIdObject, defaultValue) {
+  const includesSearch = function (
+    text: string,
+    troffDataIdObject: TroffDataIdObject,
+    defaultValue: boolean
+  ) {
     if (text == '') return true;
     text = text.toLowerCase();
     const searchableFields = getSearchableFields(troffDataIdObject);
@@ -717,13 +738,12 @@ $(document).ready(async function () {
       .some((a) => a);
   };
 
-  const sortFileList = function (cssToSort, orderByAsc) {
+  const sortFileList = function (cssToSort: string, orderByAsc: boolean) {
     orderByAsc = orderByAsc === undefined ? true : orderByAsc;
     var $fileList = $('#fileList');
 
-    $fileList
-      .children()
-      .sort((a, b) => {
+    ($fileList.children() as any)
+      .sort((a: Element, b: Element) => {
         if (orderByAsc) {
           return $(a).data(cssToSort) - $(b).data(cssToSort);
         }

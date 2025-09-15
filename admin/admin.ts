@@ -37,7 +37,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
-  getRedirectResult,
   collection,
   getDocs,
   doc,

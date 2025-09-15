@@ -78,8 +78,8 @@ import {
   TroffMarker,
   TroffObjectLocal,
   TroffStateOfSonglists,
-} from 'types/troff.js';
-import { IOInput } from 'types/io.js';
+} from './types/troff.js';
+import { IOInput } from './types/io.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
   IO.blurHack();
@@ -129,8 +129,8 @@ class TroffClass {
   nrTaps: number;
   m_zoomStartTime: number;
   m_zoomEndTime: number | null;
-  stopTimeout: number | undefined;
-  stopInterval: number | undefined;
+  stopTimeout: NodeJS.Timeout | undefined;
+  stopInterval: NodeJS.Timeout | undefined;
 
   constructor() {
     this.strCurrentSong = '';
@@ -411,7 +411,7 @@ class TroffClass {
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
 
-    const aoStates = [];
+    const aoStates: State_WithTime[] = [];
     for (let i = 0; i < markersFromServer.aStates.length; i++) {
       const parsedState = JSON.parse(markersFromServer.aStates[i]);
       aoStates.push(
@@ -967,8 +967,8 @@ class TroffClass {
   };
 
   getNewMarkerIds = (iNrOfIds: number) => {
-    var a = [];
-    var aRet = [];
+    var a: number[] = [];
+    var aRet: string[] = [];
     var nr = 0;
     for (var i = 0; i < iNrOfIds; i++) {
       while ($('#markerNr' + nr).length > 0 || a.indexOf(nr) != -1) {
@@ -2354,7 +2354,7 @@ class TroffClass {
     var min = parseFloat((aOMarkers[0] as any).timeValue);
     var iMaxIndex = 0;
     var iMinIndex = 0;
-    var aMarkers = [];
+    var aMarkers: string[] = [];
     for (var i = 0; i < aOMarkers.length; i++) {
       var tv = (aOMarkers[i] as any).timeValue;
       aMarkers[i] = tv;

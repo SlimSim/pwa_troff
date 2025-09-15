@@ -16,10 +16,7 @@
 */
 
 /* eslint eqeqeq: "off" */
-
-// todo: try to use the strict mode! :)
-// - what could possibly go wrong?
-// "use strict";
+/// <reference path="./types/globals.d.ts" />
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
@@ -76,7 +73,7 @@ import {
   TroffHistoryList,
   TroffHtmlMarkerElement,
   TroffSongIdentifyer_sk,
-} from 'types/troff.js';
+} from './types/troff.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
@@ -111,7 +108,9 @@ const googleSignIn = async function () {
   try {
     const result = await signInWithPopup(auth, new GoogleAuthProvider());
     firebaseUser = result.user;
-    console.log('firebaseUser', firebaseUser);
+    if (firebaseUser == null) {
+      return;
+    }
     setUiToSignIn(firebaseUser);
     const snap = await initiateAllFirebaseGroups(firebaseUser.email);
     initiateCollections(snap);

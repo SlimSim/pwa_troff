@@ -20,7 +20,7 @@
 import log from './utils/log.js';
 
 import { IO } from './script.js';
-import { ErrorHandler } from 'types/errorHandler.js';
+import { ErrorHandler } from './types/errorHandler.js';
 
 // Create an object type UserException
 class ShowUserException extends Error {

@@ -41,7 +41,7 @@ import {
   TroffFirebaseGroupIdentifyer,
   TroffFirebaseSongIdentifyer,
   TroffHistoryList,
-} from 'types/troff.js';
+} from './types/troff.js';
 
 window.alert = (alert) => {
   log.w('Alert:', alert);

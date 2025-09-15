@@ -12,7 +12,11 @@ if ('serviceWorker' in navigator) {
   log.e('No "serviceWorker" in navigator');
 }
 
-var PWA = {};
+var PWA = {} as {
+  listenForInstallPrompt: () => void;
+  listenForBroadcastChannel: () => void;
+  showPrompt: (e: any) => void;
+};
 
 PWA.listenForInstallPrompt = () => {
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -49,6 +53,7 @@ PWA.listenForBroadcastChannel = () => {
         return;
       }
 
+      const self = this;
       $.notify(
         {
           title: $('<span class="d-flex flex-column">')
@@ -65,7 +70,10 @@ PWA.listenForBroadcastChannel = () => {
                 $('<button>')
                   .text('RELOAD')
                   .on('click', () => {
-                    $(this).trigger('notify-hide');
+                    if (!self) {
+                      return;
+                    }
+                    $(self).trigger('notify-hide');
                     window.location.reload();
                     return false;
                   })
@@ -86,13 +94,13 @@ PWA.showPrompt = (e) => {
   e.prompt(); // Throws if called more than once or default not prevented
 
   e.userChoice.then(
-    (choiceResult) => {
+    (choiceResult: { outcome: string }) => {
       if (choiceResult.outcome === 'accepted') {
         $('#pwaAddToHomeScreen').addClass('hidden');
         $.notify('Thank you for installing Troff.\nHave fun!', 'success');
       }
     },
-    (err) => {
+    (err: Error) => {
       log.e('err', err);
     }
   );
