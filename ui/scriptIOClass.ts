@@ -61,7 +61,7 @@ class IOClass {
     }
   };
 
-  updateCellInDataTable = (column: string, value: string, key: string) => {
+  updateCellInDataTable = (column: string, value: string, key?: string) => {
     if (key == undefined) {
       ($('#dataSongTable') as any)
         .DataTable()
@@ -302,7 +302,7 @@ class IOClass {
 
     $('#buttUnselectMarkers').click(Troff.unselectMarkers);
     $('#buttResetVolume').click(() =>
-      Troff.setVolume($('#TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE').val())
+      Troff.setVolume($('#TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE').val() as number)
     );
     $('#volumeMinus').click(() => {
       Troff.incrementInput('#volumeBar', -5);
@@ -311,7 +311,7 @@ class IOClass {
       Troff.incrementInput('#volumeBar', +5);
     });
     $('#buttResetSpeed, #buttResetSpeedDemo').click(() =>
-      Troff.setSpeed($('#TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE').val())
+      Troff.setSpeed($('#TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE').val() as number)
     );
     $('#speedMinus, #speedMinusDemo').click(() => {
       Troff.incrementInput('#speedBar', -5);
@@ -610,7 +610,7 @@ class IOClass {
 
   setEnterFunction = (
     func: (event: KeyboardEvent) => any,
-    arrowFunc: (event: KeyboardEvent) => any
+    arrowFunc?: (event: KeyboardEvent) => any
   ) => {
     this.IOEnterFunction = func;
     if (arrowFunc !== undefined) this.IOArrowFunction = arrowFunc;
@@ -628,7 +628,7 @@ class IOClass {
   };
 
   promptEditMarker = (
-    markerId: string,
+    markerId: string | false,
     func: (name: string, info: string, color: string, time: number) => void,
     funcCancle?: () => void
   ) => {
@@ -782,7 +782,7 @@ class IOClass {
         func(
           $markerName.val() as string,
           $markerInfo.val() as string,
-          $('.colorPickerSelected').attr('color') as string,
+          row4.find('.colorPickerSelected').attr('color') as string,
           $markerTime.val() as number
         );
       $outerDialog.remove();
@@ -983,7 +983,7 @@ class IOClass {
     $('body').append(outerDiv.append(innerDiv));
   }; // end confirm
 
-  alert = (textHead: string, textBox: string, func?: (test: string) => void) => {
+  alert = (textHead: string, textBox?: string, func?: (test: string) => void) => {
     var time = Date.now();
     var buttEnterId = 'buttOkId' + time;
 
@@ -1039,7 +1039,7 @@ class IOClass {
     $('#' + buttEnterId).click(this.IOEnterFunction as any);
   }; // end alert
 
-  loopTimesLeft = (input?: string) => {
+  loopTimesLeft = (input?: string): string | undefined => {
     if (!input) return $('.loopTimesLeft').eq(0).text();
     if (input == '-1')
       $('.loopTimesLeft').html(String(Number($('.loopTimesLeft').eq(0).text()) - 1));

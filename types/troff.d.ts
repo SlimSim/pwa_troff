@@ -134,10 +134,10 @@ export type TroffFirebaseSongIdentifyer = {
 
 export type SonglistSongInfo = {
   name: string;
-  data: FullPathObject;
+  data: DirectoryListObject;
 };
 
-export type FullPathObject = {
+export type DirectoryListObject = {
   galleryId: string;
   fullPath: string; // todo: denna är alltid 'pwa-galleryId', byta denna grejj till bara name och fullPath! (eller path)
 };
@@ -145,7 +145,7 @@ export type FullPathObject = {
 export type TroffStateOfSonglists = {
   songListList: string[];
   galleryList: string[];
-  directoryList: string[];
+  directoryList: DirectoryListObject[];
 };
 
 export interface TroffHtmlMarkerElement extends HTMLInputElement {
@@ -190,4 +190,3 @@ export type TroffManualImportExport = {
   aoStates: State_WithTime[];
   aoMarkers: TroffMarker[];
 };
-

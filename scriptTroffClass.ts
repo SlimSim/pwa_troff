@@ -67,12 +67,19 @@ import {
   DATA_TABLE_COLUMNS,
 } from './constants/constants.js';
 import {
+  DirectoryListObject,
   SonglistSongInfo,
   State,
   State_WithTime,
+  TroffData,
+  TroffFirebaseGroupIdentifyer,
+  TroffHistoryList,
   TroffManualImportExport,
   TroffMarker,
+  TroffObjectLocal,
+  TroffStateOfSonglists,
 } from 'types/troff.js';
+import { IOInput } from 'types/io.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
   IO.blurHack();
@@ -122,6 +129,8 @@ class TroffClass {
   nrTaps: number;
   m_zoomStartTime: number;
   m_zoomEndTime: number | null;
+  stopTimeout: number | undefined;
+  stopInterval: number | undefined;
 
   constructor() {
     this.strCurrentSong = '';
@@ -238,7 +247,7 @@ class TroffClass {
     });
   };
 
-  setUrlToSong = (serverId: string | undefined, fileName: string) => {
+  setUrlToSong = (serverId: string | undefined, fileName: string | null) => {
     'use strict';
     if (serverId === undefined) {
       if (!window.location.hash) {
@@ -246,6 +255,9 @@ class TroffClass {
       }
       // remove url-hash completely:
       history.pushState('', document.title, window.location.pathname + window.location.search);
+      return;
+    }
+    if (fileName === null) {
       return;
     }
     window.location.hash = this.createHash(serverId, fileName);
@@ -350,7 +362,7 @@ class TroffClass {
       event_label: hash,
     });
 
-    let troffData;
+    let troffData: TroffData;
     try {
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
@@ -422,13 +434,17 @@ class TroffClass {
   };
 
   importTroffDataToExistingSong_keepExisting = async () => {
-    const fileName = $('#importTroffDataToExistingSong_fileName').val();
+    const fileName = $('#importTroffDataToExistingSong_fileName').val() as string;
 
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
   };
 
-  saveDownloadLinkHistory = (serverTroffDataId, fileName, troffData) => {
+  saveDownloadLinkHistory = (
+    serverTroffDataId: number,
+    fileName: string,
+    troffData: { markerJsonString: string }
+  ) => {
     const fileNameUri = encodeURI(fileName);
 
     const markerObject = JSON.parse(troffData.markerJsonString);
@@ -448,7 +464,7 @@ class TroffClass {
       tags = fileData.tags || tags;
     }
 
-    const serverSongs = nDB.get(TROFF_TROFF_DATA_ID_AND_FILE_NAME);
+    const serverSongs: TroffHistoryList[] = nDB.get(TROFF_TROFF_DATA_ID_AND_FILE_NAME);
 
     const troffDataIdObject = {
       troffDataId: serverTroffDataId,
@@ -491,7 +507,7 @@ class TroffClass {
     }
   };
 
-  showImportData = (fileName, serverId) => {
+  showImportData = (fileName: string, serverId: string | number) => {
     'use strict';
     $('#importTroffDataToExistingSong_songName').text(fileName);
     $('#importTroffDataToExistingSong_fileName').val(fileName);
@@ -501,14 +517,14 @@ class TroffClass {
     IO.removeLoadScreen();
   };
 
-  showMarkersDownloadInProgressDialog = (songName) => {
+  showMarkersDownloadInProgressDialog = (songName: string) => {
     $('.downloadSongFromServerInProgressDialog_songName').text(songName);
     $('#downloadSongFromServerInProgressDialog').removeClass('hidden');
     $('.downloadSongFromServerInProgressDialog_song').addClass('hidden');
     $('.downloadSongFromServerInProgressDialog_markers').removeClass('hidden');
   };
 
-  showDownloadSongFromServerInProgress = (songName) => {
+  showDownloadSongFromServerInProgress = (songName: string) => {
     'use strict';
     $('#downloadPercentDone').text(0);
     $('.downloadSongFromServerInProgressDialog_songName').text(songName);
@@ -518,7 +534,11 @@ class TroffClass {
     IO.removeLoadScreen();
   };
 
-  downloadSongFromServerButDataFromCacheExists = async (fileName, serverId, troffDataFromCache) => {
+  downloadSongFromServerButDataFromCacheExists = async (
+    fileName: string,
+    serverId: string,
+    troffDataFromCache: TroffObjectLocal
+  ) => {
     'use strict';
 
     const fileDoesExists = await fileHandler.doesFileExistInCache(fileName);
@@ -569,7 +589,7 @@ class TroffClass {
     }
   };
 
-  downloadSongFromServer = async (hash) => {
+  downloadSongFromServer = async (hash: string) => {
     'use strict';
     log.d('downloadSongFromServer -> hash:', hash);
     const [serverId, fileNameURI] = hash.substr(1).split('&');
@@ -617,7 +637,7 @@ class TroffClass {
   };
 
   editSongDialogSave = () => {
-    const key = $('#editSongFile').val();
+    const key = $('#editSongFile').val() as string;
     const songObject = nDB.get(key);
 
     songObject.fileData.customName = $('#editSongCustomName').val();
@@ -629,7 +649,7 @@ class TroffClass {
     songObject.fileData.genre = $('#editSongGenre').val();
     songObject.fileData.tags = $('#editSongTags').val();
 
-    IO.updateCellInDataTable('DISPLAY_NAME', $('#editSongDisplayName').val(), key);
+    IO.updateCellInDataTable('DISPLAY_NAME', $('#editSongDisplayName').val() as string, key);
     IO.updateCellInDataTable('CUSTOM_NAME', songObject.fileData.customName, key);
     IO.updateCellInDataTable('CHOREOGRAPHY', songObject.fileData.choreography, key);
     IO.updateCellInDataTable('CHOREOGRAPHER', songObject.fileData.choreographer, key);
@@ -648,13 +668,13 @@ class TroffClass {
       $('#editSongCustomName').val() ||
       $('#editSongChoreography').val() ||
       $('#editSongTitle').val() ||
-      this.pathToName($('#editSongFile').val());
+      this.pathToName($('#editSongFile').val() as string);
     $('#editSongDisplayName').val(displayName);
   };
 
   enterWritableField = () => {
-    IO.setEnterFunction((event) => {
-      if (event.ctrlKey == 1) {
+    IO.setEnterFunction((event: KeyboardEvent) => {
+      if (event.ctrlKey) {
         //Ctrl+Enter will exit
         IO.blurHack();
         return false;
@@ -677,7 +697,7 @@ class TroffClass {
     });
   };
 
-  recallSongColumnToggle = (callback) => {
+  recallSongColumnToggle = (callback: () => void) => {
     DB.getVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, (columnToggle) => {
       if (columnToggle === undefined) {
         setTimeout(() => {
@@ -688,7 +708,9 @@ class TroffClass {
 
       DATA_TABLE_COLUMNS.list.forEach((v, i) => {
         if (v.hideFromUser) {
-          const column = $('#dataSongTable').DataTable().column(DATA_TABLE_COLUMNS.getPos(v.id));
+          const column = ($('#dataSongTable') as any)
+            .DataTable()
+            .column(DATA_TABLE_COLUMNS.getPos(v.id));
           column.visible(false);
           return;
         }
@@ -749,14 +771,14 @@ class TroffClass {
     });
   };
 
-  updateHrefForTheme = (theme) => {
+  updateHrefForTheme = (theme: string) => {
     'use strict';
     $('body')
       .removeClassStartingWith('theme-')
       .addClass('theme-' + theme);
   };
 
-  setTheme = (event) => {
+  setTheme = (event: JQuery.ClickEvent) => {
     var $target = $(event.target),
       theme = $target.data('theme');
     $target.closest('#themePickerParent').find('.selected').removeClass('selected');
@@ -790,7 +812,10 @@ class TroffClass {
   };
   openSettingsDialog = () => {
     $('#outerSettingPopUpSquare').removeClass('hidden');
-    gtag('event', 'Open Settings', { event_category: 'Clicking Button' });
+    gtag('event', 'Open Settings', {
+      event_category: 'Clicking Button',
+      event_label: 'Settings Dialog',
+    });
   };
 
   //Public variables:
@@ -801,7 +826,7 @@ class TroffClass {
   };
 
   // this is regarding the "play in fullscreen" - button
-  setPlayInFullscreen = (bPlayInFullscreen) => {
+  setPlayInFullscreen = (bPlayInFullscreen: boolean) => {
     if (bPlayInFullscreen) {
       $('#playInFullscreenButt').addClass('active');
     } else {
@@ -809,7 +834,7 @@ class TroffClass {
     }
   };
 
-  setMirrorImage = (bMirrorImage) => {
+  setMirrorImage = (bMirrorImage: boolean) => {
     if (bMirrorImage) {
       $('#mirrorImageButt').addClass('active');
       $('#videoBox').addClass('flip-horizontal');
@@ -822,6 +847,8 @@ class TroffClass {
   // this is regarding the "play in fullscreen" - button
   playInFullscreenChanged = () => {
     var butt = document.querySelector('#playInFullscreenButt');
+
+    if (!butt) return;
     butt.classList.toggle('active');
 
     var bFullScreen = butt.classList.contains('active');
@@ -830,7 +857,7 @@ class TroffClass {
     IO.blurHack();
   };
 
-  mirrorImageChanged = (event) => {
+  mirrorImageChanged = (event: JQuery.ClickEvent) => {
     var bMirrorImage = !$(event.target).hasClass('active');
     DB.setCurrent(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
     this.setMirrorImage(bMirrorImage);
@@ -867,7 +894,7 @@ class TroffClass {
   /* this funciton is called when the full song/video is loaded,
    * it should thus do the things that conect player to this...
    */
-  setMetadata = (media) => {
+  setMetadata = (media: HTMLMediaElement) => {
     const key = this.getCurrentSong();
 
     let songObject = nDB.get(key);
@@ -887,7 +914,7 @@ class TroffClass {
       );
     }
 
-    document.getElementById('timeBar').max = media.duration;
+    (document.getElementById('timeBar') as any).max = media.duration;
     $('#maxTime')[0].innerHTML = this.secToDisp(media.duration);
 
     // TODO: Flytta allt i getSongMedaDataOf hit, där det hör hemma, jag har ju lixom songObject!
@@ -919,7 +946,7 @@ class TroffClass {
     );
   };
 
-  setWaitBetweenLoops = (bActive, iWait) => {
+  setWaitBetweenLoops = (bActive: boolean, iWait: number) => {
     $('#waitBetweenLoops').val(iWait);
     if (bActive) {
       $('#buttWaitBetweenLoops').addClass('active');
@@ -930,16 +957,16 @@ class TroffClass {
     }
   };
 
-  getWaitBetweenLoops = () => {
+  getWaitBetweenLoops = (): number => {
     if ($('#waitBetweenLoops').hasClass('grayOut')) return 0;
-    return $('#waitBetweenLoops').val();
+    return Number($('#waitBetweenLoops').val());
   };
 
   getNewMarkerId = () => {
     return this.getNewMarkerIds(1)[0];
   };
 
-  getNewMarkerIds = (iNrOfIds) => {
+  getNewMarkerIds = (iNrOfIds: number) => {
     var a = [];
     var aRet = [];
     var nr = 0;
@@ -955,17 +982,17 @@ class TroffClass {
 
   updateStartBefore = () => {
     var goToMarker = $('#' + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER).hasClass('active');
-    if ($('audio, video')[0].paused && goToMarker) this.goToStartMarker();
+    if (($('audio, video')[0] as HTMLMediaElement).paused && goToMarker) this.goToStartMarker();
     this.setAppropriateActivePlayRegion();
   };
 
   speedUpdate = () => {
-    var sliderVal = document.getElementById('speedBar').value;
-    $('#speed, #speedDemo').html(sliderVal);
-    $('audio, video')[0].playbackRate = sliderVal / 100;
+    var sliderVal = (document.getElementById('speedBar') as HTMLInputElement).value as unknown;
+    $('#speed, #speedDemo').html(sliderVal as string);
+    ($('audio, video')[0] as HTMLMediaElement).playbackRate = (sliderVal as number) / 100;
   };
 
-  setSpeed = (speed) => {
+  setSpeed = (speed: number) => {
     $('#speedBar').val(speed);
     $('#speedBar')[0].dispatchEvent(new Event('input'));
     gtag('event', 'Change Speed', {
@@ -975,12 +1002,12 @@ class TroffClass {
   };
 
   volumeUpdate = () => {
-    var sliderVal = document.getElementById('volumeBar').value;
-    $('#volume').html(sliderVal);
-    $('audio, video')[0].volume = sliderVal / 100;
+    var sliderVal = (document.getElementById('volumeBar') as HTMLInputElement).value as unknown;
+    $('#volume').html(sliderVal as string);
+    ($('audio, video')[0] as HTMLMediaElement).volume = (sliderVal as number) / 100;
   };
 
-  setVolume = (volume) => {
+  setVolume = (volume: number) => {
     $('#volumeBar').val(volume);
     $('#volumeBar')[0].dispatchEvent(new Event('input'));
   };
@@ -989,23 +1016,24 @@ class TroffClass {
    * to update the audio / video
    */
   timeUpdate = () => {
-    var sliderVal = document.getElementById('timeBar').value;
+    var sliderVal = Number((document.getElementById('timeBar') as HTMLInputElement).value);
     $('#time').html(this.secToDisp(sliderVal));
 
     if (sliderVal > this.getStopTime()) {
       var aFirstAndLast = this.getFirstAndLastMarkers();
       var lastMarkerId = aFirstAndLast[1] + 'S';
 
-      if (sliderVal < $('#' + lastMarkerId)[0].timeValue) this.selectStopMarker(lastMarkerId);
+      if (sliderVal < ($('#' + lastMarkerId)[0] as any).timeValue)
+        this.selectStopMarker(lastMarkerId);
       else {
         IO.confirm(
           'Out of range',
           'You pressed outside the playing region, ' +
             'do you want to add a marker to the end of the song?',
           () => {
-            var songLength = Number(document.getElementById('timeBar').max);
+            var songLength = Number((document.getElementById('timeBar') as HTMLInputElement).max);
 
-            var oMarker = {};
+            var oMarker = {} as TroffMarker;
             oMarker.name = 'End';
             oMarker.time = songLength;
             oMarker.info = '';
@@ -1018,48 +1046,51 @@ class TroffClass {
             var aFirstAndLast = this.getFirstAndLastMarkers();
             var lastMarkerId = aFirstAndLast[1] + 'S';
             this.selectStopMarker(lastMarkerId);
-            document.querySelector('audio, video').currentTime = sliderVal;
+            (document.querySelector('audio, video') as any).currentTime = sliderVal;
           }
         );
       }
     } // end if
 
-    document.querySelector('audio, video').currentTime = sliderVal;
+    (document.querySelector('audio, video') as any).currentTime = sliderVal;
   }; // end timeUpdate
 
   getStopTime = () => {
-    var extraTime = 0;
+    var extraTime = '0';
 
     if ($('audio, video').length === 0) {
       return 0;
     }
 
     if ($('#buttStopAfter').hasClass('active'))
-      extraTime = $('#stopAfter').val() ? $('#stopAfter').val() : 0;
+      extraTime = $('#stopAfter').val() ? ($('#stopAfter').val() as string) : '0';
     if ($('.currentStopMarker')[0])
       return Math.min(
-        parseFloat($('.currentStopMarker')[0].timeValue) + parseFloat(extraTime),
-        $('audio, video')[0].duration
+        parseFloat(($('.currentStopMarker')[0] as any).timeValue) + parseFloat(extraTime),
+        ($('audio, video')[0] as any).duration
       );
-    else return $('audio, video')[0].duration;
+    else return ($('audio, video')[0] as any).duration;
   };
 
   getStartTime = () => {
     if ($('.currentMarker')[0]) {
       //if there is a start marker
-      var extraTime = 0;
+      var extraTime = '0';
       if ($('#buttStartBefore').hasClass('active'))
-        extraTime = $('#startBefore').val() ? $('#startBefore').val() : 0;
-      return Math.max(parseFloat($('.currentMarker')[0].timeValue) - parseFloat(extraTime), 0);
+        extraTime = $('#startBefore').val() ? ($('#startBefore').val() as string) : '0';
+      return Math.max(
+        parseFloat(($('.currentMarker')[0] as any).timeValue) - parseFloat(extraTime),
+        0
+      );
     }
     return 0;
   };
 
-  setLoopTo = (number) => {
+  setLoopTo = (number: string | number) => {
     if (number === undefined) {
       number = $('#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON').hasClass('active')
-        ? 0
-        : $('#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE').val();
+        ? '0'
+        : ($('#TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE').val() as string);
     }
 
     if (number === 0) number = 'Inf';
@@ -1073,7 +1104,7 @@ class TroffClass {
     this.updateLoopTimes();
   };
 
-  setLoop = (mode) => {
+  setLoop = (mode: JQuery.ClickEvent) => {
     $('.currentLoop').removeClass('currentLoop');
     $(mode.currentTarget).addClass('currentLoop');
     gtag('event', 'Change loop', {
@@ -1088,11 +1119,11 @@ class TroffClass {
   updateLoopTimes = () => {
     var dbLoop = '';
     if ($('#buttLoopInf').hasClass('currentLoop')) dbLoop = 'Inf';
-    else dbLoop = $('.currentLoop').val();
+    else dbLoop = $('.currentLoop').val() as string;
 
     if (this.strCurrentSong) DB.setCurrent(this.strCurrentSong, 'loopTimes', dbLoop);
 
-    IO.loopTimesLeft($('.currentLoop').val());
+    IO.loopTimesLeft($('.currentLoop').val() as string);
   }; // end updateLoopTimes
 
   getMood = () => {
@@ -1104,7 +1135,7 @@ class TroffClass {
 
   /* this is used every time the time changes in the audio / video */
   timeupdateAudio = () => {
-    var audio = document.querySelector('audio, video');
+    var audio = document.querySelector('audio, video') as any;
     var dTime = audio.currentTime;
 
     if (dTime >= this.getStopTime()) {
@@ -1112,11 +1143,11 @@ class TroffClass {
     }
 
     $('#time').html(this.secToDisp(dTime));
-    document.getElementById('timeBar').value = dTime;
+    (document.getElementById('timeBar') as HTMLInputElement).value = dTime;
   }; // end timeupdateAudio
 
   atEndOfLoop = () => {
-    var audio = document.querySelector('audio, video');
+    var audio = document.querySelector('audio, video') as HTMLMediaElement;
     this.goToStartMarker();
     audio.pause();
 
@@ -1124,12 +1155,12 @@ class TroffClass {
       this.doIncrementSpeed();
       this.playSong(this.getWaitBetweenLoops() * 1000);
     } else {
-      if (IO.loopTimesLeft() > 1) {
-        IO.loopTimesLeft(-1);
+      if (Number(IO.loopTimesLeft()) > 1) {
+        IO.loopTimesLeft('-1');
         this.doIncrementSpeed();
         this.playSong(this.getWaitBetweenLoops() * 1000);
       } else {
-        IO.loopTimesLeft($('#loopTimes').val());
+        IO.loopTimesLeft($('#loopTimes').val() as string);
         this.pauseSong();
       }
     } // end else
@@ -1151,8 +1182,8 @@ class TroffClass {
     var loopTimesLeft,
       speedDiffLeft,
       incrementSpeedBy,
-      incrementUntill = parseInt($('#incrementUntilValue').val()),
-      currentSpeed = $('audio, video')[0].playbackRate * 100;
+      incrementUntill = parseInt($('#incrementUntilValue').val() as string),
+      currentSpeed = ($('audio, video')[0] as HTMLMediaElement).playbackRate * 100;
 
     speedDiffLeft = incrementUntill - currentSpeed;
 
@@ -1165,7 +1196,7 @@ class TroffClass {
 
       $('#speedBar').val(currentSpeed + incrementSpeedBy);
     } else {
-      loopTimesLeft = parseInt(IO.loopTimesLeft());
+      loopTimesLeft = parseInt(IO.loopTimesLeft() as string);
       incrementSpeedBy = speedDiffLeft / loopTimesLeft;
 
       $('#speedBar').val(currentSpeed + incrementSpeedBy);
@@ -1176,7 +1207,7 @@ class TroffClass {
 
   // goToStartMarker används när man updaterar startBefore / trycker på StartBefore  / trycker på en marker???
   goToStartMarker = () => {
-    document.querySelector('audio, video').currentTime = this.getStartTime();
+    (document.querySelector('audio, video') as HTMLMediaElement).currentTime = this.getStartTime();
   }; // end goToStartMarker
 
   enterKnappen = () => {
@@ -1202,7 +1233,7 @@ class TroffClass {
     this.spaceOrEnter(goToMarker, useTimer, updateLoopTimes);
   };
 
-  spaceOrEnter = (goToMarker, useTimer, updateLoopTimes) => {
+  spaceOrEnter = (goToMarker: boolean, useTimer: boolean, updateLoopTimes: boolean) => {
     var audio = document.querySelector('audio, video');
     if (!audio) {
       log.e('no song loaded');
@@ -1214,7 +1245,7 @@ class TroffClass {
     }
     if (this.getMood() == 'pause') {
       if (useTimer && $('#buttPauseBefStart').hasClass('active')) {
-        this.playSong($('#pauseBeforeStart').val() * 1000);
+        this.playSong(($('#pauseBeforeStart').val() as number) * 1000);
       } else {
         this.playSong();
       }
@@ -1224,15 +1255,15 @@ class TroffClass {
     IO.blurHack();
   }; // end spaceOrEnter()
 
-  playSong = (wait) => {
+  playSong = (wait?: number) => {
     wait = wait || 0;
-    var audio = document.querySelector('audio, video');
+    var audio = document.querySelector('audio, video') as HTMLMediaElement;
     if (!audio) return;
 
-    gtag('event', 'Start song', { event_category: 'Perform change' });
+    gtag('event', 'Start song', { event_category: 'Perform change', event_label: 'Play song' });
 
     var secondsLeft = wait / 1000;
-    $('.secondsLeft').html(secondsLeft);
+    $('.secondsLeft').html('' + secondsLeft);
 
     if (this.stopTimeout) clearInterval(this.stopTimeout);
     this.setMood('wait');
@@ -1261,21 +1292,21 @@ class TroffClass {
         //audio.isPaused) {
         secondsLeft -= 1;
         if (secondsLeft <= 0) {
-          $('.secondsLeft').html(0);
+          $('.secondsLeft').html('0');
           clearInterval(this.stopInterval);
         } else {
-          $('.secondsLeft').html(secondsLeft);
+          $('.secondsLeft').html('' + secondsLeft);
         }
       } else {
         clearInterval(this.stopInterval);
-        $('.secondsLeft').html(0);
+        $('.secondsLeft').html('0');
       }
     }, 1000);
   }; // end playSong
 
   pauseSong = (updateLoopTimes?: boolean) => {
     updateLoopTimes = updateLoopTimes !== undefined ? updateLoopTimes : true;
-    var audio = document.querySelector('audio, video');
+    var audio = document.querySelector('audio, video') as HTMLMediaElement;
     if (audio) audio.pause();
     this.setMood('pause');
     if (updateLoopTimes) {
@@ -1291,11 +1322,11 @@ class TroffClass {
       return;
     }
     if ($('#buttPauseBefStart').hasClass('active'))
-      $('.secondsLeft').html($('#pauseBeforeStart').val());
-    else $('.secondsLeft').html(0);
+      $('.secondsLeft').html($('#pauseBeforeStart').val() as string);
+    else $('.secondsLeft').html('0');
   };
 
-  setMood = (mood) => {
+  setMood = (mood: string) => {
     const infoSectionClasses =
       'overFilm bg-transparent position-absolute align-items-center w-100 flexCol';
     $('#infoSection, .moodColorizedText').removeClass('play pause wait').addClass(mood);
@@ -1311,7 +1342,7 @@ class TroffClass {
     this.updateSecondsLeft();
   };
   // this. ...
-  setCurrentSongStrings = (currentSong, currentGalleryId) => {
+  setCurrentSongStrings = (currentSong: string, currentGalleryId: string) => {
     this.strCurrentSong = currentSong;
     this.strCurrentGalleryId = currentGalleryId;
   };
@@ -1322,7 +1353,7 @@ class TroffClass {
     return this.strCurrentGalleryId;
   };
 
-  setWaitForLoad = (path, strGalleryId) => {
+  setWaitForLoad = (path: string, strGalleryId: string) => {
     if (this.strCurrentSong) {
       this.pauseSong(false);
       this.clearAllMarkers();
@@ -1340,7 +1371,7 @@ class TroffClass {
     DB.setCurrentSong(this.strCurrentSong, this.strCurrentGalleryId);
   }; // end SetCurrentSong
 
-  pathToName = (filepath) => {
+  pathToName = (filepath: string) => {
     const lastIndex = filepath.lastIndexOf('.');
     if (lastIndex == -1) {
       return filepath;
@@ -1352,7 +1383,7 @@ class TroffClass {
     return $('#stateList').children();
   };
 
-  getCurrentMarkers = (bGetStopMarkers) => {
+  getCurrentMarkers = (bGetStopMarkers?: boolean) => {
     if (bGetStopMarkers) {
       return $('#markerList li input:nth-child(4)');
     }
@@ -1378,7 +1409,7 @@ class TroffClass {
       var aState = $('#stateList').children();
       oExport.aoStates = [];
       for (i = 0; i < aState.length; i++) {
-        var oState = JSON.parse(aState.eq(i).attr('strstate'));
+        var oState = JSON.parse(aState.eq(i).attr('strstate') as string);
         oExport.aoStates[i] = this.replaceMarkerIdWithMarkerTimeInState(oState, aoMarkers);
       }
       oExport.strSongInfo = $('#songInfoArea').val() as string;
@@ -1397,7 +1428,7 @@ class TroffClass {
       'Please paste the text you received to import the markers',
       'Paste text here',
       (sImport) => {
-        var oImport = JSON.parse(sImport);
+        var oImport = JSON.parse(sImport as string);
         if (
           oImport.strSongInfo !== undefined &&
           oImport.aoStates !== undefined &&
@@ -1430,7 +1461,10 @@ class TroffClass {
     );
   };
 
-  replaceMarkerIdWithMarkerTimeInState = (oOriginalState: State, aoMarkers): State_WithTime => {
+  replaceMarkerIdWithMarkerTimeInState = (
+    oOriginalState: State,
+    aoMarkers: TroffMarker[]
+  ): State_WithTime => {
     const oState: State_WithTime = oOriginalState as State_WithTime; // to not change the original state-object
     for (let i = 0; i < aoMarkers.length; i++) {
       if (oState.currentMarker == aoMarkers[i].id) {
@@ -1467,6 +1501,7 @@ class TroffClass {
   };
 
   doImportStuff = (oImport: TroffManualImportExport) => {
+    const self = this;
     this.importMarker(oImport.aoMarkers);
     importSonginfo(oImport.strSongInfo);
     importStates(oImport.aoStates);
@@ -1505,9 +1540,8 @@ class TroffClass {
       }
 
       aoStates.map((s) => {
-        this.addButtonsOfStates([JSON.stringify(s)]);
+        self.addButtonsOfStates([JSON.stringify(s)]);
       });
-      //        DB.saveStates(this.getCurrentSong()); -- xxx
     }
   };
 
@@ -1517,7 +1551,7 @@ class TroffClass {
  */
   createMarker = () => {
     var quickTimeout = setTimeout(() => {
-      var oFI = {};
+      var oFI = {} as IOInput;
       oFI.strHead = 'Please enter the marker name here';
       var iMarkers = $('#markerList li').length + 1;
       oFI.strInput = 'marker nr ' + iMarkers;
@@ -1525,7 +1559,7 @@ class TroffClass {
       oFI.strTextarea = '';
       oFI.strTextareaPlaceholder = 'Add extra info about the marker here.';
 
-      IO.promptEditMarker(0, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
+      IO.promptEditMarker(false, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
         if (newMarkerName === '') return;
 
         var oMarker = {} as TroffMarker;
@@ -1564,7 +1598,7 @@ class TroffClass {
     }
   };
 
-  setAreas = (abAreas) => {
+  setAreas = (abAreas: boolean[]) => {
     $('#statesTab').toggleClass('active', abAreas[0]);
     $('#stateSection').toggleClass('hidden', !abAreas[0]);
     $('#settingsTab').toggleClass('active', abAreas[1]);
@@ -1576,17 +1610,17 @@ class TroffClass {
     $('#infoSectionSmall').toggleClass('hidden', abAreas[3]);
   };
 
-  setInfo = (info) => {
+  setInfo = (info: string) => {
     $('#songInfoArea').val(info);
   };
 
-  setSonglists_NEW = (aoSonglists) => {
+  setSonglists_NEW = (aoSonglists: TroffFirebaseGroupIdentifyer[]) => {
     for (var i = 0; i < aoSonglists.length; i++) {
       this.addSonglistToHTML_NEW(aoSonglists[i]);
     }
   };
 
-  setSonglistIcon = (event) => {
+  setSonglistIcon = (event: JQuery.ClickEvent) => {
     const button = event.target.tagName == 'I' ? event.target.parentElement : event.target;
 
     const element = button.firstElementChild;
@@ -1602,7 +1636,7 @@ class TroffClass {
     $('#groupDialogIcon').val(icon);
   };
 
-  setSonglistColor = (event) => {
+  setSonglistColor = (event: JQuery.ClickEvent) => {
     const element = event.target;
     const color = [...element.classList].find((o) => o.startsWith('bg-'));
 
@@ -1623,7 +1657,7 @@ class TroffClass {
     const groupDocId = $('#groupDialogName').data('groupDocId');
     const groupData = getFirebaseGroupDataFromDialog(false);
 
-    groupData.owners = groupData.owners.filter((o) => o != firebaseUser.email);
+    groupData.owners = groupData.owners.filter((o) => o != firebaseUser?.email);
 
     if (groupData.owners.length == 0) {
       this.removeGroup();
@@ -1645,7 +1679,7 @@ class TroffClass {
     $('#groupDialogIsGroup').prop('checked', true);
     $('#defaultIcon').click();
     $('#songlistColorPicker .backgroundColorNone').click();
-    addGroupOwnerRow(firebaseUser.email);
+    addGroupOwnerRow(firebaseUser?.email || undefined);
   };
 
   onClickLeaveGroup = () => {
@@ -1678,7 +1712,7 @@ class TroffClass {
       await Promise.all(subItems.map((r) => deleteObject(r)));
     }
 
-    const songDocIds = [];
+    const songDocIds: string[] = [];
     $('#groupSongParent')
       .find('.groupDialogSong')
       .each((i, s) => {
@@ -1687,7 +1721,7 @@ class TroffClass {
 
     emptyGroupDialog();
 
-    const removeDataPromise = [];
+    const removeDataPromise: Promise<void>[] = [];
     songDocIds.forEach((songDocId) => {
       removeDataPromise.push(removeSongDataFromFirebaseGroup(groupDocId, songDocId));
     });
@@ -1725,9 +1759,9 @@ class TroffClass {
     );
   };
 
-  removeSonglist_NEW = (songListId) => {
+  removeSonglist_NEW = (songListId: number) => {
     const songListObject = JSON.parse(nDB.get('straoSongLists')).filter(
-      (sl) => sl.id == songListId
+      (sl: TroffFirebaseGroupIdentifyer) => sl.id == songListId
     )[0];
 
     $('#songListList').find(`[data-songlist-id="${songListId}"]`).closest('li').remove();
@@ -1752,7 +1786,7 @@ class TroffClass {
    * @param {Object of Songlist} songListObject
    * @param {jQuery button} $target
    */
-  updateSongListInHTML = (songListObject) => {
+  updateSongListInHTML = (songListObject: TroffFirebaseGroupIdentifyer) => {
     var $target = $('#songListList').find('[data-songlist-id="' + songListObject.id + '"]');
     if (songListObject.id == undefined) {
       const groupId = songListObject.firebaseGroupDocId;
@@ -1760,7 +1794,7 @@ class TroffClass {
       songListObject.id = $target.data('songlistId');
     }
 
-    $target.text(songListObject.name);
+    $target.text(songListObject.name as string);
     $target.data('songList', songListObject);
 
     if (songListObject.firebaseGroupDocId != undefined) {
@@ -1775,7 +1809,7 @@ class TroffClass {
       .parent()
       .find('.editSongList')
       .removeClassStartingWith('bg-')
-      .addClass(songListObject.color);
+      .addClass(songListObject.color as string);
 
     $target
       .parent()
@@ -1793,7 +1827,7 @@ class TroffClass {
     }
   };
 
-  addSonglistToHTML_NEW = (oSongList) => {
+  addSonglistToHTML_NEW = (oSongList: TroffFirebaseGroupIdentifyer) => {
     if (oSongList.id == undefined) {
       oSongList.id = this.getUniqueSonglistId();
     }
@@ -1814,7 +1848,7 @@ class TroffClass {
                 .addClass('small')
                 .addClass('regularButton')
                 .addClass('editSongList')
-                .addClass(oSongList.color)
+                .addClass(oSongList.color as string)
                 .addClass('mr-2')
                 .append($('<i>').addClass('fa').addClass(groupLogo))
                 .on('click', songListDialogOpenExisting)
@@ -1829,13 +1863,13 @@ class TroffClass {
                 .data('songList', oSongList)
                 .attr('data-songlist-id', oSongList.id)
                 //  workaround to be able to select by for example $(" [data-songlist-id]")
-                .attr('data-firebase-group-doc-id', groupDocId)
-                .text(oSongList.name)
+                .attr('data-firebase-group-doc-id', groupDocId as string)
+                .text(oSongList.name as string)
                 .click(clickSongList_NEW)
             )
         )
-        .on('drop', dropSongOnSonglist)
-        .on('dragover', allowDrop)
+        .on('drop', dropSongOnSonglist as any)
+        .on('dragover', allowDrop as any)
         .on('dragleave', onDragleave)
     );
 
@@ -1851,7 +1885,7 @@ class TroffClass {
 
   recallCurrentStateOfSonglists = () => {
     DB.getVal('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT', (isAdditiveSelect) => {
-      DB.getVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, (o) => {
+      DB.getVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, (o: TroffStateOfSonglists) => {
         var indicatorClass = isAdditiveSelect ? 'active' : 'selected';
 
         $('#songListAll').removeClass('selected');
@@ -1897,21 +1931,21 @@ class TroffClass {
   };
 
   saveCurrentStateOfSonglists = () => {
-    var o = {},
-      songListList = [],
-      galleryList = [],
-      directoryList = [];
+    var o = {} as TroffStateOfSonglists,
+      songListList: string[] = [],
+      galleryList: string[] = [],
+      directoryList: DirectoryListObject[] = [];
     $('#songListList')
       .find('.active, .selected')
       .each((i, v) => {
-        songListList.push($(v).attr('data-songlist-id'));
+        songListList.push($(v).attr('data-songlist-id') as string);
       });
     o.songListList = songListList;
 
     $('#galleryList')
       .find('.active, .selected')
       .each((i, v) => {
-        galleryList.push($(v).attr('data-gallery-id'));
+        galleryList.push($(v).attr('data-gallery-id') as string);
       });
     o.galleryList = galleryList;
 
@@ -1919,8 +1953,8 @@ class TroffClass {
       .find('.active, .selected')
       .each((i, v) => {
         directoryList.push({
-          galleryId: $(v).attr('data-gallery-id'),
-          fullPath: $(v).attr('data-full-path'),
+          galleryId: $(v).attr('data-gallery-id') as string,
+          fullPath: $(v).attr('data-full-path') as string,
         });
       });
     o.directoryList = directoryList;
@@ -1948,7 +1982,7 @@ class TroffClass {
   enterSongInfo = () => {
     $('#songInfoArea').addClass('textareaEdit');
     IO.setEnterFunction((event) => {
-      if (event.ctrlKey == 1) {
+      if (event.ctrlKey) {
         //Ctrl+Enter will exit
         IO.blurHack();
         return false;
@@ -1963,8 +1997,8 @@ class TroffClass {
   };
 
   updateSongInfo = () => {
-    var strInfo = $('#songInfoArea')[0].value;
-    var songId = this.getCurrentSong();
+    const strInfo = ($('#songInfoArea')[0] as HTMLTextAreaElement).value;
+    const songId = this.getCurrentSong();
     DB.setCurrentSongInfo(strInfo, songId);
   };
 
@@ -1979,11 +2013,11 @@ class TroffClass {
       (stateName) => {
         if (stateName === '') return;
 
-        var state = {};
+        var state = {} as State;
         state.name = stateName;
-        state.currentLoop = $('.currentLoop').attr('id');
-        state.currentMarker = $('.currentMarker').attr('id');
-        state.currentStopMarker = $('.currentStopMarker').attr('id');
+        state.currentLoop = $('.currentLoop').attr('id') as string;
+        state.currentMarker = $('.currentMarker').attr('id') as string;
+        state.currentStopMarker = $('.currentStopMarker').attr('id') as string;
 
         $('[data-save-on-song-toggle-class]').each((i, element) => {
           const $target = $(element),
@@ -1994,7 +2028,7 @@ class TroffClass {
             return;
           }
 
-          state[id] = $target.hasClass(classToToggleAndSave);
+          (state as any)[id] = $target.hasClass(classToToggleAndSave);
         });
         $('[data-save-on-song-value]').each((i, element) => {
           const $target = $(element),
@@ -2006,17 +2040,20 @@ class TroffClass {
             return;
           }
 
-          state[id] = value;
+          (state as any)[id] = value;
         });
 
         this.addButtonsOfStates([JSON.stringify(state)]);
         DB.saveStates(this.getCurrentSong());
-        gtag('event', 'Remember State', { event_category: 'Adding Button' });
+        gtag('event', 'Remember State', {
+          event_category: 'Adding Button',
+          event_label: stateName,
+        });
       }
     );
   };
 
-  addButtonsOfStates = (astrState) => {
+  addButtonsOfStates = (astrState: string[]) => {
     for (var i = 0; i < astrState.length; i++) {
       var oState = JSON.parse(astrState[i]);
 
@@ -2041,9 +2078,9 @@ class TroffClass {
     if (astrState.length !== 0) $('#statesHelpText').hide();
   };
 
-  setState = (stateWrapper) => {
+  setState = (stateWrapper: JQuery.ClickEvent) => {
     var strState = $(stateWrapper.target).parent().attr('strState');
-    var oState = JSON.parse(strState);
+    var oState = JSON.parse(strState as string);
     $('#' + oState.currentLoop).click();
     $('[data-save-on-song-toggle-class]').each((i, element) => {
       const $target = $(element),
@@ -2081,7 +2118,7 @@ class TroffClass {
     $('#' + oState.currentStopMarker).click();
   };
 
-  onSearchKeyup = (event) => {
+  onSearchKeyup = (event?: JQuery.KeyUpEvent) => {
     if (event != undefined && [37, 38, 39, 40].indexOf(event.keyCode) != -1) {
       return;
     }
@@ -2095,7 +2132,7 @@ class TroffClass {
     }
   };
 
-  enterSerachDataTableSongList = (event) => {
+  enterSerachDataTableSongList = (event: JQuery.ClickEvent) => {
     const $input = $(event.target);
     $input.addClass('textareaEdit');
 
@@ -2103,19 +2140,24 @@ class TroffClass {
       $input.focus();
     }
 
-    this.onSearchKeyup(null);
+    this.onSearchKeyup(undefined);
 
     IO.setEnterFunction(
       (event) => {
-        if (event.ctrlKey == 1) {
+        if (event.ctrlKey) {
           //Ctrl+Enter will exit
           $input.val('').trigger('click');
           IO.blurHack();
           return false;
         }
 
-        $('#dataSongTable').DataTable().rows('.important').nodes().to$().trigger('click');
-        $('#dataSongTable').DataTable().rows('.important').nodes().to$().removeClass('important');
+        ($('#dataSongTable') as any).DataTable().rows('.important').nodes().to$().trigger('click');
+        ($('#dataSongTable') as any)
+          .DataTable()
+          .rows('.important')
+          .nodes()
+          .to$()
+          .removeClass('important');
 
         IO.blurHack();
         return true;
@@ -2142,7 +2184,12 @@ class TroffClass {
   };
 
   exitSerachDataTableSongList = () => {
-    $('#dataSongTable').DataTable().rows('.important').nodes().to$().removeClass('important');
+    ($('#dataSongTable') as any)
+      .DataTable()
+      .rows('.important')
+      .nodes()
+      .to$()
+      .removeClass('important');
 
     IO.clearEnterFunction();
     IO.blurHack();
@@ -2163,7 +2210,7 @@ class TroffClass {
   enterMarkerInfo = () => {
     $('#markerInfoArea').addClass('textareaEdit');
     IO.setEnterFunction((event) => {
-      if (event.ctrlKey == 1) {
+      if (event.ctrlKey) {
         //Ctrl+Enter will exit
         IO.blurHack();
         return false;
@@ -2177,29 +2224,29 @@ class TroffClass {
   };
 
   updateMarkerInfo = () => {
-    var strInfo = $('#markerInfoArea')[0].value;
-    var color = $('.currentMarker')[0].color;
-    var markerId = $('.currentMarker').attr('id');
-    var time = $('.currentMarker')[0].timeValue;
-    var markerName = $('.currentMarker').val();
+    var strInfo = ($('#markerInfoArea')[0] as any).value;
+    var color = ($('.currentMarker')[0] as any).color;
+    var markerId = $('.currentMarker').attr('id') as string;
+    var time = ($('.currentMarker')[0] as any).timeValue;
+    var markerName = $('.currentMarker').val() as string;
     var songId = this.getCurrentSong();
 
-    $('.currentMarker')[0].info = strInfo;
+    ($('.currentMarker')[0] as any).info = strInfo;
 
     DB.updateMarker(markerId, markerName, strInfo, color, time, songId);
   };
 
-  addMarkers = (aMarkers) => {
-    var startM = (event) => {
-      this.selectMarker(event.currentTarget.id);
+  addMarkers = (aMarkers: TroffMarker[]) => {
+    var startM = (event: MouseEvent) => {
+      this.selectMarker((event.currentTarget as HTMLInputElement).id);
       IO.blurHack();
     };
-    var stopM = (event) => {
-      this.selectStopMarker(event.currentTarget.id);
+    var stopM = (event: MouseEvent) => {
+      this.selectStopMarker((event.currentTarget as HTMLInputElement).id);
       IO.blurHack();
     };
-    var editM = (event) => {
-      this.editMarker(event.currentTarget.id.slice(0, -1));
+    var editM = (event: MouseEvent) => {
+      this.editMarker((event.currentTarget as HTMLInputElement).id.slice(0, -1));
       IO.blurHack();
     };
 
@@ -2211,13 +2258,13 @@ class TroffClass {
       var color = oMarker.color || 'None';
       var nameId = oMarker.id;
 
-      var maxTime = Number(document.getElementById('timeBar').max);
+      var maxTime = Number((document.getElementById('timeBar') as HTMLInputElement).max);
 
       if (oMarker.time == 'max' || time > maxTime) {
         time = maxTime;
       }
 
-      var button = document.createElement('input');
+      var button = document.createElement('input') as any;
       button.type = 'button';
       button.id = nameId;
       button.value = name;
@@ -2226,7 +2273,7 @@ class TroffClass {
       button.info = info;
       button.color = color;
 
-      var buttonS = document.createElement('input');
+      var buttonS = document.createElement('input') as any;
       buttonS.type = 'button';
       buttonS.id = nameId + 'S';
       buttonS.value = 'Stop';
@@ -2242,7 +2289,7 @@ class TroffClass {
       var p = document.createElement('b');
       p.innerHTML = this.secToDisp(time);
 
-      var docMarkerList = document.getElementById('markerList');
+      var docMarkerList = document.getElementById('markerList') as HTMLUListElement;
       var listElement = document.createElement('li');
 
       listElement.appendChild(buttonE[0]);
@@ -2251,7 +2298,7 @@ class TroffClass {
       listElement.appendChild(buttonS);
       $(listElement).addClass(MARKER_COLOR_PREFIX + color);
 
-      var child = $('#markerList li:first-child')[0];
+      var child = $('#markerList li:first-child')[0] as any;
       var bInserted = false;
       var bContinue = false;
       while (child) {
@@ -2261,7 +2308,7 @@ class TroffClass {
 
           if (child.childNodes[2].info != info) {
             var newMarkerInfo = child.childNodes[2].info + '\n\n' + info;
-            $('#' + markerId)[0].info = newMarkerInfo;
+            ($('#' + markerId)[0] as any).info = newMarkerInfo;
             if ($('.currentMarker')[0].id == child.childNodes[2].id)
               $('#markerInfoArea').val(newMarkerInfo);
           }
@@ -2286,9 +2333,9 @@ class TroffClass {
         docMarkerList.appendChild(listElement);
       }
 
-      document.getElementById(nameId).addEventListener('click', startM);
-      document.getElementById(nameId + 'S').addEventListener('click', stopM);
-      document.getElementById(nameId + 'E').addEventListener('click', editM);
+      (document.getElementById(nameId) as HTMLInputElement).addEventListener('click', startM);
+      (document.getElementById(nameId + 'S') as HTMLInputElement).addEventListener('click', stopM);
+      (document.getElementById(nameId + 'E') as HTMLInputElement).addEventListener('click', editM);
     } //end for-loop
     this.setAppropriateMarkerDistance();
     this.fixMarkerExtraExtendedColor();
@@ -2298,18 +2345,18 @@ class TroffClass {
    * returns the id of the earliest and latest markers.
    * (note: latest marker without the 'S' for stop-id)
    */
-  getFirstAndLastMarkers = () => {
+  getFirstAndLastMarkers = (): string[] => {
     var aOMarkers = $('#markerList > li > :nth-child(3)');
     if (aOMarkers.length == 0) {
-      return null;
+      throw new Error('No markers found');
     }
-    var max = parseFloat(aOMarkers[0].timeValue);
-    var min = parseFloat(aOMarkers[0].timeValue);
+    var max = parseFloat((aOMarkers[0] as any).timeValue);
+    var min = parseFloat((aOMarkers[0] as any).timeValue);
     var iMaxIndex = 0;
     var iMinIndex = 0;
     var aMarkers = [];
     for (var i = 0; i < aOMarkers.length; i++) {
-      var tv = aOMarkers[i].timeValue;
+      var tv = (aOMarkers[i] as any).timeValue;
       aMarkers[i] = tv;
 
       if (parseFloat(aMarkers[i]) > max) {
@@ -2326,37 +2373,40 @@ class TroffClass {
 
   unselectMarkers = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
-    var startMarkerId = aFirstAndLast[0];
-    var stopMarkerId = aFirstAndLast[1] + 'S';
+    var startMarkerId = aFirstAndLast?.[0];
+    var stopMarkerId = aFirstAndLast?.[1] + 'S';
 
     $('.currentMarker').removeClass('currentMarker');
     $('#' + startMarkerId).addClass('currentMarker');
-    $('#markerInfoArea').val($('#' + startMarkerId)[0].info);
+    $('#markerInfoArea').val(($('#' + startMarkerId)[0] as any).info);
     $('.currentStopMarker').removeClass('currentStopMarker');
     $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
     IO.blurHack();
 
+    if (!startMarkerId || !stopMarkerId) return;
+
     DB.setCurrentStartAndStopMarker(startMarkerId, stopMarkerId, this.strCurrentSong);
   };
 
   unselectStartMarker = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
-    var startMarkerId = aFirstAndLast[0];
+    var startMarkerId = aFirstAndLast?.[0];
 
     $('.currentMarker').removeClass('currentMarker');
     $('#' + startMarkerId).addClass('currentMarker');
-    $('#markerInfoArea').val($('#' + startMarkerId)[0].info);
+    $('#markerInfoArea').val(($('#' + startMarkerId)[0] as any).info);
 
     this.setAppropriateActivePlayRegion();
     IO.blurHack();
+    if (!startMarkerId) return;
     DB.setCurrentStartMarker(startMarkerId, this.strCurrentSong);
   };
 
   unselectStopMarker = () => {
     var aFirstAndLast = this.getFirstAndLastMarkers();
-    var stopMarkerId = aFirstAndLast[1] + 'S';
+    var stopMarkerId = aFirstAndLast?.[1] + 'S';
 
     $('.currentStopMarker').removeClass('currentStopMarker');
     $('#' + stopMarkerId).addClass('currentStopMarker');
@@ -2369,25 +2419,25 @@ class TroffClass {
   /*
         selectMarker - All, sets new Marker, sets playtime to markers playtime
     */
-  selectMarker = (markerId) => {
-    var startTime = Number($('#' + markerId)[0].timeValue);
+  selectMarker = (markerId: string) => {
+    var startTime = Number(($('#' + markerId)[0] as any).timeValue);
     var stopTime = this.getStopTime();
 
     // if stopMarker befor Marker - unselect stopMarker:
     if (stopTime <= startTime + 0.5) {
       $('.currentStopMarker').removeClass('currentStopMarker');
       var aFirstAndLast = this.getFirstAndLastMarkers();
-      var lastMarkerId = aFirstAndLast[1] + 'S';
+      var lastMarkerId = aFirstAndLast?.[1] + 'S';
 
       $('#' + lastMarkerId).addClass('currentStopMarker');
     }
     var stopMarker = $('.currentStopMarker').attr('id');
-    stopMarker = stopMarker ? stopMarker : 0;
+    stopMarker = stopMarker ? stopMarker : '0';
 
     //marks selected Marker:
     $('.currentMarker').removeClass('currentMarker');
     $('#' + markerId).addClass('currentMarker');
-    $('#markerInfoArea').val($('#' + markerId)[0].info);
+    $('#markerInfoArea').val(($('#' + markerId)[0] as any).info);
 
     if ($('#' + TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER).hasClass('active')) {
       this.goToStartMarker();
@@ -2401,22 +2451,22 @@ class TroffClass {
   /*
         selectStopMarker - All, selects a marker to stop playing at
     */
-  selectStopMarker = (markerId) => {
-    var stopTime = Number($('#' + markerId)[0].timeValue);
+  selectStopMarker = (markerId: string) => {
+    var stopTime = Number(($('#' + markerId)[0] as any).timeValue);
     var startTime = this.getStartTime();
 
     // if startMarker after stopMarker -> unselect startMarker:
     if (startTime + 0.5 >= stopTime) {
       var aFirstAndLast = this.getFirstAndLastMarkers();
-      var firstMarkerId = aFirstAndLast[0];
+      var firstMarkerId = aFirstAndLast?.[0];
 
       $('.currentMarker').removeClass('currentMarker');
       $('#' + firstMarkerId).addClass('currentMarker');
-      $('#markerInfoArea').val($('#' + firstMarkerId)[0].info);
+      $('#markerInfoArea').val(($('#' + firstMarkerId)[0] as any).info);
     }
 
     var startMarker = $('.currentMarker').attr('id');
-    startMarker = startMarker ? startMarker : 0;
+    startMarker = startMarker ? startMarker : '0';
 
     //marks selected StopMarker:
     $('.currentStopMarker').removeClass('currentStopMarker');
@@ -2426,7 +2476,7 @@ class TroffClass {
     DB.setCurrentStartAndStopMarker(startMarker, markerId, this.strCurrentSong);
   }; // end selectStopMarker
 
-  removeState = (event) => {
+  removeState = (event: JQuery.ClickEvent) => {
     // $().closest(".outerDialog ");
     // var that = this;
     IO.confirm('Remove state', 'This action can not be undone', () => {
@@ -2439,14 +2489,17 @@ class TroffClass {
   /*
         removeMarker, all, Tar bort en markÃ¶r frÃ¥n html och DB
     */
-  removeMarker = (markerIdWithoutHash) => {
-    const markerId = '#' + markerIdWithoutHash;
-    var oMarker = {};
+  removeMarker = (markerIdWithoutHash: string) => {
+    const markerId = markerIdWithoutHash.startsWith('#')
+      ? markerIdWithoutHash
+      : '#' + markerIdWithoutHash;
+
+    var oMarker = {} as TroffMarker;
     oMarker.id = markerIdWithoutHash;
-    oMarker.name = $(markerId).val();
-    oMarker.time = Number($(markerId)[0].timeValue);
-    oMarker.info = $(markerId)[0].info;
-    oMarker.color = $(markerId)[0].color;
+    oMarker.name = $(markerId).val() as string;
+    oMarker.time = Number(($(markerId)[0] as any).timeValue);
+    oMarker.info = ($(markerId)[0] as any).info as string;
+    oMarker.color = ($(markerId)[0] as any).color as string;
 
     notifyUndo('Marker ' + oMarker.name + ' was removed', () => {
       const aMarkers = [oMarker];
@@ -2472,7 +2525,7 @@ class TroffClass {
     */
   showMoveMarkers = () => {
     IO.setEnterFunction(() => {
-      this.moveMarkers();
+      this.moveMarkers(false, false);
     });
     $('#moveMarkersDialog').removeClass('hidden');
     $('#moveMarkersNumber').select();
@@ -2513,8 +2566,8 @@ class TroffClass {
     [startNumber, endNumber] = this.getStartAndEndMarkerNr(0, 1);
 
     this.stretchMarkers(
-      $('#stretchMarkersNumber').val(),
-      aAllMarkers[startNumber].timeValue,
+      $('#stretchMarkersNumber').val() as number,
+      (aAllMarkers[startNumber] as any).timeValue,
       startNumber,
       endNumber
     );
@@ -2525,12 +2578,17 @@ class TroffClass {
       startNumber = 0,
       endNumber = this.getCurrentMarkers().length;
 
-    this.stretchMarkers($('#stretchMarkersNumber').val(), baseValue, startNumber, endNumber);
+    this.stretchMarkers(
+      $('#stretchMarkersNumber').val() as number,
+      baseValue,
+      startNumber,
+      endNumber
+    );
   };
 
-  stretchMarkers = (stretchProcent, baseValue, startNr, endNr) => {
+  stretchMarkers = (stretchProcent: number, baseValue: number, startNr: number, endNr: number) => {
     var i,
-      maxTime = Number(document.getElementById('timeBar').max),
+      maxTime = Number((document.getElementById('timeBar') as HTMLInputElement).max),
       aAllMarkers = this.getCurrentMarkers(),
       newTime,
       markerId,
@@ -2548,13 +2606,14 @@ class TroffClass {
     for (i = startNr; i < endNr; i++) {
       markerId = aAllMarkers[i].id;
 
-      calculatetTime = ((aAllMarkers[i].timeValue - baseValue) * stretchProcent) / 100 + baseValue;
+      calculatetTime =
+        (((aAllMarkers[i] as any).timeValue - baseValue) * stretchProcent) / 100 + baseValue;
       newTime = Math.max(0, Math.min(maxTime, calculatetTime));
 
       this.checkIfMarkerIndexHasSameTimeAsOtherMarkers(i, markerId, aAllMarkers, newTime);
 
-      $('#' + markerId)[0].timeValue = newTime;
-      $('#' + markerId + 'S')[0].timeValue = newTime;
+      ($('#' + markerId)[0] as any).timeValue = newTime;
+      ($('#' + markerId + 'S')[0] as any).timeValue = newTime;
       $('#' + markerId)
         .prev()
         .html(this.secToDisp(newTime));
@@ -2570,7 +2629,9 @@ class TroffClass {
         copyMarkers
     */
   openCopyMarkersDialog = () => {
-    $('#copyMarkersNumber').val(document.querySelector('audio, video').currentTime);
+    $('#copyMarkersNumber').val(
+      (document.querySelector('audio, video') as HTMLMediaElement).currentTime
+    );
     $('#copyMarkersNrOfMarkers').text(this.getNrOfSelectedMarkers());
     $('#copyMarkersNumber').select();
     IO.setEnterFunction(() => {
@@ -2595,7 +2656,7 @@ class TroffClass {
       this.addMarkers([newMarker]); // adds marker to html
     }
     DB.saveMarkers(this.getCurrentSong());
-    gtag('event', 'Copy Markers', { event_category: 'Adding Button' });
+    gtag('event', 'Copy Markers', { event_category: 'Adding Button', event_label: 'Copy Markers' });
 
     $('#copyMarkersDialog').addClass('hidden');
     IO.clearEnterFunction();
@@ -2616,21 +2677,21 @@ class TroffClass {
         move all or some markers.
     */
   moveAllMarkersUp = () => {
-    $('#moveMarkersNumber').val(-$('#moveMarkersNumber').val());
+    $('#moveMarkersNumber').val(-($('#moveMarkersNumber').val() as number));
     this.moveMarkers(false, false);
   };
   moveAllMarkersDown = () => {
     this.moveMarkers(false, false);
   };
   moveSomeMarkersUp = () => {
-    $('#moveMarkersNumber').val(-$('#moveMarkersNumber').val());
+    $('#moveMarkersNumber').val(-($('#moveMarkersNumber').val() as number));
     this.moveMarkers(true, false);
   };
   moveSomeMarkersDown = () => {
     this.moveMarkers(true, false);
   };
 
-  moveOneMarkerDown = (val) => {
+  moveOneMarkerDown = (val: number) => {
     $('#moveMarkersNumber').val(val);
     this.moveMarkers(true, true);
   };
@@ -2640,7 +2701,7 @@ class TroffClass {
     return endMarkerNr - startMarkerNr;
   };
 
-  getStartAndEndMarkerNr = (addToStartNr, addToEndNr) => {
+  getStartAndEndMarkerNr = (addToStartNr: number, addToEndNr: number) => {
     addToStartNr = addToStartNr || 0;
     addToEndNr = addToEndNr || 0;
 
@@ -2658,7 +2719,7 @@ class TroffClass {
     return [startNr + addToStartNr, endNr + addToEndNr];
   };
 
-  deleteMarkers = (bDeleteSelected) => {
+  deleteMarkers = (bDeleteSelected: boolean) => {
     var i,
       markerId,
       startNumber = 1,
@@ -2675,7 +2736,7 @@ class TroffClass {
     }
 
     for (i = startNumber; i < endNumber; i++) {
-      markerId = markers.eq(i).find('input').attr('id');
+      markerId = markers.eq(i).find('input').attr('id') as string;
       this.removeMarker(markerId);
     }
     this.hideDeleteMarkersDialog();
@@ -2684,7 +2745,7 @@ class TroffClass {
   /*
         move all markers.
     */
-  moveMarkers = (bMoveSelected, bOneMarker) => {
+  moveMarkers = (bMoveSelected: boolean, bOneMarker: boolean) => {
     $('#moveMarkersDialog').addClass('hidden');
     IO.clearEnterFunction();
 
@@ -2706,14 +2767,14 @@ class TroffClass {
     for (var i = startNumber; i < endNumber; i++) {
       var markerId = aAllMarkers[i].id;
 
-      var markerTime = Number(aAllMarkers[i].timeValue) + Number(value);
-      var maxTime = Number(document.getElementById('timeBar').max);
+      var markerTime = Number((aAllMarkers[i] as any).timeValue) + Number(value);
+      var maxTime = Number((document.getElementById('timeBar') as HTMLInputElement).max);
       var newTime = Math.max(0, Math.min(maxTime, markerTime));
 
       this.checkIfMarkerIndexHasSameTimeAsOtherMarkers(i, markerId, aAllMarkers, newTime);
 
-      $('#' + markerId)[0].timeValue = newTime;
-      $('#' + markerId + 'S')[0].timeValue = newTime;
+      ($('#' + markerId)[0] as any).timeValue = newTime;
+      ($('#' + markerId + 'S')[0] as any).timeValue = newTime;
       $('#' + markerId)
         .prev()
         .html(this.secToDisp(newTime));
@@ -2723,17 +2784,23 @@ class TroffClass {
     DB.saveMarkers(this.getCurrentSong());
   };
 
-  checkIfMarkerIndexHasSameTimeAsOtherMarkers = (markerIndex, markerId, aAllMarkers, newTime) => {
+  checkIfMarkerIndexHasSameTimeAsOtherMarkers = (
+    markerIndex: number,
+    markerId: string,
+    aAllMarkers: JQuery<HTMLElement>,
+    newTime: number
+  ) => {
     for (var j = 0; j < markerIndex; j++) {
-      if (Number(aAllMarkers[j].timeValue) == newTime) {
-        var newMarkerName = $('#' + markerId).val();
+      if (Number((aAllMarkers[j] as any).timeValue) == newTime) {
+        var newMarkerName = $('#' + markerId).val() as string;
         if (newMarkerName != aAllMarkers.eq(j).val())
           newMarkerName += ', ' + aAllMarkers.eq(j).val();
         $('#' + markerId).val(newMarkerName);
 
-        var newMarkerInfo = $('#' + markerId)[0].info;
-        if (newMarkerInfo != aAllMarkers[j].info) newMarkerInfo += '\n\n' + aAllMarkers[j].info;
-        $('#' + markerId)[0].info = newMarkerInfo;
+        var newMarkerInfo = ($('#' + markerId)[0] as any).info as string;
+        if (newMarkerInfo != (aAllMarkers[j] as any).info)
+          newMarkerInfo += '\n\n' + (aAllMarkers[j] as any).info;
+        ($('#' + markerId)[0] as any).info = newMarkerInfo;
         if ($('#' + markerId).hasClass('currentMarker')) $('#markerInfoArea').val(newMarkerInfo);
 
         aAllMarkers.eq(j).parent().remove();
@@ -2744,20 +2811,21 @@ class TroffClass {
   /*
         editMarker, all, Editerar en markÃ¶r i bÃ¥de html och DB
     */
-  editMarker = (markerId) => {
-    var oldName = $('#' + markerId).val();
-    var oldTime = Number($('#' + markerId)[0].timeValue);
-    var oldMarkerInfo = $('#' + markerId)[0].info;
-    var oldMarkerColor = $('#' + markerId)[0].color;
+  editMarker = (markerId: string) => {
+    var oldName = $('#' + markerId).val() as string;
+    var oldTime = Number(($('#' + markerId)[0] as any).timeValue);
+    var oldMarkerInfo = ($('#' + markerId)[0] as any).info;
+    var oldMarkerColor = ($('#' + markerId)[0] as any).color;
     var oldMarkerClass = MARKER_COLOR_PREFIX + oldMarkerColor;
 
     IO.promptEditMarker(markerId, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
-      if (newMarkerName === null || newMarkerName === '' || newTime === null || newTime === '') {
+      if (newMarkerName === null || newMarkerName === '' || newTime === null) {
         return;
       }
 
       if (newTime < 0) newTime = 0;
-      if (newTime > $('audio, video')[0].duration) newTime = $('audio, video')[0].duration;
+      if (newTime > ($('audio, video')[0] as HTMLMediaElement).duration)
+        newTime = ($('audio, video')[0] as HTMLMediaElement).duration;
 
       var updated = false;
 
@@ -2770,13 +2838,13 @@ class TroffClass {
       // update HTML Info
       if (newMarkerInfo != oldMarkerInfo) {
         updated = true;
-        $('#' + markerId)[0].info = newMarkerInfo;
+        ($('#' + markerId)[0] as any).info = newMarkerInfo;
 
         if ($('#' + markerId).hasClass('currentMarker')) $('#markerInfoArea').val(newMarkerInfo);
       }
       if (newMarkerColor != oldMarkerColor) {
         updated = true;
-        $('#' + markerId)[0].color = newMarkerColor;
+        ($('#' + markerId)[0] as any).color = newMarkerColor;
         $('#' + markerId)
           .parent()
           .removeClass(oldMarkerClass);
@@ -2789,12 +2857,12 @@ class TroffClass {
       if (newTime != oldTime) {
         updated = true;
 
-        $('#' + markerId)[0].timeValue = newTime;
-        $('#' + markerId + 'S')[0].timeValue = newTime;
+        ($('#' + markerId)[0] as any).timeValue = newTime;
+        ($('#' + markerId + 'S')[0] as any).timeValue = newTime;
         this.setAppropriateMarkerDistance();
 
-        var startTime = Number($('.currentMarker')[0].timeValue);
-        var stopTime = Number($('.currentStopMarker')[0].timeValue);
+        var startTime = Number(($('.currentMarker')[0] as any).timeValue);
+        var stopTime = Number(($('.currentStopMarker')[0] as any).timeValue);
 
         if (startTime >= stopTime) {
           $('.currentStopMarker').removeClass('currentStopMarker');
@@ -2858,16 +2926,16 @@ class TroffClass {
     var lastMarkerId = aFirstAndLast[1] + 'S';
     if ($('.currentMarker').length === 0) {
       $('#' + firstMarkerId).addClass('currentMarker');
-      $('#markerInfoArea').val($('#' + firstMarkerId)[0].info);
+      $('#markerInfoArea').val(($('#' + firstMarkerId)[0] as any).info);
     }
     if ($('.currentStopMarker').length === 0) $('#' + lastMarkerId).addClass('currentStopMarker');
 
-    var timeBarHeight = $('#timeBar').height() - 12;
+    var timeBarHeight = ($('#timeBar').height() as number) - 12;
     var barMarginTop = parseInt($('#timeBar').css('margin-top')) + 6;
 
     var startTime = this.getStartTime();
     var stopTime = this.getStopTime();
-    var songTime = $('audio, video')[0].duration;
+    var songTime = ($('audio, video')[0] as HTMLMediaElement).duration;
 
     var height = ((stopTime - startTime) * timeBarHeight) / songTime;
     var top = (startTime * timeBarHeight) / songTime + barMarginTop;
@@ -2880,7 +2948,7 @@ class TroffClass {
     $('#markerSection').removeClass('hidden');
     var child = $('#markerList li:first-child')[0];
 
-    var timeBarHeight = $('#timeBar').height() - 10;
+    var timeBarHeight = ($('#timeBar').height() as number) - 10;
     var totalDistanceTop = 4;
 
     var barMarginTop = parseInt($('#timeBar').css('margin-top'));
@@ -2889,19 +2957,19 @@ class TroffClass {
       log.e('there is no audio or video tag');
       return;
     }
-    var songTime = audioVideo.duration;
+    var songTime = (audioVideo as HTMLMediaElement).duration;
 
     if (!isFinite(songTime)) {
       const troffData = nDB.get(this.getCurrentSong());
       if (troffData.fileData != undefined && troffData.fileData.duration != undefined) {
         songTime = troffData.fileData.duration;
       } else {
-        songTime = Number($('#markerList li:last-child')[0].childNodes[2].timeValue);
+        songTime = Number(($('#markerList li:last-child')[0].childNodes[2] as any).timeValue);
       }
     }
 
     while (child) {
-      var markerTime = Number(child.childNodes[2].timeValue);
+      var markerTime = Number((child.childNodes[2] as any).timeValue);
       var myRowHeight = child.clientHeight;
 
       var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
@@ -2918,18 +2986,20 @@ class TroffClass {
         $(child).css('border-top-style', '');
         $(child).css('margin-top', marginTop + 'px');
       }
-      child = child.nextSibling;
+      child = child.nextSibling as HTMLElement;
     }
     this.setAppropriateActivePlayRegion();
   }; // end setAppropriateMarkerDistance
 
-  selectNext = (reverse) => {
+  selectNext = (reverse: boolean) => {
     var markers = $('#markerList').children();
 
-    var currentMarkerTime = Number($('.currentMarker')[0].timeValue, 10);
-    var currentStopTime = Number($('.currentStopMarker')[0].timeValue, 10);
-    markers.sort((a, b) => {
-      return Number(a.childNodes[2].timeValue) - Number(b.childNodes[2].timeValue);
+    var currentMarkerTime = Number(($('.currentMarker')[0] as any).timeValue);
+    var currentStopTime = Number(($('.currentStopMarker')[0] as any).timeValue);
+    (markers as any).sort((a: HTMLElement, b: HTMLElement) => {
+      return (
+        Number((a.childNodes[2] as any).timeValue) - Number((b.childNodes[2] as any).timeValue)
+      );
     });
 
     var bSelectNext = false;
@@ -2945,19 +3015,19 @@ class TroffClass {
       }
     }
 
-    function checkOrSelect(i) {
+    function checkOrSelect(i: number) {
       if (bSelectNextStop) {
         $(markers[i].childNodes[3]).click();
         bSelectNextStop = false;
       }
-      if (Number(markers[i].childNodes[3].timeValue) == currentStopTime) {
+      if (Number((markers[i].childNodes[3] as any).timeValue) == currentStopTime) {
         bSelectNextStop = true;
       }
       if (bSelectNext) {
         $(markers[i].childNodes[2]).click();
         bSelectNext = false;
       }
-      if (Number(markers[i].childNodes[2].timeValue) == currentMarkerTime) {
+      if (Number((markers[i].childNodes[2] as any).timeValue) == currentMarkerTime) {
         bSelectNext = true;
       }
     }
@@ -2977,7 +3047,7 @@ class TroffClass {
 
   zoomOut = () => {
     IO.blurHack();
-    this.zoom(0, Number(document.getElementById('timeBar').max));
+    this.zoom(0, Number((document.getElementById('timeBar') as HTMLInputElement).max));
   };
 
   zoomToMarker = () => {
@@ -2993,7 +3063,7 @@ class TroffClass {
     this.zoom(startTime, endTime);
   };
 
-  zoom = (startTime, endTime) => {
+  zoom = (startTime: number, endTime: number) => {
     //NOTE all distances is in %, unless otherwise specified
 
     if (endTime === undefined) {
@@ -3005,7 +3075,7 @@ class TroffClass {
 
     DB.saveZoomTimes(this.strCurrentSong, startTime, endTime);
 
-    var winHeightPX = $('#markerSectionParent').height();
+    var winHeightPX = $('#markerSectionParent').height() as number;
 
     var mPX = parseInt($('#timeBar').css('marginTop'));
 
@@ -3016,7 +3086,7 @@ class TroffClass {
     var mT = 2 * m; //total margin
     var oh = oH - mT; //original Height of timebar
 
-    var tL = Number(document.getElementById('timeBar').max);
+    var tL = Number((document.getElementById('timeBar') as HTMLInputElement).max);
     var t1 = startTime / tL;
     var t2 = endTime / tL;
 
@@ -3055,7 +3125,7 @@ class TroffClass {
 
     if (Number.isInteger(currTempo)) {
       $('#tapTempo').val(currTempo);
-      IO.updateCellInDataTable('TEMPO', currTempo);
+      IO.updateCellInDataTable('TEMPO', currTempo.toString());
     } else {
       $('#tapTempo').val('');
       IO.updateCellInDataTable('TEMPO', '');
@@ -3070,7 +3140,10 @@ class TroffClass {
     $('#markerList')
       .children(':not(.markerColorNone)')
       .each((index, element) => {
-        const specialColorClass = this.getClassStartsWith($(element).attr('class'), 'markerColor');
+        const specialColorClass = this.getClassStartsWith(
+          $(element).attr('class') as string,
+          'markerColor'
+        );
         $(element)
           .nextUntil(':not(.markerColorNone)')
           .addClass('extend_' + specialColorClass);
@@ -3078,19 +3151,19 @@ class TroffClass {
   };
 
   /* standAlone Functions */
-  getClassStartsWith = (classes, startString) => {
+  getClassStartsWith = (classes: string, startString: string) => {
     var r = $.grep(classes.split(' '), (classes) => {
       return 0 === classes.indexOf(startString);
     }).join();
     return r || !1;
   };
 
-  secToDisp = (seconds) => {
+  secToDisp = (seconds: number) => {
     return st.secToDisp(seconds);
   };
 
-  incrementInput = (identifier, amount) => {
-    $(identifier).val(parseInt($(identifier).val()) + amount);
+  incrementInput = (identifier: string, amount: number) => {
+    $(identifier).val(parseInt($(identifier).val() as string) + amount);
     $(identifier).each((i, element) => {
       element.dispatchEvent(new Event('input'));
     });

@@ -384,14 +384,13 @@ class DBClass {
     });
   };
 
-  /** @returns {void} */
   getAllSonglists = () => {
     nDBc.get('straoSongLists', (straoSongLists) => {
       if (straoSongLists == undefined) {
         straoSongLists = [];
       }
 
-      Troff.setSonglists_NEW(JSON.parse(/** @type {string} */ straoSongLists));
+      Troff.setSonglists_NEW(JSON.parse(straoSongLists));
     });
   };
 
@@ -455,6 +454,7 @@ class DBClass {
       }
 
       song.serverId = undefined;
+      console.log('setCurrentSongInfo: -> setUrlToSong A:');
       Troff.setUrlToSong(undefined, null);
 
       nDB.set(songId, song);
@@ -481,6 +481,7 @@ class DBClass {
 
       song.aStates = aStates;
       song.serverId = undefined;
+      console.log('setCurrentSongInfo: -> setUrlToSong B:');
       Troff.setUrlToSong(undefined, null);
 
       nDB.set(songId, song);
@@ -537,6 +538,7 @@ class DBClass {
       song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0].id;
       song.markers = aMarkers;
       song.serverId = undefined;
+      console.log('setCurrentSongInfo: -> setUrlToSong C:');
       Troff.setUrlToSong(undefined, null);
 
       nDB.set(songId, song);
@@ -577,6 +579,7 @@ class DBClass {
   setCurrentSongInfo = (info: string, songId: string): void => {
     DB.setCurrent(songId, 'info', info, () => {
       nDB.setOnSong(songId, 'serverId', undefined);
+      console.log('setCurrentSongInfo: -> setUrlToSong D:');
       Troff.setUrlToSong(undefined, null);
 
       ifGroupSongUpdateFirestore(songId);

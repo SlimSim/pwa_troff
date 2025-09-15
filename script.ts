@@ -69,7 +69,7 @@ import { firebaseWrapper, fileHandler } from './services/file.js';
 import { User } from 'firebase/auth';
 import { DocumentData, DocumentSnapshot, QuerySnapshot } from 'firebase/firestore';
 import {
-  FullPathObject,
+  DirectoryListObject,
   SonglistSongInfo,
   TroffDataIdObject,
   TroffFirebaseGroupIdentifyer,
@@ -639,12 +639,12 @@ async function createSongAudio(path: string) {
  * @param {array of songs} songs
  * @param {jQuery button} $target
  */
-function addSongsToSonglist(songs: SonglistSongInfo[] | FullPathObject[], $target: JQuery) {
+function addSongsToSonglist(songs: SonglistSongInfo[] | DirectoryListObject[], $target: JQuery) {
   var songAlreadyExists,
     songList = $target.data('songList');
 
   $.each(songs, function (i, song) {
-    var dataInfo: FullPathObject = (song as SonglistSongInfo).data || song; // todo: fixa detta!
+    var dataInfo: DirectoryListObject = (song as SonglistSongInfo).data || song; // todo: fixa detta!
     songAlreadyExists =
       songList.songs.filter(function (value: any) {
         return value.galleryId == dataInfo.galleryId && value.fullPath == dataInfo.fullPath;

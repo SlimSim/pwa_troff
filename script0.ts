@@ -36,7 +36,7 @@ import { escapeRegExp, getFileExtension } from './utils/utils.js';
 import { TROFF_SETTING_SHOW_SONG_DIALOG, DATA_TABLE_COLUMNS } from './constants/constants.js';
 import { addGroupSongRow } from './features/groupManagement.js';
 import {
-  FullPathObject,
+  DirectoryListObject,
   SonglistSongInfo,
   TroffFirebaseGroupIdentifyer,
   TroffFirebaseSongIdentifyer,
@@ -379,7 +379,7 @@ function getFilterDataList(): string[] {
  * AND ALSO unchecks the songs!
  * @returns List of songDataInfoObjects {galleryId, fullPath}
  */
-function getSelectedSongs_NEW(): FullPathObject[] {
+function getSelectedSongs_NEW(): DirectoryListObject[] {
   const $checkboxes = $('#dataSongTable').find('td').find('input[type=checkbox]:checked');
   const checkedVisibleSongs = $checkboxes
     .closest('tr')
@@ -397,7 +397,7 @@ function getSelectedSongs_NEW(): FullPathObject[] {
 }
 
 function clickButtNewSongList() {
-  var songs: FullPathObject[] = getSelectedSongs_NEW();
+  var songs: DirectoryListObject[] = getSelectedSongs_NEW();
   openGroupDialog({ songs: songs });
 }
 
@@ -434,14 +434,17 @@ function dropSongOnSonglist(event: JQuery.DragEvent) {
   addSongsToSonglist([dataInfo], $target);
 }
 
-function removeSongsFromSonglist(songs: FullPathObject[] | SonglistSongInfo[], $target: JQuery) {
+function removeSongsFromSonglist(
+  songs: DirectoryListObject[] | SonglistSongInfo[],
+  $target: JQuery
+) {
   let songDidNotExists;
 
   const songList = $target.data('songList');
 
   $.each(songs, (i, song) => {
     var index,
-      dataInfo: FullPathObject = (song as SonglistSongInfo).data || song,
+      dataInfo: DirectoryListObject = (song as SonglistSongInfo).data || song,
       value;
     songDidNotExists = true;
 
@@ -774,7 +777,7 @@ function onChangeSongListSelector(event: JQuery.ChangeEvent) {
   var $target = $(event.target),
     $selected = $target.find(':selected'),
     $checkedRows = $('#dataSongTable').find('td').find('input[type=checkbox]:checked'),
-    songDataInfoList: FullPathObject[] = getSelectedSongs_NEW();
+    songDataInfoList: DirectoryListObject[] = getSelectedSongs_NEW();
 
   var $songlist = $('#songListList').find('[data-songlist-id="' + $selected.val() + '"]');
 
