@@ -190,6 +190,8 @@ const groupDialogSave = async function () {
 const addGroupSongRow = (songIdObject: TroffFirebaseSongIdentifyer) => {
   const songRow = $('#groupDialogSongRowTemplate').children().clone(true, true);
 
+  console.log('addGroupSongRow: songIdObject.firebaseSongDocId', songIdObject.firebaseSongDocId);
+
   songRow.find('.groupDialogRemoveSong').on('click', removeSongRow);
   songRow
     .find('.groupDialogSong')
@@ -197,7 +199,7 @@ const addGroupSongRow = (songIdObject: TroffFirebaseSongIdentifyer) => {
     .addClass('form-control-plaintext')
     .addClass('text-inherit')
     .data('galleryId', songIdObject.galleryId)
-    .data('firebaseSongDocId', songIdObject.firebaseSongDocId)
+    .data('firebaseSongDocId', songIdObject.firebaseSongDocId || null)
     .val(songIdObject.fullPath);
 
   $('#groupSongParent').append(songRow);

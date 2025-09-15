@@ -19,6 +19,7 @@ import '../assets/external/jquery-3.6.0.min.js';
 import '../assets/external/notify-js/notify.min.js';
 
 import {
+  TroffData,
   TroffFileData,
   TroffHtmlMarkerElement,
   TroffMarker,
@@ -45,6 +46,7 @@ import {
   deleteObject,
   signOut,
 } from '../services/firebaseClient.js';
+import { User, UserCredential } from 'firebase/auth';
 
 $(document).ready(async function () {
   'use strict';
@@ -59,19 +61,20 @@ $(document).ready(async function () {
     try {
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
       const firebaseUser = result.user;
+      console.log('firebaseUser', firebaseUser);
       setUiToSignIn(firebaseUser);
     } catch (error) {
       log.e('Error during sign-in:', error);
     }
   };
 
-  const setDivToRemoved = function (div) {
+  const setDivToRemoved = function (div: JQuery<HTMLElement>) {
     div.addClass('grayOut').removeClass('bg-Burlywood');
     div.find('.removeFile').addClass('hidden');
     div.find('.removedText').removeClass('hidden');
   };
 
-  const removeFileFromServer = async function (fileUrl, newDiv) {
+  const removeFileFromServer = async function (fileUrl: string, newDiv: JQuery<HTMLElement>) {
     // Create a reference to the file to delete
     const fileData = await fetch(fileUrl).then((res) => res.json());
 
@@ -92,7 +95,7 @@ $(document).ready(async function () {
     }
   };
 
-  const updateTroffDataOnServer = async function (troffData) {
+  const updateTroffDataOnServer = async function (troffData: TroffData) {
     try {
       await setDoc(doc(db, 'TroffData', String(troffData.id)), troffData);
       return troffData;
@@ -104,21 +107,21 @@ $(document).ready(async function () {
     }
   };
 
-  const markTroffDataDeletedOnServer = function (troffData) {
+  const markTroffDataDeletedOnServer = function (troffData: TroffData) {
     troffData.deleted = true;
     return updateTroffDataOnServer(troffData);
   };
 
-  const markTroffDataPrivateOnServer = function (troffData) {
+  const markTroffDataPrivateOnServer = function (troffData: TroffData) {
     troffData.troffDataPublic = false;
     return updateTroffDataOnServer(troffData);
   };
-  const markTroffDataPublicOnServer = function (troffData) {
+  const markTroffDataPublicOnServer = function (troffData: TroffData) {
     troffData.troffDataPublic = true;
     return updateTroffDataOnServer(troffData);
   };
 
-  const superAdmin = async function (p) {
+  const superAdmin = async function (p: string) {
     const d = [
       'vdUz7MqtIWd6EJMPW1sV6RNQla32',
       '2bQpoKUPSVS7zW54bUt2AMvFdYD2',
@@ -321,12 +324,12 @@ $(document).ready(async function () {
     });
   };
 
-  const setUiToSignIn = function (user) {
+  const setUiToSignIn = function (user: User) {
     $('.showForNewUsers').addClass('hidden');
     $('.showForLoggedInUsers').removeClass('hidden');
-    $('#userName').text(user.displayName);
-    $('#userEmail').text(user.email);
-    $('#userPhoneNumber').text(user.phoneNumber);
+    $('#userName').text(user.displayName || '');
+    $('#userEmail').text(user.email || '');
+    $('#userPhoneNumber').text(user.phoneNumber || '');
     userIsSignedId = true;
   };
 
@@ -391,42 +394,6 @@ $(document).ready(async function () {
     setUiToSignIn(user);
     superAdmin(user.uid);
   });
-
-  getRedirectResult(auth)
-    .then((result) => {
-      if (!result) {
-        // No redirect result this load; not an error
-        return;
-      }
-
-      if (!result.credential) {
-        return setUiToNotSignIn();
-      }
-
-      /** @type {firebase.auth.OAuthCredential} */
-
-      const user = result.user;
-
-      // This gives you a Google Access Token. You can use it to access the Google API.
-      // const token = credential?.accessToken;
-
-      if (userIsSignedId) {
-        return;
-      }
-
-      setUiToSignIn(user);
-
-      superAdmin(user.uid);
-    })
-    .catch((error) => {
-      log.e('getRedirectResult catch error', error);
-      // Handle Errors here.
-      var errorMessage = error.message;
-
-      $('#alertDialog').removeClass('hidden');
-      $('#alertHeader').text('Error');
-      $('#alertText').text('could not authenticate: ' + error.code + ', ' + errorMessage);
-    });
 
   $('.stOnOffButton').on('click', (e) => {
     $(e.target).closest('.stOnOffButton').toggleClass('active');

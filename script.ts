@@ -111,6 +111,7 @@ const googleSignIn = async function () {
   try {
     const result = await signInWithPopup(auth, new GoogleAuthProvider());
     firebaseUser = result.user;
+    console.log('firebaseUser', firebaseUser);
     setUiToSignIn(firebaseUser);
     const snap = await initiateAllFirebaseGroups(firebaseUser.email);
     initiateCollections(snap);

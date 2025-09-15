@@ -20,9 +20,9 @@ import '../external/jquery-3.6.0.min.js';
 $(document).ready(() => {
   console.log('update.js ->');
 
-  function addToCache(cache, url) {
+  function addToCache(cache: Cache, url: string) {
     console.log('adding ' + url + ' to ', cache);
-    cache.add(url).catch((e) => {
+    cache.add(url).catch((e: Error) => {
       console.info(`Info: cache.add( ${url} ) fails:`, e);
     });
     console.log('done');

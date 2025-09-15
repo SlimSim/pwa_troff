@@ -159,14 +159,15 @@ export type BackendService = {
 };
 
 export type TroffData = {
-  id: number;
+  deleted?: boolean;
   fileName: string;
-  fileType: string;
   fileSize: number;
+  fileType: string;
   fileUrl: string;
+  id: number;
+  markerJsonString: string;
   troffDataPublic: boolean;
   troffDataUploadedMillis: number;
-  markerJsonString: string;
 };
 
 export type TroffHistoryList = {
