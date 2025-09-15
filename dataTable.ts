@@ -4,15 +4,15 @@ import { DATA_TABLE_COLUMNS } from './constants/constants.js';
 import { TROFF_SETTING_SONG_COLUMN_TOGGLE } from './constants/constants.js';
 import { DB } from './script.js';
 
-function dataTableColumnPicker(event) {
+function dataTableColumnPicker(event: JQuery.ClickEvent) {
   console.log('dataTAbleColumnPicker ->');
   var $target = $(event.target);
   // Get the column API object
-  var column = $('#dataSongTable').DataTable().column($target.data('column'));
+  var column = ($('#dataSongTable') as any).DataTable().column($target.data('column'));
 
   $target.toggleClass('active');
 
-  const columnVisibilityObject = {};
+  const columnVisibilityObject: Record<string, boolean> = {};
 
   $('#columnToggleParent')
     .children()
@@ -21,6 +21,8 @@ function dataTableColumnPicker(event) {
       const columnId = DATA_TABLE_COLUMNS.list[dataColumn].id;
       columnVisibilityObject[columnId] = $(v).hasClass('active');
     });
+
+  console.log('columnVisibilityObject', columnVisibilityObject);
 
   DB.saveVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, columnVisibilityObject);
 

@@ -20,8 +20,9 @@ import {
   TroffObjectLocal,
   TroffSongIdentifyer_sk,
   TroffStateOfSonglists,
-} from 'types/troff.js';
-import { ColumnToggleMap } from 'types/dataTables.js';
+  TroffFirebaseGroupIdentifyer,
+} from './types/troff.js';
+import { ColumnToggleMap } from './types/dataTables.js';
 
 class DBClass {
   constructor() {}
@@ -205,7 +206,6 @@ class DBClass {
 
       DB.fixDefaultValue(allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true);
 
-      /** @type {ColumnToggleMap} */
       const columnToggleList: any = {};
       DATA_TABLE_COLUMNS.list.forEach((v) => {
         columnToggleList[v.id] = (v.default as any) == 'true' || v.default == true;
@@ -220,7 +220,6 @@ class DBClass {
           /** @type {any[]} */
           const previousColumnToggleList = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
 
-          /** @type {ColumnToggleMap & Record<string, boolean>} */
           const newColumnToggle: ColumnToggleMap = {
             CHECKBOX: previousColumnToggleList[0],
             TYPE: previousColumnToggleList[1],
@@ -329,12 +328,13 @@ class DBClass {
    */
   saveSonglists_new = () => {
     var i,
-      aoSonglists = [],
+      aoSonglists: TroffFirebaseGroupIdentifyer[] = [],
       aDOMSonglist = $('#songListList').find('button[data-songlist-id]');
 
     for (i = 0; i < aDOMSonglist.length; i++) {
       aoSonglists.push(aDOMSonglist.eq(i).data('songList'));
     }
+    console.log('aoSonglists', aoSonglists);
 
     var straoSonglists = JSON.stringify(aoSonglists);
     nDB.set('straoSongLists', straoSonglists);
@@ -470,10 +470,14 @@ class DBClass {
   saveStates = (songId: string, callback?: () => void): void => {
     nDBc.get(songId, (song) => {
       var aAllStates = Troff.getCurrentStates();
-      var aStates = [];
+      var aStates: string[] = [];
       for (var i = 0; i < aAllStates.length; i++) {
-        aStates[i] = aAllStates.eq(i).attr('strState');
+        const strState = aAllStates.eq(i).attr('strState');
+        if (strState !== undefined) {
+          aStates[i] = strState;
+        }
       }
+      console.log('aStates', aStates);
       if (!song) {
         log.e('Error "saveState, noSong" occurred, songId=' + songId);
         song = DB.fixSongObject();
@@ -517,9 +521,8 @@ class DBClass {
     nDBc.get(songId, (song) => {
       var aAllMarkers = Troff.getCurrentMarkers() as JQuery<TroffHtmlMarkerElement>;
 
-      var aMarkers = [];
+      var aMarkers: TroffMarker[] = [];
       for (var i = 0; i < aAllMarkers.length; i++) {
-        /** @type {SongMarker} */
         var oMarker: TroffMarker = {
           name: aAllMarkers[i].value,
           time: Number(aAllMarkers[i].timeValue),
