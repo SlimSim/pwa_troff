@@ -103,13 +103,13 @@ class RateClass {
     // return if user has used Troff less than 4 times durring the last month
     if (aLastMonthUsage.length < 4) return;
 
-    if (iRatedStatus == this.RATED_STATUS_ALREADY_RATED) return;
+    if (iRatedStatus === this.RATED_STATUS_ALREADY_RATED) return;
 
-    if (iRatedStatus == this.RATED_STATUS_NOT_ASKED) {
+    if (iRatedStatus === this.RATED_STATUS_NOT_ASKED) {
       this.showRateDialog();
-    } else if (iRatedStatus == this.RATED_STATUS_ASK_LATER) {
+    } else if (iRatedStatus === this.RATED_STATUS_ASK_LATER) {
       if (Math.random() < 0.3) this.showRateDialog();
-    } else if (iRatedStatus == this.RATED_STATUS_NO_THANKS) {
+    } else if (iRatedStatus === this.RATED_STATUS_NO_THANKS) {
       if (aLastMonthUsage.length < 20) return;
       if (Math.random() < 0.05) {
         this.showRateDialog();

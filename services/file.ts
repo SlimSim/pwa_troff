@@ -22,7 +22,7 @@ import { cacheImplementation } from './FileApiImplementation.js';
 import { TroffFileHandler } from 'types/file.js';
 import { FirebaseWrapper } from 'types/firebase.js';
 import { BackendService, TroffData } from 'types/troff.js';
-import { StorageError, StorageReference } from 'firebase/storage';
+import { StorageReference } from 'firebase/storage';
 
 $(() => {
   'use strict';

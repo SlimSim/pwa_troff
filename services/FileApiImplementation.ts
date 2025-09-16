@@ -1,5 +1,3 @@
-import { TroffSongData } from 'types/troff';
-
 export const cacheImplementation = {
   nameOfCache: 'songCache-v1.0',
 

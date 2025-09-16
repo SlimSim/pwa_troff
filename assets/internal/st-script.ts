@@ -122,7 +122,7 @@ $(document).ready(function () {
     },
     ST_DBc = {
       //new data base callback
-      get: function (key: string, callback: (v: any) => void): void {
+      get: function (key: string, callback: (_value: any) => void): void {
         callback(ST_DB.get(key));
       },
     },

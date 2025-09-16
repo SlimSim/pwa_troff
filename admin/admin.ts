@@ -18,15 +18,7 @@
 import '../assets/external/jquery-3.6.0.min.js';
 import '../assets/external/notify-js/notify.min.js';
 
-import {
-  TroffData,
-  TroffFileData,
-  TroffHtmlMarkerElement,
-  TroffMarker,
-  TroffObjectLocal,
-  TroffSongIdentifyer_sk,
-  TroffStateOfSonglists,
-} from '../types/troff.js';
+import { TroffData, TroffObjectLocal } from '../types/troff.js';
 
 import { st } from '../assets/internal/st-script.js';
 import log from '../utils/log.js';
@@ -45,7 +37,7 @@ import {
   deleteObject,
   signOut,
 } from '../services/firebaseClient.js';
-import { User, UserCredential } from 'firebase/auth';
+import { User } from 'firebase/auth';
 
 $(document).ready(async function () {
   'use strict';

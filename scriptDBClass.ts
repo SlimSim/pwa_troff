@@ -14,7 +14,6 @@ import {
 
 import { closeSongDialog, openSongDialog, clickAttachedSongListToggle } from './script0.js';
 import {
-  TroffFileData,
   TroffHtmlMarkerElement,
   TroffMarker,
   TroffObjectLocal,

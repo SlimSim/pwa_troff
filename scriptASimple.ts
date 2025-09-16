@@ -27,12 +27,12 @@ class SongToGroup {
     const myGroups = this.#map;
     var thisSong = myGroups[songKey];
 
-    if (thisSong == undefined) {
+    if (thisSong == null) {
       thisSong = [];
     }
 
     const thisSongIsInThisGroup = thisSong.some(
-      (o) => o.groupDocId == groupDocId && o.songDocId == songDocId
+      (o) => o.groupDocId === groupDocId && o.songDocId === songDocId
     );
 
     if (thisSongIsInThisGroup) {
@@ -65,9 +65,9 @@ class SongToGroup {
     Object.entries(myGroups).forEach((v) => {
       let idObjectList = v[1];
       idObjectList = idObjectList.filter(
-        (o) => o.songDocId != songDocId && o.groupDocId != groupDocId
+        (o) => o.songDocId !== songDocId && o.groupDocId !== groupDocId
       );
-      if (idObjectList.length == 0) {
+      if (idObjectList.length === 0) {
         delete myGroups[v[0]];
       } else {
         myGroups[v[0]] = idObjectList;
@@ -82,7 +82,7 @@ class SongToGroup {
     const myGroups = this.#map;
 
     const firestoreIdentifierList = myGroups[songKey];
-    if (firestoreIdentifierList == undefined) {
+    if (firestoreIdentifierList == null) {
       return 0;
     }
     return firestoreIdentifierList.length;
@@ -107,7 +107,7 @@ class SongToGroup {
     const myGroups = this.#map;
     const firestoreIdentifierList = myGroups[songKey];
     return firestoreIdentifierList?.find(
-      (fi) => fi.groupDocId == docId && fi.songDocId == songDocId
+      (fi) => fi.groupDocId === docId && fi.songDocId === songDocId
     )?.fileUrl;
   }
 
@@ -117,10 +117,10 @@ class SongToGroup {
 
     for (let i = 0; i < myGroupsE.length; i++) {
       const groupWithSongList = myGroupsE[i][1].filter(
-        (idObject) => idObject.songDocId == songDocId
+        (idObject) => idObject.songDocId === songDocId
       );
 
-      if (groupWithSongList.length == 0) {
+      if (groupWithSongList.length === 0) {
         continue;
       }
       return myGroupsE[i][0];

@@ -21,10 +21,16 @@ import { clickSongList_NEW } from '../scriptTroffClass.js';
 import log from '../utils/log.js';
 import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { IOInput } from 'types/io.js';
+import {
+  DoubleInputFunction,
+  EditMarkerFunction,
+  KeyboardEventFunction,
+  StringFunction,
+} from 'types/functions.js';
 
 class IOClass {
-  IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
-  IOArrowFunction: boolean | ((event: KeyboardEvent) => any);
+  IOEnterFunction: boolean | KeyboardEventFunction;
+  IOArrowFunction: boolean | KeyboardEventFunction;
 
   constructor() {
     this.IOEnterFunction = false;
@@ -608,10 +614,7 @@ class IOClass {
     } // end switch
   }; // end keyboardKeydown *****************/
 
-  setEnterFunction = (
-    func: (event: KeyboardEvent) => any,
-    arrowFunc?: (event: KeyboardEvent) => any
-  ) => {
+  setEnterFunction = (func: KeyboardEventFunction, arrowFunc?: KeyboardEventFunction) => {
     this.IOEnterFunction = func;
     if (arrowFunc !== undefined) this.IOArrowFunction = arrowFunc;
     else this.IOArrowFunction = false;
@@ -629,7 +632,7 @@ class IOClass {
 
   promptEditMarker = (
     markerId: string | false,
-    func: (name: string, info: string, color: string, time: number) => void,
+    func: EditMarkerFunction,
     funcCancle?: () => void
   ) => {
     'use strict';
@@ -829,11 +832,7 @@ class IOClass {
     }, 0);
   }; // end promptEditMarker   *******************/
 
-  promptDouble = (
-    oInput: IOInput,
-    func?: (strInput: string, strTextarea: string) => void,
-    funcCancle?: () => void
-  ) => {
+  promptDouble = (oInput: IOInput, func?: DoubleInputFunction, funcCancle?: () => void) => {
     var textHead = oInput.strHead;
     var textBox = oInput.strInput;
     var bDouble = oInput.bDouble;
@@ -921,7 +920,7 @@ class IOClass {
   prompt = (
     textHead: string,
     textBox: string,
-    func?: (strInput: string, strTextarea: string) => void,
+    func?: DoubleInputFunction,
     funcCancle?: () => void
   ) => {
     var oFI = {} as IOInput;
@@ -983,7 +982,7 @@ class IOClass {
     $('body').append(outerDiv.append(innerDiv));
   }; // end confirm
 
-  alert = (textHead: string, textBox?: string, func?: (test: string) => void) => {
+  alert = (textHead: string, textBox?: string, func?: StringFunction) => {
     var time = Date.now();
     var buttEnterId = 'buttOkId' + time;
 
