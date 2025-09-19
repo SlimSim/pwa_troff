@@ -946,19 +946,8 @@ class TroffClass {
     );
   };
 
-  setWaitBetweenLoops = (bActive: boolean, iWait: number) => {
-    $('#waitBetweenLoops').val(iWait);
-    if (bActive) {
-      $('#buttWaitBetweenLoops').addClass('active');
-      $('#waitBetweenLoops').removeClass('grayOut');
-    } else {
-      $('#buttWaitBetweenLoops').removeClass('active');
-      $('#waitBetweenLoops').addClass('grayOut');
-    }
-  };
-
   getWaitBetweenLoops = (): number => {
-    if ($('#waitBetweenLoops').hasClass('grayOut')) return 0;
+    if (!$('#buttWaitBetweenLoops').hasClass('active')) return 0;
     return Number($('#waitBetweenLoops').val());
   };
 
