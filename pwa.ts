@@ -12,6 +12,34 @@ if ('serviceWorker' in navigator) {
   log.e('No "serviceWorker" in navigator');
 }
 
+// Clean up old caches from previous SW versions
+window.addEventListener('load', async () => {
+  const cacheNames = await caches.keys();
+
+  const oldCacheNames = [
+    // 'songCache', --should NOT be deleted
+    'style-assets',
+    'include-assets',
+    'app-assets',
+    'external-assets',
+    'internal-assets',
+    'core',
+  ];
+
+  for (const name of cacheNames) {
+    // Check if name starts with any in oldCacheNames, and skip Workbox/songCache
+    const shouldDelete =
+      oldCacheNames.some((prefix) => name.startsWith(prefix)) &&
+      !name.startsWith('workbox') &&
+      !name.includes('songCache');
+
+    if (shouldDelete) {
+      console.log('Deleting old cache:', name);
+      await caches.delete(name);
+    }
+  }
+});
+
 var PWA = {} as {
   listenForInstallPrompt: () => void;
   listenForBroadcastChannel: () => void;
