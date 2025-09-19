@@ -94,32 +94,6 @@ class IOClass {
     $('#loadScreen, #loadScreenStyle').remove();
   };
 
-  addCacheVersionToAdvancedSetting = async () => {
-    (await caches.keys())
-      .sort((c1, c2) => c1.split('-v')[0].length - c2.split('-v')[0].length)
-      .forEach((cacheName) => {
-        var [name, versionNumber] = cacheName.split('-v');
-
-        if (name.includes('songCache')) {
-          return;
-        }
-
-        if (name.includes('core')) {
-          $('.app-core-version-number').text(versionNumber);
-        }
-
-        name = name.replace('-', ' ');
-        name = name[0].toUpperCase() + name.substring(1);
-
-        const $newVersion = $('<div>')
-          .addClass('py-2')
-          .append($('<h4>').addClass('buttWidthLarge inlineBlock').text(name))
-          .append($('<span>').addClass('small').text(versionNumber));
-
-        $('#advancedSettings').append($newVersion);
-      });
-  };
-
   startFunc = () => {
     if (nDB.get('TROFF_FIREBASE_PREVIOUS_SIGNED_IN')) {
       $('.hide-on-sign-out').removeClass('hidden');
@@ -134,8 +108,6 @@ class IOClass {
         $(event.target).addClass('hidden');
       }
     });
-
-    this.addCacheVersionToAdvancedSetting();
 
     // this is to not change volume or speed when scrolling horizontally on mobile (require https://j11y.io/javascript/special-scroll-events-for-jquery/)
     $(document).on('scrollStart', () => {
