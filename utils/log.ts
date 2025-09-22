@@ -7,7 +7,7 @@
 //     originalLog.apply(console, ["custom log:", ...args]);
 // };
 
-const usePhoneLog = false;
+const usePhoneLog = true;
 
 // Save the original console.log
 const originalTrace = console.trace;
