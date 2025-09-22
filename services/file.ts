@@ -343,6 +343,9 @@ $(() => {
         // Not a "missing object" case; surface the real error
         throw err;
       }
+      log.i(
+        'Ignore "404 (Not Found)"-error! It simply means that the song does not exist in Firebase, and will be uploaded now.'
+      );
       return null;
     }
   };
