@@ -82,12 +82,12 @@ class DBClass {
   fixSongObject = (songObject?: TroffObjectLocal): TroffObjectLocal => {
     let setMaxSongLength = false;
 
-    if (songObject === undefined) {
+    if (songObject == null) {
       songObject = {} as TroffObjectLocal;
       setMaxSongLength = true;
     }
 
-    if (songObject.fileData === undefined) {
+    if (songObject.fileData == null) {
       songObject.fileData = {
         album: '',
         artist: '',
