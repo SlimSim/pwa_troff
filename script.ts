@@ -734,6 +734,7 @@ function initEnvironment() {
 
   $.getJSON('manifest.json', function (manifest) {
     $('.app-version-number').text(manifest.version);
+    log.i('manifest.version', manifest.version);
   });
 
   if (environment.banner.show) {
