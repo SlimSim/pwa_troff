@@ -24,15 +24,6 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-	<script defer src="assets/external/jquery-3.6.0.min.js"></script>
-
-
-
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-
 	<link
 			href="assets/external/Fontello-2023-05-08/font/troff-icon-pack.woff2?2742147"
 			as="font"
@@ -487,7 +478,7 @@
 							</label>
 							<input
 								class="sliderRange flexOne"
-								orient="vertical"
+								style="writing-mode: vertical-lr; direction: rtl"
 								id="volumeBar"
 								type="range"
 								min="0"
@@ -516,7 +507,7 @@
 							</label>
 							<input
 								class="sliderRange flexOne"
-								orient="vertical"
+								style="writing-mode: vertical-lr; direction: rtl"
 								id="speedBar"
 								type="range"
 								min="50"
@@ -551,8 +542,8 @@
 			<label id="timeBarDiv">
 				<input
 					id="timeBar"
-					orient="vertical"
 					type="range"
+					style="writing-mode: vertical-lr; direction: rtl"
 					min="0"
 					max="42"
 					value="0"/>
@@ -2144,18 +2135,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/DataTables/css/dataTables.needed.min.css" />
 
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/external/checkbox.css" />
@@ -2171,35 +2150,13 @@
 				href="stylesheets/col1.css" />
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="stylesheets/style.css" />
 
-
-	<script defer type="text/javascript" src="assets/external/DataTables/js/jquery.dataTables.min.js"></script>
-
-
-	<script defer type="text/javascript" src="assets/external/notify-js/notify.min.js"></script>
 	<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="assets/internal/notify-js/notify.css" />
-	<script defer type="text/javascript" src="assets/internal/notify-js/notify.config.js"></script>
 
 
 	<!-- skipping for now, add Google Add later :) script src="assets/buy.js"></script-->
 
-
-	<script defer src="utils/log.js"></script>
-
-	<script defer src="assets/internal/environment.js"></script>
-	<script defer src="assets/internal/extend-jquery.js"></script>
-	<script defer src="pwa.js"></script>
-	<script defer src="file.js"></script>
-	<script defer src="assets/internal/st-script.js"></script>
-	<script defer src="script0.js"></script>
-	<script defer src="scriptTroffClass.js"></script>
-	<script defer src="script2.js"></script>
-	<script defer src="script.js"></script>
-	<script defer src="assets/internal/common.js"></script>
-
-	<script defer type="text/javascript" src="FileApiImplementation.js"></script>
-	<script defer type="text/javascript" src="assets/internal/cookie_consent.js"></script>
-
-
+	<script defer type="module" src="script.js"></script>
+	<script type="module" src="./pwa.js"></script>
 
 </body>
 </html>

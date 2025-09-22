@@ -16,305 +16,465 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<html lang="en-US" class="overflow-hidden" >
-<head>
+<html lang="en-US" class="overflow-hidden">
+  <head>
+    <title>Troff - Find new songs</title>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Find new songs with markers and info to practice!" />
+    <meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, Find, Search" />
 
-	<title>Troff - Find new songs</title>
-	<meta charset="UTF-8">
-	<meta name="description" content="Find new songs with markers and info to practice!">
-	<meta name="keywords" content="Music player, Troff, Loop, Repeat, Training, Find, Search">
+    <link rel="icon" href="assets/logos/favicon.ico" />
 
-	<link rel="icon" href="assets/logos/favicon.ico">
+    <meta name="theme-color" content="#003366" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-	<meta name="theme-color" content="#003366"/>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      button,
+      input,
+      a,
+      abbr,
+      acronym,
+      address,
+      applet,
+      article,
+      aside,
+      audio,
+      b,
+      big,
+      blockquote,
+      body,
+      canvas,
+      caption,
+      center,
+      cite,
+      code,
+      dd,
+      del,
+      details,
+      dfn,
+      div,
+      dl,
+      dt,
+      em,
+      embed,
+      fieldset,
+      figcaption,
+      figure,
+      footer,
+      form,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      header,
+      hgroup,
+      html,
+      i,
+      iframe,
+      img,
+      ins,
+      kbd,
+      label,
+      legend,
+      li,
+      mark,
+      menu,
+      nav,
+      object,
+      ol,
+      output,
+      p,
+      pre,
+      q,
+      ruby,
+      s,
+      samp,
+      section,
+      small,
+      span,
+      strike,
+      strong,
+      sub,
+      summary,
+      sup,
+      table,
+      tbody,
+      td,
+      tfoot,
+      th,
+      thead,
+      time,
+      tr,
+      tt,
+      u,
+      ul,
+      var,
+      video {
+        font-weight: 400;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+      article,
+      aside,
+      details,
+      figcaption,
+      figure,
+      footer,
+      header,
+      hgroup,
+      menu,
+      nav,
+      section {
+        display: block;
+      }
+      body {
+        line-height: 1;
+      }
+      ol,
+      ul {
+        list-style: none;
+      }
+      blockquote,
+      q {
+        quotes: none;
+      }
+      blockquote:after,
+      blockquote:before,
+      q:after,
+      q:before {
+        content: '';
+        content: none;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
 
-	<style>
-		button,input,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{font-weight:400;margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
-	</style>
-	<link rel="stylesheet" type="text/css" href="stylesheets/style-standard.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/col1.css" />
-	<link rel="stylesheet" type="text/css" href="stylesheets/help-style.css" />
+    <style>
+      .li-child-m-0 > li {
+        margin: 0;
+      }
+      .li-child-overflow-x-clip > li {
+        overflow-x: clip;
+      }
+      .li-child-b-t-color-transparent > li {
+        border-top-color: transparent;
+      }
+    </style>
 
-	<style>
-		.li-child-m-0 > li				{ 	margin: 0;	}
-		.li-child-overflow-x-clip > li	{ 	overflow-x: clip;	}
-		.li-child-b-t-color-transparent > li { border-top-color: transparent; }
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css"
+    />
+    <link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
 
-	</style>
+    <script type="module" src="find.js"></script>
+  </head>
 
-	<!--script src="assets/internal/common.js"></script -->
+  <body class="backgroundColor flexCol">
+    <input id="blur-hack" type="button" />
+    <header class="m-2">
+      <img src="assets/logos/logo.svg" width="48" alt="logo" />
+      <h1>Troff - Find new songs</h1>
+      <div class="d-flex flex-one"></div>
+      <div class="d-flex center">
+        <button id="googleSignIn" class="btn regularButton mr-2">Sign in with Google</button>
+        <button id="signOut" class="btn regularButton hidden">Sign out</button>
+        <img src="#" id="userPhoto" class="hidden h-100 p-2" />
+        <span id="userName" class="hidden p-2 small"></span>
+      </div>
+    </header>
 
-	<link rel="stylesheet" type="text/css" href="/assets/external/Fontello-2023-05-08/css/troff-icon-pack.css" />
-	<link rel="stylesheet" type="text/css" href="/assets/internal/fontello-extra.css" />
+    <div class="flexRow fill-height-minus-58">
+      <section class="flexCol flexScroll">
+        <article id="whatIsTroff" class="mt-0">
+          <h2>What's this?</h2>
+          <p>
+            Here you will see all the songs that you have downloaded or uploaded to Troff as well as
+            all the public songs, movies and choreographies that other people have uploaded to
+            Troff.
+          </p>
+          <label class="switch likeLink linkButton pb-3 m-0 p-0" for="whatsThisMoreInfoSwitch"
+            >More info</label
+          >
+          <input id="whatsThisMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+          <div class="switch_child">
+            <p>
+              When you click a song in the list below, you will see all the different versions of
+              markers that is saved for that song.
+            </p>
+            <p>
+              For every marker version, you will se how many markers that version has, as well as
+              when that version was saved. If there are any tags, genre or song info for that
+              version, it will also be displayed there. Only the first part of the song info will be
+              shown, to reduce clutter.
+            </p>
+            <p>
+              When you click "Download this version ( version id )"
+              <a class="likeLink" href="/">troff.app</a>
+              will open in a new tab and that song with all the markers and info will be downloaded!
+            </p>
+            <p class="note">
+              Note: If you already have the song that you download, then you will get a question of
+              whether to import the new markers, merge the new markers with the existing ones or
+              keep the existing ones.<br />
+              If you choose "import new markers", your existing version will be removed and if that
+              version has not been uploaded or exported, Troff will not be able to restore it.
+            </p>
+          </div>
+        </article>
+        <!-- What is Troff -->
 
-	<script src="assets/external/jquery-3.6.0.min.js"></script>
-	<script src="assets/internal/st-script.js"></script>
+        <article id="loadingArticle" class="center">
+          <i class="fa fa-circle-notch animate-spin fa-2x fa-spin align-middle"></i>
+        </article>
 
-	<script src="assets/internal/environment.js"></script>
+        <article id="mainArticle" class="hidden">
+          <div class="hidden hideForUsers">
+            <h2>Files</h2>
+            <p>Total Size: <span class="totalSize"></span></p>
+            <p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
+            <p class="pl-2">Nr of deleted files: <span class="nrOfDeletedFiles"></span></p>
+          </div>
 
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+          <div class="input-group">
+            <input
+              id="search"
+              type="text"
+              class="form-control m-0 border-right-0"
+              placeholder="Search for new songs"
+              aria-label="Search for songs and choreographies online!"
+            />
+            <div class="input-group-append">
+              <button
+                id="buttSearch"
+                class="btn btn-outline-secondary m-0"
+                title="Search for songs or a choreography"
+                type="button"
+              >
+                <span class="flip-horizontal m-0"><i class="fa-search"></i></span>
+              </button>
+            </div>
+          </div>
 
+          <div>
+            <label class="likeLink linkButton pb-3 m-0 p-0" for="sortMoreInfoSwitch"
+              >Settings</label
+            >
+            <input id="sortMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
+            <div class="switch_child d-flex flex-wrap">
+              <button class="btn stOnOffButton" id="filterOnlyHistoryButt">
+                Only my versions (<span id="nrOfHistorySongs"></span>)
+              </button>
+              <span class="flex-one"></span>
+              <div>
+                <span class="inlineBlock">
+                  <button class="btn regularButton" id="sortUploadedDesc">Newest first</button>
+                  <button class="btn regularButton mr-3" id="sortUploadedAsc">...last</button>
+                </span>
+                <span class="inlineBlock">
+                  <button class="btn regularButton" id="sortSizeDesc">Biggest First</button>
+                  <button class="btn regularButton" id="sortSizeAsc">...last</button>
+                </span>
+              </div>
+            </div>
+          </div>
 
-	<script src="find.js"></script>
+          <div id="fileList" class="flexCol"></div>
 
-</head>
+          <div class="pt-3">
+            <button class="btn stOnOffButton hidden" id="showDeletedButt">Show deleted</button>
+            <div id="deletedFileListParent" class="hidden pt-2">
+              <p>
+                These files have been deleted. That means that you can download the markers and
+                info, but the song or movie will not be downloaded. So you must already have that
+                file in Troff, or import it yourself.
+              </p>
+              <div id="deletedFileList" class="flexCol"></div>
+            </div>
+          </div>
 
-<body class="backgroundColor flexCol">
-	<input id="blur-hack" type="button"/>
-	<header class="m-2">
-		<img src="assets/logos/logo.svg" width="48" alt="logo"/>
-		<h1>Troff - Find new songs</h1>
-		<div class="d-flex flex-one"></div>
-		<div class="d-flex center">
-			<button id="googleSignIn" class="btn regularButton mr-2">Sign in with Google</button>
-			<button id="signOut" class="btn regularButton hidden">Sign out</button>
-			<img src="#" id="userPhoto" class="hidden h-100 p-2" />
-			<span id="userName" class="hidden p-2 small"></span>
-		</div>
-	</header>
+          <div id="serverSongTemplate" class="hidden">
+            <div class="tertiaryColor container flex-row p-2 my-1">
+              <div class="row toggleNext cursor-pointer">
+                <div class="col-sm pt-3">
+                  <p class="uploaded float-right"></p>
+                  <p class="newSong hidden float-right pr-3 pl-2">New file!</p>
+                  <h3 class="fileName mt-0"></h3>
+                  <p>
+                    <span class="fileType"></span
+                    ><span class="fileTypeSizeSeparator hidden">, </span
+                    ><span class="fileSize"></span>
+                  </p>
+                  <p>
+                    Number of different versions:
+                    <span class="troffDataLength"></span>
+                  </p>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm">
+                  <div class="container flex-row p-1 my-1 markerList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-<div class="flexRow fill-height-minus-58">
-	<section class="flexCol flexScroll">
+          <div id="troffDataTemplate" class="hidden">
+            <div class="row">
+              <div class="col-sm">
+                <div class="themeColor mt-1 p-3">
+                  <p class="text-light-gray float-right troffDataFirstTimeLoaded m-0"></p>
+                  <h4 class="troffDataDisplayName text-light-gray text-bold"></h4>
 
-	<article id="whatIsTroff" class="mt-0">
-		<h2>What's this?</h2>
-		<p>
-			Here you will see all the songs that you have downloaded or uploaded to Troff
-			as well as all the public songs, movies and choreographies that other people
-			have uploaded to Troff.
-		</p>
-		<label class="switch likeLink linkButton pb-3 m-0 p-0" for="whatsThisMoreInfoSwitch">More info</label>
-		<input id="whatsThisMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
-		<div class="switch_child" >
-			<p>
-				When you click a song in the list below, you will see
-				all the different versions of markers that is saved for that song.
-			</p>
-			<p>
-				For every marker version, you will se how many markers that version has,
-				as well as when that version was saved.
-				If there are any tags, genre or song info for that version,
-				it will also be displayed there.
-				Only the first part of the song info will be shown,
-				to reduce clutter.
-			</p>
-			<p>
-				When you click "Download this version ( version id )"
-				<a class="likeLink" href="/">troff.app</a>
-				will open in a new tab and that song with all the markers and info will be downloaded!
-			</p>
-			<p class="note">
-				Note: If you already have the song that you download, then
-				you will get a question of whether to import the new markers,
-				merge the new markers with the existing ones or keep the existing ones.<br />
-				If you choose "import new markers", your existing version will be removed
-				and if that version has not been uploaded or exported, Troff will not
-				be able to restore it.
-			</p>
-		</div>
-	</article> <!-- What is Troff -->
+                  <span class="troffDataGenre text-light-gray small float-right pt-2"></span>
+                  <p class="text-light-gray troffDataNrMarkersParent pt-2">
+                    <span class="troffDataNrMarkers"></span>
+                    markers<span class="text-light-gray troffDataNrStatesParent hidden"
+                      >,
+                      <span class="troffDataNrStates"></span>
+                      states</span
+                    >.
+                  </p>
+                  <span
+                    class="pt-1 troffDataTags text-light-gray float-right small float-right"
+                  ></span>
 
-	<article id="loadingArticle" class="center">
-		<i class="fa fa-circle-notch animate-spin fa-2x fa-spin align-middle"></i>
-	</article>
+                  <div class="pt-1 pb-2 text-light-gray small troffDataInfo"></div>
+                  <div>
+                    <a
+                      href="#"
+                      target="_blank"
+                      class="troffDataId text-light-gray likeLink pr-3"
+                    ></a>
+                    <button class="moreAboutVersion text-light-gray likeLink">
+                      More about this version!
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-	<article id="mainArticle" class="hidden">
+          <div id="markerTemplate" class="hidden">
+            <li class="flexRow px-2 align-items-center">
+              <b class="markerTime ml-1">0:42</b>
+              <input class="markerName mx-1" type="button" value="marker nr 69" />
+              <button class="markerInfoIndicator regularButton" aria-label="More Info about marker">
+                <i class="fa fa-question cursor-pointer m-0"></i>
+              </button>
+            </li>
+          </div>
+        </article>
+        <!-- signIn -->
 
-		<div class="hidden hideForUsers">
-			<h2>Files</h2>
-			<p>Total Size: <span class="totalSize"></span></p>
-			<p class="pl-2">Nr of files: <span class="nrOfFiles"></span></p>
-			<p class="pl-2">Nr of deleted files: <span class="nrOfDeletedFiles"></span></p>
-		</div>
+        <footer id="footer" class="white flexRow">
+          <div class="flexCol">
+            <p>
+              Contact a human:
+              <a class="white" target="_blank" rel="noopener" href="mailto:slimsimapps@gmail.com">
+                slimsimapps@gmail.com</a
+              >.
+            </p>
+            <p>
+              Like us on
+              <a
+                class="white"
+                target="_blank"
+                rel="noopener"
+                href="https://www.facebook.com/troffmusic"
+                >facebook</a
+              >!
+            </p>
+            <p><a class="white" target="_blank" rel="noopener" href="LICENSE.html">LICENSE</a>.</p>
+            <p>
+              <a class="white" target="_blank" rel="noopener" href="privacy_policy.html"
+                >Privacy Policy</a
+              >.
+            </p>
+            <p>
+              <a class="white" target="_blank" rel="noopener" href="terms.html"
+                >Terms and conditions</a
+              >.
+            </p>
+            <p>Happy training!</p>
+          </div>
+          <div class="flexCol white center flexOne">
+            <p class="white Big">Troff</p>
+            <p class="white Big textCenter">Training with music</p>
+          </div>
+        </footer>
+      </section>
 
-		<div class="input-group ">
-			<input id="search" type="text" class="form-control m-0 border-right-0"
-						 placeholder="Search for new songs"
-						 aria-label="Search for songs and choreographies online!">
-			<div class="input-group-append">
-				<button id="buttSearch" class="btn btn-outline-secondary m-0" title="Search for songs or a choreography" type="button">
-					<span class="flip-horizontal m-0"><i class="fa-search"></i></span>
-				</button>
-			</div>
-		</div>
+      <div id="alertDialog" class="outerDialog p-3 hidden">
+        <div class="innerDialog largeDialog flexCol scroll mh-100">
+          <h2 id="alertHeader"></h2>
+          <div id="alertText"></div>
+        </div>
+      </div>
 
-
-		<div>
-			<label class="likeLink linkButton pb-3 m-0 p-0" for="sortMoreInfoSwitch">Settings</label>
-			<input id="sortMoreInfoSwitch" class="switch_checkbox hidden" type="checkbox" />
-			<div class="switch_child d-flex flex-wrap" >
-				<button class="btn stOnOffButton" id="filterOnlyHistoryButt">Only my versions (<span id="nrOfHistorySongs"></span>)</button>
-				<span class="flex-one"></span>
-				<div>
-					<span class="inlineBlock">
-						<button class="btn regularButton" id="sortUploadedDesc">Newest first</button>
-						<button class="btn regularButton mr-3" id="sortUploadedAsc">...last</button>
-					</span>
-					<span class="inlineBlock">
-						<button class="btn regularButton" id="sortSizeDesc">Biggest First</button>
-						<button class="btn regularButton" id="sortSizeAsc">...last</button>
-					</span>
-				</div>
-			</div>
-		</div>
-
-		<div id="fileList" class="flexCol"></div>
-
-
-		<div class="pt-3">
-			<button class="btn stOnOffButton hidden" id="showDeletedButt">Show deleted</button>
-			<div id="deletedFileListParent" class="hidden pt-2">
-				<p>
-					These files have been deleted. That means that you can download the markers and info,
-					but the song or movie will not be downloaded. So you must already have that
-					file in Troff, or import it yourself.
-				</p>
-				<div id="deletedFileList" class="flexCol"></div>
-			</div>
-		</div>
-
-
-		<div id="serverSongTemplate" class="hidden">
-			<div class="tertiaryColor container flex-row p-2 my-1">
-				<div class="row toggleNext cursor-pointer">
-					<div class="col-sm pt-3">
-						<p class="uploaded float-right"></p>
-						<p class="newSong hidden float-right pr-3 pl-2">New file!</p>
-						<h3 class="fileName mt-0"></h3>
-						<p><span class="fileType"></span><span class="fileTypeSizeSeparator hidden">, </span><span class="fileSize"></span></p>
-						<p>Number of different versions: <span class="troffDataLength"></span></p>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-sm">
-						<div class="container flex-row p-1 my-1 markerList">
-						</div>
-					</div>
-				</div>
-			</div>
-
-		</div>
-
-		<div id="troffDataTemplate" class="hidden">
-			<div class="row">
-				<div class="col-sm">
-					<div class="themeColor mt-1 p-3">
-						<p class="text-light-gray float-right troffDataFirstTimeLoaded m-0"></p>
-						<h4 class="troffDataDisplayName text-light-gray text-bold"></h4>
-
-						<span class="troffDataGenre text-light-gray small float-right pt-2"></span>
-						<p class="text-light-gray troffDataNrMarkersParent pt-2">
-							<span class="troffDataNrMarkers"></span>
-							markers<span class="text-light-gray troffDataNrStatesParent hidden">,
-								<span class="troffDataNrStates"></span>
-							states</span>.
-						</p>
-						<span class="pt-1 troffDataTags text-light-gray float-right small float-right"></span>
-
-						<div class="pt-1 pb-2 text-light-gray small troffDataInfo"></div>
-						<div>
-							<a href="#" target="_blank" class="troffDataId text-light-gray likeLink pr-3"></a>
-							<button class="moreAboutVersion text-light-gray likeLink">More about this version!</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div id="markerTemplate" class="hidden">
-			<li  class="flexRow px-2 align-items-center">
-				<b class="markerTime ml-1">0:42</b>
-				<input class="markerName mx-1" type="button" value="marker nr 69" />
-				<button class="markerInfoIndicator regularButton" aria-label="More Info about marker">
-					<i class="fa fa-question cursor-pointer m-0"></i>
-				</button>
-			</li>
-		</div>
-
-	</article> <!-- signIn -->
-
-
-	<footer id="footer" class="white flexRow">
-		<div class="flexCol">
-			<p>
-				Contact a human:
-				<a class="white" target=_blank rel="noopener" href="mailto:slimsimapps@gmail.com">
-					slimsimapps@gmail.com</a>.
-			</p>
-			<p>
-				Like us on
-				<a class="white" target=_blank rel="noopener"
-					href="https://www.facebook.com/troffmusic">facebook</a>!
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="LICENSE.html">LICENSE</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="privacy_policy.html">Privacy Policy</a>.
-			</p>
-			<p>
-				<a class="white" target=_blank rel="noopener" href="terms.html">Terms and conditions</a>.
-			</p>
-			<p>
-				Happy training!
-			</p>
-		</div>
-		<div class="flexCol white center flexOne">
-			<p class="white Big">Troff</p>
-			<p class="white Big textCenter">Training with music</p>
-		</div>
-	</footer>
-	</section>
-
-	<div  id="alertDialog" class="outerDialog p-3 hidden">
-		<div class="innerDialog largeDialog flexCol scroll mh-100">
-			<h2 id="alertHeader"></h2>
-			<div id="alertText"></div>
-		</div>
-	</div>
-
-	<div  id="moreAboutVersionDialog" class="outerDialog p-5 hidden">
-		<div class="innerDialog w-min-content flexCol h-100 mw-100">
-			<div>
-				<button class="dialogCancelButton regularButton float-right"><i class="fa-window-close"></i></button>
-				<a id="moreAboutVersionDownload" href="#" class="float-right p-1 m-1">Download!</a>
-				<h2 id="fileName">Song title</h2>
-			</div>
-			<div class="pt-1">
-				<p id="moreAoutVersionChoreographer" class="float-right"></p>
-				<p id="moreAboutVersionChoreography"></p>
-			</div>
-			<div>
-				<p id="moreAoutVersionAlbum" class="float-right"></p>
-				<p id="moreAboutVersionArtist"></p>
-			</div>
-			<div class="h-100 mw-100 overflow-x-auto">
-				<div class="d-flex flex-row h-100">
-					<ul id="markerList" class="h-100 px-1 min-width-min-78-305px pt-2 flex-grow-1 li-child-overflow-x-clip li-child-m-0 li-child-b-t-color-transparent extra-extended mw-fit-content"></ul>
-					<div class="h-100 p-0 min-width-min-78-305px flexCol">
-						<div class="min-width-min-78-305px flex-one px-2 flexCol pb-3">
-							<h3 class="mt-0 mb-1">Song info</h3>
-							<textarea readonly id="songInfo" class="flex-one" placeholder="No song info has been writen in this version"></textarea>
-						</div>
-						<div class="min-width-min-78-305px flex-one px-2 flexCol">
-							<h3 class="mt-0 mb-1">Current marker info</h3>
-							<textarea readonly id="markerInfo" class=" flex-one" placeholder="No marker info has been writen for the selected marker"></textarea>
-						</div>
-					</div>
-				</div>
-			</div>
-			<span id="nrStates"></span>
-			<ul id="statesParent"></ul>
-			<span id="nrTimesLoaded"></span>
-		</div>
-	</div>
-
-</div>
-
-</body>
+      <div id="moreAboutVersionDialog" class="outerDialog p-5 hidden">
+        <div class="innerDialog w-min-content flexCol h-100 mw-100">
+          <div>
+            <button class="dialogCancelButton regularButton float-right">
+              <i class="fa-window-close"></i>
+            </button>
+            <a id="moreAboutVersionDownload" href="#" class="float-right p-1 m-1">Download!</a>
+            <h2 id="fileName">Song title</h2>
+          </div>
+          <div class="pt-1">
+            <p id="moreAoutVersionChoreographer" class="float-right"></p>
+            <p id="moreAboutVersionChoreography"></p>
+          </div>
+          <div>
+            <p id="moreAoutVersionAlbum" class="float-right"></p>
+            <p id="moreAboutVersionArtist"></p>
+          </div>
+          <div class="h-100 mw-100 overflow-x-auto">
+            <div class="d-flex flex-row h-100">
+              <ul
+                id="markerList"
+                class="h-100 px-1 min-width-min-78-305px pt-2 flex-grow-1 li-child-overflow-x-clip li-child-m-0 li-child-b-t-color-transparent extra-extended mw-fit-content"
+              ></ul>
+              <div class="h-100 p-0 min-width-min-78-305px flexCol">
+                <div class="min-width-min-78-305px flex-one px-2 flexCol pb-3">
+                  <h3 class="mt-0 mb-1">Song info</h3>
+                  <textarea
+                    readonly
+                    id="songInfo"
+                    class="flex-one"
+                    placeholder="No song info has been writen in this version"
+                  ></textarea>
+                </div>
+                <div class="min-width-min-78-305px flex-one px-2 flexCol">
+                  <h3 class="mt-0 mb-1">Current marker info</h3>
+                  <textarea
+                    readonly
+                    id="markerInfo"
+                    class="flex-one"
+                    placeholder="No marker info has been writen for the selected marker"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span id="nrStates"></span>
+          <ul id="statesParent"></ul>
+          <span id="nrTimesLoaded"></span>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

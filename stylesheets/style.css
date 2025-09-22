@@ -371,7 +371,6 @@ body section{
 
 
 .sliderRange{
-		-webkit-appearance: slider-vertical;
 		width: 15px;
 		min-height: 42px;
 }
@@ -492,8 +491,6 @@ body section{
 
 
 #timeBar, .timeBarDemo{
-		-webkit-appearance: slider-vertical;
-		-moz-appearance: slider-vertical;
 		height: 98%;
 		height: calc(100% - 20px);
 		margin: 10px 0;

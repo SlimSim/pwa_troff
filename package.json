@@ -1,10 +1,59 @@
 {
-  "type": "module",
+  "name": "pwa_troff",
+  "version": "1.0.0",
+  "description": "Troff - training with music, a music player for dancers or musicians\r who needs to practice dance-steps or instruments to music.",
+  "main": "dataTable.js",
   "scripts": {
-    "test": "vitest run"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc -p tsconfig.json",
+    "format": "prettier --write .",
+    "validate": "npm run lint && npm run typecheck",
+    "workbox:dev": "cross-env SW_CLIENTS_CLAIM=false SW_SKIP_WAITING=false workbox generateSW workbox-config.js",
+    "workbox:beta": "cross-env SW_CLIENTS_CLAIM=true  SW_SKIP_WAITING=true  workbox generateSW workbox-config.js",
+    "workbox:prod": "cross-env SW_CLIENTS_CLAIM=true  SW_SKIP_WAITING=true  workbox generateSW workbox-config.js",
+    "workbox": "npm run workbox:prod",
+    "build": "tsc -p tsconfig.build.json",
+    "build:check": "npm run lint && npm run typecheck && npm run build",
+    "build:watch": "tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "copy": "cpy \"**/*\" \"!node_modules/**\" \"!.git/**\" \"!.github/**\" \"!dist/**\" \"!**/*.ts\" \"!tsconfig*.json\" \"!package*.json\" \"!vitest.config.*\" dist --parents --cwd=.",
+    "copy:watch": "chokidar \"**/*\" -i \"node_modules/**\" -i \".git/**\" -i \".github/**\" -i \"dist/**\" -i \"**/*.ts\" -i \"tsconfig*.json\" -i \"package*.json\" -i \"vitest.config.*\" -c \"cpy {path} dist --parents --cwd=.\" --silent",
+    "sw:watch": "chokidar \"dist/**/*.{html,js,css,json,svg,png,webp,ico,woff2,ttf}\" -i \"dist/service-worker.js\" -i \"dist/workbox-*.js\" -i \"dist/workbox-*.js.map\" --debounce 500 -c \"npm run workbox:dev\" --initial --silent",
+    "serve": "http-server dist -a localhost -p 8000 -c-1",
+    "dev": "npm-run-all --parallel build:watch copy:watch sw:watch serve"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "@vitest/coverage-v8": "^1.6.1",
-    "vitest": "^1.0.0"
+    "@eslint/js": "^9.33.0",
+    "@types/datatables.net": "^1.10.28",
+    "@types/jquery": "^3.5.33",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "chokidar-cli": "^3.0.0",
+    "cpx2": "^8.0.0",
+    "cpy-cli": "^6.0.0",
+    "cross-env": "^10.0.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^16.3.0",
+    "http-server": "^14.1.1",
+    "jsdom": "^27.0.0",
+    "live-server": "^1.2.2",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4",
+    "workbox-build": "^7.3.0",
+    "workbox-cli": "^7.3.0"
+  },
+  "dependencies": {
+    "firebase": "^12.2.1"
   }
 }
