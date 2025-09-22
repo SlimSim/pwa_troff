@@ -2,7 +2,7 @@ name: Deploy static site to Pages (artifact)
 
 on:
   push:
-    branches: ['beta']
+    branches: ['prod']
 
 permissions:
   contents: read
@@ -46,8 +46,8 @@ jobs:
             --exclude '*.ts' \
             ./ dist/
 
-      - name: Generate Workbox service worker (beta)
-        run: npm run workbox:beta
+      - name: Generate Workbox service worker (prod)
+        run: npm run workbox:prod
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
