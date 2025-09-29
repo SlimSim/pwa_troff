@@ -34,22 +34,53 @@ const commonCode = () => {
     .filter(Boolean);
 
   // Grab the first frame that isn’t the Error header
-  // const target = frames[3] ?? frames[1] ?? '';
-  const helperNames = [
-    'commonCode',
-    'phoneLog.d',
-    'phoneLog.i',
-    'phoneLog.w',
-    'phoneLog.e',
-    'phoneLog.t',
+  const helperPatterns = [
+    /^Error$/, // first header line
+    /commonCode/, // internal helper
+    /phoneLog\.[dtiwe]/, // wrapper shortcuts
+    /\butils\/log\.js/, // compiled helper file
   ];
-  const target =
-    frames.find((frame) => !helperNames.some((helper) => frame.includes(helper))) ?? '';
+
+  const parseSafariLocation = (location: string) => {
+    const segments = location.split(':');
+    if (segments.length < 3) return null;
+
+    const column = segments.pop();
+    const line = segments.pop();
+    const file = segments.join(':');
+    return { file, line, column };
+  };
+
+  const safariFallbackParse = (candidateFrames: string[]) => {
+    for (const frame of candidateFrames) {
+      const atIndex = frame.indexOf('@');
+      if (atIndex === -1) continue;
+
+      const funcPart = frame.slice(0, atIndex).trim();
+      const locationPart = frame.slice(atIndex + 1).trim();
+      const parsed = parseSafariLocation(locationPart);
+      if (!parsed) continue;
+
+      return {
+        functionName: funcPart || '(anonymous)',
+        filename: 'sP ' + (parsed.file?.split('/')?.pop() || '-'),
+        lineNr: parsed.line || '-',
+      };
+    }
+
+    return null;
+  };
+
+  const nonHelperFrames = frames.filter(
+    (frame) => !helperPatterns.some((pattern) => pattern.test(frame))
+  );
+
+  const target = nonHelperFrames[0] ?? frames[0] ?? '';
 
   const chromeMatch = target.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/);
   const chromeAltMatch = target.match(/at\s+(.*):(\d+):(\d+)/);
-  const safariMatch = target.match(/([^@]*)@([^:]+):(\d+):(\d+)/);
-  const safariGlobalMatch = target.match(/global code@([^:]+):(\d+):(\d+)/);
+  const safariMatch = target.match(/([^@]*)@(.+):(\d+):(\d+)/);
+  const safariGlobalMatch = target.match(/global code@(.+):(\d+):(\d+)/);
 
   let functionName = '-';
   let filename = '-';
@@ -76,23 +107,9 @@ const commonCode = () => {
     filename = 'sGM ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   } else {
-    const atIndex = target.indexOf('@');
-    if (atIndex !== -1) {
-      const funcPart = target.slice(0, atIndex).trim();
-      const locationPart = target.slice(atIndex + 1).trim();
-      const segments = locationPart.split(':');
-
-      if (segments.length >= 3) {
-        segments.pop();
-        const line = segments.pop();
-        const file = segments.join(':');
-
-        functionName = funcPart || '(anonymous)';
-        filename = 'else ' + (file?.split('/')?.pop() || '-');
-        lineNr = line || '-';
-
-        return { functionName, filename, lineNr };
-      }
+    const safariParsed = safariFallbackParse(nonHelperFrames);
+    if (safariParsed) {
+      return safariParsed;
     }
 
     functionName = 'stack frames ';
