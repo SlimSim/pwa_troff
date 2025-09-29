@@ -1,7 +1,9 @@
 // Save the original console.log
 // const originalLog = console.log;
 
-import { usePhoneLog } from './browserEnv';
+import { usePhoneLog } from './browserEnv.js';
+
+// const usePhoneLog = true;
 
 // // Override console.log
 // console.log = function(...args) {
@@ -39,7 +41,7 @@ const phoneLog = {
       lineNr = line || '-';
     }
     console.trace(`${filename}:${functionName}:${lineNr}:`, ...args);
-    logToDebuggingLog(`t:${filename}:${functionName}:${lineNr}:`, ...args);
+    logToDebuggingLog(`t;${filename};${functionName};${lineNr};`, ...args);
   },
   d: (...args: any[]) => {
     const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
@@ -55,7 +57,7 @@ const phoneLog = {
       lineNr = line || '-';
     }
     console.log(`${filename}:${functionName}:${lineNr}:`, ...args);
-    logToDebuggingLog(`d:${filename}:${functionName}:${lineNr}:`, ...args);
+    logToDebuggingLog(`d;${filename};${functionName};${lineNr};`, ...args);
   },
   i: (...args: any[]) => {
     const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
@@ -71,7 +73,7 @@ const phoneLog = {
       lineNr = line || '-';
     }
     console.info(`${filename}:${functionName}:${lineNr}:`, ...args);
-    logToDebuggingLog(`i:${filename}:${functionName}:${lineNr}:`, ...args);
+    logToDebuggingLog(`i;${filename};${functionName};${lineNr};`, ...args);
   },
   e: (...args: any[]) => {
     const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
@@ -87,7 +89,7 @@ const phoneLog = {
       lineNr = line || '-';
     }
     console.error(`${filename}:${functionName}:${lineNr}: `, ...args);
-    logToDebuggingLog(`e:${filename}:${functionName}:${lineNr}:`, ...args);
+    logToDebuggingLog(`e;${filename};${functionName};${lineNr};`, ...args);
   },
   w: (...args: any[]) => {
     const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
@@ -103,14 +105,26 @@ const phoneLog = {
       lineNr = line;
     }
     console.warn(`${filename}:${functionName}:${lineNr}: `, ...args);
-    logToDebuggingLog(`w:${filename}:${functionName}:${lineNr}:`, ...args);
+    logToDebuggingLog(`w;${filename};${functionName};${lineNr};`, ...args);
   },
 };
 
 const logToDebuggingLog = (type: string, ...message: any[]) => {
   const logTextarea = document.getElementById('debuggingLogContent') as HTMLTextAreaElement;
   if (!logTextarea) return;
-  logTextarea.value += type + ': ' + message + '\n';
+
+  const messageParts = message.map((item) => {
+    if (typeof item === 'object' && item !== null) {
+      return Object.entries(item)
+        .map(([key, value]) => `${key}=${value}`)
+        .join(';');
+    } else {
+      return String(item);
+    }
+  });
+  const messageString = messageParts.join(';');
+
+  logTextarea.value += type + messageString + '\n';
   logTextarea.scrollTop = logTextarea.scrollHeight; // auto-scroll to bottom
 };
 
