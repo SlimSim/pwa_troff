@@ -82,6 +82,8 @@ import {
  */
 let firebaseUser: User | null = null;
 
+let iOSHasLoadedSong = false;
+
 log.d('browser detection', {
   isSafari: isSafari,
   isIphone: isIphone,
@@ -495,6 +497,9 @@ const mergeSongListHistorys = function (
 
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   log.d(`-> path ${path} songData ${songData} isSafari ${isSafari}`);
+
+  const canplay = false;
+
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {
@@ -605,6 +610,16 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   newElem.setAttribute('src', songData);
   newElem.addEventListener(
     'canplay',
+    () => {
+      log.d('canplay event fired - deferring markers', {
+        readyState: (newElem as HTMLAudioElement).readyState,
+        currentTime: (newElem as HTMLAudioElement).currentTime,
+      });
+    },
+    { once: true }
+  );
+  newElem.addEventListener(
+    'canplay',
     () => log.d('canplay event', { readyState: (newElem as HTMLAudioElement).readyState }),
     { once: true }
   );
@@ -657,6 +672,7 @@ function updateVersionLink(path: string) {
 }
 
 async function createSongAudio(path: string) {
+  log.d('createSongAudio ->', { path });
   let songIsV2;
   try {
     songIsV2 = await cacheImplementation.isSongV2(path);

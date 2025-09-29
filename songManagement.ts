@@ -132,8 +132,8 @@ function addItem_NEW_2(key: string): void {
     var newRow = ($('#dataSongTable') as any)
       .DataTable()
       .row.add(columns)
-      //.onClick => .on('click', 'tbody tr', function(event) i funktionen initSongTable
-      //						onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
+      // .onClick finns i funktionen "initSongTable" i scriot0.ts: .on('click', 'tbody tr', function (event: JQuery.ClickEvent)
+      // onSongLoad [loadedmetadata] finns i, addAudioToContentDiv och addVideoToContentDiv (dom anropar bla setMetadata)
       .draw(false)
       .node();
 

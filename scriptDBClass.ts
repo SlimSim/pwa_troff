@@ -421,6 +421,7 @@ class DBClass {
       var oSong = JSON.parse(/** @type {string} */ stroSong);
       Troff.setCurrentSongStrings(oSong.strPath, oSong.iGalleryId);
 
+      log.d('getCurrentSong: -> createSongAudio');
       createSongAudio(oSong.strPath);
     });
   };

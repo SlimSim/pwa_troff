@@ -212,6 +212,7 @@ class TroffClass {
   };
 
   initFileApiImplementation = () => {
+    log.d('initFileApiImplementation ->');
     $('#fileUploader').on('change', (event) => {
       const files = (event.target as HTMLInputElement).files;
       if (files == null) {
@@ -234,6 +235,7 @@ class TroffClass {
         addItem_NEW_2(key);
         if (!$('#dataSongTable_wrapper').find('tr').hasClass('selected')) {
           this.selectSongInSongList(key);
+          log.d('initFileApiImplementation: -> createSongAudio', { key });
           createSongAudio(key);
         }
 
@@ -383,6 +385,9 @@ class TroffClass {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
 
+    log.d('importTroffDataToExistingSong_importNew: -> createSongAudio', {
+      fileName: troffData.fileName,
+    });
     await createSongAudio(troffData.fileName);
     this.selectSongInSongList(troffData.fileName);
   };
@@ -408,6 +413,7 @@ class TroffClass {
       return errorHandler.backendService_getTroffData(error, serverId, fileName);
     }
 
+    log.d('importTroffDataToExistingSong_merge: -> createSongAudio', { fileName });
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
 
@@ -436,6 +442,7 @@ class TroffClass {
   importTroffDataToExistingSong_keepExisting = async () => {
     const fileName = $('#importTroffDataToExistingSong_fileName').val() as string;
 
+    log.d('importTroffDataToExistingSong_keepExisting: -> createSongAudio', { fileName });
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
   };
@@ -549,6 +556,7 @@ class TroffClass {
         if (currentSongTroffData && currentSongTroffData.serverId == serverId) {
           return;
         }
+        log.d('downloadSongFromServerButDataFromCacheExists: -> createSongAudio', { fileName });
         await createSongAudio(fileName);
         this.selectSongInSongList(fileName);
       } else {
@@ -580,6 +588,7 @@ class TroffClass {
     }
 
     if (serverId == troffDataFromCache.serverId) {
+      log.d('downloadSongFromServerButDataFromCacheExists: -> createSongAudio', { fileName });
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
@@ -630,6 +639,7 @@ class TroffClass {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
 
+    log.d('downloadSongFromServer: -> createSongAudio', { fileName });
     await createSongAudio(troffData.fileName);
     this.askIfAddSongsToCurrentSongList(troffData.fileName);
     addItem_NEW_2(troffData.fileName);
@@ -913,7 +923,11 @@ class TroffClass {
         sortAndValue(media.duration, this.secToDisp(media.duration))
       );
     }
-
+    log.d('setMetadata timeBar sync', {
+      timeBarValue: $('#timeBar').val(),
+      currentTime: media.currentTime,
+      max: media.duration,
+    });
     (document.getElementById('timeBar') as any).max = media.duration;
     $('#maxTime')[0].innerHTML = this.secToDisp(media.duration);
 
@@ -1142,6 +1156,7 @@ class TroffClass {
   timeupdateAudio = () => {
     var audio = document.querySelector('audio, video') as any;
     var dTime = audio.currentTime;
+    log.d('timeupdateAudio', { timeBarValue: $('#timeBar').val(), currentTime: audio.currentTime });
 
     if (dTime >= this.getStopTime()) {
       this.atEndOfLoop();
@@ -1293,7 +1308,10 @@ class TroffClass {
     const localPlayAndSetMood = () => {
       log.d('localPlayAndSetMood', { mood: this.getMood() });
       if (this.getMood() == 'pause') return;
+      log.d('play handler before play', { currentTimeBefore: audio.currentTime });
+
       audio.play();
+      log.d('play handler after play', { currentTimeAfter: audio.currentTime });
       this.setMood('play');
     };
 
