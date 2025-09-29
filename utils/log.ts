@@ -26,84 +26,67 @@ const regularLog = {
   e: originalError.bind(console),
 };
 
+const commonCode = () => {
+  const stack = new Error().stack ?? '';
+  const frames = stack
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  // Grab the first frame that isn’t the Error header
+  const target = frames[3] ?? frames[1] ?? '';
+
+  const chromeMatch = target.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/);
+  const chromeAltMatch = target.match(/at\s+(.*):(\d+):(\d+)/);
+  const safariMatch = target.match(/([^@]*)@([^:]+):(\d+):(\d+)/);
+
+  let functionName = '-';
+  let filename = '-';
+  let lineNr = '-';
+
+  if (chromeMatch) {
+    const [, func, file, line] = chromeMatch;
+    functionName = func?.trim() || '(anonymous)';
+    filename = file?.split('/')?.pop() || '-';
+    lineNr = line || '-';
+  } else if (chromeAltMatch) {
+    const [, file, line] = chromeAltMatch;
+    functionName = '(anonymous)';
+    filename = file?.split('/')?.pop() || '-';
+    lineNr = line || '-';
+  } else if (safariMatch) {
+    const [, func, file, line] = safariMatch;
+    functionName = func?.trim() || '(anonymous)';
+    filename = file?.split('/')?.pop() || '-';
+    lineNr = line || '-';
+  }
+
+  return { functionName, filename, lineNr };
+};
+
 const phoneLog = {
   t: (...args: any[]) => {
-    const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
-    const match =
-      stack?.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || stack?.match(/at\s+(.*):(\d+):(\d+)/);
-    let functionName = '-';
-    let filename = '-';
-    let lineNr = '-';
-    if (match) {
-      const [, func, file, line] = match;
-      functionName = func?.trim() || '-'; // Extract function name, fallback to "-"
-      filename = file?.split('/')?.pop() || '-'; // Extract filename from path
-      lineNr = line || '-';
-    }
+    const { functionName, filename, lineNr } = commonCode();
     console.trace(`${filename}:${functionName}:${lineNr}:`, ...args);
     logToDebuggingLog(`t;${filename};${functionName};${lineNr};`, ...args);
   },
   d: (...args: any[]) => {
-    const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
-    const match =
-      stack?.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || stack?.match(/at\s+(.*):(\d+):(\d+)/);
-    let functionName = '-';
-    let filename = '-';
-    let lineNr = '-';
-    if (match) {
-      const [, func, file, line] = match;
-      functionName = func.trim() || '-'; // Extract function name, fallback to "-"
-      filename = file?.split('/')?.pop() || '-'; // Extract filename from path
-      lineNr = line || '-';
-    }
-    console.log(`${filename}:${functionName}:${lineNr}:`, ...args);
+    const { functionName, filename, lineNr } = commonCode();
+    console.log(`${filename};${functionName};${lineNr};`, ...args);
     logToDebuggingLog(`d;${filename};${functionName};${lineNr};`, ...args);
   },
   i: (...args: any[]) => {
-    const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
-    const match =
-      stack?.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || stack?.match(/at\s+(.*):(\d+):(\d+)/);
-    let functionName = '-';
-    let filename = '-';
-    let lineNr = '-';
-    if (match) {
-      const [, func, file, line] = match;
-      functionName = func.trim() || '-'; // Extract function name, fallback to "-"
-      filename = file?.split('/')?.pop() || '-'; // Extract filename from path
-      lineNr = line || '-';
-    }
+    const { functionName, filename, lineNr } = commonCode();
     console.info(`${filename}:${functionName}:${lineNr}:`, ...args);
     logToDebuggingLog(`i;${filename};${functionName};${lineNr};`, ...args);
   },
   e: (...args: any[]) => {
-    const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
-    const match =
-      stack?.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || stack?.match(/at\s+(.*):(\d+):(\d+)/);
-    let functionName = '-';
-    let filename = '-';
-    let lineNr = '-';
-    if (match) {
-      const [, func, file, line] = match;
-      functionName = func?.trim() || '-'; // Extract function name, fallback to "-"
-      filename = file?.split('/')?.pop() || '-'; // Extract filename from path
-      lineNr = line || '-';
-    }
+    const { functionName, filename, lineNr } = commonCode();
     console.error(`${filename}:${functionName}:${lineNr}: `, ...args);
     logToDebuggingLog(`e;${filename};${functionName};${lineNr};`, ...args);
   },
   w: (...args: any[]) => {
-    const stack = new Error().stack?.split('\n')[2]; // Get the caller's stack frame
-    const match =
-      stack?.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || stack?.match(/at\s+(.*):(\d+):(\d+)/);
-    let functionName = '-';
-    let filename = '-';
-    let lineNr = '-';
-    if (match) {
-      const [, func, file, line] = match;
-      functionName = func?.trim() || '-'; // Extract function name, fallback to "-"
-      filename = file?.split('/')?.pop() || '-'; // Extract filename from path
-      lineNr = line;
-    }
+    const { functionName, filename, lineNr } = commonCode();
     console.warn(`${filename}:${functionName}:${lineNr}: `, ...args);
     logToDebuggingLog(`w;${filename};${functionName};${lineNr};`, ...args);
   },
