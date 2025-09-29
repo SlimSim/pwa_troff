@@ -241,9 +241,13 @@ function addAudioToContentDiv() {
   var content_div = document.getElementById('content');
   var audio = document.createElement('audio');
   audio.addEventListener('loadedmetadata', () => {
+    log.d('Safari loadedmetadata', { duration: audio.duration, readyState: audio.readyState });
+
     Troff.setMetadata(audio);
     Troff.setAudioVideoLayout();
   });
+  audio.addEventListener('error', (e) => log.e('Audio media error', e));
+
   if (content_div == null) return;
   content_div.appendChild(audio);
   return audio;
