@@ -34,11 +34,22 @@ const commonCode = () => {
     .filter(Boolean);
 
   // Grab the first frame that isn’t the Error header
-  const target = frames[3] ?? frames[1] ?? '';
+  // const target = frames[3] ?? frames[1] ?? '';
+  const helperNames = [
+    'commonCode',
+    'phoneLog.d',
+    'phoneLog.i',
+    'phoneLog.w',
+    'phoneLog.e',
+    'phoneLog.t',
+  ];
+  const target =
+    frames.find((frame) => !helperNames.some((helper) => frame.includes(helper))) ?? '';
 
   const chromeMatch = target.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/);
   const chromeAltMatch = target.match(/at\s+(.*):(\d+):(\d+)/);
   const safariMatch = target.match(/([^@]*)@([^:]+):(\d+):(\d+)/);
+  const safariGlobalMatch = target.match(/global code@([^:]+):(\d+):(\d+)/);
 
   let functionName = '-';
   let filename = '-';
@@ -47,18 +58,29 @@ const commonCode = () => {
   if (chromeMatch) {
     const [, func, file, line] = chromeMatch;
     functionName = func?.trim() || '(anonymous)';
-    filename = 'cA ' + (file?.split('/')?.pop() || '-');
+    filename = 'cM ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   } else if (chromeAltMatch) {
     const [, file, line] = chromeAltMatch;
     functionName = '(anonymous)';
-    filename = 'cA ' + (file?.split('/')?.pop() || '-');
+    filename = 'cAM ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   } else if (safariMatch) {
     const [, func, file, line] = safariMatch;
     functionName = func?.trim() || '(anonymous)';
     filename = 'sM ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
+  } else if (safariGlobalMatch) {
+    const [, file, line] = safariGlobalMatch;
+    functionName = '(anonymous)';
+    filename = 'sGM ' + (file?.split('/')?.pop() || '-');
+    lineNr = line || '-';
+  } else {
+    functionName = 'stack frames ';
+
+    frames.slice(0, 6).forEach((frame) => {
+      functionName += frame + ', ';
+    });
   }
 
   return { functionName, filename, lineNr };
