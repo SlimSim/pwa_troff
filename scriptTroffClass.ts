@@ -131,6 +131,7 @@ class TroffClass {
   m_zoomEndTime: number | null;
   stopTimeout: NodeJS.Timeout | undefined;
   stopInterval: NodeJS.Timeout | undefined;
+  iOSHasLoadedSong: boolean;
 
   constructor() {
     this.strCurrentSong = '';
@@ -141,6 +142,7 @@ class TroffClass {
     this.nrTaps = 0;
     this.m_zoomStartTime = 0;
     this.m_zoomEndTime = null;
+    this.iOSHasLoadedSong = false;
   }
 
   addAskedSongsToCurrentSongList = (
@@ -1252,7 +1254,13 @@ class TroffClass {
     this.spaceOrEnter(goToMarker, useTimer, updateLoopTimes);
   }; // end space()
 
-  playUiButton = () => {
+  playUiButton = async () => {
+    log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
+    if (isSafari && !this.iOSHasLoadedSong) {
+      log.d('playUiButton: -> createSongAudio', { songKey: this.getCurrentSong() });
+      await createSongAudio(this.getCurrentSong());
+      this.iOSHasLoadedSong = true;
+    }
     var goToMarker = $('#' + TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR).hasClass(
         'active'
       ),
