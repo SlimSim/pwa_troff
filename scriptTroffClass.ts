@@ -1035,13 +1035,29 @@ class TroffClass {
             var aFirstAndLast = this.getFirstAndLastMarkers();
             var lastMarkerId = aFirstAndLast[1] + 'S';
             this.selectStopMarker(lastMarkerId);
+            log.d('timeUpdate in if before seek', {
+              readyState: (document.querySelector('audio, video') as any).readyState,
+              sliderVal: sliderVal,
+            });
             (document.querySelector('audio, video') as any).currentTime = sliderVal;
+            log.d('timeUpdate in if after seek', {
+              readyState: (document.querySelector('audio, video') as any).readyState,
+              currentTime: (document.querySelector('audio, video') as any).currentTime,
+            });
           }
         );
       }
     } // end if
 
+    log.d('timeUpdate before seek', {
+      readyState: (document.querySelector('audio, video') as any).readyState,
+      sliderVal: sliderVal,
+    });
     (document.querySelector('audio, video') as any).currentTime = sliderVal;
+    log.d('timeUpdate after seek', {
+      readyState: (document.querySelector('audio, video') as any).readyState,
+      currentTime: (document.querySelector('audio, video') as any).currentTime,
+    });
   }; // end timeUpdate
 
   getStopTime = () => {
@@ -1196,7 +1212,15 @@ class TroffClass {
 
   // goToStartMarker används när man updaterar startBefore / trycker på StartBefore  / trycker på en marker???
   goToStartMarker = () => {
+    log.d('goToStartMarker', {
+      readystate: document.querySelector('audio, video') as HTMLMediaElement,
+      startTime: this.getStartTime(),
+    });
     (document.querySelector('audio, video') as HTMLMediaElement).currentTime = this.getStartTime();
+    log.d('goToStartMarker', {
+      readyState: (document.querySelector('audio, video') as HTMLMediaElement).readyState,
+      currentTime: (document.querySelector('audio, video') as HTMLMediaElement).currentTime,
+    });
   }; // end goToStartMarker
 
   enterKnappen = () => {
@@ -1248,6 +1272,15 @@ class TroffClass {
     wait = wait || 0;
     var audio = document.querySelector('audio, video') as HTMLMediaElement;
     if (!audio) return;
+    log.d('play button pressed', { currentTime: audio.currentTime });
+    setTimeout(
+      () =>
+        log.d('play after delay', {
+          readyState: (document.querySelector('audio, video') as HTMLMediaElement).readyState,
+          currentTime: (document.querySelector('audio, video') as HTMLMediaElement).currentTime,
+        }),
+      100
+    );
 
     gtag('event', 'Start song', { event_category: 'Perform change', event_label: 'Play song' });
 
