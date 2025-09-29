@@ -47,17 +47,17 @@ const commonCode = () => {
   if (chromeMatch) {
     const [, func, file, line] = chromeMatch;
     functionName = func?.trim() || '(anonymous)';
-    filename = file?.split('/')?.pop() || '-';
+    filename = 'cA ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   } else if (chromeAltMatch) {
     const [, file, line] = chromeAltMatch;
     functionName = '(anonymous)';
-    filename = file?.split('/')?.pop() || '-';
+    filename = 'cA ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   } else if (safariMatch) {
     const [, func, file, line] = safariMatch;
     functionName = func?.trim() || '(anonymous)';
-    filename = file?.split('/')?.pop() || '-';
+    filename = 'sM ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   }
 
