@@ -89,22 +89,22 @@ const commonCode = () => {
   if (chromeMatch) {
     const [, func, file, line] = chromeMatch;
     functionName = func?.trim() || '(anonymous)';
-    filename = 'cM ' + (file?.split('/')?.pop() || '-');
+    filename = file?.split('/')?.pop() || '-';
     lineNr = line || '-';
   } else if (chromeAltMatch) {
     const [, file, line] = chromeAltMatch;
     functionName = '(anonymous)';
-    filename = 'cAM ' + (file?.split('/')?.pop() || '-');
+    filename = file?.split('/')?.pop() || '-';
     lineNr = line || '-';
   } else if (safariMatch) {
     const [, func, file, line] = safariMatch;
-    functionName = func?.trim() || '(anonymous)';
-    filename = 'sM ' + (file?.split('/')?.pop() || '-');
-    lineNr = line || '-';
+    functionName = func?.trim() || '-';
+    filename = file?.split('/')?.pop() || '-';
+    lineNr = '-';
   } else if (safariGlobalMatch) {
     const [, file, line] = safariGlobalMatch;
     functionName = '(anonymous)';
-    filename = 'sGM ' + (file?.split('/')?.pop() || '-');
+    filename = file?.split('/')?.pop() || '-';
     lineNr = line || '-';
   } else {
     const safariParsed = safariFallbackParse(nonHelperFrames);

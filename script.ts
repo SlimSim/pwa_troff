@@ -104,7 +104,7 @@ SongToGroup.onSongAdded((event) => {
 });
 
 const googleSignIn = async function () {
-  if (isSafari) {
+  if (isSafari && treatSafariDifferent) {
     IO.alert(
       'Safari and iOS does not support sign in',
       'If you want to sign in and use shared songlists and more, ' +

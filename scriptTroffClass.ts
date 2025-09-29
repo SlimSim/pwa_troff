@@ -1258,19 +1258,23 @@ class TroffClass {
     this.setMood('wait');
 
     const localPlayAndSetMood = () => {
+      log.d('localPlayAndSetMood', { mood: this.getMood() });
       if (this.getMood() == 'pause') return;
       audio.play();
       this.setMood('play');
     };
 
+    log.d('playSong', { wait, isSafari });
     if (wait > 0) {
       // Hack to force Safari to play the sound after the timeout:
       if (isSafari) {
         audio.play();
         audio.pause();
+        log.d('playSong, did a play/pause hack');
       }
       this.stopTimeout = setTimeout(localPlayAndSetMood, wait);
     } else {
+      log.d('playSong, in else: did not wait and did not do a play/pause hack');
       localPlayAndSetMood();
     }
 
