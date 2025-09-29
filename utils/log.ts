@@ -76,6 +76,25 @@ const commonCode = () => {
     filename = 'sGM ' + (file?.split('/')?.pop() || '-');
     lineNr = line || '-';
   } else {
+    const atIndex = target.indexOf('@');
+    if (atIndex !== -1) {
+      const funcPart = target.slice(0, atIndex).trim();
+      const locationPart = target.slice(atIndex + 1).trim();
+      const segments = locationPart.split(':');
+
+      if (segments.length >= 3) {
+        segments.pop();
+        const line = segments.pop();
+        const file = segments.join(':');
+
+        functionName = funcPart || '(anonymous)';
+        filename = 'else ' + (file?.split('/')?.pop() || '-');
+        lineNr = line || '-';
+
+        return { functionName, filename, lineNr };
+      }
+    }
+
     functionName = 'stack frames ';
 
     frames.slice(0, 6).forEach((frame) => {
