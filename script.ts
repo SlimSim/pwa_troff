@@ -20,6 +20,7 @@
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
+import './utils/debugging.js';
 
 import {
   auth,
@@ -57,7 +58,7 @@ import { TroffClass } from './scriptTroffClass.js';
 import { errorHandler, ShowUserException } from './scriptErrorHandler.js';
 import DBClass from './scriptDBClass.js';
 import { loadExternalHtml } from './utils/utils.js';
-import { isSafari, isIphone, isIpad, treatSafariDifferent } from './utils/browserEnv.js';
+import { isSafari, isIphone, isIpad, treatSafariDifferent, isPhone } from './utils/browserEnv.js';
 import IOClass from './ui/scriptIOClass.js';
 import RateClass from './scriptRateClass.js';
 import { addItem_NEW_2 } from './songManagement.js';
@@ -80,6 +81,14 @@ import {
  * Extend as needed without pulling in external types.
  */
 let firebaseUser: User | null = null;
+
+log.d('browser detection', {
+  isSafari: isSafari,
+  isIphone: isIphone,
+  isIpad: isIpad,
+  isPhone: isPhone,
+  treatSafariDifferent: treatSafariDifferent,
+});
 
 // replace your current init:
 SongToGroup.initiateFromDb();
@@ -228,8 +237,21 @@ const songDocUpdate = async function (doc: DocumentSnapshot) {
   const songKey = songData.songKey;
 
   const songExists = await fileHandler.doesFileExistInCache(songKey);
+  log.d('songDocUpdate cache lookup', {
+    songKey,
+    songExists,
+    isSafari,
+    treatSafariDifferent,
+    fileUrl: songData.fileUrl,
+    firestoreFromCache: doc.metadata.fromCache,
+  });
 
   if (!songExists) {
+    log.i('songDocUpdate missing song - fetching from server', {
+      songKey,
+      navigatorOnLine: navigator.onLine,
+      treatSafariDifferent,
+    });
     try {
       await fileHandler.fetchAndSaveResponse(songData.fileUrl, songKey);
     } catch (error) {
@@ -472,6 +494,7 @@ const mergeSongListHistorys = function (
 };
 
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
+  log.d(`-> path ${path} songData ${songData} isSafari ${isSafari}`);
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {
@@ -511,10 +534,34 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   $('#downloadSongFromServerInProgressDialog').addClass('hidden');
 
   //Safari does not play well with blobs as src :(
+  log.i(`Browser detection 1: isSafari ${isSafari} treatSafariDifferent ${treatSafariDifferent}`);
+  log.i('setSong2 selecting media source', {
+    path,
+    isSafari,
+    treatSafariDifferent,
+    navigatorOnLine: navigator.onLine,
+  });
   if (isSafari && treatSafariDifferent) {
-    log.d('isSafari', isSafari, nDB);
+    log.d(`isSafari ${isSafari} treatSafariDifferent ${treatSafariDifferent}`);
 
     const troffData = nDB.get(path);
+
+    log.i('setSong2 safari media details', {
+      path,
+      isSafari,
+      treatSafariDifferent,
+      localAdded: troffData?.localInformation?.addedFromThisDevice ?? false,
+      hasFileUrl: Boolean(troffData?.fileUrl),
+      navigatorOnLine: navigator.onLine,
+    });
+
+    log.d('setSong2 safari branch', {
+      source: troffData?.localInformation?.addedFromThisDevice
+        ? 'objectUrl'
+        : troffData?.fileUrl
+          ? 'remoteUrl'
+          : 'fallbackObjectUrl',
+    });
     if (troffData.localInformation && troffData.localInformation.addedFromThisDevice) {
       log.d('setSong2: in if 1');
       newElem.setAttribute('src', songData);
@@ -551,7 +598,9 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
       (newElem as HTMLAudioElement).load();
       (newElem as HTMLAudioElement).pause();
     }
+    log.d('setSong2 safari preload complete', { path });
   } else {
+    log.d(`setting src to ${songData}`);
     //för vanlig linux, bäst att använda songData hela tiden :)
     newElem.setAttribute('src', songData);
   }
@@ -612,11 +661,21 @@ async function createSongAudio(path: string) {
       path
     );
   }
+  log.d('createSongAudio cacheImplementation.isSongV2 result', {
+    path,
+    isSongV2: songIsV2,
+    isSafari,
+  });
 
   if (songIsV2) {
     try {
       var songData = await cacheImplementation.getSong(path);
 
+      log.i('createSongAudio obtained media URL', {
+        path,
+        source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
+        urlScheme: songData.split(':', 1)[0],
+      });
       setSong2(path, songData);
     } catch (e) {
       log.e('error: No song selected yet: ', e);
@@ -624,6 +683,13 @@ async function createSongAudio(path: string) {
   } else {
     try {
       const v3SongObjectUrl = await fileHandler.getObjectUrlFromFile(path);
+
+      log.i('createSongAudio obtained media URL', {
+        path,
+        source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
+        urlScheme: v3SongObjectUrl.split(':', 1)[0],
+      });
+
       setSong2(path, v3SongObjectUrl);
     } catch (e) {
       errorHandler.fileHandler_sendFile(e, path);

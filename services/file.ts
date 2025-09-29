@@ -182,14 +182,34 @@ $(() => {
   };
 
   fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
+    log.i('-> fileHandler.fetchAndSaveResponse start', {
+      songKey,
+      fileUrl,
+      isSafari,
+    });
     const response = await fetch(fileUrl);
     if (!response.ok || response.body == null || response.headers == null) {
+      log.e('fileHandler.fetchAndSaveResponse fetch failed', {
+        songKey,
+        status: response.status,
+        statusText: response.statusText,
+        isSafari,
+      });
       throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
     }
     const contentLength = Number(response.headers.get('Content-Length'));
+    const headerContentType = response.headers.get('Content-Type');
+    log.d(`headerContentType ${headerContentType}`);
+    const contentType = headerContentType || 'application/octet-stream';
+    log.d(` contentLength: ${contentLength}, contentType: ${contentType}`);
     const reader = response.body.getReader();
     let receivedLength = 0; // received that many bytes at the moment
     const chunks = []; // array of received binary chunks (comprises the body)
+    log.d('fileHandler.fetchAndSaveResponse headers', {
+      songKey,
+      contentType,
+      contentLength,
+    });
     while (true) {
       const { done, value } = await reader.read();
 
@@ -204,7 +224,13 @@ $(() => {
         firebaseWrapper.onDownloadProgressUpdate(Math.floor(progress));
       }
     }
-    const blob = new Blob(chunks);
+    log.d('adding contentType to new Blob! lets hope this works!');
+    const blob = new Blob(chunks, { type: contentType });
+    log.d('fileHandler.fetchAndSaveResponse blob ready', {
+      songKey,
+      blobSize: blob.size,
+      contentType: blob.type,
+    });
     return fileHandler.saveResponse(new Response(blob, v3Init), songKey);
   };
 
@@ -234,7 +260,14 @@ $(() => {
 
   fileHandler.getObjectUrlFromFile = async (songKey) => {
     return caches.match(songKey).then((cachedResponse) => {
+      log.d('fileHandler.getObjectUrlFromFile cache match', {
+        songKey,
+        found: cachedResponse !== undefined,
+        isSafari,
+        navigatorOnLine: navigator.onLine,
+      });
       if (cachedResponse === undefined) {
+        log.w('fileHandler.getObjectUrlFromFile cache miss', { songKey, isSafari });
         throw new ShowUserException(`A problem occured with "${songKey}". Please try again.`);
       }
       return fileHandler.getObjectUrlFromResponse(cachedResponse, songKey);
@@ -373,7 +406,7 @@ $(() => {
             const downloadURL = await getDownloadURL(task.snapshot.ref);
             resolve(downloadURL);
           } catch {
-            log.e(error);
+            log.e('error:', error);
             reject(
               new ShowUserException(`Can not upload the file to the server.
               The server says: "${error.code}"`)
@@ -397,7 +430,7 @@ $(() => {
       await setDoc(doc(db, 'TroffData', String(troffData.id)), troffData);
       return troffData;
     } catch (error: any) {
-      log.e(error);
+      log.e('error: ', error);
       try {
         const troffDataInFirebase = await backendService.getTroffData(
           String(troffData.id),
