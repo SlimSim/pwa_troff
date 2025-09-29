@@ -583,6 +583,7 @@ function dataTableShowColumnsForFloatingState() {
 }
 
 function initSongTable() {
+  log.d('initSongTable ->');
   var dataSongTable: any,
     selectAllCheckbox = $(
       '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>'
@@ -675,9 +676,12 @@ function initSongTable() {
       event.dataTransfer.setData('jsonDataInfo', jsonDataInfo);
     })
     .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
+      log.d('on click tbody tr');
+      // onSongClick (not onSongLoad):
       const $td = $(event.target).closest('td, th');
 
       const songKey = $(event.currentTarget).data('song-key');
+      log.d('on click the tbody tr', { songKey });
 
       if ($td.hasClass('onClickOpenEditSongDialog')) {
         openEditSongDialog(songKey);
@@ -697,6 +701,7 @@ function initSongTable() {
 
       gtag('event', 'Change Song', { event_category: 'Perform change', event_label: '' });
 
+      log.d('DatasongTable on click: -> createSongAudio', { songKey });
       createSongAudio(songKey);
     });
 
