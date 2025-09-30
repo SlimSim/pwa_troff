@@ -58,7 +58,7 @@ import { TroffClass } from './scriptTroffClass.js';
 import { errorHandler, ShowUserException } from './scriptErrorHandler.js';
 import DBClass from './scriptDBClass.js';
 import { loadExternalHtml } from './utils/utils.js';
-import { isSafari, isIphone, isIpad, treatSafariDifferent, isPhone } from './utils/browserEnv.js';
+import { isSafari, isIphone, isIpad, treatSafariDifferent } from './utils/browserEnv.js';
 import IOClass from './ui/scriptIOClass.js';
 import RateClass from './scriptRateClass.js';
 import { addItem_NEW_2 } from './songManagement.js';
@@ -81,14 +81,6 @@ import {
  * Extend as needed without pulling in external types.
  */
 let firebaseUser: User | null = null;
-
-log.d('browser detection', {
-  isSafari: isSafari,
-  isIphone: isIphone,
-  isIpad: isIpad,
-  isPhone: isPhone,
-  treatSafariDifferent: treatSafariDifferent,
-});
 
 // replace your current init:
 SongToGroup.initiateFromDb();
