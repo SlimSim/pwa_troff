@@ -241,6 +241,7 @@ function addAudioToContentDiv() {
   var content_div = document.getElementById('content');
   var audio = document.createElement('audio');
   audio.addEventListener('loadedmetadata', () => {
+    // onSongLoad:
     log.d('Safari loadedmetadata', { duration: audio.duration, readyState: audio.readyState });
 
     Troff.setMetadata(audio);
@@ -272,6 +273,7 @@ function addVideoToContentDiv() {
   videoBox.setAttribute('id', 'videoBox');
 
   video.addEventListener('loadedmetadata', () => {
+    // onSongLoad:
     Troff.setMetadata(video);
     Troff.setAudioVideoLayout();
   });

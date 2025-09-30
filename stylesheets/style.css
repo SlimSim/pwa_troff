@@ -263,6 +263,7 @@ p, .notifyjs-corner span {
 .notifyjs-corner span {
 	padding: 4px 0;
 	font-weight: normal;
+    white-space: normal;
 }
 
 .normalSize{
