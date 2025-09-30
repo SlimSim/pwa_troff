@@ -676,6 +676,7 @@ function initSongTable() {
       event.dataTransfer.setData('jsonDataInfo', jsonDataInfo);
     })
     .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
+      Troff.iOSHasLoadedSong = true;
       log.d('on click tbody tr');
       // onSongClick (not onSongLoad):
       const $td = $(event.target).closest('td, th');
