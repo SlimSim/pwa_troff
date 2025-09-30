@@ -82,8 +82,6 @@ import {
  */
 let firebaseUser: User | null = null;
 
-let iOSHasLoadedSong = false;
-
 log.d('browser detection', {
   isSafari: isSafari,
   isIphone: isIphone,
@@ -495,7 +493,7 @@ const mergeSongListHistorys = function (
   return mergedSongList;
 };
 
-function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
+function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promise<void> {
   log.d(`-> path ${path} songData ${songData} isSafari ${isSafari}`);
 
   const canplay = false;
@@ -531,7 +529,7 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   if (!newElem) {
     log.e('setSong2: newElem is not defined!');
     IO.removeLoadScreen();
-    return;
+    return Promise.reject(new Error('newElem is not defined'));
   }
   // TODO: metadata? finns det något sätt jag kan få fram metadata från filerna?
   $('#currentPath').text(path);
@@ -608,23 +606,14 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   log.d(`setting src to ${songData}`);
   //för vanlig linux, bäst att använda songData hela tiden :)
   newElem.setAttribute('src', songData);
-  newElem.addEventListener(
-    'canplay',
-    () => {
-      log.d('canplay event fired - deferring markers', {
-        readyState: (newElem as HTMLAudioElement).readyState,
-        currentTime: (newElem as HTMLAudioElement).currentTime,
-      });
-    },
-    { once: true }
-  );
-  newElem.addEventListener(
-    'canplay',
-    () => log.d('canplay event', { readyState: (newElem as HTMLAudioElement).readyState }),
-    { once: true }
-  );
-  newElem.addEventListener('seeked', () => log.d('seeked event'));
-  newElem.addEventListener('seeking', () => log.d('seeking event'));
+
+  // newElem.addEventListener(
+  //   'canplay',
+  //   () => log.d('canplay event', { readyState: (newElem as HTMLAudioElement).readyState }),
+  //   { once: true }
+  // );
+  // newElem.addEventListener('seeked', () => log.d('seeked event'));
+  // newElem.addEventListener('seeking', () => log.d('seeking event'));
   // }
 
   const localInfo = nDB.get(path).localInformation || {};
@@ -634,6 +623,26 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string) {
   updateVersionLink(path);
 
   updateGroupNotification(path);
+
+  return new Promise((resolve, reject) => {
+    if (!newElem) {
+      reject(new Error('newElem is not defined in the final return!'));
+      return;
+    }
+    const timer = setTimeout(() => reject(new Error('Media load timeout')), 10000); // 10s timeout
+    newElem.addEventListener(
+      'canplay',
+      () => {
+        clearTimeout(timer);
+        log.d('canplay event fired - deferring markers', {
+          readyState: (newElem as HTMLAudioElement).readyState,
+          currentTime: (newElem as HTMLAudioElement).currentTime,
+        });
+        resolve();
+      },
+      { once: true }
+    );
+  });
 } //end setSong2
 
 function updateVersionLink(path: string) {
@@ -684,7 +693,7 @@ async function createSongAudio(path: string) {
       path
     );
   }
-  log.d('createSongAudio cacheImplementation.isSongV2 result', {
+  log.d('createSongAudio: cacheImplementation.isSongV2 result', {
     path,
     isSongV2: songIsV2,
     isSafari,
@@ -694,14 +703,19 @@ async function createSongAudio(path: string) {
     try {
       var songData = await cacheImplementation.getSong(path);
 
-      log.i('createSongAudio obtained media URL', {
+      log.i('createSongAudio: obtained media URL', {
         path,
         source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
         urlScheme: songData.split(':', 1)[0],
       });
-      setSong2(path, songData);
+      await setSong2(path, songData);
+      log.d('createSongAudio: setSong2 result', {
+        path,
+        source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
+        urlScheme: songData.split(':', 1)[0],
+      });
     } catch (e) {
-      log.e('error: No song selected yet: ', e);
+      log.e('createSongAudio:error: No song selected yet: ', e);
     }
   } else {
     try {
@@ -713,7 +727,7 @@ async function createSongAudio(path: string) {
         urlScheme: v3SongObjectUrl.split(':', 1)[0],
       });
 
-      setSong2(path, v3SongObjectUrl);
+      await setSong2(path, v3SongObjectUrl);
     } catch (e) {
       errorHandler.fileHandler_sendFile(e, path);
     }
