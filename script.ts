@@ -37,7 +37,6 @@ import {
   getDoc,
 } from './services/firebaseClient.js';
 import {
-  initSongTable,
   closeSongDialog,
   getFileType,
   clearContentDiv,
@@ -75,6 +74,7 @@ import {
   TroffHtmlMarkerElement,
   TroffSongIdentifyer_sk,
 } from './types/troff.js';
+import { initSongTable } from './dataTable.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.

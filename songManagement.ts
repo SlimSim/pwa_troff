@@ -34,6 +34,7 @@ import { DB } from './script.js';
 import { st } from './assets/internal/st-script.js';
 import { SongToGroup } from './scriptASimple.js';
 import { TroffObjectLocal } from 'types/troff.js';
+import { nDB } from './assets/internal/db.js';
 
 /**
  * @param {string} key
@@ -150,4 +151,25 @@ function addItem_NEW_2(key: string): void {
   }); // end DB.getVal
 }
 
-export { addItem_NEW_2 };
+function openEditSongDialog(songKey: string) {
+  let fileData = nDB.get(songKey).fileData;
+
+  if (fileData == undefined) {
+    fileData = DB.fixSongObject();
+  }
+
+  $('#editSongDialog').removeClass('hidden');
+
+  $('#editSongFile').val(songKey);
+  $('#editSongCustomName').val(fileData.customName);
+  $('#editSongChoreography').val(fileData.choreography);
+  $('#editSongChoreographer').val(fileData.choreographer);
+  $('#editSongTitle').val(fileData.title);
+  $('#editSongArtist').val(fileData.artist);
+  $('#editSongAlbum').val(fileData.album);
+  $('#editSongGenre').val(fileData.genre);
+  $('#editSongTags').val(fileData.tags);
+  Troff.onEditUpdateName();
+}
+
+export { addItem_NEW_2, openEditSongDialog };
