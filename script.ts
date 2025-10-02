@@ -488,8 +488,6 @@ const mergeSongListHistorys = function (
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promise<void> {
   log.d(`-> path ${path} songData ${songData} isSafari ${isSafari}`);
 
-  const canplay = false;
-
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {

@@ -97,7 +97,7 @@ const commonCode = () => {
     filename = file?.split('/')?.pop() || '-';
     lineNr = line || '-';
   } else if (safariMatch) {
-    const [, func, file, line] = safariMatch;
+    const [, func, file, _line] = safariMatch;
     functionName = func?.trim() || '-';
     filename = file?.split('/')?.pop() || '-';
     lineNr = '-';
