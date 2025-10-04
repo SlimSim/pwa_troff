@@ -75,6 +75,7 @@ import {
   TroffSongIdentifyer_sk,
 } from './types/troff.js';
 import { initSongTable } from './dataTable.js';
+import { sleep } from './utils/timeHack.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
@@ -367,32 +368,30 @@ const getFirebaseGroupDataFromDialog = function (forceUserEmail: boolean) {
   return groupData;
 };
 
-const onOnline = function () {
-  // this timeOut is because I want to wait untill possible existing
+const onOnline = async function () {
+  // this async sleep is because I want to wait untill possible existing
   // firestore updates get synced to the ego-computer.
-  // because then Ego-offline-changes should be overwritten.
-  setTimeout(() => {
-    const changedSongList: TroffSongIdentifyer_sk[] =
-      nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
-    // This is to send local changes IF the server does NOT
-    // have new updates
-    changedSongList.forEach((changedSong) => {
-      // firebase
-      //   .firestore()
-      //   .collection("Groups")
-      //   .doc(changedSong.groupDocId)
-      //   .collection("Songs")
-      //   .doc(changedSong.songDocId)
-      //   .get()
-      //   .then(songDocUpdate);
-      // There is 2 callbacks,
-      // it is because firebase is beign updated and the
-      // it sends out the update-calblack, so all in good order!
-      getDoc(doc(db, 'Groups', changedSong.groupDocId, 'Songs', changedSong.songDocId)).then(
-        songDocUpdate
-      );
-    });
-  }, 42);
+  // because then Ego-offline-changes should be overwritten:
+  await sleep(42);
+  const changedSongList: TroffSongIdentifyer_sk[] = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+  // This is to send local changes IF the server does NOT
+  // have new updates
+  changedSongList.forEach((changedSong) => {
+    // firebase
+    //   .firestore()
+    //   .collection("Groups")
+    //   .doc(changedSong.groupDocId)
+    //   .collection("Songs")
+    //   .doc(changedSong.songDocId)
+    //   .get()
+    //   .then(songDocUpdate);
+    // There is 2 callbacks,
+    // it is because firebase is beign updated and the
+    // it sends out the update-calblack, so all in good order!
+    getDoc(doc(db, 'Groups', changedSong.groupDocId, 'Songs', changedSong.songDocId)).then(
+      songDocUpdate
+    );
+  });
 };
 
 /*
@@ -624,10 +623,6 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
       'canplay',
       () => {
         clearTimeout(timer);
-        log.d('canplay event fired - deferring markers', {
-          readyState: (newElem as HTMLAudioElement).readyState,
-          currentTime: (newElem as HTMLAudioElement).currentTime,
-        });
         resolve();
       },
       { once: true }
@@ -787,44 +782,37 @@ $(document).ready(async function () {
     $('#TROFF_SETTING_UI_VOLUME_SLIDER_SHOW').removeClass('active');
   }
 
-  setTimeout(() => {
-    // don't show tha load-screen for more than 10-seconds
-    // (so that it will be removed even if something breaks)
-    IO.removeLoadScreen();
-  }, 10000);
+  IO.removeLoadScreenSoon();
 
   // include external HTML-files:
-
   const includes = $('[data-include]');
-  loadExternalHtml(includes, async function () {
-    initSongTable();
+  await loadExternalHtml(includes); //, async function () {
 
-    DB.cleanDB();
-    DB.getAllSonglists();
-    DB.getZoomDontShowAgain();
-    IO.startFunc();
-    Rate.startFunc();
+  initSongTable();
 
-    Troff.initFileApiImplementation();
-    Troff.recallCurrentStateOfSonglists();
+  await DB.cleanDB();
+  DB.getAllSonglists();
+  DB.getZoomDontShowAgain();
+  IO.startFunc();
+  Rate.startFunc();
 
-    DB.getShowSongDialog();
-    initEnvironment();
+  await Troff.initFileApiImplementation();
+  Troff.recallCurrentStateOfSonglists();
 
-    Troff.checkHashAndGetSong();
+  DB.getShowSongDialog();
+  initEnvironment();
 
-    firebaseWrapper.onUploadProgressUpdate = function (progress) {
-      $('#uploadPercentDone').text(Math.trunc(progress));
-    };
-    firebaseWrapper.onDownloadProgressUpdate = function (progress) {
-      $('#downloadPercentDone').text(Math.trunc(progress));
-    };
-  });
+  firebaseWrapper.onUploadProgressUpdate = function (progress) {
+    $('#uploadPercentDone').text(Math.trunc(progress));
+  };
+  firebaseWrapper.onDownloadProgressUpdate = function (progress) {
+    $('#downloadPercentDone').text(Math.trunc(progress));
+  };
+
+  await Troff.checkHashAndGetSong();
 });
 
 function initEnvironment() {
-  'use strict';
-
   $.getJSON('manifest.json', function (manifest) {
     $('.app-version-number').text(manifest.version);
     log.i('manifest.version', manifest.version);

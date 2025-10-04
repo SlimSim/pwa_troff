@@ -213,7 +213,7 @@ class TroffClass {
     $('#addAddedSongsToSongList_songs').empty();
   };
 
-  initFileApiImplementation = () => {
+  initFileApiImplementation = async () => {
     log.d('initFileApiImplementation ->');
     $('#fileUploader').on('change', (event) => {
       const files = (event.target as HTMLInputElement).files;
@@ -246,9 +246,8 @@ class TroffClass {
     });
 
     //loadAllFiles:
-    cacheImplementation.getAllKeys().then((keys) => {
-      keys.forEach(addItem_NEW_2);
-    });
+    const keys = await cacheImplementation.getAllKeys();
+    keys.forEach(addItem_NEW_2);
   };
 
   setUrlToSong = (serverId: string | undefined, fileName: string | null) => {
@@ -1936,50 +1935,50 @@ class TroffClass {
   };
 
   recallCurrentStateOfSonglists = () => {
-    DB.getVal('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT', (isAdditiveSelect) => {
-      DB.getVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, (o: TroffStateOfSonglists) => {
-        var indicatorClass = isAdditiveSelect ? 'active' : 'selected';
+    const isAdditiveSelect = nDB.get('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT') as boolean;
+    const o: TroffStateOfSonglists = nDB.get(
+      TROFF_CURRENT_STATE_OF_SONG_LISTS
+    ) as TroffStateOfSonglists;
+    var indicatorClass = isAdditiveSelect ? 'active' : 'selected';
 
-        $('#songListAll').removeClass('selected');
+    $('#songListAll').removeClass('selected');
 
-        o.directoryList.forEach((v) => {
-          $('#directoryList')
-            .find('[data-gallery-id=' + v.galleryId + ']')
-            .each((inner_index, inner_value) => {
-              if ($(inner_value).data('full-path') == v.fullPath) {
-                $(inner_value).addClass(indicatorClass);
-                $('#songListAll').removeClass('selected');
-              }
-            });
-        });
-        o.galleryList.forEach((v) => {
-          $('#galleryList')
-            .find('[data-gallery-id=' + v + ']')
-            .addClass(indicatorClass);
-          $('#songListAll').removeClass('selected');
-        });
-        o.songListList.forEach((v) => {
-          $('#songListList')
-            .find('[data-songlist-id=' + v + ']')
-            .addClass(indicatorClass);
-          $('#songListAll').removeClass('selected');
-
-          if (!isAdditiveSelect) {
-            const songListData = $('#songListList')
-              .find('[data-songlist-id=' + v + ']')
-              .data('songList');
-            if (songListData != undefined) {
-              $('#headArea').addClass(songListData.color);
-              $('#songlistIcon').addClass(songListData.icon);
-              $('#songlistName').text(songListData.name);
-              $('#songlistInfo').removeClass('hidden').text(songListData.info);
-            }
+    o.directoryList.forEach((v) => {
+      $('#directoryList')
+        .find('[data-gallery-id=' + v.galleryId + ']')
+        .each((inner_index, inner_value) => {
+          if ($(inner_value).data('full-path') == v.fullPath) {
+            $(inner_value).addClass(indicatorClass);
+            $('#songListAll').removeClass('selected');
           }
         });
-
-        filterSongTable(getFilterDataList());
-      });
     });
+    o.galleryList.forEach((v) => {
+      $('#galleryList')
+        .find('[data-gallery-id=' + v + ']')
+        .addClass(indicatorClass);
+      $('#songListAll').removeClass('selected');
+    });
+    o.songListList.forEach((v) => {
+      $('#songListList')
+        .find('[data-songlist-id=' + v + ']')
+        .addClass(indicatorClass);
+      $('#songListAll').removeClass('selected');
+
+      if (!isAdditiveSelect) {
+        const songListData = $('#songListList')
+          .find('[data-songlist-id=' + v + ']')
+          .data('songList');
+        if (songListData != undefined) {
+          $('#headArea').addClass(songListData.color);
+          $('#songlistIcon').addClass(songListData.icon);
+          $('#songlistName').text(songListData.name);
+          $('#songlistInfo').removeClass('hidden').text(songListData.info);
+        }
+      }
+    });
+
+    filterSongTable(getFilterDataList());
   };
 
   saveCurrentStateOfSonglists = () => {
@@ -3224,6 +3223,7 @@ class TroffClass {
   /* end standAlone Functions */
 
   checkHashAndGetSong = async () => {
+    console.log('xx: old checkHashAndGetSong');
     if (window.location.hash) {
       log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
       try {
@@ -3236,6 +3236,46 @@ class TroffClass {
       DB.getCurrentSong();
     }
   };
+
+  // Grok's sugestion:
+  // checkHashAndGetSong = async () => {
+  //   if (!window.location.hash) {
+  //     DB.getCurrentSong();
+  //     return;
+  //   }
+
+  //   log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
+  //   const parts = window.location.hash.substr(1).split('&');
+  //   const songName = decodeURIComponent(parts[1]);
+
+  //   if (this.strCurrentSong == songName) {
+  //     log.d('Song already loaded:', songName);
+  //     return;
+  //   }
+
+  //   try {
+  //     await this.downloadSongFromServer(window.location.hash);
+  //   } catch (e) {
+  //     log.e('error on downloadSongFromServer:', e);
+  //     DB.getCurrentSong();
+  //   }
+  // };
+
+  // my refactoring
+  // checkHashAndGetSong = async () => {
+  //   if (!window.location.hash) {
+  //     DB.getCurrentSong();
+  //     return;
+  //   }
+
+  //   log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
+  //   try {
+  //     await this.downloadSongFromServer(window.location.hash);
+  //   } catch (e) {
+  //     log.e('error on downloadSongFromServer:', e);
+  //     DB.getCurrentSong();
+  //   }
+  // };
 } // end TroffClass
 
 export { TroffClass, clickSongList_NEW };

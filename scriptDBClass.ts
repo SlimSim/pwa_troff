@@ -191,114 +191,110 @@ class DBClass {
    * @returns {void}
    */
   cleanDB = () => {
-    nDBc.getAllKeys((allKeys) => {
-      if (allKeys.length === 0) {
-        // This is the first time Troff is started:
-        DB.saveSonglists_new();
-      }
+    const allKeys = nDB.getAllKeys();
+    if (allKeys.length === 0) {
+      // This is the first time Troff is started:
+      DB.saveSonglists_new();
+    }
 
-      // These is for the first time Troff is started:
-      if (allKeys.indexOf('straoSongLists') === -1) DB.saveSonglists_new();
-      if (allKeys.indexOf('zoomDontShowAgain') === -1) {
-        nDB.set('zoomDontShowAgain', false);
-      }
+    // These is for the first time Troff is started:
+    if (allKeys.indexOf('straoSongLists') === -1) DB.saveSonglists_new();
+    if (allKeys.indexOf('zoomDontShowAgain') === -1) {
+      nDB.set('zoomDontShowAgain', false);
+    }
 
-      DB.fixDefaultValue(allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true);
+    DB.fixDefaultValue(allKeys, TROFF_SETTING_SHOW_SONG_DIALOG, true);
 
-      const columnToggleList: any = {};
-      DATA_TABLE_COLUMNS.list.forEach((v) => {
-        columnToggleList[v.id] = (v.default as any) == 'true' || v.default == true;
-      });
+    const columnToggleList: any = {};
+    DATA_TABLE_COLUMNS.list.forEach((v) => {
+      columnToggleList[v.id] = (v.default as any) == 'true' || v.default == true;
+    });
 
-      /*
-				This following if is ONLY to ease the transition from TROFF_SETTING_SONG_COLUMN_TOGGLE as an array to an object.
-				Can be removed after user have opened the app with this code once...
-			*/
-      if (nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE) != null) {
-        if (nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE).constructor.name == 'Array') {
-          /** @type {any[]} */
-          const previousColumnToggleList = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
+    /*
+      This following if is ONLY to ease the transition from TROFF_SETTING_SONG_COLUMN_TOGGLE as an array to an object.
+      Can be removed after user have opened the app with this code once...
+    */
+    if (nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE) != null) {
+      if (nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE).constructor.name == 'Array') {
+        /** @type {any[]} */
+        const previousColumnToggleList = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
 
-          const newColumnToggle: ColumnToggleMap = {
-            CHECKBOX: previousColumnToggleList[0],
-            TYPE: previousColumnToggleList[1],
-            DURATION: previousColumnToggleList[2],
-            DISPLAY_NAME: previousColumnToggleList[3],
-            TITLE: previousColumnToggleList[4],
-            ARTIST: previousColumnToggleList[5],
-            ALBUM: previousColumnToggleList[6],
-            TEMPO: previousColumnToggleList[7],
-            GENRE: previousColumnToggleList[8],
-            LAST_MODIFIED: previousColumnToggleList[10],
-            FILE_SIZE: previousColumnToggleList[11],
-            INFO: previousColumnToggleList[12],
-            EXTENSION: previousColumnToggleList[13],
-          };
-
-          nDB.set(TROFF_SETTING_SONG_COLUMN_TOGGLE, newColumnToggle);
-        }
-      }
-
-      DB.fixDefaultValue(allKeys, TROFF_SETTING_SONG_COLUMN_TOGGLE, columnToggleList);
-
-      if (allKeys.indexOf(TROFF_CURRENT_STATE_OF_SONG_LISTS) == -1) {
-        Troff.saveCurrentStateOfSonglists();
-      }
-
-      /**
-       * @param {string} key
-       * @param {(key: string, val: any) => void} [prepFunc]
-       * @returns {void}
-       */
-      const ifExistsPrepAndThenRemove = (
-        key: string,
-        prepFunc?: (key: string, val: any) => void
-      ) => {
-        var keyIndex = allKeys.indexOf(key);
-        if (keyIndex !== -1) {
-          if (prepFunc != null) {
-            prepFunc(key, nDB.get(key));
-          }
-          nDB.delete(key);
-          allKeys.splice(keyIndex, 1);
-        }
-      };
-
-      ifExistsPrepAndThenRemove('iCurrentSonglist', (key, val) => {
-        var o: TroffStateOfSonglists = {
-          songListList: val == 0 ? [] : [val.toString()],
-          galleryList: [],
-          directoryList: [],
+        const newColumnToggle: ColumnToggleMap = {
+          CHECKBOX: previousColumnToggleList[0],
+          TYPE: previousColumnToggleList[1],
+          DURATION: previousColumnToggleList[2],
+          DISPLAY_NAME: previousColumnToggleList[3],
+          TITLE: previousColumnToggleList[4],
+          ARTIST: previousColumnToggleList[5],
+          ALBUM: previousColumnToggleList[6],
+          TEMPO: previousColumnToggleList[7],
+          GENRE: previousColumnToggleList[8],
+          LAST_MODIFIED: previousColumnToggleList[10],
+          FILE_SIZE: previousColumnToggleList[11],
+          INFO: previousColumnToggleList[12],
+          EXTENSION: previousColumnToggleList[13],
         };
-        DB.saveVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, o);
-      });
 
-      ifExistsPrepAndThenRemove('abGeneralAreas', (key, val) => {
-        var abGeneralAreas = JSON.parse(val);
-        var showSongListArea = abGeneralAreas[0];
-        var showSongArea = abGeneralAreas[1];
+        nDB.set(TROFF_SETTING_SONG_COLUMN_TOGGLE, newColumnToggle);
+      }
+    }
 
-        if (showSongListArea) {
-          clickAttachedSongListToggle();
+    DB.fixDefaultValue(allKeys, TROFF_SETTING_SONG_COLUMN_TOGGLE, columnToggleList);
+
+    if (allKeys.indexOf(TROFF_CURRENT_STATE_OF_SONG_LISTS) == -1) {
+      Troff.saveCurrentStateOfSonglists();
+    }
+
+    /**
+     * @param {string} key
+     * @param {(key: string, val: any) => void} [prepFunc]
+     * @returns {void}
+     */
+    const ifExistsPrepAndThenRemove = (key: string, prepFunc?: (key: string, val: any) => void) => {
+      var keyIndex = allKeys.indexOf(key);
+      if (keyIndex !== -1) {
+        if (prepFunc != null) {
+          prepFunc(key, nDB.get(key));
         }
-        if (showSongArea) {
-          openSongDialog();
-        } else {
-          closeSongDialog();
-        }
-      });
+        nDB.delete(key);
+        allKeys.splice(keyIndex, 1);
+      }
+    };
 
-      ifExistsPrepAndThenRemove('TROFF_CORE_VERSION_NUMBER');
-      ifExistsPrepAndThenRemove('TROFF_STYLE_ASSETS_VERSION_NUMBER');
-      ifExistsPrepAndThenRemove('TROFF_INCLUDE_ASSETS_VERSION_NUMBER');
-      ifExistsPrepAndThenRemove('TROFF_APP_ASSETS_VERSION_NUMBER');
-      ifExistsPrepAndThenRemove('TROFF_INTERNAL_ASSETS_VERSION_NUMBER');
-      ifExistsPrepAndThenRemove('TROFF_EXTERNAL_ASSETS_VERSION_NUMBER');
+    ifExistsPrepAndThenRemove('iCurrentSonglist', (key, val) => {
+      var o: TroffStateOfSonglists = {
+        songListList: val == 0 ? [] : [val.toString()],
+        galleryList: [],
+        directoryList: [],
+      };
+      DB.saveVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, o);
+    });
 
-      allKeys.forEach((key: string) => {
-        DB.cleanSong(key, nDB.get(key));
-      });
-    }); //end get all keys
+    ifExistsPrepAndThenRemove('abGeneralAreas', (key, val) => {
+      var abGeneralAreas = JSON.parse(val);
+      var showSongListArea = abGeneralAreas[0];
+      var showSongArea = abGeneralAreas[1];
+
+      if (showSongListArea) {
+        clickAttachedSongListToggle();
+      }
+      if (showSongArea) {
+        openSongDialog();
+      } else {
+        closeSongDialog();
+      }
+    });
+
+    ifExistsPrepAndThenRemove('TROFF_CORE_VERSION_NUMBER');
+    ifExistsPrepAndThenRemove('TROFF_STYLE_ASSETS_VERSION_NUMBER');
+    ifExistsPrepAndThenRemove('TROFF_INCLUDE_ASSETS_VERSION_NUMBER');
+    ifExistsPrepAndThenRemove('TROFF_APP_ASSETS_VERSION_NUMBER');
+    ifExistsPrepAndThenRemove('TROFF_INTERNAL_ASSETS_VERSION_NUMBER');
+    ifExistsPrepAndThenRemove('TROFF_EXTERNAL_ASSETS_VERSION_NUMBER');
+
+    allKeys.forEach((key: string) => {
+      DB.cleanSong(key, nDB.get(key));
+    });
   };
 
   /**
@@ -333,7 +329,6 @@ class DBClass {
     for (i = 0; i < aDOMSonglist.length; i++) {
       aoSonglists.push(aDOMSonglist.eq(i).data('songList'));
     }
-    console.log('aoSonglists', aoSonglists);
 
     var straoSonglists = JSON.stringify(aoSonglists);
     nDB.set('straoSongLists', straoSonglists);
@@ -377,53 +372,53 @@ class DBClass {
 
   /** @returns {void} */
   getZoomDontShowAgain = () => {
-    nDBc.get('zoomDontShowAgain', (value) => {
-      var bZoomDontShowAgain = value || false;
-      Troff.dontShowZoomInstructions = bZoomDontShowAgain;
-    });
+    const value = nDB.get('zoomDontShowAgain');
+    var bZoomDontShowAgain = value || false;
+    Troff.dontShowZoomInstructions = bZoomDontShowAgain;
   };
 
   getAllSonglists = () => {
-    nDBc.get('straoSongLists', (straoSongLists) => {
-      if (straoSongLists == undefined) {
-        straoSongLists = [];
-      }
+    const straoSongLists = nDB.get('straoSongLists') || [];
 
-      Troff.setSonglists_NEW(JSON.parse(straoSongLists));
-    });
+    Troff.setSonglists_NEW(JSON.parse(straoSongLists));
   };
+  // getAllSonglists_deprecated = () => {
+  //   nDBc.get('straoSongLists', (straoSongLists) => {
+  //     if (straoSongLists == undefined) {
+  //       straoSongLists = [];
+  //     }
+
+  //     Troff.setSonglists_NEW(JSON.parse(straoSongLists));
+  //   });
+  // };
 
   /** @returns {void} */
   getShowSongDialog = () => {
-    DB.getVal(TROFF_SETTING_SHOW_SONG_DIALOG, (val) => {
-      if (val === undefined) {
-        setTimeout(() => {
-          DB.getShowSongDialog();
-        }, 42);
-      }
+    const val = nDB.get(TROFF_SETTING_SHOW_SONG_DIALOG);
+    if (val == null) {
+      throw new Error(
+        `getShowSongDialog: DB.getVal(${TROFF_SETTING_SHOW_SONG_DIALOG}) gives: val == null!`
+      );
+    }
 
-      if (val) {
-        setTimeout(() => {
-          openSongDialog();
-        }, 42);
-      }
-    });
+    if (val) {
+      openSongDialog();
+    }
   };
 
   /** @returns {void} */
   getCurrentSong = () => {
-    nDBc.get('stroCurrentSongPathAndGalleryId', (stroSong) => {
-      if (!stroSong) {
-        Troff.setAreas([false, false, false, false]);
-        IO.removeLoadScreen();
-        return;
-      }
-      var oSong = JSON.parse(/** @type {string} */ stroSong);
-      Troff.setCurrentSongStrings(oSong.strPath, oSong.iGalleryId);
+    const stroSong = nDB.get('stroCurrentSongPathAndGalleryId');
+    if (!stroSong) {
+      Troff.setAreas([false, false, false, false]);
+      IO.removeLoadScreen();
+      return;
+    }
+    var oSong = JSON.parse(/** @type {string} */ stroSong);
+    Troff.setCurrentSongStrings(oSong.strPath, oSong.iGalleryId);
 
-      log.d('getCurrentSong: -> createSongAudio');
-      createSongAudio(oSong.strPath);
-    });
+    log.d('getCurrentSong: -> createSongAudio');
+    createSongAudio(oSong.strPath);
   };
 
   /**

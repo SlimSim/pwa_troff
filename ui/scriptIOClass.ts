@@ -21,6 +21,7 @@ import { clickSongList_NEW } from '../scriptTroffClass.js';
 import log from '../utils/log.js';
 import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { IOInput } from 'types/io.js';
+import { sleep } from '../utils/timeHack.js';
 
 class IOClass {
   IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
@@ -88,6 +89,12 @@ class IOClass {
   openWindow = (event: JQuery.TriggeredEvent) => {
     const $button = $(event.target).closest('[data-href]');
     window.open($button.data('href'), $button.data('target'));
+  };
+
+  removeLoadScreenSoon = () => {
+    sleep(10000).then(() => {
+      this.removeLoadScreen();
+    });
   };
 
   removeLoadScreen = () => {
