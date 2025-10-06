@@ -56,7 +56,12 @@ const loadExternalHtml = (includes: JQuery<HTMLElement>): Promise<void> => {
 //   });
 // };
 
+const blurHack = () => {
+  document.getElementById('blur-hack')?.focus({ preventScroll: true });
+};
+
 export {
+  blurHack,
   escapeRegExp,
   loadExternalHtml,
   getFileExtension,

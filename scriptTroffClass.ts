@@ -45,7 +45,7 @@ import { gtag } from './services/analytics.js';
 import { isSafari } from './utils/browserEnv.js';
 import { errorHandler } from './scriptErrorHandler.js';
 import log from './utils/log.js';
-import { removeLocalInfo } from './utils/utils.js';
+import { blurHack, removeLocalInfo } from './utils/utils.js';
 import {
   TROFF_SETTING_SET_THEME,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
@@ -82,7 +82,7 @@ import {
 import { IOInput } from './types/io.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
-  IO.blurHack();
+  blurHack();
   var $target = $(event.target),
     data = $target.data('songList'),
     galleryId = $target.attr('data-gallery-id');
@@ -687,7 +687,7 @@ class TroffClass {
     IO.setEnterFunction((event: KeyboardEvent) => {
       if (event.ctrlKey) {
         //Ctrl+Enter will exit
-        IO.blurHack();
+        blurHack();
         return false;
       }
       return true;
@@ -859,7 +859,7 @@ class TroffClass {
     var bFullScreen = butt.classList.contains('active');
     DB.setCurrent(this.strCurrentSong, 'bPlayInFullscreen', bFullScreen);
 
-    IO.blurHack();
+    blurHack();
   };
 
   mirrorImageChanged = (event: JQuery.ClickEvent) => {
@@ -867,7 +867,7 @@ class TroffClass {
     DB.setCurrent(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
     this.setMirrorImage(bMirrorImage);
 
-    IO.blurHack();
+    blurHack();
   };
 
   setImageLayout = () => {
@@ -1127,7 +1127,7 @@ class TroffClass {
     });
 
     this.updateLoopTimes();
-    IO.blurHack();
+    blurHack();
   };
 
   updateLoopTimes = () => {
@@ -1281,7 +1281,7 @@ class TroffClass {
     } else {
       this.pauseSong(updateLoopTimes);
     }
-    IO.blurHack();
+    blurHack();
   }; // end spaceOrEnter()
 
   playSong = (wait?: number) => {
@@ -1551,11 +1551,10 @@ class TroffClass {
     importSonginfo(oImport.strSongInfo);
     importStates(oImport.aoStates);
 
-    DB.saveMarkers(this.getCurrentSong(), () => {
-      DB.saveStates(this.getCurrentSong(), () => {
-        this.updateSongInfo();
-      });
-    });
+    DB.saveMarkers(this.getCurrentSong());
+
+    DB.saveStates(this.getCurrentSong());
+    this.updateSongInfo();
 
     function importSonginfo(strSongInfo: string) {
       $('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
@@ -1628,11 +1627,11 @@ class TroffClass {
 
   toggleImportExport = () => {
     $('#outerImportExportPopUpSquare').toggleClass('hidden');
-    IO.blurHack();
+    blurHack();
   };
 
   toggleArea = (event: JQuery.ClickEvent) => {
-    IO.blurHack();
+    blurHack();
 
     var sectionToHide = $(event.target).attr('section-to-hide');
 
@@ -2029,7 +2028,7 @@ class TroffClass {
     IO.setEnterFunction((event) => {
       if (event.ctrlKey) {
         //Ctrl+Enter will exit
-        IO.blurHack();
+        blurHack();
         return false;
       }
       return true;
@@ -2050,7 +2049,7 @@ class TroffClass {
   rememberCurrentState = () => {
     if ($('#statesTab').hasClass('hidden')) return;
 
-    IO.blurHack();
+    blurHack();
     var nrStates = $('#stateList').children().length + 1;
     IO.prompt(
       'Remember state of settings to be recalled later',
@@ -2192,7 +2191,7 @@ class TroffClass {
         if (event.ctrlKey) {
           //Ctrl+Enter will exit
           $input.val('').trigger('click');
-          IO.blurHack();
+          blurHack();
           return false;
         }
 
@@ -2204,7 +2203,7 @@ class TroffClass {
           .to$()
           .removeClass('important');
 
-        IO.blurHack();
+        blurHack();
         return true;
       },
       (event) => {
@@ -2237,7 +2236,7 @@ class TroffClass {
       .removeClass('important');
 
     IO.clearEnterFunction();
-    IO.blurHack();
+    blurHack();
   };
 
   showSearchAndActivate = () => {
@@ -2257,7 +2256,7 @@ class TroffClass {
     IO.setEnterFunction((event) => {
       if (event.ctrlKey) {
         //Ctrl+Enter will exit
-        IO.blurHack();
+        blurHack();
         return false;
       }
       return true;
@@ -2284,15 +2283,15 @@ class TroffClass {
   addMarkers = (aMarkers: TroffMarker[]) => {
     var startM = (event: MouseEvent) => {
       this.selectMarker((event.currentTarget as HTMLInputElement).id);
-      IO.blurHack();
+      blurHack();
     };
     var stopM = (event: MouseEvent) => {
       this.selectStopMarker((event.currentTarget as HTMLInputElement).id);
-      IO.blurHack();
+      blurHack();
     };
     var editM = (event: MouseEvent) => {
       this.editMarker((event.currentTarget as HTMLInputElement).id.slice(0, -1));
-      IO.blurHack();
+      blurHack();
     };
 
     for (var i = 0; i < aMarkers.length; i++) {
@@ -2428,7 +2427,7 @@ class TroffClass {
     $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
-    IO.blurHack();
+    blurHack();
 
     if (!startMarkerId || !stopMarkerId) return;
 
@@ -2444,7 +2443,7 @@ class TroffClass {
     $('#markerInfoArea').val(($('#' + startMarkerId)[0] as any).info);
 
     this.setAppropriateActivePlayRegion();
-    IO.blurHack();
+    blurHack();
     if (!startMarkerId) return;
     DB.setCurrentStartMarker(startMarkerId, this.strCurrentSong);
   };
@@ -2457,7 +2456,7 @@ class TroffClass {
     $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
-    IO.blurHack();
+    blurHack();
     DB.setCurrentStopMarker(stopMarkerId, this.strCurrentSong);
   };
 
@@ -2562,7 +2561,7 @@ class TroffClass {
 
   toggleMoveMarkersMoreInfo = () => {
     $('#moveMarkersMoreInfoDialog').toggleClass('hidden');
-    IO.blurHack();
+    blurHack();
   };
 
   /*
@@ -2680,7 +2679,7 @@ class TroffClass {
     $('#copyMarkersNrOfMarkers').text(this.getNrOfSelectedMarkers());
     $('#copyMarkersNumber').select();
     IO.setEnterFunction(() => {
-      IO.blurHack();
+      blurHack();
       this.copyMarkers();
       return false;
     });
@@ -3091,12 +3090,12 @@ class TroffClass {
   };
 
   zoomOut = () => {
-    IO.blurHack();
+    blurHack();
     this.zoom(0, Number((document.getElementById('timeBar') as HTMLInputElement).max));
   };
 
   zoomToMarker = () => {
-    IO.blurHack();
+    blurHack();
     var startTime = this.getStartTime();
     var endTime = this.getStopTime();
     if (startTime === this.m_zoomStartTime && endTime == this.m_zoomEndTime) {
@@ -3157,7 +3156,7 @@ class TroffClass {
   tapTime = () => {
     this.previousTime = this.time;
     this.time = new Date().getTime() / 1000;
-    IO.blurHack();
+    blurHack();
 
     if (this.time - this.previousTime > 3) {
       this.startTime = this.previousTime = this.time;

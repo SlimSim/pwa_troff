@@ -124,15 +124,4 @@ const nDB = {
   },
 };
 
-const nDBc = {
-  //new data base callback
-
-  get: function (key: string, callback: (value: any) => void): void {
-    callback(nDB.get(key));
-  },
-  getAllKeys: function (callback: (keys: string[]) => void): void {
-    callback(nDB.getAllKeys());
-  },
-};
-
-export { nDB, nDBc };
+export { nDB };

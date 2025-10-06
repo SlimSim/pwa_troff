@@ -1,3 +1,4 @@
+import { blurHack } from './utils/utils.js';
 import { nDB } from './assets/internal/db.js';
 import { IO } from './script.js';
 import { Troff, Rate } from './script.js';
@@ -143,21 +144,21 @@ class RateClass {
   };
 
   rateDialogNoThanks = (): void => {
-    IO.blurHack();
+    blurHack();
     IO.clearEnterFunction();
     $('#rateDialog').addClass('hidden');
     nDB.set('iRatedStatus', this.RATED_STATUS_NO_THANKS);
   };
 
   rateDialogAskLater = (): void => {
-    IO.blurHack();
+    blurHack();
     IO.clearEnterFunction();
     $('#rateDialog').addClass('hidden');
     nDB.set('iRatedStatus', this.RATED_STATUS_ASK_LATER);
   };
 
   rateDialogRateNow = (): void => {
-    IO.blurHack();
+    blurHack();
     IO.clearEnterFunction();
     $('#rateDialog').addClass('hidden');
     nDB.set('iRatedStatus', this.RATED_STATUS_ALREADY_RATED);

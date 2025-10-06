@@ -1,6 +1,6 @@
 /* eslint eqeqeq: "off" */
 // @ts-check
-import { nDB, nDBc } from './assets/internal/db.js';
+import { nDB } from './assets/internal/db.js';
 import { DB, createSongAudio } from './script.js';
 import { IO, ifGroupSongUpdateFirestore, updateVersionLink } from './script.js';
 import { Troff } from './script.js';
@@ -333,21 +333,20 @@ class DBClass {
    * @returns {void}
    */
   setCurrentAreas = (songId: string) => {
-    nDBc.get(songId, (song: TroffObjectLocal) => {
-      if (!song) {
-        log.e('Error "setCurrentAreas, noSong" occurred, songId=' + songId);
-        return;
-        //TODO: replace return with song = DB.fixSongObject(); (and test)
-      }
-      song.abAreas = [
-        $('#statesTab').hasClass('active'),
-        $('#settingsTab').hasClass('active'),
-        $('#infoTab').hasClass('active'),
-        $('#countTab').hasClass('active'),
-      ];
+    const song: TroffObjectLocal = nDB.get(songId);
+    if (!song) {
+      log.e('Error "setCurrentAreas, noSong" occurred, songId=' + songId);
+      return;
+      //TODO: replace return with song = DB.fixSongObject(); (and test)
+    }
+    song.abAreas = [
+      $('#statesTab').hasClass('active'),
+      $('#settingsTab').hasClass('active'),
+      $('#infoTab').hasClass('active'),
+      $('#countTab').hasClass('active'),
+    ];
 
-      nDB.set(songId, song);
-    });
+    nDB.set(songId, song);
   };
 
   /**
@@ -375,19 +374,20 @@ class DBClass {
 
     Troff.setSonglists_NEW(JSON.parse(straoSongLists));
   };
-  // getAllSonglists_deprecated = () => {
-  //   nDBc.get('straoSongLists', (straoSongLists) => {
-  //     if (straoSongLists == undefined) {
-  //       straoSongLists = [];
-  //     }
-
-  //     Troff.setSonglists_NEW(JSON.parse(straoSongLists));
-  //   });
-  // };
 
   /** @returns {void} */
   getShowSongDialog = () => {
+    console.log(
+      'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+      localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+    );
     const val = nDB.get(TROFF_SETTING_SHOW_SONG_DIALOG);
+    console.log('xxxgetShowSongDialog: val', val);
+
+    console.log(
+      'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+      localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+    );
     if (val == null) {
       throw new Error(
         `getShowSongDialog: nDB.get(${TROFF_SETTING_SHOW_SONG_DIALOG}) gives: val == null!`
@@ -425,120 +425,94 @@ class DBClass {
     newTime: number | string,
     songId: string
   ): void => {
-    nDBc.get(songId, (song) => {
-      if (!song) {
-        log.e('Error "updateMarker, noSong" occurred, songId=' + songId);
-        song = DB.fixSongObject();
+    const song = nDB.get(songId) || DB.fixSongObject();
+
+    for (var i = 0; i < song.markers.length; i++) {
+      if (song.markers[i].id == markerId) {
+        song.markers[i].name = newName;
+        song.markers[i].time = newTime;
+        song.markers[i].info = newInfo;
+        song.markers[i].color = newColor;
+        break;
       }
+    }
 
-      for (var i = 0; i < song.markers.length; i++) {
-        if (song.markers[i].id == markerId) {
-          song.markers[i].name = newName;
-          song.markers[i].time = newTime;
-          song.markers[i].info = newInfo;
-          song.markers[i].color = newColor;
-          break;
-        }
-      }
+    song.serverId = undefined;
+    console.log('setCurrentSongInfo: -> setUrlToSong A:');
+    Troff.setUrlToSong(undefined, null);
 
-      song.serverId = undefined;
-      console.log('setCurrentSongInfo: -> setUrlToSong A:');
-      Troff.setUrlToSong(undefined, null);
+    nDB.set(songId, song);
+    updateVersionLink(songId);
 
-      nDB.set(songId, song);
-      updateVersionLink(songId);
-
-      ifGroupSongUpdateFirestore(songId);
-    });
+    ifGroupSongUpdateFirestore(songId);
   }; // end updateMarker
 
   /**
    * Save the current state buttons into the song.
    */
-  saveStates = (songId: string, callback?: () => void): void => {
-    nDBc.get(songId, (song) => {
-      var aAllStates = Troff.getCurrentStates();
-      var aStates: string[] = [];
-      for (var i = 0; i < aAllStates.length; i++) {
-        const strState = aAllStates.eq(i).attr('strState');
-        if (strState !== undefined) {
-          aStates[i] = strState;
-        }
+  saveStates = (songId: string): void => {
+    const song = nDB.get(songId) || DB.fixSongObject();
+    var aAllStates = Troff.getCurrentStates();
+    var aStates: string[] = [];
+    for (var i = 0; i < aAllStates.length; i++) {
+      const strState = aAllStates.eq(i).attr('strState');
+      if (strState !== undefined) {
+        aStates[i] = strState;
       }
-      console.log('aStates', aStates);
-      if (!song) {
-        log.e('Error "saveState, noSong" occurred, songId=' + songId);
-        song = DB.fixSongObject();
-      }
+    }
+    console.log('aStates', aStates);
 
-      song.aStates = aStates;
-      song.serverId = undefined;
-      console.log('setCurrentSongInfo: -> setUrlToSong B:');
-      Troff.setUrlToSong(undefined, null);
+    song.aStates = aStates;
+    song.serverId = undefined;
+    console.log('setCurrentSongInfo: -> setUrlToSong B:');
+    Troff.setUrlToSong(undefined, null);
 
-      nDB.set(songId, song);
+    nDB.set(songId, song);
 
-      ifGroupSongUpdateFirestore(songId);
-      if (callback) {
-        callback();
-      }
-    });
+    ifGroupSongUpdateFirestore(songId);
   };
 
   /**
    * Persist zoom window for current song.
    */
   saveZoomTimes = (songId: string, startTime: number, endTime: number): void => {
-    nDBc.get(songId, (song) => {
-      if (!song) {
-        log.e('Error "saveZoomTimes, noSong" occurred, songId=' + songId);
-        song = DB.fixSongObject();
-      }
+    const song = nDB.get(songId) || DB.fixSongObject();
 
-      song.zoomStartTime = startTime;
-      song.zoomEndTime = endTime;
+    song.zoomStartTime = startTime;
+    song.zoomEndTime = endTime;
 
-      nDB.set(songId, song);
-    });
+    nDB.set(songId, song);
   };
 
   /**
    * Save markers from the UI into the song object.
    */
-  saveMarkers = (songId: string, callback?: () => void): void => {
-    nDBc.get(songId, (song) => {
-      var aAllMarkers = Troff.getCurrentMarkers() as JQuery<TroffHtmlMarkerElement>;
+  saveMarkers = (songId: string): void => {
+    const song = nDB.get(songId) || DB.fixSongObject();
+    var aAllMarkers = Troff.getCurrentMarkers() as JQuery<TroffHtmlMarkerElement>;
 
-      var aMarkers: TroffMarker[] = [];
-      for (var i = 0; i < aAllMarkers.length; i++) {
-        var oMarker: TroffMarker = {
-          name: aAllMarkers[i].value,
-          time: Number(aAllMarkers[i].timeValue),
-          info: aAllMarkers[i].info,
-          color: aAllMarkers[i].color,
-          id: aAllMarkers[i].id,
-        };
-        aMarkers[i] = oMarker;
-      }
-      if (!song) {
-        log.e('Error "saveMarker, noSong" occurred, songId=' + songId);
-        song = DB.fixSongObject();
-      }
+    var aMarkers: TroffMarker[] = [];
+    for (var i = 0; i < aAllMarkers.length; i++) {
+      var oMarker: TroffMarker = {
+        name: aAllMarkers[i].value,
+        time: Number(aAllMarkers[i].timeValue),
+        info: aAllMarkers[i].info,
+        color: aAllMarkers[i].color,
+        id: aAllMarkers[i].id,
+      };
+      aMarkers[i] = oMarker;
+    }
 
-      song.currentStartMarker = /** @type {HTMLElement} */ $('.currentMarker')[0].id;
-      song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0].id;
-      song.markers = aMarkers;
-      song.serverId = undefined;
-      console.log('setCurrentSongInfo: -> setUrlToSong C:');
-      Troff.setUrlToSong(undefined, null);
+    song.currentStartMarker = /** @type {HTMLElement} */ $('.currentMarker')[0].id;
+    song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0].id;
+    song.markers = aMarkers;
+    song.serverId = undefined;
+    console.log('setCurrentSongInfo: -> setUrlToSong C:');
+    Troff.setUrlToSong(undefined, null);
 
-      nDB.set(songId, song);
+    nDB.set(songId, song);
 
-      ifGroupSongUpdateFirestore(songId);
-      if (callback) {
-        callback();
-      }
-    });
+    ifGroupSongUpdateFirestore(songId);
   }; // end saveMarkers
 
   /**
@@ -549,16 +523,15 @@ class DBClass {
     stopMarkerId: string,
     songId: string
   ): void => {
-    nDBc.get(songId, (song) => {
-      if (!song) {
-        log.e('Error "setStartAndStopMarker, noSong" occurred,' + ' songId=' + songId);
-        return;
-        // TODO: replace return with song = DB.fixSongObject(); (and test)
-      }
-      song.currentStartMarker = startMarkerId;
-      song.currentStopMarker = stopMarkerId;
-      nDB.set(songId, song);
-    });
+    const song = nDB.get(songId);
+    if (!song) {
+      log.e('Error "setStartAndStopMarker, noSong" occurred,' + ' songId=' + songId);
+      return;
+      // TODO: replace return with song = DB.fixSongObject(); (and test)
+    }
+    song.currentStartMarker = startMarkerId;
+    song.currentStopMarker = stopMarkerId;
+    nDB.set(songId, song);
   }; //end setCurrentStartAndStopMarker
 
   setCurrentStartMarker = (name: string, songId: string): void => {
@@ -586,32 +559,30 @@ class DBClass {
    * Set a dynamic key on the current song.
    */
   setCurrent = (songId: string, key: string, value: any, callback?: () => void): void => {
-    nDBc.get(songId, (song) => {
-      if (!song) {
-        log.e(
-          'Error, "noSong" occurred;\n' + 'songId=' + songId + ', key=' + key + ', value=' + value
-        );
-        return;
-        // TODO: replace return with song = DB.fixSongObject(); (and test)
-      }
-      /** @type {any} */ song[key] = value;
-      nDB.set(songId, song);
+    const song = nDB.get(songId);
+    if (!song) {
+      log.e(
+        'Error, "noSong" occurred;\n' + 'songId=' + songId + ', key=' + key + ', value=' + value
+      );
+      return;
+      // TODO: replace return with song = DB.fixSongObject(); (and test)
+    }
+    /** @type {any} */ song[key] = value;
+    nDB.set(songId, song);
 
-      if (callback) {
-        callback();
-      }
-    });
+    if (callback) {
+      callback();
+    }
   }; //end setCurrent
 
   getMarkers = (songId: string, funk: (markers: TroffMarker[]) => void): void => {
-    nDBc.get(songId, (song) => {
-      if (!song || !song.markers) {
-        // new song or no markers
-        return;
-        // TODO: replace return with song = DB.fixSongObject(); (and test)
-      }
-      funk(song.markers);
-    });
+    const song = nDB.get(songId);
+    if (!song || !song.markers) {
+      // new song or no markers
+      return;
+      // TODO: replace return with song = DB.fixSongObject(); (and test)
+    }
+    funk(song.markers);
   };
 
   /**
@@ -679,37 +650,32 @@ class DBClass {
       Troff.zoom(song.zoomStartTime, song.zoomEndTime);
     }; // end loadSongMetadata
 
-    nDBc.get(songId, (song) => {
-      if (!song) {
-        // new song:
-        song = DB.fixSongObject();
-        nDB.set(songId, song);
-
-        loadSongMetadata(song, songId);
-      } else {
-        loadSongMetadata(song, songId);
-      }
-    });
+    let song = nDB.get(songId);
+    if (!song) {
+      // new song:
+      song = DB.fixSongObject();
+      nDB.set(songId, song);
+    }
+    loadSongMetadata(song, songId);
   }; // end getSongMetadata
 
   /**
    * Load an image song's metadata into the UI, creating defaults if missing.
    */
   getImageMetaDataOf = (songId: string): void => {
-    nDBc.get(songId, (song) => {
-      if (!song) {
-        // new song:
-        song = DB.fixSongObject();
-        nDB.set(songId, song);
-      }
+    let song = nDB.get(songId);
+    if (!song) {
+      // new song:
+      song = DB.fixSongObject();
+      nDB.set(songId, song);
+    }
 
-      Troff.setMood('pause');
-      Troff.setInfo(song.info);
-      Troff.addButtonsOfStates(song.aStates);
-      Troff.setAreas(song.abAreas);
-      Troff.setCurrentSongInDB();
-    });
-  }; // end getSongMetadata
+    Troff.setMood('pause');
+    Troff.setInfo(song.info);
+    Troff.addButtonsOfStates(song.aStates);
+    Troff.setAreas(song.abAreas);
+    Troff.setCurrentSongInDB();
+  }; // end getImageMetaDataOf
 } // end DBClass
 
 export default DBClass;

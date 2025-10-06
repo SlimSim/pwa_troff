@@ -22,6 +22,11 @@ import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
 import './utils/debugging.js';
 
+console.log(
+  'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+  localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+);
+
 import {
   auth,
   db,
@@ -781,7 +786,10 @@ $(document).ready(async function () {
   if (isIpad || isIphone) {
     $('#TROFF_SETTING_UI_VOLUME_SLIDER_SHOW').removeClass('active');
   }
-
+  console.log(
+    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+  );
   IO.removeLoadScreenSoon();
 
   // include external HTML-files:
@@ -789,17 +797,34 @@ $(document).ready(async function () {
   await loadExternalHtml(includes); //, async function () {
 
   initSongTable();
-
+  console.log(
+    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+  );
   await DB.cleanDB();
+  console.log(
+    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+  );
   DB.getAllSonglists();
   DB.getZoomDontShowAgain();
   IO.startFunc();
   Rate.startFunc();
-
+  console.log(
+    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+  );
   await Troff.initFileApiImplementation();
   Troff.recallCurrentStateOfSonglists();
-
+  console.log(
+    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+  );
   DB.getShowSongDialog();
+  console.log(
+    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
+    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
+  );
   initEnvironment();
 
   firebaseWrapper.onUploadProgressUpdate = function (progress) {

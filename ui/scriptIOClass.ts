@@ -22,6 +22,7 @@ import log from '../utils/log.js';
 import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { IOInput } from 'types/io.js';
 import { sleep } from '../utils/timeHack.js';
+import { blurHack } from '../utils/utils.js';
 
 class IOClass {
   IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
@@ -127,7 +128,7 @@ class IOClass {
     });
 
     $('[data-st-css-selector-to-toggle]').on('click', (event) => {
-      this.blurHack();
+      blurHack();
       var $target = $(event.target),
         $value = $($target.data('st-css-selector-to-toggle'));
 
@@ -141,7 +142,7 @@ class IOClass {
     });
 
     $('[data-st-css-selector-to-fade-in]').on('click', (event) => {
-      this.blurHack();
+      blurHack();
       var $target = $(event.target),
         $value = $($target.data('st-css-selector-to-fade-in'));
 
@@ -154,7 +155,7 @@ class IOClass {
       }
     });
 
-    $('.regularButton').on('click', this.blurHack);
+    $('.regularButton').on('click', blurHack);
 
     //TODO: fix so that all cancelButtons use this class, and remove there id, and event-listener :)
     $('.dialogCancelButton').click((event) => {
@@ -164,7 +165,7 @@ class IOClass {
 
     $('[data-href]').on('click', this.openWindow);
     $('.onClickToggleFullScreen').on('click', this.toggleFullScreen);
-    $('.blurOnClick').on('click', this.blurHack);
+    $('.blurOnClick').on('click', blurHack);
     $('.showUploadSongToServerDialog').on('click', Troff.showUploadSongToServerDialog);
     $('#buttCopyUrlToClipboard').on('click', Troff.buttCopyUrlToClipboard);
     $('.onClickCopyTextToClipboard').on('click', this.onClickCopyTextToClipboard);
@@ -352,10 +353,6 @@ class IOClass {
     }
   }; //end startFunc
 
-  blurHack = () => {
-    document.getElementById('blur-hack')?.focus({ preventScroll: true });
-  };
-
   onClickCopyTextToClipboard = (event: JQuery.ClickEvent) => {
     this.copyTextToClipboard($(event.target).val());
   };
@@ -463,11 +460,11 @@ class IOClass {
         event.keyCode == 13 // Enter
       ) {
         $(':input[type="number"]').blur();
-        this.blurHack();
+        blurHack();
         return;
       }
     }
-    this.blurHack();
+    blurHack();
 
     if (event.keyCode >= 48 && event.keyCode <= 57) {
       // pressed a number
@@ -655,7 +652,7 @@ class IOClass {
       $('.colorPickerSelected').removeClass('colorPickerSelected');
       event.currentTarget.classList.add('colorPickerSelected');
       $colorText.find('span').html(event.currentTarget.getAttribute('color'));
-      this.blurHack();
+      blurHack();
     };
 
     const generateColorBut = (col: string) => {
@@ -1041,7 +1038,7 @@ class IOClass {
   };
 
   saveOnSongToggleClass = (event: JQuery.ClickEvent) => {
-    this.blurHack();
+    blurHack();
 
     var $target = $(event.target),
       id = $target.attr('id'),
