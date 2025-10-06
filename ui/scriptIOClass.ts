@@ -2,7 +2,7 @@
 import '../assets/internal/extend-jquery.js';
 import { nDB } from '../assets/internal/db.js';
 import { st } from '../assets/internal/st-script.js';
-import { DB, Troff, Rate, googleSignIn, onOnline, doSignOut } from '../script.js';
+import { Troff, Rate, googleSignIn, onOnline, doSignOut } from '../script.js';
 import { groupDialogSave } from '../features/groupManagement.js';
 import {
   addGroupOwnerRow,
@@ -1033,7 +1033,7 @@ class IOClass {
     }
 
     const key = 'TROFF_VALUE_' + id;
-    DB.setCurrent(Troff.getCurrentSong(), key, value);
+    nDB.setOnSong(Troff.getCurrentSong(), key, value);
     event.target?.dispatchEvent(new Event('savedToDbEvent'));
   };
 
@@ -1059,7 +1059,7 @@ class IOClass {
     const key = 'TROFF_CLASS_TO_TOGGLE_' + id;
     const value = $target.hasClass(classToToggleAndSave);
 
-    DB.setCurrent(Troff.getCurrentSong(), key, value);
+    nDB.setOnSong(Troff.getCurrentSong(), key, value);
   };
 } // end IOClass
 

@@ -535,45 +535,23 @@ class DBClass {
   }; //end setCurrentStartAndStopMarker
 
   setCurrentStartMarker = (name: string, songId: string): void => {
-    DB.setCurrent(songId, 'currentStartMarker', name);
+    nDB.setOnSong(songId, 'currentStartMarker', name);
   };
   setCurrentStopMarker = (name: string, songId: string): void => {
-    DB.setCurrent(songId, 'currentStopMarker', name);
+    nDB.setOnSong(songId, 'currentStopMarker', name);
   };
   setCurrentSongInfo = (info: string, songId: string): void => {
-    DB.setCurrent(songId, 'info', info, () => {
-      nDB.setOnSong(songId, 'serverId', undefined);
-      console.log('setCurrentSongInfo: -> setUrlToSong D:');
-      Troff.setUrlToSong(undefined, null);
+    nDB.setOnSong(songId, 'info', info);
+    nDB.setOnSong(songId, 'serverId', undefined);
+    Troff.setUrlToSong(undefined, null);
 
-      ifGroupSongUpdateFirestore(songId);
-      updateVersionLink(songId);
-    });
+    ifGroupSongUpdateFirestore(songId);
+    updateVersionLink(songId);
   };
 
   setCurrentTempo = (tempo: number, songId: string): void => {
-    DB.setCurrent(songId, 'tempo', tempo);
+    nDB.setOnSong(songId, 'tempo', tempo);
   };
-
-  /**
-   * Set a dynamic key on the current song.
-   */
-  setCurrent = (songId: string, key: string, value: any, callback?: () => void): void => {
-    const song = nDB.get(songId);
-    if (!song) {
-      log.e(
-        'Error, "noSong" occurred;\n' + 'songId=' + songId + ', key=' + key + ', value=' + value
-      );
-      return;
-      // TODO: replace return with song = DB.fixSongObject(); (and test)
-    }
-    /** @type {any} */ song[key] = value;
-    nDB.set(songId, song);
-
-    if (callback) {
-      callback();
-    }
-  }; //end setCurrent
 
   getMarkers = (songId: string, funk: (markers: TroffMarker[]) => void): void => {
     const song = nDB.get(songId);

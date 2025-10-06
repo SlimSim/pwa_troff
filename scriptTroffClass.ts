@@ -857,14 +857,14 @@ class TroffClass {
     butt.classList.toggle('active');
 
     var bFullScreen = butt.classList.contains('active');
-    DB.setCurrent(this.strCurrentSong, 'bPlayInFullscreen', bFullScreen);
+    nDB.setOnSong(this.strCurrentSong, 'bPlayInFullscreen', bFullScreen);
 
     blurHack();
   };
 
   mirrorImageChanged = (event: JQuery.ClickEvent) => {
     var bMirrorImage = !$(event.target).hasClass('active');
-    DB.setCurrent(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
+    nDB.setOnSong(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
     this.setMirrorImage(bMirrorImage);
 
     blurHack();
@@ -1135,7 +1135,7 @@ class TroffClass {
     if ($('#buttLoopInf').hasClass('currentLoop')) dbLoop = 'Inf';
     else dbLoop = $('.currentLoop').val() as string;
 
-    if (this.strCurrentSong) DB.setCurrent(this.strCurrentSong, 'loopTimes', dbLoop);
+    if (this.strCurrentSong) nDB.setOnSong(this.strCurrentSong, 'loopTimes', dbLoop);
 
     IO.loopTimesLeft($('.currentLoop').val() as string);
   }; // end updateLoopTimes
