@@ -699,45 +699,43 @@ class TroffClass {
   };
 
   recallFloatingDialog = () => {
-    DB.getVal('TROFF_SETTING_SONG_LIST_FLOATING_DIALOG', (floatingDialog) => {
-      if (floatingDialog) {
-        moveSongPickerToFloatingState();
-      } else {
-        moveSongPickerToAttachedState();
-      }
-    });
+    const floatingDialog = nDB.get('TROFF_SETTING_SONG_LIST_FLOATING_DIALOG');
+    if (floatingDialog) {
+      moveSongPickerToFloatingState();
+    } else {
+      moveSongPickerToAttachedState();
+    }
   };
 
   recallSongColumnToggle = (callback: () => void) => {
-    DB.getVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, (columnToggle) => {
-      if (columnToggle === undefined) {
-        setTimeout(() => {
-          this.recallSongColumnToggle(callback);
-        }, 42);
+    const columnToggle = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
+    if (columnToggle === undefined) {
+      setTimeout(() => {
+        this.recallSongColumnToggle(callback);
+      }, 42);
+      return;
+    }
+
+    DATA_TABLE_COLUMNS.list.forEach((v, i) => {
+      if (v.hideFromUser) {
+        const column = ($('#dataSongTable') as any)
+          .DataTable()
+          .column(DATA_TABLE_COLUMNS.getPos(v.id));
+        column.visible(false);
         return;
       }
 
-      DATA_TABLE_COLUMNS.list.forEach((v, i) => {
-        if (v.hideFromUser) {
-          const column = ($('#dataSongTable') as any)
-            .DataTable()
-            .column(DATA_TABLE_COLUMNS.getPos(v.id));
-          column.visible(false);
-          return;
-        }
-
-        $('#columnToggleParent').append(
-          $('<input>')
-            .attr('type', 'button')
-            .attr('data-column', i)
-            .addClass('stOnOffButton')
-            .toggleClass('active', columnToggle[v.id])
-            .val(v.header)
-            .click(dataTableColumnPicker)
-        );
-      });
-      callback();
+      $('#columnToggleParent').append(
+        $('<input>')
+          .attr('type', 'button')
+          .attr('data-column', i)
+          .addClass('stOnOffButton')
+          .toggleClass('active', columnToggle[v.id])
+          .val(v.header)
+          .click(dataTableColumnPicker)
+      );
     });
+    callback();
   };
 
   toggleExtendedMarkerColor = () => {
@@ -753,12 +751,11 @@ class TroffClass {
   };
 
   recallExtendedMarkerColor = () => {
-    DB.getVal(TROFF_SETTING_EXTENDED_MARKER_COLOR, (extend) => {
-      if (extend) {
-        $('#markerList').addClass('extended-color');
-        $('#toggleExtendedMarkerColor').addClass('active');
-      }
-    });
+    const extend = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
+    if (extend) {
+      $('#markerList').addClass('extended-color');
+      $('#toggleExtendedMarkerColor').addClass('active');
+    }
   };
 
   toggleExtraExtendedMarkerColor = () => {
@@ -774,12 +771,11 @@ class TroffClass {
   };
 
   recallExtraExtendedMarkerColor = () => {
-    DB.getVal(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR, (extend) => {
-      if (extend || extend === null) {
-        $('#markerList').addClass('extra-extended');
-        $('#toggleExtraExtendedMarkerColor').addClass('active');
-      }
-    });
+    const extend = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
+    if (extend || extend === null) {
+      $('#markerList').addClass('extra-extended');
+      $('#toggleExtraExtendedMarkerColor').addClass('active');
+    }
   };
 
   updateHrefForTheme = (theme: string) => {
@@ -809,13 +805,11 @@ class TroffClass {
   };
 
   recallTheme = () => {
-    DB.getVal(TROFF_SETTING_SET_THEME, (theme) => {
-      theme = theme || 'col1';
-      $('#themePickerParent')
-        .find('[data-theme="' + theme + '"]')
-        .addClass('selected');
-      this.updateHrefForTheme(theme);
-    });
+    const theme = nDB.get(TROFF_SETTING_SET_THEME) || 'col1';
+    $('#themePickerParent')
+      .find('[data-theme="' + theme + '"]')
+      .addClass('selected');
+    this.updateHrefForTheme(theme);
   };
 
   closeSettingsDialog = () => {
@@ -3223,59 +3217,18 @@ class TroffClass {
   /* end standAlone Functions */
 
   checkHashAndGetSong = async () => {
-    console.log('xx: old checkHashAndGetSong');
-    if (window.location.hash) {
-      log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
-      try {
-        await this.downloadSongFromServer(window.location.hash);
-      } catch (e) {
-        log.e('error on downloadSongFromServer:', e);
-        DB.getCurrentSong();
-      }
-    } else {
+    if (!window.location.hash) {
+      DB.getCurrentSong();
+      return;
+    }
+    log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
+    try {
+      await this.downloadSongFromServer(window.location.hash);
+    } catch (e) {
+      log.e('error on downloadSongFromServer:', e);
       DB.getCurrentSong();
     }
   };
-
-  // Grok's sugestion:
-  // checkHashAndGetSong = async () => {
-  //   if (!window.location.hash) {
-  //     DB.getCurrentSong();
-  //     return;
-  //   }
-
-  //   log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
-  //   const parts = window.location.hash.substr(1).split('&');
-  //   const songName = decodeURIComponent(parts[1]);
-
-  //   if (this.strCurrentSong == songName) {
-  //     log.d('Song already loaded:', songName);
-  //     return;
-  //   }
-
-  //   try {
-  //     await this.downloadSongFromServer(window.location.hash);
-  //   } catch (e) {
-  //     log.e('error on downloadSongFromServer:', e);
-  //     DB.getCurrentSong();
-  //   }
-  // };
-
-  // my refactoring
-  // checkHashAndGetSong = async () => {
-  //   if (!window.location.hash) {
-  //     DB.getCurrentSong();
-  //     return;
-  //   }
-
-  //   log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
-  //   try {
-  //     await this.downloadSongFromServer(window.location.hash);
-  //   } catch (e) {
-  //     log.e('error on downloadSongFromServer:', e);
-  //     DB.getCurrentSong();
-  //   }
-  // };
 } // end TroffClass
 
 export { TroffClass, clickSongList_NEW };

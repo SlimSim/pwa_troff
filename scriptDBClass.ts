@@ -52,13 +52,6 @@ class DBClass {
   };
 
   /**
-   * deprecated: use nDB.get_callback( key, callback )
-   */
-  getVal = (key: string, returnFunction: (value: any) => void) => {
-    nDBc.get(key, returnFunction);
-  };
-
-  /**
    * Ensure a single song object is normalized and saved.
    * @param {string} songId
    * @param {any} songObject
@@ -397,7 +390,7 @@ class DBClass {
     const val = nDB.get(TROFF_SETTING_SHOW_SONG_DIALOG);
     if (val == null) {
       throw new Error(
-        `getShowSongDialog: DB.getVal(${TROFF_SETTING_SHOW_SONG_DIALOG}) gives: val == null!`
+        `getShowSongDialog: nDB.get(${TROFF_SETTING_SHOW_SONG_DIALOG}) gives: val == null!`
       );
     }
 
