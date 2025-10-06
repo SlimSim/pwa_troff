@@ -28,8 +28,6 @@ import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { cacheImplementation } from './services/FileApiImplementation.js';
 import {
   updateUploadedHistory,
-  addGroupOwnerRow,
-  emptyGroupDialog,
   moveSongPickerToFloatingState,
   songListDialogOpenExisting,
   dropSongOnSonglist,
@@ -80,6 +78,7 @@ import {
   TroffStateOfSonglists,
 } from './types/troff.js';
 import { IOInput } from './types/io.js';
+import { addGroupOwnerRow, emptyGroupDialog } from './features/groupManagement.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
   blurHack();
@@ -237,7 +236,6 @@ class TroffClass {
         addItem_NEW_2(key);
         if (!$('#dataSongTable_wrapper').find('tr').hasClass('selected')) {
           this.selectSongInSongList(key);
-          log.d('initFileApiImplementation: -> createSongAudio', { key });
           createSongAudio(key);
         }
 
@@ -1151,7 +1149,6 @@ class TroffClass {
   timeupdateAudio = () => {
     var audio = document.querySelector('audio, video') as any;
     var dTime = audio.currentTime;
-    log.d('timeupdateAudio', { timeBarValue: $('#timeBar').val(), currentTime: audio.currentTime });
 
     if (dTime >= this.getStopTime()) {
       this.atEndOfLoop();

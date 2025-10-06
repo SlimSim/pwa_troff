@@ -3,9 +3,8 @@ import '../assets/internal/extend-jquery.js';
 import { nDB } from '../assets/internal/db.js';
 import { st } from '../assets/internal/st-script.js';
 import { Troff, Rate, googleSignIn, onOnline, doSignOut } from '../script.js';
-import { groupDialogSave } from '../features/groupManagement.js';
+import { groupDialogSave, addGroupOwnerRow } from '../features/groupManagement.js';
 import {
-  addGroupOwnerRow,
   clickButtNewSongList,
   onChangeSongListSelector,
   closeSongDialog,

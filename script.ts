@@ -21,12 +21,6 @@
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
 import './utils/debugging.js';
-
-console.log(
-  'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-  localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-);
-
 import {
   auth,
   db,
@@ -538,77 +532,9 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
     treatSafariDifferent,
     navigatorOnLine: navigator.onLine,
   });
-  // if (isSafari && treatSafariDifferent) {
-  //   log.d(`isSafari ${isSafari} treatSafariDifferent ${treatSafariDifferent}`);
-
-  //   const troffData = nDB.get(path);
-
-  //   log.i('setSong2 safari media details', {
-  //     path,
-  //     isSafari,
-  //     treatSafariDifferent,
-  //     localAdded: troffData?.localInformation?.addedFromThisDevice ?? false,
-  //     hasFileUrl: Boolean(troffData?.fileUrl),
-  //     navigatorOnLine: navigator.onLine,
-  //   });
-
-  //   log.d('setSong2 safari branch', {
-  //     source: troffData?.localInformation?.addedFromThisDevice
-  //       ? 'objectUrl'
-  //       : troffData?.fileUrl
-  //         ? 'remoteUrl'
-  //         : 'fallbackObjectUrl',
-  //   });
-  //   if (troffData.localInformation && troffData.localInformation.addedFromThisDevice) {
-  //     log.d('setSong2: in if 1');
-  //     newElem.setAttribute('src', songData);
-  //   } else if (troffData.fileUrl != undefined) {
-  //     log.d('setSong2: in if 2');
-  //     newElem.setAttribute('src', troffData.fileUrl);
-
-  //     // if first time loading the song, don't show alert :)
-  //     if (troffData.localInformation && troffData.localInformation.nrTimesLoaded > 5) {
-  //       IO.alert(
-  //         'Please add file manually',
-  //         'This file has been downloaded, ' +
-  //           'and will not work offline. You can solve this in two ways:<br />' +
-  //           '1) Add the file called<br /><br />' +
-  //           path +
-  //           '<br /><br />' +
-  //           'with the ' +
-  //           '<label ' +
-  //           'title="Add songs, videos or pictures to Troff"' +
-  //           'class="cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile"' +
-  //           'for="fileUploader">' +
-  //           '<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1"></i>' +
-  //           '<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65"></i>' +
-  //           '</label>' +
-  //           '-button at the top of the song-dialog or <br /><br />' +
-  //           '2) Switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />' +
-  //           'Best of luck!'
-  //       );
-  //     }
-  //   } else {
-  //     newElem.setAttribute('src', songData);
-  //   }
-  //   if ('load' in newElem && 'pause' in newElem) {
-  //     (newElem as HTMLAudioElement).load();
-  //     (newElem as HTMLAudioElement).pause();
-  //   }
-  //   log.d('setSong2 safari preload complete', { path });
-  // } else {
   log.d(`setting src to ${songData}`);
   //för vanlig linux, bäst att använda songData hela tiden :)
   newElem.setAttribute('src', songData);
-
-  // newElem.addEventListener(
-  //   'canplay',
-  //   () => log.d('canplay event', { readyState: (newElem as HTMLAudioElement).readyState }),
-  //   { once: true }
-  // );
-  // newElem.addEventListener('seeked', () => log.d('seeked event'));
-  // newElem.addEventListener('seeking', () => log.d('seeking event'));
-  // }
 
   const localInfo = nDB.get(path).localInformation || {};
   const nrTimesLoaded = localInfo.nrTimesLoaded || 0;
@@ -786,10 +712,15 @@ $(document).ready(async function () {
   if (isIpad || isIphone) {
     $('#TROFF_SETTING_UI_VOLUME_SLIDER_SHOW').removeClass('active');
   }
-  console.log(
-    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-  );
+
+  let oSong = nDB.get('stroCurrentSongPathAndGalleryId');
+  if (typeof oSong == 'string') {
+    oSong = JSON.parse(oSong);
+    nDB.set('stroCurrentSongPathAndGalleryId', oSong);
+  }
+
+  Troff.setCurrentSongStrings(oSong?.strPath || '', oSong?.iGalleryId || '');
+
   IO.removeLoadScreenSoon();
 
   // include external HTML-files:
@@ -797,34 +728,14 @@ $(document).ready(async function () {
   await loadExternalHtml(includes); //, async function () {
 
   initSongTable();
-  console.log(
-    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-  );
   await DB.cleanDB();
-  console.log(
-    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-  );
   DB.getAllSonglists();
   DB.getZoomDontShowAgain();
   IO.startFunc();
   Rate.startFunc();
-  console.log(
-    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-  );
   await Troff.initFileApiImplementation();
   Troff.recallCurrentStateOfSonglists();
-  console.log(
-    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-  );
   DB.getShowSongDialog();
-  console.log(
-    'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-    localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-  );
   initEnvironment();
 
   firebaseWrapper.onUploadProgressUpdate = function (progress) {

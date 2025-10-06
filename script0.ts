@@ -26,14 +26,8 @@ import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { auth, db, doc, setDoc, getDoc } from './services/firebaseClient.js';
 import { escapeRegExp, getFileExtension } from './utils/utils.js';
 import { TROFF_SETTING_SHOW_SONG_DIALOG, DATA_TABLE_COLUMNS } from './constants/constants.js';
-import { addGroupSongRow } from './features/groupManagement.js';
-import {
-  DirectoryListObject,
-  SonglistSongInfo,
-  TroffFirebaseGroupIdentifyer,
-  TroffFirebaseSongIdentifyer,
-  TroffHistoryList,
-} from './types/troff.js';
+import { DirectoryListObject, SonglistSongInfo, TroffHistoryList } from './types/troff.js';
+import { openGroupDialog } from './features/groupManagement.js';
 
 window.alert = (alert) => {
   log.w('Alert:', alert);
@@ -42,133 +36,6 @@ window.alert = (alert) => {
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
-
-const populateExampleSongsInGroupDialog = (songs: TroffFirebaseSongIdentifyer[]) => {
-  // TODO: fixa bättre sätt att lägga på låtarna!
-  const dataInfo: any = ($('#dataSongTable') as any)
-    .DataTable()
-    .column(DATA_TABLE_COLUMNS.getPos('DATA_INFO'))
-    .data();
-
-  const fullPathList = songs.map((song) => song.fullPath);
-  dataInfo.each((v: string) => {
-    const fullPath = JSON.parse(v).fullPath;
-    if (fullPathList.includes(fullPath)) {
-      return;
-    }
-    $('#possible-songs-to-add').append(
-      $('<li>')
-        .addClass('py-1')
-        .append(
-          $('<button>')
-            .text(fullPath)
-            .addClass('regularButton')
-            .attr('type', 'button')
-            .data('fullPath', fullPath)
-            .click(onClickAddNewSongToGroup)
-        )
-    );
-  });
-};
-
-const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => {
-  emptyGroupDialog();
-
-  const isGroup = songListObject.firebaseGroupDocId !== undefined;
-
-  if (isGroup) {
-    $('#leaveGroup').removeClass('hidden');
-    $('.showOnSharedSonglist').removeClass('hidden');
-    if (!songListObject.icon) {
-      songListObject.icon = 'fa-users';
-    }
-
-    $('#groupDialog')
-      .find('.innerDialog')
-      .addClass(songListObject.color || '');
-
-    $('#groupDialogSonglistIcon').addClass(songListObject.icon);
-
-    $('#groupDialogColor').val(songListObject.color || '');
-    $('#groupDialogIcon').val(songListObject.icon);
-
-    $('#songlistColorPicker')
-      .find('.' + (songListObject.color || 'backgroundColorNone'))
-      .addClass('colorPickerSelected');
-
-    $('#songlistIconPicker')
-      .find('.' + songListObject.icon)
-      .parent()
-      .addClass('selected');
-  } else {
-    $('#shareSonglist').removeClass('hidden');
-  }
-
-  $('#groupDialogName').val(songListObject.name || '');
-  $('#groupDialogName').data('songListObjectId', songListObject.id || null);
-  $('#groupDialogName').data('groupDocId', songListObject.firebaseGroupDocId || null);
-
-  $('#groupDialogIsGroup').prop('checked', isGroup);
-
-  $('#groupDialogInfo').val(songListObject.info || '');
-
-  songListObject.owners?.forEach(addGroupOwnerRow);
-
-  songListObject.songs.forEach(addGroupSongRow);
-
-  populateExampleSongsInGroupDialog(songListObject.songs);
-
-  $('#groupDialog').removeClass('hidden');
-};
-
-const emptyGroupDialog = () => {
-  $('#groupDialog').find('form').trigger('reset');
-
-  $('#groupOwnerParent').empty();
-  $('#groupSongParent').empty();
-  $('#possible-songs-to-add').empty();
-
-  $('#groupDialogName').val('');
-  $('#groupDialogName').removeData();
-
-  $('#leaveGroup').addClass('hidden');
-  $('#shareSonglist').addClass('hidden');
-  $('.showOnSharedSonglist').addClass('hidden');
-
-  $('#groupDialog').find('.innerDialog').removeClassStartingWith('bg-');
-
-  $('#groupDialogSonglistIcon').removeClassStartingWith('fa-');
-
-  $('#songlistIconPicker').find('button').removeClass('selected');
-
-  $('#songlistColorPicker').find('.colorPickerSelected').removeClass('colorPickerSelected');
-};
-
-const removeOwnerRow = (event: JQuery.ClickEvent) => {
-  const row = $(event.target).closest('.form-group.row');
-  const owner = row.find('.groupDialogOwner').val() as string;
-
-  notifyUndo(owner + ' was removed.', () => {
-    addGroupOwnerRow(owner);
-  });
-
-  row.remove();
-};
-
-const onClickAddNewSongToGroup = (event: JQuery.ClickEvent) => {
-  console.log('onClickAddNewSongToGroup TEST TEST TEST ');
-  const target = $(event.target);
-  addGroupSongRow({ fullPath: target.data('fullPath'), galleryId: 'pwa-galleryId' });
-  target.remove();
-};
-
-const addGroupOwnerRow = (owner: string = '') => {
-  const ownerRow = $('#groupDialogOwnerRowTemplate').children().clone(true, true);
-
-  ownerRow.find('.groupDialogRemoveOwner').on('click', removeOwnerRow);
-  ownerRow.find('.groupDialogOwner').val(owner);
-  $('#groupOwnerParent').append(ownerRow);
-};
 
 const nrIdsInHistoryList = (historyList: TroffHistoryList[]) => {
   if (!historyList) return 0;
@@ -615,8 +482,6 @@ function onChangeSongListSelector(event: JQuery.ChangeEvent) {
 
 export {
   updateUploadedHistory,
-  addGroupOwnerRow,
-  emptyGroupDialog,
   moveSongPickerToFloatingState,
   songListDialogOpenExisting,
   openGroupDialog,

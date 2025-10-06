@@ -353,8 +353,8 @@ class DBClass {
    * Set current song path and gallery id in DB.
    */
   setCurrentSong = (path: string, galleryId: string) => {
-    var stroSong = JSON.stringify({ strPath: path, iGalleryId: galleryId });
-    nDB.set('stroCurrentSongPathAndGalleryId', stroSong);
+    var oSong = { strPath: path, iGalleryId: galleryId };
+    nDB.set('stroCurrentSongPathAndGalleryId', oSong);
   };
 
   /** @returns {void} */
@@ -377,17 +377,7 @@ class DBClass {
 
   /** @returns {void} */
   getShowSongDialog = () => {
-    console.log(
-      'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-      localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-    );
     const val = nDB.get(TROFF_SETTING_SHOW_SONG_DIALOG);
-    console.log('xxxgetShowSongDialog: val', val);
-
-    console.log(
-      'xxx TROFF_SETTING_SHOW_SONG_DIALOG',
-      localStorage.getItem('TROFF_SETTING_SHOW_SONG_DIALOG')
-    );
     if (val == null) {
       throw new Error(
         `getShowSongDialog: nDB.get(${TROFF_SETTING_SHOW_SONG_DIALOG}) gives: val == null!`
@@ -401,13 +391,12 @@ class DBClass {
 
   /** @returns {void} */
   getCurrentSong = () => {
-    const stroSong = nDB.get('stroCurrentSongPathAndGalleryId');
-    if (!stroSong) {
+    const oSong = nDB.get('stroCurrentSongPathAndGalleryId');
+    if (!oSong) {
       Troff.setAreas([false, false, false, false]);
       IO.removeLoadScreen();
       return;
     }
-    var oSong = JSON.parse(/** @type {string} */ stroSong);
     Troff.setCurrentSongStrings(oSong.strPath, oSong.iGalleryId);
 
     log.d('getCurrentSong: -> createSongAudio');
@@ -438,7 +427,6 @@ class DBClass {
     }
 
     song.serverId = undefined;
-    console.log('setCurrentSongInfo: -> setUrlToSong A:');
     Troff.setUrlToSong(undefined, null);
 
     nDB.set(songId, song);
@@ -460,11 +448,9 @@ class DBClass {
         aStates[i] = strState;
       }
     }
-    console.log('aStates', aStates);
 
     song.aStates = aStates;
     song.serverId = undefined;
-    console.log('setCurrentSongInfo: -> setUrlToSong B:');
     Troff.setUrlToSong(undefined, null);
 
     nDB.set(songId, song);
@@ -507,7 +493,6 @@ class DBClass {
     song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0].id;
     song.markers = aMarkers;
     song.serverId = undefined;
-    console.log('setCurrentSongInfo: -> setUrlToSong C:');
     Troff.setUrlToSong(undefined, null);
 
     nDB.set(songId, song);
