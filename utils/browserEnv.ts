@@ -6,4 +6,4 @@ export const isIpad: boolean = navigator.userAgent.indexOf('iPad') !== -1;
 
 export const isPhone: boolean = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-export const usePhoneLog = true; //isPhone;
+export const usePhoneLog = isPhone;

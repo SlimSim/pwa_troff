@@ -184,6 +184,11 @@ class DBClass {
    * @returns {void}
    */
   cleanDB = () => {
+    const oSong = nDB.get('stroCurrentSongPathAndGalleryId');
+    if (typeof oSong == 'string') {
+      nDB.set('stroCurrentSongPathAndGalleryId', JSON.parse(oSong));
+    }
+
     const allKeys = nDB.getAllKeys();
     if (allKeys.length === 0) {
       // This is the first time Troff is started:

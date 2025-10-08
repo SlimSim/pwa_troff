@@ -598,10 +598,11 @@ class TroffClass {
   };
 
   downloadSongFromServer = async (hash: string) => {
-    'use strict';
-    log.d('downloadSongFromServer -> hash:', hash);
-    const [serverId, fileNameURI] = hash.substr(1).split('&');
-    const fileName = decodeURI(fileNameURI);
+    const hashNoHashtag = hash.substr(1);
+    const ampersandIndex = hashNoHashtag.indexOf('&');
+    const serverId = hashNoHashtag.substring(0, ampersandIndex);
+    const fileName = decodeURI(hashNoHashtag.substring(ampersandIndex + 1));
+
     const troffDataFromCache = nDB.get(fileName);
     let troffData;
 
@@ -916,11 +917,6 @@ class TroffClass {
         sortAndValue(media.duration, this.secToDisp(media.duration))
       );
     }
-    log.d('setMetadata timeBar sync', {
-      timeBarValue: $('#timeBar').val(),
-      currentTime: media.currentTime,
-      max: media.duration,
-    });
     (document.getElementById('timeBar') as any).max = media.duration;
     $('#maxTime')[0].innerHTML = this.secToDisp(media.duration);
 
@@ -3217,7 +3213,6 @@ class TroffClass {
       DB.getCurrentSong();
       return;
     }
-    log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
     try {
       await this.downloadSongFromServer(window.location.hash);
     } catch (e) {

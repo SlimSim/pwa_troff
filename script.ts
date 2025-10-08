@@ -713,19 +713,11 @@ $(document).ready(async function () {
     $('#TROFF_SETTING_UI_VOLUME_SLIDER_SHOW').removeClass('active');
   }
 
-  let oSong = nDB.get('stroCurrentSongPathAndGalleryId');
-  if (typeof oSong == 'string') {
-    oSong = JSON.parse(oSong);
-    nDB.set('stroCurrentSongPathAndGalleryId', oSong);
-  }
-
-  Troff.setCurrentSongStrings(oSong?.strPath || '', oSong?.iGalleryId || '');
-
   IO.removeLoadScreenSoon();
 
   // include external HTML-files:
   const includes = $('[data-include]');
-  await loadExternalHtml(includes); //, async function () {
+  await loadExternalHtml(includes);
 
   initSongTable();
   await DB.cleanDB();

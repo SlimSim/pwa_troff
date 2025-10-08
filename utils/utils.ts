@@ -42,20 +42,6 @@ const loadExternalHtml = (includes: JQuery<HTMLElement>): Promise<void> => {
   });
 };
 
-// const loadExternalHtml = (includes: JQuery<HTMLElement>, callback?: () => void): void => {
-//   if (includes.length === 0) {
-//     callback?.();
-//     return;
-//   }
-//   const currentElement = includes.eq(-1);
-//   const remainingElements = includes.slice(0, -1);
-
-//   const file = $(currentElement).data('include');
-//   $(currentElement).load(file, function () {
-//     loadExternalHtml(remainingElements, callback);
-//   });
-// };
-
 const blurHack = () => {
   document.getElementById('blur-hack')?.focus({ preventScroll: true });
 };
