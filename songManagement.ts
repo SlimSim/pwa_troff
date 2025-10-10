@@ -69,14 +69,14 @@ function addItem_NEW_2(key: string): void {
     duration = sortAndValue(0, ''),
     lastModified = '',
     size = '',
-    /** @type {string | undefined} */ customName = '',
-    /** @type {string | undefined} */ choreography = '',
-    /** @type {string | undefined} */ choreographer = '',
-    /** @type {string | undefined} */ title = '',
-    /** @type {string | undefined} */ artist = '',
-    /** @type {string | undefined} */ album = '',
-    /** @type {string | undefined} */ genre = '',
-    /** @type {string | undefined} */ tags = '',
+    customName = '',
+    choreography = '',
+    choreographer = '',
+    title = '',
+    artist = '',
+    album = '',
+    genre = '',
+    tags = '',
     titleOrFileName = '';
 
   if (song != null) {

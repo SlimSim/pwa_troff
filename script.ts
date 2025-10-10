@@ -725,7 +725,6 @@ $(document).ready(async function () {
   DB.getZoomDontShowAgain();
   IO.startFunc();
   Rate.startFunc();
-  await Troff.initFileApiImplementation();
   Troff.recallCurrentStateOfSonglists();
   DB.getShowSongDialog();
   initEnvironment();
@@ -738,6 +737,7 @@ $(document).ready(async function () {
   };
 
   await Troff.checkHashAndGetSong();
+  await Troff.initFileApiImplementation();
 });
 
 function initEnvironment() {
