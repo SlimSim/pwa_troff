@@ -34,6 +34,7 @@ import {
   initiateAllFirebaseGroups,
   getDocs,
   getDoc,
+  enableAnalyticsIfConsented,
 } from './services/firebaseClient.js';
 import {
   closeSongDialog,
@@ -229,14 +230,6 @@ const songDocUpdate = async function (doc: DocumentSnapshot) {
   const songKey = songData.songKey;
 
   const songExists = await fileHandler.doesFileExistInCache(songKey);
-  // log.d('songDocUpdate cache lookup', {
-  //   songKey,
-  //   songExists,
-  //   isSafari,
-  //   treatSafariDifferent,
-  //   fileUrl: songData.fileUrl,
-  //   firestoreFromCache: doc.metadata.fromCache,
-  // });
 
   if (!songExists) {
     log.i('songDocUpdate missing song - fetching from server', {
@@ -768,6 +761,11 @@ $.fn.removeClassStartingWith = function (filter: string) {
   });
   return this; // Ensure chaining works
 };
+
+// Listen for cookie consent event
+document.addEventListener('cookieConsentGiven', () => {
+  enableAnalyticsIfConsented();
+});
 
 export {
   Troff,

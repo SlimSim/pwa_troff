@@ -6,9 +6,8 @@
  * @property {(key: string, value: any) => void} set
  * @property {(key: string) => any} get
  */
+const COOKIE_CONSENT_ACCEPTED = 'TROFF_COOKIE_CONSENT_ACCEPTED';
 $(document).ready(function () {
-  var COOKIE_CONSENT_ACCEPTED = 'TROFF_COOKIE_CONSENT_ACCEPTED';
-
   /** @type {CookieConsentDB} */
   const cookie_consent_DB = {
     set: function (key: string, value: any) {
@@ -38,7 +37,7 @@ $(document).ready(function () {
             $('<p>')
               .attr('class', 'small text-left')
               .text(
-                'Cookies help us deliver our Services. By using our website or clicking "I consent", you consent to our privacy policy and our use of cookies'
+                'Cookies help us deliver our Services. By clicking "I consent", you consent to our privacy policy and our use of cookies'
               )
           )
           .append(
@@ -51,6 +50,8 @@ $(document).ready(function () {
                     /** @this {HTMLElement} */ function () {
                       $(this).trigger('notify-hide');
                       cookie_consent_DB.set(COOKIE_CONSENT_ACCEPTED, true);
+                      // Dispatch custom event for analytics
+                      document.dispatchEvent(new CustomEvent('cookieConsentGiven'));
                     }
                   )
               )
@@ -91,3 +92,5 @@ $(document).ready(function () {
 
   checkToShowCookieConsent();
 });
+
+export { COOKIE_CONSENT_ACCEPTED };

@@ -21,3 +21,7 @@ This is a **composite** script that runs: linting, type checking, and building s
 'npm run build:check'
 
 So that is your _one stop shop_ for checking if your code is ready for production!
+
+# Analytics
+
+Going with Firebase Analytics

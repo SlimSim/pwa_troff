@@ -1,4 +1,4 @@
-import { Environment } from "types/environment";
+import { Environment } from 'types/environment.js';
 
 // @ts-check
 const environment: Environment = {
@@ -33,6 +33,7 @@ const environment: Environment = {
         storageBucket: 'pwa-troff-dev.appspot.com',
         messagingSenderId: '245960461240',
         appId: '1:245960461240:web:7969954a2707709f13dd4d',
+        measurementId: 'G-JQH0S031J8', // This is for Analytics
       };
       break;
     case 'slimsim.github.io':
@@ -49,6 +50,7 @@ const environment: Environment = {
         storageBucket: 'troff-test.appspot.com',
         messagingSenderId: '512336951689',
         appId: '1:512336951689:web:8b47596c7f3edd26878958',
+        measurementId: 'G-4FWYZ3NC2M', // This is for Analytics
       };
       break;
     case 'troff.app':
