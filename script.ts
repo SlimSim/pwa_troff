@@ -34,7 +34,6 @@ import {
   initiateAllFirebaseGroups,
   getDocs,
   getDoc,
-  enableAnalyticsIfConsented,
 } from './services/firebaseClient.js';
 import {
   closeSongDialog,
@@ -761,11 +760,6 @@ $.fn.removeClassStartingWith = function (filter: string) {
   });
   return this; // Ensure chaining works
 };
-
-// Listen for cookie consent event
-document.addEventListener('cookieConsentGiven', () => {
-  enableAnalyticsIfConsented();
-});
 
 export {
   Troff,

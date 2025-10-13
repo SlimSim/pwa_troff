@@ -24,4 +24,4 @@ So that is your _one stop shop_ for checking if your code is ready for productio
 
 # Analytics
 
-Going with Firebase Analytics
+Going with Firebase Analytics, but do not send data to Firebase Analytics if user has not consented to cookie use.
