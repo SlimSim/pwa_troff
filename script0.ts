@@ -19,29 +19,15 @@
 
 import './assets/external/DataTables/js/jquery.dataTables.min.js';
 import { nDB } from './assets/internal/db.js';
-import {
-  DB,
-  Troff,
-  createSongAudio,
-  IO,
-  addSongsToSonglist,
-  mergeSongListHistorys,
-} from './script.js';
+import { DB, Troff, IO, addSongsToSonglist, mergeSongListHistorys } from './script.js';
 import log from './utils/log.js';
-import { gtag } from './services/analytics.js';
 import { cacheImplementation } from './services/FileApiImplementation.js';
 import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { auth, db, doc, setDoc, getDoc } from './services/firebaseClient.js';
 import { escapeRegExp, getFileExtension } from './utils/utils.js';
 import { TROFF_SETTING_SHOW_SONG_DIALOG, DATA_TABLE_COLUMNS } from './constants/constants.js';
-import { addGroupSongRow } from './features/groupManagement.js';
-import {
-  DirectoryListObject,
-  SonglistSongInfo,
-  TroffFirebaseGroupIdentifyer,
-  TroffFirebaseSongIdentifyer,
-  TroffHistoryList,
-} from './types/troff.js';
+import { DirectoryListObject, SonglistSongInfo, TroffHistoryList } from './types/troff.js';
+import { openGroupDialog } from './features/groupManagement.js';
 
 window.alert = (alert) => {
   log.w('Alert:', alert);
@@ -50,133 +36,6 @@ window.alert = (alert) => {
 var imgFormats = ['png', 'bmp', 'jpeg', 'jpg', 'gif', 'svg', 'xbm', 'webp'];
 var audFormats = ['wav', 'mp3', 'm4a'];
 var vidFormats = ['avi', '3gp', '3gpp', 'flv', 'mov', 'mpeg', 'mpeg4', 'mp4', 'webm', 'wmv', 'ogg'];
-
-const populateExampleSongsInGroupDialog = (songs: TroffFirebaseSongIdentifyer[]) => {
-  // TODO: fixa bättre sätt att lägga på låtarna!
-  const dataInfo: any = ($('#dataSongTable') as any)
-    .DataTable()
-    .column(DATA_TABLE_COLUMNS.getPos('DATA_INFO'))
-    .data();
-
-  const fullPathList = songs.map((song) => song.fullPath);
-  dataInfo.each((v: string) => {
-    const fullPath = JSON.parse(v).fullPath;
-    if (fullPathList.includes(fullPath)) {
-      return;
-    }
-    $('#possible-songs-to-add').append(
-      $('<li>')
-        .addClass('py-1')
-        .append(
-          $('<button>')
-            .text(fullPath)
-            .addClass('regularButton')
-            .attr('type', 'button')
-            .data('fullPath', fullPath)
-            .click(onClickAddNewSongToGroup)
-        )
-    );
-  });
-};
-
-const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => {
-  emptyGroupDialog();
-
-  const isGroup = songListObject.firebaseGroupDocId !== undefined;
-
-  if (isGroup) {
-    $('#leaveGroup').removeClass('hidden');
-    $('.showOnSharedSonglist').removeClass('hidden');
-    if (!songListObject.icon) {
-      songListObject.icon = 'fa-users';
-    }
-
-    $('#groupDialog')
-      .find('.innerDialog')
-      .addClass(songListObject.color || '');
-
-    $('#groupDialogSonglistIcon').addClass(songListObject.icon);
-
-    $('#groupDialogColor').val(songListObject.color || '');
-    $('#groupDialogIcon').val(songListObject.icon);
-
-    $('#songlistColorPicker')
-      .find('.' + (songListObject.color || 'backgroundColorNone'))
-      .addClass('colorPickerSelected');
-
-    $('#songlistIconPicker')
-      .find('.' + songListObject.icon)
-      .parent()
-      .addClass('selected');
-  } else {
-    $('#shareSonglist').removeClass('hidden');
-  }
-
-  $('#groupDialogName').val(songListObject.name || '');
-  $('#groupDialogName').data('songListObjectId', songListObject.id || null);
-  $('#groupDialogName').data('groupDocId', songListObject.firebaseGroupDocId || null);
-
-  $('#groupDialogIsGroup').prop('checked', isGroup);
-
-  $('#groupDialogInfo').val(songListObject.info || '');
-
-  songListObject.owners?.forEach(addGroupOwnerRow);
-
-  songListObject.songs.forEach(addGroupSongRow);
-
-  populateExampleSongsInGroupDialog(songListObject.songs);
-
-  $('#groupDialog').removeClass('hidden');
-};
-
-const emptyGroupDialog = () => {
-  $('#groupDialog').find('form').trigger('reset');
-
-  $('#groupOwnerParent').empty();
-  $('#groupSongParent').empty();
-  $('#possible-songs-to-add').empty();
-
-  $('#groupDialogName').val('');
-  $('#groupDialogName').removeData();
-
-  $('#leaveGroup').addClass('hidden');
-  $('#shareSonglist').addClass('hidden');
-  $('.showOnSharedSonglist').addClass('hidden');
-
-  $('#groupDialog').find('.innerDialog').removeClassStartingWith('bg-');
-
-  $('#groupDialogSonglistIcon').removeClassStartingWith('fa-');
-
-  $('#songlistIconPicker').find('button').removeClass('selected');
-
-  $('#songlistColorPicker').find('.colorPickerSelected').removeClass('colorPickerSelected');
-};
-
-const removeOwnerRow = (event: JQuery.ClickEvent) => {
-  const row = $(event.target).closest('.form-group.row');
-  const owner = row.find('.groupDialogOwner').val() as string;
-
-  notifyUndo(owner + ' was removed.', () => {
-    addGroupOwnerRow(owner);
-  });
-
-  row.remove();
-};
-
-const onClickAddNewSongToGroup = (event: JQuery.ClickEvent) => {
-  console.log('onClickAddNewSongToGroup TEST TEST TEST ');
-  const target = $(event.target);
-  addGroupSongRow({ fullPath: target.data('fullPath'), galleryId: 'pwa-galleryId' });
-  target.remove();
-};
-
-const addGroupOwnerRow = (owner: string = '') => {
-  const ownerRow = $('#groupDialogOwnerRowTemplate').children().clone(true, true);
-
-  ownerRow.find('.groupDialogRemoveOwner').on('click', removeOwnerRow);
-  ownerRow.find('.groupDialogOwner').val(owner);
-  $('#groupOwnerParent').append(ownerRow);
-};
 
 const nrIdsInHistoryList = (historyList: TroffHistoryList[]) => {
   if (!historyList) return 0;
@@ -584,207 +443,6 @@ function dataTableShowColumnsForFloatingState() {
     });
 }
 
-function initSongTable() {
-  log.d('initSongTable ->');
-  var dataSongTable: any,
-    selectAllCheckbox = $(
-      '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>'
-    );
-
-  selectAllCheckbox.click(() => {
-    var headerCheckbox = $('#dataSongTable').find('th').find('input[type=checkbox]'),
-      allCheckboxes = $('#dataSongTable').find('td').find('input[type=checkbox]');
-    allCheckboxes.prop('checked', headerCheckbox.is(':checked'));
-  });
-
-  for (let i = 0; i < DATA_TABLE_COLUMNS.list.length; i++) {
-    $('#dataSongTable')
-      .find('thead')
-      .find('tr')
-      .append($('<th>').addClass('primaryColor').text(DATA_TABLE_COLUMNS.list[i].header));
-  }
-
-  $('#dataSongTable')
-    .find('thead')
-    .find('tr')
-    .children()
-    .eq(DATA_TABLE_COLUMNS.getPos('CHECKBOX'))
-    .text('')
-    .append(selectAllCheckbox);
-
-  dataSongTable = ($('#dataSongTable') as any)
-    .DataTable({
-      language: {
-        emptyTable:
-          '<h1 class="lead">No files added!</h1>' +
-          '<br /><a href="/#2582986745&demo.mp4">Download the demo-video</a>,' +
-          '<br /><br />find new songs at <a href="/find.html">troff.app/find.html</a>' +
-          '<br /><br />or add your own songs by clicking the <br / >' +
-          '<label ' +
-          'title="Add songs, videos or pictures to Troff"' +
-          'class="cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile"' +
-          'for="fileUploader">' +
-          '<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1"></i>' +
-          '<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65"></i>' +
-          '</label>' +
-          '-button at the top<br />of the song-dialog',
-      },
-      fixedHeader: true,
-      paging: false,
-      createdRow: (row: string) => {
-        $(row).attr('draggable', 'true');
-      },
-      columnDefs: [
-        {
-          targets: DATA_TABLE_COLUMNS.getPos('CHECKBOX'),
-          data: null,
-          className: 'preventSongLoad secondaryColor',
-          orderable: false,
-          defaultContent:
-            '<div class="checkbox"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa fa-check"></i></span></label></div>',
-        },
-        {
-          targets: DATA_TABLE_COLUMNS.getPos('DISPLAY_NAME'),
-          className: 'min-w-200-on-attached secondaryColor',
-        },
-        {
-          targets: DATA_TABLE_COLUMNS.getPos('EDIT'),
-          data: null,
-          className: 'preventSongLoad secondaryColor onClickOpenEditSongDialog',
-          orderable: false,
-          defaultContent:
-            '<button class="regularButton"><i class="cr-icon fa fa-pencil"></i></button>',
-        },
-        {
-          targets: DATA_TABLE_COLUMNS.getPos('TYPE'),
-          className: 'secondaryColor text-center',
-        },
-        {
-          targets: ['_all'],
-          className: 'secondaryColor',
-        },
-      ],
-    })
-    .on('dragstart', 'tr', (event: any) => {
-      //function dragSongToSonglist(event){
-      if (event.dataTransfer === undefined) {
-        event.dataTransfer = event.originalEvent.dataTransfer;
-      }
-
-      const jsonDataInfo = dataSongTable.row($(event.currentTarget)).data()[
-        DATA_TABLE_COLUMNS.getPos('DATA_INFO')
-      ];
-
-      event.dataTransfer.setData('jsonDataInfo', jsonDataInfo);
-    })
-    .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
-      Troff.iOSHasLoadedSong = true;
-      log.d('on click tbody tr');
-      // onSongClick (not onSongLoad):
-      const $td = $(event.target).closest('td, th');
-
-      const songKey = $(event.currentTarget).data('song-key');
-      log.d('on click the tbody tr', { songKey });
-
-      if ($td.hasClass('onClickOpenEditSongDialog')) {
-        openEditSongDialog(songKey);
-      }
-
-      if ($td.hasClass('preventSongLoad') || $td.hasClass('dataTables_empty')) {
-        return;
-      }
-
-      ($('#dataSongTable') as any)
-        .DataTable()
-        .rows('.selected')
-        .nodes()
-        .to$()
-        .removeClass('selected');
-      $(event.currentTarget).addClass('selected');
-
-      gtag('event', 'Change Song', { event_category: 'Perform change', event_label: '' });
-
-      log.d('DatasongTable on click: -> createSongAudio', { songKey });
-      createSongAudio(songKey);
-    });
-
-  /*
-	//något att titta på: ???????? slim sim :)  (för att ordna kolumnerna :) (fixa DB sparning, o interface...x ) )
-	var table = $('#table').DataTable({ colReorder: true });
-	$('button#newOrder').click(function() {
-			table.colReorder.order([3,4,2,0,1], true);
-	});
-	*/
-
-  //to make header primaryColor:
-  $('#dataSongTable thead th').removeClass('secondaryColor');
-
-  // to move the searchbar away from the scrolling-area
-  $('#dataSongTable_filter').detach().prependTo($('#newSearchParent'));
-  $('#dataSongTable_filter')
-    .find('input')
-    .attr('placeholder', 'Search (Ctrl + F)')
-    .addClass('form-control-sm')
-    .detach()
-    .prependTo($('#dataSongTable_filter'))
-    .on('click', Troff.enterSerachDataTableSongList)
-    .on('keyup', Troff.onSearchKeyup)
-    .on('blur', Troff.exitSerachDataTableSongList);
-
-  $('#dataSongTable_filter').find('label').remove();
-
-  if ($('#toggleSonglistsId').hasClass('active')) {
-    $('#buttAttachedSongListToggle').addClass('active');
-  }
-
-  // Options for the observer (which mutations to observe)
-  const songListsObserverConfig = {
-    attributes: true,
-    childList: false,
-    subtree: false,
-  };
-
-  // Callback function to execute when mutations are observed
-  var songListsObserverCallback = (mutationsList: MutationRecord[]) => {
-    for (var mutation of mutationsList) {
-      if (mutation.attributeName === 'class') {
-        if ($(mutation.target).hasClass('active')) {
-          $('#buttAttachedSongListToggle').addClass('active');
-        } else {
-          $('#buttAttachedSongListToggle').removeClass('active');
-        }
-        return;
-      }
-    }
-  };
-
-  // Create an observer instance linked to the callback function
-  var songListsObserver = new MutationObserver(songListsObserverCallback);
-  // Start observing the target node for configured mutations
-  songListsObserver.observe($('#toggleSonglistsId')[0], songListsObserverConfig);
-}
-
-function openEditSongDialog(songKey: string) {
-  let fileData = nDB.get(songKey).fileData;
-
-  if (fileData == undefined) {
-    fileData = DB.fixSongObject();
-  }
-
-  $('#editSongDialog').removeClass('hidden');
-
-  $('#editSongFile').val(songKey);
-  $('#editSongCustomName').val(fileData.customName);
-  $('#editSongChoreography').val(fileData.choreography);
-  $('#editSongChoreographer').val(fileData.choreographer);
-  $('#editSongTitle').val(fileData.title);
-  $('#editSongArtist').val(fileData.artist);
-  $('#editSongAlbum').val(fileData.album);
-  $('#editSongGenre').val(fileData.genre);
-  $('#editSongTags').val(fileData.tags);
-  Troff.onEditUpdateName();
-}
-
 function onChangeSongListSelector(event: JQuery.ChangeEvent) {
   var $target = $(event.target),
     $selected = $target.find(':selected'),
@@ -824,12 +482,9 @@ function onChangeSongListSelector(event: JQuery.ChangeEvent) {
 
 export {
   updateUploadedHistory,
-  addGroupOwnerRow,
-  emptyGroupDialog,
   moveSongPickerToFloatingState,
   songListDialogOpenExisting,
   openGroupDialog,
-  initSongTable,
   dropSongOnSonglist,
   allowDrop,
   onDragleave,

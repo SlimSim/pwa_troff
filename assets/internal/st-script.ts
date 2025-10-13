@@ -1,3 +1,6 @@
+import { blurHack } from '../../utils/utils.js';
+import { nDB } from './db.js';
+
 export interface StandardFuntions {
   confirm: (
     textHead: string,
@@ -111,27 +114,7 @@ $(document).ready(function () {
     return typeof arg !== 'undefined' ? arg : val;
   };
 
-  var ST_DB = {
-      set: function (key: string, value: any): void {
-        window.localStorage.setItem(key, JSON.stringify(value));
-      },
-      get: function (key: string): any {
-        const raw = window.localStorage.getItem(key);
-        return raw == null ? null : JSON.parse(raw);
-      },
-    },
-    ST_DBc = {
-      //new data base callback
-      get: function (key: string, callback: (_value: any) => void): void {
-        callback(ST_DB.get(key));
-      },
-    },
-    /** @returns {void} */
-    blurHack = function () {
-      const el = document.getElementById('blur-hack');
-      if (el) el.focus({ preventScroll: true });
-    },
-    /** @param {any} event */
+  var /** @param {any} event */
     dataSaveValue = function (event: JQuery.TriggeredEvent): void {
       blurHack();
       var $target = $(event.target),
@@ -145,7 +128,7 @@ $(document).ready(function () {
 
       const key = 'TROFF_SAVE_VALUE_' + /** @type {string} */ id;
 
-      ST_DB.set(key, value);
+      nDB.set(key, value);
     };
 
   /**
@@ -175,15 +158,9 @@ $(document).ready(function () {
       var $target = $(element),
         key = 'TROFF_SAVE_VALUE_' + $target.attr('id');
 
-      ST_DBc.get(key, function (value) {
-        //var value = ret[key];
+      const value = nDB.get(key) || $target.data('st-save-current-value');
 
-        if (value === undefined || value === null) {
-          value = $target.data('st-save-current-value');
-        }
-
-        $target.val(value);
-      });
+      $target.val(value);
     }
   );
 
@@ -194,23 +171,22 @@ $(document).ready(function () {
         cssSelectorToHide = $v.data('st-css-selector-to-hide');
       if ($v.data('st-save-value-key')) {
         var key = $v.data('st-save-value-key');
-        ST_DBc.get(key, function (savedValue) {
-          //var savedValue = item[ key ];
+        const savedValue = nDB.get(key); //, function (savedValue) {
+        //var savedValue = item[ key ];
 
-          if (savedValue === undefined || savedValue === null) {
-            if ($v.hasClass('active')) {
-              $(cssSelectorToHide).removeClass('hidden');
-            } else {
-              $(cssSelectorToHide).addClass('hidden');
-            }
-          } else if (savedValue) {
-            $v.addClass('active');
+        if (savedValue === undefined || savedValue === null) {
+          if ($v.hasClass('active')) {
             $(cssSelectorToHide).removeClass('hidden');
           } else {
-            $v.removeClass('active');
             $(cssSelectorToHide).addClass('hidden');
           }
-        });
+        } else if (savedValue) {
+          $v.addClass('active');
+          $(cssSelectorToHide).removeClass('hidden');
+        } else {
+          $v.removeClass('active');
+          $(cssSelectorToHide).addClass('hidden');
+        }
       } else {
         if ($v.hasClass('active')) {
           $(cssSelectorToHide).removeClass('hidden');
@@ -232,7 +208,7 @@ $(document).ready(function () {
       $('[data-st-select-key=' + selectKey + ']').each(
         (/** @type {number} */ i, /** @type {HTMLElement} */ v) => {
           $(v).removeClass('active');
-          ST_DB.set($(v).data('st-save-value-key'), false);
+          nDB.set($(v).data('st-save-value-key'), false);
         }
       );
     }
@@ -253,7 +229,7 @@ $(document).ready(function () {
     if ($target.data('st-save-value-key')) {
       //		var o = {};
       //		o[ $target.data( "st-save-value-key" ) ] = setActive;
-      ST_DB.set($target.data('st-save-value-key'), setActive);
+      nDB.set($target.data('st-save-value-key'), setActive);
     }
   });
 

@@ -28,8 +28,6 @@ import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { cacheImplementation } from './services/FileApiImplementation.js';
 import {
   updateUploadedHistory,
-  addGroupOwnerRow,
-  emptyGroupDialog,
   moveSongPickerToFloatingState,
   songListDialogOpenExisting,
   dropSongOnSonglist,
@@ -45,7 +43,7 @@ import { gtag } from './services/analytics.js';
 import { isSafari } from './utils/browserEnv.js';
 import { errorHandler } from './scriptErrorHandler.js';
 import log from './utils/log.js';
-import { removeLocalInfo } from './utils/utils.js';
+import { blurHack, removeLocalInfo } from './utils/utils.js';
 import {
   TROFF_SETTING_SET_THEME,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
@@ -80,9 +78,10 @@ import {
   TroffStateOfSonglists,
 } from './types/troff.js';
 import { IOInput } from './types/io.js';
+import { addGroupOwnerRow, emptyGroupDialog } from './features/groupManagement.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
-  IO.blurHack();
+  blurHack();
   var $target = $(event.target),
     data = $target.data('songList'),
     galleryId = $target.attr('data-gallery-id');
@@ -213,7 +212,7 @@ class TroffClass {
     $('#addAddedSongsToSongList_songs').empty();
   };
 
-  initFileApiImplementation = () => {
+  initFileApiImplementation = async () => {
     log.d('initFileApiImplementation ->');
     $('#fileUploader').on('change', (event) => {
       const files = (event.target as HTMLInputElement).files;
@@ -237,7 +236,6 @@ class TroffClass {
         addItem_NEW_2(key);
         if (!$('#dataSongTable_wrapper').find('tr').hasClass('selected')) {
           this.selectSongInSongList(key);
-          log.d('initFileApiImplementation: -> createSongAudio', { key });
           createSongAudio(key);
         }
 
@@ -246,9 +244,8 @@ class TroffClass {
     });
 
     //loadAllFiles:
-    cacheImplementation.getAllKeys().then((keys) => {
-      keys.forEach(addItem_NEW_2);
-    });
+    const keys = await cacheImplementation.getAllKeys();
+    keys.forEach(addItem_NEW_2);
   };
 
   setUrlToSong = (serverId: string | undefined, fileName: string | null) => {
@@ -601,10 +598,11 @@ class TroffClass {
   };
 
   downloadSongFromServer = async (hash: string) => {
-    'use strict';
-    log.d('downloadSongFromServer -> hash:', hash);
-    const [serverId, fileNameURI] = hash.substr(1).split('&');
-    const fileName = decodeURI(fileNameURI);
+    const hashNoHashtag = hash.substr(1);
+    const ampersandIndex = hashNoHashtag.indexOf('&');
+    const serverId = hashNoHashtag.substring(0, ampersandIndex);
+    const fileName = decodeURI(hashNoHashtag.substring(ampersandIndex + 1));
+
     const troffDataFromCache = nDB.get(fileName);
     let troffData;
 
@@ -688,7 +686,7 @@ class TroffClass {
     IO.setEnterFunction((event: KeyboardEvent) => {
       if (event.ctrlKey) {
         //Ctrl+Enter will exit
-        IO.blurHack();
+        blurHack();
         return false;
       }
       return true;
@@ -700,45 +698,43 @@ class TroffClass {
   };
 
   recallFloatingDialog = () => {
-    DB.getVal('TROFF_SETTING_SONG_LIST_FLOATING_DIALOG', (floatingDialog) => {
-      if (floatingDialog) {
-        moveSongPickerToFloatingState();
-      } else {
-        moveSongPickerToAttachedState();
-      }
-    });
+    const floatingDialog = nDB.get('TROFF_SETTING_SONG_LIST_FLOATING_DIALOG');
+    if (floatingDialog) {
+      moveSongPickerToFloatingState();
+    } else {
+      moveSongPickerToAttachedState();
+    }
   };
 
   recallSongColumnToggle = (callback: () => void) => {
-    DB.getVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, (columnToggle) => {
-      if (columnToggle === undefined) {
-        setTimeout(() => {
-          this.recallSongColumnToggle(callback);
-        }, 42);
+    const columnToggle = nDB.get(TROFF_SETTING_SONG_COLUMN_TOGGLE);
+    if (columnToggle === undefined) {
+      setTimeout(() => {
+        this.recallSongColumnToggle(callback);
+      }, 42);
+      return;
+    }
+
+    DATA_TABLE_COLUMNS.list.forEach((v, i) => {
+      if (v.hideFromUser) {
+        const column = ($('#dataSongTable') as any)
+          .DataTable()
+          .column(DATA_TABLE_COLUMNS.getPos(v.id));
+        column.visible(false);
         return;
       }
 
-      DATA_TABLE_COLUMNS.list.forEach((v, i) => {
-        if (v.hideFromUser) {
-          const column = ($('#dataSongTable') as any)
-            .DataTable()
-            .column(DATA_TABLE_COLUMNS.getPos(v.id));
-          column.visible(false);
-          return;
-        }
-
-        $('#columnToggleParent').append(
-          $('<input>')
-            .attr('type', 'button')
-            .attr('data-column', i)
-            .addClass('stOnOffButton')
-            .toggleClass('active', columnToggle[v.id])
-            .val(v.header)
-            .click(dataTableColumnPicker)
-        );
-      });
-      callback();
+      $('#columnToggleParent').append(
+        $('<input>')
+          .attr('type', 'button')
+          .attr('data-column', i)
+          .addClass('stOnOffButton')
+          .toggleClass('active', columnToggle[v.id])
+          .val(v.header)
+          .click(dataTableColumnPicker)
+      );
     });
+    callback();
   };
 
   toggleExtendedMarkerColor = () => {
@@ -754,12 +750,11 @@ class TroffClass {
   };
 
   recallExtendedMarkerColor = () => {
-    DB.getVal(TROFF_SETTING_EXTENDED_MARKER_COLOR, (extend) => {
-      if (extend) {
-        $('#markerList').addClass('extended-color');
-        $('#toggleExtendedMarkerColor').addClass('active');
-      }
-    });
+    const extend = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
+    if (extend) {
+      $('#markerList').addClass('extended-color');
+      $('#toggleExtendedMarkerColor').addClass('active');
+    }
   };
 
   toggleExtraExtendedMarkerColor = () => {
@@ -775,12 +770,11 @@ class TroffClass {
   };
 
   recallExtraExtendedMarkerColor = () => {
-    DB.getVal(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR, (extend) => {
-      if (extend || extend === null) {
-        $('#markerList').addClass('extra-extended');
-        $('#toggleExtraExtendedMarkerColor').addClass('active');
-      }
-    });
+    const extend = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
+    if (extend || extend === null) {
+      $('#markerList').addClass('extra-extended');
+      $('#toggleExtraExtendedMarkerColor').addClass('active');
+    }
   };
 
   updateHrefForTheme = (theme: string) => {
@@ -810,13 +804,11 @@ class TroffClass {
   };
 
   recallTheme = () => {
-    DB.getVal(TROFF_SETTING_SET_THEME, (theme) => {
-      theme = theme || 'col1';
-      $('#themePickerParent')
-        .find('[data-theme="' + theme + '"]')
-        .addClass('selected');
-      this.updateHrefForTheme(theme);
-    });
+    const theme = nDB.get(TROFF_SETTING_SET_THEME) || 'col1';
+    $('#themePickerParent')
+      .find('[data-theme="' + theme + '"]')
+      .addClass('selected');
+    this.updateHrefForTheme(theme);
   };
 
   closeSettingsDialog = () => {
@@ -864,17 +856,17 @@ class TroffClass {
     butt.classList.toggle('active');
 
     var bFullScreen = butt.classList.contains('active');
-    DB.setCurrent(this.strCurrentSong, 'bPlayInFullscreen', bFullScreen);
+    nDB.setOnSong(this.strCurrentSong, 'bPlayInFullscreen', bFullScreen);
 
-    IO.blurHack();
+    blurHack();
   };
 
   mirrorImageChanged = (event: JQuery.ClickEvent) => {
     var bMirrorImage = !$(event.target).hasClass('active');
-    DB.setCurrent(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
+    nDB.setOnSong(this.strCurrentSong, 'bMirrorImage', bMirrorImage);
     this.setMirrorImage(bMirrorImage);
 
-    IO.blurHack();
+    blurHack();
   };
 
   setImageLayout = () => {
@@ -925,11 +917,6 @@ class TroffClass {
         sortAndValue(media.duration, this.secToDisp(media.duration))
       );
     }
-    log.d('setMetadata timeBar sync', {
-      timeBarValue: $('#timeBar').val(),
-      currentTime: media.currentTime,
-      max: media.duration,
-    });
     (document.getElementById('timeBar') as any).max = media.duration;
     $('#maxTime')[0].innerHTML = this.secToDisp(media.duration);
 
@@ -1134,7 +1121,7 @@ class TroffClass {
     });
 
     this.updateLoopTimes();
-    IO.blurHack();
+    blurHack();
   };
 
   updateLoopTimes = () => {
@@ -1142,7 +1129,7 @@ class TroffClass {
     if ($('#buttLoopInf').hasClass('currentLoop')) dbLoop = 'Inf';
     else dbLoop = $('.currentLoop').val() as string;
 
-    if (this.strCurrentSong) DB.setCurrent(this.strCurrentSong, 'loopTimes', dbLoop);
+    if (this.strCurrentSong) nDB.setOnSong(this.strCurrentSong, 'loopTimes', dbLoop);
 
     IO.loopTimesLeft($('.currentLoop').val() as string);
   }; // end updateLoopTimes
@@ -1158,7 +1145,6 @@ class TroffClass {
   timeupdateAudio = () => {
     var audio = document.querySelector('audio, video') as any;
     var dTime = audio.currentTime;
-    log.d('timeupdateAudio', { timeBarValue: $('#timeBar').val(), currentTime: audio.currentTime });
 
     if (dTime >= this.getStopTime()) {
       this.atEndOfLoop();
@@ -1288,7 +1274,7 @@ class TroffClass {
     } else {
       this.pauseSong(updateLoopTimes);
     }
-    IO.blurHack();
+    blurHack();
   }; // end spaceOrEnter()
 
   playSong = (wait?: number) => {
@@ -1558,11 +1544,10 @@ class TroffClass {
     importSonginfo(oImport.strSongInfo);
     importStates(oImport.aoStates);
 
-    DB.saveMarkers(this.getCurrentSong(), () => {
-      DB.saveStates(this.getCurrentSong(), () => {
-        this.updateSongInfo();
-      });
-    });
+    DB.saveMarkers(this.getCurrentSong());
+
+    DB.saveStates(this.getCurrentSong());
+    this.updateSongInfo();
 
     function importSonginfo(strSongInfo: string) {
       $('#songInfoArea').val($('#songInfoArea').val() + strSongInfo);
@@ -1635,11 +1620,11 @@ class TroffClass {
 
   toggleImportExport = () => {
     $('#outerImportExportPopUpSquare').toggleClass('hidden');
-    IO.blurHack();
+    blurHack();
   };
 
   toggleArea = (event: JQuery.ClickEvent) => {
-    IO.blurHack();
+    blurHack();
 
     var sectionToHide = $(event.target).attr('section-to-hide');
 
@@ -1936,50 +1921,50 @@ class TroffClass {
   };
 
   recallCurrentStateOfSonglists = () => {
-    DB.getVal('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT', (isAdditiveSelect) => {
-      DB.getVal(TROFF_CURRENT_STATE_OF_SONG_LISTS, (o: TroffStateOfSonglists) => {
-        var indicatorClass = isAdditiveSelect ? 'active' : 'selected';
+    const isAdditiveSelect = nDB.get('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT') as boolean;
+    const o: TroffStateOfSonglists = nDB.get(
+      TROFF_CURRENT_STATE_OF_SONG_LISTS
+    ) as TroffStateOfSonglists;
+    var indicatorClass = isAdditiveSelect ? 'active' : 'selected';
 
-        $('#songListAll').removeClass('selected');
+    $('#songListAll').removeClass('selected');
 
-        o.directoryList.forEach((v) => {
-          $('#directoryList')
-            .find('[data-gallery-id=' + v.galleryId + ']')
-            .each((inner_index, inner_value) => {
-              if ($(inner_value).data('full-path') == v.fullPath) {
-                $(inner_value).addClass(indicatorClass);
-                $('#songListAll').removeClass('selected');
-              }
-            });
-        });
-        o.galleryList.forEach((v) => {
-          $('#galleryList')
-            .find('[data-gallery-id=' + v + ']')
-            .addClass(indicatorClass);
-          $('#songListAll').removeClass('selected');
-        });
-        o.songListList.forEach((v) => {
-          $('#songListList')
-            .find('[data-songlist-id=' + v + ']')
-            .addClass(indicatorClass);
-          $('#songListAll').removeClass('selected');
-
-          if (!isAdditiveSelect) {
-            const songListData = $('#songListList')
-              .find('[data-songlist-id=' + v + ']')
-              .data('songList');
-            if (songListData != undefined) {
-              $('#headArea').addClass(songListData.color);
-              $('#songlistIcon').addClass(songListData.icon);
-              $('#songlistName').text(songListData.name);
-              $('#songlistInfo').removeClass('hidden').text(songListData.info);
-            }
+    o.directoryList.forEach((v) => {
+      $('#directoryList')
+        .find('[data-gallery-id=' + v.galleryId + ']')
+        .each((inner_index, inner_value) => {
+          if ($(inner_value).data('full-path') == v.fullPath) {
+            $(inner_value).addClass(indicatorClass);
+            $('#songListAll').removeClass('selected');
           }
         });
-
-        filterSongTable(getFilterDataList());
-      });
     });
+    o.galleryList.forEach((v) => {
+      $('#galleryList')
+        .find('[data-gallery-id=' + v + ']')
+        .addClass(indicatorClass);
+      $('#songListAll').removeClass('selected');
+    });
+    o.songListList.forEach((v) => {
+      $('#songListList')
+        .find('[data-songlist-id=' + v + ']')
+        .addClass(indicatorClass);
+      $('#songListAll').removeClass('selected');
+
+      if (!isAdditiveSelect) {
+        const songListData = $('#songListList')
+          .find('[data-songlist-id=' + v + ']')
+          .data('songList');
+        if (songListData != undefined) {
+          $('#headArea').addClass(songListData.color);
+          $('#songlistIcon').addClass(songListData.icon);
+          $('#songlistName').text(songListData.name);
+          $('#songlistInfo').removeClass('hidden').text(songListData.info);
+        }
+      }
+    });
+
+    filterSongTable(getFilterDataList());
   };
 
   saveCurrentStateOfSonglists = () => {
@@ -2036,7 +2021,7 @@ class TroffClass {
     IO.setEnterFunction((event) => {
       if (event.ctrlKey) {
         //Ctrl+Enter will exit
-        IO.blurHack();
+        blurHack();
         return false;
       }
       return true;
@@ -2057,7 +2042,7 @@ class TroffClass {
   rememberCurrentState = () => {
     if ($('#statesTab').hasClass('hidden')) return;
 
-    IO.blurHack();
+    blurHack();
     var nrStates = $('#stateList').children().length + 1;
     IO.prompt(
       'Remember state of settings to be recalled later',
@@ -2199,7 +2184,7 @@ class TroffClass {
         if (event.ctrlKey) {
           //Ctrl+Enter will exit
           $input.val('').trigger('click');
-          IO.blurHack();
+          blurHack();
           return false;
         }
 
@@ -2211,7 +2196,7 @@ class TroffClass {
           .to$()
           .removeClass('important');
 
-        IO.blurHack();
+        blurHack();
         return true;
       },
       (event) => {
@@ -2244,7 +2229,7 @@ class TroffClass {
       .removeClass('important');
 
     IO.clearEnterFunction();
-    IO.blurHack();
+    blurHack();
   };
 
   showSearchAndActivate = () => {
@@ -2264,7 +2249,7 @@ class TroffClass {
     IO.setEnterFunction((event) => {
       if (event.ctrlKey) {
         //Ctrl+Enter will exit
-        IO.blurHack();
+        blurHack();
         return false;
       }
       return true;
@@ -2291,15 +2276,15 @@ class TroffClass {
   addMarkers = (aMarkers: TroffMarker[]) => {
     var startM = (event: MouseEvent) => {
       this.selectMarker((event.currentTarget as HTMLInputElement).id);
-      IO.blurHack();
+      blurHack();
     };
     var stopM = (event: MouseEvent) => {
       this.selectStopMarker((event.currentTarget as HTMLInputElement).id);
-      IO.blurHack();
+      blurHack();
     };
     var editM = (event: MouseEvent) => {
       this.editMarker((event.currentTarget as HTMLInputElement).id.slice(0, -1));
-      IO.blurHack();
+      blurHack();
     };
 
     for (var i = 0; i < aMarkers.length; i++) {
@@ -2435,7 +2420,7 @@ class TroffClass {
     $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
-    IO.blurHack();
+    blurHack();
 
     if (!startMarkerId || !stopMarkerId) return;
 
@@ -2451,7 +2436,7 @@ class TroffClass {
     $('#markerInfoArea').val(($('#' + startMarkerId)[0] as any).info);
 
     this.setAppropriateActivePlayRegion();
-    IO.blurHack();
+    blurHack();
     if (!startMarkerId) return;
     DB.setCurrentStartMarker(startMarkerId, this.strCurrentSong);
   };
@@ -2464,7 +2449,7 @@ class TroffClass {
     $('#' + stopMarkerId).addClass('currentStopMarker');
 
     this.setAppropriateActivePlayRegion();
-    IO.blurHack();
+    blurHack();
     DB.setCurrentStopMarker(stopMarkerId, this.strCurrentSong);
   };
 
@@ -2569,7 +2554,7 @@ class TroffClass {
 
   toggleMoveMarkersMoreInfo = () => {
     $('#moveMarkersMoreInfoDialog').toggleClass('hidden');
-    IO.blurHack();
+    blurHack();
   };
 
   /*
@@ -2687,7 +2672,7 @@ class TroffClass {
     $('#copyMarkersNrOfMarkers').text(this.getNrOfSelectedMarkers());
     $('#copyMarkersNumber').select();
     IO.setEnterFunction(() => {
-      IO.blurHack();
+      blurHack();
       this.copyMarkers();
       return false;
     });
@@ -3098,12 +3083,12 @@ class TroffClass {
   };
 
   zoomOut = () => {
-    IO.blurHack();
+    blurHack();
     this.zoom(0, Number((document.getElementById('timeBar') as HTMLInputElement).max));
   };
 
   zoomToMarker = () => {
-    IO.blurHack();
+    blurHack();
     var startTime = this.getStartTime();
     var endTime = this.getStopTime();
     if (startTime === this.m_zoomStartTime && endTime == this.m_zoomEndTime) {
@@ -3164,7 +3149,7 @@ class TroffClass {
   tapTime = () => {
     this.previousTime = this.time;
     this.time = new Date().getTime() / 1000;
-    IO.blurHack();
+    blurHack();
 
     if (this.time - this.previousTime > 3) {
       this.startTime = this.previousTime = this.time;
@@ -3224,15 +3209,14 @@ class TroffClass {
   /* end standAlone Functions */
 
   checkHashAndGetSong = async () => {
-    if (window.location.hash) {
-      log.d('checkHashAndGetSong, window.location.hash', window.location.hash);
-      try {
-        await this.downloadSongFromServer(window.location.hash);
-      } catch (e) {
-        log.e('error on downloadSongFromServer:', e);
-        DB.getCurrentSong();
-      }
-    } else {
+    if (!window.location.hash) {
+      DB.getCurrentSong();
+      return;
+    }
+    try {
+      await this.downloadSongFromServer(window.location.hash);
+    } catch (e) {
+      log.e('error on downloadSongFromServer:', e);
       DB.getCurrentSong();
     }
   };

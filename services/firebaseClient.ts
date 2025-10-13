@@ -33,12 +33,76 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
 import { environment } from '../assets/internal/environment.js';
+import { COOKIE_CONSENT_ACCEPTED } from '../assets/internal/cookie_consent.js';
 
 // Initialize app once per page
 const app = initializeApp(environment.firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+let analytics: any | null = null;
+let eventLogger: any | null = null;
+
+// Enable analytics if user has consented
+enableAnalyticsIfConsented();
+
+function hasUserGivenCookieConsent(): boolean {
+  return localStorage.getItem(COOKIE_CONSENT_ACCEPTED) === 'true';
+}
+
+async function loadAnalytics(): Promise<any> {
+  if (analytics) return analytics;
+
+  if (!hasUserGivenCookieConsent()) {
+    return null;
+  }
+
+  try {
+    // Dynamically import analytics module
+    const { initializeAnalytics, logEvent, setAnalyticsCollectionEnabled } = await import(
+      //@ts-ignore
+      'https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js'
+    );
+
+    eventLogger = logEvent;
+
+    // Initialize analytics with collection disabled by default
+    analytics = initializeAnalytics(app, { automaticDataCollectionEnabled: false });
+
+    // Enable only if consent was already given
+    setAnalyticsCollectionEnabled(analytics, true);
+
+    return analytics;
+  } catch (error) {
+    console.warn('Analytics not available (likely running on localhost or blocked region):', error);
+    return null;
+  }
+}
+
+// Function to enable analytics if consent is given
+async function enableAnalyticsIfConsented(): Promise<void> {
+  if (!hasUserGivenCookieConsent()) {
+    // If no consent, ensure analytics is disabled if it was loaded
+    if (analytics) {
+      const { setAnalyticsCollectionEnabled } = await import(
+        //@ts-ignore
+        'https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js'
+      );
+      setAnalyticsCollectionEnabled(analytics, false);
+    }
+    return;
+  }
+
+  // Load analytics if needed and enable collection
+  const analyticsInstance = await loadAnalytics();
+  if (analyticsInstance) {
+    const { setAnalyticsCollectionEnabled } = await import(
+      //@ts-ignore
+      'https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js'
+    );
+    setAnalyticsCollectionEnabled(analyticsInstance, true);
+  }
+}
 
 async function initiateAllFirebaseGroups(firebaseUserEmail: string | null) {
   if (!firebaseUserEmail) {
@@ -48,6 +112,11 @@ async function initiateAllFirebaseGroups(firebaseUserEmail: string | null) {
 
   return await getDocs(q);
 }
+
+document.addEventListener('cookieConsentGiven', () => {
+  // After user accepts, load and enable analytics
+  enableAnalyticsIfConsented();
+});
 
 export {
   app,
@@ -78,4 +147,8 @@ export {
   uploadBytesResumable,
   getDownloadURL,
   initiateAllFirebaseGroups,
+  // Analytics
+  loadAnalytics,
+  eventLogger,
+  hasUserGivenCookieConsent,
 };

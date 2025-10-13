@@ -21,7 +21,6 @@
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
 import './utils/debugging.js';
-
 import {
   auth,
   db,
@@ -37,7 +36,6 @@ import {
   getDoc,
 } from './services/firebaseClient.js';
 import {
-  initSongTable,
   closeSongDialog,
   getFileType,
   clearContentDiv,
@@ -75,6 +73,8 @@ import {
   TroffHtmlMarkerElement,
   TroffSongIdentifyer_sk,
 } from './types/troff.js';
+import { initSongTable } from './dataTable.js';
+import { sleep } from './utils/timeHack.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
@@ -229,14 +229,6 @@ const songDocUpdate = async function (doc: DocumentSnapshot) {
   const songKey = songData.songKey;
 
   const songExists = await fileHandler.doesFileExistInCache(songKey);
-  // log.d('songDocUpdate cache lookup', {
-  //   songKey,
-  //   songExists,
-  //   isSafari,
-  //   treatSafariDifferent,
-  //   fileUrl: songData.fileUrl,
-  //   firestoreFromCache: doc.metadata.fromCache,
-  // });
 
   if (!songExists) {
     log.i('songDocUpdate missing song - fetching from server', {
@@ -367,32 +359,30 @@ const getFirebaseGroupDataFromDialog = function (forceUserEmail: boolean) {
   return groupData;
 };
 
-const onOnline = function () {
-  // this timeOut is because I want to wait untill possible existing
+const onOnline = async function () {
+  // this async sleep is because I want to wait untill possible existing
   // firestore updates get synced to the ego-computer.
-  // because then Ego-offline-changes should be overwritten.
-  setTimeout(() => {
-    const changedSongList: TroffSongIdentifyer_sk[] =
-      nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
-    // This is to send local changes IF the server does NOT
-    // have new updates
-    changedSongList.forEach((changedSong) => {
-      // firebase
-      //   .firestore()
-      //   .collection("Groups")
-      //   .doc(changedSong.groupDocId)
-      //   .collection("Songs")
-      //   .doc(changedSong.songDocId)
-      //   .get()
-      //   .then(songDocUpdate);
-      // There is 2 callbacks,
-      // it is because firebase is beign updated and the
-      // it sends out the update-calblack, so all in good order!
-      getDoc(doc(db, 'Groups', changedSong.groupDocId, 'Songs', changedSong.songDocId)).then(
-        songDocUpdate
-      );
-    });
-  }, 42);
+  // because then Ego-offline-changes should be overwritten:
+  await sleep(42);
+  const changedSongList: TroffSongIdentifyer_sk[] = nDB.get('TROFF_SONGS_WITH_LOCAL_CHANGES') || [];
+  // This is to send local changes IF the server does NOT
+  // have new updates
+  changedSongList.forEach((changedSong) => {
+    // firebase
+    //   .firestore()
+    //   .collection("Groups")
+    //   .doc(changedSong.groupDocId)
+    //   .collection("Songs")
+    //   .doc(changedSong.songDocId)
+    //   .get()
+    //   .then(songDocUpdate);
+    // There is 2 callbacks,
+    // it is because firebase is beign updated and the
+    // it sends out the update-calblack, so all in good order!
+    getDoc(doc(db, 'Groups', changedSong.groupDocId, 'Songs', changedSong.songDocId)).then(
+      songDocUpdate
+    );
+  });
 };
 
 /*
@@ -488,8 +478,6 @@ const mergeSongListHistorys = function (
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promise<void> {
   log.d(`-> path ${path} songData ${songData} isSafari ${isSafari}`);
 
-  const canplay = false;
-
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {
@@ -536,77 +524,9 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
     treatSafariDifferent,
     navigatorOnLine: navigator.onLine,
   });
-  // if (isSafari && treatSafariDifferent) {
-  //   log.d(`isSafari ${isSafari} treatSafariDifferent ${treatSafariDifferent}`);
-
-  //   const troffData = nDB.get(path);
-
-  //   log.i('setSong2 safari media details', {
-  //     path,
-  //     isSafari,
-  //     treatSafariDifferent,
-  //     localAdded: troffData?.localInformation?.addedFromThisDevice ?? false,
-  //     hasFileUrl: Boolean(troffData?.fileUrl),
-  //     navigatorOnLine: navigator.onLine,
-  //   });
-
-  //   log.d('setSong2 safari branch', {
-  //     source: troffData?.localInformation?.addedFromThisDevice
-  //       ? 'objectUrl'
-  //       : troffData?.fileUrl
-  //         ? 'remoteUrl'
-  //         : 'fallbackObjectUrl',
-  //   });
-  //   if (troffData.localInformation && troffData.localInformation.addedFromThisDevice) {
-  //     log.d('setSong2: in if 1');
-  //     newElem.setAttribute('src', songData);
-  //   } else if (troffData.fileUrl != undefined) {
-  //     log.d('setSong2: in if 2');
-  //     newElem.setAttribute('src', troffData.fileUrl);
-
-  //     // if first time loading the song, don't show alert :)
-  //     if (troffData.localInformation && troffData.localInformation.nrTimesLoaded > 5) {
-  //       IO.alert(
-  //         'Please add file manually',
-  //         'This file has been downloaded, ' +
-  //           'and will not work offline. You can solve this in two ways:<br />' +
-  //           '1) Add the file called<br /><br />' +
-  //           path +
-  //           '<br /><br />' +
-  //           'with the ' +
-  //           '<label ' +
-  //           'title="Add songs, videos or pictures to Troff"' +
-  //           'class="cursor-pointer mr-2 regularButton fa-stack Small full-height-on-mobile"' +
-  //           'for="fileUploader">' +
-  //           '<i class="fa-music fa-stack-10x m-relative-7 font-size-relative-1"></i>' +
-  //           '<i class="fa-plus fa-stack-10x m-relative-4 font-size-relative-65"></i>' +
-  //           '</label>' +
-  //           '-button at the top of the song-dialog or <br /><br />' +
-  //           '2) Switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />' +
-  //           'Best of luck!'
-  //       );
-  //     }
-  //   } else {
-  //     newElem.setAttribute('src', songData);
-  //   }
-  //   if ('load' in newElem && 'pause' in newElem) {
-  //     (newElem as HTMLAudioElement).load();
-  //     (newElem as HTMLAudioElement).pause();
-  //   }
-  //   log.d('setSong2 safari preload complete', { path });
-  // } else {
   log.d(`setting src to ${songData}`);
   //för vanlig linux, bäst att använda songData hela tiden :)
   newElem.setAttribute('src', songData);
-
-  // newElem.addEventListener(
-  //   'canplay',
-  //   () => log.d('canplay event', { readyState: (newElem as HTMLAudioElement).readyState }),
-  //   { once: true }
-  // );
-  // newElem.addEventListener('seeked', () => log.d('seeked event'));
-  // newElem.addEventListener('seeking', () => log.d('seeking event'));
-  // }
 
   const localInfo = nDB.get(path).localInformation || {};
   const nrTimesLoaded = localInfo.nrTimesLoaded || 0;
@@ -626,10 +546,6 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
       'canplay',
       () => {
         clearTimeout(timer);
-        log.d('canplay event fired - deferring markers', {
-          readyState: (newElem as HTMLAudioElement).readyState,
-          currentTime: (newElem as HTMLAudioElement).currentTime,
-        });
         resolve();
       },
       { once: true }
@@ -789,44 +705,34 @@ $(document).ready(async function () {
     $('#TROFF_SETTING_UI_VOLUME_SLIDER_SHOW').removeClass('active');
   }
 
-  setTimeout(() => {
-    // don't show tha load-screen for more than 10-seconds
-    // (so that it will be removed even if something breaks)
-    IO.removeLoadScreen();
-  }, 10000);
+  IO.removeLoadScreenSoon();
 
   // include external HTML-files:
-
   const includes = $('[data-include]');
-  loadExternalHtml(includes, async function () {
-    initSongTable();
+  await loadExternalHtml(includes);
 
-    DB.cleanDB();
-    DB.getAllSonglists();
-    DB.getZoomDontShowAgain();
-    IO.startFunc();
-    Rate.startFunc();
+  initSongTable();
+  await DB.cleanDB();
+  DB.getAllSonglists();
+  DB.getZoomDontShowAgain();
+  IO.startFunc();
+  Rate.startFunc();
+  Troff.recallCurrentStateOfSonglists();
+  DB.getShowSongDialog();
+  initEnvironment();
 
-    Troff.initFileApiImplementation();
-    Troff.recallCurrentStateOfSonglists();
+  firebaseWrapper.onUploadProgressUpdate = function (progress) {
+    $('#uploadPercentDone').text(Math.trunc(progress));
+  };
+  firebaseWrapper.onDownloadProgressUpdate = function (progress) {
+    $('#downloadPercentDone').text(Math.trunc(progress));
+  };
 
-    DB.getShowSongDialog();
-    initEnvironment();
-
-    Troff.checkHashAndGetSong();
-
-    firebaseWrapper.onUploadProgressUpdate = function (progress) {
-      $('#uploadPercentDone').text(Math.trunc(progress));
-    };
-    firebaseWrapper.onDownloadProgressUpdate = function (progress) {
-      $('#downloadPercentDone').text(Math.trunc(progress));
-    };
-  });
+  await Troff.checkHashAndGetSong();
+  await Troff.initFileApiImplementation();
 });
 
 function initEnvironment() {
-  'use strict';
-
   $.getJSON('manifest.json', function (manifest) {
     $('.app-version-number').text(manifest.version);
     log.i('manifest.version', manifest.version);

@@ -2,10 +2,9 @@
 import '../assets/internal/extend-jquery.js';
 import { nDB } from '../assets/internal/db.js';
 import { st } from '../assets/internal/st-script.js';
-import { DB, Troff, Rate, googleSignIn, onOnline, doSignOut } from '../script.js';
-import { groupDialogSave } from '../features/groupManagement.js';
+import { Troff, Rate, googleSignIn, onOnline, doSignOut } from '../script.js';
+import { groupDialogSave, addGroupOwnerRow } from '../features/groupManagement.js';
 import {
-  addGroupOwnerRow,
   clickButtNewSongList,
   onChangeSongListSelector,
   closeSongDialog,
@@ -21,6 +20,8 @@ import { clickSongList_NEW } from '../scriptTroffClass.js';
 import log from '../utils/log.js';
 import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { IOInput } from 'types/io.js';
+import { sleep } from '../utils/timeHack.js';
+import { blurHack } from '../utils/utils.js';
 
 class IOClass {
   IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
@@ -90,6 +91,12 @@ class IOClass {
     window.open($button.data('href'), $button.data('target'));
   };
 
+  removeLoadScreenSoon = () => {
+    sleep(10000).then(() => {
+      this.removeLoadScreen();
+    });
+  };
+
   removeLoadScreen = () => {
     $('#loadScreen, #loadScreenStyle').remove();
   };
@@ -120,7 +127,7 @@ class IOClass {
     });
 
     $('[data-st-css-selector-to-toggle]').on('click', (event) => {
-      this.blurHack();
+      blurHack();
       var $target = $(event.target),
         $value = $($target.data('st-css-selector-to-toggle'));
 
@@ -134,7 +141,7 @@ class IOClass {
     });
 
     $('[data-st-css-selector-to-fade-in]').on('click', (event) => {
-      this.blurHack();
+      blurHack();
       var $target = $(event.target),
         $value = $($target.data('st-css-selector-to-fade-in'));
 
@@ -147,7 +154,7 @@ class IOClass {
       }
     });
 
-    $('.regularButton').on('click', this.blurHack);
+    $('.regularButton').on('click', blurHack);
 
     //TODO: fix so that all cancelButtons use this class, and remove there id, and event-listener :)
     $('.dialogCancelButton').click((event) => {
@@ -157,7 +164,7 @@ class IOClass {
 
     $('[data-href]').on('click', this.openWindow);
     $('.onClickToggleFullScreen').on('click', this.toggleFullScreen);
-    $('.blurOnClick').on('click', this.blurHack);
+    $('.blurOnClick').on('click', blurHack);
     $('.showUploadSongToServerDialog').on('click', Troff.showUploadSongToServerDialog);
     $('#buttCopyUrlToClipboard').on('click', Troff.buttCopyUrlToClipboard);
     $('.onClickCopyTextToClipboard').on('click', this.onClickCopyTextToClipboard);
@@ -345,10 +352,6 @@ class IOClass {
     }
   }; //end startFunc
 
-  blurHack = () => {
-    document.getElementById('blur-hack')?.focus({ preventScroll: true });
-  };
-
   onClickCopyTextToClipboard = (event: JQuery.ClickEvent) => {
     this.copyTextToClipboard($(event.target).val());
   };
@@ -456,11 +459,11 @@ class IOClass {
         event.keyCode == 13 // Enter
       ) {
         $(':input[type="number"]').blur();
-        this.blurHack();
+        blurHack();
         return;
       }
     }
-    this.blurHack();
+    blurHack();
 
     if (event.keyCode >= 48 && event.keyCode <= 57) {
       // pressed a number
@@ -648,7 +651,7 @@ class IOClass {
       $('.colorPickerSelected').removeClass('colorPickerSelected');
       event.currentTarget.classList.add('colorPickerSelected');
       $colorText.find('span').html(event.currentTarget.getAttribute('color'));
-      this.blurHack();
+      blurHack();
     };
 
     const generateColorBut = (col: string) => {
@@ -1029,12 +1032,12 @@ class IOClass {
     }
 
     const key = 'TROFF_VALUE_' + id;
-    DB.setCurrent(Troff.getCurrentSong(), key, value);
+    nDB.setOnSong(Troff.getCurrentSong(), key, value);
     event.target?.dispatchEvent(new Event('savedToDbEvent'));
   };
 
   saveOnSongToggleClass = (event: JQuery.ClickEvent) => {
-    this.blurHack();
+    blurHack();
 
     var $target = $(event.target),
       id = $target.attr('id'),
@@ -1055,7 +1058,7 @@ class IOClass {
     const key = 'TROFF_CLASS_TO_TOGGLE_' + id;
     const value = $target.hasClass(classToToggleAndSave);
 
-    DB.setCurrent(Troff.getCurrentSong(), key, value);
+    nDB.setOnSong(Troff.getCurrentSong(), key, value);
   };
 } // end IOClass
 

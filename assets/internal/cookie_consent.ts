@@ -6,13 +6,12 @@
  * @property {(key: string, value: any) => void} set
  * @property {(key: string) => any} get
  */
+const COOKIE_CONSENT_ACCEPTED = 'TROFF_COOKIE_CONSENT_ACCEPTED';
 $(document).ready(function () {
-  var COOKIE_CONSENT_ACCEPTED = 'TROFF_COOKIE_CONSENT_ACCEPTED';
-
   /** @type {CookieConsentDB} */
   const cookie_consent_DB = {
-    set: function (key: string, value: any) {
-      window.localStorage.setItem(key, JSON.stringify(value));
+    set: async function (key: string, value: any) {
+      await window.localStorage.setItem(key, JSON.stringify(value));
     },
     get: function (key: string) {
       const raw = window.localStorage.getItem(key);
@@ -38,7 +37,7 @@ $(document).ready(function () {
             $('<p>')
               .attr('class', 'small text-left')
               .text(
-                'Cookies help us deliver our Services. By using our website or clicking "I consent", you consent to our privacy policy and our use of cookies'
+                'Cookies help us deliver our Services. By clicking "I consent", you consent to our privacy policy and our use of cookies'
               )
           )
           .append(
@@ -46,13 +45,12 @@ $(document).ready(function () {
               .append(
                 $('<button>')
                   .text('I consent')
-                  .on(
-                    'click',
-                    /** @this {HTMLElement} */ function () {
-                      $(this).trigger('notify-hide');
-                      cookie_consent_DB.set(COOKIE_CONSENT_ACCEPTED, true);
-                    }
-                  )
+                  .on('click', async function () {
+                    $(this).trigger('notify-hide');
+                    await cookie_consent_DB.set(COOKIE_CONSENT_ACCEPTED, true);
+                    // Dispatch custom event for analytics
+                    document.dispatchEvent(new CustomEvent('cookieConsentGiven'));
+                  })
               )
               .append(
                 $('<a>')
@@ -91,3 +89,5 @@ $(document).ready(function () {
 
   checkToShowCookieConsent();
 });
+
+export { COOKIE_CONSENT_ACCEPTED };

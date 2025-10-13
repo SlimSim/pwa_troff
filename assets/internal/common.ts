@@ -15,6 +15,8 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+import { blurHack } from '../../utils/utils.js';
+
 // @ts-check
 
 /**
@@ -39,12 +41,12 @@ const _w: any = window;
     }
     /**
      * Open the default mail client with a prefilled message promoting Troff.
-     * Also invokes IO.blurHack() if available to remove focus artifacts.
+     * Also invokes blurHack() if available to remove focus artifacts.
      * @returns {void}
      */
     function sendMail(): void {
       console.log('sendMail 2 ->');
-      _w.IO?.blurHack();
+      blurHack();
       var subject = 'Troff is a great music player for practicing';
       var body =
         'Hello\r\n\r\n' +
