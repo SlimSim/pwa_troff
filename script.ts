@@ -20,6 +20,7 @@
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
+import './utils/sentry.js';
 import './utils/debugging.js';
 import {
   auth,
