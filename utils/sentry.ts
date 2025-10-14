@@ -1,21 +1,62 @@
-// import { COOKIE_CONSENT_ACCEPTED } from '../assets/internal/cookie_consent.js';
+import log from './log.js';
 
-// Sentry.init({
-//   dsn: 'https://44b623ba6268a114c45ccffad2af8c3b@o4510182185631744.ingest.de.sentry.io/4510182202277968',
-//   // Optional: Add release/version for better tracking (e.g., from package.json)
-//   release: '1.0.0', // Update as needed
-//   // Optional: Environment (e.g., 'production' for live, 'development' for local)
-//   environment: 'production',
-//   // Setting this option to true will send default PII data to Sentry.
-//   // For example, automatic IP address collection on events
-//   sendDefaultPii: localStorage.getItem(COOKIE_CONSENT_ACCEPTED) === 'true',
-// });
+declare global {
+  const Sentry: {
+    init: (options: any) => void;
+    // Add other methods if needed, e.g., captureException, etc.
+  };
+}
 
-// TODO: flytta sentry-init till denna fil (men behåll script src"...." i index.html)
+let version = '0';
+let environment = 'dev';
 
-(window as any).Sentry.init({
-  dsn: 'https://44b623ba6268a114c45ccffad2af8c3b@o4510182185631744.ingest.de.sentry.io/4510182202277968',
-  // Setting this option to true will send default PII data to Sentry.
-  // For example, automatic IP address collection on events
-  sendDefaultPii: true,
+document.addEventListener('cookieConsentGiven', () => {
+  // After user accepts, load and enable Sentry
+  addAndStartSentry();
 });
+
+export function setSentryVersion(v: string) {
+  version = v;
+}
+
+export function setSentryEnvironment(env: string) {
+  environment = env;
+}
+
+export function addAndStartSentry() {
+  const script = document.createElement('script');
+  script.src = 'https://js-de.sentry-cdn.com/44b623ba6268a114c45ccffad2af8c3b.min.js';
+  script.crossOrigin = 'anonymous';
+  script.onerror = function () {
+    log.w('Failed to load Sentry script');
+  };
+  document.head.appendChild(script);
+  checkSentry();
+}
+
+function checkSentry() {
+  if (typeof Sentry === 'undefined') {
+    setTimeout(checkSentry, 100);
+    return;
+  }
+
+  function initSentry() {
+    Sentry.init({
+      dsn: 'https://44b623ba6268a114c45ccffad2af8c3b@o4510182185631744.ingest.de.sentry.io/4510182202277968',
+      environment: environment,
+      release: 'pwa_troff@' + version,
+      sendDefaultPii: false,
+      beforeSend(event: any) {
+        return event;
+      },
+    });
+  }
+
+  initSentry();
+
+  // Test error (remove in production)
+  console.log('Throwing test error...');
+  setTimeout(() => {
+    throw new Error('Test Sentry error from setTimeout!');
+  }, 1000);
+}
