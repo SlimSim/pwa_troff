@@ -53,10 +53,4 @@ function checkSentry() {
   }
 
   initSentry();
-
-  // Test error (remove in production)
-  console.log('Throwing test error...');
-  setTimeout(() => {
-    throw new Error('Test Sentry error from setTimeout!');
-  }, 1000);
 }
