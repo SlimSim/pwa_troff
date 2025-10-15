@@ -5,9 +5,9 @@ import { DATA_TABLE_COLUMNS } from './constants/constants.js';
 import { TROFF_SETTING_SONG_COLUMN_TOGGLE } from './constants/constants.js';
 import { createSongAudio, DB, Troff } from './script.js';
 import { openEditSongDialog } from './songManagement.js';
+import log from './utils/log.js';
 
 function dataTableColumnPicker(event: JQuery.ClickEvent) {
-  console.log('dataTAbleColumnPicker ->');
   var $target = $(event.target);
   // Get the column API object
   var column = ($('#dataSongTable') as any).DataTable().column($target.data('column'));
@@ -24,8 +24,6 @@ function dataTableColumnPicker(event: JQuery.ClickEvent) {
       columnVisibilityObject[columnId] = $(v).hasClass('active');
     });
 
-  console.log('columnVisibilityObject', columnVisibilityObject);
-
   DB.saveVal(TROFF_SETTING_SONG_COLUMN_TOGGLE, columnVisibilityObject);
 
   // Toggle the visibility
@@ -33,7 +31,6 @@ function dataTableColumnPicker(event: JQuery.ClickEvent) {
 }
 
 function initSongTable() {
-  console.log('initSongTable ->');
   var dataSongTable: any,
     selectAllCheckbox = $(
       '<div class="checkbox preventSongLoad"><label><input type="checkbox" value=""><span class="cr"><i class="cr-icon fa-check"></i></span></label></div>'
@@ -127,12 +124,12 @@ function initSongTable() {
     })
     .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
       Troff.iOSHasLoadedSong = true;
-      console.log('on click tbody tr');
+      log.d('on click tbody tr');
       // onSongClick (not onSongLoad):
       const $td = $(event.target).closest('td, th');
 
       const songKey = $(event.currentTarget).data('song-key');
-      console.log('on click the tbody tr', { songKey });
+      log.d('on click the tbody tr', { songKey });
 
       if ($td.hasClass('onClickOpenEditSongDialog')) {
         openEditSongDialog(songKey);
@@ -152,7 +149,6 @@ function initSongTable() {
 
       gtag('event', 'Change Song', { event_category: 'Perform change', event_label: '' });
 
-      console.log('DatasongTable on click: -> createSongAudio', { songKey });
       createSongAudio(songKey);
     });
 

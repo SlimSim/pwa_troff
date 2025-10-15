@@ -1765,32 +1765,52 @@
 					</div>
 
 					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#songlistsSettings" >Songlists</h3>
-					<div class="py-2 hidden d-sm-block d-flex flex-column" id="songlistsSettings">
+					<div class="py-2 hidden d-flex flex-column" id="songlistsSettings">
 
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
-							type="button"
-							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
-							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
-							title="If selected, clicking a songlist will add those songs to the list, instead of only showing those songs"
-							value="additive select" />
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
-							type="button"
-							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
-							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
-							title="If selected, the songs and the songlists will be shown in a floating window"
-							value="floating" />
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
 							id="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
-							title="If selected, the search-window will be cleared when a song is selected"
 							value="clear on select" />
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT">
+							<p>The search-window will be cleared when a song is selected.</p>
+						</label>
+
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
 							type="button"
-							data-st-save-value-key="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
-							id="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
-							title="If selected, the floating song-list-window will be closed when a song is selected"
-							value="exit on select" />
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT"
+							id="TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT"
+							value="exit docked on select" />
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT">
+							<p>The docked song-list will be closed when a song is selected (recomended on mobile).</p>
+						</label>
+						
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
+							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
+							value="floating" />
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG">
+							<p>The songs and the songlists will be shown in a floating window.</p>
+						</label>
+
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT"
+							id="TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT"
+							value="exit floating on select" />
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT">
+							<p>The floating song-list-window will be closed when a song is selected.</p>
+						</label>
+						
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
+							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
+							value="additive select" />
+						<label class="cursor-pointer" for="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT">
+							<p>Clicking a songlist will add those songs to the list, instead of only showing those songs.</p>
+						</label>
 					</div>
 
 					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#keysAndButtons">Behaviour of keys and buttons</h3>

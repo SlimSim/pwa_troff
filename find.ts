@@ -178,7 +178,6 @@ $(document).ready(async function () {
     allPublicTroffDataFromServer = docs
       .map((doc) => doc.data() as PublicTroffDataFromServer)
       .filter(troffDataExistsInLocalHistoryOrIsPublic);
-    console.log('allPublicTroffDataFromServer', allPublicTroffDataFromServer);
     const latestServerSongListFromServer = troffDataListToServerSongList(
       allPublicTroffDataFromServer
     );

@@ -283,6 +283,10 @@ class DBClass {
       }
     });
 
+    ifExistsPrepAndThenRemove('TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT', (key, val) => {
+      nDB.set('TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT', val);
+    });
+
     ifExistsPrepAndThenRemove('TROFF_CORE_VERSION_NUMBER');
     ifExistsPrepAndThenRemove('TROFF_STYLE_ASSETS_VERSION_NUMBER');
     ifExistsPrepAndThenRemove('TROFF_INCLUDE_ASSETS_VERSION_NUMBER');

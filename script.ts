@@ -79,6 +79,7 @@ import { sleep } from './utils/timeHack.js';
 import { addAndStartSentry, setSentryEnvironment, setSentryVersion } from './utils/sentry.js';
 import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
 import { getManifest } from './utils/manifestHelper.js';
+import { optimizeMobile } from './utils/phoneUtils.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
@@ -489,10 +490,16 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
     ($('#dataSongTable') as any).DataTable().search('').draw();
   }
 
-  var exitOnSelect = $('#TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT').hasClass('active'),
-    floatingDialog = $('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').hasClass('active');
+  const exitFloatingOnSelect = $('#TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT').hasClass(
+    'active'
+  );
+  const floatingDialog = $('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').hasClass('active');
+  const exitDockedOnSelect = $('#TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT').hasClass('active');
 
-  if (exitOnSelect && floatingDialog) {
+  if (exitFloatingOnSelect && floatingDialog) {
+    closeSongDialog();
+  }
+  if (exitDockedOnSelect && !floatingDialog) {
     closeSongDialog();
   }
 
@@ -734,6 +741,8 @@ $(document).ready(async function () {
 
   await Troff.checkHashAndGetSong();
   await Troff.initFileApiImplementation();
+
+  optimizeMobile();
 });
 
 async function initEnvironment() {

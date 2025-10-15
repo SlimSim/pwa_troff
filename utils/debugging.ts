@@ -11,7 +11,5 @@ function clearDebuggingLog() {
   textarea.value = '';
 }
 
-console.log('setting copyDebuggingLog!!!');
 $('#buttCopyDebuggingLog').on('click', copyDebuggingLog);
 $('#buttClearDebuggingLog').on('click', clearDebuggingLog);
-console.log('$', $);

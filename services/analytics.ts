@@ -24,7 +24,7 @@ async function gtag(type: string, identifier: string, args: GoogleTagArgs): Prom
       log.w('Analytics unknown type:', type, identifier, args);
     }
   } catch (error) {
-    console.error('Analytics error:', error);
+    log.e('Analytics error:', error);
   }
 }
 
