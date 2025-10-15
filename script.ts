@@ -78,6 +78,7 @@ import { initSongTable } from './dataTable.js';
 import { sleep } from './utils/timeHack.js';
 import { addAndStartSentry, setSentryEnvironment, setSentryVersion } from './utils/sentry.js';
 import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
+import { getManifest } from './utils/manifestHelper.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
@@ -722,7 +723,7 @@ $(document).ready(async function () {
   Rate.startFunc();
   Troff.recallCurrentStateOfSonglists();
   DB.getShowSongDialog();
-  initEnvironment();
+  await initEnvironment();
 
   firebaseWrapper.onUploadProgressUpdate = function (progress) {
     $('#uploadPercentDone').text(Math.trunc(progress));
@@ -735,16 +736,15 @@ $(document).ready(async function () {
   await Troff.initFileApiImplementation();
 });
 
-function initEnvironment() {
+async function initEnvironment() {
   setSentryEnvironment(environment.environment);
-  $.getJSON('manifest.json', function (manifest) {
-    $('.app-version-number').text(manifest.version);
-    setSentryVersion(manifest.version);
-    if (nDB.get(COOKIE_CONSENT_ACCEPTED)) {
-      addAndStartSentry();
-    }
-    log.i('manifest.version', manifest.version);
-  });
+  const manifest = await getManifest();
+  $('.app-version-number').text(manifest.version);
+  setSentryVersion(manifest.version);
+  if (nDB.get(COOKIE_CONSENT_ACCEPTED)) {
+    addAndStartSentry();
+  }
+  log.i('manifest.version', manifest.version);
 
   if (environment.banner.show) {
     $('#banner').removeClass('hidden');
