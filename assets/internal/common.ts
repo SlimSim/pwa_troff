@@ -45,7 +45,6 @@ const _w: any = window;
      * @returns {void}
      */
     function sendMail(): void {
-      console.log('sendMail 2 ->');
       blurHack();
       var subject = 'Troff is a great music player for practicing';
       var body =

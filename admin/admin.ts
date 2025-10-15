@@ -52,7 +52,6 @@ $(document).ready(async function () {
     try {
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
       const firebaseUser = result.user;
-      console.log('firebaseUser', firebaseUser);
       setUiToSignIn(firebaseUser);
     } catch (error) {
       log.e('Error during sign-in:', error);

@@ -6,7 +6,6 @@
 	<meta charset="UTF-8">
 	<link rel="manifest" href="manifest.json">
 
-
 <!--
 	This file is part of Troff.
 
@@ -49,19 +48,21 @@
 		button,input,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,body,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,html,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video{font-weight:400;margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:after,blockquote:before,q:after,q:before{content:'';content:none}table{border-collapse:collapse;border-spacing:0}
 	</style>
 	<style id="loadScreenStyle">
-		.backgroundColor{overflow:hidden;overflow-x:hidden!important;}#loadScreen{position:fixed;top:0;left:0;width:100vw;height:100%;display:flex;text-align:center;align-items:center;justify-content:center;background-color:#036;z-index:1984}#loadScreen h1,#loadScreen h2,#loadScreen p{color:#fff;margin:0;font:revert;font-size:42px;font-family:Arial,"Open Sans",sans-serif;padding-top:10px}#loadScreen h2{padding-top:15px;font-size:24px}#loadScreen p{font-size:16px}#loadScreen div{padding-bottom:30%}
+		.backgroundColor{overflow:hidden;overflow-x:hidden!important;}#loadScreen{position:fixed;top:0;left:0;width:100vw;height:100%;display:flex;flex-direction:column;text-align:center;align-items:center;justify-content:center;background-color:#036;z-index:1984}#loadScreen h1,#loadScreen h2,#loadScreen p{color:#fff;margin:0;font:revert;font-size:42px;font-family:Arial,"Open Sans",sans-serif;padding-top:10px}#loadScreen h2{padding-top:15px;font-size:24px}#loadScreen p{font-size:16px}.f1{flex-grow: 1;}.f2{flex-grow: 2;}
 	</style>
 
 </head>
 <body class="backgroundColor">
 
 	<div id="loadScreen">
+		<div class="f1"></div>
 		<div>
 			<img width="122" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyODkuNjQgMjg5LjY0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00NDMuNTcgLTM3MC41OCkiPgo8ZyB0cmFuc2Zvcm09Im1hdHJpeCguNjE1MzEgMCAwIC42MTUzMSAzODkuNDggMjA1LjM1KSI+CjxyZWN0IHg9Ijg3LjkwNyIgeT0iMjY4LjUzIiB3aWR0aD0iNDcwLjcyIiBoZWlnaHQ9IjQ3MC43MiIgcng9IjAiIHJ5PSIwIiBmaWxsPSIjMDM2IiBzdHJva2Utd2lkdGg9Ii45ODM4MiIvPgo8cGF0aCB0cmFuc2Zvcm09Im1hdHJpeCgxLjYyNTIgMCAwIDEuNjI1MiA4Ny45MDcgMjY4LjUzKSIgZD0ibTk4LjQzNCAxNjUuMDhjLTkuNTk3OSAyLjIyMjYtMTguMzg5IDUuMDk1Ny0yNi4xMDkgOC41MTU2LTE5LjQ5OCA4LjYzNjUtMzIuNjg4IDE5Ljg0Mi0zMi42ODggMzQuMzY3IDAgMTQuNTI1IDEzLjE5IDI3LjA2NSAzMi42ODggMzUuNzAxIDE5LjQ5OCA4LjYzNjUgNDUuNzggMTMuNzY4IDc0Ljc0OCAxMy43NjggMjguOTY4IDAgNTUuMjgtNS4xMzExIDc0Ljc3Ny0xMy43NjggMTkuNDk4LTguNjM2NSAzMi42ODYtMjEuMTc2IDMyLjY4Ni0zNS43MDEgMC0xNC41MjUtMTMuMTg4LTI1LjczMS0zMi42ODYtMzQuMzY3LTYuOTk5NS0zLjEwMDUtMTQuODgzLTUuNzU0Ni0yMy40NDUtNy44Nzg5IDAuMDA1NTMgMC4wNDggMC4wMjE2MiAwLjA5NjU4IDAuMDI3MzQgMC4xNDQ1My00OS45Mi0wLjE3NTAzLTUwLjQxMy0wLjMwMDI3LTk5Ljk5OC0wLjc4MTI1em0xMDMuOTkgOC42ODM2YzAuNzMzNjMtMC4wMTY5MSAxLjQ2MDQgMC4xMjA2MSAyLjE3OTcgMC40NjQ4NGwzMi42NyAyMS44MTFjMC42MDM0MiAwLjYyNzEzIDAuODE5MzIgMS4zNzM1IDAuMzE0NDYgMi4zNDU3bC0xNS4xODQgMTEuMDUzLTguOTAwNCAwLjE5NTMxLTMwLjE1Ni0yMC4yNDRjLTAuNzAyMTMtMC43OTYxMS0wLjY1ODgtMS42ODE2IDAtMi42NDA2bDE2Ljg1OS0xMi41MmMwLjc0MzkyLTAuMjc2NTkgMS40ODMyLTAuNDQ3OTMgMi4yMTY4LTAuNDY0ODR6IiBmaWxsPSIjZjJmMmYyIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4KPHBhdGggZD0ibTQxOS4yOCA0MTAuODljLTMzLjcyNC04Ljk4NjQtNDQuNTU3LTE4LjM3OC05MC4yMTItMTguODI0LTQ4LjA3Ny0wLjQ2NjQ4LTU5LjE5MSA3LjY4MDQtODkuOTMyIDE4LjgyNCAyMS40NDEgMTMuMDA0IDUwLjg4OSAxOS41MDkgOTEuMTI3IDIwLjQxNSAzMi44MjEtMC43NjA4NCA2Ny4wMjQtNi41ODM0IDg5LjAxNy0yMC40MTV6IiBmaWxsPSIjZjJmMmYyIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4KPHBhdGggdHJhbnNmb3JtPSJtYXRyaXgoMS40MDI3IDAgMCAxLjIzODkgMTQ2LjY0IDMxOS4yOCkiIGQ9Im0yMDguMDYgNTUuNTUyYTc4LjIzIDM0Ljc0NiAwIDEgMS0xNTYuNDYgMCA3OC4yMyAzNC43NDYgMCAxIDEgMTU2LjQ2IDB6IiBmaWxsPSJub25lIiBzdHJva2U9IiNmMmYyZjIiIHN0cm9rZS13aWR0aD0iNCIvPgo8cGF0aCBkPSJtNDA2LjIxIDQxNS44NmM1MC40MzgtNzEuMjI1IDQ5LjgzOS03MS4xOTYgNTIuMjQtNzUuNDMxIDUuNDA0MS05LjUzNCAxLjIwMDktMTQuNTgxLTIuNDAxOC0xNi44MjUtMy42MDI4LTIuMjQzMy04Ljc1MzctMy44MjE1LTEzLjIxIDIuODA0MS0zLjcwMjMgNS41MDQ1LTQzLjgzMyA3Ni44MzMtNDcuNDM2IDc5LjYzN3MtNC4wMzIxIDYuMzkxOC0yLjQwMTggOC4xMzJjMi4xMDE2IDIuMjQzMyA0LjY1MzYgNC45MDcyIDQuNjUzNiA0LjkwNzJsOC41NTY1LTMuMjI0N3oiIGZpbGw9IiNmMmYyZjIiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPgo8cGF0aCBkPSJtMjIwLjQxIDM4OS40MWMyLjMzNzMgMTkuNjQ5IDI2Ljg0MyAzMC44NTQgNTIuMDUzIDM2LjQ3MSAzOC41NTQgOC41ODk2IDc2LjUyOCA4LjkxNzMgMTE0LjY5LTAuNTYyMSAyNy43MDctNi44ODE3IDM5LjM1Ny0xMi4zMjUgNTEuOTM5LTM1Ljc3NC0xLjc5MzIgMTAuNzQzLTkuNzc4NCAxOS44OTYtMTMuOTMxIDMwLjA5Mi0xNS4wNDUgMjkuMTQ5LTE3Ljg4OCA2Mi4zMTMtMTQuOTI2IDk0LjMyNiA0Ljg5MiAyMy42NzEgMTQuOTEzIDQxLjUyMiAxMy41NTUgNjYuMjM1LTAuODM4ODcgMjYuODQyLTguMjc1MiAzNy4yMTUtMjUuNTMyIDU2LjkxOC05Ljg2NzIgOC4zNTc2LTIxLjY0MyAxNi4zNDQtMzYuOTcxIDE5LjUyOC0xOC4xNDcgMy43MzE5LTQwLjUzNSAyLjY0OTItNjEuNjU4LTAuMzM0MTUtMTQuNTQ1LTIuNTcyOS0zMC4wNC0xMS41NzYtNDAuMTA1LTIxLjIyOS0xMi4xNjctMTcuNDk1LTE5LjQ0Ni0yNi42NDgtMjIuNTYtNTguNTcyLTIuNzQ5NS0yMi4yMjcgNi45MjQtNDMuMjU2IDEwLjg4Ny02NC43NTMgMy43NzYyLTQxLjYwMi05LjQ1ODItODMuMDgyLTMwLjYzMy0xMTkuMzcgMC4zNTM4My0xLjM5NTQgMS41MTQ2LTIuODk3MyAzLjE4OS0yLjk3ODV6IiBmaWxsPSIjZjJmMmYyIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4KPC9nPgo8L2c+CjxtZXRhZGF0YT4KPHJkZjpSREY+CjxjYzpXb3JrPgo8ZGM6Zm9ybWF0PmltYWdlL3N2Zyt4bWw8L2RjOmZvcm1hdD4KPGRjOnR5cGUgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIvPgo8Y2M6bGljZW5zZSByZGY6cmVzb3VyY2U9Imh0dHA6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL2xpY2Vuc2VzL3B1YmxpY2RvbWFpbi8iLz4KPGRjOnB1Ymxpc2hlcj4KPGNjOkFnZW50IHJkZjphYm91dD0iaHR0cDovL29wZW5jbGlwYXJ0Lm9yZy8iPgo8ZGM6dGl0bGU+T3BlbmNsaXBhcnQ8L2RjOnRpdGxlPgo8L2NjOkFnZW50Pgo8L2RjOnB1Ymxpc2hlcj4KPGRjOnRpdGxlLz4KPGRjOmRhdGU+MjAxMC0wOC0wNFQxMjo1NToxMTwvZGM6ZGF0ZT4KPGRjOmRlc2NyaXB0aW9uPlNlcGFyYXRlIGVudHJpZXMgb2Ygc3BvcnQgcGljdG9ncmFtIGZyb20gbXkgc2V0PC9kYzpkZXNjcmlwdGlvbj4KPGRjOnNvdXJjZT5odHRwOi8vb3BlbmNsaXBhcnQub3JnL2RldGFpbC83NzMxMS9pY2Utc2thdGluZy1waWN0b2dyYW0tYnktc2hva3VuaW48L2RjOnNvdXJjZT4KPGRjOmNyZWF0b3I+CjxjYzpBZ2VudD4KPGRjOnRpdGxlPnNob2t1bmluPC9kYzp0aXRsZT4KPC9jYzpBZ2VudD4KPC9kYzpjcmVhdG9yPgo8ZGM6c3ViamVjdD4KPHJkZjpCYWc+CjxyZGY6bGk+Ym94PC9yZGY6bGk+CjxyZGY6bGk+Ym94aW5nPC9yZGY6bGk+CjxyZGY6bGk+Y2xpcCBhcnQ8L3JkZjpsaT4KPHJkZjpsaT5jbGlwYXJ0PC9yZGY6bGk+CjxyZGY6bGk+ZmVuY2U8L3JkZjpsaT4KPHJkZjpsaT5neW08L3JkZjpsaT4KPHJkZjpsaT5neW1uYXN0aWNzPC9yZGY6bGk+CjxyZGY6bGk+anVtcDwvcmRmOmxpPgo8cmRmOmxpPmp1bXBpbmc8L3JkZjpsaT4KPHJkZjpsaT5saWZ0aW5nPC9yZGY6bGk+CjxyZGY6bGk+bWFuPC9yZGY6bGk+CjxyZGY6bGk+cGljdG9ncmFtPC9yZGY6bGk+CjxyZGY6bGk+cnVuPC9yZGY6bGk+CjxyZGY6bGk+cnVubmluZzwvcmRmOmxpPgo8cmRmOmxpPnNpbGhvdWV0dGU8L3JkZjpsaT4KPHJkZjpsaT5zcG9ydHM8L3JkZjpsaT4KPHJkZjpsaT5zcG9ydHMyMDEwPC9yZGY6bGk+CjxyZGY6bGk+d2VpZ2h0PC9yZGY6bGk+CjwvcmRmOkJhZz4KPC9kYzpzdWJqZWN0Pgo8L2NjOldvcms+CjxjYzpMaWNlbnNlIHJkZjphYm91dD0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbGljZW5zZXMvcHVibGljZG9tYWluLyI+CjxjYzpwZXJtaXRzIHJkZjpyZXNvdXJjZT0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjUmVwcm9kdWN0aW9uIi8+CjxjYzpwZXJtaXRzIHJkZjpyZXNvdXJjZT0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjRGlzdHJpYnV0aW9uIi8+CjxjYzpwZXJtaXRzIHJkZjpyZXNvdXJjZT0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjRGVyaXZhdGl2ZVdvcmtzIi8+CjwvY2M6TGljZW5zZT4KPC9yZGY6UkRGPgo8L21ldGFkYXRhPgo8L3N2Zz4K" />
 			<h1>Troff</h1>
 			<h2>- training with music</h2>
 			<p>loading...</p>
 		</div>
+		<div class="f2"></div>
 	</div>
 
 
@@ -1764,32 +1765,52 @@
 					</div>
 
 					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#songlistsSettings" >Songlists</h3>
-					<div class="py-2 hidden d-sm-block d-flex flex-column" id="songlistsSettings">
+					<div class="py-2 hidden d-flex flex-column" id="songlistsSettings">
 
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
-							type="button"
-							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
-							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
-							title="If selected, clicking a songlist will add those songs to the list, instead of only showing those songs"
-							value="additive select" />
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
-							type="button"
-							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
-							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
-							title="If selected, the songs and the songlists will be shown in a floating window"
-							value="floating" />
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton active"
 							type="button"
 							data-st-save-value-key="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
 							id="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT"
-							title="If selected, the search-window will be cleared when a song is selected"
 							value="clear on select" />
-						<input class="buttWidthMedium w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT">
+							<p>The search-window will be cleared when a song is selected.</p>
+						</label>
+
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
 							type="button"
-							data-st-save-value-key="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
-							id="TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT"
-							title="If selected, the floating song-list-window will be closed when a song is selected"
-							value="exit on select" />
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT"
+							id="TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT"
+							value="exit docked on select" />
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT">
+							<p>The docked song-list will be closed when a song is selected (recomended on mobile).</p>
+						</label>
+						
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
+							id="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG"
+							value="floating" />
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_FLOATING_DIALOG">
+							<p>The songs and the songlists will be shown in a floating window.</p>
+						</label>
+
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT"
+							id="TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT"
+							value="exit floating on select" />
+						<label class="mb-3 cursor-pointer" for="TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT">
+							<p>The floating song-list-window will be closed when a song is selected.</p>
+						</label>
+						
+						<input class="buttWidthLarge w-auto-on-mobile st-simple-on-off-button stOnOffButton"
+							type="button"
+							data-st-save-value-key="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
+							id="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT"
+							value="additive select" />
+						<label class="cursor-pointer" for="TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT">
+							<p>Clicking a songlist will add those songs to the list, instead of only showing those songs.</p>
+						</label>
 					</div>
 
 					<h3 class="thinLineTop w-100 cursor-pointer px-3 pt-3 mt-3" data-st-css-selector-to-toggle="#keysAndButtons">Behaviour of keys and buttons</h3>

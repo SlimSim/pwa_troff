@@ -1,5 +1,7 @@
 // @ts-check
 
+import log from '../../utils/log.js';
+
 /**
  * Minimal localStorage-backed DB used for cookie consent state.
  * @typedef {Object} CookieConsentDB
@@ -80,7 +82,7 @@ $(document).ready(function () {
       }
       showCookieConsent();
     } catch (e) {
-      console.info('cc / checkToShowCookieConsent: in catch, e:', e);
+      log.i('cc / checkToShowCookieConsent: in catch, e:', e);
       setTimeout(() => {
         checkToShowCookieConsent();
       }, 10);

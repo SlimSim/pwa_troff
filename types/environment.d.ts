@@ -18,6 +18,7 @@ export interface FirebaseConfig {
 
 export interface Environment {
   banner: Banner;
+  environment: string;
   showHiddenInProd: boolean;
   firebaseConfig: FirebaseConfig;
 }

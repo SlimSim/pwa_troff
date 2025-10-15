@@ -20,6 +20,7 @@
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
+import './utils/sentry.js';
 import './utils/debugging.js';
 import {
   auth,
@@ -75,6 +76,10 @@ import {
 } from './types/troff.js';
 import { initSongTable } from './dataTable.js';
 import { sleep } from './utils/timeHack.js';
+import { addAndStartSentry, setSentryEnvironment, setSentryVersion } from './utils/sentry.js';
+import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
+import { getManifest } from './utils/manifestHelper.js';
+import { optimizeMobile } from './utils/phoneUtils.js';
 
 /**
  * A minimal shape for the authenticated user used across the app.
@@ -485,10 +490,16 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
     ($('#dataSongTable') as any).DataTable().search('').draw();
   }
 
-  var exitOnSelect = $('#TROFF_SETTING_SONG_LIST_EXIT_ON_SELECT').hasClass('active'),
-    floatingDialog = $('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').hasClass('active');
+  const exitFloatingOnSelect = $('#TROFF_SETTING_SONG_LIST_FLOATING_EXIT_ON_SELECT').hasClass(
+    'active'
+  );
+  const floatingDialog = $('#TROFF_SETTING_SONG_LIST_FLOATING_DIALOG').hasClass('active');
+  const exitDockedOnSelect = $('#TROFF_SETTING_SONG_LIST_DOCKED_EXIT_ON_SELECT').hasClass('active');
 
-  if (exitOnSelect && floatingDialog) {
+  if (exitFloatingOnSelect && floatingDialog) {
+    closeSongDialog();
+  }
+  if (exitDockedOnSelect && !floatingDialog) {
     closeSongDialog();
   }
 
@@ -719,7 +730,7 @@ $(document).ready(async function () {
   Rate.startFunc();
   Troff.recallCurrentStateOfSonglists();
   DB.getShowSongDialog();
-  initEnvironment();
+  await initEnvironment();
 
   firebaseWrapper.onUploadProgressUpdate = function (progress) {
     $('#uploadPercentDone').text(Math.trunc(progress));
@@ -730,13 +741,19 @@ $(document).ready(async function () {
 
   await Troff.checkHashAndGetSong();
   await Troff.initFileApiImplementation();
+
+  optimizeMobile();
 });
 
-function initEnvironment() {
-  $.getJSON('manifest.json', function (manifest) {
-    $('.app-version-number').text(manifest.version);
-    log.i('manifest.version', manifest.version);
-  });
+async function initEnvironment() {
+  setSentryEnvironment(environment.environment);
+  const manifest = await getManifest();
+  $('.app-version-number').text(manifest.version);
+  setSentryVersion(manifest.version);
+  if (nDB.get(COOKIE_CONSENT_ACCEPTED)) {
+    addAndStartSentry();
+  }
+  log.i('manifest.version', manifest.version);
 
   if (environment.banner.show) {
     $('#banner').removeClass('hidden');

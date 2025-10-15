@@ -1,5 +1,7 @@
 // @ts-check
 
+import log from '../../utils/log.js';
+
 /** nDB New Data Base */
 const nDB = {
   // new data base
@@ -24,7 +26,7 @@ const nDB = {
     const valObject = [];
     valObject[0] = nDB.get(songId);
     if (valObject[0] == null) {
-      console.error(
+      log.e(
         'setOnSong: songId does no exist in database. You are trying to set ' +
           value +
           ' on the property ' +

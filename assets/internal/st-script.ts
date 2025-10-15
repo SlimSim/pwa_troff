@@ -1,3 +1,4 @@
+import log from '../../utils/log.js';
 import { blurHack } from '../../utils/utils.js';
 import { nDB } from './db.js';
 
@@ -122,7 +123,7 @@ $(document).ready(function () {
         value = $target.val();
 
       if (id == null) {
-        console.error('This element is missing "id", can not save!', $target);
+        log.e('This element is missing "id", can not save!', $target);
         return;
       }
 

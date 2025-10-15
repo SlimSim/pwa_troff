@@ -1,5 +1,6 @@
 import { TroffSongAddedEvent, TroffSongGroupMap, TroffSongIdentifyer_fu } from 'types/troff.js';
 import { nDB } from './assets/internal/db.js';
+import log from './utils/log.js';
 
 class SongToGroup {
   static #map: TroffSongGroupMap = {};
@@ -125,7 +126,7 @@ class SongToGroup {
       }
       return myGroupsE[i][0];
     }
-    console.info(`getFileNameFromSongDocId: songDocId (${songDocId}) did not return any fileName!`);
+    log.i(`getFileNameFromSongDocId: songDocId (${songDocId}) did not return any fileName!`);
     return 'undefined';
   }
 }

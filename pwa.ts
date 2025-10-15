@@ -34,7 +34,6 @@ window.addEventListener('load', async () => {
       !name.includes('songCache');
 
     if (shouldDelete) {
-      console.log('Deleting old cache:', name);
       await caches.delete(name);
     }
   }

@@ -1,8 +1,8 @@
 import { Environment } from 'types/environment.js';
 
-// @ts-check
 const environment: Environment = {
   banner: { show: false, text: '', showLogs: false },
+  environment: '',
   showHiddenInProd: false,
   firebaseConfig: {
     apiKey: '',
@@ -24,6 +24,7 @@ const environment: Environment = {
       environment.banner.show = true;
       environment.banner.text = 'Welcome to development test';
       environment.banner.showLogs = true;
+      environment.environment = 'dev';
       environment.showHiddenInProd = true;
 
       environment.firebaseConfig = {
@@ -41,6 +42,7 @@ const environment: Environment = {
       environment.banner.show = true;
       environment.banner.text = 'Welcome to test';
       environment.banner.showLogs = true;
+      environment.environment = 'test';
       environment.showHiddenInProd = true;
 
       environment.firebaseConfig = {
@@ -60,6 +62,7 @@ const environment: Environment = {
       environment.banner.show = false;
       environment.banner.text = 'Production';
       environment.banner.showLogs = false;
+      environment.environment = 'prod';
       environment.showHiddenInProd = false;
 
       environment.firebaseConfig = {

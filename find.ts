@@ -19,6 +19,7 @@
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
+import './utils/sentry.js';
 
 import { st } from './assets/internal/st-script.js';
 import './assets/external/notify-js/notify.min.js';
@@ -51,6 +52,10 @@ import {
   TroffHistoryList,
 } from './types/troff.js';
 import { DocumentData } from 'firebase/firestore';
+import { addAndStartSentry, setSentryEnvironment, setSentryVersion } from './utils/sentry.js';
+import { environment } from './assets/internal/environment.js';
+import { getManifest } from './utils/manifestHelper.js';
+import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
 
 $(document).ready(async function () {
   'use strict';
@@ -134,6 +139,16 @@ $(document).ready(async function () {
   };
 
   const initiateApp = async function () {
+    if (nDB.get(COOKIE_CONSENT_ACCEPTED)) {
+      // NOTE: since this page does not offer a cookie consent dialog,
+      // we don't have to have a cookie consent listener,
+      // and also dont need to set environment and version if we don't get consent.
+      setSentryEnvironment(environment.environment);
+      const manifest = await getManifest();
+      setSentryVersion(manifest.version);
+      addAndStartSentry();
+    }
+
     populateFromMemory();
     repopulateFromFirebase();
   };
@@ -163,7 +178,6 @@ $(document).ready(async function () {
     allPublicTroffDataFromServer = docs
       .map((doc) => doc.data() as PublicTroffDataFromServer)
       .filter(troffDataExistsInLocalHistoryOrIsPublic);
-    console.log('allPublicTroffDataFromServer', allPublicTroffDataFromServer);
     const latestServerSongListFromServer = troffDataListToServerSongList(
       allPublicTroffDataFromServer
     );
