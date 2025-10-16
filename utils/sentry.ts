@@ -3,6 +3,7 @@ import log from './log.js';
 declare global {
   const Sentry: {
     init: (options: any) => void;
+    captureException: (error: Error) => void;
     // Add other methods if needed, e.g., captureException, etc.
   };
 }
@@ -14,6 +15,12 @@ document.addEventListener('cookieConsentGiven', () => {
   // After user accepts, load and enable Sentry
   addAndStartSentry();
 });
+
+export function SentryCaptureException(error: Error) {
+  if (typeof Sentry !== 'undefined') {
+    Sentry.captureException(error);
+  }
+}
 
 export function setSentryVersion(v: string) {
   version = v;
