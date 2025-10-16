@@ -1297,6 +1297,7 @@ class TroffClass {
     $('.secondsLeft').html('' + secondsLeft);
 
     if (this.stopTimeout) clearInterval(this.stopTimeout);
+
     this.setMood('wait');
 
     const localPlayAndSetMood = () => {
@@ -1304,9 +1305,15 @@ class TroffClass {
       if (this.getMood() == 'pause') return;
       log.d('play handler before play', { currentTimeBefore: audio.currentTime });
 
-      audio.play();
-      log.d('play handler after play', { currentTimeAfter: audio.currentTime });
-      this.setMood('play');
+      audio
+        .play()
+        .then(() => {
+          log.d('play handler after play', { currentTimeAfter: audio.currentTime });
+          this.setMood('play');
+        })
+        .catch((error) => {
+          log.w("Can't play the song. error:", error);
+        });
     };
 
     log.d('playSong', { wait, isSafari });
