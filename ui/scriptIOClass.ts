@@ -22,6 +22,7 @@ import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../cons
 import { IOInput } from 'types/io.js';
 import { sleep } from '../utils/timeHack.js';
 import { blurHack } from '../utils/utils.js';
+import { markersExist } from './troffUi.js';
 
 class IOClass {
   IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
@@ -341,6 +342,9 @@ class IOClass {
       addGroupOwnerRow();
     });
     window.addEventListener('resize', () => {
+      if (!markersExist()) {
+        return;
+      }
       Troff.setAppropriateMarkerDistance();
     });
 
