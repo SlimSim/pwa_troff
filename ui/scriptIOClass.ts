@@ -36,28 +36,29 @@ class IOClass {
 		or in regular mode */
 
   toggleFullScreen = () => {
-    var doc = window.document as any;
-    var docEl = doc.documentElement as any;
+    const doc = window.document as any;
 
-    var requestFullScreen =
-      docEl.requestFullscreen ||
-      docEl.mozRequestFullScreen ||
-      docEl.webkitRequestFullScreen ||
-      docEl.msRequestFullscreen;
-    var cancelFullScreen =
-      doc.exitFullscreen ||
-      doc.mozCancelFullScreen ||
-      doc.webkitExitFullscreen ||
-      doc.msExitFullscreen;
-
-    if (
+    const isNotFullScreen =
       !doc.fullscreenElement &&
       !doc.mozFullScreenElement &&
       !doc.webkitFullscreenElement &&
-      !doc.msFullscreenElement
-    ) {
+      !doc.msFullscreenElement;
+
+    if (isNotFullScreen) {
+      const docEl = doc.documentElement as any;
+      const requestFullScreen =
+        docEl.requestFullscreen ||
+        docEl.mozRequestFullScreen ||
+        docEl.webkitRequestFullScreen ||
+        docEl.msRequestFullscreen;
+
       requestFullScreen.call(docEl);
     } else {
+      const cancelFullScreen =
+        doc.exitFullscreen ||
+        doc.mozCancelFullScreen ||
+        doc.webkitExitFullscreen ||
+        doc.msExitFullscreen;
       cancelFullScreen.call(doc);
     }
   };
@@ -348,7 +349,12 @@ class IOClass {
     window.addEventListener('online', onOnline);
 
     if (navigator.onLine) {
+      //checking if we are CURRENTLY online
       onOnline();
+    }
+
+    if (!document.fullscreenEnabled) {
+      $('.onClickToggleFullScreen').addClass('hidden');
     }
   }; //end startFunc
 
