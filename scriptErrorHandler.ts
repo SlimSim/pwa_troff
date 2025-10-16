@@ -21,6 +21,7 @@ import log from './utils/log.js';
 
 import { IO } from './script.js';
 import { ErrorHandler } from './types/errorHandler.js';
+import { SentryCaptureException } from './utils/sentry.js';
 
 // Create an object type UserException
 class ShowUserException extends Error {
@@ -71,6 +72,8 @@ const errorHandler: ErrorHandler = {
       });
       return;
     }
+
+    SentryCaptureException(error);
     $.notify(
       `An unknown error occurred when trying to download the song "${fileName}", with id "${serverId}", from the server,
 			please try again later.
@@ -113,6 +116,7 @@ const errorHandler: ErrorHandler = {
       return;
     }
 
+    SentryCaptureException(error);
     $.notify(
       `An unknown error occurred with the song "${fileName}",
         please try again later.
@@ -154,6 +158,7 @@ const errorHandler: ErrorHandler = {
       return;
     }
 
+    SentryCaptureException(error);
     $.notify(
       `An unknown error occurred, please try again later.
         If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
