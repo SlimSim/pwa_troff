@@ -552,9 +552,9 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
       reject(new Error('newElem is not defined in the final return!'));
       return;
     }
-    const timer = setTimeout(() => reject(new Error('Media load timeout')), 10000); // 10s timeout
+    const timer = setTimeout(() => reject(new Error('Metadata load timeout')), 10000); // 10s timeout
     newElem.addEventListener(
-      'canplay',
+      'loadedmetadata',
       () => {
         clearTimeout(timer);
         resolve();
@@ -634,7 +634,7 @@ async function createSongAudio(path: string) {
         urlScheme: songData.split(':', 1)[0],
       });
     } catch (e) {
-      log.e('createSongAudio:error: No song selected yet: ', e);
+      log.e('createSongAudio: error: No song selected yet: ', e);
     }
   } else {
     try {
@@ -645,7 +645,6 @@ async function createSongAudio(path: string) {
         source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
         urlScheme: v3SongObjectUrl.split(':', 1)[0],
       });
-
       await setSong2(path, v3SongObjectUrl);
     } catch (e) {
       errorHandler.fileHandler_sendFile(e, path);
