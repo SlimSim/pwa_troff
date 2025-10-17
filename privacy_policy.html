@@ -54,6 +54,7 @@
           <a href="#gdpr">GDPR Data Protection Rights</a>
           <a href="#children">Children's Information</a>
           <a href="#analyticsEvent">Data collected</a>
+          <a href="#errorTracking">Error Tracking</a>
           <a href="#footer">Contact a human</a>
         </nav>
       </section>
@@ -174,17 +175,18 @@
           </p>
 
           <p>
-            We use Firebase (Google's platform) for authentication, data storage, and analytics. For
-            details on how Firebase handles data, see their
-            <a target="_blank" rel="noopener" href="https://firebase.google.com/support/privacy"
-              >Privacy Policy</a
-            >.
+            We use Firebase (Google's platform) for authentication, data storage, analytics,
+          and Sentry.IO for error tracking and monitoring. For details on how Firebase
+          and Sentry handle data, see their respective
+          <a target="_blank" rel="noopener" href="https://firebase.google.com/support/privacy">Privacy Policies</a> and
+          <a target="_blank" rel="noopener" href="https://sentry.io/privacy/">(Sentry)</a>.
           </p>
 
           <p>
             You can choose to disable cookies through your individual browser options. To know more
             detailed information about cookie management with specific web browsers, it can be found
-            at the browsers' respective websites.
+            at the browsers' respective websites. Note that disabling cookies may affect the functionality
+            of analytics and error tracking features.
           </p>
 
           <h2 id="ccpa">CCPA Privacy Rights (Do Not Sell My Personal Information)</h2>
@@ -291,6 +293,17 @@
           <p class="note">
             Analytics data is retained according to Firebase's default policies (typically 14 months
             for the free tier).
+          </p>
+        </article>
+
+        <article class="m-2 mt-0">
+          <h2 id="errorTracking">Error Tracking with Sentry.IO</h2>
+
+          <p>
+            We use Sentry.IO for error monitoring to detect and fix issues in the app.
+            Only anonymous error reports (without personal data) are sent after cookie consent.
+            For details on how Sentry handles data, see their
+            <a target="_blank" rel="noopener" href="https://sentry.io/privacy/">Privacy Policy</a>.
           </p>
         </article>
 
