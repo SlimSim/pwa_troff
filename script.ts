@@ -717,6 +717,8 @@ $(document).ready(async function () {
 
   IO.removeLoadScreenSoon();
 
+  await initEnvironment();
+
   // include external HTML-files:
   const includes = $('[data-include]');
   await loadExternalHtml(includes);
@@ -729,7 +731,6 @@ $(document).ready(async function () {
   Rate.startFunc();
   Troff.recallCurrentStateOfSonglists();
   DB.getShowSongDialog();
-  await initEnvironment();
 
   firebaseWrapper.onUploadProgressUpdate = function (progress) {
     $('#uploadPercentDone').text(Math.trunc(progress));
