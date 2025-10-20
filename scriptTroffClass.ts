@@ -1242,8 +1242,8 @@ class TroffClass {
   }; // end space()
 
   playUiButton = async () => {
-    log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
     if (isSafari && !this.iOSHasLoadedSong) {
+      log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
       log.d('playUiButton: -> createSongAudio', { songKey: this.getCurrentSong() });
       await createSongAudio(this.getCurrentSong());
       this.iOSHasLoadedSong = true;
@@ -1317,7 +1317,6 @@ class TroffClass {
         });
     };
 
-    log.d('playSong', { wait, isSafari });
     if (wait > 0) {
       // Hack to force Safari to play the sound after the timeout:
       if (isSafari) {

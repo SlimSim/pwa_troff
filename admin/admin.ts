@@ -374,7 +374,7 @@ $(document).ready(async function () {
   $('#googleSignIn').on('click', googleSignIn);
   $('#signOut').on('click', doSignOut);
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, (user: User | null) => {
     if (user == null || userIsSignedId) {
       setUiToNotSignIn();
       return;
