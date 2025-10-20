@@ -175,7 +175,8 @@ $(() => {
     if (!snapshot.exists()) {
       throw new ShowUserException(
         `Could not find song "${fileName}", with id "${troffDataId}", on the server,
-          perhaps the URL is wrong or the song has been removed`
+          perhaps the URL is wrong or the song has been removed`,
+        'warning'
       );
     }
     return snapshot.data();
@@ -252,8 +253,11 @@ $(() => {
   //private?
   fileHandler.getObjectUrlFromResponse = async (response, songKey) => {
     if (response === undefined) {
-      throw new ShowUserException(`Can not upload the song "${songKey}" because it appears to not exist in the app.
-				 Please add the song to Troff and try to upload it again.`);
+      throw new ShowUserException(
+        `Can not upload the song "${songKey}" because it appears to not exist in the app.
+				 Please add the song to Troff and try to upload it again.`,
+        'info'
+      );
     }
     return response.blob().then(URL.createObjectURL);
   };
@@ -281,16 +285,22 @@ $(() => {
 
   fileHandler.sendFileToFirebase = async (fileKey, storageDir) => {
     if (await cacheImplementation.isSongV2(fileKey)) {
-      throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
+      throw new ShowUserException(
+        `Can not upload the song "${fileKey}" because it is saved in an old format,
 			we apologize for the inconvenience.
 			Please add the file "${fileKey}" to troff again,
-			reload the page and try to upload it again`);
+			reload the page and try to upload it again`,
+        'info'
+      );
     }
 
     const cachedResponse = await caches.match(fileKey);
     if (cachedResponse === undefined) {
-      throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
-			Please add the song to Troff and try to upload it again.`);
+      throw new ShowUserException(
+        `Can not upload the song "${fileKey}" because it appears to not exist in the app.
+			Please add the song to Troff and try to upload it again.`,
+        'info'
+      );
     }
 
     const myBlob = await cachedResponse.blob();
