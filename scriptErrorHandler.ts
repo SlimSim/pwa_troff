@@ -25,68 +25,46 @@ import { SentryCaptureException } from './utils/sentry.js';
 
 // Create an object type UserException
 class ShowUserException extends Error {
-  constructor(message: string) {
+  type: 'error' | 'info' | 'warning';
+  constructor(message: string, type: 'error' | 'info' | 'warning' = 'error') {
     super(message);
     this.name = 'ShowUserException';
+    this.type = type;
     // Required for correct prototype chain in transpiled output (esp. ES5):
     Object.setPrototypeOf(this, ShowUserException.prototype);
   }
 }
 
-const errorHandler: ErrorHandler = {
-  backendService_getTroffData: function (error, serverId, fileName) {
-    IO.removeLoadScreen();
-    $('#downloadSongFromServerInProgressDialog').addClass('hidden');
-    $('#downloadMarkersFromServerInProgressDialog').addClass('hidden');
-    if (error.status == 0) {
-      $.notify(
-        `Could not connect to server. Please check your internet connection.
-					If your internet is working, please try again later.
-					If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com.`,
-        {
-          className: 'error',
-          autoHide: false,
-          clickToHide: true,
-        }
-      );
-      return;
-    }
-    if (error.status == 'NOT_FOUND') {
-      $.notify(
-        `Could not find song "${fileName}", with id "${serverId}", on the server,
-				perhaps the URL is wrong or the song has been removed`,
-        {
-          className: 'error',
-          autoHide: false,
-          clickToHide: true,
-        }
-      );
-      return;
-    }
+const clearUI = () => {
+  IO.removeLoadScreen();
+  $('#downloadSongFromServerInProgressDialog').addClass('hidden');
+  $('#downloadMarkersFromServerInProgressDialog').addClass('hidden');
+};
 
+const errorHandler: ErrorHandler = {
+  generic: function (error: Error) {
+    clearUI();
     if (error instanceof ShowUserException) {
       $.notify(error.message, {
-        className: 'error',
+        className: error.type,
         autoHide: false,
         clickToHide: true,
       });
       return;
+    } else {
+      SentryCaptureException(error);
+      $.notify(
+        `An unknown error occurred, please try again later.
+          If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
+          explaining what happened`,
+        {
+          className: 'error',
+          autoHide: false,
+          clickToHide: true,
+        }
+      );
+      log.e(`errorHandler.generic: Full Error:\n`, error);
     }
-
-    SentryCaptureException(error);
-    $.notify(
-      `An unknown error occurred when trying to download the song "${fileName}", with id "${serverId}", from the server,
-			please try again later.
-			If you still get till message after 24 hours, please submit a error message to slimsimapps@gmail.com
-			explaining what happened`,
-      {
-        className: 'error',
-        autoHide: false,
-        clickToHide: true,
-      }
-    );
-    log.e(`errorHandler.backendService_getTroffData: Full Error:\n`, error);
-    return;
   },
 
   fileHandler_fetchAndSaveResponse: function (error, fileName) {
@@ -99,7 +77,7 @@ const errorHandler: ErrorHandler = {
           but the markers have been loaded, if you have the file named "${fileName}", you can
           simply import it again and the markers will be connected with the file!`,
         {
-          className: 'error',
+          className: 'info',
           autoHide: false,
           clickToHide: true,
         }
@@ -109,10 +87,11 @@ const errorHandler: ErrorHandler = {
 
     if (error instanceof ShowUserException) {
       $.notify(error.message, {
-        className: 'error',
+        className: error.type,
         autoHide: false,
         clickToHide: true,
       });
+      SentryCaptureException(error);
       return;
     }
 
@@ -151,7 +130,7 @@ const errorHandler: ErrorHandler = {
 
     if (error instanceof ShowUserException) {
       $.notify(error.message, {
-        className: 'error',
+        className: error.type,
         autoHide: false,
         clickToHide: true,
       });

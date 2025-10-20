@@ -365,9 +365,10 @@ class TroffClass {
 
     let troffData: TroffData;
     try {
+      console.log('xxxxxxxxxxxxxxx importNew');
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(error, serverId, fileName);
+      return errorHandler.generic(error);
     }
 
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
@@ -409,7 +410,7 @@ class TroffClass {
 
       this.saveDownloadLinkHistory(Number(serverId), fileName, troffDataFromServer);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(error, serverId, fileName);
+      return errorHandler.generic(error);
     }
 
     log.d('importTroffDataToExistingSong_merge: -> createSongAudio', { fileName });
@@ -575,7 +576,7 @@ class TroffClass {
     try {
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(error, serverId, fileName);
+      return errorHandler.generic(error);
     }
 
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
@@ -622,7 +623,7 @@ class TroffClass {
     try {
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
-      return errorHandler.backendService_getTroffData(error, serverId, fileName);
+      return errorHandler.generic(error);
     }
     this.saveDownloadLinkHistory(Number(serverId), fileName, troffData);
 
@@ -1241,8 +1242,8 @@ class TroffClass {
   }; // end space()
 
   playUiButton = async () => {
-    log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
     if (isSafari && !this.iOSHasLoadedSong) {
+      log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
       log.d('playUiButton: -> createSongAudio', { songKey: this.getCurrentSong() });
       await createSongAudio(this.getCurrentSong());
       this.iOSHasLoadedSong = true;
@@ -1316,7 +1317,6 @@ class TroffClass {
         });
     };
 
-    log.d('playSong', { wait, isSafari });
     if (wait > 0) {
       // Hack to force Safari to play the sound after the timeout:
       if (isSafari) {

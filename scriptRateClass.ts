@@ -1,7 +1,8 @@
 import { blurHack } from './utils/utils.js';
 import { nDB } from './assets/internal/db.js';
-import { IO } from './script.js';
-import { Troff, Rate } from './script.js';
+import { IO, Troff, Rate } from './script.js';
+import { isSafari } from './utils/browserEnv.js';
+import { welcomeStartFunc } from './features/welcomeScripts.js';
 
 type RateStoredData = {
   millisFirstTimeStartingApp: number;
@@ -42,6 +43,8 @@ class RateClass {
       this.firstTimeStartingAppFunc();
       return;
     }
+
+    welcomeStartFunc();
 
     /** @type {number[]} */
     var aLastMonthUsage: number[] = JSON.parse(oData.straLastMonthUsage);
@@ -129,6 +132,9 @@ class RateClass {
     nDB.set('millisFirstTimeStartingApp', millis);
     nDB.set('iRatedStatus', this.RATED_STATUS_NOT_ASKED);
     nDB.set('straLastMonthUsage', straLastMonthUsage);
+    if (isSafari) {
+      nDB.set('TROFF_HAS_SHOWN_SAFARI_V_1_9_WELCOME', true);
+    }
   };
 
   /**

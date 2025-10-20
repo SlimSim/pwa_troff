@@ -3,14 +3,6 @@
 
 import { usePhoneLog } from './browserEnv.js';
 
-// const usePhoneLog = true;
-
-// // Override console.log
-// console.log = function(...args) {
-//     // Call the original console.log with a prefix
-//     originalLog.apply(console, ["custom log:", ...args]);
-// };
-
 // Save the original console.log
 const originalTrace = console.trace;
 const originalLog = console.log;

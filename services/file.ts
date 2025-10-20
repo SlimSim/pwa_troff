@@ -5,7 +5,6 @@ const backendService = {} as BackendService;
 const firebaseWrapper = {} as FirebaseWrapper;
 
 import { ShowUserException } from '../scriptErrorHandler.js';
-import { isSafari } from '../utils/browserEnv.js';
 import {
   db,
   getDoc,
@@ -135,25 +134,15 @@ $(() => {
   const handleFileWithFileType = (file: File, callbackFunk: (url: string, file: File) => void) => {
     // Only process image, audio and video files.
     if (!(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*'))) {
-      if (isSafari) {
-        IO.alert(
-          'Safari can not recognize this file',
-          'Troff only supports audios, videos and images, ' +
-            'if this file is on of those, ' +
-            'you can try to use a different browser such as Firefox Chromium or Chrome<br /><br />' +
-            'Happy training!'
-        );
-      } else {
-        IO.alert(
-          'Unrecognized file',
-          'Troff only supports audios, videos and images, ' +
-            'this file seems to be a <br /><br />' +
-            file.type +
-            '<br /><br />If this file is an audio-, video- or image-file, ' +
-            'we are deeply sorry, please contact us and describe your problem<br /><br />' +
-            'Happy training!'
-        );
-      }
+      IO.alert(
+        'Unrecognized file',
+        'Troff only supports audios, videos and images, ' +
+          'this file seems to be a <br /><br />' +
+          file.type +
+          '<br /><br />If this file is an audio-, video- or image-file, ' +
+          'we are deeply sorry, please contact us and describe your problem<br /><br />' +
+          'Happy training!'
+      );
       log.e('handleFileWithFileType: unrecognized type! file: ', file);
       return;
     }
@@ -175,25 +164,20 @@ $(() => {
     if (!snapshot.exists()) {
       throw new ShowUserException(
         `Could not find song "${fileName}", with id "${troffDataId}", on the server,
-          perhaps the URL is wrong or the song has been removed`
+          perhaps the URL is wrong or the song has been removed`,
+        'warning'
       );
     }
     return snapshot.data();
   };
 
   fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
-    log.i('-> fileHandler.fetchAndSaveResponse start', {
-      songKey,
-      fileUrl,
-      isSafari,
-    });
     const response = await fetch(fileUrl);
     if (!response.ok || response.body == null || response.headers == null) {
       log.e('fileHandler.fetchAndSaveResponse fetch failed', {
         songKey,
         status: response.status,
         statusText: response.statusText,
-        isSafari,
       });
       throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
     }
@@ -252,8 +236,11 @@ $(() => {
   //private?
   fileHandler.getObjectUrlFromResponse = async (response, songKey) => {
     if (response === undefined) {
-      throw new ShowUserException(`Can not upload the song "${songKey}" because it appears to not exist in the app.
-				 Please add the song to Troff and try to upload it again.`);
+      throw new ShowUserException(
+        `Can not upload the song "${songKey}" because it appears to not exist in the app.
+				 Please add the song to Troff and try to upload it again.`,
+        'info'
+      );
     }
     return response.blob().then(URL.createObjectURL);
   };
@@ -263,11 +250,10 @@ $(() => {
       log.d('fileHandler.getObjectUrlFromFile cache match', {
         songKey,
         found: cachedResponse !== undefined,
-        isSafari,
         navigatorOnLine: navigator.onLine,
       });
       if (cachedResponse === undefined) {
-        log.w('fileHandler.getObjectUrlFromFile cache miss', { songKey, isSafari });
+        log.w('fileHandler.getObjectUrlFromFile cache miss', { songKey });
         throw new ShowUserException(`A problem occured with "${songKey}". Please try again.`);
       }
       return fileHandler.getObjectUrlFromResponse(cachedResponse, songKey);
@@ -281,16 +267,22 @@ $(() => {
 
   fileHandler.sendFileToFirebase = async (fileKey, storageDir) => {
     if (await cacheImplementation.isSongV2(fileKey)) {
-      throw new ShowUserException(`Can not upload the song "${fileKey}" because it is saved in an old format,
+      throw new ShowUserException(
+        `Can not upload the song "${fileKey}" because it is saved in an old format,
 			we apologize for the inconvenience.
 			Please add the file "${fileKey}" to troff again,
-			reload the page and try to upload it again`);
+			reload the page and try to upload it again`,
+        'info'
+      );
     }
 
     const cachedResponse = await caches.match(fileKey);
     if (cachedResponse === undefined) {
-      throw new ShowUserException(`Can not upload the song "${fileKey}" because it appears to not exist in the app.
-			Please add the song to Troff and try to upload it again.`);
+      throw new ShowUserException(
+        `Can not upload the song "${fileKey}" because it appears to not exist in the app.
+			Please add the song to Troff and try to upload it again.`,
+        'info'
+      );
     }
 
     const myBlob = await cachedResponse.blob();
