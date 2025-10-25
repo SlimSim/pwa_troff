@@ -5,7 +5,6 @@ const backendService = {} as BackendService;
 const firebaseWrapper = {} as FirebaseWrapper;
 
 import { ShowUserException } from '../scriptErrorHandler.js';
-import { isSafari } from '../utils/browserEnv.js';
 import {
   db,
   getDoc,
@@ -135,25 +134,15 @@ $(() => {
   const handleFileWithFileType = (file: File, callbackFunk: (url: string, file: File) => void) => {
     // Only process image, audio and video files.
     if (!(file.type.match('image.*') || file.type.match('audio.*') || file.type.match('video.*'))) {
-      if (isSafari) {
-        IO.alert(
-          'Safari can not recognize this file',
-          'Troff only supports audios, videos and images, ' +
-            'if this file is on of those, ' +
-            'you can try to use a different browser such as Firefox Chromium or Chrome<br /><br />' +
-            'Happy training!'
-        );
-      } else {
-        IO.alert(
-          'Unrecognized file',
-          'Troff only supports audios, videos and images, ' +
-            'this file seems to be a <br /><br />' +
-            file.type +
-            '<br /><br />If this file is an audio-, video- or image-file, ' +
-            'we are deeply sorry, please contact us and describe your problem<br /><br />' +
-            'Happy training!'
-        );
-      }
+      IO.alert(
+        'Unrecognized file',
+        'Troff only supports audios, videos and images, ' +
+          'this file seems to be a <br /><br />' +
+          file.type +
+          '<br /><br />If this file is an audio-, video- or image-file, ' +
+          'we are deeply sorry, please contact us and describe your problem<br /><br />' +
+          'Happy training!'
+      );
       log.e('handleFileWithFileType: unrecognized type! file: ', file);
       return;
     }
@@ -183,18 +172,12 @@ $(() => {
   };
 
   fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
-    log.i('-> fileHandler.fetchAndSaveResponse start', {
-      songKey,
-      fileUrl,
-      isSafari,
-    });
     const response = await fetch(fileUrl);
     if (!response.ok || response.body == null || response.headers == null) {
       log.e('fileHandler.fetchAndSaveResponse fetch failed', {
         songKey,
         status: response.status,
         statusText: response.statusText,
-        isSafari,
       });
       throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
     }
@@ -267,11 +250,10 @@ $(() => {
       log.d('fileHandler.getObjectUrlFromFile cache match', {
         songKey,
         found: cachedResponse !== undefined,
-        isSafari,
         navigatorOnLine: navigator.onLine,
       });
       if (cachedResponse === undefined) {
-        log.w('fileHandler.getObjectUrlFromFile cache miss', { songKey, isSafari });
+        log.w('fileHandler.getObjectUrlFromFile cache miss', { songKey });
         throw new ShowUserException(`A problem occured with "${songKey}". Please try again.`);
       }
       return fileHandler.getObjectUrlFromResponse(cachedResponse, songKey);

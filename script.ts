@@ -57,7 +57,7 @@ import { TroffClass } from './scriptTroffClass.js';
 import { errorHandler, ShowUserException } from './scriptErrorHandler.js';
 import DBClass from './scriptDBClass.js';
 import { loadExternalHtml } from './utils/utils.js';
-import { isSafari, isIphone, isIpad, treatSafariDifferent } from './utils/browserEnv.js';
+import { isIphone, isIpad } from './utils/browserEnv.js';
 import IOClass from './ui/scriptIOClass.js';
 import RateClass from './scriptRateClass.js';
 import { addItem_NEW_2 } from './songManagement.js';
@@ -101,16 +101,6 @@ SongToGroup.onSongAdded((event) => {
 });
 
 const googleSignIn = async function () {
-  if (isSafari && treatSafariDifferent) {
-    IO.alert(
-      'Safari and iOS does not support sign in',
-      'If you want to sign in and use shared songlists and more, ' +
-        'please switch to a supported browser, such as Firefox, Chromium or Chrome.<br /><br />' +
-        'Best of luck!'
-    );
-    return;
-  }
-
   try {
     const result = await signInWithPopup(auth, new GoogleAuthProvider());
     firebaseUser = result.user;
@@ -236,11 +226,6 @@ const songDocUpdate = async function (doc: DocumentSnapshot) {
   const songExists = await fileHandler.doesFileExistInCache(songKey);
 
   if (!songExists) {
-    log.i('songDocUpdate missing song - fetching from server', {
-      songKey,
-      navigatorOnLine: navigator.onLine,
-      treatSafariDifferent,
-    });
     try {
       await fileHandler.fetchAndSaveResponse(songData.fileUrl, songKey);
     } catch (error) {
@@ -481,7 +466,7 @@ const mergeSongListHistorys = function (
 };
 
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promise<void> {
-  log.d(`-> path ${path} songData ${songData} isSafari ${isSafari}`);
+  log.d(`-> path ${path} songData ${songData}`);
 
   Troff.pauseSong(false);
 
@@ -528,14 +513,6 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
   $('#downloadSongFromServerInProgressDialog').addClass('hidden');
 
   //Safari does not play well with blobs as src :(
-  log.i(`Browser detection 1: isSafari ${isSafari} treatSafariDifferent ${treatSafariDifferent}`);
-  log.i('setSong2 selecting media source', {
-    path,
-    isSafari,
-    treatSafariDifferent,
-    navigatorOnLine: navigator.onLine,
-  });
-  log.d(`setting src to ${songData}`);
   //för vanlig linux, bäst att använda songData hela tiden :)
   newElem.setAttribute('src', songData);
 
@@ -615,7 +592,6 @@ async function createSongAudio(path: string) {
   log.d('createSongAudio: cacheImplementation.isSongV2 result', {
     path,
     isSongV2: songIsV2,
-    isSafari,
   });
 
   if (songIsV2) {
