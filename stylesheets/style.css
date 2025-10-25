@@ -44,14 +44,15 @@
   --body-link-color: #0051a8;
   --text-area: lightblue;
   --drop-active: lightgray;
-
-  --active-play-region: var(--accent-color-1);
-  --group-indication: var(--accent-color-2);
+  --on-drop-active: black;
 
   --on-accent-color-1: white;
   --on-accent-color-2: white;
   --on-accent-color-2-td: white;
   --on-accent-color-3: white;
+
+  --active-play-region: var(--accent-color-1);
+  --group-indication: var(--accent-color-2);
 
   --accent-color-green-ish: var(--accent-color-1, #431c5d);
   --accent-color-red-ish: var(--accent-color-2, #dd2c00);
@@ -82,14 +83,18 @@
   --body-link-color: #0051a8;
   --text-area: #dfedd8;
   --drop-active: lightgray;
-
-  --active-play-region: var(--accent-color-1);
-  --group-indication: var(--accent-color-2);
+  --on-drop-active: black;
 
   --on-accent-color-1: black;
   --on-accent-color-2: white;
   --on-accent-color-2-td: black;
   --on-accent-color-3: black;
+
+  --active-play-region: var(--accent-color-1);
+  --group-indication: var(--accent-color-2);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
 
   --accent-color-green-ish: var(--accent-color-1, #25d200);
   --accent-color-red-ish: var(--accent-color-2, #d42626);
@@ -119,14 +124,18 @@
   --body-link-color: lightgray;
   --text-area: #fffde7;
   --drop-active: lightgray;
-
-  --active-play-region: black;
-  --group-indication: var(--accent-color-1);
+  --on-drop-active: black;
 
   --on-accent-color-1: black;
   --on-accent-color-2: #fff;
   --on-accent-color-2-td: #fff;
   --on-accent-color-3: black;
+
+  --active-play-region: black;
+  --group-indication: var(--accent-color-1);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
 
   --accent-color-green-ish: var(--accent-color-3, #f5f5f5);
   --accent-color-red-ish: var(--accent-color-2, #000);
@@ -158,22 +167,72 @@
   --body-link-color: blue;
   --text-area: #f6f4ed;
   --drop-active: #bdbdbd;
-
-  --active-play-region: black;
-  --group-indication: var(--accent-color-2);
+  --on-drop-active: black;
 
   --on-accent-color-1: white;
   --on-accent-color-2: #fff;
   --on-accent-color-2-td: #fff;
   --on-accent-color-3: black;
 
+  --active-play-region: black;
+  --group-indication: var(--accent-color-2);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
   --accent-color-green-ish: var(--accent-color-1, #f5f5f5);
   --accent-color-red-ish: var(--accent-color-2, #000);
   --accent-color-yellow-ish: var(--accent-color-3, #ffeb3b);
 }
 
+.theme-col5 {
+  --primary-color: #8b0000; /* Dark red for primary elements */
+  --secondary-color: #000000; /* Black for secondary */
+  --tertiary-color: #333333; /* Dark gray for tertiary */
+  --accent-color-1: #ffff00; /* Bright yellow for highlights */
+  --accent-color-2: #00ff00; /* Neon green for play/groups */
+  --accent-color-3: #0000ff; /* Electric blue for variety */
+
+  --on-primary-color: #ffffff; /* White text on red */
+  --on-primary-color-link: #00ffff; /* Cyan links on red */
+  --on-secondary-color: #ffffff; /* White on black */
+
+  --regular-buton-color: #666666; /* Medium gray buttons */
+  --on-regular-buton-color: #dddddd; /* White text */
+  --data-tables-empty: #000000; /* Black for empty tables */
+  --on-data-tables-empty: #ffffff; /* White text */
+  --gray-out: #333333; /* Dark gray for disabled */
+  --on-gray-out: #dddddd; /* White text */
+  --body-background: #000000; /* Black overall background */
+  --on-body-background: #ffffff; /* White text */
+  --body-link-color: #ffff00; /* Yellow links */
+  --text-area: #222222; /* Dark gray inputs */
+  --on-text-area: #dddddd;
+  --drop-active: #444444; /* Slightly lighter gray for drag */
+  --on-drop-active: #b1b1b1; /* White text */
+
+  --on-accent-color-1: #000000; /* Black on yellow */
+  --on-accent-color-2: #000000; /* Black on green */
+  --on-accent-color-2-td: #000000; /* White on green in tables */
+  --on-accent-color-3: #ffffff; /* White on blue */
+
+  --active-play-region: var(--accent-color-1); /* Yellow play region */
+  --group-indication: var(--accent-color-2); /* Green groups */
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
+  --accent-color-green-ish: var(--accent-color-2); /* Green alias */
+  --accent-color-red-ish: var(--accent-color-1); /* Yellow as red-ish for variety */
+  --accent-color-yellow-ish: var(--accent-color-3); /* Blue as yellow-ish */
+}
+
 .textareaEdit {
   z-index: 99;
+}
+
+.accent-color-2 {
+  color: var(--on-accent-color-2);
 }
 
 video,
@@ -1127,7 +1186,7 @@ a {
 }
 
 .st-simple-on-off-button {
-  color: black;
+  color: var(--on-drop-active, black);
 }
 
 .stOnOffButton:focus,

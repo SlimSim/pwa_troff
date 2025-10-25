@@ -320,6 +320,7 @@ textarea {
     padding-bottom: .375rem;
     margin-bottom: 0;
     line-height: 1.5;
+	color: inherit;
     background-color: transparent;
     border: solid transparent;
     border-width: 1px 0;
