@@ -22,7 +22,7 @@ const environment: Environment = {
   switch (window.location.hostname) {
     case 'localhost':
       environment.banner.show = true;
-      environment.banner.text = 'Welcome to development test';
+      environment.banner.text = 'Welcome to dev';
       environment.banner.showLogs = true;
       environment.environment = 'dev';
       environment.showHiddenInProd = true;
@@ -60,8 +60,8 @@ const environment: Environment = {
     case 'troff.slimsim.heliohost.org':
     case 'troff.ternsjo-it.heliohost.us':
       environment.banner.show = false;
-      environment.banner.text = 'Production';
-      environment.banner.showLogs = false;
+      environment.banner.text = 'Welcome to prod';
+      environment.banner.showLogs = true;
       environment.environment = 'prod';
       environment.showHiddenInProd = false;
 

@@ -731,10 +731,15 @@ async function initEnvironment() {
   }
   log.i('manifest.version', manifest.version);
 
-  if (environment.banner.show) {
+  if (nDB.get('TROFF_SETTING_BANNER_SHOW') == null) {
+    if (environment.banner.show) {
+      $('#TROFF_SETTING_BANNER_SHOW').addClass('active');
+      $('#banner').removeClass('hidden');
+    }
+  } else if (nDB.get('TROFF_SETTING_BANNER_SHOW') == true) {
     $('#banner').removeClass('hidden');
-    $('#banner').find('#banner-text').text(environment.banner.text);
   }
+  $('#banner-text').text(environment.banner.text);
 
   if (environment.showHiddenInProd) {
     $('.hidden-in-prod').removeClass('hidden').removeClass('hidden-in-prod');
