@@ -1,0 +1,66 @@
+name: Deploy static site to Pages (artifact)
+
+on:
+  push:
+    branches: ['beta']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint + Typecheck + Build
+        run: npm run build:check
+
+      # Copy all static assets into dist (exclude TS and build/system dirs)
+      - name: Copy static files to dist
+        run: |
+          rsync -av \
+            --exclude 'node_modules' \
+            --exclude '.git' \
+            --exclude 'dist' \
+            --exclude '.github' \
+            --exclude 'tsconfig*.json' \
+            --exclude 'package*.json' \
+            --exclude 'vitest.config.*' \
+            --exclude '*.ts' \
+            ./ dist/
+
+      - name: Generate Workbox service worker (beta)
+        run: npm run workbox:beta
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

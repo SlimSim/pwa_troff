@@ -1,118 +1,146 @@
 {
-	"name": "Troff - Training with music",
-	"short_name": "Troff",
-	"version": "1.8",
-	"description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
-	"categories": ["music", "productivity"],
-	"offline_enabled": true,
-	"start_url": "/",
-	"display": "standalone",
-	"orientation": "portrait",
-	"background_color": "#bccbde",
-	"theme_color": "#003366",
-	"icons": [
-		{
-			"src": "assets/logos/logo-016.png",
-			"sizes": "16x16"
-		},
-		{
-			"src": "assets/logos/logo-036.png",
-			"sizes": "36x36"
-		},
-		{
-			"src": "assets/logos/logo-048.png",
-			"sizes": "48x48"
-		},
-		{
-			"src": "assets/logos/logo-078.png",
-			"sizes": "78x78"
-		},
-		{
-			"src": "assets/logos/logo-096.png",
-			"sizes": "96x96"
-		},
-		{
-			"src": "assets/logos/logo-128.png",
-			"sizes": "128x128"
-		},
-		{
-			"src": "assets/logos/logo-192-non-transparent.png",
-			"sizes": "192x192"
-		},
-		{
-			"src": "assets/logos/logo-256.png",
-			"sizes": "256x256"
-		},
-		{
-			"src": "assets/logos/logo-512.png",
-			"sizes": "512x512"
-		},
-		{
-			"src": "assets/logos/logo-512-maskable.png",
-			"sizes": "512x512",
-			"type": "image/png",
-			"purpose": "maskable"
-		}
-	],
-	"shortcuts" : [
-		{
-			"name": "Demo song",
-			"url": "/#2582986745&demo.mp4 ",
-			"description": "Download the demo-song with markers, colors and see what you can do with Troff!",
-			"icons": [{ "src": "/assets/logos/logo-demo-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
-		},
-		{
-			"name": "Help",
-			"url": "/help.html",
-			"description": "Get tips on how to get the most out of Troff.",
-			"icons": [{ "src": "/assets/logos/question-mark-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
-		},
-		{
-			"name": "Find Songs",
-			"url": "/find.html",
-			"description": "Find new songs and choreographies online.",
-			"icons": [{ "src": "/assets/logos/search-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
-		},
-		{
-			"name": "Terms and conditions",
-			"url": "/terms.html",
-			"description": "Read our Terms and conditions to find out what content you can submit.",
-			"icons": [{ "src": "/assets/logos/gavel-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }]
-		}
-	],
-	"screenshots" : [
-	  {
-	    "src": "/assets/screenshots/1_settings.webp",
-	    "sizes": "452x930",
-	    "type": "image/webp"
-	  },
-	  {
-	    "src": "/assets/screenshots/3_time_bar_markers.webp",
-	    "sizes": "452x930",
-	    "type": "image/webp"
-	  },
-	  {
-	    "src": "/assets/screenshots/4_time_bar_colors.webp",
-	    "sizes": "452x930",
-	    "type": "image/webp"
-	  },
-	  {
-	    "src": "/assets/screenshots/5_video.webp",
-	    "sizes": "452x930",
-	    "type": "image/webp"
-	  },
-	  {
-	    "src": "/assets/screenshots/hand_held_1.webp",
-	    "sizes": "2000x1300",
-	    "type": "image/webp"
-	  }
-	],
-	"related_applications": [
-	  {
-	    "platform": "chrome_web_store",
-	    "url": "https://chrome.google.com/webstore/detail/troff-training-with-music/mebbbmcjdgoipnkpmfjndbolgdnakppl",
-	    "id": "mebbbmcjdgoipnkpmfjndbolgdnakppl"
-	  }
-	],
-	"prefer_related_applications": false
+  "name": "Troff - Training with music",
+  "short_name": "Troff",
+  "version": "1.9.2.7",
+  "description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
+  "categories": ["music", "productivity"],
+  "offline_enabled": true,
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#bccbde",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "assets/logos/logo-016.png",
+      "sizes": "16x16"
+    },
+    {
+      "src": "assets/logos/logo-036.png",
+      "sizes": "36x36"
+    },
+    {
+      "src": "assets/logos/logo-048.png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "assets/logos/logo-078.png",
+      "sizes": "78x78"
+    },
+    {
+      "src": "assets/logos/logo-096.png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "assets/logos/logo-128.png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "assets/logos/logo-192-non-transparent.png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "assets/logos/logo-256.png",
+      "sizes": "256x256"
+    },
+    {
+      "src": "assets/logos/logo-512.png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "assets/logos/logo-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Demo song",
+      "url": "/#2582986745&demo.mp4 ",
+      "description": "Download the demo-song with markers, colors and see what you can do with Troff!",
+      "icons": [
+        {
+          "src": "/assets/logos/logo-demo-192-maskable.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "maskable"
+        }
+      ]
+    },
+    {
+      "name": "Help",
+      "url": "/help.html",
+      "description": "Get tips on how to get the most out of Troff.",
+      "icons": [
+        {
+          "src": "/assets/logos/question-mark-192-maskable.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "maskable"
+        }
+      ]
+    },
+    {
+      "name": "Find Songs",
+      "url": "/find.html",
+      "description": "Find new songs and choreographies online.",
+      "icons": [
+        {
+          "src": "/assets/logos/search-192-maskable.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "maskable"
+        }
+      ]
+    },
+    {
+      "name": "Terms and conditions",
+      "url": "/terms.html",
+      "description": "Read our Terms and conditions to find out what content you can submit.",
+      "icons": [
+        {
+          "src": "/assets/logos/gavel-192-maskable.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "maskable"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/screenshots/1_settings.webp",
+      "sizes": "452x930",
+      "type": "image/webp"
+    },
+    {
+      "src": "/assets/screenshots/3_time_bar_markers.webp",
+      "sizes": "452x930",
+      "type": "image/webp"
+    },
+    {
+      "src": "/assets/screenshots/4_time_bar_colors.webp",
+      "sizes": "452x930",
+      "type": "image/webp"
+    },
+    {
+      "src": "/assets/screenshots/5_video.webp",
+      "sizes": "452x930",
+      "type": "image/webp"
+    },
+    {
+      "src": "/assets/screenshots/hand_held_1.webp",
+      "sizes": "2000x1300",
+      "type": "image/webp"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "chrome_web_store",
+      "url": "https://chrome.google.com/webstore/detail/troff-training-with-music/mebbbmcjdgoipnkpmfjndbolgdnakppl",
+      "id": "mebbbmcjdgoipnkpmfjndbolgdnakppl"
+    }
+  ],
+  "prefer_related_applications": false
 }

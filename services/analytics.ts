@@ -1,0 +1,31 @@
+import { GoogleTagArgs } from 'types/analytics.js';
+
+import { loadAnalytics, eventLogger } from './firebaseClient.js';
+import log from '../utils/log.js';
+
+async function gtag(type: string, identifier: string, args: GoogleTagArgs): Promise<void> {
+  const analytics = await loadAnalytics();
+
+  if (!analytics) {
+    log.w('Analytics not available:', type, identifier, args);
+    return;
+  }
+
+  try {
+    // Map gtag calls to Firebase Analytics
+    if (type === 'event') {
+      // identifier is the event name
+      eventLogger(analytics, identifier, args);
+    } else if (type === 'config') {
+      // For 'config' calls, you might not need to do anything
+      // as Firebase auto-configures, but you could log if needed
+      log.i('Analytics config:', identifier, args);
+    } else {
+      log.w('Analytics unknown type:', type, identifier, args);
+    }
+  } catch (error) {
+    log.e('Analytics error:', error);
+  }
+}
+
+export { gtag };

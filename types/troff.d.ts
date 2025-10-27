@@ -1,0 +1,222 @@
+// types/troff.d.ts
+export interface TroffObjectLocal {
+  TROFF_CLASS_TO_TOGGLE_buttStartBefore: boolean;
+  TROFF_CLASS_TO_TOGGLE_buttStopAfter: boolean;
+  TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops: boolean;
+  TROFF_VALUE_incrementUntilValue: number | string;
+  TROFF_VALUE_pauseBeforeStart: number | string;
+  TROFF_VALUE_speedBar: number | string;
+  TROFF_VALUE_startBefore: number | string;
+  TROFF_VALUE_stopAfter: number | string;
+  TROFF_VALUE_tapTempo: number | string;
+  TROFF_VALUE_volumeBar: number;
+  TROFF_VALUE_waitBetweenLoops: boolean;
+  aStates: string[];
+  abAreas: boolean[];
+  currentStartMarker: string;
+  currentStopMarker: string;
+  fileData: TroffFileData;
+  info: string;
+  latestUploadToFirebase: number;
+  localInformation: TroffLocalInformation;
+  loopTimes: number | string;
+  markers: TroffMarker[];
+  zoomEndTime: number;
+  zoomStartTime: number;
+  serverId?: string;
+  bPlayInFullscreen?: boolean;
+  bMirrorImage?: boolean;
+}
+
+export type TroffObjectFirebase = Omit<TroffObjectLocal, 'localInformation'> & {
+  localInformation?: never;
+};
+
+// todo: interface for State!
+export interface State {
+  buttPauseBefStart: boolean;
+  buttStartBefore: boolean;
+  buttStopAfter: boolean;
+  buttWaitBetweenLoops: boolean;
+  currentLoop: string;
+  currentMarker: string;
+  currentStopMarker: string;
+  name: string;
+  pauseBeforeStart: number | string;
+  speedBar: number | string;
+  startBefore: number | string;
+  stopAfter: number | string;
+  volumeBar: number | string;
+  waitBetweenLoops: number | string;
+}
+
+export type State_WithTime = Omit<State, 'currentStopMarker', 'currentMarker'> & {
+  currentStopMarker?: never;
+  currentMarker?: never;
+  currentMarkerTime?: number | string;
+  currentStopMarkerTime?: number | string;
+};
+
+export interface TroffLocalInformation {
+  nrTimesLoaded?: number;
+  addedFromThisDevice?: boolean;
+}
+
+export interface TroffFileData {
+  album: string;
+  artist: string;
+  choreographer: string;
+  choreography: string;
+  customName: string;
+  duration: number;
+  genre: string;
+  tags: string;
+  title: string;
+  lastModified?: number;
+  size?: number;
+}
+
+export interface TroffMarker {
+  color: string;
+  id: string;
+  info: string;
+  name: string;
+  time: number | string;
+}
+
+export type TroffSongData = {
+  songKey: string;
+  jsonDataInfo: string;
+  fileUrl?: string;
+};
+
+export type TroffSongIdentifyer_sk = {
+  groupDocId: string;
+  songDocId: string;
+  songKey: string;
+};
+
+export type TroffSongIdentifyer_fu = {
+  groupDocId: string;
+  songDocId: string;
+  fileUrl: string;
+};
+
+export type TroffSongIdentifyer = {
+  groupDocId: string;
+  songDocId: string;
+  songKey: string;
+  fileUrl: string;
+};
+
+export type TroffSongAddedEvent = {
+  detail: TroffSongIdentifyer;
+};
+
+export type TroffSongGroupMap = Record<string, TroffSongIdentifyer_fu[]>;
+
+export type TroffFirebaseGroupIdentifyer = {
+  color?: string;
+  firebaseGroupDocId?: string;
+  icon?: string;
+  id?: number;
+  info?: string;
+  name?: string;
+  owners?: string[];
+  songs: TroffFirebaseSongIdentifyer[];
+};
+
+export type TroffFirebaseSongIdentifyer = {
+  firebaseSongDocId?: string;
+  fullPath: string;
+  galleryId: string;
+};
+
+export type SonglistSongInfo = {
+  name: string;
+  data: DirectoryListObject;
+};
+
+export type DirectoryListObject = {
+  galleryId: string;
+  fullPath: string; // todo: denna är alltid 'pwa-galleryId', byta denna grejj till bara name och fullPath! (eller path)
+};
+
+export type TroffStateOfSonglists = {
+  songListList: string[];
+  galleryList: string[];
+  directoryList: DirectoryListObject[];
+};
+
+export interface TroffHtmlMarkerElement extends HTMLInputElement {
+  timeValue: string | number;
+  info: string;
+  color: string;
+}
+
+export type BackendService = {
+  getTroffData: (troffDataId: string, fileName: string) => Promise<any>;
+};
+
+export type TroffData = {
+  deleted?: boolean;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  id: number;
+  markerJsonString: string;
+  troffDataPublic: boolean;
+  troffDataUploadedMillis: number;
+};
+
+export type TroffHistoryList = {
+  fileNameUri: string;
+  troffDataIdObjectList: TroffDataIdObject[];
+};
+
+/**
+ * Used by find.html
+ */
+export type ServerSong = {
+  fromServer?: boolean;
+  deleted: boolean;
+  fileNameUri: string;
+  size: number;
+  troffDataIdObjectList: TroffDataIdObject[];
+  type: string;
+  uploaded: number;
+};
+
+/**
+ * Used by find.html
+ */
+export type PublicTroffDataFromServer = {
+  deleted?: boolean;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  id: number;
+  songData: TroffObjectLocal;
+  troffDataPublic: boolean;
+  troffDataUploadedMillis: number;
+};
+
+export type TroffDataIdObject = {
+  fromServer?: boolean;
+  displayName: string;
+  firstTimeLoaded: number;
+  genre: string;
+  infoBeginning: string;
+  nrMarkers: number;
+  nrStates?: number;
+  tags: string;
+  troffDataId: number;
+};
+
+export type TroffManualImportExport = {
+  strSongInfo: string;
+  aoStates: State_WithTime[];
+  aoMarkers: TroffMarker[];
+};
