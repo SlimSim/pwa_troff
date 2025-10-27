@@ -2,10 +2,9 @@
 (*                        col scheem 1                                        */
 /* The "Anton & Irene" color scheem */
 
-
 /* standard color... */
 ::-webkit-input-placeholder {
-	color: dimgray;
+  color: dimgray;
 }
 
 h1,
@@ -14,140 +13,135 @@ h3,
 h4,
 h5,
 h6,
-p{
-	color: inherit;
+p {
+  color: inherit;
 }
 
-.table-row-selectable tr:hover{
-	outline-color: dimgray;
+.table-row-selectable tr:hover {
+  outline-color: dimgray;
 }
 
-.centerRoundButtCommon{
-	background-color: transparent;
+.centerRoundButtCommon {
+  background-color: transparent;
+  color: var(--important-button, #dd2c00);
 }
+.centerRoundButtText {
+  color: var(--on-important-button, #ffffff);
+}
+
 .drop-active {
-	border-color: var(--drop-active, lightgray);
+  border-color: var(--drop-active, lightgray);
 }
 .stOnOffButton,
-.loopButt{
-	outline-color: var(--drop-active, lightgray);
-	--box-shadow-color: var(--drop-active, lightgray);
+.loopButt {
+  outline-color: var(--drop-active, lightgray);
+  --box-shadow-color: var(--drop-active, lightgray);
 }
 .stOnOffButton,
-.loopButt{
-	background-color: var(--drop-active, lightgray);
+.loopButt {
+  background-color: var(--drop-active, lightgray);
+  color: var(--on-drop-active, black);
 }
-
-
 
 /* oddballs */
-.textareaStandard{
-	background: var(--text-area, lightblue);
-	border-color: var(--text-area, lightblue);
+.textareaStandard {
+  background: var(--text-area, lightblue);
+  border-color: var(--text-area, lightblue);
+  color: var(--on-text-area, black);
 }
 
-.textareaEdit{
-	background: white;
+.textareaEdit {
+  background: white;
+  color: black;
 }
 
-.fullscreen{
-	background-color: black;
+.fullscreen {
+  background-color: black;
 }
 
-.likeLink{
-	background-color: transparent;
-	color: blue;
+.likeLink {
+  background-color: transparent;
+  color: blue;
 }
 
-.outerDialog{
-	background-color: rgba(0, 0, 0, 0.5);
+.outerDialog {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .helpText {
-		color: #696969;
+  color: #696969;
 }
 
-.colorPicker{
-	border-color: black;
+.colorPicker {
+  border-color: black;
 }
-.colorPickerSelected{
-	border-color: var(--accent-color-1, #431c5d);
+.colorPickerSelected {
+  border-color: var(--accent-color-1, #431c5d);
 }
-
-
-
-
-
-
 
 /* the background */
 .backgroundColor,
-.extraBorder{
-	background-color: var(--body-background, #bccbde);
-	color: var(--on-body-background, black)
+.extraBorder {
+  background-color: var(--body-background, #bccbde);
+  color: var(--on-body-background, black);
 }
 
-.backgroundColor a {
-	color: var(--body-link-color, #0051A8);;
+.backgroundColor a,
+.backgroundColor .likeLink {
+  color: var(--body-link-color, #0051a8);
 }
-
 
 /* regularButton */
 .regularButton:focus,
 .regularButton:hover,
-.regularButton:active{
-	outline-color: var(--regular-buton-color,#b0bec5); /*regularButton*/
-	--box-shadow-color: var(--regular-buton-color,#b0bec5); /*regularButton*/
+.regularButton:active {
+  outline-color: var(--regular-buton-color, #b0bec5); /*regularButton*/
+  --box-shadow-color: var(--regular-buton-color, #b0bec5); /*regularButton*/
 }
-.regularButton{
-	background-color: var(--regular-buton-color,#b0bec5); /*regularButton*/
-	color: var(--on-regular-buton-color, black);
+.regularButton {
+  background-color: var(--regular-buton-color, #b0bec5); /*regularButton*/
+  color: var(--on-regular-buton-color, black);
 }
-
 
 /* primaryColor */
 .primaryColor,
 .bgEasyRead {
-	background-color: var(--primary-color,#c2dde6);
-	background: var(--primary-color,#c2dde6);
+  background-color: var(--primary-color, #c2dde6);
+  background: var(--primary-color, #c2dde6);
 
-	color: var(--on-primary-color, black);
+  color: var(--on-primary-color, black);
 }
-.primaryColor a {
-	color: var(--on-primary-color-link, #0051A8);
-}
-
-
-.dataTables_empty{
-	background-color: var(--data-tables-empty,white);
-	background: var(--data-tables-empty,white);
-	color: var(--on-data-tables-empty, black);
+.primaryColor a,
+.primaryColor .likeLink {
+  color: var(--on-primary-color-link, #0051a8);
 }
 
-
-
+.dataTables_empty {
+  background-color: var(--data-tables-empty, white);
+  background: var(--data-tables-empty, white);
+  color: var(--on-data-tables-empty, black);
+}
 
 /* secondaryColor */
 .secondaryColor,
 .areaParent > div,
 .popUpSquare,
 .innerDialog {
-	background-color: var(--secondary-color,#e6e9f0);
-	color: var(--on-secondary-color, black);
+  background-color: var(--secondary-color, #e6e9f0);
+  color: var(--on-secondary-color, black);
 }
 
 .marker-parent li {
-	border-top-color: var(--secondary-color, #e6e9f0);
+  border-top-color: var(--secondary-color, #e6e9f0);
 }
 
 .tertiaryColor {
-	background-color: var( --tertiary-color, #ced8e8);
+  background-color: var(--tertiary-color, #ced8e8);
 }
 
-
 /* accentColor1 */
-.drop-active.selected{
-	border-color: var(--accent-color-1,#431c5d); /* accentColor1 */
+.drop-active.selected {
+  border-color: var(--accent-color-1, #431c5d); /* accentColor1 */
 }
 
 .selected:hover,
@@ -160,9 +154,9 @@ p{
 .currentLoop:active,
 .currentMarker:active,
 .currentStopMarker:active {
-  outline-color: var(--accent-color-1,#431c5d);
-  --box-shadow-color: var(--accent-color-1,#431c5d);
-}  /* accentColor1 */
+  outline-color: var(--accent-color-1, #431c5d);
+  --box-shadow-color: var(--accent-color-1, #431c5d);
+} /* accentColor1 */
 
 .accentColor1,
 .selected,
@@ -172,104 +166,83 @@ p{
 .currentStopMarker,
 #dataSongTable tr.selected td,
 .selected.important {
-	background-color: var(--accent-color-1,#431c5d); /* accentColor1 */
-	color: var(--on-accent-color-1, white);
+  background-color: var(--accent-color-1, #431c5d); /* accentColor1 */
+  color: var(--on-accent-color-1, white);
 }
 .play .secondsLeft,
-.play .loopTimesLeft{
-		color: var(--accent-color-green-ish, #431c5d); /* accentColor1 - IF GREEN ISH (or works for that... */
+.play .loopTimesLeft {
+  color: var(
+    --accent-color-green-ish,
+    #431c5d
+  ); /* accentColor1 - IF GREEN ISH (or works for that... */
 }
-
-
-
-
-
-/* accentColor2 */
 
 .important:hover,
 .important:active,
 .special:hover,
-.special:active{
-	outline-color: var(--accent-color-2, #dd2c00);  /* accentColor2 */
-	--box-shadow-color: var(--accent-color-2, #dd2c00);
+.special:active {
+  outline-color: var(--accent-color-2, #dd2c00);
+  --box-shadow-color: var(--accent-color-2, #dd2c00);
 }
 
 .roundButt, .roundButt2,
 .roundButt:hover,
 .roundButt:active, /* slå ihop dessa tre ovan, är itne dom onödiga? */
 .selected.important {
-	border-color: var(--accent-color-2, #dd2c00); /* accentColor2 */
+  border-color: var(--important-button, #dd2c00); /* accentColor2 */
 }
 
-.groupIndication{
-	border-color: var(--group-indication, #dd2c00);
+.groupIndication {
+  border-color: var(--group-indication, #dd2c00);
 }
 
-
-.accentColor2,
 .important,
 .important td {
-	background-color: var(--accent-color-2, #dd2c00); /* accentColor2 */
+  background-color: var(--important-button, #dd2c00);
 }
 .pause .secondsLeft,
-.importantInverse,
-.pause .loopTimesLeft{
-	color: var(--accent-color-red-ish, #dd2c00); /* accentColor2 - IF RED ISH... */
+.pause .loopTimesLeft {
+  color: var(--accent-color-red-ish, #dd2c00);
 }
 
-
-.important{
-	color: var(--on-accent-color-2, #fff);
+.important {
+  color: var(--on-important-button, #fff);
 }
-
 
 .important td {
-	color: var(--on-accent-color-2, #fff);
-	text-shadow: none;
+  color: var(--on-important-button, #fff);
+  text-shadow: none;
 }
 
-
-#activePlayRegion{
-	background-color: var(--active-play-region, #431c5d);
+#activePlayRegion {
+  background-color: var(--active-play-region, #431c5d);
 }
-
-
-
-
 
 /* accentColor3 */
 .active:hover,
-.active:active{
-	outline-color: var(--accent-color-3, #787B1E); /* accentColor3 */
-	--box-shadow-color: var(--accent-color-3, #787B1E); /* accentColor3 */
+.active:active {
+  outline-color: var(--accent-color-3, #787b1e); /* accentColor3 */
+  --box-shadow-color: var(--accent-color-3, #787b1e); /* accentColor3 */
 }
 
 .accentColor3,
-.active{
-	background-color: var(--accent-color-3, #787B1E); /* accentColor3 */
-	color: var(--on-accent-color-3, #fff);;
+.active {
+  background-color: var(--accent-color-3, #787b1e); /* accentColor3 */
+  color: var(--on-accent-color-3, #fff);
 }
 .wait .secondsLeft,
-.wait .loopTimesLeft{
-	color: var(--accent-color-yellow-ish, #787B1E);; /* accentColor3 - IF YELLOW ISH... */
+.wait .loopTimesLeft {
+  color: var(--accent-color-yellow-ish, #787b1e); /* accentColor3 - IF YELLOW ISH... */
 }
 
-.gray-out-next-on-non-active:not(.active) ~*,
-.grayOut{
-	color: var(--on-gray-out, #595959);
-	background-color: var(--gray-out, lightgray);
+.gray-out-next-on-non-active:not(.active) ~ *,
+.grayOut {
+  color: var(--on-gray-out, #595959);
+  background-color: var(--gray-out, lightgray);
 }
 
 /* end "Anton & Irene" color scheeme */
 
-
-
-
 #markerSection {
-	padding-left: var(--marker-section-padding-left, 0) !important;
+  padding-left: var(--marker-section-padding-left, 0) !important;
 }
-
-
-
-
-
