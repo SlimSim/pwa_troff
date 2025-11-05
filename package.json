@@ -4,6 +4,7 @@
   "description": "Troff - training with music, a music player for dancers or musicians\r who needs to practice dance-steps or instruments to music.",
   "main": "dataTable.js",
   "scripts": {
+    "copy-vendor": "npx cpx \"node_modules/lit/**/*\" assets/external/vendor/lit && npx cpx \"node_modules/@lit/reactive-element/**/*\" assets/external/vendor/@lit/reactive-element && npx cpx \"node_modules/lit-html/**/*\" assets/external/vendor/lit-html && npx cpx \"node_modules/lit-element/**/*\" assets/external/vendor/lit-element && npx cpx \"node_modules/es-module-shims/dist/es-module-shims.js\" assets/external/vendor/es-module-shims/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
