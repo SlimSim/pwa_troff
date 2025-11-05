@@ -89,16 +89,11 @@
 					<i class="fa-resize-full toggleFullScreenExpandIcon"></i>
 					<i class="fa-resize-small toggleFullScreenCompressIcon hidden"></i>
 				</button>
-				<span id="buttPlayUiButtonParent" class="fixToBottomRightOnMobile hideOnPicture">
-					<button id="buttPlayUiButtonPlay" class="centerRoundButtCommon gigantic-on-mobile fa-stack" title="Move to selected marker and play song (key: enter or space)">
-						<i class="fa-circle fa-stack-10x"></i>
-						<i class="fa-play fa-stack-05x centerRoundButtText"></i>
-					</button>
-					<button id="buttPlayUiButtonPause" class="centerRoundButtCommon gigantic-on-mobile fa-stack hidden" title="Move to selected marker and play song (key: enter or space)">
-						<i class="fa-circle fa-stack-10x"></i>
-						<i class="fa-pause fa-stack-05x centerRoundButtText"></i>
-					</button>
-				</span>
+				
+				<t-butt important round icon id="buttPlayUiButtonParent" class="fixToBottomRightOnMobile hideOnPicture">
+					<i id="buttPlayUiButtonPlay" class="fa-play pl-1"></i>
+					<i id="buttPlayUiButtonPause" class="fa-pause"></i>
+				</t-butt>
 			</nav>
 			<div id="mediaInfoBox" class="flexCol halfMarginParent">
 
@@ -2254,6 +2249,21 @@
 
 	<!-- skipping for now, add Google Add later :) script src="assets/buy.js"></script-->
 
+	<script async src="./assets\external\vendor\es-module-shims\es-module-shims.js"></script>
+	<script type="importmap">
+	{
+		"imports": {
+			"lit": "/assets/external/vendor/lit/index.js",
+			"lit/": "/assets/external/vendor/lit/",
+			"lit-html": "/assets/external/vendor/lit-html/lit-html.js",
+			"lit-html/": "/assets/external/vendor/lit-html/",
+			"@lit/reactive-element": "/assets/external/vendor/@lit/reactive-element/reactive-element.js",
+			"@lit/reactive-element/": "/assets/external/vendor/@lit/reactive-element/",
+			"lit-element": "/assets/external/vendor/lit-element/lit-element.js",
+			"lit-element/": "/assets/external/vendor/lit-element/"
+		}
+	}
+	</script>
 	<script defer type="module" src="script.js"></script>
 	<script type="module" src="./pwa.js"></script>
 

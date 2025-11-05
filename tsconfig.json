@@ -11,6 +11,8 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": ["DOM", "ES2020"],
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "allowUmdGlobalAccess": true
   },
   "include": ["**/*.js", "*.js", "**/*.d.ts", "**/*.ts"],

@@ -95,11 +95,11 @@ p {
 .regularButton:focus,
 .regularButton:hover,
 .regularButton:active {
-  outline-color: var(--regular-buton-color, #b0bec5); /*regularButton*/
-  --box-shadow-color: var(--regular-buton-color, #b0bec5); /*regularButton*/
+  outline-color: var(--regular-button-color, #b0bec5); /*regularButton*/
+  --box-shadow-color: var(--regular-button-color, #b0bec5); /*regularButton*/
 }
 .regularButton {
-  background-color: var(--regular-buton-color, #b0bec5); /*regularButton*/
+  background-color: var(--regular-button-color, #b0bec5); /*regularButton*/
   color: var(--on-regular-buton-color, black);
 }
 

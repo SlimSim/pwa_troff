@@ -32,7 +32,7 @@
   --on-primary-color-link: #0051a8;
   --on-secondary-color: rgb(50, 50, 50);
 
-  --regular-buton-color: #b0bec5;
+  --regular-button-color: #b0bec5;
   --on-regular-buton-color: black;
   --data-tables-empty: white;
   --on-data-tables-empty: black;
@@ -54,9 +54,18 @@
   --active-play-region: var(--accent-color-1);
   --group-indication: var(--accent-color-2);
 
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
   --accent-color-green-ish: var(--accent-color-1, #431c5d);
   --accent-color-red-ish: var(--accent-color-2, #dd2c00);
   --accent-color-yellow-ish: var(--accent-color-3, #787b1e);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
 }
 
 .theme-col2 {
@@ -71,7 +80,7 @@
   --on-primary-color-link: #0051a8;
   --on-secondary-color: rgb(50, 50, 50);
 
-  --regular-buton-color: #b0bec5;
+  --regular-button-color: #b0bec5;
   --on-regular-buton-color: black;
   --data-tables-empty: white;
   --on-data-tables-empty: black;
@@ -99,6 +108,12 @@
   --accent-color-green-ish: var(--accent-color-1, #25d200);
   --accent-color-red-ish: var(--accent-color-2, #d42626);
   --accent-color-yellow-ish: var(--accent-color-3, #ffcf53);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
 }
 .theme-col3 {
   --primary-color: #9e9e9e;
@@ -112,7 +127,7 @@
   --on-primary-color-link: white;
   --on-secondary-color: white;
 
-  --regular-buton-color: #e0e0e0;
+  --regular-button-color: #e0e0e0;
   --on-regular-buton-color: black;
   --data-tables-empty: var(--primary-color, #9e9e9e);
   --on-data-tables-empty: black;
@@ -131,15 +146,21 @@
   --on-accent-color-2-td: #fff;
   --on-accent-color-3: black;
 
-  --active-play-region: black;
+  --active-play-region: var(--accent-color-2);
   --group-indication: var(--accent-color-1);
 
-  --important-button: var(--accent-color-2);
-  --on-important-button: var(--on-accent-color-2);
+  --important-button: var(--accent-color-1);
+  --on-important-button: var(--on-accent-color-1);
 
   --accent-color-green-ish: var(--accent-color-3, #f5f5f5);
   --accent-color-red-ish: var(--accent-color-2, #000);
   --accent-color-yellow-ish: var(--accent-color-1, #ffeb3b);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --marker-section-padding-left: 4px;
 }
@@ -155,7 +176,7 @@
   --on-primary-color-link: #0051a8;
   --on-secondary-color: #545454;
 
-  --regular-buton-color: #e0e0e0;
+  --regular-button-color: #e0e0e0;
   --on-regular-buton-color: black;
   --data-tables-empty: var(--primary-color, #9e9e9e);
   --on-data-tables-empty: black;
@@ -183,6 +204,12 @@
   --accent-color-green-ish: var(--accent-color-1, #f5f5f5);
   --accent-color-red-ish: var(--accent-color-2, #000);
   --accent-color-yellow-ish: var(--accent-color-3, #ffeb3b);
+
+  --toggle-button-color: #bdbdbd;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
 }
 
 .theme-col5 {
@@ -197,7 +224,7 @@
   --on-primary-color-link: #00ffff; /* Cyan links on red */
   --on-secondary-color: #ffffff; /* White on black */
 
-  --regular-buton-color: #666666; /* Medium gray buttons */
+  --regular-button-color: #666666; /* Medium gray buttons */
   --on-regular-buton-color: #dddddd; /* White text */
   --data-tables-empty: #000000; /* Black for empty tables */
   --on-data-tables-empty: #ffffff; /* White text */
@@ -225,6 +252,12 @@
   --accent-color-green-ish: var(--accent-color-2); /* Green alias */
   --accent-color-red-ish: var(--accent-color-1); /* Yellow as red-ish for variety */
   --accent-color-yellow-ish: var(--accent-color-3); /* Blue as yellow-ish */
+
+  --toggle-button-color: #444444;
+  --on-toggle-button-color: #b1b1b1;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
 }
 
 .textareaEdit {
@@ -1875,10 +1908,6 @@ table.dataTable .dataTables_empty {
   .centerRoundButtCommon {
     width: 52px;
     height: 52px;
-  }
-
-  .gigantic-on-mobile {
-    font-size: 58px;
   }
 
   .play.hidden-on-mobile-on-play,
