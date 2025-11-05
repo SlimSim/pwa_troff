@@ -197,7 +197,7 @@ class IOClass {
 
     $('#themePickerParent').find('input').click(Troff.setTheme);
 
-    $('#buttPlayUiButtonParent').click(Troff.playUiButton);
+    $('#buttPlayUiButtonParent').on('butt-clicked', Troff.playUiButton);
 
     $('#timeBar')[0].addEventListener('input', Troff.timeUpdate);
     $('#volumeBar')[0].addEventListener('input', Troff.volumeUpdate);

@@ -54,5 +54,7 @@
     "workbox-build": "^7.3.0",
     "workbox-cli": "^7.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "lit": "^3.3.1"
+  }
 }
