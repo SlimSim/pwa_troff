@@ -148,7 +148,6 @@ export class TroffSample extends LitElement {
   }
 
   private _handleClick() {
-    console.log('_handleClick ->');
     if (!this.toggle) {
       // Dispatch event for regular button action
       this.dispatchEvent(new CustomEvent('butt-clicked', { bubbles: true, composed: true }));

@@ -124,13 +124,9 @@ function initSongTable() {
     })
     .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
       Troff.iOSHasLoadedSong = true;
-      log.d('on click tbody tr');
-      // onSongClick (not onSongLoad):
       const $td = $(event.target).closest('td, th');
 
       const songKey = $(event.currentTarget).data('song-key');
-      log.d('on click the tbody tr', { songKey });
-
       if ($td.hasClass('onClickOpenEditSongDialog')) {
         openEditSongDialog(songKey);
       }

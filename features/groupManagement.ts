@@ -35,7 +35,6 @@ import { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../ty
 import { DocumentSnapshot } from 'firebase/firestore';
 import { notifyUndo } from '../assets/internal/notify-js/notify.config.js';
 import { DATA_TABLE_COLUMNS } from '../constants/constants.js';
-import log from '../utils/log.js';
 
 const setGroupAsSonglist = function (groupDocId: string) {
   const songLists: TroffFirebaseGroupIdentifyer[] = JSON.parse(nDB.get('straoSongLists'));
@@ -192,8 +191,6 @@ const groupDialogSave = async function () {
 
 const addGroupSongRow = (songIdObject: TroffFirebaseSongIdentifyer) => {
   const songRow = $('#groupDialogSongRowTemplate').children().clone(true, true);
-
-  log.d('addGroupSongRow: songIdObject.firebaseSongDocId', songIdObject.firebaseSongDocId);
 
   songRow.find('.groupDialogRemoveSong').on('click', removeSongRow);
   songRow

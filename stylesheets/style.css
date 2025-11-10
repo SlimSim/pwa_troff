@@ -193,7 +193,7 @@
   --on-accent-color-1: white;
   --on-accent-color-2: #fff;
   --on-accent-color-2-td: #fff;
-  --on-accent-color-3: black;
+  --on-accent-color-3: #fff;
 
   --active-play-region: black;
   --group-indication: var(--accent-color-2);

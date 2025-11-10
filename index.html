@@ -76,13 +76,12 @@
 		<div id="headArea" class="primaryColor flexRow-reverse padding-small">
 			<nav class="flexCol center justify-content-between">
 
-				<button class="svgButt special regularButton bg-transparent text-inherit showUploadSongToServerDialog tooltip"
-								type="button">
-					<i class="fa-share" ></i>
+				<t-butt icon special class="tooltip showUploadSongToServerDialog">
+					<t-icon name="share"></t-icon>
 					<div class="tooltiptext p-3 small left-100p top-35">
 						Share this song to friends via link
 					</div>
-				</button>
+				</t-butt>
 				<button class="svgButt d-block d-sm-none special regularButton onClickToggleFullScreen"
 								type="button"
 								title="Go to full screen!">
@@ -90,9 +89,10 @@
 					<i class="fa-resize-small toggleFullScreenCompressIcon hidden"></i>
 				</button>
 				
-				<t-butt important round icon id="buttPlayUiButtonParent" class="fixToBottomRightOnMobile hideOnPicture">
-					<i id="buttPlayUiButtonPlay" class="fa-play pl-1"></i>
-					<i id="buttPlayUiButtonPause" class="fa-pause"></i>
+				
+				<t-butt important round id="buttPlayUiButtonParent" class="fixToBottomRightOnMobile hideOnPicture">
+					<t-icon id="buttPlayUiButtonPlay" class="font-size-relative-8" name="play"></t-icon>
+					<t-icon id="buttPlayUiButtonPause" class="font-size-relative-8" name="pause"></t-icon>
 				</t-butt>
 			</nav>
 			<div id="mediaInfoBox" class="flexCol halfMarginParent">

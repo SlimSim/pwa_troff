@@ -408,7 +408,6 @@ class DBClass {
     }
     Troff.setCurrentSongStrings(oSong.strPath, oSong.iGalleryId);
 
-    log.d('getCurrentSong: -> createSongAudio');
     createSongAudio(oSong.strPath);
   };
 

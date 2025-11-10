@@ -213,7 +213,6 @@ class TroffClass {
   };
 
   initFileApiImplementation = async () => {
-    log.d('initFileApiImplementation ->');
     $('#fileUploader').on('change', (event) => {
       const files = (event.target as HTMLInputElement).files;
       if (files == null) {
@@ -365,7 +364,6 @@ class TroffClass {
 
     let troffData: TroffData;
     try {
-      console.log('xxxxxxxxxxxxxxx importNew');
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
       return errorHandler.generic(error);
@@ -385,9 +383,6 @@ class TroffClass {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
 
-    log.d('importTroffDataToExistingSong_importNew: -> createSongAudio', {
-      fileName: troffData.fileName,
-    });
     await createSongAudio(troffData.fileName);
     this.selectSongInSongList(troffData.fileName);
   };
@@ -413,7 +408,6 @@ class TroffClass {
       return errorHandler.generic(error);
     }
 
-    log.d('importTroffDataToExistingSong_merge: -> createSongAudio', { fileName });
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
 
@@ -442,7 +436,6 @@ class TroffClass {
   importTroffDataToExistingSong_keepExisting = async () => {
     const fileName = $('#importTroffDataToExistingSong_fileName').val() as string;
 
-    log.d('importTroffDataToExistingSong_keepExisting: -> createSongAudio', { fileName });
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
   };
@@ -556,7 +549,6 @@ class TroffClass {
         if (currentSongTroffData && currentSongTroffData.serverId == serverId) {
           return;
         }
-        log.d('downloadSongFromServerButDataFromCacheExists: -> createSongAudio', { fileName });
         await createSongAudio(fileName);
         this.selectSongInSongList(fileName);
       } else {
@@ -588,7 +580,6 @@ class TroffClass {
     }
 
     if (serverId == troffDataFromCache.serverId) {
-      log.d('downloadSongFromServerButDataFromCacheExists: -> createSongAudio', { fileName });
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
@@ -640,7 +631,6 @@ class TroffClass {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
 
-    log.d('downloadSongFromServer: -> createSongAudio', { fileName });
     await createSongAudio(troffData.fileName);
     this.askIfAddSongsToCurrentSongList(troffData.fileName);
     addItem_NEW_2(troffData.fileName);
@@ -1039,29 +1029,13 @@ class TroffClass {
             var aFirstAndLast = this.getFirstAndLastMarkers();
             var lastMarkerId = aFirstAndLast[1] + 'S';
             this.selectStopMarker(lastMarkerId);
-            log.d('timeUpdate in if before seek', {
-              readyState: (document.querySelector('audio, video') as any).readyState,
-              sliderVal: sliderVal,
-            });
             (document.querySelector('audio, video') as any).currentTime = sliderVal;
-            log.d('timeUpdate in if after seek', {
-              readyState: (document.querySelector('audio, video') as any).readyState,
-              currentTime: (document.querySelector('audio, video') as any).currentTime,
-            });
           }
         );
       }
     } // end if
 
-    log.d('timeUpdate before seek', {
-      readyState: (document.querySelector('audio, video') as any).readyState,
-      sliderVal: sliderVal,
-    });
     (document.querySelector('audio, video') as any).currentTime = sliderVal;
-    log.d('timeUpdate after seek', {
-      readyState: (document.querySelector('audio, video') as any).readyState,
-      currentTime: (document.querySelector('audio, video') as any).currentTime,
-    });
   }; // end timeUpdate
 
   getStopTime = () => {
@@ -1216,15 +1190,7 @@ class TroffClass {
 
   // goToStartMarker används när man updaterar startBefore / trycker på StartBefore  / trycker på en marker???
   goToStartMarker = () => {
-    log.d('goToStartMarker', {
-      readystate: document.querySelector('audio, video') as HTMLMediaElement,
-      startTime: this.getStartTime(),
-    });
     (document.querySelector('audio, video') as HTMLMediaElement).currentTime = this.getStartTime();
-    log.d('goToStartMarker', {
-      readyState: (document.querySelector('audio, video') as HTMLMediaElement).readyState,
-      currentTime: (document.querySelector('audio, video') as HTMLMediaElement).currentTime,
-    });
   }; // end goToStartMarker
 
   enterKnappen = () => {
@@ -1243,8 +1209,6 @@ class TroffClass {
 
   playUiButton = async () => {
     if (isSafari && !this.iOSHasLoadedSong) {
-      log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
-      log.d('playUiButton: -> createSongAudio', { songKey: this.getCurrentSong() });
       await createSongAudio(this.getCurrentSong());
       this.iOSHasLoadedSong = true;
     }
@@ -1282,15 +1246,6 @@ class TroffClass {
     wait = wait || 0;
     var audio = document.querySelector('audio, video') as HTMLMediaElement;
     if (!audio) return;
-    log.d('play button pressed', { currentTime: audio.currentTime });
-    setTimeout(
-      () =>
-        log.d('play after delay', {
-          readyState: (document.querySelector('audio, video') as HTMLMediaElement).readyState,
-          currentTime: (document.querySelector('audio, video') as HTMLMediaElement).currentTime,
-        }),
-      100
-    );
 
     gtag('event', 'Start song', { event_category: 'Perform change', event_label: 'Play song' });
 
@@ -1302,14 +1257,10 @@ class TroffClass {
     this.setMood('wait');
 
     const localPlayAndSetMood = () => {
-      log.d('localPlayAndSetMood', { mood: this.getMood() });
       if (this.getMood() == 'pause') return;
-      log.d('play handler before play', { currentTimeBefore: audio.currentTime });
-
       audio
         .play()
         .then(() => {
-          log.d('play handler after play', { currentTimeAfter: audio.currentTime });
           this.setMood('play');
         })
         .catch((error) => {
@@ -1322,11 +1273,9 @@ class TroffClass {
       if (isSafari) {
         audio.play();
         audio.pause();
-        log.d('playSong, did a play/pause hack');
       }
       this.stopTimeout = setTimeout(localPlayAndSetMood, wait);
     } else {
-      log.d('playSong, in else: did not wait and did not do a play/pause hack');
       localPlayAndSetMood();
     }
 

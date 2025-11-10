@@ -100,9 +100,6 @@ function addAudioToContentDiv() {
   var content_div = document.getElementById('content');
   var audio = document.createElement('audio');
   audio.addEventListener('loadedmetadata', () => {
-    // onSongLoad:
-    log.d('Safari loadedmetadata', { duration: audio.duration, readyState: audio.readyState });
-
     Troff.setMetadata(audio);
     Troff.setAudioVideoLayout();
   });
