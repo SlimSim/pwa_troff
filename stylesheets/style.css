@@ -1648,135 +1648,28 @@ table.dataTable .dataTables_empty {
   color: #f6f5f4;
 }
 
-/* Marker color section */
-.backgroundColorAqua,
-#markerList .markerColorAqua,
-#markerList.extra-extended .extend_markerColorAqua {
-  background-color: Aqua;
-  color: black;
-}
-#markerList.extended-color .markerColorAqua + li,
-#markerList.extra-extended .markerColorAqua + li,
-#markerList.extra-extended .extend_markerColorAqua,
-#markerList.extra-extended .extend_markerColorAqua + li {
-  border-top-color: Aqua;
-}
+/**
+ * Marker color section
+ * NOTE: These css variables will get there colors from the javascript!
+ */
+#markerList.extra-extended li {
+  border-top-color: var(--marker-active-color, transparent);
+  background-color: var(--marker-active-color, transparent);
+  color: var(--marker-active-on-color, black);
 
-.backgroundColorBisque,
-#markerList .markerColorBisque,
-#markerList.extra-extended .extend_markerColorBisque {
-  background-color: Bisque;
-  color: black;
+  --marker-active-color: var(--secondary-color, #e6e9f0);
 }
-#markerList.extended-color .markerColorBisque + li,
-#markerList.extra-extended .markerColorBisque + li,
-#markerList.extra-extended .extend_markerColorBisque,
-#markerList.extra-extended .extend_markerColorBisque + li {
-  border-top-color: Bisque;
+#markerList.extended-color .markerColor + li
+/* ,#markerList.extra-extended li */ {
+  border-top-color: var(--marker-border-color, var(--secondary-color, #e6e9f0));
 }
-
-.backgroundColorChartreuse,
-#markerList .markerColorChartreuse,
-#markerList.extra-extended .extend_markerColorChartreuse {
-  background-color: Chartreuse;
-  color: black;
+.markerBackgroundColor {
+  background-color: var(--marker-bg-color, var(--secondary-color, #e6e9f0));
+  color: var(--marker-on-bg-color, black);
 }
-#markerList.extended-color .markerColorChartreuse + li,
-#markerList.extra-extended .markerColorChartreuse + li,
-#markerList.extra-extended .extend_markerColorChartreuse,
-#markerList.extra-extended .extend_markerColorChartreuse + li {
-  border-top-color: Chartreuse;
-}
-
-.backgroundColorCoral,
-#markerList .markerColorCoral,
-#markerList.extra-extended .extend_markerColorCoral {
-  background-color: Coral;
-  color: black;
-}
-#markerList.extended-color .markerColorCoral + li,
-#markerList.extra-extended .markerColorCoral + li,
-#markerList.extra-extended .extend_markerColorCoral,
-#markerList.extra-extended .extend_markerColorCoral + li {
-  border-top-color: Coral;
-}
-
-.backgroundColorPink,
-#markerList .markerColorPink,
-#markerList.extra-extended .extend_markerColorPink {
-  background-color: Pink;
-  color: black;
-}
-#markerList.extended-color .markerColorPink + li,
-#markerList.extra-extended .markerColorPink + li,
-#markerList.extra-extended .extend_markerColorPink,
-#markerList.extra-extended .extend_markerColorPink + li {
-  border-top-color: Pink;
-}
-
-.backgroundColorBurlywood,
-#markerList .markerColorBurlywood,
-#markerList.extra-extended .extend_markerColorBurlywood {
-  background-color: Burlywood;
-  color: black;
-}
-#markerList.extended-color .markerColorBurlywood + li,
-#markerList.extra-extended .markerColorBurlywood + li,
-#markerList.extra-extended .extend_markerColorBurlywood,
-#markerList.extra-extended .extend_markerColorBurlywood + li {
-  border-top-color: Burlywood;
-}
-
-.backgroundColorDarkcyan,
-#markerList .markerColorDarkcyan,
-#markerList.extra-extended .extend_markerColorDarkcyan {
-  background-color: Darkcyan;
-  color: black;
-}
-#markerList.extended-color .markerColorDarkcyan + li,
-#markerList.extra-extended .markerColorDarkcyan + li,
-#markerList.extra-extended .extend_markerColorDarkcyan,
-#markerList.extra-extended .extend_markerColorDarkcyan + li {
-  border-top-color: Darkcyan;
-}
-
-.backgroundColorYellowgreen,
-#markerList .markerColorYellowgreen,
-#markerList.extra-extended .extend_markerColorYellowgreen {
-  background-color: Yellowgreen;
-  color: black;
-}
-#markerList.extended-color .markerColorYellowgreen + li,
-#markerList.extra-extended .markerColorYellowgreen + li,
-#markerList.extra-extended .extend_markerColorYellowgreen,
-#markerList.extra-extended .extend_markerColorYellowgreen + li {
-  border-top-color: Yellowgreen;
-}
-
-.backgroundColorPeru,
-#markerList .markerColorPeru,
-#markerList.extra-extended .extend_markerColorPeru {
-  background-color: Peru;
-  color: black;
-}
-#markerList.extended-color .markerColorPeru + li,
-#markerList.extra-extended .markerColorPeru + li,
-#markerList.extra-extended .extend_markerColorPeru,
-#markerList.extra-extended .extend_markerColorPeru + li {
-  border-top-color: Peru;
-}
-
-.backgroundColorViolet,
-#markerList .markerColorViolet,
-#markerList.extra-extended .extend_markerColorViolet {
-  background-color: Violet;
-  color: black;
-}
-#markerList.extended-color .markerColorViolet + li,
-#markerList.extra-extended .markerColorViolet + li,
-#markerList.extra-extended .extend_markerColorViolet,
-#markerList.extra-extended .extend_markerColorViolet + li {
-  border-top-color: Violet;
+#markerList.marker-parent .markerColor {
+  background-color: var(--marker-bg-color);
+  color: var(--marker-on-bg-color, black);
 }
 
 .table-row-selectable tr:hover {

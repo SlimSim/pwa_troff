@@ -61,7 +61,6 @@ import {
   TROFF_SETTING_SONG_COLUMN_TOGGLE,
   TROFF_CURRENT_STATE_OF_SONG_LISTS,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
-  MARKER_COLOR_PREFIX,
   DATA_TABLE_COLUMNS,
 } from './constants/constants.js';
 import {
@@ -79,6 +78,7 @@ import {
 } from './types/troff.js';
 import { IOInput } from './types/io.js';
 import { addGroupOwnerRow, emptyGroupDialog } from './features/groupManagement.js';
+import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from './ui/troffUi.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
   blurHack();
@@ -2248,7 +2248,8 @@ class TroffClass {
       var name = oMarker.name;
       var time = Number(oMarker.time);
       var info = oMarker.info;
-      var color = oMarker.color || 'None';
+      const colorName = oMarker.color || 'None';
+
       var nameId = oMarker.id;
 
       var maxTime = Number((document.getElementById('timeBar') as HTMLInputElement).max);
@@ -2264,7 +2265,7 @@ class TroffClass {
       button.classList.add('onOffButton');
       button.timeValue = time;
       button.info = info;
-      button.color = color;
+      button.color = colorName;
 
       var buttonS = document.createElement('input') as any;
       buttonS.type = 'button';
@@ -2289,7 +2290,8 @@ class TroffClass {
       listElement.appendChild(p);
       listElement.appendChild(button);
       listElement.appendChild(buttonS);
-      $(listElement).addClass(MARKER_COLOR_PREFIX + color);
+
+      updateHtmlMarkerColor(listElement, colorName);
 
       var child = $('#markerList li:first-child')[0] as any;
       var bInserted = false;
@@ -2331,7 +2333,6 @@ class TroffClass {
       (document.getElementById(nameId + 'E') as HTMLInputElement).addEventListener('click', editM);
     } //end for-loop
     this.setAppropriateMarkerDistance();
-    this.fixMarkerExtraExtendedColor();
   }; // end addMarker ****************/
 
   /*
@@ -2809,7 +2810,6 @@ class TroffClass {
     var oldTime = Number(($('#' + markerId)[0] as any).timeValue);
     var oldMarkerInfo = ($('#' + markerId)[0] as any).info;
     var oldMarkerColor = ($('#' + markerId)[0] as any).color;
-    var oldMarkerClass = MARKER_COLOR_PREFIX + oldMarkerColor;
 
     IO.promptEditMarker(markerId, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
       if (newMarkerName === null || newMarkerName === '' || newTime === null) {
@@ -2837,13 +2837,10 @@ class TroffClass {
       }
       if (newMarkerColor != oldMarkerColor) {
         updated = true;
-        ($('#' + markerId)[0] as any).color = newMarkerColor;
-        $('#' + markerId)
-          .parent()
-          .removeClass(oldMarkerClass);
-        $('#' + markerId)
-          .parent()
-          .addClass(MARKER_COLOR_PREFIX + newMarkerColor);
+        const $button = $('#' + markerId);
+        const li = $button.parent()[0] as HTMLElement;
+        ($button[0] as any).color = newMarkerColor;
+        updateHtmlMarkerColor(li, newMarkerColor);
       }
 
       // update HTML Time
@@ -2864,6 +2861,8 @@ class TroffClass {
         $('#' + markerId)
           .prev()
           .html(this.secToDisp(newTime));
+      } else {
+        this.setAppropriateMarkerDistance(true);
       }
 
       // update name and time and info and color in DB, if nessessarry
@@ -2876,7 +2875,7 @@ class TroffClass {
           Number(newTime),
           this.strCurrentSong
         );
-        this.fixMarkerExtraExtendedColor();
+        // this.setAppropriateMarkerDistance(true);
         /*
             note: DB.updateMarker will also update the "currentStartMarker" and the
             currentStopMarker, if the updated marker is the start or stop marker.
@@ -2937,51 +2936,47 @@ class TroffClass {
     $('#activePlayRegion').css('margin-top', top + 'px');
   }; // end setAppropriateActivePlayRegion
 
-  setAppropriateMarkerDistance = () => {
+  setAppropriateMarkerDistance = (onlyUpdateColors: boolean = false) => {
     $('#markerSection').removeClass('hidden');
     var child = $('#markerList li:first-child')[0];
+    let timeBarHeight = 0;
+    let totalDistanceTop = 0;
+    let barMarginTop = 0;
+    let songTime = 0;
 
-    var timeBarHeight = ($('#timeBar').height() as number) - 10;
-    var totalDistanceTop = 4;
+    if (!onlyUpdateColors) {
+      timeBarHeight = ($('#timeBar').height() as number) - 10;
+      totalDistanceTop = 4;
 
-    var barMarginTop = parseInt($('#timeBar').css('margin-top'));
-    var audioVideo = document.querySelector('audio, video');
-    if (audioVideo == null) {
-      log.e('there is no audio or video tag');
-      return;
-    }
-    var songTime = (audioVideo as HTMLMediaElement).duration;
+      barMarginTop = parseInt($('#timeBar').css('margin-top'));
+      var audioVideo = document.querySelector('audio, video');
+      if (audioVideo == null) {
+        log.e('there is no audio or video tag');
+        return;
+      }
+      songTime = (audioVideo as HTMLMediaElement).duration;
 
-    if (!isFinite(songTime)) {
-      const troffData = nDB.get(this.getCurrentSong());
-      if (troffData.fileData != undefined && troffData.fileData.duration != undefined) {
-        songTime = troffData.fileData.duration;
-      } else {
-        songTime = Number(($('#markerList li:last-child')[0].childNodes[2] as any).timeValue);
+      if (!isFinite(songTime)) {
+        const troffData = nDB.get(this.getCurrentSong());
+        if (troffData.fileData != undefined && troffData.fileData.duration != undefined) {
+          songTime = troffData.fileData.duration;
+        } else {
+          songTime = Number(($('#markerList li:last-child')[0].childNodes[2] as any).timeValue);
+        }
       }
     }
+    setCssVariablesForMarkerDistanceAndColor(
+      child,
+      onlyUpdateColors,
+      timeBarHeight,
+      songTime,
+      totalDistanceTop,
+      barMarginTop
+    );
 
-    while (child) {
-      var markerTime = Number((child.childNodes[2] as any).timeValue);
-      var myRowHeight = child.clientHeight;
-
-      var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
-
-      var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
-      totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-
-      if (marginTop > 0) {
-        $(child).css('border-top-width', marginTop + 'px');
-        $(child).css('border-top-style', 'solid');
-        $(child).css('margin-top', '');
-      } else {
-        $(child).css('border-top-width', '');
-        $(child).css('border-top-style', '');
-        $(child).css('margin-top', marginTop + 'px');
-      }
-      child = child.nextSibling as HTMLElement;
+    if (!onlyUpdateColors) {
+      this.setAppropriateActivePlayRegion();
     }
-    this.setAppropriateActivePlayRegion();
   }; // end setAppropriateMarkerDistance
 
   selectNext = (reverse: boolean) => {
@@ -3125,22 +3120,6 @@ class TroffClass {
     }
 
     $('#tapTempo')[0].dispatchEvent(new Event('input'));
-  };
-
-  fixMarkerExtraExtendedColor = () => {
-    $('#markerList').children().removeClassStartingWith('extend_');
-
-    $('#markerList')
-      .children(':not(.markerColorNone)')
-      .each((index, element) => {
-        const specialColorClass = this.getClassStartsWith(
-          $(element).attr('class') as string,
-          'markerColor'
-        );
-        $(element)
-          .nextUntil(':not(.markerColorNone)')
-          .addClass('extend_' + specialColorClass);
-      });
   };
 
   /* standAlone Functions */

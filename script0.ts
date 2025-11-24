@@ -96,13 +96,21 @@ function addImageToContentDiv() {
   return image;
 }
 
+function onLoadedMetadata(audio: HTMLAudioElement) {
+  if (!IO.isSongSelected()) {
+    setTimeout(() => {
+      onLoadedMetadata(audio);
+    }, 42);
+  } else {
+    Troff.setAudioVideoLayout();
+    Troff.setMetadata(audio);
+  }
+}
+
 function addAudioToContentDiv() {
   var content_div = document.getElementById('content');
   var audio = document.createElement('audio');
-  audio.addEventListener('loadedmetadata', () => {
-    Troff.setMetadata(audio);
-    Troff.setAudioVideoLayout();
-  });
+  audio.addEventListener('loadedmetadata', () => onLoadedMetadata(audio));
   audio.addEventListener('error', (e) => log.e('Audio media error', e));
 
   if (content_div == null) return;

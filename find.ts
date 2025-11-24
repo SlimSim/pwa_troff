@@ -56,6 +56,7 @@ import { addAndStartSentry, setSentryEnvironment, setSentryVersion } from './uti
 import { environment } from './assets/internal/environment.js';
 import { getManifest } from './utils/manifestHelper.js';
 import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
+import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from './ui/troffUi.js';
 
 $(document).ready(async function () {
   'use strict';
@@ -519,7 +520,7 @@ $(document).ready(async function () {
   };
 
   const setAppropriateMarkerDistance = function () {
-    var child = $('#markerList li:first-child')[0] as ChildNode | HTMLElement | null;
+    var child = $('#markerList li:first-child')[0];
 
     var timeBarHeight =
       ($('#markerList').height() as any) - ($('#markerList').find('li').height() as any);
@@ -528,27 +529,15 @@ $(document).ready(async function () {
     var barMarginTop = parseInt($('#markerList').css('margin-top'));
     var songTime = $('#markerList').data('songLength');
 
-    while (child) {
-      const markerTime = Number($(child).data('time'));
-      var myRowHeight = (child as HTMLElement).clientHeight;
-
-      var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
-
-      var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
-      totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-
-      if (marginTop > 0) {
-        $(child).css('border-top-width', marginTop + 'px');
-        $(child).css('border-top-style', 'solid');
-        $(child).css('margin-top', '');
-      } else {
-        $(child).css('border-top-width', '');
-        $(child).css('border-top-style', '');
-        $(child).css('margin-top', marginTop + 'px');
-      }
-      child = child.nextSibling;
-    }
-    //Troff.setAppropriateActivePlayRegion();
+    const onlyUpdateColors = false;
+    setCssVariablesForMarkerDistanceAndColor(
+      child,
+      onlyUpdateColors,
+      timeBarHeight,
+      songTime,
+      totalDistanceTop,
+      barMarginTop
+    );
   }; // end setAppropriateMarkerDistance
 
   const selectMarkerSpan = function (markerSpan: JQuery<HTMLElement>, markerInfo: string) {
@@ -611,6 +600,8 @@ $(document).ready(async function () {
         .attr('timeValue', marker.time);
 
       markerSpan.find('.markerInfoIndicator').toggleClass('hidden', marker.info === '');
+
+      updateHtmlMarkerColor(markerSpan[0], marker.color);
 
       if (marker.color !== 'None') {
         previousColor = marker.color;
