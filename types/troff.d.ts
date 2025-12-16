@@ -78,7 +78,7 @@ export interface TroffFileData {
 
 export interface TroffMarker {
   color: string;
-  onColor: string | null;
+  // onColor: string | null;
   id: string;
   info: string;
   name: string;

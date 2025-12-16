@@ -108,6 +108,7 @@ class DBClass {
       time: 0,
       info: Troff.getStandardMarkerInfo(),
       color: 'None',
+      // onColor: null,
       id: 'markerNr0',
     };
     /** @type {SongMarker} */
@@ -116,6 +117,7 @@ class DBClass {
       time: songLength,
       info: '',
       color: 'None',
+      // onColor: null,
       id: 'markerNr1',
     };
 

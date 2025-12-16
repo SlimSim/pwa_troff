@@ -70,15 +70,11 @@ class IOClass {
   };
 
   updateCellInDataTable = (column: string, value: string, key?: string) => {
-    console.trace();
-    console.log('updateCellInDataTable ->', column, value, key);
     if (key == undefined) {
-      console.log('data table get pos ', DATA_TABLE_COLUMNS.getPos(column));
       ($('#dataSongTable') as any)
         .DataTable()
         .cell('.selected', DATA_TABLE_COLUMNS.getPos(column))
         .data(value);
-      console.log('updateCellInDataTable done');
       return;
     }
     ($('#dataSongTable') as any)

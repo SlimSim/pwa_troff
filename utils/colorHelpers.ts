@@ -1,11 +1,11 @@
 import { MarkerColorConfig } from '../types/markers.js';
 import { MARKER_COLORS } from '../constants/constants.js';
 
-export const setBgCustom = (selector, color) {
-      $(selector).toggleClass('bg-custom', color.color != '');
-      $(selector)[0].style.setProperty('--bg-custom-color', color.color);
-      $(selector)[0].style.setProperty('--on-bg-custom-color', color.onColor);
-}
+export const setBgCustom = (target: HTMLElement, color: MarkerColorConfig) => {
+  target.classList.toggle('bg-custom', color.color !== '');
+  target.style.setProperty('--bg-custom-color', color.color);
+  target.style.setProperty('--on-bg-custom-color', color.onColor);
+};
 
 export const getBgColor = (color: string | undefined): MarkerColorConfig => {
   if (!color) {

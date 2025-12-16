@@ -37,9 +37,7 @@ import { notifyUndo } from '../assets/internal/notify-js/notify.config.js';
 import { DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { appendColorButtonsTo } from '../ui/troffUi.js';
 import { MarkerColorConfig } from '../types/markers.js';
-import { getBgColor } from '../utils/colorHelpers.js';
-
-console.log('groupManagement ->');
+import { getBgColor, setBgCustom } from '../utils/colorHelpers.js';
 
 const generateColorBut = (col: MarkerColorConfig) => {
   const clas = 'colorPicker markerBackgroundColor m-1';
@@ -133,8 +131,6 @@ const groupDialogSave = async function () {
   const isGroup = $('#groupDialogIsGroup').is(':checked');
   let groupDocId = $('#groupDialogName').data('groupDocId');
 
-  console.log("groupDialogSave:  $('#groupDialogColor').val()", $('#groupDialogColor').val());
-
   const songListObject = {
     id: $('#groupDialogName').data('songListObjectId'),
     name: $('#groupDialogName').val() as string,
@@ -142,8 +138,6 @@ const groupDialogSave = async function () {
     icon: $('#groupDialogIcon').val() as string,
     info: $('#groupDialogInfo').val() as string,
   } as TroffFirebaseGroupIdentifyer;
-
-  console.log('groupDialogSave: songListObject', songListObject);
 
   if (isGroup) {
     const owners: string[] = [];
@@ -290,15 +284,8 @@ const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => 
     }
 
     const color = getBgColor(songListObject.color);
-    console.log('color', color);
 
-    $('#groupDialog').find('.innerDialog')[0].style.setProperty('--bg-custom-color', color.color);
-    $('#groupDialog')
-      .find('.innerDialog')[0]
-      .style.setProperty('--on-bg-custom-color', color.onColor);
-    $('#groupDialog')
-      .find('.innerDialog')
-      .toggleClass('bg-custom', color.color != '');
+    setBgCustom($('#groupDialog').find('.innerDialog')[0], color);
 
     $('#groupDialogSonglistIcon').addClass(songListObject.icon);
 

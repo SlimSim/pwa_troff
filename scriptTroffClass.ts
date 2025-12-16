@@ -110,10 +110,7 @@ function clickSongList_NEW(event: JQuery.ClickEvent) {
 
     if (data && data.firebaseGroupDocId) {
       const color = getBgColor(data.color);
-      setBgCustom('#headArea', color);
-      // $('#headArea').toggleClass('bg-custom', color.color != '');
-      // $('#headArea')[0].style.setProperty('--bg-custom-color', color.color);
-      // $('#headArea')[0].style.setProperty('--on-bg-custom-color', color.onColor);
+      setBgCustom($('#headArea')[0], color);
       $('#songlistIcon').addClass(data.icon || 'fa-users');
       $('#songlistName').text(data.name);
       $('#songlistInfo').removeClass('hidden').text(data.info);
@@ -1638,11 +1635,6 @@ class TroffClass {
   setSonglistColor = (event: JQuery.ClickEvent) => {
     const element = event.target;
 
-    console.log(element.dataset.colorName);
-    console.log(element.dataset.colorValue);
-    console.log(element.dataset.onColorValue);
-    // const color = [...element.classList].find((o) => o.startsWith('bg-'));
-
     const dialog = $('#groupDialog').find('.innerDialog')[0];
 
     $(dialog).find('.colorPickerSelected').removeClass('colorPickerSelected');
@@ -1793,7 +1785,6 @@ class TroffClass {
    * @param {jQuery button} $target
    */
   updateSongListInHTML = (songListObject: TroffFirebaseGroupIdentifyer) => {
-    console.log('updateSongListInHTML -> songListObject', songListObject);
     var $target = $('#songListList').find('[data-songlist-id="' + songListObject.id + '"]');
     if (songListObject.id == undefined) {
       const groupId = songListObject.firebaseGroupDocId;
@@ -1813,19 +1804,10 @@ class TroffClass {
     }
 
     const color = getBgColor(songListObject.color);
+    const $editButton = $target.parent().find('.editSongList');
+    setBgCustom($editButton[0], color);
 
-    console.log('updateSongListInHTML: color', color);
-
-    const editButton = $target
-      .parent()
-      .find('.editSongList')
-      .toggleClass('markerBackgroundColor ', color.color != '')[0];
-    editButton.style.setProperty('--marker-bg-color', color.color);
-    editButton.style.setProperty('--marker-on-bg-color', color.onColor);
-
-    $target
-      .parent()
-      .find('.editSongList')
+    $editButton
       .find('i')
       .removeClassStartingWith('fa-')
       .addClass(songListObject.icon || 'fa-users');
@@ -1840,7 +1822,6 @@ class TroffClass {
   };
 
   addSonglistToHTML_NEW = (oSongList: TroffFirebaseGroupIdentifyer) => {
-    console.log('addSonglistToHTML_NEW ->');
     if (oSongList.id == undefined) {
       oSongList.id = this.getUniqueSonglistId();
     }
@@ -1849,18 +1830,16 @@ class TroffClass {
     const groupClass = groupDocId ? 'groupIndication' : '';
     const groupLogo = oSongList.icon || 'fa-pencil';
 
-    const collor = getBgColor(oSongList.color);
     const butt = $('<button>')
       .addClass('small')
       .addClass('regularButton')
       .addClass('editSongList')
-      // .addClass(oSongList.color as string)
-      .toggleClass('markerBackgroundColor', collor.color != '')
       .addClass('mr-2')
       .append($('<i>').addClass('fa').addClass(groupLogo))
       .on('click', songListDialogOpenExisting);
 
-    butt[0].style.setProperty('--marker-bg-color', collor.color);
+    const collor = getBgColor(oSongList.color);
+    setBgCustom(butt[0], collor);
 
     $('#songListList').append(
       $('<li>')
@@ -1938,7 +1917,7 @@ class TroffClass {
           .data('songList');
         if (songListData != undefined) {
           const color = getBgColor(songListData.color);
-          setBgCustom('#headArea', color);
+          setBgCustom($('#headArea')[0], color);
           $('#songlistIcon').addClass(songListData.icon);
           $('#songlistName').text(songListData.name);
           $('#songlistInfo').removeClass('hidden').text(songListData.info);

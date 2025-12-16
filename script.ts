@@ -149,7 +149,6 @@ const initiateCollections = async function (querySnapshot?: QuerySnapshot<Docume
   await Promise.all(
     querySnapshot.docs.map(async (doc) => {
       const subCollection = await getDocs(collection(doc.ref, 'Songs'));
-      // const subCollection = await doc.ref.collection("Songs").get();
 
       onSnapshot(doc.ref, groupDocUpdate);
       const group = doc.data();
@@ -178,6 +177,8 @@ const initiateCollections = async function (querySnapshot?: QuerySnapshot<Docume
       });
 
       const exists = $('#songListList').find(`[data-firebase-group-doc-id="${doc.id}"]`).length;
+
+      console.log('initiateCollections: exists', exists);
 
       if (exists == 0) {
         Troff.addSonglistToHTML_NEW(songListObject);
