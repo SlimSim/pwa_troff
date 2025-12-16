@@ -79,8 +79,10 @@ import {
 import { IOInput } from './types/io.js';
 import { addGroupOwnerRow, emptyGroupDialog } from './features/groupManagement.js';
 import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from './ui/troffUi.js';
+import { getBgColor, setBgCustom } from './utils/colorHelpers.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
+  log.d('ab clickSongList_NEW -> ');
   blurHack();
   var $target = $(event.target),
     data = $target.data('songList'),
@@ -101,13 +103,17 @@ function clickSongList_NEW(event: JQuery.ClickEvent) {
     $('#songListsList').find('button').removeClass('selected').removeClass('active');
     $target.addClass('selected');
 
-    $('#headArea').removeClassStartingWith('bg-');
+    $('#headArea').removeClass('bg-custom');
     $('#songlistIcon').removeClassStartingWith('fa-');
     $('#songlistName').text('');
     $('#songlistInfo').text('').addClass('hidden');
 
     if (data && data.firebaseGroupDocId) {
-      $('#headArea').addClass(data.color);
+      const color = getBgColor(data.color);
+      setBgCustom('#headArea', color);
+      // $('#headArea').toggleClass('bg-custom', color.color != '');
+      // $('#headArea')[0].style.setProperty('--bg-custom-color', color.color);
+      // $('#headArea')[0].style.setProperty('--on-bg-custom-color', color.onColor);
       $('#songlistIcon').addClass(data.icon || 'fa-users');
       $('#songlistName').text(data.name);
       $('#songlistInfo').removeClass('hidden').text(data.info);
@@ -1631,7 +1637,11 @@ class TroffClass {
 
   setSonglistColor = (event: JQuery.ClickEvent) => {
     const element = event.target;
-    const color = [...element.classList].find((o) => o.startsWith('bg-'));
+
+    console.log(element.dataset.colorName);
+    console.log(element.dataset.colorValue);
+    console.log(element.dataset.onColorValue);
+    // const color = [...element.classList].find((o) => o.startsWith('bg-'));
 
     const dialog = $('#groupDialog').find('.innerDialog')[0];
 
@@ -1640,9 +1650,12 @@ class TroffClass {
     $(dialog).removeClassStartingWith('bg-');
 
     element.classList.add('colorPickerSelected');
-    dialog.classList.add(color);
+    dialog.classList.add('bg-custom');
+    dialog.style.setProperty('--bg-custom-color', element.dataset.colorValue);
+    dialog.style.setProperty('--on-bg-custom-color', element.dataset.onColorValue);
+    // colorButt[0].style.setProperty('--marker-bg-color', col.color);
 
-    $(dialog).find('#groupDialogColor').val(color);
+    $(dialog).find('#groupDialogColor').val(element.dataset.colorValue);
   };
 
   leaveGroup = async () => {
@@ -1780,6 +1793,7 @@ class TroffClass {
    * @param {jQuery button} $target
    */
   updateSongListInHTML = (songListObject: TroffFirebaseGroupIdentifyer) => {
+    console.log('updateSongListInHTML -> songListObject', songListObject);
     var $target = $('#songListList').find('[data-songlist-id="' + songListObject.id + '"]');
     if (songListObject.id == undefined) {
       const groupId = songListObject.firebaseGroupDocId;
@@ -1798,11 +1812,16 @@ class TroffClass {
       songListObject.icon = 'fa-pencil';
     }
 
-    $target
+    const color = getBgColor(songListObject.color);
+
+    console.log('updateSongListInHTML: color', color);
+
+    const editButton = $target
       .parent()
       .find('.editSongList')
-      .removeClassStartingWith('bg-')
-      .addClass(songListObject.color as string);
+      .toggleClass('markerBackgroundColor ', color.color != '')[0];
+    editButton.style.setProperty('--marker-bg-color', color.color);
+    editButton.style.setProperty('--marker-on-bg-color', color.onColor);
 
     $target
       .parent()
@@ -1821,6 +1840,7 @@ class TroffClass {
   };
 
   addSonglistToHTML_NEW = (oSongList: TroffFirebaseGroupIdentifyer) => {
+    console.log('addSonglistToHTML_NEW ->');
     if (oSongList.id == undefined) {
       oSongList.id = this.getUniqueSonglistId();
     }
@@ -1829,6 +1849,19 @@ class TroffClass {
     const groupClass = groupDocId ? 'groupIndication' : '';
     const groupLogo = oSongList.icon || 'fa-pencil';
 
+    const collor = getBgColor(oSongList.color);
+    const butt = $('<button>')
+      .addClass('small')
+      .addClass('regularButton')
+      .addClass('editSongList')
+      // .addClass(oSongList.color as string)
+      .toggleClass('markerBackgroundColor', collor.color != '')
+      .addClass('mr-2')
+      .append($('<i>').addClass('fa').addClass(groupLogo))
+      .on('click', songListDialogOpenExisting);
+
+    butt[0].style.setProperty('--marker-bg-color', collor.color);
+
     $('#songListList').append(
       $('<li>')
         .addClass('py-1')
@@ -1836,16 +1869,7 @@ class TroffClass {
           $('<div>')
             .addClass('flex-display')
             .addClass('pr-2')
-            .append(
-              $('<button>')
-                .addClass('small')
-                .addClass('regularButton')
-                .addClass('editSongList')
-                .addClass(oSongList.color as string)
-                .addClass('mr-2')
-                .append($('<i>').addClass('fa').addClass(groupLogo))
-                .on('click', songListDialogOpenExisting)
-            )
+            .append(butt)
             .append(
               $('<button>')
                 .addClass('songlist')
@@ -1877,6 +1901,7 @@ class TroffClass {
   };
 
   recallCurrentStateOfSonglists = () => {
+    log.d('ab recallCurrentStateOfSonglists -> ');
     const isAdditiveSelect = nDB.get('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT') as boolean;
     const o: TroffStateOfSonglists = nDB.get(
       TROFF_CURRENT_STATE_OF_SONG_LISTS
@@ -1912,7 +1937,8 @@ class TroffClass {
           .find('[data-songlist-id=' + v + ']')
           .data('songList');
         if (songListData != undefined) {
-          $('#headArea').addClass(songListData.color);
+          const color = getBgColor(songListData.color);
+          setBgCustom('#headArea', color);
           $('#songlistIcon').addClass(songListData.icon);
           $('#songlistName').text(songListData.name);
           $('#songlistInfo').removeClass('hidden').text(songListData.info);

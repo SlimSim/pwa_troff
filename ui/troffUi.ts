@@ -1,3 +1,4 @@
+import { MarkerColorConfig } from '../types/markers.js';
 import { MARKER_COLORS } from '../constants/constants.js';
 
 export function markersExist(): boolean {
@@ -19,6 +20,28 @@ export function updateHtmlMarkerColor(li: HTMLElement, colorName: string) {
     li.dataset.markerColor = '';
     li.dataset.markerOnColor = '';
   }
+}
+
+export function appendColorButtonsTo(
+  colorParent: JQuery,
+  generateColorBut: (color: MarkerColorConfig) => JQuery
+) {
+  // const colorParent = $('<div>', { class: 'flexCol flex-sm-row' });
+  let colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
+  let colorCounter = 0;
+  MARKER_COLORS.forEach((col) => {
+    colorRow.append(generateColorBut(col));
+    colorCounter++;
+    if (colorCounter === 5) {
+      colorParent.append(colorRow);
+      colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
+      colorCounter = 0;
+    }
+  });
+  if (colorCounter > 0) {
+    colorParent.append(colorRow);
+  }
+  // colorParent;
 }
 
 export function setCssVariablesForMarkerDistanceAndColor(

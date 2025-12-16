@@ -35,6 +35,31 @@ import { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../ty
 import { DocumentSnapshot } from 'firebase/firestore';
 import { notifyUndo } from '../assets/internal/notify-js/notify.config.js';
 import { DATA_TABLE_COLUMNS } from '../constants/constants.js';
+import { appendColorButtonsTo } from '../ui/troffUi.js';
+import { MarkerColorConfig } from '../types/markers.js';
+import { getBgColor } from '../utils/colorHelpers.js';
+
+console.log('groupManagement ->');
+
+const generateColorBut = (col: MarkerColorConfig) => {
+  const clas = 'colorPicker markerBackgroundColor m-1';
+  const colorButt = $('<input>', {
+    type: 'button',
+    value: '',
+    title: col.name,
+    class: clas,
+  }).on('click', Troff.setSonglistColor);
+  colorButt[0].style.setProperty('--marker-bg-color', col.color);
+  colorButt[0].dataset.colorName = col.name;
+  colorButt[0].dataset.colorValue = col.color;
+  colorButt[0].dataset.onColorValue = col.onColor;
+  return colorButt;
+};
+
+export const setColorsOnGroupDialog = function () {
+  const colorParent = $('#songlistColorPicker');
+  appendColorButtonsTo(colorParent, generateColorBut);
+};
 
 const setGroupAsSonglist = function (groupDocId: string) {
   const songLists: TroffFirebaseGroupIdentifyer[] = JSON.parse(nDB.get('straoSongLists'));
@@ -65,12 +90,14 @@ const setGroupAsSonglist = function (groupDocId: string) {
 };
 
 const groupDocUpdate = function (doc: DocumentSnapshot) {
+  console.log('groupDocUpdate -> ');
   if (!doc.exists()) {
     setGroupAsSonglist(doc.id);
     return;
   }
 
   const group = doc.data();
+  console.log('groupDocUpdate: group', group);
   const $target = $('#songListList').find(`[data-firebase-group-doc-id="${doc.id}"]`);
 
   if (!group.owners.includes(firebaseUser?.email)) {
@@ -106,6 +133,8 @@ const groupDialogSave = async function () {
   const isGroup = $('#groupDialogIsGroup').is(':checked');
   let groupDocId = $('#groupDialogName').data('groupDocId');
 
+  console.log("groupDialogSave:  $('#groupDialogColor').val()", $('#groupDialogColor').val());
+
   const songListObject = {
     id: $('#groupDialogName').data('songListObjectId'),
     name: $('#groupDialogName').val() as string,
@@ -113,6 +142,8 @@ const groupDialogSave = async function () {
     icon: $('#groupDialogIcon').val() as string,
     info: $('#groupDialogInfo').val() as string,
   } as TroffFirebaseGroupIdentifyer;
+
+  console.log('groupDialogSave: songListObject', songListObject);
 
   if (isGroup) {
     const owners: string[] = [];
@@ -246,6 +277,7 @@ const populateExampleSongsInGroupDialog = (songs: TroffFirebaseSongIdentifyer[])
 };
 
 const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => {
+  console.log('openGroupDialog -> songListObject', songListObject);
   emptyGroupDialog();
 
   const isGroup = songListObject.firebaseGroupDocId !== undefined;
@@ -257,17 +289,24 @@ const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => 
       songListObject.icon = 'fa-users';
     }
 
+    const color = getBgColor(songListObject.color);
+    console.log('color', color);
+
+    $('#groupDialog').find('.innerDialog')[0].style.setProperty('--bg-custom-color', color.color);
+    $('#groupDialog')
+      .find('.innerDialog')[0]
+      .style.setProperty('--on-bg-custom-color', color.onColor);
     $('#groupDialog')
       .find('.innerDialog')
-      .addClass(songListObject.color || '');
+      .toggleClass('bg-custom', color.color != '');
 
     $('#groupDialogSonglistIcon').addClass(songListObject.icon);
 
-    $('#groupDialogColor').val(songListObject.color || '');
+    $('#groupDialogColor').val(color.color || '');
     $('#groupDialogIcon').val(songListObject.icon);
 
     $('#songlistColorPicker')
-      .find('.' + (songListObject.color || 'backgroundColorNone'))
+      .find('[data-color-value="' + (color.color || 'backgroundColorNone') + '"]')
       .addClass('colorPickerSelected');
 
     $('#songlistIconPicker')
@@ -313,8 +352,10 @@ const emptyGroupDialog = () => {
 
   $('#groupDialogSonglistIcon').removeClassStartingWith('fa-');
 
+  $('#groupDialogIcon').val('');
   $('#songlistIconPicker').find('button').removeClass('selected');
 
+  $('#groupDialogColor').val('');
   $('#songlistColorPicker').find('.colorPickerSelected').removeClass('colorPickerSelected');
 };
 

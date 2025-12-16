@@ -18,15 +18,11 @@ import {
 import { gtag } from '../services/analytics.js';
 import { clickSongList_NEW } from '../scriptTroffClass.js';
 import log from '../utils/log.js';
-import {
-  TROFF_SETTING_CONFIRM_DELETE_MARKER,
-  DATA_TABLE_COLUMNS,
-  MARKER_COLORS,
-} from '../constants/constants.js';
+import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { IOInput } from 'types/io.js';
 import { sleep } from '../utils/timeHack.js';
 import { blurHack } from '../utils/utils.js';
-import { markersExist } from './troffUi.js';
+import { appendColorButtonsTo, markersExist } from './troffUi.js';
 import { MarkerColorConfig } from 'types/markers.js';
 
 class IOClass {
@@ -257,7 +253,6 @@ class IOClass {
 
     $('[data-save-on-song-toggle-class]').click(this.saveOnSongToggleClass);
 
-    $('#songlistColorPicker').find('input').on('click', Troff.setSonglistColor);
     $('#songlistIconPicker').find('button').on('click', Troff.setSonglistIcon);
 
     // The jQuery version doesn't update as the user is typing:
@@ -743,20 +738,23 @@ class IOClass {
       .append($('<div>', { class: 'flexRowWrap' }).append(generateColorBut(noneColor)));
 
     const colorParent = $('<div>', { class: 'flexCol flex-sm-row' });
-    let colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
-    let colorCounter = 0;
-    MARKER_COLORS.forEach((col) => {
-      colorRow.append(generateColorBut(col));
-      colorCounter++;
-      if (colorCounter == 5) {
-        colorParent.append(colorRow);
-        colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
-        colorCounter = 0;
-      }
-    });
-    if (colorCounter > 0) {
-      colorParent.append(colorRow);
-    }
+
+    appendColorButtonsTo(colorParent, generateColorBut);
+
+    // let colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
+    // let colorCounter = 0;
+    // MARKER_COLORS.forEach((col) => {
+    //   colorRow.append(generateColorBut(col));
+    //   colorCounter++;
+    //   if (colorCounter == 5) {
+    //     colorParent.append(colorRow);
+    //     colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
+    //     colorCounter = 0;
+    //   }
+    // });
+    // if (colorCounter > 0) {
+    //   colorParent.append(colorRow);
+    // }
 
     row4.append(colorParent);
 

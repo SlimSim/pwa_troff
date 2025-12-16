@@ -51,7 +51,11 @@ import log from './utils/log.js';
 import { saveSongDataToFirebaseGroup } from './services/firebase.js';
 import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { cacheImplementation } from './services/FileApiImplementation.js';
-import { groupDocUpdate, setGroupAsSonglist } from './features/groupManagement.js';
+import {
+  groupDocUpdate,
+  setColorsOnGroupDialog,
+  setGroupAsSonglist,
+} from './features/groupManagement.js';
 import { setUiToSignIn, setUiToNotSignIn, updateGroupNotification } from './ui/ui.js';
 import { nDB } from './assets/internal/db.js';
 import { SongToGroup } from './scriptASimple.js';
@@ -672,7 +676,7 @@ $(document).ready(async function () {
   }
 
   IO.removeLoadScreenSoon();
-
+  setColorsOnGroupDialog();
   await initEnvironment();
 
   // include external HTML-files:

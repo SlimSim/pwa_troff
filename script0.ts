@@ -272,6 +272,7 @@ function clickButtNewSongList() {
 }
 
 function songListDialogOpenExisting(event: JQuery.ClickEvent) {
+  
   openGroupDialog($(event.target).closest('button').next().data('songList'));
 }
 

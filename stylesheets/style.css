@@ -1467,7 +1467,7 @@ table.dataTable .dataTables_empty {
   color: #f44336;
 }
 
-.bg-blue-1 {
+/* .bg-blue-1 {
   background-color: #99c1f1;
   color: #000;
 }
@@ -1646,6 +1646,11 @@ table.dataTable .dataTables_empty {
 .bg-black-5 {
   background-color: #000000;
   color: #f6f5f4;
+} */
+
+.bg-custom {
+  background-color: var(--bg-custom-color);
+  color: var(--on-bg-custom-color);
 }
 
 /**
