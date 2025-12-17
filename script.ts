@@ -19,6 +19,7 @@
 /// <reference path="./types/globals.d.ts" />
 
 import './components/atom/t-butt.js';
+import './components/atom/t-icon.js';
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
@@ -50,7 +51,11 @@ import log from './utils/log.js';
 import { saveSongDataToFirebaseGroup } from './services/firebase.js';
 import { notifyUndo } from './assets/internal/notify-js/notify.config.js';
 import { cacheImplementation } from './services/FileApiImplementation.js';
-import { groupDocUpdate, setGroupAsSonglist } from './features/groupManagement.js';
+import {
+  groupDocUpdate,
+  setColorsOnGroupDialog,
+  setGroupAsSonglist,
+} from './features/groupManagement.js';
 import { setUiToSignIn, setUiToNotSignIn, updateGroupNotification } from './ui/ui.js';
 import { nDB } from './assets/internal/db.js';
 import { SongToGroup } from './scriptASimple.js';
@@ -144,7 +149,6 @@ const initiateCollections = async function (querySnapshot?: QuerySnapshot<Docume
   await Promise.all(
     querySnapshot.docs.map(async (doc) => {
       const subCollection = await getDocs(collection(doc.ref, 'Songs'));
-      // const subCollection = await doc.ref.collection("Songs").get();
 
       onSnapshot(doc.ref, groupDocUpdate);
       const group = doc.data();
@@ -468,8 +472,6 @@ const mergeSongListHistorys = function (
 };
 
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promise<void> {
-  log.d(`-> path ${path} songData ${songData}`);
-
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {
@@ -579,7 +581,6 @@ function updateVersionLink(path: string) {
 }
 
 async function createSongAudio(path: string) {
-  log.d('createSongAudio ->', { path });
   let songIsV2;
   try {
     songIsV2 = await cacheImplementation.isSongV2(path);
@@ -591,26 +592,11 @@ async function createSongAudio(path: string) {
       path
     );
   }
-  log.d('createSongAudio: cacheImplementation.isSongV2 result', {
-    path,
-    isSongV2: songIsV2,
-  });
 
   if (songIsV2) {
     try {
       var songData = await cacheImplementation.getSong(path);
-
-      log.i('createSongAudio: obtained media URL', {
-        path,
-        source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
-        urlScheme: songData.split(':', 1)[0],
-      });
       await setSong2(path, songData);
-      log.d('createSongAudio: setSong2 result', {
-        path,
-        source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
-        urlScheme: songData.split(':', 1)[0],
-      });
     } catch (e) {
       log.e('createSongAudio: error: No song selected yet: ', e);
     }
@@ -618,11 +604,6 @@ async function createSongAudio(path: string) {
     try {
       const v3SongObjectUrl = await fileHandler.getObjectUrlFromFile(path);
 
-      log.i('createSongAudio obtained media URL', {
-        path,
-        source: songIsV2 ? 'cacheImplementation.getSong' : 'fileHandler.getObjectUrlFromFile',
-        urlScheme: v3SongObjectUrl.split(':', 1)[0],
-      });
       await setSong2(path, v3SongObjectUrl);
     } catch (e) {
       errorHandler.fileHandler_sendFile(e, path);
@@ -694,7 +675,7 @@ $(document).ready(async function () {
   }
 
   IO.removeLoadScreenSoon();
-
+  setColorsOnGroupDialog();
   await initEnvironment();
 
   // include external HTML-files:

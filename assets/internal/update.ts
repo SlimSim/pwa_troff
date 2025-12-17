@@ -15,46 +15,37 @@
 	along with Troff. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * This file is only used by update.html
+ */
+
+// import log from '../utils/log.js';
 import '../external/jquery-3.6.0.min.js';
 
 $(document).ready(() => {
-  console.log('update.js ->');
-
   function addToCache(cache: Cache, url: string) {
-    console.log('adding ' + url + ' to ', cache);
     cache.add(url).catch((e: Error) => {
       console.info(`Info: cache.add( ${url} ) fails:`, e);
     });
-    console.log('done');
   }
 
   caches.keys().then(async function (names) {
-    console.log('names', names);
     for (const name of names) {
       if (name.includes('songCache')) {
-        console.log('skipping name', name);
         continue;
       }
 
       const urls = (await (await caches.open(name)).keys()).map((i) => i.url);
-      console.log('urls from this cache', urls);
-      console.log('deleting name', name);
       caches.delete(name);
 
       const cache = await caches.open(name);
-      console.log(name + ' is open as ', cache);
 
       urls.forEach((url) => addToCache(cache, url));
     }
-    console.log('done!');
 
     if ('serviceWorker' in navigator) {
-      console.log('serviceWorker is in navigator!');
       window.addEventListener('load', () => {
-        console.log('window is load ->');
-
         navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          console.log('registrations', registrations);
           for (const registration of registrations) {
             registration.unregister();
           }
@@ -76,8 +67,8 @@ This don't seem to fire, the service-worker does not send a message :(
 
 	const channel = new BroadcastChannel('service-worker-broadcastChanel');
 	channel.addEventListener('message', event => {
-		console.log( "service-worker-broadcastChanel event", event);
-		console.log( "service-worker-broadcastChanel event.data", event.data);
+		log.d( "service-worker-broadcastChanel event", event);
+		log.d( "service-worker-broadcastChanel event.data", event.data);
 
 		window.location.replace( "/" );
 	});

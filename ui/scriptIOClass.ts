@@ -22,7 +22,8 @@ import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../cons
 import { IOInput } from 'types/io.js';
 import { sleep } from '../utils/timeHack.js';
 import { blurHack } from '../utils/utils.js';
-import { markersExist } from './troffUi.js';
+import { appendColorButtonsTo, markersExist } from './troffUi.js';
+import { MarkerColorConfig } from 'types/markers.js';
 
 class IOClass {
   IOEnterFunction: boolean | ((event: KeyboardEvent) => any);
@@ -62,6 +63,10 @@ class IOClass {
         doc.msExitFullscreen;
       cancelFullScreen.call(doc);
     }
+  };
+
+  isSongSelected = () => {
+    return ($('#dataSongTable') as any).DataTable().rows('.selected').data().length > 0;
   };
 
   updateCellInDataTable = (column: string, value: string, key?: string) => {
@@ -244,7 +249,6 @@ class IOClass {
 
     $('[data-save-on-song-toggle-class]').click(this.saveOnSongToggleClass);
 
-    $('#songlistColorPicker').find('input').on('click', Troff.setSonglistColor);
     $('#songlistIconPicker').find('button').on('click', Troff.setSonglistIcon);
 
     // The jQuery version doesn't update as the user is typing:
@@ -621,20 +625,20 @@ class IOClass {
 
     var markerName;
     var markerInfo;
-    var markerColor: string;
+    var selectedColorName: string;
     var markerTime;
     var strHeader;
 
     if (markerId) {
       markerName = $('#' + markerId).val();
       markerInfo = ($('#' + markerId)[0] as any).info;
-      markerColor = ($('#' + markerId)[0] as any).color;
+      selectedColorName = ($('#' + markerId)[0] as any).color || 'None';
       markerTime = Number(($('#' + markerId)[0] as any).timeValue);
       strHeader = 'Edit marker';
     } else {
       markerName = 'marker nr ' + ($('#markerList li').length + 1);
       markerInfo = '';
-      markerColor = 'None';
+      selectedColorName = 'None';
       markerTime = ($('audio, video')[0] as any).currentTime;
       strHeader = 'Create new marker';
     }
@@ -660,33 +664,30 @@ class IOClass {
     const setColor = (event: JQuery.ClickEvent) => {
       $('.colorPickerSelected').removeClass('colorPickerSelected');
       event.currentTarget.classList.add('colorPickerSelected');
-      $colorText.find('span').html(event.currentTarget.getAttribute('color'));
+
+      selectedColorName = event.currentTarget.dataset.colorName as string;
+      $colorText.find('span').html(selectedColorName);
       blurHack();
     };
 
-    const generateColorBut = (col: string) => {
-      var clas = 'colorPicker backgroundColor' + col;
-      if (col === markerColor) {
+    const generateColorBut = (col: MarkerColorConfig) => {
+      var clas = 'colorPicker markerBackgroundColor';
+
+      if (col.name === selectedColorName) {
         clas += ' colorPickerSelected';
       }
-      return $('<input>', {
+      const colorButt = $('<input>', {
         type: 'button',
         value: '',
-        color: col,
         class: clas,
-      }).click(setColor);
+      }).on('click', setColor);
+
+      colorButt[0].style.setProperty('--marker-bg-color', col.color);
+      colorButt[0].dataset.colorName = col.name;
+      colorButt[0].dataset.colorValue = col.color;
+      colorButt[0].dataset.onColorValue = col.onColor;
+      return colorButt;
     };
-    var butColor0 = generateColorBut('None');
-    var butColor1 = generateColorBut('Bisque');
-    var butColor2 = generateColorBut('Aqua');
-    var butColor3 = generateColorBut('Chartreuse');
-    var butColor4 = generateColorBut('Coral');
-    var butColor5 = generateColorBut('Pink');
-    var butColor6 = generateColorBut('Burlywood');
-    var butColor7 = generateColorBut('Darkcyan');
-    var butColor8 = generateColorBut('Yellowgreen');
-    var butColor9 = generateColorBut('Peru');
-    var butColor10 = generateColorBut('Violet');
 
     var row0 = $('<span>', { class: 'oneRow' }).append($('<h2>').append(strHeader));
 
@@ -726,22 +727,32 @@ class IOClass {
       .append($('<p>').append('Color:'))
       .append($('<span>').append(''));
 
+    const noneColor: MarkerColorConfig = { name: 'None', color: 'transparent', onColor: '' };
+
     var row4 = $('<span>', { class: 'oneRow' })
       .append($colorText)
-      .append($('<div>', { class: 'flexRowWrap' }).append(butColor0))
-      .append(
-        $('<div>', { class: 'flexRowWrap colorPickerWidth' })
-          .append(butColor1)
-          .append(butColor2)
-          .append(butColor3)
-          .append(butColor4)
-          .append(butColor5)
-          .append(butColor6)
-          .append(butColor7)
-          .append(butColor8)
-          .append(butColor9)
-          .append(butColor10)
-      );
+      .append($('<div>', { class: 'flexRowWrap' }).append(generateColorBut(noneColor)));
+
+    const colorParent = $('<div>', { class: 'flexCol flex-sm-row' });
+
+    appendColorButtonsTo(colorParent, generateColorBut);
+
+    // let colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
+    // let colorCounter = 0;
+    // MARKER_COLORS.forEach((col) => {
+    //   colorRow.append(generateColorBut(col));
+    //   colorCounter++;
+    //   if (colorCounter == 5) {
+    //     colorParent.append(colorRow);
+    //     colorRow = $('<div>', { class: 'flexRow flex-sm-col' });
+    //     colorCounter = 0;
+    //   }
+    // });
+    // if (colorCounter > 0) {
+    //   colorParent.append(colorRow);
+    // }
+
+    row4.append(colorParent);
 
     var row5: JQuery<HTMLElement> | string = '';
     if (markerId) {
@@ -767,7 +778,7 @@ class IOClass {
         func(
           $markerName.val() as string,
           $markerInfo.val() as string,
-          row4.find('.colorPickerSelected').attr('color') as string,
+          selectedColorName,
           $markerTime.val() as number
         );
       $outerDialog.remove();
@@ -809,7 +820,7 @@ class IOClass {
 
     var quickTimeOut = setTimeout(() => {
       $markerName.select();
-      $colorText.find('span').html(markerColor);
+      $colorText.find('span').html(selectedColorName);
       clearInterval(quickTimeOut);
     }, 0);
   }; // end promptEditMarker   *******************/
