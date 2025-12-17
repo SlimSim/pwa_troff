@@ -82,7 +82,6 @@ import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from 
 import { getBgColor, setBgCustom } from './utils/colorHelpers.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
-  log.d('ab clickSongList_NEW -> ');
   blurHack();
   var $target = $(event.target),
     data = $target.data('songList'),
@@ -1880,7 +1879,6 @@ class TroffClass {
   };
 
   recallCurrentStateOfSonglists = () => {
-    log.d('ab recallCurrentStateOfSonglists -> ');
     const isAdditiveSelect = nDB.get('TROFF_SETTING_SONG_LIST_ADDITIVE_SELECT') as boolean;
     const o: TroffStateOfSonglists = nDB.get(
       TROFF_CURRENT_STATE_OF_SONG_LISTS

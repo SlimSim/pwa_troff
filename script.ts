@@ -178,8 +178,6 @@ const initiateCollections = async function (querySnapshot?: QuerySnapshot<Docume
 
       const exists = $('#songListList').find(`[data-firebase-group-doc-id="${doc.id}"]`).length;
 
-      console.log('initiateCollections: exists', exists);
-
       if (exists == 0) {
         Troff.addSonglistToHTML_NEW(songListObject);
       } else {

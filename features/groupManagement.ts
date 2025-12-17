@@ -88,14 +88,12 @@ const setGroupAsSonglist = function (groupDocId: string) {
 };
 
 const groupDocUpdate = function (doc: DocumentSnapshot) {
-  console.log('groupDocUpdate -> ');
   if (!doc.exists()) {
     setGroupAsSonglist(doc.id);
     return;
   }
 
   const group = doc.data();
-  console.log('groupDocUpdate: group', group);
   const $target = $('#songListList').find(`[data-firebase-group-doc-id="${doc.id}"]`);
 
   if (!group.owners.includes(firebaseUser?.email)) {
@@ -271,7 +269,6 @@ const populateExampleSongsInGroupDialog = (songs: TroffFirebaseSongIdentifyer[])
 };
 
 const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => {
-  console.log('openGroupDialog -> songListObject', songListObject);
   emptyGroupDialog();
 
   const isGroup = songListObject.firebaseGroupDocId !== undefined;
