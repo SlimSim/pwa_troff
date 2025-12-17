@@ -59,7 +59,7 @@ export function setCssVariablesForMarkerDistanceAndColor(
   let previousActiveOnMarkerColor = null;
   while (child) {
     if (!onlyUpdateColors) {
-      const markerTime = Number((child.childNodes[2] as any).timeValue || $(child).data('time'));
+      const markerTime = Number((child.childNodes[2] as any).timeValue ?? $(child).data('time'));
       const myRowHeight = child.clientHeight;
 
       const freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
