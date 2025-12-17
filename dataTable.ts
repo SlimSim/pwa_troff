@@ -5,7 +5,6 @@ import { DATA_TABLE_COLUMNS } from './constants/constants.js';
 import { TROFF_SETTING_SONG_COLUMN_TOGGLE } from './constants/constants.js';
 import { createSongAudio, DB, Troff } from './script.js';
 import { openEditSongDialog } from './songManagement.js';
-import log from './utils/log.js';
 
 function dataTableColumnPicker(event: JQuery.ClickEvent) {
   var $target = $(event.target);

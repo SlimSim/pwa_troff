@@ -249,6 +249,7 @@ class IOClass {
 
     $('[data-save-on-song-toggle-class]').click(this.saveOnSongToggleClass);
 
+    $('#songlistColorPicker').find('.backgroundColorNone').on('click', Troff.setSonglistColor);
     $('#songlistIconPicker').find('button').on('click', Troff.setSonglistIcon);
 
     // The jQuery version doesn't update as the user is typing:

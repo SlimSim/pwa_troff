@@ -1641,10 +1641,15 @@ class TroffClass {
     $(dialog).removeClassStartingWith('bg-');
 
     element.classList.add('colorPickerSelected');
-    dialog.classList.add('bg-custom');
-    dialog.style.setProperty('--bg-custom-color', element.dataset.colorValue);
-    dialog.style.setProperty('--on-bg-custom-color', element.dataset.onColorValue);
-    // colorButt[0].style.setProperty('--marker-bg-color', col.color);
+    if (element.dataset.colorValue) {
+      dialog.classList.add('bg-custom');
+      dialog.style.setProperty('--bg-custom-color', element.dataset.colorValue);
+      dialog.style.setProperty('--on-bg-custom-color', element.dataset.onColorValue);
+    } else {
+      dialog.classList.remove('bg-custom');
+      dialog.style.removeProperty('--bg-custom-color');
+      dialog.style.removeProperty('--on-bg-custom-color');
+    }
 
     $(dialog).find('#groupDialogColor').val(element.dataset.colorValue);
   };
