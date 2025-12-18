@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 @customElement('t-butt')
-export class TroffSample extends LitElement {
+export class TButt extends LitElement {
   static styles = css`
     :host {
       display: inline-block;

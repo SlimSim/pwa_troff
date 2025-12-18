@@ -26,31 +26,8 @@ const removeLocalInfo = (markerObject: TroffObjectLocal): TroffObjectFirebase =>
   return payload;
 };
 
-const loadExternalHtml = (includes: JQuery<HTMLElement>): Promise<void> => {
-  return new Promise<void>((resolve) => {
-    if (includes.length === 0) {
-      resolve();
-      return;
-    }
-    const currentElement = includes.eq(-1);
-    const remainingElements = includes.slice(0, -1);
-
-    const file = $(currentElement).data('include');
-    $(currentElement).load(file, function () {
-      loadExternalHtml(remainingElements).then(resolve);
-    });
-  });
-};
-
 const blurHack = () => {
   document.getElementById('blur-hack')?.focus({ preventScroll: true });
 };
 
-export {
-  blurHack,
-  escapeRegExp,
-  loadExternalHtml,
-  getFileExtension,
-  removeLocalInfo,
-  fileUrlToStorageFileName,
-};
+export { blurHack, escapeRegExp, getFileExtension, removeLocalInfo, fileUrlToStorageFileName };

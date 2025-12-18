@@ -176,14 +176,9 @@
     <script type="module">
       import './components/atom/t-butt.js';
       import './components/atom/t-icon.js';
+      import './components/legacy/t-quick-help.js';
       import './assets/external/jquery-3.6.0.min.js';
       import './assets/internal/common.js';
-      import { loadExternalHtml } from './utils/utils.js';
-
-      $(function () {
-        const includes = $('[data-include]');
-        loadExternalHtml(includes);
-      });
     </script>
   </head>
 
@@ -293,7 +288,7 @@ Follow Troff on facebook.com/troffmusic to get the latest information!
           <h2 class="paragraph">
             <b class="bold">Quick Help for Troff - training with music</b>
           </h2>
-          <div class="quick-help" data-include="/includes/quick-help.html"></div>
+          <t-quick-help></t-quick-help>
         </article>
 
         <article id="howToAddMedia">
