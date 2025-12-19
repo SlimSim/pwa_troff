@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Copy vendor dependencies
+        run: npm run copy-vendor
+
       - name: Lint + Typecheck + Build
         run: npm run build:check
 

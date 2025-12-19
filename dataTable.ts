@@ -5,7 +5,6 @@ import { DATA_TABLE_COLUMNS } from './constants/constants.js';
 import { TROFF_SETTING_SONG_COLUMN_TOGGLE } from './constants/constants.js';
 import { createSongAudio, DB, Troff } from './script.js';
 import { openEditSongDialog } from './songManagement.js';
-import log from './utils/log.js';
 
 function dataTableColumnPicker(event: JQuery.ClickEvent) {
   var $target = $(event.target);
@@ -124,13 +123,9 @@ function initSongTable() {
     })
     .on('click', 'tbody tr', function (event: JQuery.ClickEvent) {
       Troff.iOSHasLoadedSong = true;
-      log.d('on click tbody tr');
-      // onSongClick (not onSongLoad):
       const $td = $(event.target).closest('td, th');
 
       const songKey = $(event.currentTarget).data('song-key');
-      log.d('on click the tbody tr', { songKey });
-
       if ($td.hasClass('onClickOpenEditSongDialog')) {
         openEditSongDialog(songKey);
       }

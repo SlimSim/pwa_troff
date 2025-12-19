@@ -61,7 +61,6 @@ import {
   TROFF_SETTING_SONG_COLUMN_TOGGLE,
   TROFF_CURRENT_STATE_OF_SONG_LISTS,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
-  MARKER_COLOR_PREFIX,
   DATA_TABLE_COLUMNS,
 } from './constants/constants.js';
 import {
@@ -79,6 +78,8 @@ import {
 } from './types/troff.js';
 import { IOInput } from './types/io.js';
 import { addGroupOwnerRow, emptyGroupDialog } from './features/groupManagement.js';
+import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from './ui/troffUi.js';
+import { getBgColor, setBgCustom } from './utils/colorHelpers.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
   blurHack();
@@ -101,13 +102,14 @@ function clickSongList_NEW(event: JQuery.ClickEvent) {
     $('#songListsList').find('button').removeClass('selected').removeClass('active');
     $target.addClass('selected');
 
-    $('#headArea').removeClassStartingWith('bg-');
+    $('#headArea').removeClass('bg-custom');
     $('#songlistIcon').removeClassStartingWith('fa-');
     $('#songlistName').text('');
     $('#songlistInfo').text('').addClass('hidden');
 
     if (data && data.firebaseGroupDocId) {
-      $('#headArea').addClass(data.color);
+      const color = getBgColor(data.color);
+      setBgCustom($('#headArea')[0], color);
       $('#songlistIcon').addClass(data.icon || 'fa-users');
       $('#songlistName').text(data.name);
       $('#songlistInfo').removeClass('hidden').text(data.info);
@@ -213,7 +215,6 @@ class TroffClass {
   };
 
   initFileApiImplementation = async () => {
-    log.d('initFileApiImplementation ->');
     $('#fileUploader').on('change', (event) => {
       const files = (event.target as HTMLInputElement).files;
       if (files == null) {
@@ -365,7 +366,6 @@ class TroffClass {
 
     let troffData: TroffData;
     try {
-      console.log('xxxxxxxxxxxxxxx importNew');
       troffData = await backendService.getTroffData(serverId, fileName);
     } catch (error) {
       return errorHandler.generic(error);
@@ -385,9 +385,6 @@ class TroffClass {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
 
-    log.d('importTroffDataToExistingSong_importNew: -> createSongAudio', {
-      fileName: troffData.fileName,
-    });
     await createSongAudio(troffData.fileName);
     this.selectSongInSongList(troffData.fileName);
   };
@@ -413,7 +410,6 @@ class TroffClass {
       return errorHandler.generic(error);
     }
 
-    log.d('importTroffDataToExistingSong_merge: -> createSongAudio', { fileName });
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
 
@@ -442,7 +438,6 @@ class TroffClass {
   importTroffDataToExistingSong_keepExisting = async () => {
     const fileName = $('#importTroffDataToExistingSong_fileName').val() as string;
 
-    log.d('importTroffDataToExistingSong_keepExisting: -> createSongAudio', { fileName });
     await createSongAudio(fileName);
     this.selectSongInSongList(fileName);
   };
@@ -556,7 +551,6 @@ class TroffClass {
         if (currentSongTroffData && currentSongTroffData.serverId == serverId) {
           return;
         }
-        log.d('downloadSongFromServerButDataFromCacheExists: -> createSongAudio', { fileName });
         await createSongAudio(fileName);
         this.selectSongInSongList(fileName);
       } else {
@@ -588,7 +582,6 @@ class TroffClass {
     }
 
     if (serverId == troffDataFromCache.serverId) {
-      log.d('downloadSongFromServerButDataFromCacheExists: -> createSongAudio', { fileName });
       await createSongAudio(fileName);
       addItem_NEW_2(fileName);
 
@@ -640,7 +633,6 @@ class TroffClass {
       return errorHandler.fileHandler_fetchAndSaveResponse(error, fileName);
     }
 
-    log.d('downloadSongFromServer: -> createSongAudio', { fileName });
     await createSongAudio(troffData.fileName);
     this.askIfAddSongsToCurrentSongList(troffData.fileName);
     addItem_NEW_2(troffData.fileName);
@@ -1039,29 +1031,13 @@ class TroffClass {
             var aFirstAndLast = this.getFirstAndLastMarkers();
             var lastMarkerId = aFirstAndLast[1] + 'S';
             this.selectStopMarker(lastMarkerId);
-            log.d('timeUpdate in if before seek', {
-              readyState: (document.querySelector('audio, video') as any).readyState,
-              sliderVal: sliderVal,
-            });
             (document.querySelector('audio, video') as any).currentTime = sliderVal;
-            log.d('timeUpdate in if after seek', {
-              readyState: (document.querySelector('audio, video') as any).readyState,
-              currentTime: (document.querySelector('audio, video') as any).currentTime,
-            });
           }
         );
       }
     } // end if
 
-    log.d('timeUpdate before seek', {
-      readyState: (document.querySelector('audio, video') as any).readyState,
-      sliderVal: sliderVal,
-    });
     (document.querySelector('audio, video') as any).currentTime = sliderVal;
-    log.d('timeUpdate after seek', {
-      readyState: (document.querySelector('audio, video') as any).readyState,
-      currentTime: (document.querySelector('audio, video') as any).currentTime,
-    });
   }; // end timeUpdate
 
   getStopTime = () => {
@@ -1216,15 +1192,7 @@ class TroffClass {
 
   // goToStartMarker används när man updaterar startBefore / trycker på StartBefore  / trycker på en marker???
   goToStartMarker = () => {
-    log.d('goToStartMarker', {
-      readystate: document.querySelector('audio, video') as HTMLMediaElement,
-      startTime: this.getStartTime(),
-    });
     (document.querySelector('audio, video') as HTMLMediaElement).currentTime = this.getStartTime();
-    log.d('goToStartMarker', {
-      readyState: (document.querySelector('audio, video') as HTMLMediaElement).readyState,
-      currentTime: (document.querySelector('audio, video') as HTMLMediaElement).currentTime,
-    });
   }; // end goToStartMarker
 
   enterKnappen = () => {
@@ -1243,8 +1211,6 @@ class TroffClass {
 
   playUiButton = async () => {
     if (isSafari && !this.iOSHasLoadedSong) {
-      log.d('playUiButton', { isSafari: isSafari, iOSHasLoadedSong: this.iOSHasLoadedSong });
-      log.d('playUiButton: -> createSongAudio', { songKey: this.getCurrentSong() });
       await createSongAudio(this.getCurrentSong());
       this.iOSHasLoadedSong = true;
     }
@@ -1282,15 +1248,6 @@ class TroffClass {
     wait = wait || 0;
     var audio = document.querySelector('audio, video') as HTMLMediaElement;
     if (!audio) return;
-    log.d('play button pressed', { currentTime: audio.currentTime });
-    setTimeout(
-      () =>
-        log.d('play after delay', {
-          readyState: (document.querySelector('audio, video') as HTMLMediaElement).readyState,
-          currentTime: (document.querySelector('audio, video') as HTMLMediaElement).currentTime,
-        }),
-      100
-    );
 
     gtag('event', 'Start song', { event_category: 'Perform change', event_label: 'Play song' });
 
@@ -1302,14 +1259,10 @@ class TroffClass {
     this.setMood('wait');
 
     const localPlayAndSetMood = () => {
-      log.d('localPlayAndSetMood', { mood: this.getMood() });
       if (this.getMood() == 'pause') return;
-      log.d('play handler before play', { currentTimeBefore: audio.currentTime });
-
       audio
         .play()
         .then(() => {
-          log.d('play handler after play', { currentTimeAfter: audio.currentTime });
           this.setMood('play');
         })
         .catch((error) => {
@@ -1322,11 +1275,9 @@ class TroffClass {
       if (isSafari) {
         audio.play();
         audio.pause();
-        log.d('playSong, did a play/pause hack');
       }
       this.stopTimeout = setTimeout(localPlayAndSetMood, wait);
     } else {
-      log.d('playSong, in else: did not wait and did not do a play/pause hack');
       localPlayAndSetMood();
     }
 
@@ -1682,7 +1633,6 @@ class TroffClass {
 
   setSonglistColor = (event: JQuery.ClickEvent) => {
     const element = event.target;
-    const color = [...element.classList].find((o) => o.startsWith('bg-'));
 
     const dialog = $('#groupDialog').find('.innerDialog')[0];
 
@@ -1691,9 +1641,17 @@ class TroffClass {
     $(dialog).removeClassStartingWith('bg-');
 
     element.classList.add('colorPickerSelected');
-    dialog.classList.add(color);
+    if (element.dataset.colorValue) {
+      dialog.classList.add('bg-custom');
+      dialog.style.setProperty('--bg-custom-color', element.dataset.colorValue);
+      dialog.style.setProperty('--on-bg-custom-color', element.dataset.onColorValue);
+    } else {
+      dialog.classList.remove('bg-custom');
+      dialog.style.removeProperty('--bg-custom-color');
+      dialog.style.removeProperty('--on-bg-custom-color');
+    }
 
-    $(dialog).find('#groupDialogColor').val(color);
+    $(dialog).find('#groupDialogColor').val(element.dataset.colorValue);
   };
 
   leaveGroup = async () => {
@@ -1849,15 +1807,11 @@ class TroffClass {
       songListObject.icon = 'fa-pencil';
     }
 
-    $target
-      .parent()
-      .find('.editSongList')
-      .removeClassStartingWith('bg-')
-      .addClass(songListObject.color as string);
+    const color = getBgColor(songListObject.color);
+    const $editButton = $target.parent().find('.editSongList');
+    setBgCustom($editButton[0], color);
 
-    $target
-      .parent()
-      .find('.editSongList')
+    $editButton
       .find('i')
       .removeClassStartingWith('fa-')
       .addClass(songListObject.icon || 'fa-users');
@@ -1880,6 +1834,17 @@ class TroffClass {
     const groupClass = groupDocId ? 'groupIndication' : '';
     const groupLogo = oSongList.icon || 'fa-pencil';
 
+    const butt = $('<button>')
+      .addClass('small')
+      .addClass('regularButton')
+      .addClass('editSongList')
+      .addClass('mr-2')
+      .append($('<i>').addClass('fa').addClass(groupLogo))
+      .on('click', songListDialogOpenExisting);
+
+    const collor = getBgColor(oSongList.color);
+    setBgCustom(butt[0], collor);
+
     $('#songListList').append(
       $('<li>')
         .addClass('py-1')
@@ -1887,16 +1852,7 @@ class TroffClass {
           $('<div>')
             .addClass('flex-display')
             .addClass('pr-2')
-            .append(
-              $('<button>')
-                .addClass('small')
-                .addClass('regularButton')
-                .addClass('editSongList')
-                .addClass(oSongList.color as string)
-                .addClass('mr-2')
-                .append($('<i>').addClass('fa').addClass(groupLogo))
-                .on('click', songListDialogOpenExisting)
-            )
+            .append(butt)
             .append(
               $('<button>')
                 .addClass('songlist')
@@ -1963,7 +1919,8 @@ class TroffClass {
           .find('[data-songlist-id=' + v + ']')
           .data('songList');
         if (songListData != undefined) {
-          $('#headArea').addClass(songListData.color);
+          const color = getBgColor(songListData.color);
+          setBgCustom($('#headArea')[0], color);
           $('#songlistIcon').addClass(songListData.icon);
           $('#songlistName').text(songListData.name);
           $('#songlistInfo').removeClass('hidden').text(songListData.info);
@@ -2299,7 +2256,8 @@ class TroffClass {
       var name = oMarker.name;
       var time = Number(oMarker.time);
       var info = oMarker.info;
-      var color = oMarker.color || 'None';
+      const colorName = oMarker.color || 'None';
+
       var nameId = oMarker.id;
 
       var maxTime = Number((document.getElementById('timeBar') as HTMLInputElement).max);
@@ -2315,7 +2273,7 @@ class TroffClass {
       button.classList.add('onOffButton');
       button.timeValue = time;
       button.info = info;
-      button.color = color;
+      button.color = colorName;
 
       var buttonS = document.createElement('input') as any;
       buttonS.type = 'button';
@@ -2340,7 +2298,8 @@ class TroffClass {
       listElement.appendChild(p);
       listElement.appendChild(button);
       listElement.appendChild(buttonS);
-      $(listElement).addClass(MARKER_COLOR_PREFIX + color);
+
+      updateHtmlMarkerColor(listElement, colorName);
 
       var child = $('#markerList li:first-child')[0] as any;
       var bInserted = false;
@@ -2382,7 +2341,6 @@ class TroffClass {
       (document.getElementById(nameId + 'E') as HTMLInputElement).addEventListener('click', editM);
     } //end for-loop
     this.setAppropriateMarkerDistance();
-    this.fixMarkerExtraExtendedColor();
   }; // end addMarker ****************/
 
   /*
@@ -2860,7 +2818,6 @@ class TroffClass {
     var oldTime = Number(($('#' + markerId)[0] as any).timeValue);
     var oldMarkerInfo = ($('#' + markerId)[0] as any).info;
     var oldMarkerColor = ($('#' + markerId)[0] as any).color;
-    var oldMarkerClass = MARKER_COLOR_PREFIX + oldMarkerColor;
 
     IO.promptEditMarker(markerId, (newMarkerName, newMarkerInfo, newMarkerColor, newTime) => {
       if (newMarkerName === null || newMarkerName === '' || newTime === null) {
@@ -2888,13 +2845,10 @@ class TroffClass {
       }
       if (newMarkerColor != oldMarkerColor) {
         updated = true;
-        ($('#' + markerId)[0] as any).color = newMarkerColor;
-        $('#' + markerId)
-          .parent()
-          .removeClass(oldMarkerClass);
-        $('#' + markerId)
-          .parent()
-          .addClass(MARKER_COLOR_PREFIX + newMarkerColor);
+        const $button = $('#' + markerId);
+        const li = $button.parent()[0] as HTMLElement;
+        ($button[0] as any).color = newMarkerColor;
+        updateHtmlMarkerColor(li, newMarkerColor);
       }
 
       // update HTML Time
@@ -2915,6 +2869,8 @@ class TroffClass {
         $('#' + markerId)
           .prev()
           .html(this.secToDisp(newTime));
+      } else {
+        this.setAppropriateMarkerDistance(true);
       }
 
       // update name and time and info and color in DB, if nessessarry
@@ -2927,7 +2883,7 @@ class TroffClass {
           Number(newTime),
           this.strCurrentSong
         );
-        this.fixMarkerExtraExtendedColor();
+        // this.setAppropriateMarkerDistance(true);
         /*
             note: DB.updateMarker will also update the "currentStartMarker" and the
             currentStopMarker, if the updated marker is the start or stop marker.
@@ -2988,51 +2944,47 @@ class TroffClass {
     $('#activePlayRegion').css('margin-top', top + 'px');
   }; // end setAppropriateActivePlayRegion
 
-  setAppropriateMarkerDistance = () => {
+  setAppropriateMarkerDistance = (onlyUpdateColors: boolean = false) => {
     $('#markerSection').removeClass('hidden');
     var child = $('#markerList li:first-child')[0];
+    let timeBarHeight = 0;
+    let totalDistanceTop = 0;
+    let barMarginTop = 0;
+    let songTime = 0;
 
-    var timeBarHeight = ($('#timeBar').height() as number) - 10;
-    var totalDistanceTop = 4;
+    if (!onlyUpdateColors) {
+      timeBarHeight = ($('#timeBar').height() as number) - 10;
+      totalDistanceTop = 4;
 
-    var barMarginTop = parseInt($('#timeBar').css('margin-top'));
-    var audioVideo = document.querySelector('audio, video');
-    if (audioVideo == null) {
-      log.e('there is no audio or video tag');
-      return;
-    }
-    var songTime = (audioVideo as HTMLMediaElement).duration;
+      barMarginTop = parseInt($('#timeBar').css('margin-top'));
+      var audioVideo = document.querySelector('audio, video');
+      if (audioVideo == null) {
+        log.e('there is no audio or video tag');
+        return;
+      }
+      songTime = (audioVideo as HTMLMediaElement).duration;
 
-    if (!isFinite(songTime)) {
-      const troffData = nDB.get(this.getCurrentSong());
-      if (troffData.fileData != undefined && troffData.fileData.duration != undefined) {
-        songTime = troffData.fileData.duration;
-      } else {
-        songTime = Number(($('#markerList li:last-child')[0].childNodes[2] as any).timeValue);
+      if (!isFinite(songTime)) {
+        const troffData = nDB.get(this.getCurrentSong());
+        if (troffData.fileData != undefined && troffData.fileData.duration != undefined) {
+          songTime = troffData.fileData.duration;
+        } else {
+          songTime = Number(($('#markerList li:last-child')[0].childNodes[2] as any).timeValue);
+        }
       }
     }
+    setCssVariablesForMarkerDistanceAndColor(
+      child,
+      onlyUpdateColors,
+      timeBarHeight,
+      songTime,
+      totalDistanceTop,
+      barMarginTop
+    );
 
-    while (child) {
-      var markerTime = Number((child.childNodes[2] as any).timeValue);
-      var myRowHeight = child.clientHeight;
-
-      var freeDistanceToTop = (timeBarHeight * markerTime) / songTime;
-
-      var marginTop = freeDistanceToTop - totalDistanceTop + barMarginTop;
-      totalDistanceTop = freeDistanceToTop + myRowHeight + barMarginTop;
-
-      if (marginTop > 0) {
-        $(child).css('border-top-width', marginTop + 'px');
-        $(child).css('border-top-style', 'solid');
-        $(child).css('margin-top', '');
-      } else {
-        $(child).css('border-top-width', '');
-        $(child).css('border-top-style', '');
-        $(child).css('margin-top', marginTop + 'px');
-      }
-      child = child.nextSibling as HTMLElement;
+    if (!onlyUpdateColors) {
+      this.setAppropriateActivePlayRegion();
     }
-    this.setAppropriateActivePlayRegion();
   }; // end setAppropriateMarkerDistance
 
   selectNext = (reverse: boolean) => {
@@ -3176,22 +3128,6 @@ class TroffClass {
     }
 
     $('#tapTempo')[0].dispatchEvent(new Event('input'));
-  };
-
-  fixMarkerExtraExtendedColor = () => {
-    $('#markerList').children().removeClassStartingWith('extend_');
-
-    $('#markerList')
-      .children(':not(.markerColorNone)')
-      .each((index, element) => {
-        const specialColorClass = this.getClassStartsWith(
-          $(element).attr('class') as string,
-          'markerColor'
-        );
-        $(element)
-          .nextUntil(':not(.markerColorNone)')
-          .addClass('extend_' + specialColorClass);
-      });
   };
 
   /* standAlone Functions */

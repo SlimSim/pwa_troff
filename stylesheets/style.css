@@ -32,7 +32,7 @@
   --on-primary-color-link: #0051a8;
   --on-secondary-color: rgb(50, 50, 50);
 
-  --regular-buton-color: #b0bec5;
+  --regular-button-color: #b0bec5;
   --on-regular-buton-color: black;
   --data-tables-empty: white;
   --on-data-tables-empty: black;
@@ -54,9 +54,18 @@
   --active-play-region: var(--accent-color-1);
   --group-indication: var(--accent-color-2);
 
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
   --accent-color-green-ish: var(--accent-color-1, #431c5d);
   --accent-color-red-ish: var(--accent-color-2, #dd2c00);
   --accent-color-yellow-ish: var(--accent-color-3, #787b1e);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
 }
 
 .theme-col2 {
@@ -71,7 +80,7 @@
   --on-primary-color-link: #0051a8;
   --on-secondary-color: rgb(50, 50, 50);
 
-  --regular-buton-color: #b0bec5;
+  --regular-button-color: #b0bec5;
   --on-regular-buton-color: black;
   --data-tables-empty: white;
   --on-data-tables-empty: black;
@@ -99,6 +108,12 @@
   --accent-color-green-ish: var(--accent-color-1, #25d200);
   --accent-color-red-ish: var(--accent-color-2, #d42626);
   --accent-color-yellow-ish: var(--accent-color-3, #ffcf53);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
 }
 .theme-col3 {
   --primary-color: #9e9e9e;
@@ -112,7 +127,7 @@
   --on-primary-color-link: white;
   --on-secondary-color: white;
 
-  --regular-buton-color: #e0e0e0;
+  --regular-button-color: #e0e0e0;
   --on-regular-buton-color: black;
   --data-tables-empty: var(--primary-color, #9e9e9e);
   --on-data-tables-empty: black;
@@ -131,15 +146,21 @@
   --on-accent-color-2-td: #fff;
   --on-accent-color-3: black;
 
-  --active-play-region: black;
+  --active-play-region: var(--accent-color-2);
   --group-indication: var(--accent-color-1);
 
-  --important-button: var(--accent-color-2);
-  --on-important-button: var(--on-accent-color-2);
+  --important-button: var(--accent-color-1);
+  --on-important-button: var(--on-accent-color-1);
 
   --accent-color-green-ish: var(--accent-color-3, #f5f5f5);
   --accent-color-red-ish: var(--accent-color-2, #000);
   --accent-color-yellow-ish: var(--accent-color-1, #ffeb3b);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --marker-section-padding-left: 4px;
 }
@@ -155,7 +176,7 @@
   --on-primary-color-link: #0051a8;
   --on-secondary-color: #545454;
 
-  --regular-buton-color: #e0e0e0;
+  --regular-button-color: #e0e0e0;
   --on-regular-buton-color: black;
   --data-tables-empty: var(--primary-color, #9e9e9e);
   --on-data-tables-empty: black;
@@ -172,7 +193,7 @@
   --on-accent-color-1: white;
   --on-accent-color-2: #fff;
   --on-accent-color-2-td: #fff;
-  --on-accent-color-3: black;
+  --on-accent-color-3: #fff;
 
   --active-play-region: black;
   --group-indication: var(--accent-color-2);
@@ -183,6 +204,12 @@
   --accent-color-green-ish: var(--accent-color-1, #f5f5f5);
   --accent-color-red-ish: var(--accent-color-2, #000);
   --accent-color-yellow-ish: var(--accent-color-3, #ffeb3b);
+
+  --toggle-button-color: #bdbdbd;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
 }
 
 .theme-col5 {
@@ -197,7 +224,7 @@
   --on-primary-color-link: #00ffff; /* Cyan links on red */
   --on-secondary-color: #ffffff; /* White on black */
 
-  --regular-buton-color: #666666; /* Medium gray buttons */
+  --regular-button-color: #666666; /* Medium gray buttons */
   --on-regular-buton-color: #dddddd; /* White text */
   --data-tables-empty: #000000; /* Black for empty tables */
   --on-data-tables-empty: #ffffff; /* White text */
@@ -225,6 +252,12 @@
   --accent-color-green-ish: var(--accent-color-2); /* Green alias */
   --accent-color-red-ish: var(--accent-color-1); /* Yellow as red-ish for variety */
   --accent-color-yellow-ish: var(--accent-color-3); /* Blue as yellow-ish */
+
+  --toggle-button-color: #444444;
+  --on-toggle-button-color: #b1b1b1;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
 }
 
 .textareaEdit {
@@ -1363,6 +1396,11 @@ table.dataTable .dataTables_empty {
   width: 200px !important;
 }
 
+.w-devil,
+.w-exact-666 {
+  width: 666px;
+}
+
 .h-exact-20 {
   height: 20px;
 }
@@ -1403,347 +1441,33 @@ table.dataTable .dataTables_empty {
   margin-top: -7px;
 }
 
-.bg-blue-1 a {
-  color: #003b6f;
-}
-.bg-blue-2 a {
-  color: #ffdc00;
-}
-.bg-blue-3 a {
-  color: #ffca28;
-}
-.bg-blue-4 a {
-  color: #d50000;
-}
-.bg-blue-5 a {
-  color: #c51162;
-}
-.bg-purple-1 a {
-  color: #2962ff;
-}
-.bg-purple-2 a {
-  color: #00c853;
-}
-.bg-purple-3 a {
-  color: #ff4081;
-}
-.bg-purple-4 a {
-  color: #f50057;
-}
-.bg-purple-5 a {
-  color: #f44336;
+.bg-custom {
+  background-color: var(--bg-custom-color);
+  color: var(--on-bg-custom-color);
 }
 
-.bg-blue-1 {
-  background-color: #99c1f1;
-  color: #000;
-}
-.bg-blue-2 {
-  background-color: #62a0ea;
-  color: #f6f5f4;
-}
-.bg-blue-3 {
-  background-color: #3584e4;
-  color: #f6f5f4;
-}
-.bg-blue-4 {
-  background-color: #1c71d8;
-  color: #f6f5f4;
-}
-.bg-blue-5 {
-  background-color: #1a5fb4;
-  color: #f6f5f4;
-}
-.bg-green-1 {
-  background-color: #8ff0a4;
-  color: #000;
-}
-.bg-green-2 {
-  background-color: #57e389;
-  color: #000;
-}
-.bg-green-3 {
-  background-color: #33d17a;
-  color: #000;
-}
-.bg-green-4 {
-  background-color: #2ec27e;
-  color: #000;
-}
-.bg-green-5 {
-  background-color: #26a269;
-  color: #f6f5f4;
-}
-.bg-yellow-1 {
-  background-color: #f9f06b;
-  color: #000;
-}
-.bg-yellow-2 {
-  background-color: #f8e45c;
-  color: #000;
-}
-.bg-yellow-3 {
-  background-color: #f6d32d;
-  color: #000;
-}
-.bg-yellow-4 {
-  background-color: #f5c211;
-  color: #000;
-}
-.bg-yellow-5 {
-  background-color: #e5a50a;
-  color: #000;
-}
-.bg-oragne-1 {
-  background-color: #ffbe6f;
-  color: #000;
-}
-.bg-oragne-2 {
-  background-color: #ffa348;
-  color: #000;
-}
-.bg-oragne-3 {
-  background-color: #ff7800;
-  color: #f6f5f4;
-}
-.bg-oragne-4 {
-  background-color: #e66100;
-  color: #f6f5f4;
-}
-.bg-oragne-5 {
-  background-color: #c64600;
-  color: #f6f5f4;
-}
-.bg-red-1 {
-  background-color: #f66151;
-  color: #000;
-}
-.bg-red-2 {
-  background-color: #ed333b;
-  color: #f6f5f4;
-}
-.bg-red-3 {
-  background-color: #e01b24;
-  color: #f6f5f4;
-}
-.bg-red-4 {
-  background-color: #c01c28;
-  color: #f6f5f4;
-}
-.bg-red-5 {
-  background-color: #a51d2d;
-  color: #f6f5f4;
-}
-.bg-purple-1 {
-  background-color: #dc8add;
-  color: #000;
-}
-.bg-purple-2 {
-  background-color: #c061cb;
-  color: #000;
-}
-.bg-purple-3 {
-  background-color: #9141ac;
-  color: #f6f5f4;
-}
-.bg-purple-4 {
-  background-color: #813d9c;
-  color: #f6f5f4;
-}
-.bg-purple-5 {
-  background-color: #613583;
-  color: #f6f5f4;
-}
-.bg-brown-1 {
-  background-color: #cdab8f;
-  color: #000;
-}
-.bg-brown-2 {
-  background-color: #b5835a;
-  color: #f6f5f4;
-}
-.bg-brown-3 {
-  background-color: #986a44;
-  color: #f6f5f4;
-}
-.bg-brown-4 {
-  background-color: #865e3c;
-  color: #f6f5f4;
-}
-.bg-brown-5 {
-  background-color: #63452c;
-  color: #f6f5f4;
-}
-.bg-white-1 {
-  background-color: #ffffff;
-  color: #333;
-}
-.bg-white-2 {
-  background-color: #f6f5f4;
-  color: #000;
-}
-.bg-white-3 {
-  background-color: #deddda;
-  color: #000;
-}
-.bg-white-4 {
-  background-color: #c0bfbc;
-  color: #000;
-}
-.bg-white-5 {
-  background-color: #9a9996;
-  color: #f6f5f4;
-}
-.bg-black-1 {
-  background-color: #77767b;
-  color: #f6f5f4;
-}
-.bg-black-2 {
-  background-color: #5e5c64;
-  color: #f6f5f4;
-}
-.bg-black-3 {
-  background-color: #3d3846;
-  color: #f6f5f4;
-}
-.bg-black-4 {
-  background-color: #241f31;
-  color: #f6f5f4;
-}
-.bg-black-5 {
-  background-color: #000000;
-  color: #f6f5f4;
-}
+/**
+ * Marker color section
+ * NOTE: These css variables will get there colors from the javascript!
+ */
+#markerList.extra-extended li {
+  border-top-color: var(--marker-active-color, transparent);
+  background-color: var(--marker-active-color, transparent);
+  color: var(--marker-active-on-color, black);
 
-/* Marker color section */
-.backgroundColorAqua,
-#markerList .markerColorAqua,
-#markerList.extra-extended .extend_markerColorAqua {
-  background-color: Aqua;
-  color: black;
+  --marker-active-color: var(--secondary-color, #e6e9f0);
 }
-#markerList.extended-color .markerColorAqua + li,
-#markerList.extra-extended .markerColorAqua + li,
-#markerList.extra-extended .extend_markerColorAqua,
-#markerList.extra-extended .extend_markerColorAqua + li {
-  border-top-color: Aqua;
+#markerList.extended-color .markerColor + li
+/* ,#markerList.extra-extended li */ {
+  border-top-color: var(--marker-border-color, var(--secondary-color, #e6e9f0));
 }
-
-.backgroundColorBisque,
-#markerList .markerColorBisque,
-#markerList.extra-extended .extend_markerColorBisque {
-  background-color: Bisque;
-  color: black;
+.markerBackgroundColor {
+  background-color: var(--marker-bg-color, var(--secondary-color, #e6e9f0));
+  color: var(--marker-on-bg-color, black);
 }
-#markerList.extended-color .markerColorBisque + li,
-#markerList.extra-extended .markerColorBisque + li,
-#markerList.extra-extended .extend_markerColorBisque,
-#markerList.extra-extended .extend_markerColorBisque + li {
-  border-top-color: Bisque;
-}
-
-.backgroundColorChartreuse,
-#markerList .markerColorChartreuse,
-#markerList.extra-extended .extend_markerColorChartreuse {
-  background-color: Chartreuse;
-  color: black;
-}
-#markerList.extended-color .markerColorChartreuse + li,
-#markerList.extra-extended .markerColorChartreuse + li,
-#markerList.extra-extended .extend_markerColorChartreuse,
-#markerList.extra-extended .extend_markerColorChartreuse + li {
-  border-top-color: Chartreuse;
-}
-
-.backgroundColorCoral,
-#markerList .markerColorCoral,
-#markerList.extra-extended .extend_markerColorCoral {
-  background-color: Coral;
-  color: black;
-}
-#markerList.extended-color .markerColorCoral + li,
-#markerList.extra-extended .markerColorCoral + li,
-#markerList.extra-extended .extend_markerColorCoral,
-#markerList.extra-extended .extend_markerColorCoral + li {
-  border-top-color: Coral;
-}
-
-.backgroundColorPink,
-#markerList .markerColorPink,
-#markerList.extra-extended .extend_markerColorPink {
-  background-color: Pink;
-  color: black;
-}
-#markerList.extended-color .markerColorPink + li,
-#markerList.extra-extended .markerColorPink + li,
-#markerList.extra-extended .extend_markerColorPink,
-#markerList.extra-extended .extend_markerColorPink + li {
-  border-top-color: Pink;
-}
-
-.backgroundColorBurlywood,
-#markerList .markerColorBurlywood,
-#markerList.extra-extended .extend_markerColorBurlywood {
-  background-color: Burlywood;
-  color: black;
-}
-#markerList.extended-color .markerColorBurlywood + li,
-#markerList.extra-extended .markerColorBurlywood + li,
-#markerList.extra-extended .extend_markerColorBurlywood,
-#markerList.extra-extended .extend_markerColorBurlywood + li {
-  border-top-color: Burlywood;
-}
-
-.backgroundColorDarkcyan,
-#markerList .markerColorDarkcyan,
-#markerList.extra-extended .extend_markerColorDarkcyan {
-  background-color: Darkcyan;
-  color: black;
-}
-#markerList.extended-color .markerColorDarkcyan + li,
-#markerList.extra-extended .markerColorDarkcyan + li,
-#markerList.extra-extended .extend_markerColorDarkcyan,
-#markerList.extra-extended .extend_markerColorDarkcyan + li {
-  border-top-color: Darkcyan;
-}
-
-.backgroundColorYellowgreen,
-#markerList .markerColorYellowgreen,
-#markerList.extra-extended .extend_markerColorYellowgreen {
-  background-color: Yellowgreen;
-  color: black;
-}
-#markerList.extended-color .markerColorYellowgreen + li,
-#markerList.extra-extended .markerColorYellowgreen + li,
-#markerList.extra-extended .extend_markerColorYellowgreen,
-#markerList.extra-extended .extend_markerColorYellowgreen + li {
-  border-top-color: Yellowgreen;
-}
-
-.backgroundColorPeru,
-#markerList .markerColorPeru,
-#markerList.extra-extended .extend_markerColorPeru {
-  background-color: Peru;
-  color: black;
-}
-#markerList.extended-color .markerColorPeru + li,
-#markerList.extra-extended .markerColorPeru + li,
-#markerList.extra-extended .extend_markerColorPeru,
-#markerList.extra-extended .extend_markerColorPeru + li {
-  border-top-color: Peru;
-}
-
-.backgroundColorViolet,
-#markerList .markerColorViolet,
-#markerList.extra-extended .extend_markerColorViolet {
-  background-color: Violet;
-  color: black;
-}
-#markerList.extended-color .markerColorViolet + li,
-#markerList.extra-extended .markerColorViolet + li,
-#markerList.extra-extended .extend_markerColorViolet,
-#markerList.extra-extended .extend_markerColorViolet + li {
-  border-top-color: Violet;
+#markerList.marker-parent .markerColor {
+  background-color: var(--marker-bg-color);
+  color: var(--marker-on-bg-color, black);
 }
 
 .table-row-selectable tr:hover {
@@ -1875,10 +1599,6 @@ table.dataTable .dataTables_empty {
   .centerRoundButtCommon {
     width: 52px;
     height: 52px;
-  }
-
-  .gigantic-on-mobile {
-    font-size: 58px;
   }
 
   .play.hidden-on-mobile-on-play,

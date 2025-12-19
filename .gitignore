@@ -26,3 +26,5 @@ node_modules/
 
 # GitHub Action Build stuff:
 dist/
+
+assets/external/vendor/

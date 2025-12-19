@@ -1,4 +1,5 @@
 import { DataTableColumnHelper } from 'types/dataTables';
+import { MarkerColorConfig } from 'types/markers';
 
 export const TROFF_SETTING_SET_THEME: string = 'TROFF_SETTING_SET_THEME';
 export const TROFF_SETTING_EXTENDED_MARKER_COLOR: string = 'TROFF_SETTING_EXTENDED_MARKER_COLOR';
@@ -42,6 +43,64 @@ export const TROFF_SETTING_SHOW_SONG_DIALOG: string = 'TROFF_SETTING_SHOW_SONG_D
 export const TROFF_TROFF_DATA_ID_AND_FILE_NAME: string = 'TROFF_TROFF_DATA_ID_AND_FILE_NAME';
 
 export const MARKER_COLOR_PREFIX: string = 'markerColor';
+
+export const MARKER_COLORS: MarkerColorConfig[] = [
+  { name: 'Bisque', color: 'Bisque', onColor: '#000' },
+  { name: 'Aqua', color: 'Aqua', onColor: '#000' },
+  { name: 'Chartreuse', color: 'Chartreuse', onColor: '#000' },
+  { name: 'Coral', color: 'Coral', onColor: '#000' },
+  { name: 'Pink', color: 'Pink', onColor: '#000' },
+  { name: 'Burlywood', color: 'Burlywood', onColor: '#000' },
+  { name: 'Darkcyan', color: 'Darkcyan', onColor: '#000' },
+  { name: 'Yellowgreen', color: 'Yellowgreen', onColor: '#000' },
+  { name: 'Peru', color: 'Peru', onColor: '#000' },
+  { name: 'Violet', color: 'Violet', onColor: '#000' },
+  { name: 'Blue 1', color: '#99c1f1', onColor: '#000' },
+  { name: 'Blue 2', color: '#62a0ea', onColor: '#000' },
+  { name: 'Blue 3', color: '#3584e4', onColor: '#000' },
+  { name: 'Blue 4', color: '#1c71d8', onColor: '#f6f5f4' },
+  { name: 'Blue 5', color: '#1a5fb4', onColor: '#f6f5f4' },
+  { name: 'Green 1', color: '#8ff0a4', onColor: '#000' },
+  { name: 'Green 2', color: '#57e389', onColor: '#000' },
+  { name: 'Green 3', color: '#33d17a', onColor: '#000' },
+  { name: 'Green 4', color: '#2ec27e', onColor: '#000' },
+  { name: 'Green 5', color: '#26a269', onColor: '#000' },
+  { name: 'Yellow 1', color: '#f9f06b', onColor: '#000' },
+  { name: 'Yellow 2', color: '#f8e45c', onColor: '#000' },
+  { name: 'Yellow 3', color: '#f6d32d', onColor: '#000' },
+  { name: 'Yellow 4', color: '#f5c211', onColor: '#000' },
+  { name: 'Yellow 5', color: '#e5a50a', onColor: '#000' },
+  { name: 'Oragne 1', color: '#ffbe6f', onColor: '#000' },
+  { name: 'Oragne 2', color: '#ffa348', onColor: '#000' },
+  { name: 'Oragne 3', color: '#ff7800', onColor: '#000' },
+  { name: 'Oragne 4', color: '#e66100', onColor: '#000' },
+  { name: 'Oragne 5', color: '#c64600', onColor: '#f6f5f4' },
+  { name: 'Red 1', color: '#f66151', onColor: '#000' },
+  { name: 'Red 2', color: '#ed333b', onColor: '#000' },
+  { name: 'Red 3', color: '#e01b24', onColor: '#f6f5f4' },
+  { name: 'Red 4', color: '#c01c28', onColor: '#f6f5f4' },
+  { name: 'Red 5', color: '#a51d2d', onColor: '#f6f5f4' },
+  { name: 'Purple 1', color: '#dc8add', onColor: '#000' },
+  { name: 'Purple 2', color: '#c061cb', onColor: '#000' },
+  { name: 'Purple 3', color: '#9141ac', onColor: '#f6f5f4' },
+  { name: 'Purple 4', color: '#813d9c', onColor: '#f6f5f4' },
+  { name: 'Purple 5', color: '#613583', onColor: '#f6f5f4' },
+  { name: 'Brown 1', color: '#cdab8f', onColor: '#000' },
+  { name: 'Brown 2', color: '#b5835a', onColor: '#000' },
+  { name: 'Brown 3', color: '#986a44', onColor: '#f6f5f4' },
+  { name: 'Brown 4', color: '#865e3c', onColor: '#f6f5f4' },
+  { name: 'Brown 5', color: '#63452c', onColor: '#f6f5f4' },
+  { name: 'White', color: '#ffffff', onColor: '#333' },
+  { name: 'Gray 1', color: '#f6f5f4', onColor: '#000' },
+  { name: 'Gray 2', color: '#deddda', onColor: '#000' },
+  { name: 'Gray 3', color: '#c0bfbc', onColor: '#000' },
+  { name: 'Gray 4', color: '#9a9996', onColor: '#000' },
+  { name: 'Gray 5', color: '#77767b', onColor: '#000' },
+  { name: 'Gray 6', color: '#5e5c64', onColor: '#f6f5f4' },
+  { name: 'Gray 7', color: '#3d3846', onColor: '#f6f5f4' },
+  { name: 'Gray 8', color: '#241f31', onColor: '#f6f5f4' },
+  { name: 'Black', color: '#000000', onColor: '#f6f5f4' },
+];
 
 export const DATA_TABLE_COLUMNS: DataTableColumnHelper = {
   list: [

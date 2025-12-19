@@ -183,17 +183,12 @@ $(() => {
     }
     const contentLength = Number(response.headers.get('Content-Length'));
     const headerContentType = response.headers.get('Content-Type');
-    log.d(`headerContentType ${headerContentType}`);
     const contentType = headerContentType || 'application/octet-stream';
-    log.d(` contentLength: ${contentLength}, contentType: ${contentType}`);
+
     const reader = response.body.getReader();
     let receivedLength = 0; // received that many bytes at the moment
     const chunks = []; // array of received binary chunks (comprises the body)
-    log.d('fileHandler.fetchAndSaveResponse headers', {
-      songKey,
-      contentType,
-      contentLength,
-    });
+
     while (true) {
       const { done, value } = await reader.read();
 
@@ -208,13 +203,9 @@ $(() => {
         firebaseWrapper.onDownloadProgressUpdate(Math.floor(progress));
       }
     }
-    log.d('adding contentType to new Blob! lets hope this works!');
+
     const blob = new Blob(chunks, { type: contentType });
-    log.d('fileHandler.fetchAndSaveResponse blob ready', {
-      songKey,
-      blobSize: blob.size,
-      contentType: blob.type,
-    });
+
     return fileHandler.saveResponse(new Response(blob, v3Init), songKey);
   };
 
@@ -247,11 +238,6 @@ $(() => {
 
   fileHandler.getObjectUrlFromFile = async (songKey) => {
     return caches.match(songKey).then((cachedResponse) => {
-      log.d('fileHandler.getObjectUrlFromFile cache match', {
-        songKey,
-        found: cachedResponse !== undefined,
-        navigatorOnLine: navigator.onLine,
-      });
       if (cachedResponse === undefined) {
         log.w('fileHandler.getObjectUrlFromFile cache miss', { songKey });
         throw new ShowUserException(`A problem occured with "${songKey}". Please try again.`);
