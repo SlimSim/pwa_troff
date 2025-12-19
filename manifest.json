@@ -1,7 +1,7 @@
 {
   "name": "Troff - Training with music",
   "short_name": "Troff",
-  "version": "1.9.3.6",
+  "version": "1.9.4",
   "description": "Training with music - A Music player that let you loop a part of a song, slow it down and create markers on the song timeline.",
   "categories": ["music", "productivity"],
   "offline_enabled": true,
