@@ -20,6 +20,7 @@
 
 import './components/atom/t-butt.js';
 import './components/atom/t-icon.js';
+import './components/legacy/t-quick-help.js';
 
 import './assets/external/jquery-3.6.0.min.js';
 import './assets/internal/cookie_consent.js';
@@ -63,7 +64,6 @@ import { environment } from './assets/internal/environment.js';
 import { TroffClass } from './scriptTroffClass.js';
 import { errorHandler, ShowUserException } from './scriptErrorHandler.js';
 import DBClass from './scriptDBClass.js';
-import { loadExternalHtml } from './utils/utils.js';
 import { isIphone, isIpad } from './utils/browserEnv.js';
 import IOClass from './ui/scriptIOClass.js';
 import RateClass from './scriptRateClass.js';
@@ -677,10 +677,6 @@ $(document).ready(async function () {
   IO.removeLoadScreenSoon();
   setColorsOnGroupDialog();
   await initEnvironment();
-
-  // include external HTML-files:
-  const includes = $('[data-include]');
-  await loadExternalHtml(includes);
 
   initSongTable();
   await DB.cleanDB();
