@@ -32,7 +32,7 @@ export class TIcon extends LitElement {
   async updated(changedProperties: Map<string, any>) {
     if (changedProperties.has('name') && this.name) {
       try {
-        const response = await fetch(`assets/icons/${this.name}.svg`);
+        const response = await fetch(`/assets/icons/${this.name}.svg`);
         if (response.ok) {
           this._svgContent = await response.text();
           this.requestUpdate();
