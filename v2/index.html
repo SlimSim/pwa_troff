@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <title>Troff - Training with music</title>
+    <meta charset="UTF-8" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!--
+	This file is part of Troff.
+
+	Troff is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License,
+	or (at your option) any later version.
+
+	Troff is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Troff. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+    <link
+      href="/assets/external/Fontello-2023-05-08/font/troff-icon-pack.woff2?2742147"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="apple-touch-icon" href="/assets/logos/logo-192-non-transparent.png" />
+    <link rel="icon" href="/assets/logos/favicon.ico" />
+
+    <meta
+      name="description"
+      content="Troff is a music player that let you loop a part of a song, adjust tempo and create markers on the song timeline. Use Troff if you need to practice something to music!"
+    />
+    <meta name="keywords" content="Music player, Troff, Loop, Repeat, Training" />
+
+    <meta name="theme-color" content="#003366" />
+
+    <meta
+      name="viewport"
+      content="width=device-width,
+					initial-scale=1,
+					minimum-scale=1,
+					user-scalable=yes"
+    />
+
+    <style>
+      button,
+      input,
+      a,
+      abbr,
+      acronym,
+      address,
+      applet,
+      article,
+      aside,
+      audio,
+      b,
+      big,
+      blockquote,
+      body,
+      canvas,
+      caption,
+      center,
+      cite,
+      code,
+      dd,
+      del,
+      details,
+      dfn,
+      div,
+      dl,
+      dt,
+      em,
+      embed,
+      fieldset,
+      figcaption,
+      figure,
+      footer,
+      form,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      header,
+      hgroup,
+      html,
+      i,
+      iframe,
+      img,
+      ins,
+      kbd,
+      label,
+      legend,
+      li,
+      mark,
+      menu,
+      nav,
+      object,
+      ol,
+      output,
+      p,
+      pre,
+      q,
+      ruby,
+      s,
+      samp,
+      section,
+      small,
+      span,
+      strike,
+      strong,
+      sub,
+      summary,
+      sup,
+      table,
+      tbody,
+      td,
+      tfoot,
+      th,
+      thead,
+      time,
+      tr,
+      tt,
+      u,
+      ul,
+      var,
+      video {
+        font-weight: 400;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+      article,
+      aside,
+      details,
+      figcaption,
+      figure,
+      footer,
+      header,
+      hgroup,
+      menu,
+      nav,
+      section {
+        display: block;
+      }
+      body {
+        line-height: 1;
+      }
+      ol,
+      ul {
+        list-style: none;
+      }
+      blockquote,
+      q {
+        quotes: none;
+      }
+      blockquote:after,
+      blockquote:before,
+      q:after,
+      q:before {
+        content: '';
+        content: none;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+    </style>
+    <style id="loadScreenStyle">
+      .backgroundColor {
+        overflow: hidden;
+        overflow-x: hidden !important;
+      }
+      #loadScreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        background-color: #036;
+        z-index: 1984;
+      }
+      #loadScreen h1,
+      #loadScreen h2,
+      #loadScreen p {
+        color: #fff;
+        margin: 0;
+        font: revert;
+        font-size: 42px;
+        font-family: Arial, 'Open Sans', sans-serif;
+        padding-top: 10px;
+      }
+      #loadScreen h2 {
+        padding-top: 15px;
+        font-size: 24px;
+      }
+      #loadScreen p {
+        font-size: 16px;
+      }
+      .f1 {
+        flex-grow: 1;
+      }
+      .f2 {
+        flex-grow: 2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Troff - Training with music</h1>
+    <h2>Welcome to the modernization effort of Troff!</h2>
+    <p>what do you think?</p>
+    <t-footer></t-footer>
+
+    <script async src="/assets\external\vendor\es-module-shims\es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "lit": "/assets/external/vendor/lit/index.js",
+          "lit/": "/assets/external/vendor/lit/",
+          "lit-html": "/assets/external/vendor/lit-html/lit-html.js",
+          "lit-html/": "/assets/external/vendor/lit-html/",
+          "@lit/reactive-element": "/assets/external/vendor/@lit/reactive-element/reactive-element.js",
+          "@lit/reactive-element/": "/assets/external/vendor/@lit/reactive-element/",
+          "lit-element": "/assets/external/vendor/lit-element/lit-element.js",
+          "lit-element/": "/assets/external/vendor/lit-element/"
+        }
+      }
+    </script>
+    <script defer type="module" src="/v2Script.js"></script>
+  </body>
+</html>
