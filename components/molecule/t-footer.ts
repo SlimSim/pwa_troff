@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
+  @property({ type: Boolean }) settingsPanelVisible = false;
   static styles = css`
     :host {
       display: block;
@@ -48,35 +49,37 @@ export class BottomNav extends LitElement {
       color: white;
     } */
 
-    /* @media (min-width: 768px) {
-      .nav-container {
-        max-width: 800px;
-      }
+    .nav-item t-icon {
+      transition: transform 0.3s ease-in-out;
+      transform-style: preserve-3d;
+    }
 
-      .nav-item {
-        height: 70px;
-      }
-
-      .play-button-wrapper t-butt {
-        width: 80px;
-        height: 80px;
-      }
-
-      .play-button-wrapper t-icon {
-        font-size: 2.5rem;
-      }
-    } */
+    .nav-item t-icon.flipped {
+      transform: rotateX(180deg) translateY(-4px);
+    }
   `;
 
   private _handleNavClick(event: Event, action: string) {
     event.stopPropagation();
-    this.dispatchEvent(
-      new CustomEvent('nav-click', {
-        detail: { action },
-        bubbles: true,
-        composed: true,
-      })
-    );
+
+    if (action === 'info') {
+      this.settingsPanelVisible = !this.settingsPanelVisible;
+      this.dispatchEvent(
+        new CustomEvent('settings-toggle', {
+          detail: { visible: this.settingsPanelVisible },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    } else {
+      this.dispatchEvent(
+        new CustomEvent('nav-click', {
+          detail: { action },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
   }
 
   render() {
@@ -108,7 +111,10 @@ export class BottomNav extends LitElement {
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
           <t-butt icon>
-            <t-icon name="chevron-up"></t-icon>
+            <t-icon
+              name="chevron-up"
+              class="${this.settingsPanelVisible ? 'flipped' : ''}"
+            ></t-icon>
           </t-butt>
         </div>
       </div>
