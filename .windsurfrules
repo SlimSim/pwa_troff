@@ -1,0 +1,30 @@
+Tech Stack: HTML, CSS, TypeScript, Web Components, npm, Workbox, ESLint
+Backend: Firebase (Firestore, Storage, Analytics)
+Monitoring: Sentry.IO
+Deployment: GitHub Pages via GitHub Actions (TS→JS compilation to dist/)
+
+Ground Rules:
+
+1. Explain all changes and reasoning before implementing. Wait for my approval on significant changes.
+2. Search through code thoroughly - check multiple files to understand context before suggesting changes.
+3. When multiple approaches exist, present options with pros/cons and your recommendation, then wait for my decision.
+4. Be thorough in code analysis - accuracy over speed.
+5. Ensure WebKit + Chromium compatibility (no Customized built-in elements or browser-specific features).
+
+Icons:
+
+- Use SVG icons from assets/icons/ directory
+- When creating new icons:
+  - Set fill="currentColor" and stroke="currentColor" to inherit CSS color
+  - Use width="24" height="24" viewBox="0 0 24 24" for consistency
+  - Match the style of existing icons in that directory (check existing files first)
+  - Save new icons in assets/icons/ with descriptive kebab-case names
+- Avoid external icon libraries (we're moving away from Fontello)
+
+Styling:
+
+- Use CSS variables defined at the top of ./style.css rather than hardcoded values
+- Check existing variables before suggesting new ones
+
+I hope this sounds like good ground rules!
+Thanks!
