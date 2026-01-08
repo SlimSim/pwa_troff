@@ -10,7 +10,8 @@ export class Header extends LitElement {
       top: 0;
       left: 0;
       right: 0;
-      background-color: var(--body-background, #bccbde);
+      background-color: var(--theme-color, #003366);
+      color: var(--on-theme-color, #ffffff);
       border-bottom: 1px solid var(--border-color, #333);
       z-index: 1000;
       padding: 10px 12px;
@@ -59,7 +60,6 @@ export class Header extends LitElement {
     .song-title {
       font-size: 0.9rem;
       font-weight: 600;
-      color: var(--text-color, #000);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -67,7 +67,6 @@ export class Header extends LitElement {
 
     .artist-name {
       font-size: 0.8rem;
-      color: var(--text-color, #000);
       opacity: 0.8;
       white-space: nowrap;
       overflow: hidden;
@@ -77,8 +76,6 @@ export class Header extends LitElement {
 
     .time-info {
       font-size: 0.7rem;
-      color: var(--text-color, #000);
-      opacity: 0.6;
       margin-top: 2px;
     }
 

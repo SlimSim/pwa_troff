@@ -1,0 +1,244 @@
+
+
+.theme-col1,
+[data-theme='col1'] {
+  --theme-color: #003366;
+  --on-theme-color: #eee;
+  --primary-color: #c2dde6;
+  --secondary-color: #e6e9f0;
+  --tertiary-color: #ced8e8;
+  --accent-color-1: #431c5d;
+  --accent-color-2: #dd2c00;
+  --accent-color-3: #787b1e;
+
+  --on-primary-color: black;
+  --on-primary-color-link: #0051a8;
+  --on-secondary-color: rgb(50, 50, 50);
+
+  --regular-button-color: #b0bec5;
+  --on-regular-buton-color: black;
+  --data-tables-empty: white;
+  --on-data-tables-empty: black;
+
+  --gray-out: lightgray;
+  --on-gray-out: #595959;
+  --body-background: #bccbde;
+  --on-body-background: black;
+  --body-link-color: #0051a8;
+  --text-area: lightblue;
+  --drop-active: lightgray;
+  --on-drop-active: black;
+
+  --on-accent-color-1: white;
+  --on-accent-color-2: white;
+  --on-accent-color-2-td: white;
+  --on-accent-color-3: white;
+
+  --active-play-region: var(--accent-color-1);
+  --group-indication: var(--accent-color-2);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
+  --accent-color-green-ish: var(--accent-color-1, #431c5d);
+  --accent-color-red-ish: var(--accent-color-2, #dd2c00);
+  --accent-color-yellow-ish: var(--accent-color-3, #787b1e);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
+}
+
+.theme-col2 {
+  --primary-color: #93c47d;
+  --secondary-color: #c9e2be;
+  --tertiary-color: #ced8e8; /*usage in find.html???*/
+  --accent-color-1: #25d200;
+  --accent-color-2: #d42626;
+  --accent-color-3: #ffcf53;
+
+  --on-primary-color: black;
+  --on-primary-color-link: #0051a8;
+  --on-secondary-color: rgb(50, 50, 50);
+
+  --regular-button-color: #b0bec5;
+  --on-regular-buton-color: black;
+  --data-tables-empty: white;
+  --on-data-tables-empty: black;
+
+  --gray-out: lightgray;
+  --on-gray-out: #595959;
+  --body-background: #f2f8ef;
+  --on-body-background: black;
+  --body-link-color: #0051a8;
+  --text-area: #dfedd8;
+  --drop-active: lightgray;
+  --on-drop-active: black;
+
+  --on-accent-color-1: black;
+  --on-accent-color-2: white;
+  --on-accent-color-2-td: black;
+  --on-accent-color-3: black;
+
+  --active-play-region: var(--accent-color-1);
+  --group-indication: var(--accent-color-2);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
+  --accent-color-green-ish: var(--accent-color-1, #25d200);
+  --accent-color-red-ish: var(--accent-color-2, #d42626);
+  --accent-color-yellow-ish: var(--accent-color-3, #ffcf53);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
+}
+.theme-col3 {
+  --primary-color: #9e9e9e;
+  --secondary-color: #616161;
+  --tertiary-color: #; /*usage???*/
+  --accent-color-1: #ffeb3b;
+  --accent-color-2: #000;
+  --accent-color-3: #f5f5f5;
+
+  --on-primary-color: black;
+  --on-primary-color-link: white;
+  --on-secondary-color: white;
+
+  --regular-button-color: #e0e0e0;
+  --on-regular-buton-color: black;
+  --data-tables-empty: var(--primary-color, #9e9e9e);
+  --on-data-tables-empty: black;
+
+  --gray-out: lightgray;
+  --on-gray-out: #595959;
+  --body-background: black;
+  --on-body-background: white;
+  --body-link-color: lightgray;
+  --text-area: #fffde7;
+  --drop-active: lightgray;
+  --on-drop-active: black;
+
+  --on-accent-color-1: black;
+  --on-accent-color-2: #fff;
+  --on-accent-color-2-td: #fff;
+  --on-accent-color-3: black;
+
+  --active-play-region: var(--accent-color-2);
+  --group-indication: var(--accent-color-1);
+
+  --important-button: var(--accent-color-1);
+  --on-important-button: var(--on-accent-color-1);
+
+  --accent-color-green-ish: var(--accent-color-3, #f5f5f5);
+  --accent-color-red-ish: var(--accent-color-2, #000);
+  --accent-color-yellow-ish: var(--accent-color-1, #ffeb3b);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
+
+  --marker-section-padding-left: 4px;
+}
+.theme-col4 {
+  --primary-color: #f0f0f0;
+  --secondary-color: #fcfcfc;
+  --tertiary-color: #; /*usage???*/
+  --accent-color-1: #ad974f;
+  --accent-color-2: #231f20;
+  --accent-color-3: #8e793e;
+
+  --on-primary-color: #545454;
+  --on-primary-color-link: #0051a8;
+  --on-secondary-color: #545454;
+
+  --regular-button-color: #e0e0e0;
+  --on-regular-buton-color: black;
+  --data-tables-empty: var(--primary-color, #9e9e9e);
+  --on-data-tables-empty: black;
+
+  --gray-out: lightgray;
+  --on-gray-out: #595959;
+  --body-background: #eaeaea;
+  --on-body-background: 545454;
+  --body-link-color: blue;
+  --text-area: #f6f4ed;
+  --drop-active: #bdbdbd;
+  --on-drop-active: black;
+
+  --on-accent-color-1: white;
+  --on-accent-color-2: #fff;
+  --on-accent-color-2-td: #fff;
+  --on-accent-color-3: #fff;
+
+  --active-play-region: black;
+  --group-indication: var(--accent-color-2);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
+  --accent-color-green-ish: var(--accent-color-1, #f5f5f5);
+  --accent-color-red-ish: var(--accent-color-2, #000);
+  --accent-color-yellow-ish: var(--accent-color-3, #ffeb3b);
+
+  --toggle-button-color: #bdbdbd;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
+}
+
+.theme-col5 {
+  --primary-color: #8b0000; /* Dark red for primary elements */
+  --secondary-color: #000000; /* Black for secondary */
+  --tertiary-color: #333333; /* Dark gray for tertiary */
+  --accent-color-1: #ffff00; /* Bright yellow for highlights */
+  --accent-color-2: #00ff00; /* Neon green for play/groups */
+  --accent-color-3: #0000ff; /* Electric blue for variety */
+
+  --on-primary-color: #ffffff; /* White text on red */
+  --on-primary-color-link: #00ffff; /* Cyan links on red */
+  --on-secondary-color: #ffffff; /* White on black */
+
+  --regular-button-color: #666666; /* Medium gray buttons */
+  --on-regular-buton-color: #dddddd; /* White text */
+  --data-tables-empty: #000000; /* Black for empty tables */
+  --on-data-tables-empty: #ffffff; /* White text */
+  --gray-out: #333333; /* Dark gray for disabled */
+  --on-gray-out: #dddddd; /* White text */
+  --body-background: #000000; /* Black overall background */
+  --on-body-background: #ffffff; /* White text */
+  --body-link-color: #ffff00; /* Yellow links */
+  --text-area: #222222; /* Dark gray inputs */
+  --on-text-area: #dddddd;
+  --drop-active: #444444; /* Slightly lighter gray for drag */
+  --on-drop-active: #b1b1b1; /* White text */
+
+  --on-accent-color-1: #000000; /* Black on yellow */
+  --on-accent-color-2: #000000; /* Black on green */
+  --on-accent-color-2-td: #000000; /* White on green in tables */
+  --on-accent-color-3: #ffffff; /* White on blue */
+
+  --active-play-region: var(--accent-color-1); /* Yellow play region */
+  --group-indication: var(--accent-color-2); /* Green groups */
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
+  --accent-color-green-ish: var(--accent-color-2); /* Green alias */
+  --accent-color-red-ish: var(--accent-color-1); /* Yellow as red-ish for variety */
+  --accent-color-yellow-ish: var(--accent-color-3); /* Blue as yellow-ish */
+
+  --toggle-button-color: #444444;
+  --on-toggle-button-color: #b1b1b1;
+
+  --toggle-button-active-color: var(--accent-color-3);
+  --on-toggle-button-active-color: var(--on-accent-color-3);
+}

@@ -12,7 +12,7 @@ export class BottomNav extends LitElement {
       left: 0;
       right: 0;
       z-index: 1000;
-      background-color: var(--body-background, #bccbde);
+      background-color: var(--theme-color, #003366);
       /* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); */
       // todo: have box-shadow ONLY when the body is scrollable, not the host
     }
