@@ -84,13 +84,13 @@ export class BottomNav extends LitElement {
       <div class="nav-container">
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'songs')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon name="time"></t-icon>
           </t-butt>
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'settings')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon name="speed"></t-icon>
           </t-butt>
         </div>
 
@@ -102,13 +102,13 @@ export class BottomNav extends LitElement {
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'states')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon name="marker-plus"></t-icon>
           </t-butt>
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon name="chevron-up"></t-icon>
           </t-butt>
         </div>
       </div>
