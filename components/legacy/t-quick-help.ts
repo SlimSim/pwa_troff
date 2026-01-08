@@ -222,32 +222,32 @@ export class TQuickHelp extends LitElement {
           <span class="paragraph normalSize bold w-exact-120">Works great with:</span>
           <img
             class="p-2 logo-h-w"
-            src="assets/external/browserLogos/chrome-logo.svg"
+            src="/assets/external/browserLogos/chrome-logo.svg"
             alt="Chrome logo"
           />
           <img
             class="p-2 logo-h-w"
-            src="assets/external/browserLogos/chromium-logo.svg"
+            src="/assets/external/browserLogos/chromium-logo.svg"
             alt="Chromium logo"
           />
           <img
             class="p-2 logo-h-w"
-            src="assets/external/browserLogos/firefox-logo.svg"
+            src="/assets/external/browserLogos/firefox-logo.svg"
             alt="Firefox logo"
           />
           <img
             class="p-2 logo-h-w"
-            src="assets/external/browserLogos/edge-logo.svg"
+            src="/assets/external/browserLogos/edge-logo.svg"
             alt="Edge logo"
           />
           <img
             class="p-2 logo-h-w"
-            src="assets/external/browserLogos/safari-logo.svg"
+            src="/assets/external/browserLogos/safari-logo.svg"
             alt="Safari logo"
           />
           <img
             class="p-2 logo-h-w"
-            src="assets/external/browserLogos/ios-logo.svg"
+            src="/assets/external/browserLogos/ios-logo.svg"
             alt="iOS logo"
           />
         </div>
