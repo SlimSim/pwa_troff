@@ -13,13 +13,13 @@ export class SettingsPanel extends LitElement {
       border-top: 1px solid var(--border-color, #333);
       z-index: 1000;
       transform: translateY(100%);
-      transition: transform 0.3s ease-in-out;
       max-height: calc(100vh - var(--footer-height, 60px));
       overflow-y: auto;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
     }
 
     :host([visible]) {
+      transition: transform 0.3s ease-in-out;
       transform: translateY(calc(-1 * var(--footer-height, 60px)));
     }
 
