@@ -6,13 +6,12 @@ export class SettingsPanel extends LitElement {
   static styles = css`
     :host {
       position: absolute;
-      bottom: 0;
+      bottom: -100%;
       left: 0;
       right: 0;
       background-color: var(--theme-color, #003366);
       color: var(--on-theme-color, #ffffff);
       z-index: 999;
-      transform: translateY(100%);
       transition: transform 0.3s ease-in-out;
       height: 100%;
       overflow-y: auto;
@@ -20,7 +19,7 @@ export class SettingsPanel extends LitElement {
     }
 
     :host([visible]) {
-      transform: translateY(0);
+      transform: translateY(-100%);
     }
 
     .panel-content {
