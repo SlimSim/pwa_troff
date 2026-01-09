@@ -5,22 +5,22 @@ import { customElement, property } from 'lit/decorators.js';
 export class SettingsPanel extends LitElement {
   static styles = css`
     :host {
-      position: fixed;
+      position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background-color: var(--body-background, #bccbde);
-      border-top: 1px solid var(--border-color, #333);
-      z-index: 1000;
+      background-color: var(--theme-color, #003366);
+      color: var(--on-theme-color, #ffffff);
+      z-index: 999;
       transform: translateY(100%);
-      max-height: calc(100vh - var(--footer-height, 60px));
+      transition: transform 0.3s ease-in-out;
+      height: 100%;
       overflow-y: auto;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
     }
 
     :host([visible]) {
-      transition: transform 0.3s ease-in-out;
-      transform: translateY(calc(-1 * var(--footer-height, 60px)));
+      transform: translateY(0);
     }
 
     .panel-content {
@@ -102,37 +102,12 @@ export class SettingsPanel extends LitElement {
 
   @property({ type: Boolean, reflect: true }) visible = false;
 
-  private resizeObserver?: ResizeObserver;
-
   connectedCallback() {
     super.connectedCallback();
-    this._setupFooterHeightObserver();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-  }
-
-  private _setupFooterHeightObserver() {
-    // Find the footer element
-    const footer = document.querySelector('t-footer');
-    if (footer) {
-      this.resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const footerHeight = entry.contentRect.height;
-          // Update CSS custom property
-          this.style.setProperty('--footer-height', `${footerHeight}px`);
-        }
-      });
-      this.resizeObserver.observe(footer);
-
-      // Get initial height
-      const rect = footer.getBoundingClientRect();
-      this.style.setProperty('--footer-height', `${rect.height}px`);
-    }
   }
 
   private _handleClose() {

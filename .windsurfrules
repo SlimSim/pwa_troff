@@ -10,7 +10,8 @@ Ground Rules:
 3. When multiple approaches exist, present options with pros/cons and your recommendation, then wait for my decision.
 4. Be thorough in code analysis - accuracy over speed.
 5. Ensure WebKit + Chromium compatibility (no Customized built-in elements or browser-specific features).
-   6
+
+HTML:
 
 Icons:
 
@@ -27,6 +28,7 @@ Styling:
 - Use CSS variables defined at the top of ./style.css rather than hardcoded values
 - Check existing variables before suggesting new ones.
 - Mobile-first CSS: base styles are for mobile, use @media (min-width: 576px) for larger screens only when necessary. Never use max-width media queries.
+- Avoid inline style on elements!
 
 I hope this sounds like good ground rules!
 Thanks!

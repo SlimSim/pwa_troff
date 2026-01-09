@@ -6,10 +6,7 @@ export class Header extends LitElement {
   static styles = css`
     :host {
       display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      position: relative;
       background-color: var(--theme-color, #003366);
       color: var(--on-theme-color, #ffffff);
       border-bottom: 1px solid var(--border-color, #333);

@@ -3,53 +3,29 @@ import './components/atom/t-icon.js';
 import './components/molecule/t-footer.js';
 import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
+import './components/molecule/t-song-list.js';
 
 // Initialize components and set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
   const footer = document.getElementById('footer') as any;
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const header = document.getElementById('header') as any;
+  const songList = document.getElementById('songList') as any;
 
-  // Function to update body margin based on footer height
-  const updateBodyMargin = () => {
-    if (footer) {
-      const footerHeight = footer.getBoundingClientRect().height;
-      document.body.style.marginBottom = `${footerHeight}px`;
-    }
-  };
-
-  // Set up ResizeObserver for footer height changes
-  if (footer) {
-    const resizeObserver = new ResizeObserver(() => {
-      updateBodyMargin();
-    });
-    resizeObserver.observe(footer);
-
-    // Initial margin calculation
-    setTimeout(updateBodyMargin, 100);
-  }
-
-  // Function to update content margin based on header height
-  const updateContentMargin = () => {
+  // Set CSS variables for header and footer heights (simple one-time calculation)
+  const setComponentHeights = () => {
     if (header) {
       const headerHeight = header.getBoundingClientRect().height;
-      const mainContent = document.querySelector('h1')?.parentElement;
-      if (mainContent) {
-        mainContent.style.marginTop = `${headerHeight}px`;
-      }
+      document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    }
+    if (footer) {
+      const footerHeight = footer.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--footer-height', `${footerHeight}px`);
     }
   };
 
-  // Set up ResizeObserver for header height changes
-  if (header) {
-    const headerResizeObserver = new ResizeObserver(() => {
-      updateContentMargin();
-    });
-    headerResizeObserver.observe(header);
-
-    // Initial margin calculation
-    setTimeout(updateContentMargin, 100);
-  }
+  // Set heights after components are rendered
+  setTimeout(setComponentHeights, 200);
 
   if (footer && settingsPanel) {
     // Listen for settings toggle events from footer
@@ -74,12 +50,30 @@ document.addEventListener('DOMContentLoaded', () => {
   if (header) {
     // Listen for header expand events
     header.addEventListener('header-expand', (event: any) => {
-      console.log('Header expanded:', event.detail.expanded);
-      // Here you can add logic to show/hide song list
-      // For example: toggleSongList(event.detail.expanded);
+      const expanded = event.detail.expanded;
+      console.log('Header expanded:', expanded);
+
+      // Toggle song list visibility
+      if (songList) {
+        songList.visible = expanded;
+      }
     });
 
-    // Set some demo data for the header
+    // Listen for song list close events
+    if (songList) {
+      songList.addEventListener('song-list-closed', () => {
+        header.expanded = false;
+      });
+
+      // Listen for song selection
+      songList.addEventListener('song-selected', (event: any) => {
+        console.log('Song selected:', event.detail.song);
+        // Here you can add logic to load and play the selected song
+        // For example: loadSong(event.detail.song);
+      });
+    }
+
+    // Set some demo data for header
     header.songTitle = 'Bohemian Rhapsody';
     header.artistName = 'Queen';
     header.currentTime = '1:42';

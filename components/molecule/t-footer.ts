@@ -7,12 +7,9 @@ export class BottomNav extends LitElement {
   static styles = css`
     :host {
       display: block;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
+      position: relative;
       background-color: var(--theme-color, #003366);
+      z-index: 1000;
       /* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); */
       // todo: have box-shadow ONLY when the body is scrollable, not the host
     }
