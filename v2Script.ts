@@ -4,6 +4,7 @@ import './components/molecule/t-footer.js';
 import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
 import './components/molecule/t-song-list.js';
+import './components/molecule/t-main-layout.js';
 
 // Initialize components and set up event listeners
 document.addEventListener('DOMContentLoaded', () => {

@@ -181,24 +181,7 @@
     <style id="loadScreenStyle">
       body {
         font-family: Arial, 'Open Sans', sans-serif;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        max-height: 100vh;
-        overflow: clip;
         margin: 0;
-      }
-
-      .main-content-parent {
-        position: relative;
-        display: flex;
-        flex: 1;
-        overflow-y: hidden;
-      }
-
-      .main-content {
-        overflow: auto;
-        flex: 1;
       }
 
       .backgroundColor {
@@ -245,17 +228,17 @@
     </style>
   </head>
   <body data-theme="col1">
-    <t-header id="header"></t-header>
-    <div class="main-content-parent">
-      <t-song-list id="songList"></t-song-list>
-      <div class="main-content">
+    <t-main-layout>
+      <t-header id="header" slot="header"></t-header>
+      <t-song-list id="songList" slot="song-list"></t-song-list>
+      <div slot="main-content">
         <h1>Troff - Training with music</h1>
         <h2>Welcome to modernization effort of Troff!</h2>
         <p>what do you think?</p>
       </div>
-      <t-settings-panel id="settingsPanel"></t-settings-panel>
-    </div>
-    <t-footer id="footer"></t-footer>
+      <t-settings-panel id="settingsPanel" slot="settings-panel"></t-settings-panel>
+      <t-footer id="footer" slot="footer"></t-footer>
+    </t-main-layout>
 
     <script async src="/assets\external\vendor\es-module-shims\es-module-shims.js"></script>
     <script type="importmap">
