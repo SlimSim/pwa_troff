@@ -25,7 +25,7 @@ Icons:
 
 Styling:
 
-- Use CSS variables defined at the top of ./style.css rather than hardcoded values
+- Use CSS variables defined in ./stylesheets\variables-theme.css or stylesheets\variables.css rather than hardcoded values
 - Check existing variables before suggesting new ones.
 - Mobile-first CSS: base styles are for mobile, use @media (min-width: 576px) for larger screens only when necessary. Never use max-width media queries.
 - Avoid inline style on elements!
