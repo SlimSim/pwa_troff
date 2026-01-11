@@ -177,7 +177,8 @@ export class SongList extends LitElement {
         album: 'A Night at the Opera',
         genre: 'Rock',
         year: '1975',
-        comment: 'Epic masterpiece',
+        comment:
+          'Epic masterpiece by Queen. This song combines rock and opera elements. It also features intricate harmonies and a memorable guitar solo by Brian May. Furthermore, it has become one of the most iconic songs in rock history.',
         duration: '4:20',
         rating: 0,
         tempo: '120 BPM',
@@ -191,7 +192,8 @@ export class SongList extends LitElement {
         album: 'Led Zeppelin IV',
         genre: 'Rock',
         year: '1971',
-        comment: 'Classic rock anthem',
+        comment:
+          'Classic rock anthem with legendary guitar solo by Jimmy Page. This song is known for its progressive structure, starting with a gentle acoustic intro and building up to a powerful climax. The lyrics are often interpreted as a spiritual journey and a metaphor for the American Dream. It remains a staple in rock music and is frequently cited as one of the greatest rock songs of all time.',
         duration: '6:45',
         rating: 20,
         tempo: '82 BPM',

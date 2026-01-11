@@ -44,10 +44,6 @@ export class NumberLabel extends LitElement {
   @property({ type: Number }) value = 0;
 
   render() {
-    return html`
-      <div class="number-circle ${this.variant}">
-        ${this.value}
-      </div>
-    `;
+    return html` <div class="number-circle ${this.variant}">${this.value}</div> `;
   }
 }

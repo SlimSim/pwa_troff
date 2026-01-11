@@ -12,7 +12,7 @@ export class MediaItem extends LitElement {
 
     .media-container {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       padding: 12px 16px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -48,7 +48,6 @@ export class MediaItem extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      min-width: 45px;
       flex-shrink: 0;
       align-items: center;
     }
@@ -73,7 +72,8 @@ export class MediaItem extends LitElement {
       white-space: nowrap;
     }
 
-    .tempo, .duration-info {
+    .tempo,
+    .duration-info {
       font-size: 0.7rem;
       color: var(--on-theme-color, #ffffff);
       opacity: 0.7;
@@ -87,7 +87,6 @@ export class MediaItem extends LitElement {
       flex-direction: column;
       gap: 3px;
       align-items: center;
-      min-width: 40px;
       flex-shrink: 0;
     }
 
@@ -116,6 +115,18 @@ export class MediaItem extends LitElement {
       white-space: normal;
     }
 
+    .read-more-link {
+      color: var(--on-theme-color, #ffffff);
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 500;
+      display: inline;
+    }
+
+    .read-more-link:hover {
+      opacity: 0.7;
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .media-container {
@@ -128,16 +139,11 @@ export class MediaItem extends LitElement {
         height: 56px;
       }
 
-      .info-column {
-        min-width: 50px;
-      }
-
       .star-rating {
         font-size: 1.2rem;
       }
 
       .play-stats {
-        min-width: 45px;
         gap: 4px;
       }
 
@@ -170,6 +176,7 @@ export class MediaItem extends LitElement {
   @property({ type: Number }) playsTotal = 0;
   @property({ type: String }) albumArt = '';
   @property({ type: Boolean, reflect: true }) active = false;
+  @property({ type: Boolean }) expanded = false;
 
   private _handleClick() {
     this.dispatchEvent(
@@ -186,7 +193,7 @@ export class MediaItem extends LitElement {
           tempo: this.tempo,
           playsWeek: this.playsWeek,
           playsTotal: this.playsTotal,
-          albumArt: this.albumArt
+          albumArt: this.albumArt,
         },
         bubbles: true,
         composed: true,
@@ -198,7 +205,7 @@ export class MediaItem extends LitElement {
     // Rating is already 0-100, just ensure it's within bounds
     const fillPercentage = Math.min(100, Math.max(0, rating));
     return {
-      fillWidth: `${fillPercentage}%`
+      fillWidth: `${fillPercentage}%`,
     };
   }
 
@@ -209,19 +216,74 @@ export class MediaItem extends LitElement {
 
   private _formatDetails(): string {
     const details = [];
-    
+
     if (this.artist) details.push(this.artist);
     if (this.album) details.push(this.album);
     if (this.genre) details.push(this.genre);
     if (this.year) details.push(this.year);
     if (this.comment) details.push(this.comment);
-    
+
     return details.join(' - ');
+  }
+
+  private _getMaxCommentLength(): number {
+    // Responsive comment truncation based on screen size
+    const screenWidth = window.innerWidth;
+
+    if (screenWidth < 576) {
+      return 25; // Small screens (mobile)
+    } else if (screenWidth < 992) {
+      return 60; // Medium screens (tablet)
+    } else {
+      return 80; // Large screens (desktop)
+    }
+  }
+
+  private _getFormattedDetailsWithComment(): { text: string; hasMoreToShow: boolean } {
+    const maxCommentLength = this._getMaxCommentLength();
+    const details = [];
+
+    if (this.artist) details.push(this.artist);
+    if (this.album) details.push(this.album);
+    if (this.genre) details.push(this.genre);
+    if (this.year) details.push(this.year);
+
+    let detailsStr = details.join(' - ');
+    let hasMoreToShow = false;
+    let commentText = this.comment;
+
+    if (this.comment) {
+      // Check if comment is too long to determine if we need read more/less
+      hasMoreToShow = this.comment.length > maxCommentLength;
+
+      // Only truncate if not expanded
+      if (!this.expanded && hasMoreToShow) {
+        commentText = this.comment.substring(0, maxCommentLength);
+      }
+      if (detailsStr) {
+        detailsStr += ' - ' + commentText;
+      } else {
+        detailsStr = commentText;
+      }
+    }
+
+    return { text: detailsStr, hasMoreToShow };
+  }
+
+  private _handleReadMore(event: Event) {
+    event.stopPropagation();
+    this.expanded = true;
+  }
+
+  private _handleReadLess(event: Event) {
+    event.stopPropagation();
+    this.expanded = false;
   }
 
   render() {
     const starData = this._generateStar(this.rating);
-    
+    const { text, hasMoreToShow } = this._getFormattedDetailsWithComment();
+
     return html`
       <div class="media-container ${this.active ? 'active' : ''}" @click=${this._handleClick}>
         <div class="album-art">
@@ -244,7 +306,17 @@ export class MediaItem extends LitElement {
 
         <div class="details-column">
           <div class="media-title">${this.title}</div>
-          <div class="media-details">${this._formatDetails()}</div>
+          <div class="media-details">
+            ${text}
+            ${hasMoreToShow && !this.expanded
+              ? html`<span class="read-more-link" @click=${this._handleReadMore}
+                  >... read more</span
+                >`
+              : ''}
+            ${hasMoreToShow && this.expanded
+              ? html`<span class="read-more-link" @click=${this._handleReadLess}> read less</span>`
+              : ''}
+          </div>
         </div>
       </div>
     `;
