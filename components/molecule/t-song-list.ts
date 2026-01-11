@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-media.js';
+import './t-song-list-footer.js';
 
 @customElement('t-song-list')
 export class SongList extends LitElement {
@@ -61,7 +62,8 @@ export class SongList extends LitElement {
     .songs-container {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 0;
+      padding: 8px 0 0 0;
+      padding-bottom: 60px;
     }
 
     .song-item {
@@ -136,6 +138,7 @@ export class SongList extends LitElement {
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
+  @property({ type: String }) currentFilter = 'tracks';
 
   private _handleClose() {
     this.visible = false;
@@ -166,6 +169,10 @@ export class SongList extends LitElement {
         composed: true,
       })
     );
+  }
+
+  private _handleFilterChanged(event: CustomEvent) {
+    this.currentFilter = event.detail.filter;
   }
 
   render() {
@@ -293,25 +300,38 @@ export class SongList extends LitElement {
       </div>
 
       <div class="songs-container">
-        ${mockSongs.map(
-          (song) => html`
-            <t-media
-              title=${song.title}
-              artist=${song.artist}
-              album=${song.album}
-              genre=${song.genre}
-              year=${song.year}
-              comment=${song.comment}
-              duration=${song.duration}
-              .rating=${song.rating}
-              tempo=${song.tempo}
-              .playsWeek=${song.playsWeek}
-              .playsTotal=${song.playsTotal}
-              @media-selected=${this._handleMediaSelected}
-            ></t-media>
-          `
-        )}
+        ${this.currentFilter === 'tracks' ? html`
+          ${mockSongs.map(
+            (song) => html`
+              <t-media
+                title=${song.title}
+                artist=${song.artist}
+                album=${song.album}
+                genre=${song.genre}
+                year=${song.year}
+                comment=${song.comment}
+                duration=${song.duration}
+                .rating=${song.rating}
+                tempo=${song.tempo}
+                .playsWeek=${song.playsWeek}
+                .playsTotal=${song.playsTotal}
+                @media-selected=${this._handleMediaSelected}
+              ></t-media>
+            `
+          )}
+        ` : html`
+          <div style="padding: 16px; text-align: center; opacity: 0.6;">
+            ${this.currentFilter === 'groups' ? 'Groups view coming soon...' : ''}
+            ${this.currentFilter === 'artists' ? 'Artists view coming soon...' : ''}
+            ${this.currentFilter === 'genre' ? 'Genre view coming soon...' : ''}
+          </div>
+        `}
       </div>
+
+      <t-song-list-footer
+        .selected=${this.currentFilter}
+        @filter-changed=${this._handleFilterChanged}
+      ></t-song-list-footer>
     `;
   }
 }

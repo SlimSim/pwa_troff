@@ -1,0 +1,77 @@
+import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import '../atom/t-button-group.js';
+
+@customElement('t-song-list-footer')
+export class SongListFooter extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      position: sticky;
+      bottom: 0;
+      background-color: var(--theme-color, #003366);
+      color: var(--on-theme-color, #ffffff);
+      z-index: 998;
+      border-top: 1px solid var(--on-theme-color, #ffffff);
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .footer-container {
+      padding: 8px 0;
+    }
+
+    .filter-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0 16px 4px 16px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Mobile responsive adjustments */
+    @media (min-width: 576px) {
+      .footer-container {
+        padding: 12px 0;
+      }
+
+      .filter-label {
+        padding: 0 20px 6px 20px;
+        font-size: 0.85rem;
+      }
+    }
+  `;
+
+  @property({ type: String }) selected: string = 'tracks';
+
+  private filterOptions = [
+    { id: 'tracks', label: 'Tracks' },
+    { id: 'groups', label: 'Groups' },
+    { id: 'artists', label: 'Artists' },
+    { id: 'genre', label: 'Genre' },
+  ];
+
+  private _handleFilterSelected(event: CustomEvent) {
+    this.selected = event.detail.selectedId;
+    this.dispatchEvent(
+      new CustomEvent('filter-changed', {
+        detail: { filter: event.detail.selectedId },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  render() {
+    return html`
+      <div class="footer-container">
+        <div class="filter-label">View</div>
+        <t-button-group
+          .options=${this.filterOptions}
+          .selected=${this.selected}
+          @button-group-selected=${this._handleFilterSelected}
+        ></t-button-group>
+      </div>
+    `;
+  }
+}
