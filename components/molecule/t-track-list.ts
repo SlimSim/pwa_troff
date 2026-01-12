@@ -1,0 +1,54 @@
+import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import '../atom/t-media.js';
+
+@customElement('t-track-list')
+export class TrackList extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+    }
+
+    .tracks-container {
+      padding: 0;
+    }
+  `;
+
+  @property({ type: Array }) tracks: any[] = [];
+
+  private _handleMediaSelected(event: CustomEvent) {
+    this.dispatchEvent(
+      new CustomEvent('track-selected', {
+        detail: { track: event.detail },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  render() {
+    return html`
+      <div class="tracks-container">
+        ${this.tracks.map(
+          (track) => html`
+            <t-media
+              title=${track.title}
+              artist=${track.artist}
+              album=${track.album}
+              genre=${track.genre}
+              year=${track.year}
+              comment=${track.comment}
+              duration=${track.duration}
+              .rating=${track.rating}
+              tempo=${track.tempo}
+              .playsWeek=${track.playsWeek}
+              .playsTotal=${track.playsTotal}
+              @media-selected=${this._handleMediaSelected}
+            ></t-media>
+          `
+        )}
+      </div>
+    `;
+  }
+}

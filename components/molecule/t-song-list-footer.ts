@@ -20,24 +20,10 @@ export class SongListFooter extends LitElement {
       padding: 8px 0;
     }
 
-    .filter-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 0 16px 4px 16px;
-      opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .footer-container {
         padding: 12px 0;
-      }
-
-      .filter-label {
-        padding: 0 20px 6px 20px;
-        font-size: 0.85rem;
       }
     }
   `;
@@ -65,7 +51,6 @@ export class SongListFooter extends LitElement {
   render() {
     return html`
       <div class="footer-container">
-        <div class="filter-label">View</div>
         <t-button-group
           .options=${this.filterOptions}
           .selected=${this.selected}

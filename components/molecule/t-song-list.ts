@@ -1,6 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import '../atom/t-media.js';
+import './t-track-list.js';
+import './t-artist-list.js';
+import './t-genre-list.js';
+import './t-group-list.js';
 import './t-song-list-footer.js';
 
 @customElement('t-song-list')
@@ -62,8 +65,7 @@ export class SongList extends LitElement {
     .songs-container {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 0 0 0;
-      padding-bottom: 60px;
+      padding: 0;
     }
 
     .song-item {
@@ -150,18 +152,7 @@ export class SongList extends LitElement {
     );
   }
 
-  private _handleSongClick(song: any) {
-    this.dispatchEvent(
-      new CustomEvent('song-selected', {
-        detail: { song },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  private _handleMediaSelected(event: CustomEvent) {
-    // Forward the media-selected event as song-selected for compatibility
+  private _handleTrackSelected(event: CustomEvent) {
     this.dispatchEvent(
       new CustomEvent('song-selected', {
         detail: { song: event.detail },
@@ -187,7 +178,7 @@ export class SongList extends LitElement {
         comment:
           'Epic masterpiece by Queen. This song combines rock and opera elements. It also features intricate harmonies and a memorable guitar solo by Brian May. Furthermore, it has become one of the most iconic songs in rock history.',
         duration: '4:20',
-        rating: 0,
+        rating: 95,
         tempo: '120 BPM',
         playsWeek: 3,
         playsTotal: 47,
@@ -202,7 +193,7 @@ export class SongList extends LitElement {
         comment:
           'Classic rock anthem with legendary guitar solo by Jimmy Page. This song is known for its progressive structure, starting with a gentle acoustic intro and building up to a powerful climax. The lyrics are often interpreted as a spiritual journey and a metaphor for the American Dream. It remains a staple in rock music and is frequently cited as one of the greatest rock songs of all time.',
         duration: '6:45',
-        rating: 20,
+        rating: 88,
         tempo: '82 BPM',
         playsWeek: 1,
         playsTotal: 23,
@@ -216,7 +207,7 @@ export class SongList extends LitElement {
         year: '1976',
         comment: 'Mysterious lyrics',
         duration: '3:32',
-        rating: 40,
+        rating: 75,
         tempo: '75 BPM',
         playsWeek: 2,
         playsTotal: 31,
@@ -230,7 +221,7 @@ export class SongList extends LitElement {
         year: '1987',
         comment: 'Iconic guitar riff',
         duration: '3:38',
-        rating: 60,
+        rating: 92,
         tempo: '125 BPM',
         playsWeek: 5,
         playsTotal: 68,
@@ -244,7 +235,7 @@ export class SongList extends LitElement {
         year: '1971',
         comment: 'Peace anthem',
         duration: '3:05',
-        rating: 80,
+        rating: 85,
         tempo: '76 BPM',
         playsWeek: 2,
         playsTotal: 34,
@@ -258,7 +249,7 @@ export class SongList extends LitElement {
         year: '1991',
         comment: 'Grunge anthem',
         duration: '2:31',
-        rating: 100,
+        rating: 78,
         tempo: '116 BPM',
         playsWeek: 4,
         playsTotal: 52,
@@ -293,6 +284,24 @@ export class SongList extends LitElement {
       },
     ];
 
+    const mockGroups = [
+      {
+        id: 'workout',
+        name: 'Workout Mix',
+        tracks: mockSongs.filter((song, index) => index % 2 === 0),
+      },
+      {
+        id: 'chill',
+        name: 'Chill Vibes',
+        tracks: mockSongs.filter((song, index) => index % 3 === 0),
+      },
+      {
+        id: 'rock-classics',
+        name: 'Rock Classics',
+        tracks: mockSongs.filter((song) => song.genre === 'Rock'),
+      },
+    ];
+
     return html`
       <div class="song-list-header">
         <h3 class="song-list-title">Song List</h3>
@@ -300,32 +309,39 @@ export class SongList extends LitElement {
       </div>
 
       <div class="songs-container">
-        ${this.currentFilter === 'tracks' ? html`
-          ${mockSongs.map(
-            (song) => html`
-              <t-media
-                title=${song.title}
-                artist=${song.artist}
-                album=${song.album}
-                genre=${song.genre}
-                year=${song.year}
-                comment=${song.comment}
-                duration=${song.duration}
-                .rating=${song.rating}
-                tempo=${song.tempo}
-                .playsWeek=${song.playsWeek}
-                .playsTotal=${song.playsTotal}
-                @media-selected=${this._handleMediaSelected}
-              ></t-media>
+        ${this.currentFilter === 'tracks'
+          ? html`
+              <t-track-list
+                .tracks=${mockSongs}
+                @track-selected=${this._handleTrackSelected}
+              ></t-track-list>
             `
-          )}
-        ` : html`
-          <div style="padding: 16px; text-align: center; opacity: 0.6;">
-            ${this.currentFilter === 'groups' ? 'Groups view coming soon...' : ''}
-            ${this.currentFilter === 'artists' ? 'Artists view coming soon...' : ''}
-            ${this.currentFilter === 'genre' ? 'Genre view coming soon...' : ''}
-          </div>
-        `}
+          : ''}
+        ${this.currentFilter === 'artists'
+          ? html`
+              <t-artist-list
+                .tracks=${mockSongs}
+                @track-selected=${this._handleTrackSelected}
+              ></t-artist-list>
+            `
+          : ''}
+        ${this.currentFilter === 'genre'
+          ? html`
+              <t-genre-list
+                .tracks=${mockSongs}
+                @track-selected=${this._handleTrackSelected}
+              ></t-genre-list>
+            `
+          : ''}
+        ${this.currentFilter === 'groups'
+          ? html`
+              <t-group-list
+                .groups=${mockGroups}
+                .tracks=${mockSongs}
+                @track-selected=${this._handleTrackSelected}
+              ></t-group-list>
+            `
+          : ''}
       </div>
 
       <t-song-list-footer
