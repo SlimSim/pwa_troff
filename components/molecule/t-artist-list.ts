@@ -98,9 +98,15 @@ export class ArtistList extends LitElement {
   `;
 
   @property({ type: Array }) tracks: any[] = [];
+  @property({ type: Array }) artists: any[] = [];
   @property({ type: String }) selectedArtist: string = '';
 
   private _getArtistGroups(): ArtistGroup[] {
+    // Use pre-sorted artists if provided, otherwise generate from tracks
+    if (this.artists && this.artists.length > 0) {
+      return this.artists.map((artist: any) => ({ artist: artist.name, tracks: artist.tracks }));
+    }
+
     const groups = new Map<string, any[]>();
 
     this.tracks.forEach((track) => {

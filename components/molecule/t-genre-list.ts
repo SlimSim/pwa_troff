@@ -97,9 +97,15 @@ export class GenreList extends LitElement {
   `;
 
   @property({ type: Array }) tracks: any[] = [];
+  @property({ type: Array }) genres: any[] = [];
   @property({ type: String }) selectedGenre: string = '';
 
   private _getGenreGroups(): GenreGroup[] {
+    // Use pre-sorted genres if provided, otherwise generate from tracks
+    if (this.genres && this.genres.length > 0) {
+      return this.genres.map((genre: any) => ({ genre: genre.name, tracks: genre.tracks }));
+    }
+
     const groups = new Map<string, any[]>();
 
     this.tracks.forEach((track) => {

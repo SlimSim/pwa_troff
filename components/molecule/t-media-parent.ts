@@ -214,6 +214,15 @@ export class MediaParent extends LitElement {
   @property({ type: String }) sortBy = 'title';
   @property({ type: String }) sortOrder = 'ascending';
   @property({ type: Boolean }) showSortDropdown = false;
+  @property({ type: String }) groupSortBy = 'name';
+  @property({ type: String }) groupSortOrder = 'ascending';
+  @property({ type: Boolean }) showGroupSortDropdown = false;
+  @property({ type: String }) artistSortBy = 'name';
+  @property({ type: String }) artistSortOrder = 'ascending';
+  @property({ type: Boolean }) showArtistSortDropdown = false;
+  @property({ type: String }) genreSortBy = 'name';
+  @property({ type: String }) genreSortOrder = 'ascending';
+  @property({ type: Boolean }) showGenreSortDropdown = false;
 
   private _getSortedSongs(songs: any[]): any[] {
     const sorted = [...songs];
@@ -358,6 +367,249 @@ export class MediaParent extends LitElement {
         @click=${() => this._handleSortOption('playsTotal')}
       >
         By Plays (Total)
+      </div>
+    `;
+  }
+
+  private _handleGroupSortDropdownToggled(event: CustomEvent) {
+    this.showGroupSortDropdown = event.detail.open;
+  }
+
+  private _handleGroupSortOption(option: string) {
+    this.groupSortBy = option;
+  }
+
+  private _handleGroupSortOrder(order: 'ascending' | 'descending') {
+    this.groupSortOrder = order;
+  }
+
+  private _getSortedGroups(groups: any[]): any[] {
+    const sorted = [...groups];
+    sorted.sort((a, b) => {
+      let aVal: any = a[this.groupSortBy as keyof typeof a];
+      let bVal: any = b[this.groupSortBy as keyof typeof b];
+
+      // Handle array length (for track count)
+      if (Array.isArray(aVal) && Array.isArray(bVal)) {
+        aVal = aVal.length;
+        bVal = bVal.length;
+      }
+
+      // Handle string comparisons (case-insensitive)
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      // Compare values
+      let comparison = 0;
+      if (aVal < bVal) comparison = -1;
+      if (aVal > bVal) comparison = 1;
+
+      // Reverse if descending
+      return this.groupSortOrder === 'descending' ? -comparison : comparison;
+    });
+    return sorted;
+  }
+
+  private _renderGroupSortDropdown() {
+    return html`
+      <div class="sort-order-container">
+        <div
+          class="sort-option-item ${this.groupSortOrder === 'ascending' ? 'active' : ''}"
+          @click=${() => this._handleGroupSortOrder('ascending')}
+        >
+          ${this.groupSortOrder === 'ascending' ? '✓ ' : ''}Ascending
+        </div>
+        <div
+          class="sort-option-item ${this.groupSortOrder === 'descending' ? 'active' : ''}"
+          @click=${() => this._handleGroupSortOrder('descending')}
+        >
+          ${this.groupSortOrder === 'descending' ? '✓ ' : ''}Descending
+        </div>
+      </div>
+      <div class="sort-divider"></div>
+      <div
+        class="sort-option-item ${this.groupSortBy === 'name' ? 'active' : ''}"
+        @click=${() => this._handleGroupSortOption('name')}
+      >
+        By Name
+      </div>
+      <div
+        class="sort-option-item ${this.groupSortBy === 'tracks' ? 'active' : ''}"
+        @click=${() => this._handleGroupSortOption('tracks')}
+      >
+        By Track Count
+      </div>
+    `;
+  }
+
+  private _handleArtistSortDropdownToggled(event: CustomEvent) {
+    this.showArtistSortDropdown = event.detail.open;
+  }
+
+  private _handleArtistSortOption(option: string) {
+    this.artistSortBy = option;
+  }
+
+  private _handleArtistSortOrder(order: 'ascending' | 'descending') {
+    this.artistSortOrder = order;
+  }
+
+  private _getUniqueArtists(songs: any[]) {
+    const artists = new Map();
+    songs.forEach((song) => {
+      const artist = song.artist || 'Unknown';
+      if (!artists.has(artist)) {
+        artists.set(artist, []);
+      }
+      artists.get(artist).push(song);
+    });
+    return Array.from(artists.entries()).map(([name, tracks]) => ({ name, tracks }));
+  }
+
+  private _getSortedArtists(songs: any[]): any[] {
+    const artists = this._getUniqueArtists(songs);
+    artists.sort((a, b) => {
+      let aVal: any = a[this.artistSortBy as keyof typeof a];
+      let bVal: any = b[this.artistSortBy as keyof typeof b];
+
+      // Handle array length (for track count)
+      if (Array.isArray(aVal) && Array.isArray(bVal)) {
+        aVal = aVal.length;
+        bVal = bVal.length;
+      }
+
+      // Handle string comparisons (case-insensitive)
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      // Compare values
+      let comparison = 0;
+      if (aVal < bVal) comparison = -1;
+      if (aVal > bVal) comparison = 1;
+
+      // Reverse if descending
+      return this.artistSortOrder === 'descending' ? -comparison : comparison;
+    });
+    return artists;
+  }
+
+  private _renderArtistSortDropdown() {
+    return html`
+      <div class="sort-order-container">
+        <div
+          class="sort-option-item ${this.artistSortOrder === 'ascending' ? 'active' : ''}"
+          @click=${() => this._handleArtistSortOrder('ascending')}
+        >
+          ${this.artistSortOrder === 'ascending' ? '✓ ' : ''}Ascending
+        </div>
+        <div
+          class="sort-option-item ${this.artistSortOrder === 'descending' ? 'active' : ''}"
+          @click=${() => this._handleArtistSortOrder('descending')}
+        >
+          ${this.artistSortOrder === 'descending' ? '✓ ' : ''}Descending
+        </div>
+      </div>
+      <div class="sort-divider"></div>
+      <div
+        class="sort-option-item ${this.artistSortBy === 'name' ? 'active' : ''}"
+        @click=${() => this._handleArtistSortOption('name')}
+      >
+        By Name
+      </div>
+      <div
+        class="sort-option-item ${this.artistSortBy === 'tracks' ? 'active' : ''}"
+        @click=${() => this._handleArtistSortOption('tracks')}
+      >
+        By Track Count
+      </div>
+    `;
+  }
+
+  private _handleGenreSortDropdownToggled(event: CustomEvent) {
+    this.showGenreSortDropdown = event.detail.open;
+  }
+
+  private _handleGenreSortOption(option: string) {
+    this.genreSortBy = option;
+  }
+
+  private _handleGenreSortOrder(order: 'ascending' | 'descending') {
+    this.genreSortOrder = order;
+  }
+
+  private _getUniqueGenres(songs: any[]) {
+    const genres = new Map();
+    songs.forEach((song) => {
+      const genre = song.genre || 'Unknown';
+      if (!genres.has(genre)) {
+        genres.set(genre, []);
+      }
+      genres.get(genre).push(song);
+    });
+    return Array.from(genres.entries()).map(([name, tracks]) => ({ name, tracks }));
+  }
+
+  private _getSortedGenres(songs: any[]): any[] {
+    const genres = this._getUniqueGenres(songs);
+    genres.sort((a, b) => {
+      let aVal: any = a[this.genreSortBy as keyof typeof a];
+      let bVal: any = b[this.genreSortBy as keyof typeof b];
+
+      // Handle array length (for track count)
+      if (Array.isArray(aVal) && Array.isArray(bVal)) {
+        aVal = aVal.length;
+        bVal = bVal.length;
+      }
+
+      // Handle string comparisons (case-insensitive)
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      // Compare values
+      let comparison = 0;
+      if (aVal < bVal) comparison = -1;
+      if (aVal > bVal) comparison = 1;
+
+      // Reverse if descending
+      return this.genreSortOrder === 'descending' ? -comparison : comparison;
+    });
+    return genres;
+  }
+
+  private _renderGenreSortDropdown() {
+    return html`
+      <div class="sort-order-container">
+        <div
+          class="sort-option-item ${this.genreSortOrder === 'ascending' ? 'active' : ''}"
+          @click=${() => this._handleGenreSortOrder('ascending')}
+        >
+          ${this.genreSortOrder === 'ascending' ? '✓ ' : ''}Ascending
+        </div>
+        <div
+          class="sort-option-item ${this.genreSortOrder === 'descending' ? 'active' : ''}"
+          @click=${() => this._handleGenreSortOrder('descending')}
+        >
+          ${this.genreSortOrder === 'descending' ? '✓ ' : ''}Descending
+        </div>
+      </div>
+      <div class="sort-divider"></div>
+      <div
+        class="sort-option-item ${this.genreSortBy === 'name' ? 'active' : ''}"
+        @click=${() => this._handleGenreSortOption('name')}
+      >
+        By Name
+      </div>
+      <div
+        class="sort-option-item ${this.genreSortBy === 'tracks' ? 'active' : ''}"
+        @click=${() => this._handleGenreSortOption('tracks')}
+      >
+        By Track Count
       </div>
     `;
   }
@@ -521,15 +773,89 @@ export class MediaParent extends LitElement {
                   <t-butt slot="button" title="Sort options">
                     <t-icon name="sort"></t-icon>
                   </t-butt>
-                  <div slot="dropdown">
-                    ${this._renderSortDropdown()}
-                  </div>
+                  <div slot="dropdown">${this._renderSortDropdown()}</div>
                 </t-dropdown-button>
 
                 <!-- Search Songs Button -->
                 <t-butt @click=${this._handleSearchSongs} title="Search songs">
                   <t-icon name="note-search"></t-icon>
                 </t-butt>
+              </div>
+            `
+          : ''}
+        ${this.currentFilter === 'artists'
+          ? html`
+              <div class="header-controls">
+                <!-- Add Artist Button -->
+                <t-butt icon @click=${this._handleAddSong} title="Add artist">
+                  <t-icon name="note-plus"></t-icon>
+                </t-butt>
+
+                <!-- Artist Count -->
+                <div class="song-count">
+                  <t-icon name="note"></t-icon> ${this._getUniqueArtists(mockSongs).length}
+                </div>
+
+                <!-- Sort/Filter Button with Dropdown -->
+                <t-dropdown-button
+                  .open=${this.showArtistSortDropdown}
+                  @dropdown-toggled=${this._handleArtistSortDropdownToggled}
+                >
+                  <t-butt slot="button" title="Sort options">
+                    <t-icon name="sort"></t-icon>
+                  </t-butt>
+                  <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
+                </t-dropdown-button>
+              </div>
+            `
+          : ''}
+        ${this.currentFilter === 'genre'
+          ? html`
+              <div class="header-controls">
+                <!-- Add Genre Button -->
+                <t-butt icon @click=${this._handleAddSong} title="Add genre">
+                  <t-icon name="note-plus"></t-icon>
+                </t-butt>
+
+                <!-- Genre Count -->
+                <div class="song-count">
+                  <t-icon name="note"></t-icon> ${this._getUniqueGenres(mockSongs).length}
+                </div>
+
+                <!-- Sort/Filter Button with Dropdown -->
+                <t-dropdown-button
+                  .open=${this.showGenreSortDropdown}
+                  @dropdown-toggled=${this._handleGenreSortDropdownToggled}
+                >
+                  <t-butt slot="button" title="Sort options">
+                    <t-icon name="sort"></t-icon>
+                  </t-butt>
+                  <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
+                </t-dropdown-button>
+              </div>
+            `
+          : ''}
+        ${this.currentFilter === 'groups'
+          ? html`
+              <div class="header-controls">
+                <!-- Add Group Button -->
+                <t-butt icon @click=${this._handleAddSong} title="Add group">
+                  <t-icon name="note-plus"></t-icon>
+                </t-butt>
+
+                <!-- Group Count -->
+                <div class="song-count"><t-icon name="note"></t-icon> ${mockGroups.length}</div>
+
+                <!-- Sort/Filter Button with Dropdown -->
+                <t-dropdown-button
+                  .open=${this.showGroupSortDropdown}
+                  @dropdown-toggled=${this._handleGroupSortDropdownToggled}
+                >
+                  <t-butt slot="button" title="Sort options">
+                    <t-icon name="sort"></t-icon>
+                  </t-butt>
+                  <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
+                </t-dropdown-button>
               </div>
             `
           : ''}
@@ -547,6 +873,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'artists'
           ? html`
               <t-artist-list
+                .artists=${this._getSortedArtists(mockSongs)}
                 .tracks=${mockSongs}
                 @track-selected=${this._handleTrackSelected}
               ></t-artist-list>
@@ -555,6 +882,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'genre'
           ? html`
               <t-genre-list
+                .genres=${this._getSortedGenres(mockSongs)}
                 .tracks=${mockSongs}
                 @track-selected=${this._handleTrackSelected}
               ></t-genre-list>
@@ -563,7 +891,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'groups'
           ? html`
               <t-group-list
-                .groups=${mockGroups}
+                .groups=${this._getSortedGroups(mockGroups)}
                 .tracks=${mockSongs}
                 @track-selected=${this._handleTrackSelected}
               ></t-group-list>

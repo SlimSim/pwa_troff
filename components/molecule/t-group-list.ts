@@ -121,7 +121,7 @@ export class GroupList extends LitElement {
 
   render() {
     const isDetailView = this.selectedGroupId !== '';
-    const selectedGroup = this.groups.find(g => g.id === this.selectedGroupId);
+    const selectedGroup = this.groups.find((g) => g.id === this.selectedGroupId);
 
     if (isDetailView && selectedGroup) {
       return html`
@@ -167,7 +167,9 @@ export class GroupList extends LitElement {
             <div class="group-item" @click=${() => this._handleGroupClick(group.id)}>
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
-                <div class="group-track-count">${group.tracks.length} track${group.tracks.length !== 1 ? 's' : ''}</div>
+                <div class="group-track-count">
+                  ${group.tracks.length} track${group.tracks.length !== 1 ? 's' : ''}
+                </div>
               </div>
             </div>
           `
