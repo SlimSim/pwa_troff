@@ -16,6 +16,7 @@ Troff is a Progressive Web App for music training, allowing dancers/musicians to
 3. **When multiple approaches exist**, present options with pros/cons and your recommendation, then wait for decision.
 4. **Be thorough in code analysis** - accuracy over speed.
 5. **Ensure WebKit + Chromium compatibility** (no Customized built-in elements or browser-specific features).
+6. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
 
 ## Architecture & Key Patterns
 

@@ -5,6 +5,8 @@ import './t-artist-list.js';
 import './t-genre-list.js';
 import './t-group-list.js';
 import './t-media-footer.js';
+import '../atom/t-butt.js';
+import '../atom/t-dropdown-button.js';
 
 @customElement('t-media-parent')
 export class MediaParent extends LitElement {
@@ -45,6 +47,74 @@ export class MediaParent extends LitElement {
       font-size: 1.1rem;
       font-weight: 600;
       margin: 0;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .song-count {
+      font-size: 0.9rem;
+      color: var(--on-theme-color, #ffffff);
+      opacity: 0.8;
+    }
+
+    .sort-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: var(--theme-color, #003366);
+      border: 1px solid var(--on-theme-color, #ffffff);
+      border-radius: 4px;
+      margin-top: 4px;
+      z-index: 1000;
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .sort-option-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      color: var(--on-theme-color, #ffffff);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .sort-option-item:last-child {
+      border-bottom: none;
+    }
+
+    .sort-option-item:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .sort-option-item.active {
+      background-color: rgba(255, 255, 255, 0.25);
+      font-weight: 600;
+    }
+
+    .sort-divider {
+      height: 1px;
+      background-color: rgba(255, 255, 255, 0.2);
+      margin: 4px 0;
+    }
+
+    .sort-order-container {
+      display: flex;
+      gap: 0;
+    }
+
+    .sort-order-container .sort-option-item {
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sort-order-container .sort-option-item:last-child {
+      border-right: none;
     }
 
     .close-button {
@@ -141,6 +211,38 @@ export class MediaParent extends LitElement {
 
   @property({ type: Boolean, reflect: true }) visible = false;
   @property({ type: String }) currentFilter = 'tracks';
+  @property({ type: String }) sortBy = 'title';
+  @property({ type: String }) sortOrder = 'ascending';
+  @property({ type: Boolean }) showSortDropdown = false;
+
+  private _getSortedSongs(songs: any[]): any[] {
+    const sorted = [...songs];
+    sorted.sort((a, b) => {
+      let aVal: any = a[this.sortBy as keyof typeof a];
+      let bVal: any = b[this.sortBy as keyof typeof b];
+
+      // Handle tempo parsing (extract number from 'XXX BPM' format)
+      if (this.sortBy === 'tempo') {
+        aVal = parseInt(String(aVal).split(' ')[0], 10);
+        bVal = parseInt(String(bVal).split(' ')[0], 10);
+      }
+
+      // Handle string comparisons (case-insensitive)
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      // Compare values
+      let comparison = 0;
+      if (aVal < bVal) comparison = -1;
+      if (aVal > bVal) comparison = 1;
+
+      // Reverse if descending
+      return this.sortOrder === 'descending' ? -comparison : comparison;
+    });
+    return sorted;
+  }
 
   private _handleClose() {
     this.visible = false;
@@ -164,6 +266,100 @@ export class MediaParent extends LitElement {
 
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
+  }
+
+  private _handleToggleSortDropdown() {
+    this.showSortDropdown = !this.showSortDropdown;
+  }
+
+  private _handleSortDropdownToggled(event: CustomEvent) {
+    this.showSortDropdown = event.detail.open;
+  }
+
+  private _handleSortOption(option: string) {
+    this.sortBy = option;
+  }
+
+  private _handleSortOrder(order: 'ascending' | 'descending') {
+    this.sortOrder = order;
+  }
+
+  private _handleAddSong() {
+    // Logic to be implemented later
+    console.log('Add song button clicked');
+  }
+
+  private _handleSearchSongs() {
+    // Logic to be implemented later
+    console.log('Search songs button clicked');
+  }
+
+  private _renderSortDropdown() {
+    return html`
+      <div class="sort-order-container">
+        <div
+          class="sort-option-item ${this.sortOrder === 'ascending' ? 'active' : ''}"
+          @click=${() => this._handleSortOrder('ascending')}
+        >
+          ${this.sortOrder === 'ascending' ? '✓ ' : ''}Ascending
+        </div>
+        <div
+          class="sort-option-item ${this.sortOrder === 'descending' ? 'active' : ''}"
+          @click=${() => this._handleSortOrder('descending')}
+        >
+          ${this.sortOrder === 'descending' ? '✓ ' : ''}Descending
+        </div>
+      </div>
+      <div class="sort-divider"></div>
+      <div
+        class="sort-option-item ${this.sortBy === 'title' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('title')}
+      >
+        By Title
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'artist' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('artist')}
+      >
+        By Artist
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'album' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('album')}
+      >
+        By Album
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'genre' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('genre')}
+      >
+        By Genre
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'rating' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('rating')}
+      >
+        By Rating
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'tempo' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('tempo')}
+      >
+        By Tempo
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'playsWeek' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('playsWeek')}
+      >
+        By Plays (Week)
+      </div>
+      <div
+        class="sort-option-item ${this.sortBy === 'playsTotal' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('playsTotal')}
+      >
+        By Plays (Total)
+      </div>
+    `;
   }
 
   render() {
@@ -305,14 +501,45 @@ export class MediaParent extends LitElement {
     return html`
       <div class="song-list-header">
         <h3 class="song-list-title">Song List</h3>
-        <button class="close-button" @click=${this._handleClose}>×</button>
+
+        ${this.currentFilter === 'tracks'
+          ? html`
+              <div class="header-controls">
+                <!-- Add Songs Button -->
+                <t-butt icon @click=${this._handleAddSong} title="Add songs">
+                  <t-icon name="note-plus"></t-icon>
+                </t-butt>
+
+                <!-- Song Count -->
+                <div class="song-count"><t-icon name="note"></t-icon> ${mockSongs.length}</div>
+
+                <!-- Sort/Filter Button with Dropdown -->
+                <t-dropdown-button
+                  .open=${this.showSortDropdown}
+                  @dropdown-toggled=${this._handleSortDropdownToggled}
+                >
+                  <t-butt slot="button" title="Sort options">
+                    <t-icon name="sort"></t-icon>
+                  </t-butt>
+                  <div slot="dropdown">
+                    ${this._renderSortDropdown()}
+                  </div>
+                </t-dropdown-button>
+
+                <!-- Search Songs Button -->
+                <t-butt @click=${this._handleSearchSongs} title="Search songs">
+                  <t-icon name="note-search"></t-icon>
+                </t-butt>
+              </div>
+            `
+          : ''}
       </div>
 
       <div class="songs-container">
         ${this.currentFilter === 'tracks'
           ? html`
               <t-track-list
-                .tracks=${mockSongs}
+                .tracks=${this._getSortedSongs(mockSongs)}
                 @track-selected=${this._handleTrackSelected}
               ></t-track-list>
             `
