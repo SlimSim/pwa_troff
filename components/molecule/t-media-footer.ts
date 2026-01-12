@@ -2,8 +2,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-button-group.js';
 
-@customElement('t-song-list-footer')
-export class SongListFooter extends LitElement {
+@customElement('t-media-footer')
+export class MediaFooter extends LitElement {
   static styles = css`
     :host {
       display: block;

@@ -4,10 +4,10 @@ import './t-track-list.js';
 import './t-artist-list.js';
 import './t-genre-list.js';
 import './t-group-list.js';
-import './t-song-list-footer.js';
+import './t-media-footer.js';
 
-@customElement('t-song-list')
-export class SongList extends LitElement {
+@customElement('t-media-parent')
+export class MediaParent extends LitElement {
   static styles = css`
     :host {
       position: absolute;
@@ -344,10 +344,10 @@ export class SongList extends LitElement {
           : ''}
       </div>
 
-      <t-song-list-footer
+      <t-media-footer
         .selected=${this.currentFilter}
         @filter-changed=${this._handleFilterChanged}
-      ></t-song-list-footer>
+      ></t-media-footer>
     `;
   }
 }

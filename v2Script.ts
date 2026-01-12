@@ -3,7 +3,7 @@ import './components/atom/t-icon.js';
 import './components/molecule/t-footer.js';
 import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
-import './components/molecule/t-song-list.js';
+import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
 
 // Initialize components and set up event listeners
