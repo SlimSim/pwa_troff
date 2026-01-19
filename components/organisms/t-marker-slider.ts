@@ -1,15 +1,18 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import './t-butt.js';
+import '../atom/t-butt.js';
+
+interface Preset {
+  label: string;
+  value: number;
+}
 
 @customElement('t-vertical-slider')
 export class VerticalSlider extends LitElement {
   static styles = css`
     :host {
-      display: flex;
-      flex-direction: column;
+      display: inline-block;
       user-select: none;
-      align-items: center;
     }
 
     .slider-container {
@@ -33,7 +36,7 @@ export class VerticalSlider extends LitElement {
       top: 0;
       bottom: 0;
       width: var(--slider-track-width);
-      background-color: color-mix(in srgb, var(--theme-color) 25%, transparent);
+      background-color: rgba(255, 255, 255, 0.2);
       border-radius: 2px;
       cursor: pointer;
     }
@@ -43,7 +46,7 @@ export class VerticalSlider extends LitElement {
       left: 50%;
       width: var(--slider-thumb-size);
       height: var(--slider-thumb-size);
-      background-color: var(--theme-color);
+      background-color: var(--on-theme-color, #ffffff);
       border-radius: 50%;
       cursor: grab;
       transition: box-shadow 0.2s ease;
@@ -51,23 +54,34 @@ export class VerticalSlider extends LitElement {
     }
 
     .slider-thumb:hover {
-      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--theme-color);
+      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--on-theme-color, #ffffff);
     }
 
     .slider-thumb:active {
       cursor: grabbing;
 
-      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--theme-color);
+      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--on-theme-color, #ffffff);
     }
 
-    .label {
-      margin-bottom: 4px;
-      margin-top: 0;
+    .presets-container {
+      position: relative;
+      height: 300px;
+      flex-shrink: 0;
+    }
+
+    .preset-button-wrapper {
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: max-content;
+      display: flex;
+      transform: translateY(50%);
     }
 
     .value-display {
       font-size: 0.9rem;
       font-weight: 600;
+      color: var(--on-theme-color, #ffffff);
       text-align: center;
       min-width: 50px;
       writing-mode: horizontal-tb;
@@ -82,6 +96,7 @@ export class VerticalSlider extends LitElement {
     .value-display {
       font-size: 0.9rem;
       font-weight: 600;
+      color: var(--on-theme-color, #ffffff);
       text-align: center;
       min-width: 50px;
       writing-mode: horizontal-tb;
@@ -92,8 +107,7 @@ export class VerticalSlider extends LitElement {
   @property({ type: Number }) max = 100;
   @property({ type: Number }) value = 50;
   @property({ type: String }) unit = '';
-  @property({ type: Number }) defaultValue = 50;
-  @property({ type: String }) label = '';
+  @property({ type: Array }) presets: Preset[] = [];
 
   private isDragging = false;
 
@@ -160,9 +174,9 @@ export class VerticalSlider extends LitElement {
     this.isDragging = false;
   }
 
-  private _handleDefaultClick(event: MouseEvent) {
+  private _handlePresetClick(event: MouseEvent, preset: Preset) {
     event.stopPropagation();
-    this.value = this.defaultValue;
+    this.value = Math.round(preset.value);
     this._dispatchValueChanged();
   }
 
@@ -194,11 +208,11 @@ export class VerticalSlider extends LitElement {
     const displayValue = this.value;
 
     return html`
-      ${this.label ? html`<p class="label">${this.label}</p>` : ''}
       <div class="value-display">${displayValue}${this.unit}</div>
       <div class="slider-container" @click=${(e: Event) => e.stopPropagation()}>
         <div class="slider-track-wrapper" @click=${this._handleTrackClick}>
           <div class="slider-track"></div>
+
           <!-- Slider thumb -->
           <div
             class="slider-thumb"
@@ -206,14 +220,27 @@ export class VerticalSlider extends LitElement {
             @mousedown=${this._handleThumbMouseDown}
           ></div>
         </div>
+
+        <!-- Preset buttons on the right -->
+        <div class="presets-container">
+          ${this.presets.map(
+            (preset) => html`
+              <div
+                class="preset-button-wrapper"
+                style="bottom: ${this._getPositionPercent(preset.value)}%;"
+              >
+                <t-butt
+                  .active=${this.value === preset.value}
+                  @click=${(e: MouseEvent) => this._handlePresetClick(e, preset)}
+                  title=${preset.label}
+                >
+                  ${preset.label}
+                </t-butt>
+              </div>
+            `
+          )}
+        </div>
       </div>
-      <t-butt
-        .active=${this.value === this.defaultValue}
-        @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
-        title="${this.defaultValue}"
-      >
-        ${this.defaultValue}${this.unit}
-      </t-butt>
       <div class="value-controls" @click=${(e: Event) => e.stopPropagation()}>
         <t-butt class="icon" @click=${this._handleDecrement} title="Decrease by 5%"> − </t-butt>
         <t-butt class="icon" @click=${this._handleIncrement} title="Increase by 5%"> + </t-butt>

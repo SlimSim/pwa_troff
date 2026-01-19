@@ -77,8 +77,7 @@ export class MediaParent extends LitElement {
     .sort-option-item {
       padding: 10px 16px;
       cursor: pointer;
-      color: var(--on-theme-color, #ffffff);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
       font-size: 0.9rem;
       transition: background-color 0.2s ease;
     }
@@ -88,48 +87,32 @@ export class MediaParent extends LitElement {
     }
 
     .sort-option-item:hover {
-      background-color: rgba(255, 255, 255, 0.15);
+      background-color: color-mix(in srgb, currentColor 10%, transparent);
     }
 
     .sort-option-item.active {
-      background-color: rgba(255, 255, 255, 0.25);
+      background-color: color-mix(in srgb, currentColor 14%, transparent);
       font-weight: 600;
     }
-
-    .sort-divider {
-      height: 1px;
-      background-color: rgba(255, 255, 255, 0.2);
-      margin: 4px 0;
+    .sort-option-item.active:hover {
+      background-color: color-mix(in srgb, currentColor 20%, transparent);
     }
 
     .sort-order-container {
       display: flex;
       gap: 0;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
     }
 
     .sort-order-container .sort-option-item {
       flex: 1;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       border-right: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: 1px solid color-mix(in srgb, currentColor 10%, transparent);
     }
 
     .sort-order-container .sort-option-item:last-child {
       border-right: none;
-    }
-
-    .close-button {
-      background: none;
-      border: none;
-      color: var(--on-theme-color, #ffffff);
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      transition: background-color 0.2s ease;
-    }
-
-    .close-button:hover {
-      background-color: rgba(255, 255, 255, 0.2);
     }
 
     .songs-container {
@@ -148,11 +131,11 @@ export class MediaParent extends LitElement {
     }
 
     .song-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: color-mix(in srgb, currentColor 10%, transparent);
     }
 
     .song-item.active {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: color-mix(in srgb, currentColor 20%, transparent);
     }
 
     .song-info {
@@ -319,7 +302,6 @@ export class MediaParent extends LitElement {
           Descending
         </div>
       </div>
-      <div class="sort-divider"></div>
       <div
         class="sort-option-item ${this.sortBy === 'title' ? 'active' : ''}"
         @click=${() => this._handleSortOption('title')}

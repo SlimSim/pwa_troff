@@ -62,7 +62,6 @@ export class BottomNav extends LitElement {
 
     .speed-dropdown-content {
       padding: 16px 8px;
-      background-color: var(--theme-color, #003366);
       border: 1px solid var(--on-theme-color, #ffffff);
       border-radius: 4px;
       display: flex;
@@ -143,17 +142,19 @@ export class BottomNav extends LitElement {
               <t-vertical-slider
                 min="0"
                 max="100"
+                label="Volume"
+                defaultValue="75"
                 .value=${this.volume}
                 unit=""
-                .presets=${[{ label: '75', value: 75 }]}
                 @value-changed=${this._handleVolumeChanged}
               ></t-vertical-slider>
               <t-vertical-slider
                 min="50"
                 max="200"
+                label="Speed"
+                defaultValue="100"
                 .value=${this.speed}
                 unit="%"
-                .presets=${[{ label: '100%', value: 100 }]}
                 @value-changed=${this._handleSpeedChanged}
               ></t-vertical-slider>
             </div>
