@@ -38,7 +38,6 @@ export class MediaItem extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--on-theme-color, #ffffff);
       font-size: 1.2rem;
       opacity: 0.7;
     }
@@ -75,7 +74,6 @@ export class MediaItem extends LitElement {
     .tempo,
     .duration-info {
       font-size: 0.7rem;
-      color: var(--on-theme-color, #ffffff);
       opacity: 0.7;
       line-height: 1.2;
       text-align: center;
@@ -102,13 +100,11 @@ export class MediaItem extends LitElement {
     .media-title {
       font-size: 0.95rem;
       font-weight: 500;
-      color: var(--on-theme-color, #ffffff);
       line-height: 1.2;
     }
 
     .media-details {
       font-size: 0.75rem;
-      color: var(--on-theme-color, #ffffff);
       opacity: 0.8;
       line-height: 1.4;
       word-break: break-word;
@@ -116,7 +112,6 @@ export class MediaItem extends LitElement {
     }
 
     .read-more-link {
-      color: var(--on-theme-color, #ffffff);
       text-decoration: underline;
       cursor: pointer;
       font-weight: 500;

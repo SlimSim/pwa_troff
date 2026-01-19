@@ -16,8 +16,8 @@ export class MediaParent extends LitElement {
       top: -100%;
       left: 0;
       right: 0;
-      background-color: var(--theme-color, #003366);
-      color: var(--on-theme-color, #ffffff);
+      background-color: var(--tertiary-color);
+      color: var(--on-primary-color);
       z-index: 999;
       transition: transform 0.3s ease-in-out;
       height: 100%;
@@ -32,9 +32,9 @@ export class MediaParent extends LitElement {
     }
 
     .song-list-header {
+      /* background: color-mix(in srgb, currentColor 5%, transparent); */
       padding: 16px;
-      border-bottom: 1px solid var(--on-theme-color, #ffffff);
-      background-color: rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--theme-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -57,7 +57,6 @@ export class MediaParent extends LitElement {
 
     .song-count {
       font-size: 0.9rem;
-      color: var(--on-theme-color, #ffffff);
       opacity: 0.8;
     }
 
@@ -146,7 +145,6 @@ export class MediaParent extends LitElement {
     .song-title {
       font-size: 0.95rem;
       font-weight: 500;
-      color: var(--on-theme-color, #ffffff);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -155,7 +153,6 @@ export class MediaParent extends LitElement {
 
     .song-artist {
       font-size: 0.8rem;
-      color: var(--on-theme-color, #ffffff);
       opacity: 0.8;
       white-space: nowrap;
       overflow: hidden;
@@ -164,7 +161,6 @@ export class MediaParent extends LitElement {
 
     .song-duration {
       font-size: 0.75rem;
-      color: var(--on-theme-color, #ffffff);
       opacity: 0.6;
     }
 
@@ -608,7 +604,7 @@ export class MediaParent extends LitElement {
         comment:
           'Epic masterpiece by Queen. This song combines rock and opera elements. It also features intricate harmonies and a memorable guitar solo by Brian May. Furthermore, it has become one of the most iconic songs in rock history.',
         duration: '4:20',
-        rating: 95,
+        rating: 20,
         tempo: '120 BPM',
         playsWeek: 3,
         playsTotal: 47,

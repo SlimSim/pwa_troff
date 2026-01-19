@@ -40,13 +40,11 @@ export class GenreList extends LitElement {
     .genre-name {
       font-size: 0.95rem;
       font-weight: 500;
-      color: var(--on-theme-color, #ffffff);
       margin-bottom: 4px;
     }
 
     .genre-track-count {
       font-size: 0.8rem;
-      color: var(--on-theme-color, #ffffff);
       opacity: 0.7;
     }
 
@@ -66,13 +64,11 @@ export class GenreList extends LitElement {
     .back-arrow {
       font-size: 1.2rem;
       cursor: pointer;
-      color: var(--on-theme-color, #ffffff);
     }
 
     .detail-title {
       font-size: 1rem;
       font-weight: 600;
-      color: var(--on-theme-color, #ffffff);
       margin: 0;
     }
 
