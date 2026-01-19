@@ -1,3 +1,12 @@
-:root{
-    
+:root {
+  /* sliders */
+  --slider-track-width: 4px;
+  --slider-thumb-size: 20px;
+
+  /* buttons */
+  --button-border-radius: 0;
+  --hover-size: 2px;
+  --active-size: 4px;
+  --hover-fuzzy: 0;
+  --active-fuzzy: 0;
 }

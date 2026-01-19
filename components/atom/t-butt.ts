@@ -16,6 +16,7 @@ export class TButt extends LitElement {
       font-size: inherit;
       margin: 2px;
       border-width: 0;
+      border-radius: var(--button-border-radius);
       padding: 1px 6px;
       font-family: sans-serif;
       background-color: var(--regular-button-color, #b0bec5);
@@ -31,10 +32,11 @@ export class TButt extends LitElement {
     }
 
     button:hover {
-      box-shadow: 0px 0px 0px 2px var(--regular-button-color, #b0bec5);
+      box-shadow: 0px 0px var(--hover-fuzzy) var(--hover-size) var(--regular-button-color, #b0bec5);
     }
     button:active {
-      box-shadow: 0px 0px 0px 4px var(--regular-button-color, #b0bec5);
+      box-shadow: 0px 0px var(--active-fuzzy) var(--active-size)
+        var(--regular-button-color, #b0bec5);
     }
 
     /* Style for ICON button */

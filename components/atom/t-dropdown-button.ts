@@ -15,12 +15,9 @@ export class DropdownButton extends LitElement {
 
     .dropdown {
       position: absolute;
-      top: 100%;
-      right: 0;
       background-color: var(--theme-color, #003366);
       border: 1px solid var(--on-theme-color, #ffffff);
       border-radius: 4px;
-      margin-top: 4px;
       z-index: 1000;
       min-width: 180px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -29,6 +26,30 @@ export class DropdownButton extends LitElement {
       transition:
         opacity 0.2s ease,
         visibility 0.2s ease;
+    }
+
+    .dropdown[position='down'][align='right'] {
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+    }
+
+    .dropdown[position='down'][align='left'] {
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+    }
+
+    .dropdown[position='up'][align='right'] {
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 4px;
+    }
+
+    .dropdown[position='up'][align='left'] {
+      bottom: 100%;
+      left: 0;
+      margin-bottom: 4px;
     }
 
     .dropdown[open] {
@@ -45,6 +66,8 @@ export class DropdownButton extends LitElement {
   `;
 
   @property({ type: Boolean, reflect: true }) open = false;
+  @property({ type: String }) position = 'down';
+  @property({ type: String }) align = 'right';
 
   connectedCallback() {
     super.connectedCallback();
@@ -79,7 +102,7 @@ export class DropdownButton extends LitElement {
     return html`
       <div class="button-wrapper" @click=${this._handleButtonClick}>
         <slot name="button"></slot>
-        <div class="dropdown" ?open=${this.open}>
+        <div class="dropdown" position=${this.position} align=${this.align} ?open=${this.open}>
           <slot name="dropdown"></slot>
         </div>
       </div>

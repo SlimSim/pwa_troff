@@ -310,13 +310,13 @@ export class MediaParent extends LitElement {
           class="sort-option-item ${this.sortOrder === 'ascending' ? 'active' : ''}"
           @click=${() => this._handleSortOrder('ascending')}
         >
-          ${this.sortOrder === 'ascending' ? '✓ ' : ''}Ascending
+          Ascending
         </div>
         <div
           class="sort-option-item ${this.sortOrder === 'descending' ? 'active' : ''}"
           @click=${() => this._handleSortOrder('descending')}
         >
-          ${this.sortOrder === 'descending' ? '✓ ' : ''}Descending
+          Descending
         </div>
       </div>
       <div class="sort-divider"></div>
@@ -770,14 +770,14 @@ export class MediaParent extends LitElement {
                   .open=${this.showSortDropdown}
                   @dropdown-toggled=${this._handleSortDropdownToggled}
                 >
-                  <t-butt slot="button" title="Sort options">
+                  <t-butt icon slot="button" title="Sort options">
                     <t-icon name="sort"></t-icon>
                   </t-butt>
                   <div slot="dropdown">${this._renderSortDropdown()}</div>
                 </t-dropdown-button>
 
                 <!-- Search Songs Button -->
-                <t-butt @click=${this._handleSearchSongs} title="Search songs">
+                <t-butt icon @click=${this._handleSearchSongs} title="Search songs">
                   <t-icon name="note-search"></t-icon>
                 </t-butt>
               </div>
@@ -801,7 +801,7 @@ export class MediaParent extends LitElement {
                   .open=${this.showArtistSortDropdown}
                   @dropdown-toggled=${this._handleArtistSortDropdownToggled}
                 >
-                  <t-butt slot="button" title="Sort options">
+                  <t-butt icon slot="button" title="Sort options">
                     <t-icon name="sort"></t-icon>
                   </t-butt>
                   <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
@@ -827,7 +827,7 @@ export class MediaParent extends LitElement {
                   .open=${this.showGenreSortDropdown}
                   @dropdown-toggled=${this._handleGenreSortDropdownToggled}
                 >
-                  <t-butt slot="button" title="Sort options">
+                  <t-butt icon slot="button" title="Sort options">
                     <t-icon name="sort"></t-icon>
                   </t-butt>
                   <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
@@ -840,7 +840,7 @@ export class MediaParent extends LitElement {
               <div class="header-controls">
                 <!-- Add Group Button -->
                 <t-butt icon @click=${this._handleAddSong} title="Add group">
-                  <t-icon name="note-plus"></t-icon>
+                  <t-icon name="group-plus"></t-icon>
                 </t-butt>
 
                 <!-- Group Count -->
@@ -851,7 +851,7 @@ export class MediaParent extends LitElement {
                   .open=${this.showGroupSortDropdown}
                   @dropdown-toggled=${this._handleGroupSortDropdownToggled}
                 >
-                  <t-butt slot="button" title="Sort options">
+                  <t-butt icon slot="button" title="Sort options">
                     <t-icon name="sort"></t-icon>
                   </t-butt>
                   <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
