@@ -7,25 +7,33 @@ interface Preset {
   value: number;
 }
 
-@customElement('t-vertical-slider')
-export class VerticalSlider extends LitElement {
+@customElement('t-marker-slider')
+export class MarkerSlider extends LitElement {
   static styles = css`
     :host {
+      padding: 0;
       display: inline-block;
       user-select: none;
+      height: 100%;
+      width: 100%;
+
+      --button-height: 46px;
+      --slider-top-padding: 0px;
     }
 
     .slider-container {
+      margin: calc(var(--button-height) / 2) 0;
+
       display: flex;
+      padding: var(--slider-top-padding);
       flex-direction: row;
       align-items: center;
       gap: 4px;
-      padding: 8px;
     }
 
     .slider-track-wrapper {
       position: relative;
-      height: 300px;
+      height: 100%;
       width: max(var(--slider-thumb-size), var(--slider-track-width));
       flex-shrink: 0;
     }
@@ -36,7 +44,7 @@ export class VerticalSlider extends LitElement {
       top: 0;
       bottom: 0;
       width: var(--slider-track-width);
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: color-mix(in srgb, var(--theme-color) 25%, transparent);
       border-radius: 2px;
       cursor: pointer;
     }
@@ -46,7 +54,7 @@ export class VerticalSlider extends LitElement {
       left: 50%;
       width: var(--slider-thumb-size);
       height: var(--slider-thumb-size);
-      background-color: var(--on-theme-color, #ffffff);
+      background-color: var(--theme-color);
       border-radius: 50%;
       cursor: grab;
       transition: box-shadow 0.2s ease;
@@ -54,18 +62,18 @@ export class VerticalSlider extends LitElement {
     }
 
     .slider-thumb:hover {
-      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--on-theme-color, #ffffff);
+      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--theme-color);
     }
 
     .slider-thumb:active {
       cursor: grabbing;
 
-      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--on-theme-color, #ffffff);
+      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--theme-color);
     }
 
     .presets-container {
       position: relative;
-      height: 300px;
+      height: 100%;
       flex-shrink: 0;
     }
 
@@ -77,30 +85,6 @@ export class VerticalSlider extends LitElement {
       display: flex;
       transform: translateY(50%);
     }
-
-    .value-display {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--on-theme-color, #ffffff);
-      text-align: center;
-      min-width: 50px;
-      writing-mode: horizontal-tb;
-    }
-    .value-controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .value-display {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--on-theme-color, #ffffff);
-      text-align: center;
-      min-width: 50px;
-      writing-mode: horizontal-tb;
-    }
   `;
 
   @property({ type: Number }) min = 0;
@@ -108,8 +92,13 @@ export class VerticalSlider extends LitElement {
   @property({ type: Number }) value = 50;
   @property({ type: String }) unit = '';
   @property({ type: Array }) presets: Preset[] = [];
+  @property({ type: Number }) zoomLevel = 1;
+  @property({ type: Number }) minZoom = 1;
 
   private isDragging = false;
+  private isPinching = false;
+  private initialPinchDistance = 0;
+  private initialZoom = 1;
 
   private _getTrackElement(): HTMLElement | null {
     return this.shadowRoot?.querySelector('.slider-track-wrapper') ?? null;
@@ -119,12 +108,20 @@ export class VerticalSlider extends LitElement {
     super.connectedCallback();
     document.addEventListener('mousemove', this._handleMouseMove.bind(this));
     document.addEventListener('mouseup', this._handleMouseUp.bind(this));
+    this.addEventListener('wheel', this._handleWheel.bind(this));
+    this.addEventListener('touchstart', this._handleTouchStart.bind(this));
+    this.addEventListener('touchmove', this._handleTouchMove.bind(this));
+    this.addEventListener('touchend', this._handleTouchEnd.bind(this));
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('mousemove', this._handleMouseMove.bind(this));
     document.removeEventListener('mouseup', this._handleMouseUp.bind(this));
+    this.removeEventListener('wheel', this._handleWheel.bind(this));
+    this.removeEventListener('touchstart', this._handleTouchStart.bind(this));
+    this.removeEventListener('touchmove', this._handleTouchMove.bind(this));
+    this.removeEventListener('touchend', this._handleTouchEnd.bind(this));
   }
 
   private _getPositionPercent(val: number): number {
@@ -203,13 +200,60 @@ export class VerticalSlider extends LitElement {
     );
   }
 
+  private _handleWheel(event: WheelEvent) {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+
+      const delta = event.deltaY > 0 ? 0.9 : 1.1;
+      this._setZoom(this.zoomLevel * delta);
+    }
+  }
+
+  private _handleTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      this.isPinching = true;
+      this.initialPinchDistance = this._getDistance(event.touches[0], event.touches[1]);
+      this.initialZoom = this.zoomLevel;
+    }
+  }
+
+  private _handleTouchMove(event: TouchEvent) {
+    if (this.isPinching && event.touches.length === 2) {
+      event.preventDefault();
+
+      const currentDistance = this._getDistance(event.touches[0], event.touches[1]);
+      const scale = currentDistance / this.initialPinchDistance;
+      this._setZoom(this.initialZoom * scale);
+    }
+  }
+
+  private _handleTouchEnd(event: TouchEvent) {
+    if (event.touches.length < 2) {
+      this.isPinching = false;
+    }
+  }
+
+  private _getDistance(touch1: Touch, touch2: Touch): number {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  private _setZoom(newZoom: number) {
+    this.zoomLevel = Math.max(this.minZoom, newZoom);
+    this.requestUpdate();
+  }
+
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
-    const displayValue = this.value;
 
     return html`
-      <div class="value-display">${displayValue}${this.unit}</div>
-      <div class="slider-container" @click=${(e: Event) => e.stopPropagation()}>
+      <div
+        class="slider-container"
+        style="height: calc(calc(100% * ${this
+          .zoomLevel}) - var(--button-height) - calc(2 * var(--slider-top-padding)));"
+        @click=${(e: Event) => e.stopPropagation()}
+      >
         <div class="slider-track-wrapper" @click=${this._handleTrackClick}>
           <div class="slider-track"></div>
 
@@ -240,10 +284,6 @@ export class VerticalSlider extends LitElement {
             `
           )}
         </div>
-      </div>
-      <div class="value-controls" @click=${(e: Event) => e.stopPropagation()}>
-        <t-butt class="icon" @click=${this._handleDecrement} title="Decrease by 5%"> − </t-butt>
-        <t-butt class="icon" @click=${this._handleIncrement} title="Increase by 5%"> + </t-butt>
       </div>
     `;
   }

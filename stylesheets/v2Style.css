@@ -1,2 +1,6 @@
 @import url('/stylesheets/variables-theme.css');
 @import url('/stylesheets/variables.css');
+
+body {
+  background-color: var(--secondary-color);
+}

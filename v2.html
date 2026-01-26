@@ -231,10 +231,8 @@
     <t-main-layout>
       <t-header id="header" slot="header"></t-header>
       <t-media-parent id="songList" slot="song-list"></t-media-parent>
-      <div slot="main-content">
-        <h1>Troff - Training with music</h1>
-        <h2>Welcome to modernization effort of Troff!</h2>
-        <p>what do you think?</p>
+      <div slot="main-content" style="height: 100%; min-height: 400px">
+        <t-marker-slider id="markerSlider"></t-marker-slider>
       </div>
       <t-settings-panel id="settingsPanel" slot="settings-panel"></t-settings-panel>
       <t-footer id="footer" slot="footer"></t-footer>

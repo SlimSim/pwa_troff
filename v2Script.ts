@@ -5,6 +5,7 @@ import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
 import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
+import './components/organisms/t-marker-slider.js';
 
 // Initialize components and set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
+  const markerSlider = document.getElementById('markerSlider') as any;
 
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
@@ -79,5 +81,28 @@ document.addEventListener('DOMContentLoaded', () => {
     header.artistName = 'Queen';
     header.currentTime = '1:42';
     header.totalTime = '4:20';
+  }
+
+  // Set up demo data for marker slider
+  if (markerSlider) {
+    markerSlider.presets = [
+      { label: 'Start', value: 0 },
+      { label: 'Intro', value: 10 },
+      { label: 'Verse 1', value: 25 },
+      { label: 'Chorus', value: 40 },
+      { label: 'Verse 2', value: 55 },
+      { label: 'Guitar', value: 70 },
+      { label: 'Outro', value: 85 },
+      { label: 'End', value: 100 },
+    ];
+    markerSlider.min = 0;
+    markerSlider.max = 100;
+    markerSlider.value = 40;
+    markerSlider.unit = '%';
+
+    // Listen for slider value changes
+    markerSlider.addEventListener('value-changed', (event: any) => {
+      console.log('Slider value changed:', event.detail.value);
+    });
   }
 });

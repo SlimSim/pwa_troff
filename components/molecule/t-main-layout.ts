@@ -24,14 +24,7 @@ export class MainLayout extends LitElement {
     .main-content {
       overflow: auto;
       flex: 1;
-      padding: 16px;
-    }
-
-    /* Mobile-first responsive */
-    @media (min-width: 576px) {
-      .main-content {
-        padding: 24px;
-      }
+      padding: 0;
     }
   `;
 
