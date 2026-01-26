@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
+import '../molecule/t-marker.js';
 
 interface Preset {
   label: string;
@@ -76,15 +77,6 @@ export class MarkerSlider extends LitElement {
       height: 100%;
       flex-shrink: 0;
     }
-
-    .preset-button-wrapper {
-      position: absolute;
-      left: 0;
-      right: 0;
-      width: max-content;
-      display: flex;
-      transform: translateY(50%);
-    }
   `;
 
   @property({ type: Number }) min = 0;
@@ -125,11 +117,11 @@ export class MarkerSlider extends LitElement {
   }
 
   private _getPositionPercent(val: number): number {
-    return ((val - this.min) / (this.max - this.min)) * 100;
+    return ((this.max - val) / (this.max - this.min)) * 100;
   }
 
   private _getValueFromPosition(positionPercent: number): number {
-    const rawValue = (positionPercent / 100) * (this.max - this.min) + this.min;
+    const rawValue = (1 - positionPercent / 100) * (this.max - this.min) + this.min;
     // Clamp to min/max
     return Math.max(this.min, Math.min(this.max, rawValue));
   }
@@ -171,7 +163,7 @@ export class MarkerSlider extends LitElement {
     this.isDragging = false;
   }
 
-  private _handlePresetClick(event: MouseEvent, preset: Preset) {
+  private _handlePresetClick(event: CustomEvent, preset: Preset) {
     event.stopPropagation();
     this.value = Math.round(preset.value);
     this._dispatchValueChanged();
@@ -269,18 +261,13 @@ export class MarkerSlider extends LitElement {
         <div class="presets-container">
           ${this.presets.map(
             (preset) => html`
-              <div
-                class="preset-button-wrapper"
-                style="bottom: ${this._getPositionPercent(preset.value)}%;"
-              >
-                <t-butt
-                  .active=${this.value === preset.value}
-                  @click=${(e: MouseEvent) => this._handlePresetClick(e, preset)}
-                  title=${preset.label}
-                >
-                  ${preset.label}
-                </t-butt>
-              </div>
+              <t-marker
+                class="preset-marker"
+                style="position: absolute; bottom: ${this._getPositionPercent(preset.value)}%;"
+                .marker=${preset}
+                .active=${this.value === preset.value}
+                @marker-click=${(e: CustomEvent) => this._handlePresetClick(e, preset)}
+              ></t-marker>
             `
           )}
         </div>

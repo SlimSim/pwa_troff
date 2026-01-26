@@ -3,4 +3,5 @@
 
 body {
   background-color: var(--secondary-color);
+  color: var(--on-secondary-color);
 }
