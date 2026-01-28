@@ -23,6 +23,13 @@ export class TButt extends LitElement {
       color: var(--on-regular-buton-color, black);
     }
 
+    button.ellipsis {
+      display: block;
+      width: 100%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
     button.round {
       min-height: 42px;
     }
@@ -124,6 +131,7 @@ export class TButt extends LitElement {
 
   @property({ type: Boolean }) icon = false;
   @property({ type: Boolean }) round = false;
+  @property({ type: Boolean }) ellipsis = false;
   @property({ type: Boolean }) important = false;
   @property({ type: Boolean }) special = false;
   @property({ type: Boolean }) toggle = false;
@@ -139,6 +147,9 @@ export class TButt extends LitElement {
     }
     if (this.round) {
       classes.push('round');
+    }
+    if (this.ellipsis) {
+      classes.push('ellipsis');
     }
     if (this.important) {
       classes.push('important');

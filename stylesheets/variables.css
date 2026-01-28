@@ -9,4 +9,10 @@
   --active-size: 4px;
   --hover-fuzzy: 0;
   --active-fuzzy: 0;
+
+  /* markers */
+  --button-height: 46px; /*onlye for marker height, not for actual buttons...*/
+  --slider-top-padding: 0px;
+  --slider-horizontal-padding: 8px;
+  --marker-gap: 4px;
 }

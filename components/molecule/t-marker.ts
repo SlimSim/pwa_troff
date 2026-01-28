@@ -13,14 +13,15 @@ export class Marker extends LitElement {
     :host {
       display: block;
       transform: translateY(50%);
+      max-width: 100%;
     }
 
     .marker-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--marker-gap);
+      padding-right: var(--marker-gap);
       width: 100%;
-      padding: 0 8px;
       box-sizing: border-box;
     }
 
@@ -30,15 +31,8 @@ export class Marker extends LitElement {
     }
 
     .marker-name-button {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-    }
-
-    .marker-name-button t-butt {
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
   `;
 
@@ -97,15 +91,15 @@ export class Marker extends LitElement {
         <div class="time-stamp">${this._formatTime(this.marker.value)}</div>
 
         <!-- Marker name button -->
-        <div class="marker-name-button">
-          <t-butt
-            .active=${this.active}
-            @click=${this._handleMarkerClick}
-            title=${this.marker.label}
-          >
-            ${this.marker.label}
-          </t-butt>
-        </div>
+        <t-butt
+          ellipsis
+          class="marker-name-button"
+          .active=${this.active}
+          @click=${this._handleMarkerClick}
+          title=${this.marker.label}
+        >
+          ${this.marker.label}
+        </t-butt>
 
         <!-- Stop button -->
         <t-butt class="stop-button" @click=${this._handleStop} title="Stop at marker">

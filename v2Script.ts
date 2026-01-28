@@ -88,8 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
     markerSlider.presets = [
       { label: 'Start', value: 0 },
       { label: 'Intro', value: 10 },
-      { label: 'Verse 1', value: 25 },
-      { label: 'Chorus', value: 40 },
+      { label: 'Verse 1, riktigt lång markör', value: 25 },
+      {
+        label:
+          'Chorus. Tror du det är långt? titta på detta då, den är ju MINST tre gånger så lång! HAHAHAHA!',
+        value: 40,
+      },
       { label: 'Verse 2', value: 55 },
       { label: 'Guitar', value: 70 },
       { label: 'Outro', value: 85 },

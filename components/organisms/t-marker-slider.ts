@@ -17,22 +17,20 @@ export class MarkerSlider extends LitElement {
       user-select: none;
       height: 100%;
       width: 100%;
-
-      --button-height: 46px;
-      --slider-top-padding: 0px;
     }
 
     .slider-container {
       margin: calc(var(--button-height) / 2) 0;
 
       display: flex;
-      padding: var(--slider-top-padding);
+      padding: var(--slider-top-padding) 0;
       flex-direction: row;
       align-items: center;
-      gap: 4px;
+      gap: 0;
     }
 
     .slider-track-wrapper {
+      padding: 0 var(--slider-horizontal-padding);
       position: relative;
       height: 100%;
       width: max(var(--slider-thumb-size), var(--slider-track-width));
@@ -75,7 +73,9 @@ export class MarkerSlider extends LitElement {
     .presets-container {
       position: relative;
       height: 100%;
-      flex-shrink: 0;
+      flex-grow: 1;
+      display: flex;
+      width: 100%;
     }
   `;
 
