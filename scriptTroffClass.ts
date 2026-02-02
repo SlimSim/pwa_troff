@@ -1763,9 +1763,9 @@ class TroffClass {
   };
 
   removeSonglist_NEW = (songListId: number) => {
-    const songListObject = JSON.parse(nDB.get('straoSongLists')).filter(
-      (sl: TroffFirebaseGroupIdentifyer) => sl.id == songListId
-    )[0];
+    const songListObject = nDB
+      .get('aoSongLists')
+      .filter((sl: TroffFirebaseGroupIdentifyer) => sl.id == songListId)[0];
 
     $('#songListList').find(`[data-songlist-id="${songListId}"]`).closest('li').remove();
     $('#songListSelector').find(`[value="${songListId}"]`).remove();

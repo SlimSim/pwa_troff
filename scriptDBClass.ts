@@ -182,23 +182,54 @@ class DBClass {
   };
 
   /**
+   * Fix double-stringified values in localStorage (one-time migration)
+   */
+  migration1 = (oldKey: string, newKey: string): void => {
+    const raw = nDB.get(oldKey);
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed) {
+        nDB.set(newKey, parsed);
+        nDB.delete(oldKey);
+      }
+    } catch {
+      console.log('Not valid JSON, leave it alone, key:', oldKey);
+      // Not valid JSON, leave it alone
+    }
+  };
+
+  /**
    * Clean and migrate DB entries and set defaults.
    * @returns {void}
    */
   cleanDB = () => {
-    const oSong = nDB.get('stroCurrentSongPathAndGalleryId');
-    if (typeof oSong == 'string') {
-      nDB.set('stroCurrentSongPathAndGalleryId', JSON.parse(oSong));
+    // Update to latest version
+    const LATEST_MIGRATION_VERSION = 1; // Increment this when you add new migrations
+
+    const allKeys = nDB.getAllKeys(); // this must be BEFORE the migrations-version is set :)
+
+    // Run one-time migrations if needed
+    const migrationVersion = nDB.get('TROFF_MIGRATION_VERSION') || 0;
+    if (migrationVersion < 1) {
+      this.migration1('straLastMonthUsage', 'aLastMonthUsage');
+      this.migration1('straoSongLists', 'aoSongLists');
     }
 
-    const allKeys = nDB.getAllKeys();
+    // add if(migrationVersion < 2) {...} and so on here
+
+    if (migrationVersion < LATEST_MIGRATION_VERSION) {
+      nDB.set('TROFF_MIGRATION_VERSION', LATEST_MIGRATION_VERSION);
+    }
+
     if (allKeys.length === 0) {
       // This is the first time Troff is started:
       DB.saveSonglists_new();
     }
 
     // These is for the first time Troff is started:
-    if (allKeys.indexOf('straoSongLists') === -1) DB.saveSonglists_new();
+    if (allKeys.indexOf('aoSongLists') === -1) DB.saveSonglists_new();
     if (allKeys.indexOf('zoomDontShowAgain') === -1) {
       nDB.set('zoomDontShowAgain', false);
     }
@@ -307,7 +338,7 @@ class DBClass {
    * @returns {void}
    */
   setSonglistAsNotGroup = (firebaseGroupDocId: string) => {
-    const allSonglists = JSON.parse(nDB.get('straoSongLists'));
+    const allSonglists = nDB.get('aoSongLists');
 
     const currentSonglist = allSonglists.find(
       (g: any) => g.firebaseGroupDocId == firebaseGroupDocId
@@ -318,7 +349,7 @@ class DBClass {
       delete song.firebaseSongDocId;
     });
 
-    nDB.set('straoSongLists', JSON.stringify(allSonglists));
+    nDB.set('aoSongLists', allSonglists);
   };
 
   /**
@@ -334,8 +365,7 @@ class DBClass {
       aoSonglists.push(aDOMSonglist.eq(i).data('songList'));
     }
 
-    var straoSonglists = JSON.stringify(aoSonglists);
-    nDB.set('straoSongLists', straoSonglists);
+    nDB.set('aoSongLists', aoSonglists);
   };
 
   /**
@@ -381,9 +411,9 @@ class DBClass {
   };
 
   getAllSonglists = () => {
-    const straoSongLists = nDB.get('straoSongLists') || [];
+    const aoSongLists = nDB.get('aoSongLists') || [];
 
-    Troff.setSonglists_NEW(JSON.parse(straoSongLists));
+    Troff.setSonglists_NEW(aoSongLists);
   };
 
   /** @returns {void} */
