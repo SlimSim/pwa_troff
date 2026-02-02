@@ -7,6 +7,7 @@ import './t-group-list.js';
 import './t-media-footer.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
+import { LocalSongDataService } from '../../utils/local-song-data.js';
 
 @customElement('t-media-parent')
 export class MediaParent extends LitElement {
@@ -202,6 +203,25 @@ export class MediaParent extends LitElement {
   @property({ type: String }) genreSortBy = 'name';
   @property({ type: String }) genreSortOrder = 'ascending';
   @property({ type: Boolean }) showGenreSortDropdown = false;
+  @property({ type: Array }) private songs: any[] = [];
+
+  // Add lifecycle method to load songs
+  async connectedCallback() {
+    super.connectedCallback();
+    await this._loadSongs();
+  }
+
+  // Add method to load songs
+  private async _loadSongs() {
+    try {
+      this.songs = await LocalSongDataService.getAllSongs();
+      this.requestUpdate();
+    } catch (error) {
+      console.error('Failed to load songs:', error);
+      // Fallback to empty array
+      this.songs = [];
+    }
+  }
 
   private _getSortedSongs(songs: any[]): any[] {
     const sorted = [...songs];
@@ -593,138 +613,23 @@ export class MediaParent extends LitElement {
   }
 
   render() {
-    const mockSongs = [
-      {
-        id: 1,
-        title: 'Bohemian Rhapsody',
-        artist: 'Queen',
-        album: 'A Night at the Opera',
-        genre: 'Rock',
-        year: '1975',
-        comment:
-          'Epic masterpiece by Queen. This song combines rock and opera elements. It also features intricate harmonies and a memorable guitar solo by Brian May. Furthermore, it has become one of the most iconic songs in rock history.',
-        duration: '4:20',
-        rating: 20,
-        tempo: '120 BPM',
-        playsWeek: 3,
-        playsTotal: 47,
-      },
-      {
-        id: 2,
-        title: 'Stairway to Heaven',
-        artist: 'Led Zeppelin',
-        album: 'Led Zeppelin IV',
-        genre: 'Rock',
-        year: '1971',
-        comment:
-          'Classic rock anthem with legendary guitar solo by Jimmy Page. This song is known for its progressive structure, starting with a gentle acoustic intro and building up to a powerful climax. The lyrics are often interpreted as a spiritual journey and a metaphor for the American Dream. It remains a staple in rock music and is frequently cited as one of the greatest rock songs of all time.',
-        duration: '6:45',
-        rating: 88,
-        tempo: '82 BPM',
-        playsWeek: 1,
-        playsTotal: 23,
-      },
-      {
-        id: 3,
-        title: 'Hotel California',
-        artist: 'Eagles',
-        album: 'Hotel California',
-        genre: 'Rock',
-        year: '1976',
-        comment: 'Mysterious lyrics',
-        duration: '3:32',
-        rating: 75,
-        tempo: '75 BPM',
-        playsWeek: 2,
-        playsTotal: 31,
-      },
-      {
-        id: 4,
-        title: "Sweet Child O' Mine",
-        artist: "Guns N' Roses",
-        album: 'Appetite for Destruction',
-        genre: 'Hard Rock',
-        year: '1987',
-        comment: 'Iconic guitar riff',
-        duration: '3:38',
-        rating: 92,
-        tempo: '125 BPM',
-        playsWeek: 5,
-        playsTotal: 68,
-      },
-      {
-        id: 5,
-        title: 'Imagine',
-        artist: 'John Lennon',
-        album: 'Imagine',
-        genre: 'Pop',
-        year: '1971',
-        comment: 'Peace anthem',
-        duration: '3:05',
-        rating: 85,
-        tempo: '76 BPM',
-        playsWeek: 2,
-        playsTotal: 34,
-      },
-      {
-        id: 6,
-        title: 'Smells Like Teen Spirit',
-        artist: 'Nirvana',
-        album: 'Nevermind',
-        genre: 'Grunge',
-        year: '1991',
-        comment: 'Grunge anthem',
-        duration: '2:31',
-        rating: 78,
-        tempo: '116 BPM',
-        playsWeek: 4,
-        playsTotal: 52,
-      },
-      {
-        id: 7,
-        title: 'Back in Black',
-        artist: 'AC/DC',
-        album: 'Back in Black',
-        genre: 'Hard Rock',
-        year: '1980',
-        comment: 'High energy',
-        duration: '3:51',
-        rating: 82,
-        tempo: '93 BPM',
-        playsWeek: 1,
-        playsTotal: 19,
-      },
-      {
-        id: 8,
-        title: 'Another Brick in the Wall',
-        artist: 'Pink Floyd',
-        album: 'The Wall',
-        genre: 'Progressive Rock',
-        year: '1979',
-        comment: 'Conceptual piece',
-        duration: '6:23',
-        rating: 90,
-        tempo: '104 BPM',
-        playsWeek: 0,
-        playsTotal: 15,
-      },
-    ];
+    const songs = this.songs;
 
     const mockGroups = [
       {
         id: 'workout',
         name: 'Workout Mix',
-        tracks: mockSongs.filter((song, index) => index % 2 === 0),
+        tracks: songs.filter((song, index) => index % 2 === 0),
       },
       {
         id: 'chill',
         name: 'Chill Vibes',
-        tracks: mockSongs.filter((song, index) => index % 3 === 0),
+        tracks: songs.filter((song, index) => index % 3 === 0),
       },
       {
         id: 'rock-classics',
         name: 'Rock Classics',
-        tracks: mockSongs.filter((song) => song.genre === 'Rock'),
+        tracks: songs.filter((song) => song.genre === 'Rock'),
       },
     ];
 
@@ -741,7 +646,7 @@ export class MediaParent extends LitElement {
                 </t-butt>
 
                 <!-- Song Count -->
-                <div class="song-count"><t-icon name="note"></t-icon> ${mockSongs.length}</div>
+                <div class="song-count"><t-icon name="note"></t-icon> ${songs.length}</div>
 
                 <!-- Sort/Filter Button with Dropdown -->
                 <t-dropdown-button
@@ -771,7 +676,7 @@ export class MediaParent extends LitElement {
 
                 <!-- Artist Count -->
                 <div class="song-count">
-                  <t-icon name="note"></t-icon> ${this._getUniqueArtists(mockSongs).length}
+                  <t-icon name="note"></t-icon> ${this._getUniqueArtists(songs).length}
                 </div>
 
                 <!-- Sort/Filter Button with Dropdown -->
@@ -797,7 +702,7 @@ export class MediaParent extends LitElement {
 
                 <!-- Genre Count -->
                 <div class="song-count">
-                  <t-icon name="note"></t-icon> ${this._getUniqueGenres(mockSongs).length}
+                  <t-icon name="note"></t-icon> ${this._getUniqueGenres(songs).length}
                 </div>
 
                 <!-- Sort/Filter Button with Dropdown -->
@@ -843,7 +748,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'tracks'
           ? html`
               <t-track-list
-                .tracks=${this._getSortedSongs(mockSongs)}
+                .tracks=${this._getSortedSongs(songs)}
                 @track-selected=${this._handleTrackSelected}
               ></t-track-list>
             `
@@ -851,8 +756,8 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'artists'
           ? html`
               <t-artist-list
-                .artists=${this._getSortedArtists(mockSongs)}
-                .tracks=${mockSongs}
+                .artists=${this._getSortedArtists(songs)}
+                .tracks=${songs}
                 @track-selected=${this._handleTrackSelected}
               ></t-artist-list>
             `
@@ -860,8 +765,8 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'genre'
           ? html`
               <t-genre-list
-                .genres=${this._getSortedGenres(mockSongs)}
-                .tracks=${mockSongs}
+                .genres=${this._getSortedGenres(songs)}
+                .tracks=${songs}
                 @track-selected=${this._handleTrackSelected}
               ></t-genre-list>
             `
@@ -870,7 +775,7 @@ export class MediaParent extends LitElement {
           ? html`
               <t-group-list
                 .groups=${this._getSortedGroups(mockGroups)}
-                .tracks=${mockSongs}
+                .tracks=${songs}
                 @track-selected=${this._handleTrackSelected}
               ></t-group-list>
             `

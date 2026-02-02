@@ -80,6 +80,7 @@ import { IOInput } from './types/io.js';
 import { addGroupOwnerRow, emptyGroupDialog } from './features/groupManagement.js';
 import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from './ui/troffUi.js';
 import { getBgColor, setBgCustom } from './utils/colorHelpers.js';
+import { getSongDisplayName } from './utils/song.js';
 
 function clickSongList_NEW(event: JQuery.ClickEvent) {
   blurHack();
@@ -461,7 +462,7 @@ class TroffClass {
     let tags = '';
 
     if (fileData) {
-      displayName = fileData.customName || fileData.choreography || fileData.title || displayName;
+      displayName = getSongDisplayName(fileData, displayName);
       genre = fileData.genre || genre;
       tags = fileData.tags || tags;
     }
