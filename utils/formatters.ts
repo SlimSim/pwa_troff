@@ -1,5 +1,5 @@
 import { TroffObjectLocal } from 'types/troff';
-import { getSongDisplayName } from './song';
+import { getSongDisplayName } from './song.js';
 
 /**
  * Format duration in seconds to MM:SS format
