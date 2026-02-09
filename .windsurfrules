@@ -30,5 +30,27 @@ Styling:
 - Mobile-first CSS: base styles are for mobile, use @media (min-width: 576px) for larger screens only when necessary. Never use max-width media queries.
 - Avoid inline style on elements!
 
+Always put functions where they belong, look in the utils-folder for existing files and use them if possible, otherwise create a new file in the utils-folder or where the file structure dictates.
+
+This project has legasy code that you can reed to se how metadata has been stored before but you are not allowed to change that code or reference it from the new code. These files are:
+utils/debugging.ts
+utils/timeHack.ts
+script.ts
+script0.ts
+scriptASimple.ts
+scriptDBClass.ts
+scriptErrorHandler.ts
+scriptRateClass.ts
+scriptTroffClass.ts
+songManagement.ts
+find.ts
+services/FileApiImplementation.ts
+services/analytics.ts
+services/file.ts
+services/firebase.ts
+services/firebaseClient.ts
+features/groupManagement.ts
+anything in assets/internal
+
 I hope this sounds like good ground rules!
 Thanks!

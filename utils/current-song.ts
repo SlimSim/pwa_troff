@@ -37,9 +37,10 @@ export function updateHeaderWithCurrentSong() {
  * @param galleryId The gallery ID (optional)
  */
 export function setCurrentSong(songKey: string, galleryId?: string) {
-  const currentSongData = nDB.get('stroCurrentSongPathAndGalleryId') || {};
-  currentSongData.strPath = songKey;
-  currentSongData.iGalleryId = galleryId || currentSongData.iGalleryId || 'pwa-galleryId';
+  const currentSongData = {
+    strPath: songKey,
+    iGalleryId: galleryId || 'pwa-galleryId',
+  };
   nDB.set('stroCurrentSongPathAndGalleryId', currentSongData);
 
   // Update header with new song info

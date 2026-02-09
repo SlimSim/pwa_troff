@@ -6,7 +6,39 @@ import './components/molecule/t-header.js';
 import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
 import './components/organisms/t-marker-slider.js';
-import { updateHeaderWithCurrentSong, setCurrentSong } from './utils/current-song.js';
+import {
+  updateHeaderWithCurrentSong,
+  setCurrentSong,
+  getCurrentSongMetadata,
+  getCurrentSongKey,
+} from './utils/current-song.js';
+import { nDB } from './assets/internal/db.js';
+
+// Function to update marker slider with current song markers
+const updateMarkerSlider = (markerSlider: any) => {
+  const currentSongMetadata = getCurrentSongMetadata();
+  if (currentSongMetadata && markerSlider) {
+    // Load real markers from current song
+    const songKey = getCurrentSongKey();
+    const currentSongData = songKey ? nDB.get(songKey) : null;
+    const markers = currentSongData?.markers || [];
+
+    markerSlider.markers = markers;
+    markerSlider.min = 0;
+    markerSlider.max = currentSongMetadata.duration;
+    markerSlider.unit = 's';
+
+    // Set initial value to 0 (top of slider)
+    markerSlider.value = 0;
+  } else if (markerSlider) {
+    // No song selected, use default state
+    markerSlider.markers = [];
+    markerSlider.min = 0;
+    markerSlider.max = 0;
+    markerSlider.unit = '';
+    markerSlider.value = 0;
+  }
+};
 
 // Initialize components and set up event listeners
 
@@ -76,6 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const songKey = event.detail.songKey;
         if (songKey) {
           setCurrentSong(songKey);
+
+          // Update marker slider with new song markers
+          updateMarkerSlider(markerSlider);
         }
 
         // Here you can add logic to load and play the selected song
@@ -87,26 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeaderWithCurrentSong();
   }
 
-  // Set up demo data for marker slider
+  // Set up marker slider with real markers from current song
   if (markerSlider) {
-    markerSlider.presets = [
-      { label: 'Start', value: 0 },
-      { label: 'Intro', value: 10 },
-      { label: 'Verse 1, riktigt lång markör', value: 25 },
-      {
-        label:
-          'Chorus. Tror du det är långt? titta på detta då, den är ju MINST tre gånger så lång! HAHAHAHA!',
-        value: 40,
-      },
-      { label: 'Verse 2', value: 55 },
-      { label: 'Guitar', value: 70 },
-      { label: 'Outro', value: 85 },
-      { label: 'End', value: 100 },
-    ];
-    markerSlider.min = 0;
-    markerSlider.max = 100;
-    markerSlider.value = 40;
-    markerSlider.unit = '%';
+    // Initialize marker slider with current song markers
+    updateMarkerSlider(markerSlider);
 
     // Listen for slider value changes
     markerSlider.addEventListener('value-changed', (event: any) => {

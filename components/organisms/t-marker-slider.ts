@@ -1,12 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import type { TroffMarker } from '../../types/troff.js';
 import '../atom/t-butt.js';
 import '../molecule/t-marker.js';
-
-interface Preset {
-  label: string;
-  value: number;
-}
 
 @customElement('t-marker-slider')
 export class MarkerSlider extends LitElement {
@@ -83,7 +79,7 @@ export class MarkerSlider extends LitElement {
   @property({ type: Number }) max = 100;
   @property({ type: Number }) value = 50;
   @property({ type: String }) unit = '';
-  @property({ type: Array }) presets: Preset[] = [];
+  @property({ type: Array }) markers: TroffMarker[] = [];
   @property({ type: Number }) zoomLevel = 1;
   @property({ type: Number }) minZoom = 1;
 
@@ -163,9 +159,9 @@ export class MarkerSlider extends LitElement {
     this.isDragging = false;
   }
 
-  private _handlePresetClick(event: CustomEvent, preset: Preset) {
+  private _handleMarkerClick(event: CustomEvent, marker: TroffMarker) {
     event.stopPropagation();
-    this.value = Math.round(preset.value);
+    this.value = Math.round(Number(marker.time));
     this._dispatchValueChanged();
   }
 
@@ -257,16 +253,18 @@ export class MarkerSlider extends LitElement {
           ></div>
         </div>
 
-        <!-- Preset buttons on the right -->
+        <!-- Marker buttons on the right -->
         <div class="presets-container">
-          ${this.presets.map(
-            (preset) => html`
+          ${this.markers.map(
+            (marker) => html`
               <t-marker
                 class="preset-marker"
-                style="position: absolute; bottom: ${this._getPositionPercent(preset.value)}%;"
-                .marker=${preset}
-                .active=${this.value === preset.value}
-                @marker-click=${(e: CustomEvent) => this._handlePresetClick(e, preset)}
+                style="position: absolute; bottom: ${this._getPositionPercent(
+                  Number(marker.time)
+                )}%;"
+                .marker=${{ label: marker.name, value: Number(marker.time) }}
+                .active=${this.value === Number(marker.time)}
+                @marker-click=${(e: CustomEvent) => this._handleMarkerClick(e, marker)}
               ></t-marker>
             `
           )}
