@@ -6,8 +6,10 @@ import './components/molecule/t-header.js';
 import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
 import './components/organisms/t-marker-slider.js';
+import { updateHeaderWithCurrentSong, setCurrentSong } from './utils/current-song.js';
 
 // Initialize components and set up event listeners
+
 document.addEventListener('DOMContentLoaded', () => {
   const footer = document.getElementById('footer') as any;
   const settingsPanel = document.getElementById('settingsPanel') as any;
@@ -71,16 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
       // Listen for song selection
       songList.addEventListener('song-selected', (event: any) => {
         console.log('Song selected:', event.detail.song);
+
+        // Update current song in localStorage
+        const songKey = event.detail.song?.songKey;
+        if (songKey) {
+          setCurrentSong(songKey);
+        }
+
         // Here you can add logic to load and play the selected song
         // For example: loadSong(event.detail.song);
       });
     }
 
-    // Set some demo data for header
-    header.songTitle = 'Bohemian Rhapsody';
-    header.artistName = 'Queen';
-    header.currentTime = '1:42';
-    header.totalTime = '4:20';
+    // Initialize header with current song data
+    updateHeaderWithCurrentSong();
   }
 
   // Set up demo data for marker slider

@@ -8,6 +8,8 @@ import './t-media-footer.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
 import { LocalSongDataService } from '../../utils/local-song-data.js';
+import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
+import { nDB } from '../../assets/internal/db.js';
 
 @customElement('t-media-parent')
 export class MediaParent extends LitElement {
@@ -204,6 +206,7 @@ export class MediaParent extends LitElement {
   @property({ type: String }) genreSortOrder = 'ascending';
   @property({ type: Boolean }) showGenreSortDropdown = false;
   @property({ type: Array }) private songs: any[] = [];
+  @property({ type: Array }) private groups: TroffFirebaseGroupIdentifyer[] = [];
 
   // Add lifecycle method to load songs
   async connectedCallback() {
@@ -215,11 +218,16 @@ export class MediaParent extends LitElement {
   private async _loadSongs() {
     try {
       this.songs = await LocalSongDataService.getAllSongs();
+
+      // Load groups from localStorage
+      const songLists = nDB.get('aoSongLists') || [];
+      this.groups = songLists;
+
       this.requestUpdate();
     } catch (error) {
-      console.error('Failed to load songs:', error);
-      // Fallback to empty array
+      console.error('Failed to load songs and groups:', error);
       this.songs = [];
+      this.groups = [];
     }
   }
 
@@ -615,23 +623,14 @@ export class MediaParent extends LitElement {
   render() {
     const songs = this.songs;
 
-    const mockGroups = [
-      {
-        id: 'workout',
-        name: 'Workout Mix',
-        tracks: songs.filter((song, index) => index % 2 === 0),
-      },
-      {
-        id: 'chill',
-        name: 'Chill Vibes',
-        tracks: songs.filter((song, index) => index % 3 === 0),
-      },
-      {
-        id: 'rock-classics',
-        name: 'Rock Classics',
-        tracks: songs.filter((song) => song.genre === 'Rock'),
-      },
-    ];
+    const groups = this.groups.map((group) => ({
+      ...group,
+      tracks: songs.filter((song) =>
+        group.songs.some(
+          (groupSong) => groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+        )
+      ),
+    }));
 
     return html`
       <div class="song-list-header">
@@ -727,7 +726,7 @@ export class MediaParent extends LitElement {
                 </t-butt>
 
                 <!-- Group Count -->
-                <div class="song-count"><t-icon name="note"></t-icon> ${mockGroups.length}</div>
+                <div class="song-count"><t-icon name="note"></t-icon> ${this.groups.length}</div>
 
                 <!-- Sort/Filter Button with Dropdown -->
                 <t-dropdown-button
@@ -774,7 +773,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'groups'
           ? html`
               <t-group-list
-                .groups=${this._getSortedGroups(mockGroups)}
+                .groups=${this._getSortedGroups(groups)}
                 .tracks=${songs}
                 @track-selected=${this._handleTrackSelected}
               ></t-group-list>
