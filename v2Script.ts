@@ -71,11 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Listen for song selection
-      songList.addEventListener('song-selected', (event: any) => {
-        console.log('Song selected:', event.detail.song);
-
+      songList.addEventListener('media-selected', (event: any) => {
         // Update current song in localStorage
-        const songKey = event.detail.song?.songKey;
+        const songKey = event.detail.songKey;
         if (songKey) {
           setCurrentSong(songKey);
         }

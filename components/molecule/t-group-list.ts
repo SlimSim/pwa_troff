@@ -105,16 +105,6 @@ export class GroupList extends LitElement {
     this.selectedGroupId = '';
   }
 
-  private _handleMediaSelected(event: CustomEvent) {
-    this.dispatchEvent(
-      new CustomEvent('track-selected', {
-        detail: { track: event.detail },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
   render() {
     const isDetailView = this.selectedGroupId !== '';
     const selectedGroup = this.groups.find((g) => g.id === this.selectedGroupId);
@@ -140,7 +130,7 @@ export class GroupList extends LitElement {
                 tempo=${track.tempo}
                 .playsWeek=${track.playsWeek}
                 .playsTotal=${track.playsTotal}
-                @media-selected=${this._handleMediaSelected}
+                .songKey=${track.songKey}
               ></t-media>
             `
           )}

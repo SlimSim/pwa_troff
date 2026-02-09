@@ -170,6 +170,7 @@ export class MediaItem extends LitElement {
   @property({ type: Number }) playsWeek = 0;
   @property({ type: Number }) playsTotal = 0;
   @property({ type: String }) albumArt = '';
+  @property({ type: String }) songKey = '';
   @property({ type: Boolean, reflect: true }) active = false;
   @property({ type: Boolean }) expanded = false;
 
@@ -189,6 +190,7 @@ export class MediaItem extends LitElement {
           playsWeek: this.playsWeek,
           playsTotal: this.playsTotal,
           albumArt: this.albumArt,
+          songKey: this.songKey,
         },
         bubbles: true,
         composed: true,

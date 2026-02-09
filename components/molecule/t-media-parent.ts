@@ -270,16 +270,6 @@ export class MediaParent extends LitElement {
     );
   }
 
-  private _handleTrackSelected(event: CustomEvent) {
-    this.dispatchEvent(
-      new CustomEvent('song-selected', {
-        detail: { song: event.detail },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
   }
@@ -745,29 +735,19 @@ export class MediaParent extends LitElement {
 
       <div class="songs-container">
         ${this.currentFilter === 'tracks'
-          ? html`
-              <t-track-list
-                .tracks=${this._getSortedSongs(songs)}
-                @track-selected=${this._handleTrackSelected}
-              ></t-track-list>
-            `
+          ? html` <t-track-list .tracks=${this._getSortedSongs(songs)}></t-track-list> `
           : ''}
         ${this.currentFilter === 'artists'
           ? html`
               <t-artist-list
                 .artists=${this._getSortedArtists(songs)}
                 .tracks=${songs}
-                @track-selected=${this._handleTrackSelected}
               ></t-artist-list>
             `
           : ''}
         ${this.currentFilter === 'genre'
           ? html`
-              <t-genre-list
-                .genres=${this._getSortedGenres(songs)}
-                .tracks=${songs}
-                @track-selected=${this._handleTrackSelected}
-              ></t-genre-list>
+              <t-genre-list .genres=${this._getSortedGenres(songs)} .tracks=${songs}></t-genre-list>
             `
           : ''}
         ${this.currentFilter === 'groups'
@@ -775,7 +755,6 @@ export class MediaParent extends LitElement {
               <t-group-list
                 .groups=${this._getSortedGroups(groups)}
                 .tracks=${songs}
-                @track-selected=${this._handleTrackSelected}
               ></t-group-list>
             `
           : ''}

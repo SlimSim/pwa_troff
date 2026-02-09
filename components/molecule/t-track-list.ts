@@ -17,16 +17,6 @@ export class TrackList extends LitElement {
 
   @property({ type: Array }) tracks: any[] = [];
 
-  private _handleMediaSelected(event: CustomEvent) {
-    this.dispatchEvent(
-      new CustomEvent('track-selected', {
-        detail: { track: event.detail },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
   render() {
     return html`
       <div class="tracks-container">
@@ -44,7 +34,7 @@ export class TrackList extends LitElement {
               tempo=${track.tempo}
               .playsWeek=${track.playsWeek}
               .playsTotal=${track.playsTotal}
-              @media-selected=${this._handleMediaSelected}
+              .songKey=${track.songKey}
             ></t-media>
           `
         )}
