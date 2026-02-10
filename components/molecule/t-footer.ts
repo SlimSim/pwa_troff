@@ -9,6 +9,7 @@ export class BottomNav extends LitElement {
   @property({ type: Number }) speed = 100;
   @property({ type: Number }) volume = 75;
   @property({ type: Boolean }) showSpeedDropdown = false;
+  @property({ type: Boolean }) isPlaying = false;
   static styles = css`
     :host {
       display: block;
@@ -163,7 +164,7 @@ export class BottomNav extends LitElement {
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
           <t-butt round important>
-            <t-icon name="play"></t-icon>
+            <t-icon name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
           </t-butt>
         </div>
 

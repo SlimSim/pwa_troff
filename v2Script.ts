@@ -90,7 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for nav-click events
     footer.addEventListener('nav-click', (event: any) => {
       if (event.detail.action === 'play') {
-        audio.play().catch(console.error);
+        if (audio.paused) {
+          audio.play().catch(console.error);
+        } else {
+          audio.pause();
+        }
       }
     });
 
@@ -149,6 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     audio.addEventListener('timeupdate', () => {
       header.currentTime = formatDuration(audio.currentTime);
+    });
+    audio.addEventListener('play', () => {
+      footer.isPlaying = true;
+    });
+    audio.addEventListener('pause', () => {
+      footer.isPlaying = false;
+    });
+    audio.addEventListener('ended', () => {
+      footer.isPlaying = false;
     });
   }
 
