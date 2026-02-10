@@ -13,6 +13,8 @@ import {
   getCurrentSongKey,
 } from './utils/current-song.js';
 import { nDB } from './assets/internal/db.js';
+import { audio, loadSong } from './services/audio.js';
+import { formatDuration } from './utils/formatters.js';
 
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: any) => {
@@ -84,6 +86,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (footer) {
+    // Listen for nav-click events
+    footer.addEventListener('nav-click', (event: any) => {
+      if (event.detail.action === 'play') {
+        audio.play().catch(console.error);
+      }
+    });
+
+    // Listen for speed and volume changes
+    footer.addEventListener('speed-changed', (event: any) => {
+      audio.playbackRate = event.detail.speed / 100;
+    });
+    footer.addEventListener('volume-changed', (event: any) => {
+      audio.volume = event.detail.volume / 100;
+    });
+  }
+
   if (header) {
     // Listen for header expand events
     header.addEventListener('header-expand', (event: any) => {
@@ -108,18 +127,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const songKey = event.detail.songKey;
         if (songKey) {
           setCurrentSong(songKey);
+          loadSong(songKey);
 
           // Update marker slider with new song markers
           updateMarkerSlider(markerSlider);
         }
-
-        // Here you can add logic to load and play the selected song
-        // For example: loadSong(event.detail.song);
       });
     }
 
     // Initialize header with current song data
     updateHeaderWithCurrentSong();
+
+    const currentSongKey = getCurrentSongKey();
+    if (currentSongKey) {
+      loadSong(currentSongKey);
+    }
+
+    // Add audio event listeners for timing
+    audio.addEventListener('loadedmetadata', () => {
+      header.totalTime = formatDuration(audio.duration);
+    });
+    audio.addEventListener('timeupdate', () => {
+      header.currentTime = formatDuration(audio.currentTime);
+    });
   }
 
   // Set up marker slider with real markers from current song
