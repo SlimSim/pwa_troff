@@ -1,7 +1,8 @@
 :root {
   /* sliders */
-  --slider-track-width: 4px;
-  --slider-thumb-size: 20px;
+  --slider-track-width: 3px;
+  --slider-thumb-size: 19px;
+  --slider-playback-region-width: 7px;
 
   /* buttons */
   --button-border-radius: 0;

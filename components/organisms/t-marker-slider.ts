@@ -44,6 +44,15 @@ export class MarkerSlider extends LitElement {
       cursor: pointer;
     }
 
+    .playback-region {
+      position: absolute;
+      left: calc(50% - var(--slider-playback-region-width) / 2);
+      width: var(--slider-playback-region-width);
+      background-color: var(--theme-color);
+      bottom: var(--min-percent, 0);
+      height: var(--height-percent, 100%);
+    }
+
     .slider-thumb {
       position: absolute;
       left: 50%;
@@ -234,8 +243,33 @@ export class MarkerSlider extends LitElement {
     this.requestUpdate();
   }
 
+  private _getStartMakerValue() {
+    const startMarker = this.markers.find((m) => m.id === this.startMarkerId)?.time;
+    if (startMarker === undefined) {
+      return this.min;
+    }
+    if (startMarker === 'max') {
+      return this.max;
+    }
+    return Number(startMarker);
+  }
+
+  private _getStopMakerValue() {
+    const stopMarker = this.markers.find((m) => m.id + 'S' === this.stopMarkerId)?.time;
+    if (stopMarker === 'max' || stopMarker === undefined) {
+      return this.max;
+    }
+    return Number(stopMarker);
+  }
+
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
+    const minValue = this._getStartMakerValue();
+    const maxValue = this._getStopMakerValue();
+
+    const minPercent = this._getPositionPercent(maxValue);
+    const maxPercent = this._getPositionPercent(minValue);
+    const heightPercent = maxPercent - minPercent;
 
     return html`
       <div
@@ -246,6 +280,10 @@ export class MarkerSlider extends LitElement {
       >
         <div class="slider-track-wrapper" @click=${this._handleTrackClick}>
           <div class="slider-track"></div>
+          <div
+            class="playback-region"
+            style="--min-percent: ${minPercent}%; --height-percent: ${heightPercent}%;"
+          ></div>
 
           <!-- Slider thumb -->
           <div
