@@ -31,8 +31,10 @@ const updateMarkerSlider = (markerSlider: any, duration?: number) => {
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
 
-    // Set initial value to 0 (top of slider)
-    markerSlider.value = 0;
+    // Set initial value to 0 only if duration is provided (on load)
+    if (duration !== undefined) {
+      markerSlider.value = 0;
+    }
 
     console.log('currentSongData', currentSongData);
 
@@ -181,6 +183,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for slider value changes
     markerSlider.addEventListener('value-changed', (event: any) => {
       audio.currentTime = event.detail.value;
+    });
+
+    // Listen for start marker selection
+    markerSlider.addEventListener('set-start-marker', (event: any) => {
+      const markerId = event.detail.markerId;
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        const currentSongData = nDB.get(songKey);
+        if (currentSongData) {
+          currentSongData.currentStartMarker = markerId;
+          nDB.set(songKey, currentSongData);
+          updateMarkerSlider(markerSlider);
+        }
+      }
+    });
+
+    // Listen for stop marker selection
+    markerSlider.addEventListener('set-stop-marker', (event: any) => {
+      const markerId = event.detail.markerId;
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        const currentSongData = nDB.get(songKey);
+        if (currentSongData) {
+          currentSongData.currentStopMarker = markerId + 'S';
+          nDB.set(songKey, currentSongData);
+          updateMarkerSlider(markerSlider);
+        }
+      }
     });
   }
 });

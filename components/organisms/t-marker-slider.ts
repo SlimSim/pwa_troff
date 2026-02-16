@@ -174,6 +174,24 @@ export class MarkerSlider extends LitElement {
     event.stopPropagation();
     this.value = marker.time === 'max' ? this.max : Math.round(Number(marker.time));
     this._dispatchValueChanged();
+    this.dispatchEvent(
+      new CustomEvent('set-start-marker', {
+        detail: { markerId: marker.id },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleMarkerStop(event: CustomEvent, marker: TroffMarker) {
+    event.stopPropagation();
+    this.dispatchEvent(
+      new CustomEvent('set-stop-marker', {
+        detail: { markerId: marker.id },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleIncrement() {
@@ -305,6 +323,7 @@ export class MarkerSlider extends LitElement {
                 .startActive=${marker.id === this.startMarkerId}
                 .stopActive=${marker.id + 'S' === this.stopMarkerId}
                 @marker-click=${(e: CustomEvent) => this._handleMarkerClick(e, marker)}
+                @marker-stop=${(e: CustomEvent) => this._handleMarkerStop(e, marker)}
               ></t-marker>
             `;
           })}
