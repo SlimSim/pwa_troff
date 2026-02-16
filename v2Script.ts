@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     audio.addEventListener('timeupdate', () => {
       header.currentTime = formatDuration(audio.currentTime);
+      markerSlider.value = audio.currentTime;
     });
     audio.addEventListener('play', () => {
       footer.isPlaying = true;
@@ -174,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for slider value changes
     markerSlider.addEventListener('value-changed', (event: any) => {
-      console.log('Slider value changed:', event.detail.value);
+      audio.currentTime = event.detail.value;
     });
   }
 });
