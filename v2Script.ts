@@ -33,6 +33,11 @@ const updateMarkerSlider = (markerSlider: any, duration?: number) => {
 
     // Set initial value to 0 (top of slider)
     markerSlider.value = 0;
+
+    console.log('currentSongData', currentSongData);
+
+    markerSlider.startMarkerId = currentSongData?.currentStartMarker || '';
+    markerSlider.stopMarkerId = currentSongData?.currentStopMarker || '';
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];

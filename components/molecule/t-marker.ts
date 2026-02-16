@@ -38,7 +38,8 @@ export class Marker extends LitElement {
   `;
 
   @property({ type: Object }) marker: MarkerData = { label: '', value: 0 };
-  @property({ type: Boolean }) active = false;
+  @property({ type: Boolean }) startActive = false;
+  @property({ type: Boolean }) stopActive = false;
 
   private _handleEdit() {
     this.dispatchEvent(
@@ -85,7 +86,7 @@ export class Marker extends LitElement {
         <t-butt
           ellipsis
           class="marker-name-button"
-          .active=${this.active}
+          .active=${this.startActive}
           @click=${this._handleMarkerClick}
           title=${this.marker.label}
         >
@@ -93,7 +94,12 @@ export class Marker extends LitElement {
         </t-butt>
 
         <!-- Stop button -->
-        <t-butt class="stop-button" @click=${this._handleStop} title="Stop at marker">
+        <t-butt
+          class="stop-button"
+          .active=${this.stopActive}
+          @click=${this._handleStop}
+          title="Stop at marker"
+        >
           <t-icon name="stop-here"></t-icon>
         </t-butt>
       </div>

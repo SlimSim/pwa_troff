@@ -75,6 +75,8 @@ export class MarkerSlider extends LitElement {
     }
   `;
 
+  @property({ type: String }) startMarkerId = '';
+  @property({ type: String }) stopMarkerId = '';
   @property({ type: Number }) min = 0;
   @property({ type: Number }) max = 100;
   @property({ type: Number }) value = 50;
@@ -262,7 +264,8 @@ export class MarkerSlider extends LitElement {
                 class="preset-marker"
                 style="position: absolute; bottom: ${this._getPositionPercent(markerValue)}%;"
                 .marker=${{ label: marker.name, value: markerValue }}
-                .active=${this.value === markerValue}
+                .startActive=${marker.id === this.startMarkerId}
+                .stopActive=${marker.id + 'S' === this.stopMarkerId}
                 @marker-click=${(e: CustomEvent) => this._handleMarkerClick(e, marker)}
               ></t-marker>
             `;
