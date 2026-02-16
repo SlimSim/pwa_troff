@@ -17,8 +17,9 @@ import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 
 // Function to update marker slider with current song markers
-const updateMarkerSlider = (markerSlider: any) => {
+const updateMarkerSlider = (markerSlider: any, duration?: number) => {
   const currentSongMetadata = getCurrentSongMetadata();
+  const songDuration = duration !== undefined ? duration : currentSongMetadata?.duration || 0;
   if (currentSongMetadata && markerSlider) {
     // Load real markers from current song
     const songKey = getCurrentSongKey();
@@ -27,7 +28,7 @@ const updateMarkerSlider = (markerSlider: any) => {
 
     markerSlider.markers = markers;
     markerSlider.min = 0;
-    markerSlider.max = currentSongMetadata.duration;
+    markerSlider.max = songDuration;
     markerSlider.unit = 's';
 
     // Set initial value to 0 (top of slider)
@@ -150,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add audio event listeners for timing
     audio.addEventListener('loadedmetadata', () => {
       header.totalTime = formatDuration(audio.duration);
+      updateMarkerSlider(markerSlider, audio.duration);
     });
     audio.addEventListener('timeupdate', () => {
       header.currentTime = formatDuration(audio.currentTime);

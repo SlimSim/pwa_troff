@@ -1,6 +1,5 @@
 import { nDB } from '../assets/internal/db.js';
 import { getSongMetadata } from './song.js';
-import { formatDuration } from './formatters.js';
 
 /**
  * Update the header with current song information
@@ -18,8 +17,7 @@ export function updateHeaderWithCurrentSong() {
     if (metadata) {
       header.songTitle = metadata.title;
       header.artistName = metadata.artist;
-      header.currentTime = '0:00'; // Will be updated by media player
-      header.totalTime = formatDuration(metadata.duration);
+      header.currentTime = '0:00';
       console.log('Header updated with song:', metadata.title, 'by', metadata.artist);
     }
   } else {
@@ -43,7 +41,6 @@ export function setCurrentSong(songKey: string, galleryId?: string) {
   };
   nDB.set('stroCurrentSongPathAndGalleryId', currentSongData);
 
-  // Update header with new song info
   updateHeaderWithCurrentSong();
 }
 

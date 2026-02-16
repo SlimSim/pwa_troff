@@ -161,7 +161,7 @@ export class MarkerSlider extends LitElement {
 
   private _handleMarkerClick(event: CustomEvent, marker: TroffMarker) {
     event.stopPropagation();
-    this.value = Math.round(Number(marker.time));
+    this.value = marker.time === 'max' ? this.max : Math.round(Number(marker.time));
     this._dispatchValueChanged();
   }
 
@@ -255,19 +255,18 @@ export class MarkerSlider extends LitElement {
 
         <!-- Marker buttons on the right -->
         <div class="presets-container">
-          ${this.markers.map(
-            (marker) => html`
+          ${this.markers.map((marker) => {
+            const markerValue = marker.time === 'max' ? this.max : Number(marker.time);
+            return html`
               <t-marker
                 class="preset-marker"
-                style="position: absolute; bottom: ${this._getPositionPercent(
-                  Number(marker.time)
-                )}%;"
-                .marker=${{ label: marker.name, value: Number(marker.time) }}
-                .active=${this.value === Number(marker.time)}
+                style="position: absolute; bottom: ${this._getPositionPercent(markerValue)}%;"
+                .marker=${{ label: marker.name, value: markerValue }}
+                .active=${this.value === markerValue}
                 @marker-click=${(e: CustomEvent) => this._handleMarkerClick(e, marker)}
               ></t-marker>
-            `
-          )}
+            `;
+          })}
         </div>
       </div>
     `;

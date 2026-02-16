@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
+import { formatDuration } from '../../utils/formatters.js';
 
 export interface MarkerData {
   label: string;
@@ -69,16 +70,6 @@ export class Marker extends LitElement {
     );
   }
 
-  private _formatTime(value: number): string {
-    // Assuming value represents percentage (0-100) of song duration
-    // For now, we'll format it as mm:ss based on a 4:20 song (260 seconds)
-    const totalSeconds = 260; // 4:20 in seconds
-    const currentSeconds = Math.round((value / 100) * totalSeconds);
-    const minutes = Math.floor(currentSeconds / 60);
-    const seconds = currentSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-
   render() {
     return html`
       <div class="marker-row">
@@ -88,7 +79,7 @@ export class Marker extends LitElement {
         </t-butt>
 
         <!-- Time stamp -->
-        <div class="time-stamp">${this._formatTime(this.marker.value)}</div>
+        <div class="time-stamp">${formatDuration(this.marker.value)}</div>
 
         <!-- Marker name button -->
         <t-butt
