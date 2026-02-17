@@ -19,9 +19,9 @@ import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import { configureMarkerSlider } from './utils/troff-settings.js';
 
 // Function to update marker slider with current song markers
-const updateMarkerSlider = (markerSlider: MarkerSlider, duration?: number) => {
+const updateMarkerSlider = (markerSlider: MarkerSlider) => {
   const currentSongMetadata = getCurrentSongMetadata();
-  const songDuration = duration !== undefined ? duration : currentSongMetadata?.duration || 0;
+  const songDuration = audio.duration > 0 ? audio.duration : currentSongMetadata?.duration || 0;
   if (currentSongMetadata && markerSlider) {
     // Load real markers from current song
     const songKey = getCurrentSongKey();
@@ -32,13 +32,6 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, duration?: number) => {
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
-
-    // Set initial value to 0 only if duration is provided (on load)
-    if (duration !== undefined) {
-      markerSlider.value = 0;
-    }
-
-    console.log('currentSongData', currentSongData);
 
     configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
@@ -159,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add audio event listeners for timing
     audio.addEventListener('loadedmetadata', () => {
       header.totalTime = formatDuration(audio.duration);
-      updateMarkerSlider(markerSlider, audio.duration);
+      updateMarkerSlider(markerSlider);
     });
     audio.addEventListener('timeupdate', () => {
       header.currentTime = formatDuration(audio.currentTime);

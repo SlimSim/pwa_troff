@@ -174,7 +174,8 @@ export class MarkerSlider extends LitElement {
 
   private _handleMarkerClick(event: CustomEvent, marker: TroffMarker) {
     event.stopPropagation();
-    this.value = marker.time === 'max' ? this.max : Math.round(Number(marker.time));
+    this.startMarkerId = marker.id;
+    this.value = this._getPlaybackStart();
     this._dispatchValueChanged();
     this.dispatchEvent(
       new CustomEvent('set-start-marker', {
@@ -263,7 +264,7 @@ export class MarkerSlider extends LitElement {
     this.requestUpdate();
   }
 
-  private _getStartMakerValue() {
+  private _getPlaybackStart() {
     const startMarker = this.markers.find((m) => m.id === this.startMarkerId)?.time;
     if (startMarker === undefined) {
       return this.min;
@@ -271,26 +272,26 @@ export class MarkerSlider extends LitElement {
     if (startMarker === 'max') {
       return this.max;
     }
-    return Number(startMarker);
+    const minValue = Number(startMarker) - Number(this.startBefore);
+    return Math.max(this.min, minValue);
   }
 
-  private _getStopMakerValue() {
+  private _getPlaybackStop() {
     const stopMarker = this.markers.find((m) => m.id + 'S' === this.stopMarkerId)?.time;
     if (stopMarker === 'max' || stopMarker === undefined) {
       return this.max;
     }
-    return Number(stopMarker);
+    const maxValue = Number(stopMarker) + Number(this.stopAfter);
+    return Math.min(this.max, maxValue);
   }
 
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
-    let minValue = this._getStartMakerValue() - Number(this.startBefore);
-    minValue = Math.max(this.min, minValue);
-    let maxValue = this._getStopMakerValue() + Number(this.stopAfter);
-    maxValue = Math.min(this.max, maxValue);
+    const startValue = this._getPlaybackStart();
+    const stopValue = this._getPlaybackStop();
 
-    const minPercent = this._getPositionPercent(maxValue);
-    const maxPercent = this._getPositionPercent(minValue);
+    const minPercent = this._getPositionPercent(stopValue);
+    const maxPercent = this._getPositionPercent(startValue);
     const heightPercent = maxPercent - minPercent;
 
     return html`
