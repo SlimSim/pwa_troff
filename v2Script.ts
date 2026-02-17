@@ -19,7 +19,7 @@ import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import { configureMarkerSlider } from './utils/troff-settings.js';
 
 // Function to update marker slider with current song markers
-const updateMarkerSlider = (markerSlider: MarkerSlider) => {
+const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
   const currentSongMetadata = getCurrentSongMetadata();
   const songDuration = audio.duration > 0 ? audio.duration : currentSongMetadata?.duration || 0;
   if (currentSongMetadata && markerSlider) {
@@ -32,7 +32,9 @@ const updateMarkerSlider = (markerSlider: MarkerSlider) => {
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
-    audio.currentTime = markerSlider.getPlaybackStart();
+    if (setAudioTime) {
+      audio.currentTime = markerSlider.getPlaybackStart();
+    }
 
     configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
@@ -42,7 +44,9 @@ const updateMarkerSlider = (markerSlider: MarkerSlider) => {
     markerSlider.max = 0;
     markerSlider.unit = '';
     markerSlider.value = 0;
-    audio.currentTime = 0;
+    if (setAudioTime) {
+      audio.currentTime = 0;
+    }
   }
 };
 
@@ -204,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSongData) {
           currentSongData.currentStopMarker = markerId + 'S';
           nDB.set(songKey, currentSongData);
-          updateMarkerSlider(markerSlider);
+          updateMarkerSlider(markerSlider, false);
         }
       }
     });
