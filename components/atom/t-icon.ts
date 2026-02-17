@@ -20,11 +20,20 @@ export class TIcon extends LitElement {
     }
 
     .icon-wrapper {
+      font-size: 1.125rem;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 1em;
       height: 1em;
+    }
+
+    .slim {
+      font-size: 0.8rem;
+    }
+
+    .large {
+      font-size: 1.875rem;
     }
 
     svg {
@@ -57,8 +66,21 @@ export class TIcon extends LitElement {
   @property({ type: String }) name = '';
   @property({ type: String }) label = '';
   @property({ type: String }) unit = '';
+  @property({ type: Boolean }) slim = false;
+  @property({ type: Boolean }) large = false;
 
   private _svgContent = '';
+
+  private _getClasses() {
+    const classes = [];
+    if (this.slim) {
+      classes.push('slim');
+    }
+    if (this.large) {
+      classes.push('large');
+    }
+    return classes.join(' ');
+  }
 
   async updated(changedProperties: Map<string, any>) {
     if (changedProperties.has('name') && this.name) {
@@ -99,7 +121,7 @@ export class TIcon extends LitElement {
     const svgElement = svgDoc.documentElement;
 
     return html`
-      <div class="icon-wrapper">${svgElement}</div>
+      <div class="icon-wrapper ${this._getClasses()}">${svgElement}</div>
       ${this.label || this.unit ? html`<div class="label">${this.label}${this.unit}</div>` : ''}
     `;
   }

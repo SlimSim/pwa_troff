@@ -21,6 +21,16 @@ export class TButt extends LitElement {
       font-family: sans-serif;
       background-color: var(--regular-button-color, #b0bec5);
       color: var(--on-regular-buton-color, black);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button.slim {
+      min-width: 20px;
+      min-height: 20px;
+      height: 20px;
+      font-size: 0.8rem;
     }
 
     button.ellipsis {
@@ -46,22 +56,11 @@ export class TButt extends LitElement {
         var(--regular-button-color, #b0bec5);
     }
 
-    /* Style for ICON button */
-    button.icon {
-      height: 31px;
-      width: 42px;
-      font-size: 1.125rem; /*= 18px;*/
-    }
-
     /* Style for ROUND button */
     button.round {
       border-radius: 50%;
       width: 3.2rem;
       height: 3.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.875rem; /* = 30px*/
     }
 
     /* STYLE for the TOGGLE button */
@@ -112,25 +111,11 @@ export class TButt extends LitElement {
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
-    @media (min-width: 576px) {
-      /* ie width is GREATER than 576px */
-      /* NOT ON MOBILE-PHONES */
-      button {
-        min-width: 12px;
-        min-height: 12px;
-      }
-
-      button.round {
-        min-height: 12px;
-        width: 37px;
-        height: 37px;
-        font-size: 1.3125rem; /* = 21px */
-      }
     }
   `;
 
-  @property({ type: Boolean }) icon = false;
   @property({ type: Boolean }) round = false;
+  @property({ type: Boolean }) slim = false;
   @property({ type: Boolean }) ellipsis = false;
   @property({ type: Boolean }) important = false;
   @property({ type: Boolean }) special = false;
@@ -141,9 +126,6 @@ export class TButt extends LitElement {
     const classes = [];
     if (this.toggle) {
       classes.push('toggle');
-    }
-    if (this.icon) {
-      classes.push('icon');
     }
     if (this.round) {
       classes.push('round');
@@ -156,6 +138,9 @@ export class TButt extends LitElement {
     }
     if (this.special) {
       classes.push('special');
+    }
+    if (this.slim) {
+      classes.push('slim');
     }
     return classes.join(' ');
   }

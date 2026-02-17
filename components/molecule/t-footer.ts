@@ -164,7 +164,7 @@ export class BottomNav extends LitElement {
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
           <t-butt round important>
-            <t-icon name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
+            <t-icon large name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
           </t-butt>
         </div>
 

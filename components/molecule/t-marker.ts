@@ -75,8 +75,8 @@ export class Marker extends LitElement {
     return html`
       <div class="marker-row">
         <!-- Edit button -->
-        <t-butt @click=${this._handleEdit} title="Edit marker"
-          ><t-icon name="edit"></t-icon>
+        <t-butt slim @click=${this._handleEdit} title="Edit marker"
+          ><t-icon slim name="edit"></t-icon>
         </t-butt>
 
         <!-- Time stamp -->
@@ -84,6 +84,7 @@ export class Marker extends LitElement {
 
         <!-- Marker name button -->
         <t-butt
+          slim
           ellipsis
           class="marker-name-button"
           .active=${this.startActive}
@@ -95,12 +96,13 @@ export class Marker extends LitElement {
 
         <!-- Stop button -->
         <t-butt
+          slim
           class="stop-button"
           .active=${this.stopActive}
           @click=${this._handleStop}
           title="Stop at marker"
         >
-          <t-icon name="stop-here"></t-icon>
+          <t-icon slim name="stop-here"></t-icon>
         </t-butt>
       </div>
     `;
