@@ -175,7 +175,7 @@ export class MarkerSlider extends LitElement {
   private _handleMarkerClick(event: CustomEvent, marker: TroffMarker) {
     event.stopPropagation();
     this.startMarkerId = marker.id;
-    this.value = this._getPlaybackStart();
+    this.value = this.getPlaybackStart();
     this._dispatchValueChanged();
     this.dispatchEvent(
       new CustomEvent('set-start-marker', {
@@ -264,7 +264,7 @@ export class MarkerSlider extends LitElement {
     this.requestUpdate();
   }
 
-  private _getPlaybackStart() {
+  getPlaybackStart() {
     const startMarker = this.markers.find((m) => m.id === this.startMarkerId)?.time;
     if (startMarker === undefined) {
       return this.min;
@@ -287,7 +287,7 @@ export class MarkerSlider extends LitElement {
 
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
-    const startValue = this._getPlaybackStart();
+    const startValue = this.getPlaybackStart();
     const stopValue = this._getPlaybackStop();
 
     const stopPercent = this._getPositionPercent(stopValue);

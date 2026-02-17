@@ -32,6 +32,7 @@ const updateMarkerSlider = (markerSlider: MarkerSlider) => {
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
+    audio.currentTime = markerSlider.getPlaybackStart();
 
     configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
@@ -41,6 +42,7 @@ const updateMarkerSlider = (markerSlider: MarkerSlider) => {
     markerSlider.max = 0;
     markerSlider.unit = '';
     markerSlider.value = 0;
+    audio.currentTime = 0;
   }
 };
 
