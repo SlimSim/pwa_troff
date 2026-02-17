@@ -86,6 +86,8 @@ export class MarkerSlider extends LitElement {
 
   @property({ type: String }) startMarkerId = '';
   @property({ type: String }) stopMarkerId = '';
+  @property({ type: Number }) startBefore = 0;
+  @property({ type: Number }) stopAfter = 0;
   @property({ type: Number }) min = 0;
   @property({ type: Number }) max = 100;
   @property({ type: Number }) value = 50;
@@ -282,8 +284,10 @@ export class MarkerSlider extends LitElement {
 
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
-    const minValue = this._getStartMakerValue();
-    const maxValue = this._getStopMakerValue();
+    let minValue = this._getStartMakerValue() - this.startBefore;
+    minValue = Math.max(this.min, minValue);
+    let maxValue = this._getStopMakerValue() + this.stopAfter;
+    maxValue = Math.min(this.max, maxValue);
 
     const minPercent = this._getPositionPercent(maxValue);
     const maxPercent = this._getPositionPercent(minValue);
