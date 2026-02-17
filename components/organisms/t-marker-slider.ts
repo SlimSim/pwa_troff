@@ -49,7 +49,7 @@ export class MarkerSlider extends LitElement {
       left: calc(50% - var(--slider-playback-region-width) / 2);
       width: var(--slider-playback-region-width);
       background-color: var(--theme-color);
-      bottom: var(--min-percent, 0);
+      top: var(--min-percent, 0);
       height: var(--height-percent, 100%);
     }
 
@@ -126,7 +126,7 @@ export class MarkerSlider extends LitElement {
   }
 
   private _getPositionPercent(val: number): number {
-    return ((this.max - val) / (this.max - this.min)) * 100;
+    return ((val - this.min) / (this.max - this.min)) * 100;
   }
 
   private _getValueFromPosition(positionPercent: number): number {
@@ -290,9 +290,9 @@ export class MarkerSlider extends LitElement {
     const startValue = this._getPlaybackStart();
     const stopValue = this._getPlaybackStop();
 
-    const minPercent = this._getPositionPercent(stopValue);
-    const maxPercent = this._getPositionPercent(startValue);
-    const heightPercent = maxPercent - minPercent;
+    const stopPercent = this._getPositionPercent(stopValue);
+    const startPercent = this._getPositionPercent(startValue);
+    const heightPercent = stopPercent - startPercent;
 
     return html`
       <div
@@ -305,13 +305,13 @@ export class MarkerSlider extends LitElement {
           <div class="slider-track"></div>
           <div
             class="playback-region"
-            style="--min-percent: ${minPercent}%; --height-percent: ${heightPercent}%;"
+            style="--min-percent: ${startPercent}%; --height-percent: ${heightPercent}%;"
           ></div>
 
           <!-- Slider thumb -->
           <div
             class="slider-thumb"
-            style="bottom: ${currentPositionPercent}%; transform: translateX(-50%) translateY(50%);"
+            style="top: calc(${currentPositionPercent}%); transform: translateX(-50%) translateY(-50%);"
             @mousedown=${this._handleThumbMouseDown}
           ></div>
         </div>
@@ -323,7 +323,7 @@ export class MarkerSlider extends LitElement {
             return html`
               <t-marker
                 class="preset-marker"
-                style="position: absolute; bottom: ${this._getPositionPercent(markerValue)}%;"
+                style="position: absolute; top: ${this._getPositionPercent(markerValue)}%;"
                 .marker=${{ label: marker.name, value: markerValue }}
                 .startActive=${marker.id === this.startMarkerId}
                 .stopActive=${marker.id + 'S' === this.stopMarkerId}

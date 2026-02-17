@@ -13,7 +13,7 @@ export class Marker extends LitElement {
   static styles = css`
     :host {
       display: block;
-      transform: translateY(50%);
+      transform: translateY(-50%);
       max-width: 100%;
     }
 
