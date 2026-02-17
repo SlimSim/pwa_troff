@@ -10,6 +10,7 @@ Ground Rules:
 3. When multiple approaches exist, present options with pros/cons and your recommendation, then wait for my decision.
 4. Be thorough in code analysis - accuracy over speed.
 5. Ensure WebKit + Chromium compatibility (no Customized built-in elements or browser-specific features).
+6. Don't use the 'any' type, always try to find a more specific type.
 
 HTML:
 

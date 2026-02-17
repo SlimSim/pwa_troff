@@ -15,10 +15,11 @@ import {
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
-import { getStartBefore, getStopAfter } from './utils/troff-settings.js';
+import { MarkerSlider } from './components/organisms/t-marker-slider.js';
+import { configureMarkerSlider } from './utils/troff-settings.js';
 
 // Function to update marker slider with current song markers
-const updateMarkerSlider = (markerSlider: any, duration?: number) => {
+const updateMarkerSlider = (markerSlider: MarkerSlider, duration?: number) => {
   const currentSongMetadata = getCurrentSongMetadata();
   const songDuration = duration !== undefined ? duration : currentSongMetadata?.duration || 0;
   if (currentSongMetadata && markerSlider) {
@@ -39,10 +40,7 @@ const updateMarkerSlider = (markerSlider: any, duration?: number) => {
 
     console.log('currentSongData', currentSongData);
 
-    markerSlider.startMarkerId = currentSongData?.currentStartMarker || '';
-    markerSlider.stopMarkerId = currentSongData?.currentStopMarker || '';
-    markerSlider.startBefore = getStartBefore(currentSongData);
-    markerSlider.stopAfter = getStopAfter(currentSongData);
+    configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];
@@ -60,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
-  const markerSlider = document.getElementById('markerSlider') as any;
+  const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
 
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
