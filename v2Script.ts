@@ -163,6 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.addEventListener('timeupdate', () => {
       header.currentTime = formatDuration(audio.currentTime);
       markerSlider.value = audio.currentTime;
+
+      // Check if playback reached the stop point
+      if (audio.currentTime >= markerSlider.getPlaybackStop()) {
+        audio.pause();
+        audio.currentTime = markerSlider.getPlaybackStart();
+      }
     });
     audio.addEventListener('play', () => {
       footer.isPlaying = true;

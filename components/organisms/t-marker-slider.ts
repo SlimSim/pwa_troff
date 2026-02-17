@@ -276,7 +276,7 @@ export class MarkerSlider extends LitElement {
     return Math.max(this.min, minValue);
   }
 
-  private _getPlaybackStop() {
+  getPlaybackStop() {
     const stopMarker = this.markers.find((m) => m.id + 'S' === this.stopMarkerId)?.time;
     if (stopMarker === 'max' || stopMarker === undefined) {
       return this.max;
@@ -288,7 +288,7 @@ export class MarkerSlider extends LitElement {
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
     const startValue = this.getPlaybackStart();
-    const stopValue = this._getPlaybackStop();
+    const stopValue = this.getPlaybackStop();
 
     const stopPercent = this._getPositionPercent(stopValue);
     const startPercent = this._getPositionPercent(startValue);
