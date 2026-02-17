@@ -284,9 +284,9 @@ export class MarkerSlider extends LitElement {
 
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
-    let minValue = this._getStartMakerValue() - this.startBefore;
+    let minValue = this._getStartMakerValue() - Number(this.startBefore);
     minValue = Math.max(this.min, minValue);
-    let maxValue = this._getStopMakerValue() + this.stopAfter;
+    let maxValue = this._getStopMakerValue() + Number(this.stopAfter);
     maxValue = Math.min(this.max, maxValue);
 
     const minPercent = this._getPositionPercent(maxValue);

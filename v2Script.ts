@@ -15,6 +15,7 @@ import {
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
+import { getStartBefore, getStopAfter } from './utils/troff-settings.js';
 
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: any, duration?: number) => {
@@ -40,6 +41,8 @@ const updateMarkerSlider = (markerSlider: any, duration?: number) => {
 
     markerSlider.startMarkerId = currentSongData?.currentStartMarker || '';
     markerSlider.stopMarkerId = currentSongData?.currentStopMarker || '';
+    markerSlider.startBefore = getStartBefore(currentSongData);
+    markerSlider.stopAfter = getStopAfter(currentSongData);
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];
