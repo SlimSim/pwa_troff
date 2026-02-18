@@ -94,6 +94,7 @@ export class VerticalSlider extends LitElement {
   @property({ type: String }) unit = '';
   @property({ type: Number }) defaultValue = 50;
   @property({ type: String }) label = '';
+  @property({ type: String }) key = '';
 
   private isDragging = false;
 
@@ -209,14 +210,31 @@ export class VerticalSlider extends LitElement {
       </div>
       <t-butt
         .active=${this.value === this.defaultValue}
+        .key=${this.key}
         @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
         title="${this.defaultValue}"
       >
         ${this.defaultValue}${this.unit}
       </t-butt>
       <div class="value-controls" @click=${(e: Event) => e.stopPropagation()}>
-        <t-butt class="icon" @click=${this._handleDecrement} title="Decrease by 5%"> − </t-butt>
-        <t-butt class="icon" @click=${this._handleIncrement} title="Increase by 5%"> + </t-butt>
+        <t-butt
+          class="icon"
+          .key=${this.key}
+          alt
+          @click=${this._handleDecrement}
+          title="Decrease by 5%"
+        >
+          −
+        </t-butt>
+        <t-butt
+          class="icon"
+          .key=${this.key}
+          shift
+          @click=${this._handleIncrement}
+          title="Increase by 5%"
+        >
+          +
+        </t-butt>
       </div>
     `;
   }

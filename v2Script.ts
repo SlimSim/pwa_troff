@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for header expand events
     header.addEventListener('header-expand', (event: any) => {
       const expanded = event.detail.expanded;
-      console.log('Header expanded:', expanded);
 
       // Toggle song list visibility
       if (songList) {

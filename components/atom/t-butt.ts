@@ -121,6 +121,35 @@ export class TButt extends LitElement {
   @property({ type: Boolean }) special = false;
   @property({ type: Boolean }) toggle = false;
   @property({ type: Boolean, reflect: true }) active = false;
+  @property({ type: String, reflect: true }) key = '';
+  @property({ type: Boolean, reflect: true }) alt = false;
+  @property({ type: Boolean, reflect: true }) shift = false;
+
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('keydown', this._handleKeyDown.bind(this));
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener('keydown', this._handleKeyDown.bind(this));
+  }
+
+  private _handleKeyDown(event: KeyboardEvent) {
+    if (
+      document.activeElement instanceof HTMLInputElement ||
+      document.activeElement instanceof HTMLTextAreaElement
+    )
+      return;
+
+    if (
+      event.key.toLowerCase() === this.key.toLowerCase() &&
+      event.altKey === this.alt &&
+      event.shiftKey === this.shift
+    ) {
+      event.preventDefault();
+      this.shadowRoot?.querySelector('button')?.click();
+    }
+  }
 
   private _getClasses() {
     const classes = [];
@@ -145,24 +174,8 @@ export class TButt extends LitElement {
     return classes.join(' ');
   }
 
-  private _handleClick() {
-    if (!this.toggle) {
-      // Dispatch event for regular button action
-      this.dispatchEvent(new CustomEvent('butt-clicked', { bubbles: true, composed: true }));
-    } else if (this.toggle) {
-      this.active = !this.active;
-      this.dispatchEvent(
-        new CustomEvent('butt-toggled', {
-          detail: { active: this.active },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    }
-  }
-
   render() {
-    return html`<button class="${this._getClasses()}" @click=${this._handleClick}>
+    return html`<button class="${this._getClasses()}">
       <slot></slot>
     </button>`;
   }

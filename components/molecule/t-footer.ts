@@ -119,6 +119,7 @@ export class BottomNav extends LitElement {
             </t-butt>
             <div slot="dropdown" class="speed-dropdown-content">
               <t-vertical-slider
+                key="v"
                 min="0"
                 max="100"
                 label="Volume"
@@ -128,6 +129,7 @@ export class BottomNav extends LitElement {
                 @value-changed=${this._handleVolumeChanged}
               ></t-vertical-slider>
               <t-vertical-slider
+                key="s"
                 min="50"
                 max="200"
                 label="Speed"
@@ -141,7 +143,7 @@ export class BottomNav extends LitElement {
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
-          <t-butt round important>
+          <t-butt round important key=" ">
             <t-icon large name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
           </t-butt>
         </div>
