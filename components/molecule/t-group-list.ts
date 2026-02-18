@@ -96,6 +96,7 @@ export class GroupList extends LitElement {
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) selectedGroupId: string = '';
+  @property({ type: String }) currentSongKey = '';
 
   private _handleGroupClick(groupId: string) {
     this.selectedGroupId = groupId;
@@ -119,6 +120,7 @@ export class GroupList extends LitElement {
           ${selectedGroup.tracks.map(
             (track) => html`
               <t-media
+                .active=${track.songKey === this.currentSongKey}
                 title=${track.title}
                 artist=${track.artist}
                 album=${track.album}

@@ -96,6 +96,7 @@ export class ArtistList extends LitElement {
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: Array }) artists: any[] = [];
   @property({ type: String }) selectedArtist: string = '';
+  @property({ type: String }) currentSongKey = '';
 
   private _getArtistGroups(): ArtistGroup[] {
     // Use pre-sorted artists if provided, otherwise generate from tracks
@@ -141,6 +142,7 @@ export class ArtistList extends LitElement {
           ${selectedGroup.tracks.map(
             (track) => html`
               <t-media
+                .active=${track.songKey === this.currentSongKey}
                 title=${track.title}
                 artist=${track.artist}
                 album=${track.album}

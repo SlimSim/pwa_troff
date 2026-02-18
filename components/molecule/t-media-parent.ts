@@ -10,6 +10,7 @@ import '../atom/t-dropdown-button.js';
 import { LocalSongDataService } from '../../utils/local-song-data.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
 import { nDB } from '../../assets/internal/db.js';
+import { getCurrentSongKey } from '../../utils/current-song.js';
 
 @customElement('t-media-parent')
 export class MediaParent extends LitElement {
@@ -207,11 +208,17 @@ export class MediaParent extends LitElement {
   @property({ type: Boolean }) showGenreSortDropdown = false;
   @property({ type: Array }) private songs: any[] = [];
   @property({ type: Array }) private groups: TroffFirebaseGroupIdentifyer[] = [];
+  @property({ type: String }) currentSongKey = '';
 
   // Add lifecycle method to load songs
   async connectedCallback() {
     super.connectedCallback();
     await this._loadSongs();
+    this.currentSongKey = getCurrentSongKey() || '';
+    this.addEventListener('media-selected', (e: any) => {
+      this.currentSongKey = e.detail.songKey || '';
+      this.requestUpdate(); // Force re-render to update active states
+    });
   }
 
   // Add method to load songs
@@ -735,19 +742,29 @@ export class MediaParent extends LitElement {
 
       <div class="songs-container">
         ${this.currentFilter === 'tracks'
-          ? html` <t-track-list .tracks=${this._getSortedSongs(songs)}></t-track-list> `
+          ? html`
+              <t-track-list
+                .tracks=${this._getSortedSongs(songs)}
+                currentSongKey=${this.currentSongKey}
+              ></t-track-list>
+            `
           : ''}
         ${this.currentFilter === 'artists'
           ? html`
               <t-artist-list
                 .artists=${this._getSortedArtists(songs)}
                 .tracks=${songs}
+                currentSongKey=${this.currentSongKey}
               ></t-artist-list>
             `
           : ''}
         ${this.currentFilter === 'genre'
           ? html`
-              <t-genre-list .genres=${this._getSortedGenres(songs)} .tracks=${songs}></t-genre-list>
+              <t-genre-list
+                .genres=${this._getSortedGenres(songs)}
+                .tracks=${songs}
+                currentSongKey=${this.currentSongKey}
+              ></t-genre-list>
             `
           : ''}
         ${this.currentFilter === 'groups'
@@ -755,6 +772,7 @@ export class MediaParent extends LitElement {
               <t-group-list
                 .groups=${this._getSortedGroups(groups)}
                 .tracks=${songs}
+                currentSongKey=${this.currentSongKey}
               ></t-group-list>
             `
           : ''}

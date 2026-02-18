@@ -16,6 +16,7 @@ export class TrackList extends LitElement {
   `;
 
   @property({ type: Array }) tracks: any[] = [];
+  @property({ type: String }) currentSongKey = '';
 
   render() {
     return html`
@@ -23,6 +24,7 @@ export class TrackList extends LitElement {
         ${this.tracks.map(
           (track) => html`
             <t-media
+              .active=${track.songKey === this.currentSongKey}
               title=${track.title}
               artist=${track.artist}
               album=${track.album}

@@ -25,7 +25,8 @@ export class MediaItem extends LitElement {
     }
 
     .media-container.active {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: var(--toggle-button-active-color, #431c5d);
+      color: var(--on-toggle-button-active-color, white);
     }
 
     /* Album Art Section */
