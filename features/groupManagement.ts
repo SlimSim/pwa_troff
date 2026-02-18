@@ -60,7 +60,7 @@ export const setColorsOnGroupDialog = function () {
 };
 
 const setGroupAsSonglist = function (groupDocId: string) {
-  const songLists: TroffFirebaseGroupIdentifyer[] = JSON.parse(nDB.get('straoSongLists'));
+  const songLists: TroffFirebaseGroupIdentifyer[] = nDB.get('aoSongLists');
   if (!songLists.find((sl) => sl.firebaseGroupDocId == groupDocId)) {
     return;
   }

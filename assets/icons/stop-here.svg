@@ -8,7 +8,7 @@
    version="1.1"
    viewBox="0 0 24 24"
    id="svg1"
-   sodipodi:docname="chevron-up.svg"
+   sodipodi:docname="stop-here.svg"
    width="24"
    height="24"
    inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
@@ -27,9 +27,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="26.791299"
-     inkscape:cx="12.018827"
-     inkscape:cy="11.440281"
+     inkscape:zoom="8"
+     inkscape:cx="7.75"
+     inkscape:cy="25.4375"
      inkscape:window-width="1920"
      inkscape:window-height="1129"
      inkscape:window-x="1912"
@@ -37,8 +37,18 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="svg1" />
   <path
-     d="M 1.7142848,16.095717 12,7.904235 22.285715,16.095717"
+     d="M 1.7142846,11.552292 12,19.743774 22.285715,11.552292"
      id="path1"
      style="fill:none;stroke-width:3.42857"
      sodipodi:nodetypes="ccc" />
+  <path
+     d="M 1.7142849,22.285715 H 22.285715"
+     id="path1-3"
+     style="fill:none;stroke-width:3.42857"
+     sodipodi:nodetypes="cc" />
+  <path
+     d="M 12,22.285715 V 1.714285"
+     id="path1-3-1"
+     style="fill:none;stroke-width:3.42857"
+     sodipodi:nodetypes="cc" />
 </svg>
