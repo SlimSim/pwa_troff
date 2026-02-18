@@ -36,7 +36,7 @@ export class BottomNav extends LitElement {
     }
 
     .nav-item t-icon.flipped {
-      transform: rotateX(180deg) translateY(-4px);
+      transform: rotateX(180deg) translateY(-1px);
     }
 
     .speed-dropdown-content {

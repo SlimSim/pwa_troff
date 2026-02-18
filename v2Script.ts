@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for settings toggle events from footer
     footer.addEventListener('settings-toggle', (event: any) => {
       settingsPanel.visible = event.detail.visible;
+      if (event.detail.visible) {
+        songList.visible = false; // Close song list when settings open
+      }
     });
 
     // Listen for settings panel close events
@@ -123,6 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Toggle song list visibility
       if (songList) {
         songList.visible = expanded;
+        if (expanded) {
+          settingsPanel.visible = false; // Close settings panel when song list opens
+          footer.settingsPanelVisible = false;
+        }
       }
     });
 
