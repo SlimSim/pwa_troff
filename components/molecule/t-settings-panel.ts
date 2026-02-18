@@ -9,8 +9,8 @@ export class SettingsPanel extends LitElement {
       bottom: -100%;
       left: 0;
       right: 0;
-      background-color: var(--theme-color, #003366);
-      color: var(--on-theme-color, #ffffff);
+      background-color: var(--tertiary-color);
+      color: var(--on-tertiary-color);
       z-index: 999;
       transition: transform 0.3s ease-in-out;
       height: 100%;
@@ -136,8 +136,9 @@ export class SettingsPanel extends LitElement {
           <h2 class="panel-title">Settings</h2>
           <button class="close-button" @click=${this._handleClose}>×</button>
         </div>
+        <span>To be implemented...</span>
 
-        <div class="settings-section">
+        <!--div class="settings-section">
           <h3>Audio Settings</h3>
           <div class="settings-grid">
             <div class="setting-item">
@@ -149,7 +150,7 @@ export class SettingsPanel extends LitElement {
                   max="100"
                   value="75"
                   @change=${(e: Event) =>
-                    this._handleSettingChange('volume', (e.target as HTMLInputElement).value)}
+          this._handleSettingChange('volume', (e.target as HTMLInputElement).value)}
                 />
                 <span>75%</span>
               </div>
@@ -171,7 +172,7 @@ export class SettingsPanel extends LitElement {
               <div class="setting-value">
                 <select
                   @change=${(e: Event) =>
-                    this._handleSettingChange('theme', (e.target as HTMLSelectElement).value)}
+          this._handleSettingChange('theme', (e.target as HTMLSelectElement).value)}
                 >
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
@@ -200,7 +201,7 @@ export class SettingsPanel extends LitElement {
                   max="200"
                   value="120"
                   @change=${(e: Event) =>
-                    this._handleSettingChange('tempo', (e.target as HTMLInputElement).value)}
+          this._handleSettingChange('tempo', (e.target as HTMLInputElement).value)}
                 />
               </div>
             </div>
@@ -213,7 +214,7 @@ export class SettingsPanel extends LitElement {
           </div>
         </div>
 
-        <div class="settings-section">
+        <div-- class="settings-section">
           <h3>Actions</h3>
           <div class="settings-grid">
             <div class="setting-item">
@@ -227,7 +228,7 @@ export class SettingsPanel extends LitElement {
               >
             </div>
           </div>
-        </div>
+        </div-->
       </div>
     `;
   }
