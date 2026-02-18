@@ -39,7 +39,7 @@ export class MarkerSlider extends LitElement {
       top: 0;
       bottom: 0;
       width: var(--slider-track-width);
-      background-color: color-mix(in srgb, var(--theme-color) 25%, transparent);
+      background-color: var(--slider-color);
       border-radius: 2px;
       cursor: pointer;
     }
@@ -48,7 +48,7 @@ export class MarkerSlider extends LitElement {
       position: absolute;
       left: calc(50% - var(--slider-playback-region-width) / 2);
       width: var(--slider-playback-region-width);
-      background-color: var(--theme-color);
+      background-color: var(--slider-playback-region-color);
       top: var(--min-percent, 0);
       height: var(--height-percent, 100%);
     }
@@ -58,7 +58,7 @@ export class MarkerSlider extends LitElement {
       left: 50%;
       width: var(--slider-thumb-size);
       height: var(--slider-thumb-size);
-      background-color: var(--theme-color);
+      background-color: var(--slider-color);
       border-radius: 50%;
       cursor: grab;
       transition: box-shadow 0.2s ease;
@@ -66,13 +66,13 @@ export class MarkerSlider extends LitElement {
     }
 
     .slider-thumb:hover {
-      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--theme-color);
+      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--slider-color);
     }
 
     .slider-thumb:active {
       cursor: grabbing;
 
-      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--theme-color);
+      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--slider-color);
     }
 
     .presets-container {
@@ -302,11 +302,11 @@ export class MarkerSlider extends LitElement {
         @click=${(e: Event) => e.stopPropagation()}
       >
         <div class="slider-track-wrapper" @click=${this._handleTrackClick}>
-          <div class="slider-track"></div>
           <div
             class="playback-region"
             style="--min-percent: ${startPercent}%; --height-percent: ${heightPercent}%;"
           ></div>
+          <div class="slider-track"></div>
 
           <!-- Slider thumb -->
           <div

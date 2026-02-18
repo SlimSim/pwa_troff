@@ -1,5 +1,3 @@
-
-
 .theme-col1,
 [data-theme='col1'] {
   --theme-color: #003366;
@@ -49,6 +47,9 @@
 
   --toggle-button-active-color: var(--accent-color-1);
   --on-toggle-button-active-color: var(--on-accent-color-1);
+
+  --slider-color: var(--regular-button-color);
+  --slider-playback-region-color: var(--accent-color-1);
 }
 
 .theme-col2 {
@@ -167,7 +168,7 @@
   --gray-out: lightgray;
   --on-gray-out: #595959;
   --body-background: #eaeaea;
-  --on-body-background: 545454;
+  --on-body-background: #545454;
   --body-link-color: blue;
   --text-area: #f6f4ed;
   --drop-active: #bdbdbd;

@@ -3,9 +3,9 @@
   --container-padding-x: 12px;
 
   /* sliders */
-  --slider-track-width: 3px;
-  --slider-thumb-size: 19px;
-  --slider-playback-region-width: 7px;
+  --slider-track-width: 5px;
+  --slider-thumb-size: 15px;
+  --slider-playback-region-width: 19px;
 
   /* buttons */
   --button-border-radius: 0;
