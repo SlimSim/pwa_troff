@@ -1,17 +1,22 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
+import '../atom/t-dropdown-button.js';
+import '../atom/t-vertical-slider.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
+  @property({ type: Boolean }) settingsPanelVisible = false;
+  @property({ type: Number }) speed = 100;
+  @property({ type: Number }) volume = 75;
+  @property({ type: Boolean }) showSpeedDropdown = false;
+  @property({ type: Boolean }) isPlaying = false;
   static styles = css`
     :host {
       display: block;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: relative;
+      background-color: var(--theme-color, #003366);
       z-index: 1000;
-      background-color: var(--body-background, #bccbde);
+      padding: 5px var(--container-padding-x);
       /* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); */
       // todo: have box-shadow ONLY when the body is scrollable, not the host
     }
@@ -19,60 +24,74 @@ export class BottomNav extends LitElement {
     .nav-container {
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      padding: 8px 0;
+      justify-content: space-between;
+      padding: 0;
       max-width: 600px;
       margin: 0 auto;
-      /* position: relative; */
     }
 
-    /* .nav-item {
+    .nav-item t-icon {
+      transition: transform 0.3s ease-in-out;
+      transform-style: preserve-3d;
+    }
+
+    .nav-item t-icon.flipped {
+      transform: rotateX(180deg) translateY(-1px);
+    }
+
+    .speed-dropdown-content {
+      padding: 16px 8px;
+      border: 1px solid var(--on-theme-color, #ffffff);
+      border-radius: 4px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      /* height: 60px; * /
-    } */
-
-    /* .nav-item t-butt {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    } */
-
-    /* .play-button-wrapper t-icon {
-      font-size: 2rem;
-      color: white;
-    } */
-
-    /* @media (min-width: 768px) {
-      .nav-container {
-        max-width: 800px;
-      }
-
-      .nav-item {
-        height: 70px;
-      }
-
-      .play-button-wrapper t-butt {
-        width: 80px;
-        height: 80px;
-      }
-
-      .play-button-wrapper t-icon {
-        font-size: 2.5rem;
-      }
-    } */
+      flex-direction: row;
+      gap: 16px;
+    }
   `;
 
   private _handleNavClick(event: Event, action: string) {
     event.stopPropagation();
+
+    if (action === 'info') {
+      this.settingsPanelVisible = !this.settingsPanelVisible;
+      this.dispatchEvent(
+        new CustomEvent('settings-toggle', {
+          detail: { visible: this.settingsPanelVisible },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    } else {
+      this.dispatchEvent(
+        new CustomEvent('nav-click', {
+          detail: { action },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
+  private _handleSpeedDropdownToggled(event: CustomEvent) {
+    this.showSpeedDropdown = event.detail.open;
+  }
+
+  private _handleSpeedChanged(event: CustomEvent) {
+    this.speed = event.detail.value;
     this.dispatchEvent(
-      new CustomEvent('nav-click', {
-        detail: { action },
+      new CustomEvent('speed-changed', {
+        detail: { speed: this.speed },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleVolumeChanged(event: CustomEvent) {
+    this.volume = event.detail.value;
+    this.dispatchEvent(
+      new CustomEvent('volume-changed', {
+        detail: { volume: this.volume },
         bubbles: true,
         composed: true,
       })
@@ -84,31 +103,63 @@ export class BottomNav extends LitElement {
       <div class="nav-container">
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'songs')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon name="time" label="3" unit="s"></t-icon>
           </t-butt>
         </div>
 
-        <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'settings')}>
-          <t-butt icon>
-            <t-icon name="share"></t-icon>
-          </t-butt>
+        <div class="nav-item">
+          <t-dropdown-button
+            position="up"
+            align="left"
+            .open=${this.showSpeedDropdown}
+            @dropdown-toggled=${this._handleSpeedDropdownToggled}
+          >
+            <t-butt icon slot="button" title="Speed control">
+              <t-icon name="speed" label="${Math.round(this.speed)}" unit="%"></t-icon>
+            </t-butt>
+            <div slot="dropdown" class="speed-dropdown-content">
+              <t-vertical-slider
+                key="v"
+                min="0"
+                max="100"
+                label="Volume"
+                defaultValue="75"
+                .value=${this.volume}
+                unit=""
+                @value-changed=${this._handleVolumeChanged}
+              ></t-vertical-slider>
+              <t-vertical-slider
+                key="s"
+                min="50"
+                max="200"
+                label="Speed"
+                defaultValue="100"
+                .value=${this.speed}
+                unit="%"
+                @value-changed=${this._handleSpeedChanged}
+              ></t-vertical-slider>
+            </div>
+          </t-dropdown-button>
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
-          <t-butt round important>
-            <t-icon name="play"></t-icon>
+          <t-butt round important key=" ">
+            <t-icon large name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
           </t-butt>
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'states')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon name="marker-plus"></t-icon>
           </t-butt>
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
           <t-butt icon>
-            <t-icon name="share"></t-icon>
+            <t-icon
+              name="chevron-up"
+              class="${this.settingsPanelVisible ? 'flipped' : ''}"
+            ></t-icon>
           </t-butt>
         </div>
       </div>

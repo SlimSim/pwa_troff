@@ -7,7 +7,7 @@ import { welcomeStartFunc } from './features/welcomeScripts.js';
 type RateStoredData = {
   millisFirstTimeStartingApp: number;
   iRatedStatus: number;
-  straLastMonthUsage: string;
+  aLastMonthUsage: number[];
 };
 
 class RateClass {
@@ -34,7 +34,7 @@ class RateClass {
     var oData: RateStoredData = {
       millisFirstTimeStartingApp: nDB.get('millisFirstTimeStartingApp'),
       iRatedStatus: nDB.get('iRatedStatus'),
-      straLastMonthUsage: nDB.get('straLastMonthUsage'),
+      aLastMonthUsage: nDB.get('aLastMonthUsage'),
     };
     // Check if it is the first time user starts the App
 
@@ -47,7 +47,7 @@ class RateClass {
     welcomeStartFunc();
 
     /** @type {number[]} */
-    var aLastMonthUsage: number[] = JSON.parse(oData.straLastMonthUsage);
+    var aLastMonthUsage: number[] = oData.aLastMonthUsage;
 
     var d = new Date();
     var millis = d.getTime();
@@ -62,7 +62,7 @@ class RateClass {
       aLastMonthUsage.shift();
     }
 
-    nDB.set('straLastMonthUsage', JSON.stringify(aLastMonthUsage));
+    nDB.set('aLastMonthUsage', aLastMonthUsage);
 
     // return if no conection
     if (!navigator.onLine) return;
@@ -128,10 +128,9 @@ class RateClass {
     var d = new Date();
     var millis = d.getTime();
     var aLastMonthUsage = [millis];
-    var straLastMonthUsage = JSON.stringify(aLastMonthUsage);
     nDB.set('millisFirstTimeStartingApp', millis);
     nDB.set('iRatedStatus', this.RATED_STATUS_NOT_ASKED);
-    nDB.set('straLastMonthUsage', straLastMonthUsage);
+    nDB.set('aLastMonthUsage', aLastMonthUsage);
     if (isSafari) {
       nDB.set('TROFF_HAS_SHOWN_SAFARI_V_1_9_WELCOME', true);
     }

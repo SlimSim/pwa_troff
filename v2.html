@@ -48,6 +48,8 @@
 					user-scalable=yes"
     />
 
+    <link rel="stylesheet" href="/stylesheets/v2Style.css" />
+
     <style>
       button,
       input,
@@ -177,6 +179,11 @@
       }
     </style>
     <style id="loadScreenStyle">
+      body {
+        font-family: Arial, 'Open Sans', sans-serif;
+        margin: 0;
+      }
+
       .backgroundColor {
         overflow: hidden;
         overflow-x: hidden !important;
@@ -220,11 +227,16 @@
       }
     </style>
   </head>
-  <body>
-    <h1>Troff - Training with music</h1>
-    <h2>Welcome to the modernization effort of Troff!</h2>
-    <p>what do you think?</p>
-    <t-footer></t-footer>
+  <body data-theme="col1">
+    <t-main-layout>
+      <t-header id="header" slot="header"></t-header>
+      <t-media-parent id="songList" slot="song-list"></t-media-parent>
+      <div slot="main-content" style="height: 100%; min-height: 400px">
+        <t-marker-slider id="markerSlider"></t-marker-slider>
+      </div>
+      <t-settings-panel id="settingsPanel" slot="settings-panel"></t-settings-panel>
+      <t-footer id="footer" slot="footer"></t-footer>
+    </t-main-layout>
 
     <script async src="/assets\external\vendor\es-module-shims\es-module-shims.js"></script>
     <script type="importmap">

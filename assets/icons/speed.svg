@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="currentColor"
+   stroke="currentColor"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   stroke-width="2"
+   version="1.1"
+   viewBox="0 0 24 24"
+   id="svg1"
+   sodipodi:docname="speed.svg"
+   width="24"
+   height="24"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="6.6978248"
+     inkscape:cx="11.197665"
+     inkscape:cy="17.990916"
+     inkscape:window-width="1920"
+     inkscape:window-height="1129"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <title
+     id="title1">Speed Icon</title>
+  <path
+     fill="currentColor"
+     d="m 9.7524005,15.88037 c -0.8268005,1.436401 -0.27,2.616 0.8783995,3.2784 1.1472,0.663601 2.4492,0.558001 3.2784,-0.8784 C 14.736,16.84637 19.9656,4.0423685 19.5108,3.7795684 19.056,3.5167684 10.5804,14.445171 9.7524005,15.88037 M 12,6.7603686 c 0.5256,0 1.0368,0.0444 1.5372,0.1307999 0.5256,-0.6587999 1.1136,-1.3847999 1.686,-2.0736 A 11.5968,11.5968 0 0 0 12,4.3603685 c -6.7284,0 -12,5.6748015 -12,12.9192015 0,0.445201 0.01919999,0.8904 0.05880001,1.3236 0.05880002,0.6612 0.648,1.146 1.30079999,1.089601 0.6612,-0.0612 1.1484,-0.642001 1.0896,-1.303201 A 12.554399,12.554399 0 0 1 2.4,17.27957 C 2.4,11.38037 6.6168,6.7603686 12,6.7603686 m 8.6628,1.4999999 c -0.334801,0.9 -0.6888,1.8168015 -1.0008,2.6088015 1.218,1.764001 1.938,3.976801 1.938,6.4104 0,0.3792 -0.018,0.762001 -0.0516,1.1316 a 1.2012,1.2012 0 0 0 2.3904,0.2184 C 23.9784,18.185571 24,17.73197 24,17.27957 c 0,-3.5448 -1.2636,-6.708 -3.3372,-9.0192015"
+     id="path4"
+     style="stroke-width:0;stroke-dasharray:none" />
+</svg>

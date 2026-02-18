@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="currentColor"
+   stroke="currentColor"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   stroke-width="2"
+   version="1.1"
+   viewBox="0 0 24 24"
+   id="svg1"
+   sodipodi:docname="time.svg"
+   width="24"
+   height="24"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="11.313709"
+     inkscape:cx="11.446291"
+     inkscape:cy="12.109204"
+     inkscape:window-width="958"
+     inkscape:window-height="1120"
+     inkscape:window-x="1913"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1" />
+  <title
+     id="title1">Time Icon</title>
+  <circle
+     cx="12"
+     cy="12"
+     r="10.92147"
+     stroke="#222222"
+     id="circle1"
+     style="fill:none;stroke-width:2.15706;stroke-dasharray:none" />
+  <path
+     d="M 15.614218,15.235696 12.025096,12.079459 12.000004,5.6651297"
+     stroke="#222222"
+     stroke-linecap="round"
+     id="path1"
+     style="fill:none;stroke-width:2.15706;stroke-dasharray:none"
+     sodipodi:nodetypes="ccc" />
+</svg>

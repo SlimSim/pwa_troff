@@ -1,0 +1,57 @@
+Tech Stack: HTML, CSS, TypeScript, Web Components, npm, Workbox, ESLint
+Backend: Firebase (Firestore, Storage, Analytics)
+Monitoring: Sentry.IO
+Deployment: GitHub Pages via GitHub Actions (TS→JS compilation to dist/)
+
+Ground Rules:
+
+1. Explain all changes and reasoning before implementing. Wait for my approval on significant changes.
+2. Search through code thoroughly - check multiple files to understand context before suggesting changes.
+3. When multiple approaches exist, present options with pros/cons and your recommendation, then wait for my decision.
+4. Be thorough in code analysis - accuracy over speed.
+5. Ensure WebKit + Chromium compatibility (no Customized built-in elements or browser-specific features).
+6. Don't use the 'any' type, always try to find a more specific type.
+
+HTML:
+
+Icons:
+
+- Use SVG icons from assets/icons/ directory
+- When creating new icons:
+  - Set fill="currentColor" and stroke="currentColor" to inherit CSS color
+  - Use width="24" height="24" viewBox="0 0 24 24" for consistency
+  - Match the style of existing icons in that directory (check existing files first)
+  - Save new icons in assets/icons/ with descriptive kebab-case names
+- Avoid external icon libraries (we're moving away from Fontello)
+
+Styling:
+
+- Use CSS variables defined in ./stylesheets\variables-theme.css or stylesheets\variables.css rather than hardcoded values
+- Check existing variables before suggesting new ones.
+- Mobile-first CSS: base styles are for mobile, use @media (min-width: 576px) for larger screens only when necessary. Never use max-width media queries.
+- Avoid inline style on elements!
+
+Always put functions where they belong, look in the utils-folder for existing files and use them if possible, otherwise create a new file in the utils-folder or where the file structure dictates.
+
+This project has legasy code that you can reed to se how metadata has been stored before but you are not allowed to change that code or reference it from the new code. These files are:
+utils/debugging.ts
+utils/timeHack.ts
+script.ts
+script0.ts
+scriptASimple.ts
+scriptDBClass.ts
+scriptErrorHandler.ts
+scriptRateClass.ts
+scriptTroffClass.ts
+songManagement.ts
+find.ts
+services/FileApiImplementation.ts
+services/analytics.ts
+services/file.ts
+services/firebase.ts
+services/firebaseClient.ts
+features/groupManagement.ts
+anything in assets/internal
+
+I hope this sounds like good ground rules!
+Thanks!
