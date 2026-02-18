@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-track-list.js';
 import './t-artist-list.js';
@@ -218,7 +218,19 @@ export class MediaParent extends LitElement {
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
       this.requestUpdate(); // Force re-render to update active states
+      this.visible = false; // Close the song list panel
     });
+  }
+
+  updated(changedProperties: PropertyValues) {
+    if (changedProperties.has('visible') && !this.visible) {
+      this.dispatchEvent(
+        new CustomEvent('song-list-closed', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
   }
 
   // Add method to load songs
@@ -265,16 +277,6 @@ export class MediaParent extends LitElement {
       return this.sortOrder === 'descending' ? -comparison : comparison;
     });
     return sorted;
-  }
-
-  private _handleClose() {
-    this.visible = false;
-    this.dispatchEvent(
-      new CustomEvent('song-list-closed', {
-        bubbles: true,
-        composed: true,
-      })
-    );
   }
 
   private _handleFilterChanged(event: CustomEvent) {
