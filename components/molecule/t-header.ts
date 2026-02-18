@@ -11,7 +11,7 @@ export class Header extends LitElement {
       color: var(--on-theme-color, #ffffff);
       border-bottom: 1px solid var(--border-color, #333);
       z-index: 1000;
-      padding: 10px 12px;
+      padding: 10px var(--container-padding-x);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       cursor: pointer;
       user-select: none;

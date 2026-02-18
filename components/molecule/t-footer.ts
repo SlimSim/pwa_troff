@@ -16,6 +16,7 @@ export class BottomNav extends LitElement {
       position: relative;
       background-color: var(--theme-color, #003366);
       z-index: 1000;
+      padding: 5px var(--container-padding-x);
       /* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); */
       // todo: have box-shadow ONLY when the body is scrollable, not the host
     }
@@ -23,34 +24,11 @@ export class BottomNav extends LitElement {
     .nav-container {
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      padding: 8px 0;
+      justify-content: space-between;
+      padding: 0;
       max-width: 600px;
       margin: 0 auto;
-      /* position: relative; */
     }
-
-    /* .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      /* height: 60px; * /
-    } */
-
-    /* .nav-item t-butt {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    } */
-
-    /* .play-button-wrapper t-icon {
-      font-size: 2rem;
-      color: white;
-    } */
 
     .nav-item t-icon {
       transition: transform 0.3s ease-in-out;

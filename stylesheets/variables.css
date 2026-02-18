@@ -1,4 +1,7 @@
 :root {
+  /* Layout*/
+  --container-padding-x: 12px;
+
   /* sliders */
   --slider-track-width: 3px;
   --slider-thumb-size: 19px;
