@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { getManifest } from '../../utils/manifestHelper.js';
 
 @customElement('t-settings-panel')
 export class SettingsPanel extends LitElement {
@@ -100,6 +101,7 @@ export class SettingsPanel extends LitElement {
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
+  @property({ type: String }) versionNumber = '';
 
   connectedCallback() {
     super.connectedCallback();
@@ -107,6 +109,17 @@ export class SettingsPanel extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+  }
+
+  async firstUpdated() {
+    try {
+      const manifest = await getManifest();
+      console.log(manifest.version);
+      this.versionNumber = manifest.version;
+    } catch (error) {
+      console.error('Failed to fetch manifest version:', error);
+      this.versionNumber = 'Unknown';
+    }
   }
 
   private _handleClose() {
@@ -137,6 +150,7 @@ export class SettingsPanel extends LitElement {
           <button class="close-button" @click=${this._handleClose}>×</button>
         </div>
         <span>To be implemented...</span>
+        <div>Version: ${this.versionNumber}</div>
 
         <!--div class="settings-section">
           <h3>Audio Settings</h3>
