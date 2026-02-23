@@ -7,8 +7,8 @@ export class MainLayout extends LitElement {
     :host {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      max-height: 100vh;
+      min-height: 100dvh;
+      max-height: 100dvh;
       overflow: hidden;
       margin: 0;
       font-family: Arial, 'Open Sans', sans-serif;
