@@ -226,14 +226,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
-// Make body slightly taller, scroll down, then reset
-const hideChrome = () => {
-  document.body.style.height = `calc(100vh + 1px)`;
-  window.scrollTo(0, 1);
-  setTimeout(() => {
-    document.body.style.height = '';
-  }, 50);
-};
-
-window.addEventListener('load', hideChrome);
