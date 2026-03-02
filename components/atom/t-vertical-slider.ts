@@ -63,6 +63,14 @@ export class VerticalSlider extends LitElement {
     .label {
       margin-bottom: 4px;
       margin-top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.7em;
+      line-height: 1;
+      padding-bottom: 10px;
+      padding-top: 8px;
     }
 
     .value-display {
@@ -95,6 +103,7 @@ export class VerticalSlider extends LitElement {
   @property({ type: Number }) defaultValue = 50;
   @property({ type: String }) label = '';
   @property({ type: String }) key = '';
+  @property({ type: String }) iconName = '';
 
   private isDragging = false;
 
@@ -195,6 +204,7 @@ export class VerticalSlider extends LitElement {
     const displayValue = this.value;
 
     return html`
+      ${this.iconName ? html`<t-icon large name="${this.iconName}"></t-icon>` : ''}
       ${this.label ? html`<p class="label">${this.label}</p>` : ''}
       <div class="value-display">${displayValue}${this.unit}</div>
       <div class="slider-container" @click=${(e: Event) => e.stopPropagation()}>

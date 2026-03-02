@@ -33,7 +33,7 @@ export class Dial extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-color-on-theme);
+      color: var(--on-theme-color);
       font-weight: bold;
       font-size: 0.8rem;
     }
@@ -47,20 +47,18 @@ export class Dial extends LitElement {
       box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--theme-color);
     }
 
-    .indicator {
-      position: absolute;
-      top: 5px;
-      left: 50%;
-      width: 2px;
-      height: 10px;
-      background-color: var(--text-color-on-theme);
-      transform: translateX(-50%);
-      border-radius: 1px;
-    }
-
     .label {
       margin-bottom: 4px;
+      margin-top: 0;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.7em;
+      line-height: 1;
+      padding-bottom: 10px;
+      padding-top: 10px;
     }
 
     .value-display {
@@ -70,13 +68,6 @@ export class Dial extends LitElement {
       min-width: 50px;
       margin-bottom: 8px;
     }
-
-    .value-controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
   `;
 
   @property({ type: Number }) value = 1;
@@ -84,6 +75,7 @@ export class Dial extends LitElement {
   @property({ type: Number }) defaultValue = 1;
   @property({ type: String }) label = '';
   @property({ type: String }) key = '';
+  @property({ type: String }) iconName = '';
 
   private isDragging = false;
   private initialValue = 1;
@@ -254,6 +246,7 @@ export class Dial extends LitElement {
 
   render() {
     return html`
+      ${this.iconName ? html`<t-icon large name="${this.iconName}"></t-icon>` : ''}
       ${this.label ? html`<p class="label">${this.label}</p>` : ''}
       <div class="value-display">${this.value}${this.unit}</div>
       <div class="dial-container">
@@ -263,7 +256,7 @@ export class Dial extends LitElement {
           @mousedown=${this._handleMouseDown}
           @touchstart=${this._handleTouchStart}
         >
-          <div class="indicator"></div>
+          <t-icon class="dial-icon" name="rotate" large></t-icon>
         </div>
       </div>
       <t-butt

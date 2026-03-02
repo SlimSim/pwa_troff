@@ -13,7 +13,7 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) showTimeDropdown = false;
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Number }) pauseBefore = 3;
-  @property({ type: Number }) waitBetween = 3;
+  @property({ type: Number }) waitBetween = 1;
   static styles = css`
     :host {
       display: block;
@@ -153,6 +153,7 @@ export class BottomNav extends LitElement {
               <t-dial
                 key="p"
                 label="Pause before"
+                iconName="pause-before"
                 unit="s"
                 defaultValue="3"
                 .value=${this.pauseBefore}
@@ -161,6 +162,7 @@ export class BottomNav extends LitElement {
               <t-dial
                 key="w"
                 label="Wait between"
+                iconName="wait-between"
                 unit="s"
                 defaultValue="1"
                 .value=${this.waitBetween}
@@ -186,6 +188,7 @@ export class BottomNav extends LitElement {
                 min="0"
                 max="100"
                 label="Volume"
+                iconName="volume"
                 defaultValue="75"
                 .value=${this.volume}
                 unit=""
@@ -196,6 +199,7 @@ export class BottomNav extends LitElement {
                 min="50"
                 max="200"
                 label="Speed"
+                iconName="speed"
                 defaultValue="100"
                 .value=${this.speed}
                 unit="%"
