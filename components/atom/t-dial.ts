@@ -68,14 +68,38 @@ export class Dial extends LitElement {
       min-width: 50px;
       margin-bottom: 8px;
     }
+
+    .button-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   `;
 
-  @property({ type: Number }) value = 1;
+  @property({ type: Number }) _value = 1;
+
+  set value(newValue: number) {
+    if (this.disabled) {
+      return;
+    }
+
+    this._value = newValue;
+    this.requestUpdate();
+  }
+
+  get value(): number {
+    return this._value;
+  }
+
+  get displayValue(): number {
+    return this.disabled ? 0 : this._value;
+  }
   @property({ type: String }) unit = '';
   @property({ type: Number }) defaultValue = 1;
   @property({ type: String }) label = '';
   @property({ type: String }) key = '';
   @property({ type: String }) iconName = '';
+  @property({ type: Boolean }) disabled = false;
 
   private isDragging = false;
   private initialValue = 1;
@@ -165,6 +189,7 @@ export class Dial extends LitElement {
 
     this.startAngle = currentAngle;
     this.requestUpdate();
+    this._dispatchValueChanged();
   }
 
   private _handleEnd() {
@@ -234,10 +259,22 @@ export class Dial extends LitElement {
     this._dispatchValueChanged();
   }
 
-  private _dispatchValueChanged() {
+  private _handleDisabledToggle() {
+    this.disabled = !this.disabled;
     this.dispatchEvent(
       new CustomEvent('value-changed', {
-        detail: { value: this.value },
+        detail: { value: this.displayValue },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _dispatchValueChanged() {
+    console.log('_dispatchValueChanged ->', this.displayValue);
+    this.dispatchEvent(
+      new CustomEvent('value-changed', {
+        detail: { value: this.displayValue },
         bubbles: true,
         composed: true,
       })
@@ -248,7 +285,8 @@ export class Dial extends LitElement {
     return html`
       ${this.iconName ? html`<t-icon large name="${this.iconName}"></t-icon>` : ''}
       ${this.label ? html`<p class="label">${this.label}</p>` : ''}
-      <div class="value-display">${this.value}${this.unit}</div>
+      <div class="value-display">V: ${this.value}${this.unit}</div>
+      <div class="value-display">DV: ${this.displayValue}${this.unit}</div>
       <div class="dial-container">
         <div
           class="dial-knob"
@@ -259,14 +297,25 @@ export class Dial extends LitElement {
           <t-icon class="dial-icon" name="rotate" large></t-icon>
         </div>
       </div>
-      <t-butt
-        .active=${this.value === this.defaultValue}
-        .key=${this.key}
-        @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
-        title="${this.defaultValue}"
-      >
-        ${this.defaultValue}${this.unit}
-      </t-butt>
+      <div class="button-row">
+        <t-butt
+          class="icon"
+          .active=${this.disabled}
+          .key=${this.key}
+          @click=${this._handleDisabledToggle}
+          title="Toggle"
+        >
+          <t-icon name="disable"></t-icon>
+        </t-butt>
+        <t-butt
+          .active=${this.value === this.defaultValue}
+          .key=${this.key}
+          @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
+          title="${this.defaultValue}"
+        >
+          ${this.defaultValue}${this.unit}
+        </t-butt>
+      </div>
       <div class="value-controls">
         <t-butt
           class="icon"
