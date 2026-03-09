@@ -88,12 +88,9 @@ export class Dial extends LitElement {
   }
 
   get value(): number {
-    return this._value;
-  }
-
-  get displayValue(): number {
     return this.disabled ? 0 : this._value;
   }
+
   @property({ type: String }) unit = '';
   @property({ type: Number }) defaultValue = 1;
   @property({ type: String }) label = '';
@@ -146,7 +143,7 @@ export class Dial extends LitElement {
     this.isDragging = true;
     const touch = (event as TouchEvent).touches?.[0] || (event as MouseEvent);
     this.startAngle = this._getAngleFromEvent(touch);
-    this.initialValue = this.value;
+    this.initialValue = this._value;
     this.justDragged = false;
     this.accumulatedAngle = 0; // Reset accumulation for each drag
   }
@@ -175,15 +172,15 @@ export class Dial extends LitElement {
     const totalValueChange = fullValueChange + partialValueChange;
 
     const newValue = Math.max(0, this.initialValue + direction * Math.round(totalValueChange));
-    this.value = newValue;
+    this._value = newValue;
 
     // Update initialValue when hitting min
-    if (this.value === 0) {
+    if (this._value === 0) {
       this.initialValue = 0;
     }
 
     // Reset accumulation if negative at min
-    if (this.value === 0 && this.accumulatedAngle < 0) {
+    if (this._value === 0 && this.accumulatedAngle < 0) {
       this.accumulatedAngle = 0;
     }
 
@@ -243,19 +240,19 @@ export class Dial extends LitElement {
 
   private _handleDefaultClick(event: MouseEvent) {
     event.stopPropagation();
-    this.value = this.defaultValue;
+    this._value = this.defaultValue;
     this.currentRotation = 0;
     this.accumulatedAngle = 0;
     this._dispatchValueChanged();
   }
 
   private _handleIncrement() {
-    this.value = Math.max(0, this.value + 1);
+    this._value = Math.max(0, this._value + 1);
     this._dispatchValueChanged();
   }
 
   private _handleDecrement() {
-    this.value = Math.max(0, this.value - 1);
+    this._value = Math.max(0, this._value - 1);
     this._dispatchValueChanged();
   }
 
@@ -263,7 +260,7 @@ export class Dial extends LitElement {
     this.disabled = !this.disabled;
     this.dispatchEvent(
       new CustomEvent('value-changed', {
-        detail: { value: this.displayValue },
+        detail: { value: this.value },
         bubbles: true,
         composed: true,
       })
@@ -271,10 +268,9 @@ export class Dial extends LitElement {
   }
 
   private _dispatchValueChanged() {
-    console.log('_dispatchValueChanged ->', this.displayValue);
     this.dispatchEvent(
       new CustomEvent('value-changed', {
-        detail: { value: this.displayValue },
+        detail: { value: this.value },
         bubbles: true,
         composed: true,
       })
@@ -285,8 +281,7 @@ export class Dial extends LitElement {
     return html`
       ${this.iconName ? html`<t-icon large name="${this.iconName}"></t-icon>` : ''}
       ${this.label ? html`<p class="label">${this.label}</p>` : ''}
-      <div class="value-display">V: ${this.value}${this.unit}</div>
-      <div class="value-display">DV: ${this.displayValue}${this.unit}</div>
+      <div class="value-display">${this._value}${this.unit}</div>
       <div class="dial-container">
         <div
           class="dial-knob"
@@ -303,7 +298,7 @@ export class Dial extends LitElement {
           .active=${this.disabled}
           .key=${this.key}
           @click=${this._handleDisabledToggle}
-          title="Toggle"
+          title="Disable ${this.label}"
         >
           <t-icon name="disable"></t-icon>
         </t-butt>
