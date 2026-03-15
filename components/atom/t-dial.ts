@@ -38,6 +38,10 @@ export class Dial extends LitElement {
       font-size: 0.8rem;
     }
 
+    .dial-knob.disabled {
+      background-color: var(--on-gray-out);
+    }
+
     .dial-knob:hover {
       box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--theme-color);
     }
@@ -65,8 +69,26 @@ export class Dial extends LitElement {
       font-size: 0.9rem;
       font-weight: 600;
       text-align: center;
-      min-width: 50px;
+      padding-left: 6px;
+      padding-right: 6px;
       margin-bottom: 8px;
+    }
+
+    .value-display.disabled {
+      color: var(--on-gray-out);
+      position: relative;
+    }
+
+    .value-display.disabled::after {
+      content: '';
+      position: absolute;
+      top: 31%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: var(--on-gray-out);
+      transform: rotate(-15deg);
+      transform-origin: center;
     }
 
     .button-row {
@@ -281,10 +303,10 @@ export class Dial extends LitElement {
     return html`
       ${this.iconName ? html`<t-icon large name="${this.iconName}"></t-icon>` : ''}
       ${this.label ? html`<p class="label">${this.label}</p>` : ''}
-      <div class="value-display">${this._value}${this.unit}</div>
+      <div class="value-display ${this.disabled ? 'disabled' : ''}">${this._value}${this.unit}</div>
       <div class="dial-container">
         <div
-          class="dial-knob"
+          class="dial-knob ${this.disabled ? 'disabled' : ''}"
           style="transform: rotate(${this.currentRotation}deg);"
           @mousedown=${this._handleMouseDown}
           @touchstart=${this._handleTouchStart}
@@ -303,7 +325,7 @@ export class Dial extends LitElement {
           <t-icon name="disable"></t-icon>
         </t-butt>
         <t-butt
-          .active=${this.value === this.defaultValue}
+          .active=${this._value === this.defaultValue}
           .key=${this.key}
           @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
           title="${this.defaultValue}"
