@@ -11,6 +11,7 @@ import {
   setCurrentSong,
   getCurrentSongMetadata,
   getCurrentSongKey,
+  updateFooterWithCurrentSong,
 } from './utils/current-song.js';
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
@@ -98,6 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (footer) {
+    updateFooterWithCurrentSong();
+
     // Listen for nav-click events
     footer.addEventListener('nav-click', (event: any) => {
       if (event.detail.action === 'play') {
@@ -112,9 +115,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for speed and volume changes
     footer.addEventListener('speed-changed', (event: any) => {
       audio.playbackRate = event.detail.speed / 100;
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
+      }
     });
     footer.addEventListener('volume-changed', (event: any) => {
       audio.volume = event.detail.volume / 100;
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        nDB.setOnSong(songKey, 'TROFF_VALUE_volumeBar', event.detail.volume);
+      }
+    });
+
+    // Listen for pause before and wait between changes
+    footer.addEventListener('pause-before-changed', (event: any) => {
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        nDB.setOnSong(songKey, 'TROFF_VALUE_pauseBeforeStart', event.detail.pauseBefore);
+        nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttPauseBefStart', !event.detail.disabled);
+      }
+    });
+    footer.addEventListener('wait-between-changed', (event: any) => {
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        nDB.setOnSong(songKey, 'TROFF_VALUE_waitBetweenLoops', event.detail.waitBetween);
+        nDB.setOnSong(
+          songKey,
+          'TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops',
+          !event.detail.disabled
+        );
+      }
     });
   }
 
@@ -146,6 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (songKey) {
           setCurrentSong(songKey);
           loadSong(songKey);
+
+          updateFooterWithCurrentSong();
 
           // Update marker slider with new song markers
           updateMarkerSlider(markerSlider);

@@ -282,7 +282,7 @@ export class Dial extends LitElement {
     this.disabled = !this.disabled;
     this.dispatchEvent(
       new CustomEvent('value-changed', {
-        detail: { value: this.value },
+        detail: { value: this._value, disabled: this.disabled },
         bubbles: true,
         composed: true,
       })
@@ -292,7 +292,7 @@ export class Dial extends LitElement {
   private _dispatchValueChanged() {
     this.dispatchEvent(
       new CustomEvent('value-changed', {
-        detail: { value: this.value },
+        detail: { value: this._value, disabled: this.disabled },
         bubbles: true,
         composed: true,
       })

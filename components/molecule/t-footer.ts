@@ -14,6 +14,8 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Number }) pauseBefore = 3;
   @property({ type: Number }) waitBetween = 1;
+  @property({ type: Boolean }) disablePauseBefore = false;
+  @property({ type: Boolean }) disableWaitBetween = false;
   static styles = css`
     :host {
       display: block;
@@ -115,10 +117,15 @@ export class BottomNav extends LitElement {
   }
 
   private _handlePauseBeforeChanged(event: CustomEvent) {
-    this.pauseBefore = event.detail.value;
+    this.disablePauseBefore = event.detail.disabled;
+    if (this.disablePauseBefore) {
+      this.pauseBefore = 0;
+    } else {
+      this.pauseBefore = event.detail.value;
+    }
     this.dispatchEvent(
       new CustomEvent('pause-before-changed', {
-        detail: { pauseBefore: this.pauseBefore },
+        detail: { pauseBefore: event.detail.value, disabled: this.disablePauseBefore },
         bubbles: true,
         composed: true,
       })
@@ -126,10 +133,15 @@ export class BottomNav extends LitElement {
   }
 
   private _handleWaitBetweenChanged(event: CustomEvent) {
-    this.waitBetween = event.detail.value;
+    this.disableWaitBetween = event.detail.disabled;
+    if (this.disableWaitBetween) {
+      this.waitBetween = 0;
+    } else {
+      this.waitBetween = event.detail.value;
+    }
     this.dispatchEvent(
       new CustomEvent('wait-between-changed', {
-        detail: { waitBetween: this.waitBetween },
+        detail: { waitBetween: this.waitBetween, disabled: this.disableWaitBetween },
         bubbles: true,
         composed: true,
       })
@@ -147,7 +159,13 @@ export class BottomNav extends LitElement {
             @dropdown-toggled=${this._handleTimeDropdownToggled}
           >
             <t-butt slot="button" title="Wait control">
-              <t-icon name="time" label="3" unit="s"></t-icon>
+              <t-icon
+                name="time"
+                label="${this.isPlaying
+                  ? `${this.waitBetween}`
+                  : `${this.disablePauseBefore ? 0 : this.pauseBefore}`}"
+                unit="s"
+              ></t-icon>
             </t-butt>
             <div slot="dropdown" class="time-dropdown-content">
               <t-dial
@@ -157,6 +175,7 @@ export class BottomNav extends LitElement {
                 unit="s"
                 defaultValue="3"
                 .value=${this.pauseBefore}
+                .disabled=${this.disablePauseBefore}
                 @value-changed=${this._handlePauseBeforeChanged}
               ></t-dial>
               <t-dial
@@ -166,6 +185,7 @@ export class BottomNav extends LitElement {
                 unit="s"
                 defaultValue="1"
                 .value=${this.waitBetween}
+                .disabled=${this.disableWaitBetween}
                 @value-changed=${this._handleWaitBetweenChanged}
               ></t-dial>
             </div>
