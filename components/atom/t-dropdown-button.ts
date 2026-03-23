@@ -70,40 +70,56 @@ export class DropdownButton extends LitElement {
   @property({ type: String }) position = 'down';
   @property({ type: String }) align = 'right';
 
+  private _boundHandleDocumentClick!: (event: MouseEvent) => void;
+
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener('click', this._handleDocumentClick.bind(this));
+    this._boundHandleDocumentClick = this._handleDocumentClick.bind(this);
+    document.addEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener('click', this._handleDocumentClick.bind(this));
+    document.removeEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
   }
 
   private _handleDocumentClick(event: MouseEvent) {
-    const target = event.target as Node;
-    if (!this.contains(target) && this.open) {
+    const path = event.composedPath();
+    const isInside = path.includes(this);
+    if (!isInside && this.open) {
       this.open = false;
     }
   }
 
   private _handleButtonClick(event: Event) {
     event.stopPropagation();
-    this.open = !this.open;
-    this.dispatchEvent(
-      new CustomEvent('dropdown-toggled', {
-        detail: { open: this.open },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    if (!this.open) {
+      this.open = true;
+      this.dispatchEvent(
+        new CustomEvent('dropdown-toggled', {
+          detail: { open: this.open },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
+  private _handleDropdownClick(event: Event) {
+    event.stopPropagation();
   }
 
   render() {
     return html`
       <div class="button-wrapper" @click=${this._handleButtonClick}>
         <slot name="button"></slot>
-        <div class="dropdown" position=${this.position} align=${this.align} ?open=${this.open}>
+        <div
+          class="dropdown"
+          position=${this.position}
+          align=${this.align}
+          ?open=${this.open}
+          @click=${this._handleDropdownClick}
+        >
           <slot name="dropdown"></slot>
         </div>
       </div>

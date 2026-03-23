@@ -4,6 +4,7 @@ export { audio };
 
 export async function loadSong(songKey: string) {
   try {
+    audio.pause();
     const cache = await caches.open('songCache-v1.0');
     const response = await cache.match(songKey);
     if (!response) {

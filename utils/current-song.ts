@@ -18,7 +18,6 @@ export function updateHeaderWithCurrentSong() {
       header.songTitle = metadata.title;
       header.artistName = metadata.artist;
       header.currentTime = '0:00';
-      console.log('Header updated with song:', metadata.title, 'by', metadata.artist);
     }
   } else {
     // No song selected, show default values
@@ -26,6 +25,27 @@ export function updateHeaderWithCurrentSong() {
     header.artistName = 'Select a song to play';
     header.currentTime = '0:00';
     header.totalTime = '0:00';
+  }
+}
+
+export function updateFooterWithCurrentSong() {
+  const footer = document.getElementById('footer') as any;
+  if (!footer) return;
+
+  // Get current song path from localStorage
+  const currentSongData = nDB.get('stroCurrentSongPathAndGalleryId');
+  const songPath = currentSongData?.strPath;
+
+  if (songPath) {
+    const songData = nDB.get(songPath);
+    if (songData) {
+      footer.speed = Number(songData.TROFF_VALUE_speedBar) || 100;
+      footer.volume = Number(songData.TROFF_VALUE_volumeBar) || 75;
+      footer.pauseBefore = Number(songData.TROFF_VALUE_pauseBeforeStart) || 3;
+      footer.waitBetween = Number(songData.TROFF_VALUE_waitBetweenLoops) || 1;
+      footer.disablePauseBefore = !songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart;
+      footer.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+    }
   }
 }
 

@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-vertical-slider.js';
+import '../atom/t-dial.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
@@ -9,7 +10,12 @@ export class BottomNav extends LitElement {
   @property({ type: Number }) speed = 100;
   @property({ type: Number }) volume = 75;
   @property({ type: Boolean }) showSpeedDropdown = false;
+  @property({ type: Boolean }) showTimeDropdown = false;
   @property({ type: Boolean }) isPlaying = false;
+  @property({ type: Number }) pauseBefore = 3;
+  @property({ type: Number }) waitBetween = 1;
+  @property({ type: Boolean }) disablePauseBefore = false;
+  @property({ type: Boolean }) disableWaitBetween = false;
   static styles = css`
     :host {
       display: block;
@@ -47,6 +53,14 @@ export class BottomNav extends LitElement {
       flex-direction: row;
       gap: 16px;
     }
+    .time-dropdown-content {
+      padding: 16px 8px;
+      border: 1px solid var(--on-theme-color, #ffffff);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+    }
   `;
 
   private _handleNavClick(event: Event, action: string) {
@@ -76,6 +90,10 @@ export class BottomNav extends LitElement {
     this.showSpeedDropdown = event.detail.open;
   }
 
+  private _handleTimeDropdownToggled(event: CustomEvent) {
+    this.showTimeDropdown = event.detail.open;
+  }
+
   private _handleSpeedChanged(event: CustomEvent) {
     this.speed = event.detail.value;
     this.dispatchEvent(
@@ -98,13 +116,80 @@ export class BottomNav extends LitElement {
     );
   }
 
+  private _handlePauseBeforeChanged(event: CustomEvent) {
+    this.disablePauseBefore = event.detail.disabled;
+    if (this.disablePauseBefore) {
+      this.pauseBefore = 0;
+    } else {
+      this.pauseBefore = event.detail.value;
+    }
+    this.dispatchEvent(
+      new CustomEvent('pause-before-changed', {
+        detail: { pauseBefore: event.detail.value, disabled: this.disablePauseBefore },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleWaitBetweenChanged(event: CustomEvent) {
+    this.disableWaitBetween = event.detail.disabled;
+    if (this.disableWaitBetween) {
+      this.waitBetween = 0;
+    } else {
+      this.waitBetween = event.detail.value;
+    }
+    this.dispatchEvent(
+      new CustomEvent('wait-between-changed', {
+        detail: { waitBetween: this.waitBetween, disabled: this.disableWaitBetween },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   render() {
     return html`
       <div class="nav-container">
-        <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'songs')}>
-          <t-butt icon>
-            <t-icon name="time" label="3" unit="s"></t-icon>
-          </t-butt>
+        <div class="nav-item">
+          <t-dropdown-button
+            position="up"
+            align="left"
+            .open=${this.showTimeDropdown}
+            @dropdown-toggled=${this._handleTimeDropdownToggled}
+          >
+            <t-butt slot="button" title="Wait control">
+              <t-icon
+                name="time"
+                label="${this.isPlaying
+                  ? `${this.waitBetween}`
+                  : `${this.disablePauseBefore ? 0 : this.pauseBefore}`}"
+                unit="s"
+              ></t-icon>
+            </t-butt>
+            <div slot="dropdown" class="time-dropdown-content">
+              <t-dial
+                key="p"
+                label="Pause before"
+                iconName="pause-before"
+                unit="s"
+                defaultValue="3"
+                .value=${this.pauseBefore}
+                .disabled=${this.disablePauseBefore}
+                @value-changed=${this._handlePauseBeforeChanged}
+              ></t-dial>
+              <t-dial
+                key="w"
+                label="Wait between"
+                iconName="wait-between"
+                unit="s"
+                defaultValue="1"
+                .value=${this.waitBetween}
+                .disabled=${this.disableWaitBetween}
+                @value-changed=${this._handleWaitBetweenChanged}
+              ></t-dial>
+            </div>
+          </t-dropdown-button>
         </div>
 
         <div class="nav-item">
@@ -123,6 +208,7 @@ export class BottomNav extends LitElement {
                 min="0"
                 max="100"
                 label="Volume"
+                iconName="volume"
                 defaultValue="75"
                 .value=${this.volume}
                 unit=""
@@ -133,6 +219,7 @@ export class BottomNav extends LitElement {
                 min="50"
                 max="200"
                 label="Speed"
+                iconName="speed"
                 defaultValue="100"
                 .value=${this.speed}
                 unit="%"

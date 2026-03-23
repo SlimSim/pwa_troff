@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="currentColor"
+   stroke="currentColor"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   stroke-width="2"
+   version="1.1"
+   viewBox="0 0 24 24"
+   id="svg1"
+   sodipodi:docname="pause-before.svg"
+   width="24"
+   height="24"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="11.313709"
+     inkscape:cx="31.289474"
+     inkscape:cy="7.0268733"
+     inkscape:window-width="1920"
+     inkscape:window-height="1129"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <title
+     id="title1">Time Icon</title>
+  <g
+     id="g1"
+     transform="scale(0.85713721)">
+    <path
+       stroke="#222222"
+       id="circle1"
+       style="fill:none;stroke-width:2.15706;stroke-dasharray:none"
+       sodipodi:type="arc"
+       sodipodi:cx="13.215178"
+       sodipodi:cy="-10.648818"
+       sodipodi:rx="10.92147"
+       sodipodi:ry="10.92147"
+       sodipodi:start="0.022438847"
+       sodipodi:end="5.0018849"
+       sodipodi:open="true"
+       sodipodi:arc-type="arc"
+       d="M 24.133898,-10.403773 A 10.92147,10.92147 0 0 1 16.479149,-0.22648653 10.92147,10.92147 0 0 1 4.3866685,-4.2195157 10.92147,10.92147 0 0 1 4.2975261,-16.953895 10.92147,10.92147 0 0 1 16.33292,-21.115822"
+       transform="rotate(83.862524)" />
+    <path
+       d="M 8.0864278,15.184136 12.025096,12.079459 12.000004,5.6651297"
+       stroke="#222222"
+       stroke-linecap="round"
+       id="path1"
+       style="fill:none;stroke-width:2.15706;stroke-dasharray:none"
+       sodipodi:nodetypes="ccc" />
+  </g>
+  <path
+     d="M 13.029223,22.998319 V 11.739487 q 0,-0.640811 0.369074,-0.855773 0.369073,-0.214959 0.871975,0.125726 l 9.376944,5.799894 q 0.33257,0.235236 0.33257,0.559716 0,0.146007 -0.08112,0.287958 -0.08112,0.141951 -0.162231,0.206843 l -0.08922,0.06489 -9.376943,5.807674 q -0.50292,0.33257 -0.871975,0.117617 -0.36908,-0.214955 -0.36908,-0.855777 z"
+     stroke-width="0.0332438"
+     id="path1-8" />
+  <metadata
+     id="metadata2">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Time Icon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
