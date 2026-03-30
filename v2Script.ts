@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
       }
     });
+
     footer.addEventListener('volume-changed', (event: any) => {
       audio.volume = event.detail.volume / 100;
       const songKey = getCurrentSongKey();
@@ -136,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttPauseBefStart', !event.detail.disabled);
       }
     });
+
     footer.addEventListener('wait-between-changed', (event: any) => {
       const songKey = getCurrentSongKey();
       if (songKey) {
@@ -146,6 +148,31 @@ document.addEventListener('DOMContentLoaded', () => {
           !event.detail.disabled
         );
       }
+    });
+
+    footer.addEventListener('marker-created', (event: any) => {
+      // Save the marker to localStorage (following existing pattern)
+      const songKey = getCurrentSongKey();
+      if (songKey && event.detail.marker) {
+        const currentSongData = nDB.get(songKey) || {};
+        const existingMarkers = currentSongData.markers || [];
+        existingMarkers.push(event.detail.marker);
+        nDB.setOnSong(songKey, 'markers', existingMarkers);
+      }
+
+      // Update the marker slider UI
+      updateMarkerSlider(markerSlider, false);
+    });
+
+    footer.addEventListener('marker-dialog-opened', () => {
+      const songKey = getCurrentSongKey();
+      if (!songKey) {
+        return;
+      }
+
+      const currentSongData = nDB.get(songKey) || {};
+      const markers = currentSongData.markers || [];
+      footer.markerName = `Marker nr ${markers.length + 1}`;
     });
   }
 

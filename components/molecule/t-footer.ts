@@ -1,8 +1,12 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-vertical-slider.js';
 import '../atom/t-dial.js';
+import '../atom/t-time-input.js';
+import '../atom/t-input.js';
+import '../atom/t-color-picker.js';
+import { audio } from '../../services/audio.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
@@ -11,11 +15,18 @@ export class BottomNav extends LitElement {
   @property({ type: Number }) volume = 75;
   @property({ type: Boolean }) showSpeedDropdown = false;
   @property({ type: Boolean }) showTimeDropdown = false;
+  @property({ type: Boolean }) showMarkerDropdown = false;
+  @property({ type: Number }) markerTime = 0;
+  @property({ type: String }) markerName = '';
+  @property({ type: String }) markerColor = '';
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Number }) pauseBefore = 3;
   @property({ type: Number }) waitBetween = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
   @property({ type: Boolean }) disableWaitBetween = false;
+
+  @query('.marker-dropdown-content t-input')
+  private _markerNameInput?: HTMLElement & { focus: () => void; select: () => void; value: string };
   static styles = css`
     :host {
       display: block;
@@ -61,6 +72,24 @@ export class BottomNav extends LitElement {
       flex-direction: row;
       gap: 16px;
     }
+
+    .marker-dropdown-content {
+      padding: 16px 8px;
+      border: 1px solid var(--on-theme-color, #ffffff);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 200px;
+    }
+    .marker-dropdown-content .marker-text {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .marker-dropdown-content t-dial .button-row {
+      display: none;
+    }
   `;
 
   private _handleNavClick(event: Event, action: string) {
@@ -92,6 +121,39 @@ export class BottomNav extends LitElement {
 
   private _handleTimeDropdownToggled(event: CustomEvent) {
     this.showTimeDropdown = event.detail.open;
+  }
+
+  private _handleMarkerDropdownToggled(event: CustomEvent) {
+    this.showMarkerDropdown = event.detail.open;
+
+    if (this.showMarkerDropdown) {
+      // Capture current time
+      try {
+        this.markerTime = audio && audio.currentTime ? audio.currentTime : 0;
+      } catch (error) {
+        console.warn('Could not capture audio time:', error);
+        this.markerTime = 0;
+      }
+
+      this.markerName = '';
+      this.markerColor = '';
+
+      this.dispatchEvent(
+        new CustomEvent('marker-dialog-opened', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
+  protected override updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+
+    if (changedProperties.has('showMarkerDropdown') && this.showMarkerDropdown) {
+      this._markerNameInput?.focus();
+      this._markerNameInput?.select();
+    }
   }
 
   private _handleSpeedChanged(event: CustomEvent) {
@@ -146,6 +208,52 @@ export class BottomNav extends LitElement {
         composed: true,
       })
     );
+  }
+
+  private _handleMarkerNameChange(event: CustomEvent) {
+    if (typeof event.detail?.value === 'string') {
+      this.markerName = event.detail.value;
+    }
+  }
+
+  private _handleMarkerColorChange(event: CustomEvent) {
+    this.markerColor = event.detail.name || '';
+  }
+
+  private _handleMarkerTimeChange(event: CustomEvent) {
+    this.markerTime = event.detail.value || 0;
+  }
+
+  private _handleMarkerOkClick() {
+    const currentName = this._markerNameInput?.value ?? this.markerName;
+
+    if (!currentName || !currentName.trim()) {
+      console.warn('Marker name is required');
+      return;
+    }
+
+    // Create marker object
+    const marker = {
+      id: Date.now().toString(), // Simple unique ID
+      name: currentName.trim(),
+      time: this.markerTime,
+      color: this.markerColor || '', // Default color if none selected
+      createdAt: new Date().toISOString(),
+    };
+
+    // Dispatch event to let v2Script handle saving and UI updates
+    this.dispatchEvent(
+      new CustomEvent('marker-created', {
+        detail: { marker },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    // Reset form and close dropdown
+    this.markerName = '';
+    this.markerColor = '';
+    this.showMarkerDropdown = false;
   }
 
   render() {
@@ -236,9 +344,36 @@ export class BottomNav extends LitElement {
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'states')}>
-          <t-butt icon>
-            <t-icon name="marker-plus"></t-icon>
-          </t-butt>
+          <t-dropdown-button
+            position="up"
+            align="right"
+            .open=${this.showMarkerDropdown}
+            @dropdown-toggled=${this._handleMarkerDropdownToggled}
+          >
+            <t-butt icon slot="button">
+              <t-icon name="marker-plus"></t-icon>
+            </t-butt>
+            <div slot="dropdown" class="marker-dropdown-content">
+              <div class="marker-text">Add a marker</div>
+              <t-input
+                label="Name of Marker"
+                placeholder="Enter Name of marker"
+                helper-text="Enter a name for the marker"
+                .value=${this.markerName}
+                @input=${this._handleMarkerNameChange}
+              ></t-input>
+              <t-time-input
+                key="m"
+                label="Marker time"
+                unit="s"
+                defaultValue="0"
+                .value=${this.markerTime}
+                @value-changed=${this._handleMarkerTimeChange}
+              ></t-time-input>
+              <t-color-picker @change=${this._handleMarkerColorChange}></t-color-picker>
+              <t-butt important @click=${this._handleMarkerOkClick}>OK</t-butt>
+            </div>
+          </t-dropdown-button>
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>

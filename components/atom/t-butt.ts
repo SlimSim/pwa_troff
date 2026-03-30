@@ -125,21 +125,23 @@ export class TButt extends LitElement {
   @property({ type: Boolean, reflect: true }) alt = false;
   @property({ type: Boolean, reflect: true }) shift = false;
 
+  private _boundKeyDownHandler?: (event: KeyboardEvent) => void;
+
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener('keydown', this._handleKeyDown.bind(this));
+    this._boundKeyDownHandler = (event: KeyboardEvent) => this._handleKeyDown(event);
+    document.addEventListener('keydown', this._boundKeyDownHandler);
   }
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener('keydown', this._handleKeyDown.bind(this));
+    if (this._boundKeyDownHandler) {
+      document.removeEventListener('keydown', this._boundKeyDownHandler);
+      this._boundKeyDownHandler = undefined;
+    }
   }
 
   private _handleKeyDown(event: KeyboardEvent) {
-    if (
-      document.activeElement instanceof HTMLInputElement ||
-      document.activeElement instanceof HTMLTextAreaElement
-    )
-      return;
+    if (this._isEditableKeyEvent(event)) return;
 
     if (
       event.key.toLowerCase() === this.key.toLowerCase() &&
@@ -149,6 +151,41 @@ export class TButt extends LitElement {
       event.preventDefault();
       this.shadowRoot?.querySelector('button')?.click();
     }
+  }
+
+  private _isEditableKeyEvent(event: KeyboardEvent): boolean {
+    const path = event.composedPath();
+    for (const target of path) {
+      if (!(target instanceof HTMLElement)) continue;
+
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+        return true;
+      }
+
+      if (target.isContentEditable) {
+        return true;
+      }
+    }
+
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+      return true;
+    }
+    if (active instanceof HTMLElement && active.isContentEditable) {
+      return true;
+    }
+
+    if (active instanceof HTMLElement) {
+      const shadowActive = active.shadowRoot?.activeElement;
+      if (shadowActive instanceof HTMLInputElement || shadowActive instanceof HTMLTextAreaElement) {
+        return true;
+      }
+      if (shadowActive instanceof HTMLElement && shadowActive.isContentEditable) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private _getClasses() {
