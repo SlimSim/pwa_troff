@@ -324,7 +324,7 @@ export class MarkerSlider extends LitElement {
               <t-marker
                 class="preset-marker"
                 style="position: absolute; top: ${this._getPositionPercent(markerValue)}%;"
-                .marker=${{ label: marker.name, value: markerValue }}
+                .marker=${{ label: marker.name, value: markerValue, color: marker.color }}
                 .startActive=${marker.id === this.startMarkerId}
                 .stopActive=${marker.id + 'S' === this.stopMarkerId}
                 @marker-click=${(e: CustomEvent) => this._handleMarkerClick(e, marker)}

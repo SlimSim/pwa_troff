@@ -2,10 +2,12 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
 import { formatDuration } from '../../utils/formatters.js';
+import { getBgColor } from '../../utils/colorHelpers.js';
 
 export interface MarkerData {
   label: string;
   value: number;
+  color?: string;
 }
 
 @customElement('t-marker')
@@ -24,11 +26,14 @@ export class Marker extends LitElement {
       padding-right: var(--marker-gap);
       width: 100%;
       box-sizing: border-box;
+      border-radius: var(--button-border-radius);
+      background-color: var(--marker-bg-color, transparent);
     }
 
     .time-stamp {
       font-size: 0.9rem;
       font-family: monospace;
+      color: var(--marker-on-color, inherit);
     }
 
     .marker-name-button {
@@ -71,9 +76,21 @@ export class Marker extends LitElement {
     );
   }
 
+  private _getMarkerRowStyle(): string {
+    console.log('Getting marker row style for marker:', this.marker);
+    const markerColor = getBgColor(this.marker.color);
+    console.log('Marker color:', markerColor);
+
+    if (!markerColor.color) {
+      return '';
+    }
+
+    return `--marker-bg-color: ${markerColor.color}; --marker-on-color: ${markerColor.onColor};`;
+  }
+
   render() {
     return html`
-      <div class="marker-row">
+      <div class="marker-row" style=${this._getMarkerRowStyle()}>
         <!-- Edit button -->
         <t-butt slim @click=${this._handleEdit} title="Edit marker"
           ><t-icon slim name="edit"></t-icon>
