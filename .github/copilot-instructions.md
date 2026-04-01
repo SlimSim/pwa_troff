@@ -17,6 +17,31 @@ Troff is a Progressive Web App for music training, allowing dancers/musicians to
 4. **Be thorough in code analysis** - accuracy over speed.
 5. **Ensure WebKit + Chromium compatibility** (no Customized built-in elements or browser-specific features).
 6. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
+7. **Never use the `any` type in TypeScript** - always find a more specific type.
+8. **Always put functions where they belong** - check the `utils/` folder for existing files and use them if possible, otherwise create a new file in `utils/` or wherever the file structure dictates.
+
+## Legacy Code — Do Not Touch
+
+The following files contain legacy code. You may read them to understand how things were done before, but you are **not allowed to modify them or reference them from new code**:
+
+- `utils/debugging.ts`
+- `utils/timeHack.ts`
+- `script.ts`
+- `script0.ts`
+- `scriptASimple.ts`
+- `scriptDBClass.ts`
+- `scriptErrorHandler.ts`
+- `scriptRateClass.ts`
+- `scriptTroffClass.ts`
+- `songManagement.ts`
+- `find.ts`
+- `services/FileApiImplementation.ts`
+- `services/analytics.ts`
+- `services/file.ts`
+- `services/firebase.ts`
+- `services/firebaseClient.ts`
+- `features/groupManagement.ts`
+- Anything in `assets/internal/`
 
 ## Architecture & Key Patterns
 
@@ -65,12 +90,16 @@ npm run sw:watch     # Regenerates service worker on dist/ changes
 - **Mobile-First**: Base styles for mobile, `@media (min-width: 576px)` for larger screens only. **Never use max-width media queries**
 - **CSS Variables**: Use variables defined in `stylesheets/variables.css` or `stylesheets/variables-theme.css` instead of hardcoded values. **Check existing variables before suggesting new ones**
 - **No Inline Styles**: Always use CSS classes or Lit component styles
-- **Icon Pattern**: SVG icons in `assets/icons/` directory with strict conventions:
-  - Set `fill="currentColor"` AND `stroke="currentColor"` to inherit CSS color
-  - Use `width="24" height="24" viewBox="0 0 24 24"` for consistency
-  - Check existing files first to match style
-  - Save with descriptive kebab-case names
-  - Avoid external icon libraries (moving away from Fontello)
+
+### Icon Conventions
+
+SVG icons live in `assets/icons/`. When creating new icons:
+
+- Set `fill="currentColor"` AND `stroke="currentColor"` to inherit CSS color
+- Use `width="24" height="24" viewBox="0 0 24 24"` for consistency
+- Check existing files first to match the style
+- Save with descriptive kebab-case names
+- Avoid external icon libraries (moving away from Fontello)
 
 ## Critical Integration Points
 
