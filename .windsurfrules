@@ -88,6 +88,7 @@ npm run sw:watch     # Regenerates service worker on dist/ changes
 ### Styling Conventions
 
 - **Mobile-First**: Base styles for mobile, `@media (min-width: 576px)` for larger screens only. **Never use max-width media queries**
+- **Avoid media queries by default**: Do not add responsive breakpoints or screen-size-dependent styles unless explicitly asked. The app is mobile-first and most UI should work the same across all screen sizes. Only reach for `@media (min-width: 576px)` when the user specifically requests different behavior on larger screens.
 - **CSS Variables**: Use variables defined in `stylesheets/variables.css` or `stylesheets/variables-theme.css` instead of hardcoded values. **Check existing variables before suggesting new ones**
 - **No Inline Styles**: Always use CSS classes or Lit component styles
 
