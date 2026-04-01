@@ -5,8 +5,10 @@ import '../atom/t-vertical-slider.js';
 import '../atom/t-dial.js';
 import '../atom/t-time-input.js';
 import '../atom/t-input.js';
+import '../atom/t-textarea.js';
 import '../atom/t-color-picker.js';
 import type { TInput } from '../atom/t-input.js';
+import type { TTextarea } from '../atom/t-textarea.js';
 import { audio } from '../../services/audio.js';
 
 @customElement('t-footer')
@@ -19,6 +21,7 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) showMarkerDropdown = false;
   @property({ type: Number }) markerTime = 0;
   @property({ type: String }) markerName = '';
+  @property({ type: String }) markerInfo = '';
   @property({ type: String }) markerColor = '';
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Number }) pauseBefore = 3;
@@ -28,6 +31,8 @@ export class BottomNav extends LitElement {
 
   @query('.marker-dropdown-content t-input')
   private _markerNameInput?: TInput;
+  @query('.marker-dropdown-content t-textarea')
+  private _markerInfoInput?: TTextarea;
   private _boundMarkerDropdownKeyHandler?: (event: KeyboardEvent) => void;
 
   connectedCallback() {
@@ -161,6 +166,7 @@ export class BottomNav extends LitElement {
       }
 
       this.markerName = '';
+      this.markerInfo = '';
       this.markerColor = '';
 
       this.dispatchEvent(
@@ -302,12 +308,19 @@ export class BottomNav extends LitElement {
     this.markerColor = event.detail.name || '';
   }
 
+  private _handleMarkerInfoChange(event: CustomEvent) {
+    if (typeof event.detail?.value === 'string') {
+      this.markerInfo = event.detail.value;
+    }
+  }
+
   private _handleMarkerTimeChange(event: CustomEvent) {
     this.markerTime = event.detail.value || 0;
   }
 
   private _handleMarkerOkClick() {
     const currentName = this._markerNameInput?.value ?? this.markerName;
+    const currentInfo = this._markerInfoInput?.value ?? this.markerInfo;
 
     if (!currentName || !currentName.trim()) {
       console.warn('Marker name is required');
@@ -318,6 +331,7 @@ export class BottomNav extends LitElement {
     const marker = {
       id: Date.now().toString(), // Simple unique ID
       name: currentName.trim(),
+      info: currentInfo,
       time: this.markerTime,
       color: this.markerColor || '', // Default color if none selected
       createdAt: new Date().toISOString(),
@@ -334,6 +348,7 @@ export class BottomNav extends LitElement {
 
     // Reset form and close dropdown
     this.markerName = '';
+    this.markerInfo = '';
     this.markerColor = '';
     this.showMarkerDropdown = false;
   }
@@ -432,21 +447,29 @@ export class BottomNav extends LitElement {
             .open=${this.showMarkerDropdown}
             @dropdown-toggled=${this._handleMarkerDropdownToggled}
           >
-            <t-butt icon slot="button">
+            <t-butt key="m" icon slot="button">
               <t-icon name="marker-plus"></t-icon>
             </t-butt>
             <div slot="dropdown" class="marker-dropdown-content">
               <div class="marker-text">Add a marker</div>
               <t-input
-                label="Name of Marker"
+                label="Name"
                 placeholder="Enter Name of marker"
                 helper-text="Enter a name for the marker"
                 .value=${this.markerName}
                 @input=${this._handleMarkerNameChange}
               ></t-input>
+              <t-textarea
+                label="Info"
+                placeholder="Put extra marker info here"
+                helper-text="You can add multiple lines"
+                .value=${this.markerInfo}
+                rows="4"
+                @input=${this._handleMarkerInfoChange}
+              ></t-textarea>
               <t-time-input
                 key="m"
-                label="Marker time"
+                label="Time"
                 unit="s"
                 defaultValue="0"
                 .value=${this.markerTime}
