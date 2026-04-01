@@ -6,6 +6,7 @@ import '../atom/t-dial.js';
 import '../atom/t-time-input.js';
 import '../atom/t-input.js';
 import '../atom/t-color-picker.js';
+import type { TInput } from '../atom/t-input.js';
 import { audio } from '../../services/audio.js';
 
 @customElement('t-footer')
@@ -26,7 +27,28 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) disableWaitBetween = false;
 
   @query('.marker-dropdown-content t-input')
-  private _markerNameInput?: HTMLElement & { focus: () => void; select: () => void; value: string };
+  private _markerNameInput?: TInput;
+  private _boundMarkerDropdownKeyHandler?: (event: KeyboardEvent) => void;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._boundMarkerDropdownKeyHandler = (event: KeyboardEvent) =>
+      this._handleMarkerDropdownKeyboardShortcut(event);
+    document.addEventListener('keydown', this._boundMarkerDropdownKeyHandler, {
+      capture: true,
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._boundMarkerDropdownKeyHandler) {
+      document.removeEventListener('keydown', this._boundMarkerDropdownKeyHandler, {
+        capture: true,
+      });
+      this._boundMarkerDropdownKeyHandler = undefined;
+    }
+  }
+
   static styles = css`
     :host {
       display: block;
@@ -90,6 +112,9 @@ export class BottomNav extends LitElement {
     .marker-dropdown-content t-dial .button-row {
       display: none;
     }
+    .marker-dropdown-content t-butt {
+      align-self: flex-end;
+    }
   `;
 
   private _handleNavClick(event: Event, action: string) {
@@ -144,15 +169,72 @@ export class BottomNav extends LitElement {
           composed: true,
         })
       );
+
+      void this._focusAndSelectMarkerNameInput();
     }
+  }
+
+  private _getMarkerNativeInput() {
+    const input = this._markerNameInput;
+    if (!input) return undefined;
+    const nativeInput = input.shadowRoot?.querySelector('input');
+    return nativeInput instanceof HTMLInputElement ? nativeInput : undefined;
+  }
+
+  private _focusAndSelectMarkerNameInputAttempt(source: string, attempt: number) {
+    const input = this._markerNameInput;
+    const nativeInput = this._getMarkerNativeInput();
+
+    if (!input || !nativeInput) return;
+
+    input.focus();
+    input.select();
+
+    nativeInput.focus();
+    nativeInput.select();
+  }
+
+  private async _focusAndSelectMarkerNameInput() {
+    await this.updateComplete;
+
+    const input = this._markerNameInput;
+    if (!input) return;
+
+    await input.updateComplete;
+
+    requestAnimationFrame(() => {
+      this._focusAndSelectMarkerNameInputAttempt('raf', 1);
+    });
+
+    setTimeout(() => this._focusAndSelectMarkerNameInputAttempt('timeout', 2), 0);
+    setTimeout(() => this._focusAndSelectMarkerNameInputAttempt('timeout', 3), 50);
+    setTimeout(() => this._focusAndSelectMarkerNameInputAttempt('timeout', 4), 150);
+  }
+
+  private _handleMarkerDropdownKeyboardShortcut(event: KeyboardEvent) {
+    if (!this.showMarkerDropdown) return;
+    if (event.isComposing) return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showMarkerDropdown = false;
+      return;
+    }
+
+    if (event.key !== 'Enter') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this._handleMarkerOkClick();
   }
 
   protected override updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
 
     if (changedProperties.has('showMarkerDropdown') && this.showMarkerDropdown) {
-      this._markerNameInput?.focus();
-      this._markerNameInput?.select();
+      void this._focusAndSelectMarkerNameInput();
     }
   }
 
