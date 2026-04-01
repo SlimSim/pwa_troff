@@ -1,8 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { TroffMarker } from '../../types/troff.js';
+import { getBgColor } from '../../utils/colorHelpers.js';
 import '../atom/t-butt.js';
 import '../molecule/t-marker.js';
+
+type FillColorMode = 'none' | 'through' | 'marker';
 
 @customElement('t-marker-slider')
 export class MarkerSlider extends LitElement {
@@ -82,6 +85,13 @@ export class MarkerSlider extends LitElement {
       display: flex;
       width: 100%;
     }
+
+    .fill-segment {
+      position: absolute;
+      left: 0;
+      right: var(--slider-horizontal-padding);
+      background-color: var(--fill-segment-color, transparent);
+    }
   `;
 
   @property({ type: String }) startMarkerId = '';
@@ -95,6 +105,7 @@ export class MarkerSlider extends LitElement {
   @property({ type: Array }) markers: TroffMarker[] = [];
   @property({ type: Number }) zoomLevel = 1;
   @property({ type: Number }) minZoom = 1;
+  @property({ type: String, attribute: 'fill-color' }) fillColor = '';
 
   private isDragging = false;
   private isPinching = false;
@@ -285,6 +296,120 @@ export class MarkerSlider extends LitElement {
     return Math.min(this.max, maxValue);
   }
 
+  private _getFillColorMode(): FillColorMode {
+    const mode = this.fillColor?.trim().toLowerCase();
+    if (mode === 'through' || mode === 'marker') {
+      return mode;
+    }
+    return 'none';
+  }
+
+  private _getMarkersWithPosition(): Array<{
+    top: number;
+    color: string;
+    onColor: string;
+  }> {
+    return this.markers
+      .map((marker) => {
+        const markerValue = marker.time === 'max' ? this.max : Number(marker.time);
+        const colorData = getBgColor(marker.color);
+
+        return {
+          top: this._getPositionPercent(markerValue),
+          color: colorData.color,
+          onColor: colorData.onColor,
+        };
+      })
+      .sort((a, b) => a.top - b.top);
+  }
+
+  private _getMarkerHalfHeightPercent(): number {
+    const presetsContainer = this.shadowRoot?.querySelector(
+      '.presets-container'
+    ) as HTMLElement | null;
+    const markerElement = this.shadowRoot?.querySelector('.preset-marker') as HTMLElement | null;
+
+    if (!presetsContainer || !markerElement) {
+      return 0;
+    }
+
+    const containerHeight = presetsContainer.getBoundingClientRect().height;
+    const markerHeight = markerElement.getBoundingClientRect().height;
+
+    if (containerHeight <= 0 || markerHeight <= 0) {
+      return 0;
+    }
+
+    return (markerHeight / 2 / containerHeight) * 100;
+  }
+
+  private _getColoredMarkersWithPosition(): Array<{ top: number; color: string; onColor: string }> {
+    return this._getMarkersWithPosition().filter((marker) => marker.color);
+  }
+
+  private _getFillSegments(): Array<{
+    top: number;
+    height: number;
+    color: string;
+    onColor: string;
+  }> {
+    const fillMode = this._getFillColorMode();
+    if (fillMode === 'none') {
+      return [];
+    }
+
+    if (fillMode === 'through') {
+      const coloredMarkers = this._getColoredMarkersWithPosition();
+
+      return coloredMarkers
+        .map((marker, index) => {
+          const nextMarker = coloredMarkers[index + 1];
+          const end = nextMarker ? nextMarker.top : 100;
+          const height = Math.max(0, end - marker.top);
+
+          return {
+            top: marker.top,
+            height,
+            color: marker.color,
+            onColor: marker.onColor,
+          };
+        })
+        .filter((segment) => segment.height > 0);
+    }
+
+    const markers = this._getMarkersWithPosition();
+    const coloredMarkers = this._getColoredMarkersWithPosition();
+    const markerHalfHeightPercent = this._getMarkerHalfHeightPercent();
+
+    return coloredMarkers
+      .map((marker) => {
+        const nextMarker = markers.find((candidate) => candidate.top > marker.top);
+        const end = nextMarker
+          ? Math.max(marker.top, nextMarker.top - markerHalfHeightPercent)
+          : 100;
+        const height = Math.max(0, end - marker.top);
+
+        return {
+          top: marker.top,
+          height,
+          color: marker.color,
+          onColor: marker.onColor,
+        };
+      })
+      .filter((segment) => segment.height > 0);
+  }
+
+  private _getInheritedTextColor(positionPercent: number): string | undefined {
+    const segments = this._getFillSegments();
+    for (const segment of segments) {
+      const segmentEnd = segment.top + segment.height;
+      if (positionPercent >= segment.top && positionPercent < segmentEnd) {
+        return segment.onColor;
+      }
+    }
+    return undefined;
+  }
+
   render() {
     const currentPositionPercent = this._getPositionPercent(this.value);
     const startValue = this.getPlaybackStart();
@@ -318,13 +443,29 @@ export class MarkerSlider extends LitElement {
 
         <!-- Marker buttons on the right -->
         <div class="presets-container">
+          ${this._getFillColorMode() !== 'none'
+            ? this._getFillSegments().map(
+                (segment) => html`
+                  <div
+                    class="fill-segment"
+                    style="top: ${segment.top}%; height: ${segment.height}%; --fill-segment-color: ${segment.color};"
+                  ></div>
+                `
+              )
+            : ''}
           ${this.markers.map((marker) => {
             const markerValue = marker.time === 'max' ? this.max : Number(marker.time);
+            const markerPosition = this._getPositionPercent(markerValue);
             return html`
               <t-marker
                 class="preset-marker"
-                style="position: absolute; top: ${this._getPositionPercent(markerValue)}%;"
-                .marker=${{ label: marker.name, value: markerValue, color: marker.color }}
+                style="position: absolute; top: ${markerPosition}%; left: 0; right: var(--slider-horizontal-padding);"
+                .marker=${{
+                  label: marker.name,
+                  value: markerValue,
+                  color: marker.color,
+                  textColor: this._getInheritedTextColor(markerPosition),
+                }}
                 .startActive=${marker.id === this.startMarkerId}
                 .stopActive=${marker.id + 'S' === this.stopMarkerId}
                 @marker-click=${(e: CustomEvent) => this._handleMarkerClick(e, marker)}

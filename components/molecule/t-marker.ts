@@ -8,6 +8,7 @@ export interface MarkerData {
   label: string;
   value: number;
   color?: string;
+  textColor?: string;
 }
 
 @customElement('t-marker')
@@ -77,12 +78,14 @@ export class Marker extends LitElement {
   }
 
   private _getMarkerRowStyle(): string {
-    console.log('Getting marker row style for marker:', this.marker);
     const markerColor = getBgColor(this.marker.color);
-    console.log('Marker color:', markerColor);
 
     if (!markerColor.color) {
-      return '';
+      if (!this.marker.textColor) {
+        return '';
+      }
+
+      return `--marker-on-color: ${this.marker.textColor};`;
     }
 
     return `--marker-bg-color: ${markerColor.color}; --marker-on-color: ${markerColor.onColor};`;
