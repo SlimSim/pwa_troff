@@ -26,6 +26,7 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Boolean }) isStartingPlayback = false;
   @property({ type: Number }) playbackCountdown = 0;
+  @property({ type: String }) loopTimesLeftLabel = '';
   @property({ type: Number }) pauseBefore = 3;
   @property({ type: Number }) waitBetween = 1;
   @property({ type: Boolean }) disablePauseBefore = false;

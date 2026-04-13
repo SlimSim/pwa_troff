@@ -20,8 +20,11 @@ import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import { configureMarkerSlider } from './utils/troff-settings.js';
 import {
+  TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON,
   TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_SPACE_RESET_COUNTER,
   TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
 } from './constants/constants.js';
 
@@ -67,14 +70,82 @@ document.addEventListener('DOMContentLoaded', () => {
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
   let pendingPlaybackStart: number | undefined;
   let playbackCountdownInterval: number | undefined;
+  let isLoopTransitionPause = false;
+  let configuredLoopTimes = 1;
+  let loopTimesLeft = 1;
 
-  const updatePlaybackCountdown = (millisecondsLeft: number) => {
-    if (!footer) {
+  const parseConfiguredLoopTimes = (value: unknown) => {
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'inf' || normalized === 'infinite' || normalized === '∞') {
+        return Number.POSITIVE_INFINITY;
+      }
+    }
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 1;
+    }
+
+    return Math.floor(parsed);
+  };
+
+  const updateLoopTimesDisplay = () => {
+    if (footer) {
+      footer.loopTimesLeftLabel = Number.isFinite(loopTimesLeft) ? String(loopTimesLeft) : '∞';
+    }
+
+    if (header) {
+      header.statusLoopsLeft = Number.isFinite(loopTimesLeft)
+        ? `${loopTimesLeft} loops`
+        : '∞ loops';
+    }
+  };
+
+  const updateHeaderCountdownDisplay = () => {
+    if (!header) {
       return;
     }
 
-    footer.isStartingPlayback = true;
-    footer.playbackCountdown = Math.max(1, Math.ceil(millisecondsLeft / 1000));
+    if (pendingPlaybackStart !== undefined && footer?.isStartingPlayback) {
+      header.statusCountdown = `${Math.max(1, footer.playbackCountdown)}s`;
+      return;
+    }
+
+    if (!audio.paused) {
+      header.statusCountdown = '0s';
+      return;
+    }
+
+    const pauseBeforeSeconds =
+      footer && !footer.disablePauseBefore ? Math.max(0, footer.pauseBefore) : 0;
+    header.statusCountdown = `${pauseBeforeSeconds}s`;
+  };
+
+  const syncLoopTimesFromSong = () => {
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    configuredLoopTimes = parseConfiguredLoopTimes(songData?.loopTimes);
+    loopTimesLeft = configuredLoopTimes;
+    updateLoopTimesDisplay();
+  };
+
+  const resetLoopTimesCounter = () => {
+    loopTimesLeft = configuredLoopTimes;
+    updateLoopTimesDisplay();
+  };
+
+  const updatePlaybackCountdown = (millisecondsLeft: number) => {
+    const countdownSeconds = Math.max(1, Math.ceil(millisecondsLeft / 1000));
+
+    if (footer) {
+      footer.isStartingPlayback = true;
+      footer.playbackCountdown = countdownSeconds;
+    }
+
+    if (header) {
+      header.statusCountdown = `${countdownSeconds}s`;
+    }
   };
 
   const clearPlaybackCountdown = () => {
@@ -87,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = false;
       footer.playbackCountdown = 0;
     }
+
+    updateHeaderCountdownDisplay();
   };
 
   const clearPendingPlaybackStart = () => {
@@ -150,18 +223,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.max(0, footer.pauseBefore) * 1000;
   };
 
-  const startPlayback = (settingKey: string) => {
-    if (pendingPlaybackStart !== undefined) {
-      clearPendingPlaybackStart();
-      return;
+  const getWaitBetweenDelay = () => {
+    if (!footer || footer.disableWaitBetween) {
+      return 0;
     }
 
-    if (!audio.paused) {
-      audio.pause();
-      return;
-    }
+    return Math.max(0, footer.waitBetween) * 1000;
+  };
 
-    const delay = getPauseBeforeDelay(settingKey);
+  const schedulePlaybackAfterDelay = (delay: number) => {
+    clearPendingPlaybackStart();
+
     if (delay <= 0) {
       clearPlaybackCountdown();
       audio.play().catch(console.error);
@@ -188,6 +260,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }, delay);
   };
 
+  const shouldResetLoopCounter = (settingKey: string) => nDB.get(settingKey) === true;
+
+  const startPlayback = (timerSettingKey: string, resetCounterSettingKey: string) => {
+    if (pendingPlaybackStart !== undefined) {
+      if (shouldResetLoopCounter(resetCounterSettingKey)) {
+        resetLoopTimesCounter();
+      }
+      clearPendingPlaybackStart();
+      updateHeaderCountdownDisplay();
+      return;
+    }
+
+    if (!audio.paused) {
+      if (shouldResetLoopCounter(resetCounterSettingKey)) {
+        resetLoopTimesCounter();
+      }
+      audio.pause();
+      updateHeaderCountdownDisplay();
+      return;
+    }
+
+    schedulePlaybackAfterDelay(getPauseBeforeDelay(timerSettingKey));
+    updateHeaderCountdownDisplay();
+  };
+
   const handlePlaybackKeyDown = (event: KeyboardEvent) => {
     if (event.isComposing || event.repeat) {
       return;
@@ -200,14 +297,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
-      startPlayback(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR);
+      startPlayback(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR, TROFF_SETTING_ENTER_RESET_COUNTER);
       return;
     }
 
     if (event.key === ' ' || event.key === 'Spacebar') {
       event.preventDefault();
       event.stopPropagation();
-      startPlayback(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR);
+      startPlayback(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, TROFF_SETTING_SPACE_RESET_COUNTER);
     }
   };
 
@@ -253,11 +350,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (footer) {
     updateFooterWithCurrentSong();
+    syncLoopTimesFromSong();
+    updateHeaderCountdownDisplay();
 
     // Listen for nav-click events
     footer.addEventListener('nav-click', (event: any) => {
       if (event.detail.action === 'play') {
-        startPlayback(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR);
+        startPlayback(
+          TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+          TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON
+        );
       }
     });
 
@@ -285,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_pauseBeforeStart', event.detail.pauseBefore);
         nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttPauseBefStart', !event.detail.disabled);
       }
+      updateHeaderCountdownDisplay();
     });
 
     footer.addEventListener('wait-between-changed', (event: any) => {
@@ -358,6 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
           loadSong(songKey);
 
           updateFooterWithCurrentSong();
+          syncLoopTimesFromSong();
+          updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
           updateMarkerSlider(markerSlider);
@@ -372,6 +477,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSongKey) {
       clearPendingPlaybackStart();
       loadSong(currentSongKey);
+      syncLoopTimesFromSong();
+      updateHeaderCountdownDisplay();
     }
 
     // Add audio event listeners for timing
@@ -385,8 +492,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Check if playback reached the stop point
       if (audio.currentTime >= markerSlider.getPlaybackStop()) {
+        const playbackStart = markerSlider.getPlaybackStart();
+        if (Number.isFinite(loopTimesLeft)) {
+          if (loopTimesLeft <= 1) {
+            audio.pause();
+            audio.currentTime = playbackStart;
+            resetLoopTimesCounter();
+            return;
+          }
+
+          loopTimesLeft -= 1;
+          updateLoopTimesDisplay();
+        }
+
+        const waitBetweenDelay = getWaitBetweenDelay();
+        isLoopTransitionPause = true;
         audio.pause();
-        audio.currentTime = markerSlider.getPlaybackStart();
+        audio.currentTime = playbackStart;
+        schedulePlaybackAfterDelay(waitBetweenDelay);
       }
     });
     audio.addEventListener('play', () => {
@@ -394,18 +517,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (footer) {
         footer.isPlaying = true;
       }
+      updateHeaderCountdownDisplay();
     });
     audio.addEventListener('pause', () => {
-      clearPendingPlaybackStart();
+      if (isLoopTransitionPause) {
+        isLoopTransitionPause = false;
+      } else {
+        clearPendingPlaybackStart();
+      }
       if (footer) {
         footer.isPlaying = false;
       }
+      updateHeaderCountdownDisplay();
     });
     audio.addEventListener('ended', () => {
       clearPendingPlaybackStart();
       if (footer) {
         footer.isPlaying = false;
       }
+      updateHeaderCountdownDisplay();
     });
   }
 
