@@ -13,11 +13,17 @@ import {
   getCurrentSongKey,
   updateFooterWithCurrentSong,
 } from './utils/current-song.js';
+import type { BottomNav } from './components/molecule/t-footer.js';
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import { configureMarkerSlider } from './utils/troff-settings.js';
+import {
+  TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+} from './constants/constants.js';
 
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
@@ -54,11 +60,158 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
 // Initialize components and set up event listeners
 
 document.addEventListener('DOMContentLoaded', () => {
-  const footer = document.getElementById('footer') as any;
+  const footer = document.getElementById('footer') as BottomNav | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
+  let pendingPlaybackStart: number | undefined;
+  let playbackCountdownInterval: number | undefined;
+
+  const updatePlaybackCountdown = (millisecondsLeft: number) => {
+    if (!footer) {
+      return;
+    }
+
+    footer.isStartingPlayback = true;
+    footer.playbackCountdown = Math.max(1, Math.ceil(millisecondsLeft / 1000));
+  };
+
+  const clearPlaybackCountdown = () => {
+    if (playbackCountdownInterval !== undefined) {
+      window.clearInterval(playbackCountdownInterval);
+      playbackCountdownInterval = undefined;
+    }
+
+    if (footer) {
+      footer.isStartingPlayback = false;
+      footer.playbackCountdown = 0;
+    }
+  };
+
+  const clearPendingPlaybackStart = () => {
+    if (pendingPlaybackStart === undefined) {
+      clearPlaybackCountdown();
+      return;
+    }
+
+    window.clearTimeout(pendingPlaybackStart);
+    pendingPlaybackStart = undefined;
+    clearPlaybackCountdown();
+  };
+
+  const isEditableKeyEvent = (event: KeyboardEvent) => {
+    const path = event.composedPath();
+    for (const target of path) {
+      if (!(target instanceof HTMLElement)) {
+        continue;
+      }
+
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+        return true;
+      }
+
+      if (target.isContentEditable) {
+        return true;
+      }
+    }
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+      return true;
+    }
+
+    if (activeElement instanceof HTMLElement && activeElement.isContentEditable) {
+      return true;
+    }
+
+    if (activeElement instanceof HTMLElement) {
+      const shadowActiveElement = activeElement.shadowRoot?.activeElement;
+      if (
+        shadowActiveElement instanceof HTMLInputElement ||
+        shadowActiveElement instanceof HTMLTextAreaElement
+      ) {
+        return true;
+      }
+
+      if (shadowActiveElement instanceof HTMLElement && shadowActiveElement.isContentEditable) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const getPauseBeforeDelay = (settingKey: string) => {
+    if (!footer || !nDB.get(settingKey) || footer.disablePauseBefore) {
+      return 0;
+    }
+
+    return Math.max(0, footer.pauseBefore) * 1000;
+  };
+
+  const startPlayback = (settingKey: string) => {
+    if (pendingPlaybackStart !== undefined) {
+      clearPendingPlaybackStart();
+      return;
+    }
+
+    if (!audio.paused) {
+      audio.pause();
+      return;
+    }
+
+    const delay = getPauseBeforeDelay(settingKey);
+    if (delay <= 0) {
+      clearPlaybackCountdown();
+      audio.play().catch(console.error);
+      return;
+    }
+
+    const targetTime = Date.now() + delay;
+    updatePlaybackCountdown(delay);
+    playbackCountdownInterval = window.setInterval(() => {
+      const millisecondsLeft = targetTime - Date.now();
+      if (millisecondsLeft <= 0) {
+        return;
+      }
+
+      updatePlaybackCountdown(millisecondsLeft);
+    }, 100);
+
+    pendingPlaybackStart = window.setTimeout(() => {
+      pendingPlaybackStart = undefined;
+      audio.play().catch((error) => {
+        clearPendingPlaybackStart();
+        console.error(error);
+      });
+    }, delay);
+  };
+
+  const handlePlaybackKeyDown = (event: KeyboardEvent) => {
+    if (event.isComposing || event.repeat) {
+      return;
+    }
+
+    if (event.altKey || event.ctrlKey || event.metaKey || isEditableKeyEvent(event)) {
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      startPlayback(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR);
+      return;
+    }
+
+    if (event.key === ' ' || event.key === 'Spacebar') {
+      event.preventDefault();
+      event.stopPropagation();
+      startPlayback(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR);
+    }
+  };
+
+  document.addEventListener('keydown', handlePlaybackKeyDown, true);
 
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
@@ -104,11 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for nav-click events
     footer.addEventListener('nav-click', (event: any) => {
       if (event.detail.action === 'play') {
-        if (audio.paused) {
-          audio.play().catch(console.error);
-        } else {
-          audio.pause();
-        }
+        startPlayback(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR);
       }
     });
 
@@ -186,7 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
         songList.visible = expanded;
         if (expanded) {
           settingsPanel.visible = false; // Close settings panel when song list opens
-          footer.settingsPanelVisible = false;
+          if (footer) {
+            footer.settingsPanelVisible = false;
+          }
         }
       }
     });
@@ -202,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update current song in localStorage
         const songKey = event.detail.songKey;
         if (songKey) {
+          clearPendingPlaybackStart();
           setCurrentSong(songKey);
           loadSong(songKey);
 
@@ -218,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const currentSongKey = getCurrentSongKey();
     if (currentSongKey) {
+      clearPendingPlaybackStart();
       loadSong(currentSongKey);
     }
 
@@ -237,13 +390,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     audio.addEventListener('play', () => {
-      footer.isPlaying = true;
+      clearPlaybackCountdown();
+      if (footer) {
+        footer.isPlaying = true;
+      }
     });
     audio.addEventListener('pause', () => {
-      footer.isPlaying = false;
+      clearPendingPlaybackStart();
+      if (footer) {
+        footer.isPlaying = false;
+      }
     });
     audio.addEventListener('ended', () => {
-      footer.isPlaying = false;
+      clearPendingPlaybackStart();
+      if (footer) {
+        footer.isPlaying = false;
+      }
     });
   }
 

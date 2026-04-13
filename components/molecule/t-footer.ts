@@ -24,6 +24,8 @@ export class BottomNav extends LitElement {
   @property({ type: String }) markerInfo = '';
   @property({ type: String }) markerColor = '';
   @property({ type: Boolean }) isPlaying = false;
+  @property({ type: Boolean }) isStartingPlayback = false;
+  @property({ type: Number }) playbackCountdown = 0;
   @property({ type: Number }) pauseBefore = 3;
   @property({ type: Number }) waitBetween = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
@@ -119,6 +121,20 @@ export class BottomNav extends LitElement {
     }
     .marker-dropdown-content t-butt {
       align-self: flex-end;
+    }
+
+    .play-button-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .play-countdown {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2px;
     }
   `;
 
@@ -428,7 +444,16 @@ export class BottomNav extends LitElement {
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
           <t-butt round important key=" ">
-            <t-icon large name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
+            <div class="play-button-content">
+              ${this.isStartingPlayback
+                ? html`<div class="play-countdown">${this.playbackCountdown}</div>`
+                : ''}
+              <t-icon
+                name="${this.isPlaying || this.isStartingPlayback ? 'pause' : 'play'}"
+                ?large=${!this.isStartingPlayback}
+                ?slim=${this.isStartingPlayback}
+              ></t-icon>
+            </div>
           </t-butt>
         </div>
 
