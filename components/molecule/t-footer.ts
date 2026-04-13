@@ -268,11 +268,7 @@ export class BottomNav extends LitElement {
 
   private _handlePauseBeforeChanged(event: CustomEvent) {
     this.disablePauseBefore = event.detail.disabled;
-    if (this.disablePauseBefore) {
-      this.pauseBefore = 0;
-    } else {
-      this.pauseBefore = event.detail.value;
-    }
+    this.pauseBefore = event.detail.value;
     this.dispatchEvent(
       new CustomEvent('pause-before-changed', {
         detail: { pauseBefore: event.detail.value, disabled: this.disablePauseBefore },
@@ -284,11 +280,7 @@ export class BottomNav extends LitElement {
 
   private _handleWaitBetweenChanged(event: CustomEvent) {
     this.disableWaitBetween = event.detail.disabled;
-    if (this.disableWaitBetween) {
-      this.waitBetween = 0;
-    } else {
-      this.waitBetween = event.detail.value;
-    }
+    this.waitBetween = event.detail.value;
     this.dispatchEvent(
       new CustomEvent('wait-between-changed', {
         detail: { waitBetween: this.waitBetween, disabled: this.disableWaitBetween },
@@ -367,7 +359,7 @@ export class BottomNav extends LitElement {
               <t-icon
                 name="time"
                 label="${this.isPlaying
-                  ? `${this.waitBetween}`
+                  ? `${this.disableWaitBetween ? 0 : this.waitBetween}`
                   : `${this.disablePauseBefore ? 0 : this.pauseBefore}`}"
                 unit="s"
               ></t-icon>
