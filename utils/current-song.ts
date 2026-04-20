@@ -32,6 +32,11 @@ export function updateFooterWithCurrentSong() {
   const footer = document.getElementById('footer') as any;
   if (!footer) return;
 
+  const parseStoredNumber = (value: unknown, fallback: number) => {
+    const parsedValue = Number(value);
+    return Number.isFinite(parsedValue) ? parsedValue : fallback;
+  };
+
   // Get current song path from localStorage
   const currentSongData = nDB.get('stroCurrentSongPathAndGalleryId');
   const songPath = currentSongData?.strPath;
@@ -39,10 +44,10 @@ export function updateFooterWithCurrentSong() {
   if (songPath) {
     const songData = nDB.get(songPath);
     if (songData) {
-      footer.speed = Number(songData.TROFF_VALUE_speedBar) || 100;
-      footer.volume = Number(songData.TROFF_VALUE_volumeBar) || 75;
-      footer.pauseBefore = Number(songData.TROFF_VALUE_pauseBeforeStart) || 3;
-      footer.waitBetween = Number(songData.TROFF_VALUE_waitBetweenLoops) || 1;
+      footer.speed = parseStoredNumber(songData.TROFF_VALUE_speedBar, 100);
+      footer.volume = parseStoredNumber(songData.TROFF_VALUE_volumeBar, 75);
+      footer.pauseBefore = parseStoredNumber(songData.TROFF_VALUE_pauseBeforeStart, 3);
+      footer.waitBetween = parseStoredNumber(songData.TROFF_VALUE_waitBetweenLoops, 1);
       footer.disablePauseBefore = !songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart;
       footer.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
     }

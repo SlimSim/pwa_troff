@@ -1,5 +1,9 @@
 import { nDB } from '../assets/internal/db.js';
 import { MarkerSlider } from '../components/organisms/t-marker-slider.js';
+import {
+  TROFF_SETTING_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+} from '../constants/constants.js';
 
 export function getStartBefore(songData: any): number {
   const startBeforeValue = songData?.TROFF_VALUE_startBefore;
@@ -26,4 +30,15 @@ export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any)
   markerSlider.stopMarkerId = songData?.currentStopMarker || '';
   markerSlider.startBefore = getStartBefore(songData);
   markerSlider.stopAfter = getStopAfter(songData);
+
+  const isExtraExtended = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) === true;
+  const isExtended = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR) === true;
+
+  if (isExtraExtended) {
+    markerSlider.fillColor = 'through';
+  } else if (isExtended) {
+    markerSlider.fillColor = 'marker';
+  } else {
+    markerSlider.fillColor = '';
+  }
 }

@@ -11,13 +11,18 @@ export const getBgColor = (color: string | undefined): MarkerColorConfig => {
   if (!color) {
     return { name: 'None', color: '', onColor: '' };
   }
-  const colorObject = MARKER_COLORS.find((config) => config.color === color);
+
+  const normalizedColor = color.trim().toLocaleLowerCase();
+
+  const colorObject = MARKER_COLORS.find(
+    (config) => config.color.toLowerCase() === normalizedColor
+  );
 
   if (colorObject) {
     return colorObject;
   }
 
-  const colorName = color.replace(/^bg-/, '').replace(/-/g, ' ');
+  const colorName = normalizedColor.replace(/^bg-/i, '').replace(/-/g, ' ').trim().toLowerCase();
 
   const secondColorObject = MARKER_COLORS.find((config) => config.name.toLowerCase() === colorName);
 
@@ -25,7 +30,7 @@ export const getBgColor = (color: string | undefined): MarkerColorConfig => {
     return secondColorObject;
   }
 
-  switch (color) {
+  switch (normalizedColor) {
     case 'bg-white-1':
       return { name: 'White', color: '#ffffff', onColor: '#333' };
     case 'bg-white-2':

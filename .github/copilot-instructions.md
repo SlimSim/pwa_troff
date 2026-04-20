@@ -11,12 +11,86 @@ Troff is a Progressive Web App for music training, allowing dancers/musicians to
 
 ## AI Agent Ground Rules
 
+1. Think Before Coding
+Don't assume. Don't hide confusion. Surface tradeoffs.
+
+Before implementing:
+
+State your assumptions explicitly. If uncertain, ask.
+If multiple interpretations exist, present them - don't pick silently.
+If a simpler approach exists, say so. Push back when warranted.
+If something is unclear, stop. Name what's confusing. Ask.
+2. Simplicity First
+Minimum code that solves the problem. Nothing speculative.
+
+No features beyond what was asked.
+No abstractions for single-use code.
+No "flexibility" or "configurability" that wasn't requested.
+No error handling for impossible scenarios.
+If you write 200 lines and it could be 50, rewrite it.
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+3. Surgical Changes
+Touch only what you must. Clean up only your own mess.
+
+When editing existing code:
+
+Don't "improve" adjacent code, comments, or formatting.
+Don't refactor things that aren't broken.
+Match existing style, even if you'd do it differently.
+If you notice unrelated dead code, mention it - don't delete it.
+When your changes create orphans:
+
+Remove imports/variables/functions that YOUR changes made unused.
+Don't remove pre-existing dead code unless asked.
+The test: Every changed line should trace directly to the user's request.
+
+4. Goal-Driven Execution
+Define success criteria. Loop until verified.
+
+Transform tasks into verifiable goals:
+
+"Add validation" → "Write tests for invalid inputs, then make them pass"
+"Fix the bug" → "Write a test that reproduces it, then make it pass"
+"Refactor X" → "Ensure tests pass before and after"
+For multi-step tasks, state a brief plan:
+
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
 1. **Explain all changes and reasoning before implementing**. Wait for user approval on significant changes.
 2. **Search through code thoroughly** - check multiple files to understand context before suggesting changes.
 3. **When multiple approaches exist**, present options with pros/cons and your recommendation, then wait for decision.
 4. **Be thorough in code analysis** - accuracy over speed.
 5. **Ensure WebKit + Chromium compatibility** (no Customized built-in elements or browser-specific features).
 6. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
+7. **Never use the `any` type in TypeScript** - always find a more specific type.
+8. **Always put functions where they belong** - check the `utils/` folder for existing files and use them if possible, otherwise create a new file in `utils/` or wherever the file structure dictates.
+
+## Legacy Code — Do Not Touch
+
+The following files contain legacy code. You may read them to understand how things were done before, but you are **not allowed to modify them or reference them from new code**:
+
+- `utils/debugging.ts`
+- `utils/timeHack.ts`
+- `script.ts`
+- `script0.ts`
+- `scriptASimple.ts`
+- `scriptDBClass.ts`
+- `scriptErrorHandler.ts`
+- `scriptRateClass.ts`
+- `scriptTroffClass.ts`
+- `songManagement.ts`
+- `find.ts`
+- `services/FileApiImplementation.ts`
+- `services/analytics.ts`
+- `services/file.ts`
+- `services/firebase.ts`
+- `services/firebaseClient.ts`
+- `features/groupManagement.ts`
+- Anything in `assets/internal/`
 
 ## Architecture & Key Patterns
 
@@ -63,14 +137,19 @@ npm run sw:watch     # Regenerates service worker on dist/ changes
 ### Styling Conventions
 
 - **Mobile-First**: Base styles for mobile, `@media (min-width: 576px)` for larger screens only. **Never use max-width media queries**
+- **Avoid media queries by default**: Do not add responsive breakpoints or screen-size-dependent styles unless explicitly asked. The app is mobile-first and most UI should work the same across all screen sizes. Only reach for `@media (min-width: 576px)` when the user specifically requests different behavior on larger screens.
 - **CSS Variables**: Use variables defined in `stylesheets/variables.css` or `stylesheets/variables-theme.css` instead of hardcoded values. **Check existing variables before suggesting new ones**
 - **No Inline Styles**: Always use CSS classes or Lit component styles
-- **Icon Pattern**: SVG icons in `assets/icons/` directory with strict conventions:
-  - Set `fill="currentColor"` AND `stroke="currentColor"` to inherit CSS color
-  - Use `width="24" height="24" viewBox="0 0 24 24"` for consistency
-  - Check existing files first to match style
-  - Save with descriptive kebab-case names
-  - Avoid external icon libraries (moving away from Fontello)
+
+### Icon Conventions
+
+SVG icons live in `assets/icons/`. When creating new icons:
+
+- Set `fill="currentColor"` AND `stroke="currentColor"` to inherit CSS color
+- Use `width="24" height="24" viewBox="0 0 24 24"` for consistency
+- Check existing files first to match the style
+- Save with descriptive kebab-case names
+- Avoid external icon libraries (moving away from Fontello)
 
 ## Critical Integration Points
 

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
+import '../atom/t-butt.js';
 
 @customElement('t-settings-panel')
 export class SettingsPanel extends LitElement {
@@ -88,8 +89,44 @@ export class SettingsPanel extends LitElement {
       gap: 5px;
     }
 
+    .loop-buttons {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .loop-buttons t-butt {
+      width: 100%;
+    }
+
+    .setting-group-title {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .action-buttons t-butt {
+      width: 100%;
+    }
+
     /* Responsive design */
-    @media (max-width: 768px) {
+    @media (min-width: 576px) {
       .panel-content {
         padding: 15px;
       }
@@ -97,11 +134,29 @@ export class SettingsPanel extends LitElement {
       .settings-grid {
         grid-template-columns: 1fr;
       }
+
+      .action-buttons {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .loop-buttons {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+      }
     }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
   @property({ type: String }) versionNumber = '';
+  @property({ type: String }) loopTimesValue = '1';
+  @property({ type: Boolean }) enterUseTimer = false;
+  @property({ type: Boolean }) enterResetCounter = false;
+  @property({ type: Boolean }) enterGoToMarker = false;
+  @property({ type: Boolean }) spaceUseTimer = false;
+  @property({ type: Boolean }) spaceResetCounter = false;
+  @property({ type: Boolean }) spaceGoToMarker = false;
+  @property({ type: Boolean }) playUseTimer = false;
+  @property({ type: Boolean }) playResetCounter = false;
+  @property({ type: Boolean }) playGoToMarker = false;
 
   connectedCallback() {
     super.connectedCallback();
@@ -132,7 +187,7 @@ export class SettingsPanel extends LitElement {
     );
   }
 
-  private _handleSettingChange(setting: string, value: any) {
+  private _handleSettingChange(setting: string, value: unknown) {
     this.dispatchEvent(
       new CustomEvent('setting-changed', {
         detail: { setting, value },
@@ -142,6 +197,58 @@ export class SettingsPanel extends LitElement {
     );
   }
 
+  private _toggleSetting(setting: string, currentValue: boolean) {
+    const nextValue = !currentValue;
+
+    switch (setting) {
+      case 'enterUseTimer':
+        this.enterUseTimer = nextValue;
+        break;
+      case 'enterResetCounter':
+        this.enterResetCounter = nextValue;
+        break;
+      case 'enterGoToMarker':
+        this.enterGoToMarker = nextValue;
+        break;
+      case 'spaceUseTimer':
+        this.spaceUseTimer = nextValue;
+        break;
+      case 'spaceResetCounter':
+        this.spaceResetCounter = nextValue;
+        break;
+      case 'spaceGoToMarker':
+        this.spaceGoToMarker = nextValue;
+        break;
+      case 'playUseTimer':
+        this.playUseTimer = nextValue;
+        break;
+      case 'playResetCounter':
+        this.playResetCounter = nextValue;
+        break;
+      case 'playGoToMarker':
+        this.playGoToMarker = nextValue;
+        break;
+      default:
+        return;
+    }
+
+    this._handleSettingChange(setting, nextValue);
+  }
+
+  private _setLoopTimes(loopTimes: string) {
+    this.loopTimesValue = loopTimes;
+    this._handleSettingChange('loopTimes', loopTimes);
+  }
+
+  private _isLoopButtonActive(loopTimes: string) {
+    const current = this.loopTimesValue.trim().toLowerCase();
+    if (loopTimes === 'Inf') {
+      return current === 'inf' || current === 'infinite' || current === '∞';
+    }
+
+    return current === loopTimes;
+  }
+
   render() {
     return html`
       <div class="panel-content">
@@ -149,100 +256,131 @@ export class SettingsPanel extends LitElement {
           <h2 class="panel-title">Settings</h2>
           <button class="close-button" @click=${this._handleClose}>×</button>
         </div>
-        <span>To be implemented...</span>
-        <div>Version: ${this.versionNumber}</div>
 
-        <!--div class="settings-section">
-          <h3>Audio Settings</h3>
+        <div class="settings-section">
+          <h3>Song Loop</h3>
           <div class="settings-grid">
             <div class="setting-item">
-              <span class="setting-label">Volume</span>
-              <div class="setting-value">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value="75"
-                  @change=${(e: Event) =>
-          this._handleSettingChange('volume', (e.target as HTMLInputElement).value)}
-                />
-                <span>75%</span>
-              </div>
-            </div>
-            <div class="setting-item">
-              <span class="setting-label">Loop Mode</span>
-              <div class="setting-value">
-                <t-butt toggle>Enabled</t-butt>
+              <div class="loop-buttons">
+                ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
+                  (loopTimes) => html`
+                    <t-butt
+                      toggle
+                      .active=${this._isLoopButtonActive(loopTimes)}
+                      @click=${() => this._setLoopTimes(loopTimes)}
+                    >
+                      ${loopTimes === 'Inf' ? '∞' : loopTimes}
+                    </t-butt>
+                  `
+                )}
               </div>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>Display Settings</h3>
+          <h3>Enter Key</h3>
           <div class="settings-grid">
             <div class="setting-item">
-              <span class="setting-label">Theme</span>
-              <div class="setting-value">
-                <select
-                  @change=${(e: Event) =>
-          this._handleSettingChange('theme', (e.target as HTMLSelectElement).value)}
+              <div class="action-buttons">
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.enterGoToMarker}
+                  @click=${() => this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
                 >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="auto">Auto</option>
-                </select>
-              </div>
-            </div>
-            <div class="setting-item">
-              <span class="setting-label">Show Markers</span>
-              <div class="setting-value">
-                <t-butt toggle active>Enabled</t-butt>
+                  Go to marker
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.enterUseTimer}
+                  @click=${() => this._toggleSetting('enterUseTimer', this.enterUseTimer)}
+                >
+                  Use timer
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.enterResetCounter}
+                  @click=${() => this._toggleSetting('enterResetCounter', this.enterResetCounter)}
+                >
+                  Reset counter
+                </t-butt>
               </div>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>Practice Settings</h3>
+          <h3>Space Key</h3>
           <div class="settings-grid">
             <div class="setting-item">
-              <span class="setting-label">Default Tempo</span>
-              <div class="setting-value">
-                <input
-                  type="number"
-                  min="40"
-                  max="200"
-                  value="120"
-                  @change=${(e: Event) =>
-          this._handleSettingChange('tempo', (e.target as HTMLInputElement).value)}
-                />
-              </div>
-            </div>
-            <div class="setting-item">
-              <span class="setting-label">Metronome</span>
-              <div class="setting-value">
-                <t-butt toggle>Enabled</t-butt>
+              <div class="action-buttons">
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.spaceGoToMarker}
+                  @click=${() => this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
+                >
+                  Go to marker
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.spaceUseTimer}
+                  @click=${() => this._toggleSetting('spaceUseTimer', this.spaceUseTimer)}
+                >
+                  Use timer
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.spaceResetCounter}
+                  @click=${() => this._toggleSetting('spaceResetCounter', this.spaceResetCounter)}
+                >
+                  Reset counter
+                </t-butt>
               </div>
             </div>
           </div>
         </div>
 
-        <div-- class="settings-section">
-          <h3>Actions</h3>
+        <div class="settings-section">
+          <h3>Play Button</h3>
           <div class="settings-grid">
             <div class="setting-item">
-              <t-butt @click=${() => this._handleSettingChange('reset', 'all')}
-                >Reset All Settings</t-butt
-              >
-            </div>
-            <div class="setting-item">
-              <t-butt @click=${() => this._handleSettingChange('export', 'settings')}
-                >Export Settings</t-butt
-              >
+              <div class="action-buttons">
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.playGoToMarker}
+                  @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
+                >
+                  Go to marker
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.playUseTimer}
+                  @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
+                >
+                  Use timer
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.playResetCounter}
+                  @click=${() => this._toggleSetting('playResetCounter', this.playResetCounter)}
+                >
+                  Reset counter
+                </t-butt>
+              </div>
             </div>
           </div>
-        </div-->
+        </div>
+
+        <div>Version: ${this.versionNumber}</div>
       </div>
     `;
   }

@@ -18,6 +18,29 @@ import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import { configureMarkerSlider } from './utils/troff-settings.js';
+import {
+  TROFF_SETTING_ENTER_RESET_COUNTER,
+  TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+  TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_SPACE_RESET_COUNTER,
+  TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+} from './constants/constants.js';
+
+type FooterElement = HTMLElement & {
+  settingsPanelVisible?: boolean;
+  speed?: number;
+  volume?: number;
+  pauseBefore?: number;
+  waitBetween?: number;
+  disablePauseBefore?: boolean;
+  disableWaitBetween?: boolean;
+  isStartingPlayback?: boolean;
+  playbackCountdown?: number;
+  markerName?: string;
+  isPlaying?: boolean;
+  loopTimesLeftLabel?: string;
+};
 
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
@@ -54,11 +77,288 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
 // Initialize components and set up event listeners
 
 document.addEventListener('DOMContentLoaded', () => {
-  const footer = document.getElementById('footer') as any;
+  const footer = document.getElementById('footer') as FooterElement | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
+  let pendingPlaybackStart: number | undefined;
+  let playbackCountdownInterval: number | undefined;
+  let isLoopTransitionPause = false;
+  let configuredLoopTimes = 1;
+  let loopTimesLeft = 1;
+
+  const parseConfiguredLoopTimes = (value: unknown) => {
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'inf' || normalized === 'infinite' || normalized === '∞') {
+        return Number.POSITIVE_INFINITY;
+      }
+    }
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 1;
+    }
+
+    return Math.floor(parsed);
+  };
+
+  const normalizeLoopTimesInput = (value: unknown): number | string => {
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'inf' || normalized === 'infinite' || normalized === '∞') {
+        return 'Inf';
+      }
+    }
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 1;
+    }
+
+    return Math.floor(parsed);
+  };
+
+  const updateLoopTimesDisplay = () => {
+    if (footer) {
+      footer.loopTimesLeftLabel = Number.isFinite(loopTimesLeft) ? String(loopTimesLeft) : '∞';
+    }
+
+    if (header) {
+      header.statusLoopsLeft = Number.isFinite(loopTimesLeft)
+        ? `${loopTimesLeft} loops`
+        : '∞ loops';
+    }
+  };
+
+  const updateHeaderCountdownDisplay = () => {
+    if (!header) {
+      return;
+    }
+
+    if (pendingPlaybackStart !== undefined && footer?.isStartingPlayback) {
+      header.statusCountdown = `${Math.max(1, footer.playbackCountdown ?? 1)}s`;
+      return;
+    }
+
+    if (!audio.paused) {
+      header.statusCountdown = '0s';
+      return;
+    }
+
+    const pauseBeforeSeconds =
+      footer && !footer.disablePauseBefore ? Math.max(0, footer.pauseBefore ?? 0) : 0;
+    header.statusCountdown = `${pauseBeforeSeconds}s`;
+  };
+
+  const syncSettingsPanelValues = () => {
+    if (!settingsPanel) {
+      return;
+    }
+
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    const configuredLoops = parseConfiguredLoopTimes(songData?.loopTimes);
+
+    settingsPanel.loopTimesValue = Number.isFinite(configuredLoops)
+      ? String(configuredLoops)
+      : 'Inf';
+    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
+    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
+    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
+    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
+    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
+    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
+  };
+
+  const syncLoopTimesFromSong = () => {
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    configuredLoopTimes = parseConfiguredLoopTimes(songData?.loopTimes);
+    loopTimesLeft = configuredLoopTimes;
+    updateLoopTimesDisplay();
+  };
+
+  const resetLoopTimesCounter = () => {
+    loopTimesLeft = configuredLoopTimes;
+    updateLoopTimesDisplay();
+  };
+
+  const updatePlaybackCountdown = (millisecondsLeft: number) => {
+    const countdownSeconds = Math.max(1, Math.ceil(millisecondsLeft / 1000));
+
+    if (footer) {
+      footer.isStartingPlayback = true;
+      footer.playbackCountdown = countdownSeconds;
+    }
+
+    if (header) {
+      header.statusCountdown = `${countdownSeconds}s`;
+    }
+  };
+
+  const clearPlaybackCountdown = () => {
+    if (playbackCountdownInterval !== undefined) {
+      window.clearInterval(playbackCountdownInterval);
+      playbackCountdownInterval = undefined;
+    }
+
+    if (footer) {
+      footer.isStartingPlayback = false;
+      footer.playbackCountdown = 0;
+    }
+
+    updateHeaderCountdownDisplay();
+  };
+
+  const clearPendingPlaybackStart = () => {
+    if (pendingPlaybackStart === undefined) {
+      clearPlaybackCountdown();
+      return;
+    }
+
+    window.clearTimeout(pendingPlaybackStart);
+    pendingPlaybackStart = undefined;
+    clearPlaybackCountdown();
+  };
+
+  const isEditableKeyEvent = (event: KeyboardEvent) => {
+    const path = event.composedPath();
+    for (const target of path) {
+      if (!(target instanceof HTMLElement)) {
+        continue;
+      }
+
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+        return true;
+      }
+
+      if (target.isContentEditable) {
+        return true;
+      }
+    }
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+      return true;
+    }
+
+    if (activeElement instanceof HTMLElement && activeElement.isContentEditable) {
+      return true;
+    }
+
+    if (activeElement instanceof HTMLElement) {
+      const shadowActiveElement = activeElement.shadowRoot?.activeElement;
+      if (
+        shadowActiveElement instanceof HTMLInputElement ||
+        shadowActiveElement instanceof HTMLTextAreaElement
+      ) {
+        return true;
+      }
+
+      if (shadowActiveElement instanceof HTMLElement && shadowActiveElement.isContentEditable) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const getPauseBeforeDelay = (settingKey: string) => {
+    if (!footer || !nDB.get(settingKey) || footer.disablePauseBefore) {
+      return 0;
+    }
+
+    return Math.max(0, footer.pauseBefore ?? 0) * 1000;
+  };
+
+  const getWaitBetweenDelay = () => {
+    if (!footer || footer.disableWaitBetween) {
+      return 0;
+    }
+
+    return Math.max(0, footer.waitBetween ?? 0) * 1000;
+  };
+
+  const schedulePlaybackAfterDelay = (delay: number) => {
+    clearPendingPlaybackStart();
+
+    if (delay <= 0) {
+      clearPlaybackCountdown();
+      audio.play().catch(console.error);
+      return;
+    }
+
+    const targetTime = Date.now() + delay;
+    updatePlaybackCountdown(delay);
+    playbackCountdownInterval = window.setInterval(() => {
+      const millisecondsLeft = targetTime - Date.now();
+      if (millisecondsLeft <= 0) {
+        return;
+      }
+
+      updatePlaybackCountdown(millisecondsLeft);
+    }, 100);
+
+    pendingPlaybackStart = window.setTimeout(() => {
+      pendingPlaybackStart = undefined;
+      audio.play().catch((error) => {
+        clearPendingPlaybackStart();
+        console.error(error);
+      });
+    }, delay);
+  };
+
+  const shouldResetLoopCounter = (settingKey: string) => nDB.get(settingKey) === true;
+
+  const startPlayback = (timerSettingKey: string, resetCounterSettingKey: string) => {
+    if (pendingPlaybackStart !== undefined) {
+      if (shouldResetLoopCounter(resetCounterSettingKey)) {
+        resetLoopTimesCounter();
+      }
+      clearPendingPlaybackStart();
+      updateHeaderCountdownDisplay();
+      return;
+    }
+
+    if (!audio.paused) {
+      if (shouldResetLoopCounter(resetCounterSettingKey)) {
+        resetLoopTimesCounter();
+      }
+      audio.pause();
+      updateHeaderCountdownDisplay();
+      return;
+    }
+
+    schedulePlaybackAfterDelay(getPauseBeforeDelay(timerSettingKey));
+    updateHeaderCountdownDisplay();
+  };
+
+  const handlePlaybackKeyDown = (event: KeyboardEvent) => {
+    if (event.isComposing || event.repeat) {
+      return;
+    }
+
+    if (event.altKey || event.ctrlKey || event.metaKey || isEditableKeyEvent(event)) {
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      startPlayback(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR, TROFF_SETTING_ENTER_RESET_COUNTER);
+      return;
+    }
+
+    if (event.key === ' ' || event.key === 'Spacebar') {
+      event.preventDefault();
+      event.stopPropagation();
+      startPlayback(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, TROFF_SETTING_SPACE_RESET_COUNTER);
+    }
+  };
+
+  document.addEventListener('keydown', handlePlaybackKeyDown, true);
 
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
@@ -92,23 +392,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for setting changes
     settingsPanel.addEventListener('setting-changed', (event: any) => {
-      console.log('Setting changed:', event.detail.setting, event.detail.value);
-      // Here you can add logic to handle setting changes
-      // For example, save to localStorage, update app state, etc.
+      const setting = String(event.detail.setting ?? '');
+      const value = event.detail.value;
+      const songKey = getCurrentSongKey();
+
+      if (setting === 'loopTimes') {
+        if (!songKey) {
+          return;
+        }
+
+        const normalizedLoopTimes = normalizeLoopTimesInput(value);
+        nDB.setOnSong(songKey, 'loopTimes', normalizedLoopTimes);
+        syncLoopTimesFromSong();
+        syncSettingsPanelValues();
+        return;
+      }
+
+      const settingsKeyByPanelSetting: Record<string, string> = {
+        enterUseTimer: TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+        enterResetCounter: TROFF_SETTING_ENTER_RESET_COUNTER,
+        spaceUseTimer: TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+        spaceResetCounter: TROFF_SETTING_SPACE_RESET_COUNTER,
+        playUseTimer: TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+        playResetCounter: TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+      };
+
+      const storageKey = settingsKeyByPanelSetting[setting];
+      if (!storageKey) {
+        return;
+      }
+
+      nDB.set(storageKey, value === true);
+      syncSettingsPanelValues();
     });
   }
 
   if (footer) {
     updateFooterWithCurrentSong();
+    syncLoopTimesFromSong();
+    syncSettingsPanelValues();
+    updateHeaderCountdownDisplay();
 
     // Listen for nav-click events
     footer.addEventListener('nav-click', (event: any) => {
       if (event.detail.action === 'play') {
-        if (audio.paused) {
-          audio.play().catch(console.error);
-        } else {
-          audio.pause();
-        }
+        startPlayback(
+          TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+          TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER
+        );
       }
     });
 
@@ -120,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
       }
     });
+
     footer.addEventListener('volume-changed', (event: any) => {
       audio.volume = event.detail.volume / 100;
       const songKey = getCurrentSongKey();
@@ -135,7 +467,9 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_pauseBeforeStart', event.detail.pauseBefore);
         nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttPauseBefStart', !event.detail.disabled);
       }
+      updateHeaderCountdownDisplay();
     });
+
     footer.addEventListener('wait-between-changed', (event: any) => {
       const songKey = getCurrentSongKey();
       if (songKey) {
@@ -146,6 +480,31 @@ document.addEventListener('DOMContentLoaded', () => {
           !event.detail.disabled
         );
       }
+    });
+
+    footer.addEventListener('marker-created', (event: any) => {
+      // Save the marker to localStorage (following existing pattern)
+      const songKey = getCurrentSongKey();
+      if (songKey && event.detail.marker) {
+        const currentSongData = nDB.get(songKey) || {};
+        const existingMarkers = currentSongData.markers || [];
+        existingMarkers.push(event.detail.marker);
+        nDB.setOnSong(songKey, 'markers', existingMarkers);
+      }
+
+      // Update the marker slider UI
+      updateMarkerSlider(markerSlider, false);
+    });
+
+    footer.addEventListener('marker-dialog-opened', () => {
+      const songKey = getCurrentSongKey();
+      if (!songKey) {
+        return;
+      }
+
+      const currentSongData = nDB.get(songKey) || {};
+      const markers = currentSongData.markers || [];
+      footer.markerName = `Marker nr ${markers.length + 1}`;
     });
   }
 
@@ -159,7 +518,9 @@ document.addEventListener('DOMContentLoaded', () => {
         songList.visible = expanded;
         if (expanded) {
           settingsPanel.visible = false; // Close settings panel when song list opens
-          footer.settingsPanelVisible = false;
+          if (footer) {
+            footer.settingsPanelVisible = false;
+          }
         }
       }
     });
@@ -175,10 +536,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update current song in localStorage
         const songKey = event.detail.songKey;
         if (songKey) {
+          clearPendingPlaybackStart();
           setCurrentSong(songKey);
           loadSong(songKey);
 
           updateFooterWithCurrentSong();
+          syncLoopTimesFromSong();
+          syncSettingsPanelValues();
+          updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
           updateMarkerSlider(markerSlider);
@@ -191,7 +556,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const currentSongKey = getCurrentSongKey();
     if (currentSongKey) {
+      clearPendingPlaybackStart();
       loadSong(currentSongKey);
+      syncLoopTimesFromSong();
+      syncSettingsPanelValues();
+      updateHeaderCountdownDisplay();
     }
 
     // Add audio event listeners for timing
@@ -205,18 +574,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Check if playback reached the stop point
       if (audio.currentTime >= markerSlider.getPlaybackStop()) {
+        const playbackStart = markerSlider.getPlaybackStart();
+        if (Number.isFinite(loopTimesLeft)) {
+          if (loopTimesLeft <= 1) {
+            audio.pause();
+            audio.currentTime = playbackStart;
+            resetLoopTimesCounter();
+            return;
+          }
+
+          loopTimesLeft -= 1;
+          updateLoopTimesDisplay();
+        }
+
+        const waitBetweenDelay = getWaitBetweenDelay();
+        isLoopTransitionPause = true;
         audio.pause();
-        audio.currentTime = markerSlider.getPlaybackStart();
+        audio.currentTime = playbackStart;
+        schedulePlaybackAfterDelay(waitBetweenDelay);
       }
     });
     audio.addEventListener('play', () => {
-      footer.isPlaying = true;
+      clearPlaybackCountdown();
+      if (footer) {
+        footer.isPlaying = true;
+      }
+      updateHeaderCountdownDisplay();
     });
     audio.addEventListener('pause', () => {
-      footer.isPlaying = false;
+      if (isLoopTransitionPause) {
+        isLoopTransitionPause = false;
+      } else {
+        clearPendingPlaybackStart();
+      }
+      if (footer) {
+        footer.isPlaying = false;
+      }
+      updateHeaderCountdownDisplay();
     });
     audio.addEventListener('ended', () => {
-      footer.isPlaying = false;
+      clearPendingPlaybackStart();
+      if (footer) {
+        footer.isPlaying = false;
+      }
+      updateHeaderCountdownDisplay();
     });
   }
 

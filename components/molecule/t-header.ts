@@ -75,6 +75,29 @@ export class Header extends LitElement {
       margin-top: 2px;
     }
 
+    .status-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      min-width: 2.5rem;
+      margin-left: 8px;
+      gap: 2px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .status-countdown {
+      min-height: 0.9rem;
+    }
+
+    .status-loops {
+      min-height: 0.9rem;
+      opacity: 0.9;
+    }
+
     .expand-section {
       position: absolute;
       bottom: -9px;
@@ -100,6 +123,8 @@ export class Header extends LitElement {
   @property({ type: String }) artistName = 'Unknown Artist';
   @property({ type: String }) currentTime = '0:00';
   @property({ type: String }) totalTime = '0:00';
+  @property({ type: String }) statusCountdown = '';
+  @property({ type: String }) statusLoopsLeft = '';
   @property({ type: Boolean, reflect: true }) expanded = false;
 
   private _handleExpand() {
@@ -127,6 +152,11 @@ export class Header extends LitElement {
           <div class="song-title">${this.songTitle}</div>
           <div class="artist-name">${this.artistName}</div>
           <div class="time-info">${this.currentTime} / ${this.totalTime}</div>
+        </div>
+
+        <div class="status-stack">
+          <div class="status-countdown">${this.statusCountdown}</div>
+          <div class="status-loops">${this.statusLoopsLeft}</div>
         </div>
 
         <div
