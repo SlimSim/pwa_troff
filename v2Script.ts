@@ -13,7 +13,6 @@ import {
   getCurrentSongKey,
   updateFooterWithCurrentSong,
 } from './utils/current-song.js';
-import type { BottomNav } from './components/molecule/t-footer.js';
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
@@ -22,11 +21,26 @@ import { configureMarkerSlider } from './utils/troff-settings.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
-  TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON,
+  TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
   TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
   TROFF_SETTING_SPACE_RESET_COUNTER,
   TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
 } from './constants/constants.js';
+
+type FooterElement = HTMLElement & {
+  settingsPanelVisible?: boolean;
+  speed?: number;
+  volume?: number;
+  pauseBefore?: number;
+  waitBetween?: number;
+  disablePauseBefore?: boolean;
+  disableWaitBetween?: boolean;
+  isStartingPlayback?: boolean;
+  playbackCountdown?: number;
+  markerName?: string;
+  isPlaying?: boolean;
+  loopTimesLeftLabel?: string;
+};
 
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
@@ -63,7 +77,7 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
 // Initialize components and set up event listeners
 
 document.addEventListener('DOMContentLoaded', () => {
-  const footer = document.getElementById('footer') as BottomNav | null;
+  const footer = document.getElementById('footer') as FooterElement | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
@@ -79,6 +93,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const normalized = value.trim().toLowerCase();
       if (normalized === 'inf' || normalized === 'infinite' || normalized === '∞') {
         return Number.POSITIVE_INFINITY;
+      }
+    }
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 1;
+    }
+
+    return Math.floor(parsed);
+  };
+
+  const normalizeLoopTimesInput = (value: unknown): number | string => {
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'inf' || normalized === 'infinite' || normalized === '∞') {
+        return 'Inf';
       }
     }
 
@@ -108,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (pendingPlaybackStart !== undefined && footer?.isStartingPlayback) {
-      header.statusCountdown = `${Math.max(1, footer.playbackCountdown)}s`;
+      header.statusCountdown = `${Math.max(1, footer.playbackCountdown ?? 1)}s`;
       return;
     }
 
@@ -118,8 +148,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pauseBeforeSeconds =
-      footer && !footer.disablePauseBefore ? Math.max(0, footer.pauseBefore) : 0;
+      footer && !footer.disablePauseBefore ? Math.max(0, footer.pauseBefore ?? 0) : 0;
     header.statusCountdown = `${pauseBeforeSeconds}s`;
+  };
+
+  const syncSettingsPanelValues = () => {
+    if (!settingsPanel) {
+      return;
+    }
+
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    const configuredLoops = parseConfiguredLoopTimes(songData?.loopTimes);
+
+    settingsPanel.loopTimesValue = Number.isFinite(configuredLoops)
+      ? String(configuredLoops)
+      : 'Inf';
+    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
+    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
+    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
+    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
+    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
+    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
   };
 
   const syncLoopTimesFromSong = () => {
@@ -220,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 0;
     }
 
-    return Math.max(0, footer.pauseBefore) * 1000;
+    return Math.max(0, footer.pauseBefore ?? 0) * 1000;
   };
 
   const getWaitBetweenDelay = () => {
@@ -228,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 0;
     }
 
-    return Math.max(0, footer.waitBetween) * 1000;
+    return Math.max(0, footer.waitBetween ?? 0) * 1000;
   };
 
   const schedulePlaybackAfterDelay = (delay: number) => {
@@ -342,15 +392,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for setting changes
     settingsPanel.addEventListener('setting-changed', (event: any) => {
-      console.log('Setting changed:', event.detail.setting, event.detail.value);
-      // Here you can add logic to handle setting changes
-      // For example, save to localStorage, update app state, etc.
+      const setting = String(event.detail.setting ?? '');
+      const value = event.detail.value;
+      const songKey = getCurrentSongKey();
+
+      if (setting === 'loopTimes') {
+        if (!songKey) {
+          return;
+        }
+
+        const normalizedLoopTimes = normalizeLoopTimesInput(value);
+        nDB.setOnSong(songKey, 'loopTimes', normalizedLoopTimes);
+        syncLoopTimesFromSong();
+        syncSettingsPanelValues();
+        return;
+      }
+
+      const settingsKeyByPanelSetting: Record<string, string> = {
+        enterUseTimer: TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+        enterResetCounter: TROFF_SETTING_ENTER_RESET_COUNTER,
+        spaceUseTimer: TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+        spaceResetCounter: TROFF_SETTING_SPACE_RESET_COUNTER,
+        playUseTimer: TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+        playResetCounter: TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+      };
+
+      const storageKey = settingsKeyByPanelSetting[setting];
+      if (!storageKey) {
+        return;
+      }
+
+      nDB.set(storageKey, value === true);
+      syncSettingsPanelValues();
     });
   }
 
   if (footer) {
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
+    syncSettingsPanelValues();
     updateHeaderCountdownDisplay();
 
     // Listen for nav-click events
@@ -358,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (event.detail.action === 'play') {
         startPlayback(
           TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
-          TROFF_SETTING_PLAY_UI_BUTTON_SHOW_BUTTON
+          TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER
         );
       }
     });
@@ -462,6 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           updateFooterWithCurrentSong();
           syncLoopTimesFromSong();
+          syncSettingsPanelValues();
           updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
@@ -478,6 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearPendingPlaybackStart();
       loadSong(currentSongKey);
       syncLoopTimesFromSong();
+      syncSettingsPanelValues();
       updateHeaderCountdownDisplay();
     }
 
