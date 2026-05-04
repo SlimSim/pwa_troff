@@ -88,6 +88,191 @@ document.addEventListener('DOMContentLoaded', () => {
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
 
+  const withSafeNumber = (value: unknown, fallback: number) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const getTimelineDuration = () => {
+    const durationFromSlider = withSafeNumber(markerSlider?.max, 0);
+    if (durationFromSlider > 0) {
+      return durationFromSlider;
+    }
+
+    const durationFromAudio = withSafeNumber(audio.duration, 0);
+    if (durationFromAudio > 0) {
+      return durationFromAudio;
+    }
+
+    const metadataDuration = withSafeNumber(getCurrentSongMetadata()?.duration, 0);
+    return Math.max(0, metadataDuration);
+  };
+
+  const normalizeZoomWindow = (startTime: number, endTime: number, duration: number) => {
+    const boundedDuration = Math.max(0, duration);
+    const boundedStart = Math.max(0, Math.min(startTime, boundedDuration));
+    const boundedEnd = Math.max(0, Math.min(endTime, boundedDuration));
+
+    if (boundedEnd <= boundedStart) {
+      return { startTime: 0, endTime: boundedDuration };
+    }
+
+    return { startTime: boundedStart, endTime: boundedEnd };
+  };
+
+  const persistZoomWindow = (startTime: number, endTime: number) => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+
+    nDB.setOnSong(songKey, 'zoomStartTime', startTime);
+    nDB.setOnSong(songKey, 'zoomEndTime', endTime);
+  };
+
+  const getMarkerViewportPaddingTime = (visibleWindow: number) => {
+    if (!markerSlider || visibleWindow <= 0) {
+      return 0;
+    }
+
+    const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
+    const markerElement = markerSlider.shadowRoot?.querySelector('.preset-marker') as HTMLElement | null;
+
+    if (!mainContent || !markerElement || mainContent.clientHeight <= 0) {
+      return 0;
+    }
+
+    const halfMarkerHeight = markerElement.getBoundingClientRect().height / 2;
+    if (halfMarkerHeight <= 0) {
+      return 0;
+    }
+
+    return (visibleWindow * halfMarkerHeight) / mainContent.clientHeight;
+  };
+
+  const applyMarkerSliderZoom = async (
+    startTime: number,
+    endTime: number,
+    persist: boolean,
+    addMarkerPadding: boolean = false
+  ) => {
+    if (!markerSlider) {
+      return;
+    }
+
+    const duration = getTimelineDuration();
+    const baseZoomWindow = normalizeZoomWindow(startTime, endTime, duration);
+    const paddingTime = addMarkerPadding
+      ? getMarkerViewportPaddingTime(baseZoomWindow.endTime - baseZoomWindow.startTime)
+      : 0;
+    const zoomWindow = normalizeZoomWindow(
+      baseZoomWindow.startTime - paddingTime,
+      baseZoomWindow.endTime + paddingTime,
+      duration
+    );
+    const visibleWindow = zoomWindow.endTime - zoomWindow.startTime;
+    const zoomLevel = visibleWindow > 0 && duration > 0 ? duration / visibleWindow : 1;
+
+    markerSlider.zoomLevel = Math.max(markerSlider.minZoom, zoomLevel);
+
+    if (persist) {
+      persistZoomWindow(zoomWindow.startTime, zoomWindow.endTime);
+    }
+
+    await markerSlider.updateComplete;
+
+    const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
+    const sliderContainer = markerSlider.shadowRoot?.querySelector('.slider-container') as HTMLElement | null;
+
+    if (!mainContent || !sliderContainer || duration <= 0) {
+      return;
+    }
+
+    const centerTime = (zoomWindow.startTime + zoomWindow.endTime) / 2;
+    const centerFraction = Math.max(0, Math.min(1, centerTime / duration));
+
+    const sliderRect = sliderContainer.getBoundingClientRect();
+    const contentRect = mainContent.getBoundingClientRect();
+    const targetViewportY = sliderRect.top + sliderRect.height * centerFraction;
+    const delta = targetViewportY - (contentRect.top + contentRect.height / 2);
+    const maxScrollTop = Math.max(0, mainContent.scrollHeight - mainContent.clientHeight);
+    const nextScrollTop = Math.max(0, Math.min(maxScrollTop, mainContent.scrollTop + delta));
+
+    mainContent.scrollTo({ top: nextScrollTop, behavior: 'smooth' });
+  };
+
+  const zoomToPlayableRegion = async () => {
+    if (!markerSlider) {
+      return;
+    }
+
+    await applyMarkerSliderZoom(
+      markerSlider.getPlaybackStart(),
+      markerSlider.getPlaybackStop(),
+      true,
+      true
+    );
+  };
+
+  const zoomOutTimeline = async () => {
+    const duration = getTimelineDuration();
+    await applyMarkerSliderZoom(0, duration, true);
+  };
+
+  const applySavedZoomWindowForCurrentSong = async () => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+
+    const songData = nDB.get(songKey) || {};
+    const duration = getTimelineDuration();
+    const fallbackEnd = duration;
+
+    const savedStart = withSafeNumber(songData.zoomStartTime, 0);
+    const savedEnd = withSafeNumber(songData.zoomEndTime, fallbackEnd);
+    const normalized = normalizeZoomWindow(savedStart, savedEnd, duration);
+
+    await applyMarkerSliderZoom(normalized.startTime, normalized.endTime, false);
+  };
+
+  const selectFirstAndLastMarkers = () => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+
+    const songData = nDB.get(songKey) || {};
+    const markers = Array.isArray(songData.markers) ? [...songData.markers] : [];
+    if (markers.length === 0) {
+      return;
+    }
+
+    const markerToNumericTime = (markerTime: unknown) => {
+      if (markerTime === 'max') {
+        return Number.POSITIVE_INFINITY;
+      }
+
+      const parsed = Number(markerTime);
+      return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+    };
+
+    markers.sort((a, b) => markerToNumericTime(a.time) - markerToNumericTime(b.time));
+
+    const firstMarkerId = String(markers[0].id);
+    const lastMarkerId = String(markers[markers.length - 1].id);
+
+    songData.currentStartMarker = firstMarkerId;
+    songData.currentStopMarker = `${lastMarkerId}S`;
+    nDB.set(songKey, songData);
+
+    markerSlider.startMarkerId = firstMarkerId;
+    markerSlider.stopMarkerId = `${lastMarkerId}S`;
+    markerSlider.requestUpdate();
+  };
+
   const parseConfiguredLoopTimes = (value: unknown) => {
     if (typeof value === 'string') {
       const normalized = value.trim().toLowerCase();
@@ -396,6 +581,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const value = event.detail.value;
       const songKey = getCurrentSongKey();
 
+      if (setting === 'playFullSong') {
+        selectFirstAndLastMarkers();
+        settingsPanel.playFullSong = false;
+        return;
+      }
+
+      if (setting === 'startBefore' || setting === 'stopAfter' || setting === 'incrementUntill') {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        if (setting === 'startBefore') {
+          currentSongData.TROFF_VALUE_startBefore = value;
+          markerSlider.startBefore = Number(value) || 0;
+        }
+        if (setting === 'stopAfter') {
+          currentSongData.TROFF_VALUE_stopAfter = value;
+          markerSlider.stopAfter = Number(value) || 0;
+        }
+        if (setting === 'incrementUntill') {
+          currentSongData.TROFF_VALUE_incrementUntilValue = value;
+        }
+
+        nDB.set(songKey, currentSongData);
+        markerSlider.requestUpdate();
+        return;
+      }
+
       if (setting === 'loopTimes') {
         if (!songKey) {
           return;
@@ -424,6 +638,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       nDB.set(storageKey, value === true);
       syncSettingsPanelValues();
+    });
+
+    settingsPanel.addEventListener('song-action-requested', async (event: Event) => {
+      const customEvent = event as CustomEvent<{ action?: string }>;
+      const action = String(customEvent.detail?.action ?? '');
+
+      if (action === 'zoom') {
+        await zoomToPlayableRegion();
+        return;
+      }
+
+      if (action === 'zoomOut') {
+        await zoomOutTimeline();
+      }
     });
   }
 
@@ -547,6 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Update marker slider with new song markers
           updateMarkerSlider(markerSlider);
+          void applySavedZoomWindowForCurrentSong();
         }
       });
     }
@@ -561,12 +790,14 @@ document.addEventListener('DOMContentLoaded', () => {
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
       updateHeaderCountdownDisplay();
+      void applySavedZoomWindowForCurrentSong();
     }
 
     // Add audio event listeners for timing
     audio.addEventListener('loadedmetadata', () => {
       header.totalTime = formatDuration(audio.duration);
       updateMarkerSlider(markerSlider);
+      void applySavedZoomWindowForCurrentSong();
     });
     audio.addEventListener('timeupdate', () => {
       header.currentTime = formatDuration(audio.currentTime);
