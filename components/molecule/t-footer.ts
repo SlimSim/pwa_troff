@@ -1,9 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import '../atom/t-dropdown-button.js';
-import '../atom/t-vertical-slider.js';
 import '../atom/t-dial.js';
-import '../atom/t-time-input.js';
 import '../atom/t-input.js';
 import '../atom/t-textarea.js';
 import '../atom/t-color-picker.js';
@@ -31,6 +29,7 @@ export class BottomNav extends LitElement {
   @property({ type: Number }) waitBetween = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
   @property({ type: Boolean }) disableWaitBetween = false;
+  @property({ type: Number }) songDuration = 0;
 
   @query('.marker-dropdown-content t-input')
   private _markerNameInput?: TInput;
@@ -86,20 +85,14 @@ export class BottomNav extends LitElement {
       transform: rotateX(180deg) translateY(-1px);
     }
 
-    .speed-dropdown-content {
-      padding: 16px 8px;
-      border: 1px solid var(--on-theme-color, #ffffff);
-      border-radius: 4px;
-      display: flex;
-      flex-direction: row;
-      gap: 16px;
-    }
+    .speed-dropdown-content,
     .time-dropdown-content {
       padding: 16px 8px;
       border: 1px solid var(--on-theme-color, #ffffff);
       border-radius: 4px;
       display: flex;
       flex-direction: column;
+      align-items: start;
       gap: 16px;
     }
 
@@ -388,6 +381,7 @@ export class BottomNav extends LitElement {
                 iconName="pause-before"
                 unit="s"
                 defaultValue="3"
+                show-disable-button
                 .value=${this.pauseBefore}
                 .disabled=${this.disablePauseBefore}
                 @value-changed=${this._handlePauseBeforeChanged}
@@ -398,6 +392,7 @@ export class BottomNav extends LitElement {
                 iconName="wait-between"
                 unit="s"
                 defaultValue="1"
+                show-disable-button
                 .value=${this.waitBetween}
                 .disabled=${this.disableWaitBetween}
                 @value-changed=${this._handleWaitBetweenChanged}
@@ -417,28 +412,30 @@ export class BottomNav extends LitElement {
               <t-icon name="speed" label="${Math.round(this.speed)}" unit="%"></t-icon>
             </t-butt>
             <div slot="dropdown" class="speed-dropdown-content">
-              <t-vertical-slider
+              <t-dial
                 key="v"
                 min="0"
                 max="100"
+                step="5"
                 label="Volume"
                 iconName="volume"
                 defaultValue="75"
                 .value=${this.volume}
                 unit=""
                 @value-changed=${this._handleVolumeChanged}
-              ></t-vertical-slider>
-              <t-vertical-slider
+              ></t-dial>
+              <t-dial
                 key="s"
                 min="50"
                 max="200"
+                step="5"
                 label="Speed"
                 iconName="speed"
                 defaultValue="100"
                 .value=${this.speed}
                 unit="%"
                 @value-changed=${this._handleSpeedChanged}
-              ></t-vertical-slider>
+              ></t-dial>
             </div>
           </t-dropdown-button>
         </div>
@@ -485,14 +482,16 @@ export class BottomNav extends LitElement {
                 rows="4"
                 @input=${this._handleMarkerInfoChange}
               ></t-textarea>
-              <t-time-input
+              <t-dial
+                iconName="time"
                 key="m"
                 label="Time"
                 unit="s"
-                defaultValue="0"
+                min="0"
+                .max=${audio.duration || 0}
                 .value=${this.markerTime}
                 @value-changed=${this._handleMarkerTimeChange}
-              ></t-time-input>
+              ></t-dial>
               <t-color-picker @change=${this._handleMarkerColorChange}></t-color-picker>
               <t-butt important @click=${this._handleMarkerOkClick}>OK</t-butt>
             </div>

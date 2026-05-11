@@ -1,17 +1,18 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-butt.js';
+import './t-icon.js';
+import './t-dropdown-button.js';
 
 @customElement('t-dial')
 export class Dial extends LitElement {
-  private static readonly KNOB_SIZE = 80;
-
   static styles = css`
     :host {
       display: flex;
       flex-direction: column;
       align-items: center;
       user-select: none;
+      position: relative;
     }
 
     .dial-container {
@@ -152,7 +153,7 @@ export class Dial extends LitElement {
     }
 
     .floating-dial {
-      position: fixed;
+      position: absolute;
       left: var(--dial-x, 0px);
       top: var(--dial-y, 0px);
       transform: translate(-50%, -50%);
@@ -180,6 +181,25 @@ export class Dial extends LitElement {
     .floating-dial-value.disabled {
       color: var(--on-gray-out);
     }
+
+    .disabled {
+      --regular-button-color: var(--gray-out, lightgray);
+      --on-regular-buton-color: var(--on-gray-out, #595959);
+    }
+
+    .dropdown-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+    }
+
+    .side-button {
+      min-width: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   `;
 
   @property({ type: Number }) _value = 1;
@@ -189,8 +209,14 @@ export class Dial extends LitElement {
       return;
     }
 
-    this._value = newValue;
+    this._value = this._clamp(newValue);
     this.requestUpdate();
+  }
+
+  private _clamp(value: number) {
+    if (this.min !== undefined && this.min !== null && !Number.isNaN(this.min)) value = Math.max(this.min, value);
+    if (this.max !== undefined && this.max !== null && !Number.isNaN(this.max)) value = Math.min(this.max, value);
+    return value;
   }
 
   get value(): number {
@@ -198,11 +224,15 @@ export class Dial extends LitElement {
   }
 
   @property({ type: String }) unit = '';
-  @property({ type: Number }) defaultValue = 1;
+  @property({ type: Number }) defaultValue: number | undefined;
   @property({ type: String }) label = '';
   @property({ type: String }) key = '';
   @property({ type: String }) iconName = '';
   @property({ type: Boolean }) disabled = false;
+  @property({ type: Number }) step = 1;
+  @property({ type: Number }) min: number | undefined;
+  @property({ type: Number }) max: number | undefined;
+  @property({ type: Boolean, attribute: 'show-disable-button' }) showDisableButton = false;
 
   private isDragging = false;
   private initialValue = 1;
@@ -225,24 +255,19 @@ export class Dial extends LitElement {
     return this.shadowRoot?.querySelector('.dial-knob') ?? null;
   }
 
-  private _getValueControlsElement(): HTMLElement | null {
-    return this.shadowRoot?.querySelector('.value-controls') ?? null;
-  }
-
   private _getFixedDialPosition(): { x: number; y: number } | null {
-    const valueControls = this._getValueControlsElement();
     const valueDisplay = this.shadowRoot?.querySelector('.value-display');
 
-    if (!(valueControls instanceof HTMLElement) || !(valueDisplay instanceof HTMLElement)) {
+    if (!(valueDisplay instanceof HTMLElement)) {
       return null;
     }
 
-    const controlsRect = valueControls.getBoundingClientRect();
+    const hostRect = this.getBoundingClientRect();
     const valueRect = valueDisplay.getBoundingClientRect();
 
     return {
-      x: valueRect.left + valueRect.width / 2,
-      y: controlsRect.top + Dial.KNOB_SIZE / 2,
+      x: valueRect.left - hostRect.left + valueRect.width / 2,
+      y: valueRect.bottom - hostRect.top,
     };
   }
 
@@ -250,7 +275,11 @@ export class Dial extends LitElement {
     let centerX = this.dialPositionX;
     let centerY = this.dialPositionY;
 
-    if (!this.dialVisible) {
+    if (this.dialVisible) {
+      const hostRect = this.getBoundingClientRect();
+      centerX = hostRect.left + this.dialPositionX;
+      centerY = hostRect.top + this.dialPositionY;
+    } else {
       const knob = this._getKnobElement();
       if (!knob) return 0;
       const rect = knob.getBoundingClientRect();
@@ -328,16 +357,31 @@ export class Dial extends LitElement {
     const partialValueChange = fractionalLap * (fullLaps + 1) * 10;
     const totalValueChange = fullValueChange + partialValueChange;
 
-    const newValue = Math.max(0, this.initialValue + direction * Math.round(totalValueChange));
+    const effectiveMin = this.min ?? 0;
+    const effectiveMax = this.max ?? Infinity;
+    let newValue = this.initialValue + direction * Math.round(totalValueChange);
+
+    // Clamp during drag calculation (like t-time-input does for min)
+    newValue = Math.max(effectiveMin, Math.min(effectiveMax, newValue));
     this._value = newValue;
 
     // Update initialValue when hitting min
-    if (this._value === 0) {
-      this.initialValue = 0;
+    if (this._value === effectiveMin) {
+      this.initialValue = effectiveMin;
     }
 
-    // Reset accumulation if negative at min
-    if (this._value === 0 && this.accumulatedAngle < 0) {
+    // Update initialValue when hitting max
+    if (this._value === effectiveMax) {
+      this.initialValue = effectiveMax;
+    }
+
+    // Reset accumulation if at min with negative direction
+    if (this._value === effectiveMin && this.accumulatedAngle < 0) {
+      this.accumulatedAngle = 0;
+    }
+
+    // Reset accumulation if at max with positive direction
+    if (this._value === effectiveMax && this.accumulatedAngle > 0) {
       this.accumulatedAngle = 0;
     }
 
@@ -417,19 +461,22 @@ export class Dial extends LitElement {
 
   private _handleDefaultClick(event: MouseEvent) {
     event.stopPropagation();
-    this._value = this.defaultValue;
+    if (!this._hasDefaultValue()) return;
+    this._value = this.defaultValue as number;
     this.currentRotation = 0;
     this.accumulatedAngle = 0;
     this._dispatchValueChanged();
   }
 
   private _handleIncrement() {
-    this._value = Math.max(0, this._value + 1);
+    const effectiveMax = this.max ?? Infinity;
+    this._value = Math.min(effectiveMax, this._value + this.step);
     this._dispatchValueChanged();
   }
 
   private _handleDecrement() {
-    this._value = Math.max(0, this._value - 1);
+    const effectiveMin = this.min ?? 0;
+    this._value = Math.max(effectiveMin, this._value - this.step);
     this._dispatchValueChanged();
   }
 
@@ -454,6 +501,10 @@ export class Dial extends LitElement {
     );
   }
 
+  private _hasDefaultValue() {
+    return this.defaultValue !== undefined && !Number.isNaN(this.defaultValue);
+  }
+
   render() {
     return html`
       <div class="dial-row">
@@ -463,26 +514,45 @@ export class Dial extends LitElement {
               ${this.label ? html`<p class="title-label">${this.label}</p>` : ''}
             </div>`
           : ''}
-        <div class="value-controls">
-          <t-butt
-            .key=${this.key}
-            @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
-            title="${this.defaultValue}"
-          >
-            <span class="reset-content">
-              <t-icon class="reset-icon" name="reset"></t-icon>
-              <span class="reset-text">${this.defaultValue}${this.unit}</span>
-            </span>
-          </t-butt>
-          <t-butt
-            class="icon"
-            .active=${this.disabled}
-            .key=${this.key}
-            @click=${this._handleDisabledToggle}
-            title="Disable ${this.label}"
-          >
-            <t-icon name="disable"></t-icon>
-          </t-butt>
+        <div class="value-controls ${this.disabled ? 'disabled' : ''}">
+          ${this._hasDefaultValue() || this.showDisableButton
+            ? html`
+                <t-dropdown-button position="up" align="left">
+                  <t-butt class="side-button" slot="button" title="Options">
+                    <t-icon name="chevron-up"></t-icon>
+                  </t-butt>
+                  <div class="dropdown-row" slot="dropdown">
+                    ${this._hasDefaultValue()
+                      ? html`
+                          <t-butt
+                            .key=${this.key}
+                            @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
+                            title="${this.defaultValue}"
+                          >
+                            <span class="reset-content">
+                              <t-icon class="reset-icon" name="reset"></t-icon>
+                              <span class="reset-text">${this.defaultValue}${this.unit}</span>
+                            </span>
+                          </t-butt>
+                        `
+                      : ''}
+                    ${this.showDisableButton
+                      ? html`
+                          <t-butt
+                            class="icon side-button"
+                            .active=${this.disabled}
+                            .key=${this.key}
+                            @click=${this._handleDisabledToggle}
+                            title="Disable ${this.label}"
+                          >
+                            <t-icon name="disable"></t-icon>
+                          </t-butt>
+                        `
+                      : ''}
+                  </div>
+                </t-dropdown-button>
+              `
+            : ''}
           <t-butt
             class="icon"
             .key=${this.key}

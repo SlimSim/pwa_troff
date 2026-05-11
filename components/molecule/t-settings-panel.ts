@@ -535,42 +535,41 @@ export class SettingsPanel extends LitElement {
                 </div>
                 <div class="setting-item song-stepper-item">
                   <div class="song-stepper-grid">
-                    <t-slide-stepper
+                    <t-dial
                       id="asdf"
                       unit="s"
-                      label="Start before 2"
-                      default="3"
+                      label="Start before"
+                      show-disable-button
                       defaultValue="4"
                       .value=${this.startBeforeValue}
-                      show-disable-button
                       .min=${0}
                       .max=${999}
                       .step=${1}
                       @value-changed=${(event: CustomEvent<{ value: number }>) =>
                         this._setSongNumericSetting('startBefore', event.detail.value)}
-                    ></t-slide-stepper>
-                    <t-slide-stepper
+                    ></t-dial>
+                    <t-dial
                       label="Stop after"
+                      show-disable-button
+                      defaultValue="2"
                       .value=${this.stopAfterValue}
                       .min=${0}
                       .max=${999}
                       .step=${1}
                       @value-changed=${(event: CustomEvent<{ value: number }>) =>
                         this._setSongNumericSetting('stopAfter', event.detail.value)}
-                    ></t-slide-stepper>
-                    <t-slide-stepper
+                    ></t-dial>
+                    <t-dial
                       label="Increment untill"
-                      put-buttons-in-dropdown=${true}
-                      default="100"
                       show-disable-button
+                      defaultValue="100"
                       .value=${this.incrementUntillValue}
-                      show-plus-minus-buttons=${true}
                       .min=${0}
                       .max=${999}
                       .step=${1}
                       @value-changed=${(event: CustomEvent<{ value: number }>) =>
                         this._setSongNumericSetting('incrementUntill', event.detail.value)}
-                    ></t-slide-stepper>
+                    ></t-dial>
                   </div>
                 </div>
               </div>
