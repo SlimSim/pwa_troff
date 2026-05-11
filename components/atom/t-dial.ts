@@ -6,14 +6,13 @@ import './t-dropdown-button.js';
 
 @customElement('t-dial')
 export class Dial extends LitElement {
-  private static readonly KNOB_SIZE = 80;
-
   static styles = css`
     :host {
       display: flex;
       flex-direction: column;
       align-items: center;
       user-select: none;
+      position: relative;
     }
 
     .dial-container {
@@ -154,7 +153,7 @@ export class Dial extends LitElement {
     }
 
     .floating-dial {
-      position: fixed;
+      position: absolute;
       left: var(--dial-x, 0px);
       top: var(--dial-y, 0px);
       transform: translate(-50%, -50%);
@@ -256,24 +255,19 @@ export class Dial extends LitElement {
     return this.shadowRoot?.querySelector('.dial-knob') ?? null;
   }
 
-  private _getValueControlsElement(): HTMLElement | null {
-    return this.shadowRoot?.querySelector('.value-controls') ?? null;
-  }
-
   private _getFixedDialPosition(): { x: number; y: number } | null {
-    const valueControls = this._getValueControlsElement();
     const valueDisplay = this.shadowRoot?.querySelector('.value-display');
 
-    if (!(valueControls instanceof HTMLElement) || !(valueDisplay instanceof HTMLElement)) {
+    if (!(valueDisplay instanceof HTMLElement)) {
       return null;
     }
 
-    const controlsRect = valueControls.getBoundingClientRect();
+    const hostRect = this.getBoundingClientRect();
     const valueRect = valueDisplay.getBoundingClientRect();
 
     return {
-      x: valueRect.left + valueRect.width / 2,
-      y: controlsRect.top + Dial.KNOB_SIZE / 2,
+      x: valueRect.left - hostRect.left + valueRect.width / 2,
+      y: valueRect.bottom - hostRect.top,
     };
   }
 
@@ -281,7 +275,11 @@ export class Dial extends LitElement {
     let centerX = this.dialPositionX;
     let centerY = this.dialPositionY;
 
-    if (!this.dialVisible) {
+    if (this.dialVisible) {
+      const hostRect = this.getBoundingClientRect();
+      centerX = hostRect.left + this.dialPositionX;
+      centerY = hostRect.top + this.dialPositionY;
+    } else {
       const knob = this._getKnobElement();
       if (!knob) return 0;
       const rect = knob.getBoundingClientRect();
