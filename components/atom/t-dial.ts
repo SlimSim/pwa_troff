@@ -4,6 +4,8 @@ import './t-butt.js';
 
 @customElement('t-dial')
 export class Dial extends LitElement {
+  private static readonly KNOB_SIZE = 80;
+
   static styles = css`
     :host {
       display: flex;
@@ -69,9 +71,9 @@ export class Dial extends LitElement {
       font-size: 0.9rem;
       font-weight: 600;
       text-align: center;
-      padding-left: 6px;
-      padding-right: 6px;
-      margin-bottom: 8px;
+      margin-bottom: 0;
+      cursor: grab;
+      touch-action: none;
     }
 
     .value-display.disabled {
@@ -82,7 +84,7 @@ export class Dial extends LitElement {
     .value-display.disabled::after {
       content: '';
       position: absolute;
-      top: 31%;
+      top: 42%;
       left: 0;
       right: 0;
       height: 2px;
@@ -91,10 +93,92 @@ export class Dial extends LitElement {
       transform-origin: center;
     }
 
-    .button-row {
+    .value-controls {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 8px;
+    }
+
+    .dial-row {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: nowrap;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .title-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .title-label {
+      margin: 0;
+      font-size: 0.7em;
+      line-height: 1;
+    }
+
+    .value-controls t-butt {
+      margin: -2px;
+    }
+
+    .reset-content {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.4em;
+      min-height: 1.6em;
+    }
+
+    .reset-icon {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      transform: scale(2);
+      transform-origin: center;
+    }
+
+    .reset-text {
+      position: relative;
+      z-index: 1;
+      margin-top: 1em;
+      font-size: 0.69em;
+      line-height: 1;
+    }
+
+    .floating-dial {
+      position: fixed;
+      left: var(--dial-x, 0px);
+      top: var(--dial-y, 0px);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .floating-dial-icon {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% - 6px);
+      transform: translateX(-50%);
+    }
+
+    .floating-dial-value {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .floating-dial-value.disabled {
+      color: var(--on-gray-out);
     }
   `;
 
@@ -126,38 +210,89 @@ export class Dial extends LitElement {
   private startAngle = 0;
   private currentRotation = 0;
   private accumulatedAngle = 0;
+  private dialVisible = false;
+  private dialPositionX = 0;
+  private dialPositionY = 0;
+
+  private readonly _boundMouseMove = (event: MouseEvent) => this._handleMouseMove(event);
+  private readonly _boundMouseUp = (event: MouseEvent) => this._handleMouseUp(event);
+  private readonly _boundTouchMove = (event: TouchEvent) => this._handleTouchMove(event);
+  private readonly _boundTouchEnd = (event: TouchEvent) => this._handleTouchEnd(event);
+  private readonly _boundTouchCancel = (event: TouchEvent) => this._handleTouchEnd(event);
+  private readonly _boundDocumentClick = (event: MouseEvent) => this._handleDocumentClick(event);
 
   private _getKnobElement(): HTMLElement | null {
     return this.shadowRoot?.querySelector('.dial-knob') ?? null;
   }
 
+  private _getValueControlsElement(): HTMLElement | null {
+    return this.shadowRoot?.querySelector('.value-controls') ?? null;
+  }
+
+  private _getFixedDialPosition(): { x: number; y: number } | null {
+    const valueControls = this._getValueControlsElement();
+    const valueDisplay = this.shadowRoot?.querySelector('.value-display');
+
+    if (!(valueControls instanceof HTMLElement) || !(valueDisplay instanceof HTMLElement)) {
+      return null;
+    }
+
+    const controlsRect = valueControls.getBoundingClientRect();
+    const valueRect = valueDisplay.getBoundingClientRect();
+
+    return {
+      x: valueRect.left + valueRect.width / 2,
+      y: controlsRect.top + Dial.KNOB_SIZE / 2,
+    };
+  }
+
   private _getAngleFromEvent(event: MouseEvent | Touch): number {
-    const knob = this._getKnobElement();
-    if (!knob) return 0;
-    const rect = knob.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const deltaX = (event.clientX || (event as Touch).clientX) - centerX;
-    const deltaY = (event.clientY || (event as Touch).clientY) - centerY;
+    let centerX = this.dialPositionX;
+    let centerY = this.dialPositionY;
+
+    if (!this.dialVisible) {
+      const knob = this._getKnobElement();
+      if (!knob) return 0;
+      const rect = knob.getBoundingClientRect();
+      centerX = rect.left + rect.width / 2;
+      centerY = rect.top + rect.height / 2;
+    }
+
+    const deltaX = event.clientX - centerX;
+    const deltaY = event.clientY - centerY;
     return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  }
+
+  private _showDial() {
+    const position = this._getFixedDialPosition();
+    if (!position) {
+      return;
+    }
+
+    this.dialPositionX = position.x;
+    this.dialPositionY = position.y;
+    this.dialVisible = true;
+    this.requestUpdate();
   }
 
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener('mousemove', this._handleMouseMove.bind(this));
-    document.addEventListener('mouseup', this._handleMouseUp.bind(this));
-    document.addEventListener('touchmove', this._handleTouchMove.bind(this), { passive: false });
-    document.addEventListener('touchend', this._handleTouchEnd.bind(this));
-    document.addEventListener('click', this._handleDocumentClick.bind(this), true); // capture
+    document.addEventListener('mousemove', this._boundMouseMove);
+    document.addEventListener('mouseup', this._boundMouseUp);
+    document.addEventListener('touchmove', this._boundTouchMove, { passive: false });
+    document.addEventListener('touchend', this._boundTouchEnd);
+    document.addEventListener('touchcancel', this._boundTouchCancel);
+    document.addEventListener('click', this._boundDocumentClick, true); // capture
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener('mousemove', this._handleMouseMove.bind(this));
-    document.removeEventListener('mouseup', this._handleMouseUp.bind(this));
-    document.removeEventListener('touchmove', this._handleTouchMove.bind(this));
-    document.removeEventListener('touchend', this._handleTouchEnd.bind(this));
-    document.removeEventListener('click', this._handleDocumentClick.bind(this), true);
+    document.removeEventListener('mousemove', this._boundMouseMove);
+    document.removeEventListener('mouseup', this._boundMouseUp);
+    document.removeEventListener('touchmove', this._boundTouchMove);
+    document.removeEventListener('touchend', this._boundTouchEnd);
+    document.removeEventListener('touchcancel', this._boundTouchCancel);
+    document.removeEventListener('click', this._boundDocumentClick, true);
   }
 
   private _handleStart(event: MouseEvent | TouchEvent) {
@@ -213,6 +348,8 @@ export class Dial extends LitElement {
 
   private _handleEnd() {
     this.isDragging = false;
+    this.dialVisible = false;
+    this.requestUpdate();
   }
 
   private _handleMouseDown(event: MouseEvent) {
@@ -236,6 +373,24 @@ export class Dial extends LitElement {
     if (event.touches.length === 1) {
       this._handleStart(event);
     }
+  }
+
+  private _handleValueMouseDown(event: MouseEvent) {
+    if (event.button !== 0) {
+      return;
+    }
+
+    this._showDial();
+    this._handleStart(event);
+  }
+
+  private _handleValueTouchStart(event: TouchEvent) {
+    if (event.touches.length !== 1) {
+      return;
+    }
+
+    this._showDial();
+    this._handleStart(event);
   }
 
   private _handleTouchMove(event: TouchEvent) {
@@ -301,58 +456,82 @@ export class Dial extends LitElement {
 
   render() {
     return html`
-      ${this.iconName ? html`<t-icon large name="${this.iconName}"></t-icon>` : ''}
-      ${this.label ? html`<p class="label">${this.label}</p>` : ''}
-      <div class="value-display ${this.disabled ? 'disabled' : ''}">${this._value}${this.unit}</div>
-      <div class="dial-container">
-        <div
-          class="dial-knob ${this.disabled ? 'disabled' : ''}"
-          style="transform: rotate(${this.currentRotation}deg);"
-          @mousedown=${this._handleMouseDown}
-          @touchstart=${this._handleTouchStart}
-        >
-          <t-icon class="dial-icon" name="rotate" large></t-icon>
+      <div class="dial-row">
+        ${this.iconName || this.label
+          ? html`<div class="title-inline">
+              ${this.iconName ? html`<t-icon name="${this.iconName}"></t-icon>` : ''}
+              ${this.label ? html`<p class="title-label">${this.label}</p>` : ''}
+            </div>`
+          : ''}
+        <div class="value-controls">
+          <t-butt
+            .key=${this.key}
+            @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
+            title="${this.defaultValue}"
+          >
+            <span class="reset-content">
+              <t-icon class="reset-icon" name="reset"></t-icon>
+              <span class="reset-text">${this.defaultValue}${this.unit}</span>
+            </span>
+          </t-butt>
+          <t-butt
+            class="icon"
+            .active=${this.disabled}
+            .key=${this.key}
+            @click=${this._handleDisabledToggle}
+            title="Disable ${this.label}"
+          >
+            <t-icon name="disable"></t-icon>
+          </t-butt>
+          <t-butt
+            class="icon"
+            .key=${this.key}
+            alt
+            @click=${this._handleDecrement}
+            title="Decrease by 1"
+          >
+            −
+          </t-butt>
+          <t-butt
+            class="value-display ${this.disabled ? 'disabled' : ''}"
+            @mousedown=${this._handleValueMouseDown}
+            @touchstart=${this._handleValueTouchStart}
+            title="Press and hold to use dial"
+          >
+            ${this._value}${this.unit}
+          </t-butt>
+          <t-butt
+            class="icon"
+            .key=${this.key}
+            shift
+            @click=${this._handleIncrement}
+            title="Increase by 1"
+          >
+            +
+          </t-butt>
         </div>
       </div>
-      <div class="button-row">
-        <t-butt
-          class="icon"
-          .active=${this.disabled}
-          .key=${this.key}
-          @click=${this._handleDisabledToggle}
-          title="Disable ${this.label}"
-        >
-          <t-icon name="disable"></t-icon>
-        </t-butt>
-        <t-butt
-          .active=${this._value === this.defaultValue}
-          .key=${this.key}
-          @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
-          title="${this.defaultValue}"
-        >
-          ${this.defaultValue}${this.unit}
-        </t-butt>
-      </div>
-      <div class="value-controls">
-        <t-butt
-          class="icon"
-          .key=${this.key}
-          alt
-          @click=${this._handleDecrement}
-          title="Decrease by 1"
-        >
-          −
-        </t-butt>
-        <t-butt
-          class="icon"
-          .key=${this.key}
-          shift
-          @click=${this._handleIncrement}
-          title="Increase by 1"
-        >
-          +
-        </t-butt>
-      </div>
+      ${this.dialVisible
+        ? html`<div
+            class="floating-dial"
+            style="--dial-x: ${this.dialPositionX}px; --dial-y: ${this.dialPositionY}px;"
+          >
+            <div class="floating-dial-value ${this.disabled ? 'disabled' : ''}">
+              ${this._value}${this.unit}
+            </div>
+            <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
+            <div class="dial-container">
+              <div
+                class="dial-knob ${this.disabled ? 'disabled' : ''}"
+                style="transform: rotate(${this.currentRotation}deg);"
+                @mousedown=${this._handleMouseDown}
+                @touchstart=${this._handleTouchStart}
+              >
+                <t-icon class="dial-icon" name="rotate" large></t-icon>
+              </div>
+            </div>
+          </div>`
+        : ''}
     `;
   }
 }

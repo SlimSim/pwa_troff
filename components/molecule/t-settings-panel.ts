@@ -2,6 +2,30 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import '../atom/t-butt.js';
+import '../atom/t-slide-stepper.js';
+
+type ToggleSetting =
+  | 'playFullSong'
+  | 'enterUseTimer'
+  | 'enterResetCounter'
+  | 'enterGoToMarker'
+  | 'spaceUseTimer'
+  | 'spaceResetCounter'
+  | 'spaceGoToMarker'
+  | 'playUseTimer'
+  | 'playResetCounter'
+  | 'playGoToMarker';
+
+type SongAction =
+  | 'zoomOut'
+  | 'zoom'
+  | 'importExport'
+  | 'copyMarkers'
+  | 'moveMarkers'
+  | 'deleteMarkers'
+  | 'stretchMarkers';
+
+type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
 @customElement('t-settings-panel')
 export class SettingsPanel extends LitElement {
@@ -58,6 +82,54 @@ export class SettingsPanel extends LitElement {
       margin-bottom: 20px;
     }
 
+    .settings-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-group {
+      padding: 14px;
+      border-radius: 10px;
+      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--border-color, #333);
+    }
+
+    .settings-group-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .settings-group-title-block {
+      display: grid;
+      gap: 4px;
+    }
+
+    .settings-group-title {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--text-color, #000);
+    }
+
+    .settings-group-copy {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-color, #000);
+      opacity: 0.8;
+    }
+
+    .scope-badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--secondary-color, rgba(0, 0, 0, 0.08));
+      color: var(--on-secondary-color, #000);
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     .settings-section h3 {
       margin-bottom: 10px;
       color: var(--text-color, #000);
@@ -76,6 +148,11 @@ export class SettingsPanel extends LitElement {
       padding: 10px;
       background-color: var(--item-background, rgba(255, 255, 255, 0.1));
       border-radius: 5px;
+    }
+
+    .setting-item > * {
+      width: 100%;
+      min-width: 0;
     }
 
     .setting-label {
@@ -106,6 +183,12 @@ export class SettingsPanel extends LitElement {
       font-weight: 600;
     }
 
+    .setting-group-copy {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      opacity: 0.8;
+    }
+
     .toggle-row {
       display: flex;
       align-items: center;
@@ -125,6 +208,90 @@ export class SettingsPanel extends LitElement {
       width: 100%;
     }
 
+    .song-action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .song-action-buttons t-butt {
+      width: 100%;
+    }
+
+    .song-stepper-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .song-stepper-grid t-slide-stepper {
+      min-width: 0;
+    }
+
+    .setting-item.song-stepper-item {
+      align-items: stretch;
+      justify-content: stretch;
+    }
+
+    details.advanced-panel {
+      border: 1px solid var(--border-color, #333);
+      border-radius: 8px;
+      background-color: var(--item-background, rgba(255, 255, 255, 0.06));
+      overflow: hidden;
+    }
+
+    details.advanced-panel[open] {
+      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
+    }
+
+    .advanced-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      padding: 12px 14px;
+    }
+
+    .advanced-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .advanced-summary-copy {
+      display: grid;
+      gap: 2px;
+    }
+
+    .advanced-summary-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-color, #000);
+    }
+
+    .advanced-summary-text {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--text-color, #000);
+      opacity: 0.8;
+    }
+
+    .advanced-chevron {
+      font-size: 1rem;
+      transition: transform 0.2s ease;
+    }
+
+    details.advanced-panel[open] .advanced-chevron {
+      transform: rotate(180deg);
+    }
+
+    .advanced-content {
+      padding: 0 14px 14px;
+    }
+
     /* Responsive design */
     @media (min-width: 576px) {
       .panel-content {
@@ -139,6 +306,14 @@ export class SettingsPanel extends LitElement {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
+      .song-action-buttons {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .song-stepper-grid {
+        flex-direction: row;
+      }
+
       .loop-buttons {
         grid-template-columns: repeat(10, minmax(0, 1fr));
       }
@@ -148,6 +323,10 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean, reflect: true }) visible = false;
   @property({ type: String }) versionNumber = '';
   @property({ type: String }) loopTimesValue = '1';
+  @property({ type: Boolean }) playFullSong = false;
+  @property({ type: Number }) startBeforeValue = 0;
+  @property({ type: Number }) stopAfterValue = 0;
+  @property({ type: Number }) incrementUntillValue = 0;
   @property({ type: Boolean }) enterUseTimer = false;
   @property({ type: Boolean }) enterResetCounter = false;
   @property({ type: Boolean }) enterGoToMarker = false;
@@ -175,6 +354,12 @@ export class SettingsPanel extends LitElement {
       console.error('Failed to fetch manifest version:', error);
       this.versionNumber = 'Unknown';
     }
+
+    const asdfStepper = this.renderRoot?.querySelector('#asdf');
+    asdfStepper?.addEventListener('value-changed', (event: Event) => {
+      const customEvent = event as CustomEvent<{ value: number; disabled?: boolean }>;
+      console.log('asdf value:', customEvent.detail.value);
+    });
   }
 
   private _handleClose() {
@@ -197,10 +382,41 @@ export class SettingsPanel extends LitElement {
     );
   }
 
-  private _toggleSetting(setting: string, currentValue: boolean) {
+  private _handleSongAction(action: SongAction) {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _setSongNumericSetting(setting: SongNumericSetting, value: number) {
+    switch (setting) {
+      case 'startBefore':
+        this.startBeforeValue = value;
+        break;
+      case 'stopAfter':
+        this.stopAfterValue = value;
+        break;
+      case 'incrementUntill':
+        this.incrementUntillValue = value;
+        break;
+      default:
+        return;
+    }
+
+    this._handleSettingChange(setting, value);
+  }
+
+  private _toggleSetting(setting: ToggleSetting, currentValue: boolean) {
     const nextValue = !currentValue;
 
     switch (setting) {
+      case 'playFullSong':
+        this.playFullSong = nextValue;
+        break;
       case 'enterUseTimer':
         this.enterUseTimer = nextValue;
         break;
@@ -249,6 +465,12 @@ export class SettingsPanel extends LitElement {
     return current === loopTimes;
   }
 
+  private _renderSongActionButton(action: SongAction, label: string) {
+    return html`
+      <t-butt ellipsis @click=${() => this._handleSongAction(action)}>${label}</t-butt>
+    `;
+  }
+
   render() {
     return html`
       <div class="panel-content">
@@ -257,127 +479,240 @@ export class SettingsPanel extends LitElement {
           <button class="close-button" @click=${this._handleClose}>×</button>
         </div>
 
-        <div class="settings-section">
-          <h3>Song Loop</h3>
-          <div class="settings-grid">
-            <div class="setting-item">
-              <div class="loop-buttons">
-                ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
-                  (loopTimes) => html`
+        <div class="settings-shell">
+          <section class="settings-group">
+            <div class="settings-group-header">
+              <div class="settings-group-title-block">
+                <h3 class="settings-group-title">Current Song</h3>
+                <p class="settings-group-copy">
+                  These controls belong to the selected song and should be saved with it.
+                </p>
+              </div>
+              <div class="scope-badge">Saved per song</div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Song Loop</h3>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <div class="loop-buttons">
+                    ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
+                      (loopTimes) => html`
+                        <t-butt
+                          toggle
+                          .active=${this._isLoopButtonActive(loopTimes)}
+                          @click=${() => this._setLoopTimes(loopTimes)}
+                        >
+                          ${loopTimes === 'Inf' ? '∞' : loopTimes}
+                        </t-butt>
+                      `
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Song Options</h3>
+              <p class="setting-group-copy">Core playback and practice controls for this song.</p>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <div class="action-buttons">
+                    <t-butt
+                      ellipsis
+                      .active=${this.playFullSong}
+                      @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
+                    >
+                      Play full song
+                    </t-butt>
+                  </div>
+                </div>
+                <div class="setting-item">
+                  <div class="song-action-buttons">
+                    ${this._renderSongActionButton('zoomOut', 'Zoom out')}
+                    ${this._renderSongActionButton('zoom', 'Zoom')}
+                  </div>
+                </div>
+                <div class="setting-item song-stepper-item">
+                  <div class="song-stepper-grid">
+                    <t-slide-stepper
+                      id="asdf"
+                      unit="s"
+                      label="Start before 2"
+                      default="3"
+                      defaultValue="4"
+                      .value=${this.startBeforeValue}
+                      show-disable-button
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) =>
+                        this._setSongNumericSetting('startBefore', event.detail.value)}
+                    ></t-slide-stepper>
+                    <t-slide-stepper
+                      label="Stop after"
+                      .value=${this.stopAfterValue}
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) =>
+                        this._setSongNumericSetting('stopAfter', event.detail.value)}
+                    ></t-slide-stepper>
+                    <t-slide-stepper
+                      label="Increment untill"
+                      put-buttons-in-dropdown=${true}
+                      default="100"
+                      show-disable-button
+                      .value=${this.incrementUntillValue}
+                      show-plus-minus-buttons=${true}
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) =>
+                        this._setSongNumericSetting('incrementUntill', event.detail.value)}
+                    ></t-slide-stepper>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <details class="advanced-panel">
+                <summary class="advanced-summary">
+                  <div class="advanced-summary-copy">
+                    <p class="advanced-summary-title">Advanced</p>
+                    <p class="advanced-summary-text">Song-specific marker and transfer actions.</p>
+                  </div>
+                  <span class="advanced-chevron">⌄</span>
+                </summary>
+                <div class="advanced-content">
+                  <div class="song-action-buttons">
+                    ${this._renderSongActionButton('importExport', 'Import / export')}
+                    ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
+                    ${this._renderSongActionButton('moveMarkers', 'Move markers')}
+                    ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
+                    ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
+                  </div>
+                </div>
+              </details>
+            </div>
+          </section>
+
+          <section class="settings-group">
+            <div class="settings-group-header">
+              <div class="settings-group-title-block">
+                <h3 class="settings-group-title">Global Controls</h3>
+                <p class="settings-group-copy">
+                  These key and button behaviors apply across Troff, not just this song.
+                </p>
+              </div>
+              <div class="scope-badge">App-wide</div>
+            </div>
+
+            <div class="settings-section">
+              <h3>Enter Key</h3>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <div class="action-buttons">
                     <t-butt
                       toggle
-                      .active=${this._isLoopButtonActive(loopTimes)}
-                      @click=${() => this._setLoopTimes(loopTimes)}
+                      ellipsis
+                      .active=${this.enterGoToMarker}
+                      @click=${() => this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
                     >
-                      ${loopTimes === 'Inf' ? '∞' : loopTimes}
+                      Go to marker
                     </t-butt>
-                  `
-                )}
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.enterUseTimer}
+                      @click=${() => this._toggleSetting('enterUseTimer', this.enterUseTimer)}
+                    >
+                      Use timer
+                    </t-butt>
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.enterResetCounter}
+                      @click=${() =>
+                        this._toggleSetting('enterResetCounter', this.enterResetCounter)}
+                    >
+                      Reset counter
+                    </t-butt>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div class="settings-section">
-          <h3>Enter Key</h3>
-          <div class="settings-grid">
-            <div class="setting-item">
-              <div class="action-buttons">
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.enterGoToMarker}
-                  @click=${() => this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
-                >
-                  Go to marker
-                </t-butt>
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.enterUseTimer}
-                  @click=${() => this._toggleSetting('enterUseTimer', this.enterUseTimer)}
-                >
-                  Use timer
-                </t-butt>
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.enterResetCounter}
-                  @click=${() => this._toggleSetting('enterResetCounter', this.enterResetCounter)}
-                >
-                  Reset counter
-                </t-butt>
+            <div class="settings-section">
+              <h3>Space Key</h3>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <div class="action-buttons">
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.spaceGoToMarker}
+                      @click=${() => this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
+                    >
+                      Go to marker
+                    </t-butt>
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.spaceUseTimer}
+                      @click=${() => this._toggleSetting('spaceUseTimer', this.spaceUseTimer)}
+                    >
+                      Use timer
+                    </t-butt>
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.spaceResetCounter}
+                      @click=${() =>
+                        this._toggleSetting('spaceResetCounter', this.spaceResetCounter)}
+                    >
+                      Reset counter
+                    </t-butt>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div class="settings-section">
-          <h3>Space Key</h3>
-          <div class="settings-grid">
-            <div class="setting-item">
-              <div class="action-buttons">
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.spaceGoToMarker}
-                  @click=${() => this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
-                >
-                  Go to marker
-                </t-butt>
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.spaceUseTimer}
-                  @click=${() => this._toggleSetting('spaceUseTimer', this.spaceUseTimer)}
-                >
-                  Use timer
-                </t-butt>
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.spaceResetCounter}
-                  @click=${() => this._toggleSetting('spaceResetCounter', this.spaceResetCounter)}
-                >
-                  Reset counter
-                </t-butt>
+            <div class="settings-section">
+              <h3>Play Button</h3>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <div class="action-buttons">
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.playGoToMarker}
+                      @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
+                    >
+                      Go to marker
+                    </t-butt>
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.playUseTimer}
+                      @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
+                    >
+                      Use timer
+                    </t-butt>
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.playResetCounter}
+                      @click=${() => this._toggleSetting('playResetCounter', this.playResetCounter)}
+                    >
+                      Reset counter
+                    </t-butt>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Play Button</h3>
-          <div class="settings-grid">
-            <div class="setting-item">
-              <div class="action-buttons">
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.playGoToMarker}
-                  @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
-                >
-                  Go to marker
-                </t-butt>
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.playUseTimer}
-                  @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
-                >
-                  Use timer
-                </t-butt>
-                <t-butt
-                  toggle
-                  ellipsis
-                  .active=${this.playResetCounter}
-                  @click=${() => this._toggleSetting('playResetCounter', this.playResetCounter)}
-                >
-                  Reset counter
-                </t-butt>
-              </div>
-            </div>
-          </div>
+          </section>
         </div>
 
         <div>Version: ${this.versionNumber}</div>
