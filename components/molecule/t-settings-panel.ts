@@ -538,7 +538,9 @@ export class SettingsPanel extends LitElement {
                     <t-slide-stepper
                       id="asdf"
                       unit="s"
-                      label="Start before"
+                      label="Start before 2"
+                      default="3"
+                      defaultValue="4"
                       .value=${this.startBeforeValue}
                       show-disable-button
                       .min=${0}
@@ -558,7 +560,11 @@ export class SettingsPanel extends LitElement {
                     ></t-slide-stepper>
                     <t-slide-stepper
                       label="Increment untill"
+                      put-buttons-in-dropdown=${true}
+                      default="100"
+                      show-disable-button
                       .value=${this.incrementUntillValue}
+                      show-plus-minus-buttons=${true}
                       .min=${0}
                       .max=${999}
                       .step=${1}

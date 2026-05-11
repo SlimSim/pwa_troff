@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-butt.js';
 import './t-icon.js';
+import './t-dropdown-button.js';
 
 @customElement('t-slide-stepper')
 export class SlideStepper extends LitElement {
@@ -93,6 +94,13 @@ export class SlideStepper extends LitElement {
     .slide-hint t-icon {
       font-size: 1.25rem;
     }
+
+    .dropdown-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+    }
   `;
 
   @property({ type: Number }) _value = 0;
@@ -104,6 +112,8 @@ export class SlideStepper extends LitElement {
   @property({ type: String }) unit = '';
   @property({ type: Boolean }) disabled = false;
   @property({ type: Boolean, attribute: 'show-disable-button' }) showDisableButton = false;
+  @property({ type: Boolean, attribute: 'show-plus-minus-buttons' }) showPlusMinusButtons = false;
+  @property({ type: Boolean, attribute: 'put-buttons-in-dropdown' }) putButtonsInDropdown = false;
 
   set value(newValue: number) {
     if (this.disabled) {
@@ -244,20 +254,53 @@ export class SlideStepper extends LitElement {
       <div class="wrapper">
         ${this.label ? html`<p class="label">${this.label}</p>` : ''}
         <div class="controls ${this.disabled ? 'disabled' : ''}">
-          ${this._hasDefaultValue()
+          ${this.putButtonsInDropdown
             ? html`
-                <t-butt
-                  class="side-button"
-                  .active=${this._value === this.defaultValue}
-                  @click=${this._applyDefaultValue}
-                  title="${this.defaultValue}${this.unit}"
-                >
-                  ${this.defaultValue}${this.unit}
-                </t-butt>
+                <t-dropdown-button position="up" align="left">
+                  <t-butt class="side-button" slot="button" title="Options">
+                    <t-icon name="chevron-up"></t-icon>
+                  </t-butt>
+                  <div class="dropdown-row" slot="dropdown">
+                    ${this._hasDefaultValue()
+                      ? html`
+                          <t-butt
+                            class="side-button"
+                            @click=${this._applyDefaultValue}
+                            title="${this.defaultValue}${this.unit}"
+                          >
+                            ${this.defaultValue}${this.unit}
+                          </t-butt>
+                        `
+                      : ''}
+                    ${this.showDisableButton
+                      ? html`
+                          <t-butt
+                            class="side-button"
+                            .active=${this.disabled}
+                            @click=${this._toggleDisabled}
+                            title="Disable ${this.label}"
+                          >
+                            <t-icon name="disable"></t-icon>
+                          </t-butt>
+                        `
+                      : ''}
+                  </div>
+                </t-dropdown-button>
               `
+            : this._hasDefaultValue()
+              ? html`
+                  <t-butt
+                    class="side-button"
+                    @click=${this._applyDefaultValue}
+                    title="${this.defaultValue}${this.unit}"
+                  >
+                    ${this.defaultValue}${this.unit}
+                  </t-butt>
+                `
+              : ''}
+          ${this.showPlusMinusButtons
+            ? html`<t-butt @click=${this._decrement} title="Decrease"> - </t-butt>`
             : ''}
-
-          <t-butt @click=${this._decrement} title="Decrease"> - </t-butt>
 
           <div class="value-button-wrap ${this.disabled ? 'disabled' : ''}">
             <t-butt
@@ -274,20 +317,23 @@ export class SlideStepper extends LitElement {
             </div>
           </div>
 
-          <t-butt @click=${this._increment} title="Increase"> + </t-butt>
-
-          ${this.showDisableButton
-            ? html`
-                <t-butt
-                  class="side-button"
-                  .active=${this.disabled}
-                  @click=${this._toggleDisabled}
-                  title="Disable ${this.label}"
-                >
-                  <t-icon name="disable"></t-icon>
-                </t-butt>
-              `
+          ${this.showPlusMinusButtons
+            ? html`<t-butt @click=${this._increment} title="Increase"> + </t-butt>`
             : ''}
+          ${this.putButtonsInDropdown
+            ? ''
+            : this.showDisableButton
+              ? html`
+                  <t-butt
+                    class="side-button"
+                    .active=${this.disabled}
+                    @click=${this._toggleDisabled}
+                    title="Disable ${this.label}"
+                  >
+                    <t-icon name="disable"></t-icon>
+                  </t-butt>
+                `
+              : ''}
         </div>
       </div>
     `;

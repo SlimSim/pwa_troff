@@ -99,7 +99,7 @@ export class BottomNav extends LitElement {
       border: 1px solid var(--on-theme-color, #ffffff);
       border-radius: 4px;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       gap: 16px;
     }
 
