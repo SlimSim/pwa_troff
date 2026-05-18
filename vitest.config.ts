@@ -2,12 +2,12 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
 
-    include: ['tests/**/*.test.mjs'],
+    include: ['tests/**/*.test.ts', 'components/**/*.test.ts'],
     coverage: {
       reporter: ['text', 'html'],
-      include: ['scriptTroffClass.mjs', '*.mjs', '*.html'], // add more source files if needed
+      include: ['utils/**/*.ts', 'constants/**/*.ts', 'components/**/*.ts'],
     },
   },
 });

@@ -240,6 +240,10 @@ export class TTextarea extends LitElement {
   updated(changedProperties: Map<string, any>) {
     super.updated(changedProperties);
     
+    if (changedProperties.has('value') && this._textarea && this._textarea.value !== this.value) {
+      this._textarea.value = this.value;
+    }
+
     if (this.autoResize && changedProperties.has('value')) {
       this._autoResize();
     }
@@ -262,7 +266,7 @@ export class TTextarea extends LitElement {
         
         <textarea
           id="${textareaId}"
-          value="${this.value}"
+          .value=${this.value}
           placeholder="${this.placeholder}"
           ?disabled="${this.disabled}"
           ?required="${this.required}"
@@ -278,7 +282,7 @@ export class TTextarea extends LitElement {
           @change="${this._handleChange}"
           @focus="${this._handleFocus}"
           @blur="${this._handleBlur}"
-        >${this.value}</textarea>
+        ></textarea>
 
         ${hasError ? html`
           <div id="${textareaId}-error" class="error-message" role="alert">

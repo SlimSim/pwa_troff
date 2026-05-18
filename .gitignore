@@ -27,4 +27,7 @@ node_modules/
 # GitHub Action Build stuff:
 dist/
 
+# Test coverage
+coverage/
+
 assets/external/vendor/

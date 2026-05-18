@@ -13,6 +13,12 @@ who needs to practice dance-steps or instruments to music.
 
 `npm run dev`
 
+## run the tests:
+
+From the project root, run:
+
+`npx vitest run`
+
 ## Icons
 
 Note: Make sure your SVG files have fill="currentColor" in them if you want to control color via CSS! (do this with text-editor)

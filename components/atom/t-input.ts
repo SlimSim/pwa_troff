@@ -228,6 +228,14 @@ export class TInput extends LitElement {
     this._input?.select();
   }
 
+  updated(changedProperties: Map<string, any>) {
+    super.updated(changedProperties);
+
+    if (changedProperties.has('value') && this._input && this._input.value !== this.value) {
+      this._input.value = this.value;
+    }
+  }
+
   render() {
     const inputId = this.id || this._generateId();
     const hasError = this.errorMessage && !this.disabled;

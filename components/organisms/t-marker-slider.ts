@@ -461,6 +461,10 @@ export class MarkerSlider extends LitElement {
                 class="preset-marker"
                 style="position: absolute; top: ${markerPosition}%; left: 0; right: var(--slider-horizontal-padding);"
                 .marker=${{
+                  id: marker.id,
+                  name: marker.name,
+                  info: marker.info,
+                  time: markerValue,
                   label: marker.name,
                   value: markerValue,
                   color: marker.color,
