@@ -111,8 +111,12 @@ describe('v2Script utilities and related functions', () => {
         })
       );
 
-      expect((footer as HTMLElement & { markerDialogInitialTime?: number }).markerDialogInitialTime).toBe(37);
-      expect((footer as HTMLElement & { markerDialogSuggestedName?: string }).markerDialogSuggestedName).toBe('marker nr 3');
+      expect(
+        (footer as HTMLElement & { markerDialogInitialTime?: number }).markerDialogInitialTime
+      ).toBe(37);
+      expect(
+        (footer as HTMLElement & { markerDialogSuggestedName?: string }).markerDialogSuggestedName
+      ).toBe('marker nr 3');
     });
   });
 });
