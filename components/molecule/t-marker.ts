@@ -5,6 +5,10 @@ import { formatDuration } from '../../utils/formatters.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 
 export interface MarkerData {
+  id?: string;
+  name?: string;
+  info?: string;
+  time?: number;
   label: string;
   value: number;
   color?: string;

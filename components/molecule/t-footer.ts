@@ -1,12 +1,8 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-dial.js';
-import '../atom/t-input.js';
-import '../atom/t-textarea.js';
-import '../atom/t-color-picker.js';
-import type { TInput } from '../atom/t-input.js';
-import type { TTextarea } from '../atom/t-textarea.js';
+import './t-marker-dialog.js';
 import { audio } from '../../services/audio.js';
 
 @customElement('t-footer')
@@ -17,10 +13,12 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) showSpeedDropdown = false;
   @property({ type: Boolean }) showTimeDropdown = false;
   @property({ type: Boolean }) showMarkerDropdown = false;
-  @property({ type: Number }) markerTime = 0;
-  @property({ type: String }) markerName = '';
-  @property({ type: String }) markerInfo = '';
-  @property({ type: String }) markerColor = '';
+  @property({ type: String }) markerDialogMode: 'create' | 'edit' = 'create';
+  @property({ type: Object }) markerDialogData?: Partial<
+    import('../../types/troff.d.js').TroffMarker
+  >;
+  @property({ type: Number }) markerDialogInitialTime = 0;
+  @property({ type: String }) markerDialogSuggestedName = '';
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Boolean }) isStartingPlayback = false;
   @property({ type: Number }) playbackCountdown = 0;
@@ -31,29 +29,12 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) disableWaitBetween = false;
   @property({ type: Number }) songDuration = 0;
 
-  @query('.marker-dropdown-content t-input')
-  private _markerNameInput?: TInput;
-  @query('.marker-dropdown-content t-textarea')
-  private _markerInfoInput?: TTextarea;
-  private _boundMarkerDropdownKeyHandler?: (event: KeyboardEvent) => void;
-
   connectedCallback() {
     super.connectedCallback();
-    this._boundMarkerDropdownKeyHandler = (event: KeyboardEvent) =>
-      this._handleMarkerDropdownKeyboardShortcut(event);
-    document.addEventListener('keydown', this._boundMarkerDropdownKeyHandler, {
-      capture: true,
-    });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (this._boundMarkerDropdownKeyHandler) {
-      document.removeEventListener('keydown', this._boundMarkerDropdownKeyHandler, {
-        capture: true,
-      });
-      this._boundMarkerDropdownKeyHandler = undefined;
-    }
   }
 
   static styles = css`
@@ -94,27 +75,6 @@ export class BottomNav extends LitElement {
       flex-direction: column;
       align-items: start;
       gap: 16px;
-    }
-
-    .marker-dropdown-content {
-      padding: 16px 8px;
-      border: 1px solid var(--on-theme-color, #ffffff);
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      min-width: 200px;
-    }
-    .marker-dropdown-content .marker-text {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .marker-dropdown-content t-dial .button-row {
-      display: none;
-    }
-    .marker-dropdown-content t-butt {
-      align-self: flex-end;
     }
 
     .play-button-content {
@@ -164,20 +124,16 @@ export class BottomNav extends LitElement {
   }
 
   private _handleMarkerDropdownToggled(event: CustomEvent) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
     this.showMarkerDropdown = event.detail.open;
 
     if (this.showMarkerDropdown) {
-      // Capture current time
-      try {
-        this.markerTime = audio && audio.currentTime ? audio.currentTime : 0;
-      } catch (error) {
-        console.warn('Could not capture audio time:', error);
-        this.markerTime = 0;
-      }
-
-      this.markerName = '';
-      this.markerInfo = '';
-      this.markerColor = '';
+      // Reset to create mode when opening from footer button
+      this.markerDialogMode = 'create';
+      this.markerDialogData = undefined;
 
       this.dispatchEvent(
         new CustomEvent('marker-dialog-opened', {
@@ -185,73 +141,30 @@ export class BottomNav extends LitElement {
           composed: true,
         })
       );
-
-      void this._focusAndSelectMarkerNameInput();
     }
   }
 
-  private _getMarkerNativeInput() {
-    const input = this._markerNameInput;
-    if (!input) return undefined;
-    const nativeInput = input.shadowRoot?.querySelector('input');
-    return nativeInput instanceof HTMLInputElement ? nativeInput : undefined;
-  }
+  openMarkerDialogForEdit(markerData: Partial<import('../../types/troff.d.js').TroffMarker>) {
+    this.markerDialogMode = 'edit';
+    this.markerDialogData = { ...markerData };
 
-  private _focusAndSelectMarkerNameInputAttempt(source: string, attempt: number) {
-    const input = this._markerNameInput;
-    const nativeInput = this._getMarkerNativeInput();
-
-    if (!input || !nativeInput) return;
-
-    input.focus();
-    input.select();
-
-    nativeInput.focus();
-    nativeInput.select();
-  }
-
-  private async _focusAndSelectMarkerNameInput() {
-    await this.updateComplete;
-
-    const input = this._markerNameInput;
-    if (!input) return;
-
-    await input.updateComplete;
-
-    requestAnimationFrame(() => {
-      this._focusAndSelectMarkerNameInputAttempt('raf', 1);
-    });
-
-    setTimeout(() => this._focusAndSelectMarkerNameInputAttempt('timeout', 2), 0);
-    setTimeout(() => this._focusAndSelectMarkerNameInputAttempt('timeout', 3), 50);
-    setTimeout(() => this._focusAndSelectMarkerNameInputAttempt('timeout', 4), 150);
-  }
-
-  private _handleMarkerDropdownKeyboardShortcut(event: KeyboardEvent) {
-    if (!this.showMarkerDropdown) return;
-    if (event.isComposing) return;
-    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      event.stopPropagation();
+    if (this.showMarkerDropdown) {
       this.showMarkerDropdown = false;
+      requestAnimationFrame(() => {
+        this.showMarkerDropdown = true;
+      });
       return;
     }
 
-    if (event.key !== 'Enter') return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    this._handleMarkerOkClick();
+    this.showMarkerDropdown = true;
   }
 
-  protected override updated(changedProperties: Map<string, unknown>) {
-    super.updated(changedProperties);
+  private _handleMarkerDialogCompleted() {
+    this.showMarkerDropdown = false;
+  }
 
-    if (changedProperties.has('showMarkerDropdown') && this.showMarkerDropdown) {
-      void this._focusAndSelectMarkerNameInput();
-    }
+  private _handleMarkerDialogCancelled() {
+    this.showMarkerDropdown = false;
   }
 
   private _handleSpeedChanged(event: CustomEvent) {
@@ -298,61 +211,6 @@ export class BottomNav extends LitElement {
         composed: true,
       })
     );
-  }
-
-  private _handleMarkerNameChange(event: CustomEvent) {
-    if (typeof event.detail?.value === 'string') {
-      this.markerName = event.detail.value;
-    }
-  }
-
-  private _handleMarkerColorChange(event: CustomEvent) {
-    this.markerColor = event.detail.name || '';
-  }
-
-  private _handleMarkerInfoChange(event: CustomEvent) {
-    if (typeof event.detail?.value === 'string') {
-      this.markerInfo = event.detail.value;
-    }
-  }
-
-  private _handleMarkerTimeChange(event: CustomEvent) {
-    this.markerTime = event.detail.value || 0;
-  }
-
-  private _handleMarkerOkClick() {
-    const currentName = this._markerNameInput?.value ?? this.markerName;
-    const currentInfo = this._markerInfoInput?.value ?? this.markerInfo;
-
-    if (!currentName || !currentName.trim()) {
-      console.warn('Marker name is required');
-      return;
-    }
-
-    // Create marker object
-    const marker = {
-      id: Date.now().toString(), // Simple unique ID
-      name: currentName.trim(),
-      info: currentInfo,
-      time: this.markerTime,
-      color: this.markerColor || '', // Default color if none selected
-      createdAt: new Date().toISOString(),
-    };
-
-    // Dispatch event to let v2Script handle saving and UI updates
-    this.dispatchEvent(
-      new CustomEvent('marker-created', {
-        detail: { marker },
-        bubbles: true,
-        composed: true,
-      })
-    );
-
-    // Reset form and close dropdown
-    this.markerName = '';
-    this.markerInfo = '';
-    this.markerColor = '';
-    this.showMarkerDropdown = false;
   }
 
   render() {
@@ -465,36 +323,17 @@ export class BottomNav extends LitElement {
             <t-butt key="m" icon slot="button">
               <t-icon name="marker-plus"></t-icon>
             </t-butt>
-            <div slot="dropdown" class="marker-dropdown-content">
-              <div class="marker-text">Add a marker</div>
-              <t-input
-                label="Name"
-                placeholder="Enter Name of marker"
-                helper-text="Enter a name for the marker"
-                .value=${this.markerName}
-                @input=${this._handleMarkerNameChange}
-              ></t-input>
-              <t-textarea
-                label="Info"
-                placeholder="Put extra marker info here"
-                helper-text="You can add multiple lines"
-                .value=${this.markerInfo}
-                rows="4"
-                @input=${this._handleMarkerInfoChange}
-              ></t-textarea>
-              <t-dial
-                iconName="time"
-                key="m"
-                label="Time"
-                unit="s"
-                min="0"
-                .max=${audio.duration || 0}
-                .value=${this.markerTime}
-                @value-changed=${this._handleMarkerTimeChange}
-              ></t-dial>
-              <t-color-picker @change=${this._handleMarkerColorChange}></t-color-picker>
-              <t-butt important @click=${this._handleMarkerOkClick}>OK</t-butt>
-            </div>
+            <t-marker-dialog
+              slot="dropdown"
+              .mode=${this.markerDialogMode}
+              .open=${this.showMarkerDropdown}
+              .markerData=${this.markerDialogData}
+              .maxTime=${this.songDuration || audio.duration || 0}
+              .initialTime=${this.markerDialogInitialTime}
+              .suggestedName=${this.markerDialogSuggestedName}
+              @dialog-completed=${this._handleMarkerDialogCompleted}
+              @dialog-cancelled=${this._handleMarkerDialogCancelled}
+            ></t-marker-dialog>
           </t-dropdown-button>
         </div>
 

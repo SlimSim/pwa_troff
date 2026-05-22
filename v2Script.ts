@@ -17,7 +17,8 @@ import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
-import { configureMarkerSlider } from './utils/troff-settings.js';
+import { configureMarkerSlider, getStartBefore, getStopAfter, getIncrementUntil } from './utils/troff-settings.js';
+import type { TroffMarker } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
@@ -40,6 +41,9 @@ type FooterElement = HTMLElement & {
   markerName?: string;
   isPlaying?: boolean;
   loopTimesLeftLabel?: string;
+  markerDialogInitialTime?: number;
+  markerDialogSuggestedName?: string;
+  openMarkerDialogForEdit?: (markerData: Partial<TroffMarker>) => void;
 };
 
 // Function to update marker slider with current song markers
@@ -136,8 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
-    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
-    const markerElement = markerSlider.shadowRoot?.querySelector('.preset-marker') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector(
+      '.main-content'
+    ) as HTMLElement | null;
+    const markerElement = markerSlider.shadowRoot?.querySelector(
+      '.preset-marker'
+    ) as HTMLElement | null;
 
     if (!mainContent || !markerElement || mainContent.clientHeight <= 0) {
       return 0;
@@ -183,8 +191,12 @@ document.addEventListener('DOMContentLoaded', () => {
     await markerSlider.updateComplete;
 
     const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
-    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
-    const sliderContainer = markerSlider.shadowRoot?.querySelector('.slider-container') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector(
+      '.main-content'
+    ) as HTMLElement | null;
+    const sliderContainer = markerSlider.shadowRoot?.querySelector(
+      '.slider-container'
+    ) as HTMLElement | null;
 
     if (!mainContent || !sliderContainer || duration <= 0) {
       return;
@@ -349,6 +361,24 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.loopTimesValue = Number.isFinite(configuredLoops)
       ? String(configuredLoops)
       : 'Inf';
+
+    // Load song-specific numeric settings and their disabled states
+    if (songKey && songData) {
+      settingsPanel.startBeforeValue = getStartBefore(songData);
+      settingsPanel.startBeforeDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore;
+      settingsPanel.stopAfterValue = getStopAfter(songData);
+      settingsPanel.stopAfterDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter;
+      settingsPanel.incrementUntillValue = getIncrementUntil(songData);
+      settingsPanel.incrementUntillDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntill;
+    } else {
+      settingsPanel.startBeforeValue = 0;
+      settingsPanel.startBeforeDisabled = false;
+      settingsPanel.stopAfterValue = 0;
+      settingsPanel.stopAfterDisabled = false;
+      settingsPanel.incrementUntillValue = 0;
+      settingsPanel.incrementUntillDisabled = false;
+    }
+
     settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
     settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
@@ -610,6 +640,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      if (
+        setting === 'startBeforeDisabled' ||
+        setting === 'stopAfterDisabled' ||
+        setting === 'incrementUntillDisabled'
+      ) {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        if (setting === 'startBeforeDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttStartBefore = !value;
+        }
+        if (setting === 'stopAfterDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !value;
+        }
+        if (setting === 'incrementUntillDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntill = !value;
+        }
+
+        nDB.set(songKey, currentSongData);
+        return;
+      }
+
       if (setting === 'loopTimes') {
         if (!songKey) {
           return;
@@ -726,13 +780,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     footer.addEventListener('marker-dialog-opened', () => {
       const songKey = getCurrentSongKey();
-      if (!songKey) {
-        return;
+      const currentSongData = songKey ? nDB.get(songKey) : null;
+      const existingMarkers = (currentSongData?.markers || []) as TroffMarker[];
+
+      footer.markerDialogInitialTime = audio.currentTime || 0;
+      footer.markerDialogSuggestedName = `marker nr ${existingMarkers.length + 1}`;
+    });
+
+    footer.addEventListener('marker-updated', (event: any) => {
+      // Update the marker in localStorage
+      const songKey = getCurrentSongKey();
+      if (songKey && event.detail.marker) {
+        const currentSongData = nDB.get(songKey) || {};
+        const existingMarkers = currentSongData.markers || [];
+        const markerIndex = existingMarkers.findIndex((m: any) => m.id === event.detail.marker.id);
+        if (markerIndex !== -1) {
+          existingMarkers[markerIndex] = event.detail.marker;
+          nDB.setOnSong(songKey, 'markers', existingMarkers);
+        }
       }
 
-      const currentSongData = nDB.get(songKey) || {};
-      const markers = currentSongData.markers || [];
-      footer.markerName = `Marker nr ${markers.length + 1}`;
+      // Update the marker slider UI
+      updateMarkerSlider(markerSlider, false);
+    });
+
+    // Listen for marker-edit events from t-marker components
+    document.addEventListener('marker-edit', (event: Event) => {
+      const customEvent = event as CustomEvent<{ marker?: Partial<TroffMarker> }>;
+      if (footer && customEvent.detail?.marker && footer.openMarkerDialogForEdit) {
+        footer.openMarkerDialogForEdit(customEvent.detail.marker);
+      }
     });
   }
 

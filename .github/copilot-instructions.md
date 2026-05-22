@@ -2,6 +2,8 @@
 
 ## Project Overview
 
+test-code: 6942
+
 Troff is a Progressive Web App for music training, allowing dancers/musicians to practice with loop sections, speed controls, and timeline markers.
 
 **Tech Stack**: HTML, CSS, TypeScript, Web Components, npm, Workbox, ESLint  
@@ -12,15 +14,14 @@ Troff is a Progressive Web App for music training, allowing dancers/musicians to
 ## AI Agent Ground Rules
 
 1. Think Before Coding
-Don't assume. Don't hide confusion. Surface tradeoffs.
+   Don't assume. Don't hide confusion. Surface tradeoffs.
 
 Before implementing:
 
 State your assumptions explicitly. If uncertain, ask.
 If multiple interpretations exist, present them - don't pick silently.
 If a simpler approach exists, say so. Push back when warranted.
-If something is unclear, stop. Name what's confusing. Ask.
-2. Simplicity First
+If something is unclear, stop. Name what's confusing. Ask. 2. Simplicity First
 Minimum code that solves the problem. Nothing speculative.
 
 No features beyond what was asked.
@@ -31,7 +32,7 @@ If you write 200 lines and it could be 50, rewrite it.
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
 3. Surgical Changes
-Touch only what you must. Clean up only your own mess.
+   Touch only what you must. Clean up only your own mess.
 
 When editing existing code:
 
@@ -46,7 +47,7 @@ Don't remove pre-existing dead code unless asked.
 The test: Every changed line should trace directly to the user's request.
 
 4. Goal-Driven Execution
-Define success criteria. Loop until verified.
+   Define success criteria. Loop until verified.
 
 Transform tasks into verifiable goals:
 
@@ -58,20 +59,38 @@ For multi-step tasks, state a brief plan:
 1. [Step] → verify: [check]
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+   Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-1. **Explain all changes and reasoning before implementing**. Wait for user approval on significant changes.
-2. **Search through code thoroughly** - check multiple files to understand context before suggesting changes.
-3. **When multiple approaches exist**, present options with pros/cons and your recommendation, then wait for decision.
-4. **Be thorough in code analysis** - accuracy over speed.
-5. **Ensure WebKit + Chromium compatibility** (no Customized built-in elements or browser-specific features).
-6. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
-7. **Never use the `any` type in TypeScript** - always find a more specific type.
-8. **Always put functions where they belong** - check the `utils/` folder for existing files and use them if possible, otherwise create a new file in `utils/` or wherever the file structure dictates.
+4. **Explain all changes and reasoning before implementing**. Wait for user approval on significant changes.
+5. **Search through code thoroughly** - check multiple files to understand context before suggesting changes.
+6. **When multiple approaches exist**, present options with pros/cons and your recommendation, then wait for decision.
+7. **Be thorough in code analysis** - accuracy over speed.
+8. **Ensure WebKit + Chromium compatibility** (no Customized built-in elements or browser-specific features).
+9. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
+10. **Never use the `any` type in TypeScript** - always find a more specific type.
+11. **Always put functions where they belong** - check the `utils/` folder for existing files and use them if possible, otherwise create a new file in `utils/` or wherever the file structure dictates.
+
+## Test Creation Guidelines for Regression Testing
+
+**Core Principle: Test Actual Code, Not Reimplementations**
+
+**CRITICAL RULE**: Never re-implement functions in test files. Always import and test the actual functions from the codebase.
+
+Import the Actual Function
+
+````javascript
+// ✅ CORRECT - Import the actual function
+import { withSafeNumber } from '../utils/numberUtils.js';
+
+// ❌ WRONG - Re-implementing the function
+const withSafeNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 ## Legacy Code — Do Not Touch
 
-The following files contain legacy code. You may read them to understand how things were done before, but you are **not allowed to modify them or reference them from new code**:
+The following files contain legacy code. You may read them to understand how things were done before, but **NEVER modify, import or reference from these files!**.
 
 - `utils/debugging.ts`
 - `utils/timeHack.ts`
@@ -126,7 +145,7 @@ npm run dev          # Full development mode (build:watch + copy:watch + sw:watc
 npm run build:check  # Composite: lint + typecheck + build (production validation)
 npm run copy:watch   # Watches non-TS files, copies to dist/
 npm run sw:watch     # Regenerates service worker on dist/ changes
-```
+````
 
 ### PWA Service Worker
 
@@ -204,17 +223,10 @@ export class NewComponent extends LitElement {
 }
 ```
 
-## Common Issues & Solutions
+## Reference Docs — Load On Demand
 
-- **Service Worker**: Use environment-specific scripts (`workbox:dev` vs `workbox:prod`)
-- **TypeScript Imports**: Always `.js` extensions, never `.ts` in import statements
-- **Firebase Auth**: Check authentication state before accessing user-specific features
-- **PWA Caching**: Audio files require special cache handling to prevent bloat
+Only load these when relevant to the current task:
 
-## External Dependencies
-
-- **Lit**: Web components framework (vendor-copied to `assets/external/vendor/`)
-- **Firebase**: v9+ modular SDK via CDN imports
-- **jQuery**: Legacy dependency for DataTables and some DOM manipulation
-- **DataTables**: Table management for song lists
-- **Workbox**: Service worker generation and PWA caching strategies
+- @docs/common-issues.md — when debugging, hitting build errors, or SW/Firebase issues
+- @docs/dependencies.md — when adding/changing external dependencies
+- @docs/component-patterns.md — when creating or modifying Web Components

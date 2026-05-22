@@ -93,16 +93,14 @@ export class DropdownButton extends LitElement {
 
   private _handleButtonClick(event: Event) {
     event.stopPropagation();
-    if (!this.open) {
-      this.open = true;
-      this.dispatchEvent(
-        new CustomEvent('dropdown-toggled', {
-          detail: { open: this.open },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    }
+    this.open = !this.open;
+    this.dispatchEvent(
+      new CustomEvent('dropdown-toggled', {
+        detail: { open: this.open },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleDropdownClick(event: Event) {
