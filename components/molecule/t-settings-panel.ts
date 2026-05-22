@@ -325,8 +325,11 @@ export class SettingsPanel extends LitElement {
   @property({ type: String }) loopTimesValue = '1';
   @property({ type: Boolean }) playFullSong = false;
   @property({ type: Number }) startBeforeValue = 0;
+  @property({ type: Boolean }) startBeforeDisabled = false;
   @property({ type: Number }) stopAfterValue = 0;
+  @property({ type: Boolean }) stopAfterDisabled = false;
   @property({ type: Number }) incrementUntillValue = 0;
+  @property({ type: Boolean }) incrementUntillDisabled = false;
   @property({ type: Boolean }) enterUseTimer = false;
   @property({ type: Boolean }) enterResetCounter = false;
   @property({ type: Boolean }) enterGoToMarker = false;
@@ -392,16 +395,28 @@ export class SettingsPanel extends LitElement {
     );
   }
 
-  private _setSongNumericSetting(setting: SongNumericSetting, value: number) {
+  private _setSongNumericSetting(setting: SongNumericSetting, value: number, disabled?: boolean) {
     switch (setting) {
       case 'startBefore':
         this.startBeforeValue = value;
+        if (disabled !== undefined) {
+          this.startBeforeDisabled = disabled;
+          this._handleSettingChange('startBeforeDisabled', disabled);
+        }
         break;
       case 'stopAfter':
         this.stopAfterValue = value;
+        if (disabled !== undefined) {
+          this.stopAfterDisabled = disabled;
+          this._handleSettingChange('stopAfterDisabled', disabled);
+        }
         break;
       case 'incrementUntill':
         this.incrementUntillValue = value;
+        if (disabled !== undefined) {
+          this.incrementUntillDisabled = disabled;
+          this._handleSettingChange('incrementUntillDisabled', disabled);
+        }
         break;
       default:
         return;
@@ -542,33 +557,36 @@ export class SettingsPanel extends LitElement {
                       show-disable-button
                       defaultValue="4"
                       .value=${this.startBeforeValue}
+                      .disabled=${this.startBeforeDisabled}
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number }>) =>
-                        this._setSongNumericSetting('startBefore', event.detail.value)}
+                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
+                        this._setSongNumericSetting('startBefore', event.detail.value, event.detail.disabled)}
                     ></t-dial>
                     <t-dial
                       label="Stop after"
                       show-disable-button
                       defaultValue="2"
                       .value=${this.stopAfterValue}
+                      .disabled=${this.stopAfterDisabled}
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number }>) =>
-                        this._setSongNumericSetting('stopAfter', event.detail.value)}
+                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
+                        this._setSongNumericSetting('stopAfter', event.detail.value, event.detail.disabled)}
                     ></t-dial>
                     <t-dial
                       label="Increment untill"
                       show-disable-button
                       defaultValue="100"
                       .value=${this.incrementUntillValue}
+                      .disabled=${this.incrementUntillDisabled}
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number }>) =>
-                        this._setSongNumericSetting('incrementUntill', event.detail.value)}
+                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
+                        this._setSongNumericSetting('incrementUntill', event.detail.value, event.detail.disabled)}
                     ></t-dial>
                   </div>
                 </div>

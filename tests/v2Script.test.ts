@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { formatDuration } from '../utils/formatters.ts';
-import * as constants from '../constants/constants.ts';
+import { formatDuration } from '../utils/formatters.js';
+import * as constants from '../constants/constants.js';
 
 describe('v2Script utilities and related functions', () => {
   beforeEach(() => {
@@ -24,8 +24,8 @@ describe('v2Script utilities and related functions', () => {
     });
 
     it('should format null/undefined as 0:00', () => {
-      expect(formatDuration(null)).toBe('0:00');
-      expect(formatDuration(undefined)).toBe('0:00');
+      expect(formatDuration(null as unknown as number)).toBe('0:00');
+      expect(formatDuration(undefined as unknown as number)).toBe('0:00');
     });
 
     it('should format seconds less than a minute', () => {
@@ -101,7 +101,7 @@ describe('v2Script utilities and related functions', () => {
         loadSong: vi.fn(),
       }));
 
-      await import('../v2Script.ts');
+      await import('../v2Script.js');
 
       document.dispatchEvent(new Event('DOMContentLoaded'));
       footer.dispatchEvent(

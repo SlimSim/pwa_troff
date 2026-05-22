@@ -123,14 +123,21 @@ describe('t-marker-dialog', () => {
     element.open = true;
     await element.updateComplete;
 
-    const infoComponent = element.shadowRoot?.querySelector('t-textarea') as HTMLElement;
-    await (infoComponent as { updateComplete: Promise<void> }).updateComplete;
+    const infoComponent = element.shadowRoot?.querySelector('t-textarea') as
+      | (HTMLElement & { updateComplete: Promise<void> })
+      | null;
+    expect(infoComponent).toBeTruthy();
+    if (!infoComponent) {
+      throw new Error('Expected t-textarea to exist');
+    }
+
+    await infoComponent.updateComplete;
     const infoTextareaBefore = infoComponent.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
     expect(infoTextareaBefore.value).toBe('Info One');
 
     element.markerData = markerTwo;
     await element.updateComplete;
-    await (infoComponent as { updateComplete: Promise<void> }).updateComplete;
+    await infoComponent.updateComplete;
 
     const infoTextareaAfter = infoComponent.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
     expect(infoTextareaAfter.value).toBe('Info Two');

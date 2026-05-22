@@ -25,6 +25,14 @@ export function getStopAfter(songData: any): number {
   return Number(defaultSavedValue) || 2;
 }
 
+export function getIncrementUntil(songData: Record<string, unknown> | null | undefined): number {
+  const incrementUntilValue = songData?.TROFF_VALUE_incrementUntilValue;
+  if (incrementUntilValue !== undefined) {
+    return Number(incrementUntilValue);
+  }
+  return 0;
+}
+
 export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any) {
   markerSlider.startMarkerId = songData?.currentStartMarker || '';
   markerSlider.stopMarkerId = songData?.currentStopMarker || '';

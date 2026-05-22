@@ -17,7 +17,7 @@ import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
-import { configureMarkerSlider } from './utils/troff-settings.js';
+import { configureMarkerSlider, getStartBefore, getStopAfter, getIncrementUntil } from './utils/troff-settings.js';
 import type { TroffMarker } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -361,6 +361,24 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.loopTimesValue = Number.isFinite(configuredLoops)
       ? String(configuredLoops)
       : 'Inf';
+
+    // Load song-specific numeric settings and their disabled states
+    if (songKey && songData) {
+      settingsPanel.startBeforeValue = getStartBefore(songData);
+      settingsPanel.startBeforeDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore;
+      settingsPanel.stopAfterValue = getStopAfter(songData);
+      settingsPanel.stopAfterDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter;
+      settingsPanel.incrementUntillValue = getIncrementUntil(songData);
+      settingsPanel.incrementUntillDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntill;
+    } else {
+      settingsPanel.startBeforeValue = 0;
+      settingsPanel.startBeforeDisabled = false;
+      settingsPanel.stopAfterValue = 0;
+      settingsPanel.stopAfterDisabled = false;
+      settingsPanel.incrementUntillValue = 0;
+      settingsPanel.incrementUntillDisabled = false;
+    }
+
     settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
     settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
@@ -619,6 +637,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         nDB.set(songKey, currentSongData);
         markerSlider.requestUpdate();
+        return;
+      }
+
+      if (
+        setting === 'startBeforeDisabled' ||
+        setting === 'stopAfterDisabled' ||
+        setting === 'incrementUntillDisabled'
+      ) {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        if (setting === 'startBeforeDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttStartBefore = !value;
+        }
+        if (setting === 'stopAfterDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !value;
+        }
+        if (setting === 'incrementUntillDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntill = !value;
+        }
+
+        nDB.set(songKey, currentSongData);
         return;
       }
 
