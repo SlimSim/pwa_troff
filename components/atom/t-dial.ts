@@ -205,10 +205,6 @@ export class Dial extends LitElement {
   @property({ type: Number }) _value = 1;
 
   set value(newValue: number) {
-    if (this.disabled) {
-      return;
-    }
-
     this._value = this._clamp(newValue);
     this.requestUpdate();
   }

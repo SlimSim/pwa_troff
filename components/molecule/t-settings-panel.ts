@@ -551,7 +551,6 @@ export class SettingsPanel extends LitElement {
                 <div class="setting-item song-stepper-item">
                   <div class="song-stepper-grid">
                     <t-dial
-                      id="asdf"
                       unit="s"
                       label="Start before"
                       show-disable-button
@@ -561,32 +560,52 @@ export class SettingsPanel extends LitElement {
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
-                        this._setSongNumericSetting('startBefore', event.detail.value, event.detail.disabled)}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) =>
+                        this._setSongNumericSetting(
+                          'startBefore',
+                          event.detail.value,
+                          event.detail.disabled
+                        )}
                     ></t-dial>
                     <t-dial
                       label="Stop after"
                       show-disable-button
+                      unit="s"
                       defaultValue="2"
                       .value=${this.stopAfterValue}
                       .disabled=${this.stopAfterDisabled}
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
-                        this._setSongNumericSetting('stopAfter', event.detail.value, event.detail.disabled)}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) =>
+                        this._setSongNumericSetting(
+                          'stopAfter',
+                          event.detail.value,
+                          event.detail.disabled
+                        )}
                     ></t-dial>
                     <t-dial
-                      label="Increment untill"
+                      label="Increment until"
+                      unit="%"
                       show-disable-button
                       defaultValue="100"
                       .value=${this.incrementUntillValue}
                       .disabled=${this.incrementUntillDisabled}
-                      .min=${0}
-                      .max=${999}
+                      .min=${50}
+                      .max=${200}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
-                        this._setSongNumericSetting('incrementUntill', event.detail.value, event.detail.disabled)}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) =>
+                        this._setSongNumericSetting(
+                          'incrementUntill',
+                          event.detail.value,
+                          event.detail.disabled
+                        )}
                     ></t-dial>
                   </div>
                 </div>

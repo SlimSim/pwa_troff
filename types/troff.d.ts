@@ -3,7 +3,7 @@ export interface TroffObjectLocal {
   TROFF_CLASS_TO_TOGGLE_buttStartBefore: boolean;
   TROFF_CLASS_TO_TOGGLE_buttStopAfter: boolean;
   TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops: boolean;
-  TROFF_CLASS_TO_TOGGLE_buttIncrementUntill: boolean;
+  TROFF_CLASS_TO_TOGGLE_buttIncrementUntil: boolean;
   TROFF_VALUE_incrementUntilValue: number | string;
   TROFF_VALUE_pauseBeforeStart: number | string;
   TROFF_VALUE_speedBar: number | string;
