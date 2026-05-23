@@ -362,14 +362,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ? String(configuredLoops)
       : 'Inf';
 
-    // Load song-specific numeric settings and their disabled states
+    // Load song-specific numeric settings and their disabled states.
+    // Disabled state must be set BEFORE value so the t-dial knows its disabled
+    // state when receiving the new value (for correct display).
     if (songKey && songData) {
+      settingsPanel.startBeforeDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
       settingsPanel.startBeforeValue = getStartBefore(songData);
-      settingsPanel.startBeforeDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore;
+      settingsPanel.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
       settingsPanel.stopAfterValue = getStopAfter(songData);
-      settingsPanel.stopAfterDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter;
+      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       settingsPanel.incrementUntillValue = getIncrementUntil(songData);
-      settingsPanel.incrementUntillDisabled = !songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntill;
     } else {
       settingsPanel.startBeforeValue = 0;
       settingsPanel.startBeforeDisabled = false;
@@ -657,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !value;
         }
         if (setting === 'incrementUntillDisabled') {
-          currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntill = !value;
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = !value;
         }
 
         nDB.set(songKey, currentSongData);

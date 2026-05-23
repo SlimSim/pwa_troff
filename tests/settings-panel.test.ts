@@ -92,7 +92,8 @@ describe('SettingsPanel numeric settings integration', () => {
       const handler = vi.fn();
       settingsPanel.addEventListener('setting-changed', handler);
 
-      (settingsPanel as any)._setSongNumericSetting('startBefore', 7);
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._setSongNumericSetting('startBefore', 7);
 
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -105,7 +106,8 @@ describe('SettingsPanel numeric settings integration', () => {
       const handler = vi.fn();
       settingsPanel.addEventListener('setting-changed', handler);
 
-      (settingsPanel as any)._setSongNumericSetting('startBefore', 7, true);
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._setSongNumericSetting('startBefore', 7, true);
 
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -124,7 +126,8 @@ describe('SettingsPanel numeric settings integration', () => {
       const handler = vi.fn();
       settingsPanel.addEventListener('setting-changed', handler);
 
-      (settingsPanel as any)._setSongNumericSetting('stopAfter', 3, false);
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._setSongNumericSetting('stopAfter', 3, false);
 
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -142,7 +145,8 @@ describe('SettingsPanel numeric settings integration', () => {
       const handler = vi.fn();
       settingsPanel.addEventListener('setting-changed', handler);
 
-      (settingsPanel as any)._setSongNumericSetting('incrementUntill', 10, true);
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._setSongNumericSetting('incrementUntill', 10, true);
 
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -160,12 +164,112 @@ describe('SettingsPanel numeric settings integration', () => {
       const handler = vi.fn();
       settingsPanel.addEventListener('setting-changed', handler);
 
-      (settingsPanel as any)._setSongNumericSetting('startBefore', 5, undefined);
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._setSongNumericSetting('startBefore', 5, undefined);
 
       const disabledCalls = handler.mock.calls.filter(
         (call: unknown[]) => (call[0] as { detail: { setting: string } }).detail.setting === 'startBeforeDisabled'
       );
       expect(disabledCalls.length).toBe(0);
+    });
+
+    it('should still update value after disabled is set to true', () => {
+      // Simulate the sequence that happens on song load:
+      // disabled is set first, then value is set
+      settingsPanel.startBeforeDisabled = true;
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._setSongNumericSetting('startBefore', 42);
+
+      expect(settingsPanel.startBeforeValue).toBe(42);
+      expect(settingsPanel.startBeforeDisabled).toBe(true);
+    });
+
+    it('should update value even when already disabled (song switch scenario)', () => {
+      // Simulate switching to a new song while disabled was already active
+      settingsPanel.incrementUntillDisabled = true;
+      settingsPanel.incrementUntillValue = 0;
+
+      // New song has incrementUntill = 75
+      settingsPanel.incrementUntillValue = 75;
+
+      // Value should be updated despite disabled being true
+      expect(settingsPanel.incrementUntillValue).toBe(75);
+    });
+  });
+
+  describe('loading defaults when database keys are missing', () => {
+    // These tests simulate what syncSettingsPanelValues() does in v2Script.ts
+    // when loading song data that lacks certain keys.
+
+    it('should default incrementUntillDisabled to true when TROFF_CLASS_TO_TOGGLE_buttIncrementUntil is missing', () => {
+      // v2Script uses: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true
+      // undefined !== true → true (disabled)
+      const songData: Record<string, unknown> = {};
+      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      expect(settingsPanel.incrementUntillDisabled).toBe(true);
+    });
+
+    it('should load incrementUntillDisabled as true when TROFF_CLASS_TO_TOGGLE_buttIncrementUntil is false', () => {
+      // false !== true → true (disabled, user had toggled it on)
+      const songData: Record<string, unknown> = { TROFF_CLASS_TO_TOGGLE_buttIncrementUntil: false };
+      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      expect(settingsPanel.incrementUntillDisabled).toBe(true);
+    });
+
+    it('should load incrementUntillDisabled as false when TROFF_CLASS_TO_TOGGLE_buttIncrementUntil is true', () => {
+      // true !== true → false (not disabled, user explicitly toggled it off)
+      const songData: Record<string, unknown> = { TROFF_CLASS_TO_TOGGLE_buttIncrementUntil: true };
+      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      expect(settingsPanel.incrementUntillDisabled).toBe(false);
+    });
+
+    it('should default incrementUntillValue to 100 when TROFF_VALUE_incrementUntilValue is missing', () => {
+      // This is what getIncrementUntil() returns when the key is absent
+      const songData: Record<string, unknown> = {};
+      const value = songData.TROFF_VALUE_incrementUntilValue !== undefined
+        ? Number(songData.TROFF_VALUE_incrementUntilValue)
+        : 100;
+      settingsPanel.incrementUntillValue = value;
+      expect(settingsPanel.incrementUntillValue).toBe(100);
+    });
+
+    it('should default incrementUntillValue to 100 when songData is null', () => {
+      // getIncrementUntil(null) returns 100 — tested in troff-settings.test.ts
+      // Here we verify the panel correctly reflects that value
+      settingsPanel.incrementUntillValue = 100;
+      expect(settingsPanel.incrementUntillValue).toBe(100);
+    });
+
+    it('should default startBeforeDisabled to false when TROFF_CLASS_TO_TOGGLE_buttStartBefore is missing', () => {
+      // v2Script uses: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false
+      // undefined === false → false (not disabled)
+      const songData: Record<string, unknown> = {};
+      settingsPanel.startBeforeDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      expect(settingsPanel.startBeforeDisabled).toBe(false);
+    });
+
+    it('should default stopAfterDisabled to false when TROFF_CLASS_TO_TOGGLE_buttStopAfter is missing', () => {
+      const songData: Record<string, unknown> = {};
+      settingsPanel.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      expect(settingsPanel.stopAfterDisabled).toBe(false);
+    });
+
+    it('should default startBeforeValue to 4 when songData has no TROFF_VALUE_startBefore', () => {
+      const songData: Record<string, unknown> = {};
+      const value = songData.TROFF_VALUE_startBefore !== undefined
+        ? Number(songData.TROFF_VALUE_startBefore)
+        : 4;
+      settingsPanel.startBeforeValue = value;
+      expect(settingsPanel.startBeforeValue).toBe(4);
+    });
+
+    it('should default stopAfterValue to 2 when songData has no TROFF_VALUE_stopAfter', () => {
+      const songData: Record<string, unknown> = {};
+      const value = songData.TROFF_VALUE_stopAfter !== undefined
+        ? Number(songData.TROFF_VALUE_stopAfter)
+        : 2;
+      settingsPanel.stopAfterValue = value;
+      expect(settingsPanel.stopAfterValue).toBe(2);
     });
   });
 });

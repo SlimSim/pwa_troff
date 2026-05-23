@@ -103,15 +103,15 @@ describe('getIncrementUntil', () => {
     expect(getIncrementUntil(songData)).toBe(75);
   });
 
-  it('should return 0 when songData has no incrementUntil value', () => {
-    expect(getIncrementUntil({})).toBe(0);
+  it('should return 100 when songData has no incrementUntil value', () => {
+    expect(getIncrementUntil({})).toBe(100);
   });
 
-  it('should return 0 when songData is null', () => {
-    expect(getIncrementUntil(null)).toBe(0);
+  it('should return 100 when songData is null', () => {
+    expect(getIncrementUntil(null)).toBe(100);
   });
 
-  it('should return 0 when songData is undefined', () => {
-    expect(getIncrementUntil(undefined)).toBe(0);
+  it('should return 100 when songData is undefined', () => {
+    expect(getIncrementUntil(undefined)).toBe(100);
   });
 });

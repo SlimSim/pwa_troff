@@ -30,7 +30,7 @@ export function getIncrementUntil(songData: Record<string, unknown> | null | und
   if (incrementUntilValue !== undefined) {
     return Number(incrementUntilValue);
   }
-  return 0;
+  return 100;
 }
 
 export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any) {
