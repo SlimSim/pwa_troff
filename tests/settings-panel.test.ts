@@ -201,25 +201,45 @@ describe('SettingsPanel numeric settings integration', () => {
     // These tests simulate what syncSettingsPanelValues() does in v2Script.ts
     // when loading song data that lacks certain keys.
 
-    it('should default incrementUntillDisabled to true when TROFF_CLASS_TO_TOGGLE_buttIncrementUntil is missing', () => {
-      // v2Script uses: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true
-      // undefined !== true → true (disabled)
+    it('should fall back to global default for incrementUntillDisabled when song key is missing and default is off', () => {
+      // v2Script should use: !settingsPanel.defaultIncrementUntilOn when key is missing
+      // defaultIncrementUntilOn defaults to false → !false = true (disabled)
       const songData: Record<string, unknown> = {};
-      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined;
+      settingsPanel.incrementUntillDisabled = keyMissing
+        ? !settingsPanel.defaultIncrementUntilOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       expect(settingsPanel.incrementUntillDisabled).toBe(true);
     });
 
+    it('should fall back to global default for incrementUntillDisabled when song key is missing and default is on', () => {
+      // When user sets global default to ON → disabled should be false
+      settingsPanel.defaultIncrementUntilOn = true;
+      const songData: Record<string, unknown> = {};
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined;
+      settingsPanel.incrementUntillDisabled = keyMissing
+        ? !settingsPanel.defaultIncrementUntilOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      expect(settingsPanel.incrementUntillDisabled).toBe(false);
+    });
+
     it('should load incrementUntillDisabled as true when TROFF_CLASS_TO_TOGGLE_buttIncrementUntil is false', () => {
-      // false !== true → true (disabled, user had toggled it on)
+      // false !== true → true (disabled)
       const songData: Record<string, unknown> = { TROFF_CLASS_TO_TOGGLE_buttIncrementUntil: false };
-      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined;
+      settingsPanel.incrementUntillDisabled = keyMissing
+        ? !settingsPanel.defaultIncrementUntilOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       expect(settingsPanel.incrementUntillDisabled).toBe(true);
     });
 
     it('should load incrementUntillDisabled as false when TROFF_CLASS_TO_TOGGLE_buttIncrementUntil is true', () => {
-      // true !== true → false (not disabled, user explicitly toggled it off)
+      // true !== true → false (not disabled)
       const songData: Record<string, unknown> = { TROFF_CLASS_TO_TOGGLE_buttIncrementUntil: true };
-      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined;
+      settingsPanel.incrementUntillDisabled = keyMissing
+        ? !settingsPanel.defaultIncrementUntilOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       expect(settingsPanel.incrementUntillDisabled).toBe(false);
     });
 
@@ -240,17 +260,43 @@ describe('SettingsPanel numeric settings integration', () => {
       expect(settingsPanel.incrementUntillValue).toBe(100);
     });
 
-    it('should default startBeforeDisabled to false when TROFF_CLASS_TO_TOGGLE_buttStartBefore is missing', () => {
-      // v2Script uses: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false
-      // undefined === false → false (not disabled)
+    it('should fall back to global default for startBeforeDisabled when song key is missing and default is off', () => {
+      // defaultStartBeforeOn defaults to false → !false = true (disabled)
       const songData: Record<string, unknown> = {};
-      settingsPanel.startBeforeDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === undefined;
+      settingsPanel.startBeforeDisabled = keyMissing
+        ? !settingsPanel.defaultStartBeforeOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      expect(settingsPanel.startBeforeDisabled).toBe(true);
+    });
+
+    it('should fall back to global default for startBeforeDisabled when song key is missing and default is on', () => {
+      settingsPanel.defaultStartBeforeOn = true;
+      const songData: Record<string, unknown> = {};
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === undefined;
+      settingsPanel.startBeforeDisabled = keyMissing
+        ? !settingsPanel.defaultStartBeforeOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
       expect(settingsPanel.startBeforeDisabled).toBe(false);
     });
 
-    it('should default stopAfterDisabled to false when TROFF_CLASS_TO_TOGGLE_buttStopAfter is missing', () => {
+    it('should fall back to global default for stopAfterDisabled when song key is missing and default is off', () => {
+      // defaultStopAfterOn defaults to false → !false = true (disabled)
       const songData: Record<string, unknown> = {};
-      settingsPanel.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === undefined;
+      settingsPanel.stopAfterDisabled = keyMissing
+        ? !settingsPanel.defaultStopAfterOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      expect(settingsPanel.stopAfterDisabled).toBe(true);
+    });
+
+    it('should fall back to global default for stopAfterDisabled when song key is missing and default is on', () => {
+      settingsPanel.defaultStopAfterOn = true;
+      const songData: Record<string, unknown> = {};
+      const keyMissing = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === undefined;
+      settingsPanel.stopAfterDisabled = keyMissing
+        ? !settingsPanel.defaultStopAfterOn
+        : songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
       expect(settingsPanel.stopAfterDisabled).toBe(false);
     });
 

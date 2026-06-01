@@ -87,6 +87,7 @@ const withSafeNumber = (value, fallback) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+````
 
 ## Legacy Code — Do Not Touch
 

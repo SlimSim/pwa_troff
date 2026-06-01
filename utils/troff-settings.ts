@@ -1,5 +1,6 @@
 import { nDB } from '../assets/internal/db.js';
 import { MarkerSlider } from '../components/organisms/t-marker-slider.js';
+import type { TroffMarker } from '../types/troff.d.js';
 import {
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
@@ -30,7 +31,10 @@ export function getIncrementUntil(songData: Record<string, unknown> | null | und
   if (incrementUntilValue !== undefined) {
     return Number(incrementUntilValue);
   }
-  return 100;
+  const defaultSavedValue = nDB.get(
+    'TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE'
+  );
+  return Number(defaultSavedValue) || 100;
 }
 
 export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any) {
@@ -49,4 +53,29 @@ export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any)
   } else {
     markerSlider.fillColor = '';
   }
+}
+
+/**
+ * Create default Start/End markers on a song if it has no markers and song duration > 0.
+ * Modifies songData.markers in place.
+ * @returns The markers array (either existing or newly created defaults).
+ */
+export function ensureDefaultMarkers(
+  songData: Record<string, unknown> | null | undefined,
+  songDuration: number
+): TroffMarker[] {
+  if (!songData || songDuration <= 0) {
+    return [];
+  }
+  const markers = Array.isArray(songData.markers) ? (songData.markers as TroffMarker[]) : [];
+  if (markers.length > 0) {
+    return markers;
+  }
+
+  const defaultMarkers: TroffMarker[] = [
+    { name: 'Start', time: 0, info: '', color: 'None', id: 'markerNr0' },
+    { name: 'End', time: songDuration, info: '', color: 'None', id: 'markerNr1' },
+  ];
+  songData.markers = defaultMarkers;
+  return defaultMarkers;
 }

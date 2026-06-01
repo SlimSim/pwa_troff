@@ -44,12 +44,34 @@ export function updateFooterWithCurrentSong() {
   if (songPath) {
     const songData = nDB.get(songPath);
     if (songData) {
-      footer.speed = parseStoredNumber(songData.TROFF_VALUE_speedBar, 100);
-      footer.volume = parseStoredNumber(songData.TROFF_VALUE_volumeBar, 75);
-      footer.pauseBefore = parseStoredNumber(songData.TROFF_VALUE_pauseBeforeStart, 3);
-      footer.waitBetween = parseStoredNumber(songData.TROFF_VALUE_waitBetweenLoops, 1);
-      footer.disablePauseBefore = !songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart;
-      footer.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+      footer.speed = parseStoredNumber(
+        songData.TROFF_VALUE_speedBar,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100
+      );
+      footer.volume = parseStoredNumber(
+        songData.TROFF_VALUE_volumeBar,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE')) || 75
+      );
+      footer.pauseBefore = parseStoredNumber(
+        songData.TROFF_VALUE_pauseBeforeStart,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE')) || 3
+      );
+      footer.waitBetween = parseStoredNumber(
+        songData.TROFF_VALUE_waitBetweenLoops,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE')) || 1
+      );
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart === undefined) {
+        const globalPauseBeforeOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON') ?? true;
+        footer.disablePauseBefore = !globalPauseBeforeOn;
+      } else {
+        footer.disablePauseBefore = !songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart;
+      }
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops === undefined) {
+        const globalWaitBetweenOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON') ?? true;
+        footer.disableWaitBetween = !globalWaitBetweenOn;
+      } else {
+        footer.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+      }
     }
   }
 }

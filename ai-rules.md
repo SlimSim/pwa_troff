@@ -78,7 +78,7 @@ For multi-step tasks, state a brief plan:
 
 Import the Actual Function
 
-````javascript
+```javascript
 // ✅ CORRECT - Import the actual function
 import { withSafeNumber } from '../utils/numberUtils.js';
 
@@ -87,6 +87,7 @@ const withSafeNumber = (value, fallback) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+```
 
 ## Legacy Code — Do Not Touch
 
@@ -145,7 +146,7 @@ npm run dev          # Full development mode (build:watch + copy:watch + sw:watc
 npm run build:check  # Composite: lint + typecheck + build (production validation)
 npm run copy:watch   # Watches non-TS files, copies to dist/
 npm run sw:watch     # Regenerates service worker on dist/ changes
-````
+```
 
 ### PWA Service Worker
 

@@ -17,7 +17,7 @@ import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
-import { configureMarkerSlider, getStartBefore, getStopAfter, getIncrementUntil } from './utils/troff-settings.js';
+import { configureMarkerSlider, getStartBefore, getStopAfter, getIncrementUntil, ensureDefaultMarkers } from './utils/troff-settings.js';
 import type { TroffMarker } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -26,6 +26,19 @@ import {
   TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
   TROFF_SETTING_SPACE_RESET_COUNTER,
   TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE,
+  TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE,
+  TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON,
+  TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON,
+  TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON,
+  TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON,
+  TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON,
+  TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON,
 } from './constants/constants.js';
 
 type FooterElement = HTMLElement & {
@@ -54,7 +67,12 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     // Load real markers from current song
     const songKey = getCurrentSongKey();
     const currentSongData = songKey ? nDB.get(songKey) : null;
-    const markers = currentSongData?.markers || [];
+    const hadMarkers = Array.isArray(currentSongData?.markers) && currentSongData.markers.length > 0;
+    const markers = ensureDefaultMarkers(currentSongData, songDuration);
+    if (!hadMarkers && markers.length > 0 && songKey && currentSongData) {
+      // ensureDefaultMarkers created default markers — save to nDB
+      nDB.set(songKey, currentSongData);
+    }
 
     markerSlider.markers = markers;
     markerSlider.min = 0;
@@ -257,7 +275,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const songData = nDB.get(songKey) || {};
-    const markers = Array.isArray(songData.markers) ? [...songData.markers] : [];
+    const songDuration = audio.duration > 0 ? audio.duration : 0;
+    const hadMarkers = Array.isArray(songData.markers) && songData.markers.length > 0;
+    const markers = ensureDefaultMarkers(songData, songDuration);
+    if (!hadMarkers && markers.length > 0) {
+      // ensureDefaultMarkers created default markers — save to nDB
+      nDB.set(songKey, songData);
+    }
     if (markers.length === 0) {
       return;
     }
@@ -317,6 +341,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.floor(parsed);
   };
 
+  const getDefaultLoopTimesValue = (): string | number => {
+    const infiniteOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON) === true;
+    if (infiniteOn) {
+      return 'Inf';
+    }
+    const defaultNr = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE)) || 1;
+    return defaultNr;
+  };
+
   const updateLoopTimesDisplay = () => {
     if (footer) {
       footer.loopTimesLeftLabel = Number.isFinite(loopTimesLeft) ? String(loopTimesLeft) : '∞';
@@ -356,7 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
-    const configuredLoops = parseConfiguredLoopTimes(songData?.loopTimes);
+    const rawLoopTimes = songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
+    const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
 
     settingsPanel.loopTimesValue = Number.isFinite(configuredLoops)
       ? String(configuredLoops)
@@ -366,11 +400,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Disabled state must be set BEFORE value so the t-dial knows its disabled
     // state when receiving the new value (for correct display).
     if (songKey && songData) {
-      settingsPanel.startBeforeDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === undefined) {
+        const globalStartBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
+        settingsPanel.startBeforeDisabled = !globalStartBeforeOn;
+      } else {
+        settingsPanel.startBeforeDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      }
       settingsPanel.startBeforeValue = getStartBefore(songData);
-      settingsPanel.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === undefined) {
+        const globalStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
+        settingsPanel.stopAfterDisabled = !globalStopAfterOn;
+      } else {
+        settingsPanel.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      }
       settingsPanel.stopAfterValue = getStopAfter(songData);
-      settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
+        const globalIncrementUntilOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
+        settingsPanel.incrementUntillDisabled = !globalIncrementUntilOn;
+      } else {
+        settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      }
       settingsPanel.incrementUntillValue = getIncrementUntil(songData);
     } else {
       settingsPanel.startBeforeValue = 0;
@@ -387,12 +436,29 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
+
+    // Load global default song values from nDB
+    settingsPanel.defaultStartBeforeValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE)) || 4;
+    settingsPanel.defaultStartBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
+    settingsPanel.defaultStopAfterValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE)) || 2;
+    settingsPanel.defaultStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
+    settingsPanel.defaultPauseBeforeValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE)) || 3;
+    settingsPanel.defaultPauseBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON) ?? true;
+    settingsPanel.defaultWaitBetweenValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE)) || 1;
+    settingsPanel.defaultWaitBetweenOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON) ?? true;
+    settingsPanel.defaultIncrementUntilValue = Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE')) || 100;
+    settingsPanel.defaultIncrementUntilOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
+    settingsPanel.defaultNrLoopsValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE)) || 1;
+    settingsPanel.defaultNrLoopsInfiniteOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON) ?? false;
+    settingsPanel.defaultVolumeValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE)) || 75;
+    settingsPanel.defaultSpeedValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
   };
 
   const syncLoopTimesFromSong = () => {
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
-    configuredLoopTimes = parseConfiguredLoopTimes(songData?.loopTimes);
+    const rawLoopTimes = songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
+    configuredLoopTimes = parseConfiguredLoopTimes(rawLoopTimes);
     loopTimesLeft = configuredLoopTimes;
     updateLoopTimesDisplay();
   };
@@ -678,6 +744,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Save global default song values to nDB
+      const defaultNumericKeyBySetting: Record<string, string> = {
+        defaultStartBeforeValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
+        defaultStopAfterValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE,
+        defaultPauseBeforeValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE,
+        defaultWaitBetweenValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE,
+        defaultIncrementUntilValue: 'TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE',
+        defaultNrLoopsValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE,
+        defaultVolumeValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE,
+        defaultSpeedValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE,
+      };
+      const defaultOnKeyBySetting: Record<string, string> = {
+        defaultStartBeforeOn: TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON,
+        defaultStopAfterOn: TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON,
+        defaultPauseBeforeOn: TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON,
+        defaultWaitBetweenOn: TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON,
+        defaultIncrementUntilOn: TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON,
+        defaultNrLoopsInfiniteOn: TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON,
+      };
+
+      const numericKey = defaultNumericKeyBySetting[setting];
+      if (numericKey) {
+        nDB.set(numericKey, value);
+        return;
+      }
+
+      const onKey = defaultOnKeyBySetting[setting];
+      if (onKey) {
+        nDB.set(onKey, value === true);
+        return;
+      }
+
       const settingsKeyByPanelSetting: Record<string, string> = {
         enterUseTimer: TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
         enterResetCounter: TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -876,6 +974,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audio.addEventListener('loadedmetadata', () => {
       header.totalTime = formatDuration(audio.duration);
       updateMarkerSlider(markerSlider);
+      selectFirstAndLastMarkers();
       void applySavedZoomWindowForCurrentSong();
     });
     audio.addEventListener('timeupdate', () => {
