@@ -17,7 +17,13 @@ import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
-import { configureMarkerSlider, getStartBefore, getStopAfter, getIncrementUntil, ensureDefaultMarkers } from './utils/troff-settings.js';
+import {
+  configureMarkerSlider,
+  getStartBefore,
+  getStopAfter,
+  getIncrementUntil,
+  ensureDefaultMarkers,
+} from './utils/troff-settings.js';
 import type { TroffMarker } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -67,7 +73,8 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     // Load real markers from current song
     const songKey = getCurrentSongKey();
     const currentSongData = songKey ? nDB.get(songKey) : null;
-    const hadMarkers = Array.isArray(currentSongData?.markers) && currentSongData.markers.length > 0;
+    const hadMarkers =
+      Array.isArray(currentSongData?.markers) && currentSongData.markers.length > 0;
     const markers = ensureDefaultMarkers(currentSongData, songDuration);
     if (!hadMarkers && markers.length > 0 && songKey && currentSongData) {
       // ensureDefaultMarkers created default markers — save to nDB
@@ -346,7 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (infiniteOn) {
       return 'Inf';
     }
-    const defaultNr = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE)) || 1;
+    const defaultNr =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE)) || 1;
     return defaultNr;
   };
 
@@ -356,9 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (header) {
-      header.statusLoopsLeft = Number.isFinite(loopTimesLeft)
-        ? `${loopTimesLeft} loops`
-        : '∞ loops';
+      header.statusLoopsLeft = Number.isFinite(loopTimesLeft) ? `${loopTimesLeft}#` : '∞#';
     }
   };
 
@@ -389,7 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
-    const rawLoopTimes = songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
+    const rawLoopTimes =
+      songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
     const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
 
     settingsPanel.loopTimesValue = Number.isFinite(configuredLoops)
@@ -404,7 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalStartBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
         settingsPanel.startBeforeDisabled = !globalStartBeforeOn;
       } else {
-        settingsPanel.startBeforeDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+        settingsPanel.startBeforeDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
       }
       settingsPanel.startBeforeValue = getStartBefore(songData);
       if (songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === undefined) {
@@ -415,10 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       settingsPanel.stopAfterValue = getStopAfter(songData);
       if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
-        const globalIncrementUntilOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
+        const globalIncrementUntilOn =
+          nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
         settingsPanel.incrementUntillDisabled = !globalIncrementUntilOn;
       } else {
-        settingsPanel.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+        settingsPanel.incrementUntillDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       }
       settingsPanel.incrementUntillValue = getIncrementUntil(songData);
     } else {
@@ -438,26 +448,40 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
 
     // Load global default song values from nDB
-    settingsPanel.defaultStartBeforeValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE)) || 4;
-    settingsPanel.defaultStartBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
-    settingsPanel.defaultStopAfterValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE)) || 2;
+    settingsPanel.defaultStartBeforeValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE)) || 4;
+    settingsPanel.defaultStartBeforeOn =
+      nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
+    settingsPanel.defaultStopAfterValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE)) || 2;
     settingsPanel.defaultStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
-    settingsPanel.defaultPauseBeforeValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE)) || 3;
-    settingsPanel.defaultPauseBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON) ?? true;
-    settingsPanel.defaultWaitBetweenValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE)) || 1;
-    settingsPanel.defaultWaitBetweenOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON) ?? true;
-    settingsPanel.defaultIncrementUntilValue = Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE')) || 100;
-    settingsPanel.defaultIncrementUntilOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
-    settingsPanel.defaultNrLoopsValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE)) || 1;
-    settingsPanel.defaultNrLoopsInfiniteOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON) ?? false;
-    settingsPanel.defaultVolumeValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE)) || 75;
-    settingsPanel.defaultSpeedValue = Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
+    settingsPanel.defaultPauseBeforeValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE)) || 3;
+    settingsPanel.defaultPauseBeforeOn =
+      nDB.get(TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON) ?? true;
+    settingsPanel.defaultWaitBetweenValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE)) || 1;
+    settingsPanel.defaultWaitBetweenOn =
+      nDB.get(TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON) ?? true;
+    settingsPanel.defaultIncrementUntilValue =
+      Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE')) || 100;
+    settingsPanel.defaultIncrementUntilOn =
+      nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
+    settingsPanel.defaultNrLoopsValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE)) || 1;
+    settingsPanel.defaultNrLoopsInfiniteOn =
+      nDB.get(TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON) ?? false;
+    settingsPanel.defaultVolumeValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE)) || 75;
+    settingsPanel.defaultSpeedValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
   };
 
   const syncLoopTimesFromSong = () => {
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
-    const rawLoopTimes = songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
+    const rawLoopTimes =
+      songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
     configuredLoopTimes = parseConfiguredLoopTimes(rawLoopTimes);
     loopTimesLeft = configuredLoopTimes;
     updateLoopTimesDisplay();
@@ -750,7 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
         defaultStopAfterValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE,
         defaultPauseBeforeValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE,
         defaultWaitBetweenValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE,
-        defaultIncrementUntilValue: 'TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE',
+        defaultIncrementUntilValue:
+          'TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE',
         defaultNrLoopsValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_VALUE,
         defaultVolumeValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE,
         defaultSpeedValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE,
