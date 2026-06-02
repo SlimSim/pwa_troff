@@ -45,6 +45,8 @@ import {
   TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON,
   TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON,
   TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON,
+  TROFF_SETTING_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
 } from './constants/constants.js';
 
 type FooterElement = HTMLElement & {
@@ -446,6 +448,9 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
+    settingsPanel.extendedMarkerColor = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR) === true;
+    settingsPanel.extraExtendedMarkerColor =
+      nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) === true;
 
     // Load global default song values from nDB
     settingsPanel.defaultStartBeforeValue =
@@ -808,6 +813,8 @@ document.addEventListener('DOMContentLoaded', () => {
         spaceResetCounter: TROFF_SETTING_SPACE_RESET_COUNTER,
         playUseTimer: TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
         playResetCounter: TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+        extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
+        extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -817,6 +824,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       nDB.set(storageKey, value === true);
       syncSettingsPanelValues();
+
+      if (setting === 'extendedMarkerColor' || setting === 'extraExtendedMarkerColor') {
+        const songKey = getCurrentSongKey();
+        const songData = songKey ? nDB.get(songKey) : null;
+        configureMarkerSlider(markerSlider, songData);
+        markerSlider.requestUpdate();
+      }
     });
 
     settingsPanel.addEventListener('song-action-requested', async (event: Event) => {
@@ -923,6 +937,23 @@ document.addEventListener('DOMContentLoaded', () => {
           existingMarkers[markerIndex] = event.detail.marker;
           nDB.setOnSong(songKey, 'markers', existingMarkers);
         }
+      }
+
+      // Update the marker slider UI
+      updateMarkerSlider(markerSlider, false);
+    });
+
+    footer.addEventListener('marker-deleted', (event: Event) => {
+      const customEvent = event as CustomEvent<{ markerId?: string }>;
+      // Remove the marker from localStorage
+      const songKey = getCurrentSongKey();
+      if (songKey && customEvent.detail.markerId) {
+        const currentSongData = nDB.get(songKey) || {};
+        const existingMarkers = currentSongData.markers || [];
+        const updatedMarkers = existingMarkers.filter(
+          (m: TroffMarker) => m.id !== customEvent.detail.markerId
+        );
+        nDB.setOnSong(songKey, 'markers', updatedMarkers);
       }
 
       // Update the marker slider UI

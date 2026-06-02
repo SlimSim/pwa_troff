@@ -132,14 +132,18 @@ describe('t-marker-dialog', () => {
     }
 
     await infoComponent.updateComplete;
-    const infoTextareaBefore = infoComponent.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
+    const infoTextareaBefore = infoComponent.shadowRoot?.querySelector(
+      'textarea'
+    ) as HTMLTextAreaElement;
     expect(infoTextareaBefore.value).toBe('Info One');
 
     element.markerData = markerTwo;
     await element.updateComplete;
     await infoComponent.updateComplete;
 
-    const infoTextareaAfter = infoComponent.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
+    const infoTextareaAfter = infoComponent.shadowRoot?.querySelector(
+      'textarea'
+    ) as HTMLTextAreaElement;
     expect(infoTextareaAfter.value).toBe('Info Two');
   });
 
@@ -248,5 +252,149 @@ describe('t-marker-dialog', () => {
     await element.updateComplete;
 
     expect(dialogCompletedSpy).toHaveBeenCalled();
+  });
+});
+
+describe('t-marker-dialog focus behavior', () => {
+  afterEach(() => {
+    // Remove any stray elements left in the body from these tests
+    const dialogs = Array.from(document.querySelectorAll('t-marker-dialog'));
+    for (const d of dialogs) {
+      if (document.body.contains(d)) {
+        document.body.removeChild(d);
+      }
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('should NOT call _focusAndSelectMarkerNameInput in edit mode when dialog opens', async () => {
+    const focusSpy = vi.spyOn(MarkerDialog.prototype as any, '_focusAndSelectMarkerNameInput');
+
+    const element = new MarkerDialog();
+    element.mode = 'edit';
+    element.maxTime = 100;
+    document.body.appendChild(element);
+
+    element.open = true;
+    await element.updateComplete;
+
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
+  it('should call _focusAndSelectMarkerNameInput in create mode when dialog opens', async () => {
+    const focusSpy = vi.spyOn(MarkerDialog.prototype as any, '_focusAndSelectMarkerNameInput');
+
+    const element = new MarkerDialog();
+    element.mode = 'create';
+    element.maxTime = 100;
+    document.body.appendChild(element);
+
+    element.open = true;
+    await element.updateComplete;
+
+    expect(focusSpy).toHaveBeenCalled();
+  });
+});
+
+describe('t-marker-dialog delete behavior', () => {
+  let element: MarkerDialog;
+
+  beforeEach(() => {
+    element = new MarkerDialog();
+    element.mode = 'create';
+    element.open = true;
+    element.maxTime = 100;
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('Delete button exists in create mode', async () => {
+    await element.updateComplete;
+
+    const deleteBtn = element.shadowRoot?.querySelector('.button-row t-butt');
+    expect(deleteBtn).toBeTruthy();
+  });
+
+  it('Delete button exists in edit mode', async () => {
+    element.mode = 'edit';
+    element.markerData = { id: 'edit-test-id', name: 'Test Marker' };
+    await element.updateComplete;
+
+    const deleteBtn = element.shadowRoot?.querySelector('.button-row t-butt');
+    expect(deleteBtn).toBeTruthy();
+  });
+
+  it('In create mode, clicking delete dispatches dialog-cancelled', async () => {
+    await element.updateComplete;
+
+    const dialogCancelledSpy = vi.fn();
+    element.addEventListener('dialog-cancelled', dialogCancelledSpy);
+
+    const deleteBtn = element.shadowRoot?.querySelector('.button-row t-butt') as HTMLElement;
+    deleteBtn.click(); // First click — enters confirming
+    await element.updateComplete;
+    deleteBtn.click(); // Second click — actually fires
+    await element.updateComplete;
+
+    expect(dialogCancelledSpy).toHaveBeenCalled();
+  });
+
+  it('In edit mode, clicking delete dispatches marker-deleted', async () => {
+    element.mode = 'edit';
+    element.markerData = { id: 'del-marker-id', name: 'Delete Me' };
+    await element.updateComplete;
+
+    const markerDeletedSpy = vi.fn();
+    element.addEventListener('marker-deleted', markerDeletedSpy);
+
+    const deleteBtn = element.shadowRoot?.querySelector('.button-row t-butt') as HTMLElement;
+    deleteBtn.click(); // First click — enters confirming
+    await element.updateComplete;
+    deleteBtn.click(); // Second click — actually fires
+    await element.updateComplete;
+
+    expect(markerDeletedSpy).toHaveBeenCalled();
+  });
+
+  it('In edit mode, clicking delete also dispatches dialog-completed', async () => {
+    element.mode = 'edit';
+    element.markerData = { id: 'del-completed-id', name: 'Delete Me' };
+    await element.updateComplete;
+
+    const dialogCompletedSpy = vi.fn();
+    element.addEventListener('dialog-completed', dialogCompletedSpy);
+
+    const deleteBtn = element.shadowRoot?.querySelector('.button-row t-butt') as HTMLElement;
+    deleteBtn.click(); // First click — enters confirming
+    await element.updateComplete;
+    deleteBtn.click(); // Second click — actually fires
+    await element.updateComplete;
+
+    expect(dialogCompletedSpy).toHaveBeenCalled();
+  });
+
+  it('marker-deleted event includes the marker ID', async () => {
+    element.mode = 'edit';
+    element.markerData = { id: 'test-marker-id', name: 'Marker To Delete' };
+    await element.updateComplete;
+
+    const markerDeletedSpy = vi.fn();
+    element.addEventListener('marker-deleted', markerDeletedSpy);
+
+    const deleteBtn = element.shadowRoot?.querySelector('.button-row t-butt') as HTMLElement;
+    deleteBtn.click(); // First click — enters confirming
+    await element.updateComplete;
+    deleteBtn.click(); // Second click — actually fires
+    await element.updateComplete;
+
+    expect(markerDeletedSpy).toHaveBeenCalled();
+    const event = markerDeletedSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.detail.markerId).toBe('test-marker-id');
   });
 });

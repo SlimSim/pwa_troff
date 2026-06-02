@@ -38,8 +38,10 @@ export class MarkerDialog extends LitElement {
       display: none;
     }
 
-    .marker-dropdown-content t-butt {
-      align-self: flex-end;
+    .marker-dropdown-content .button-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
     }
   `;
 
@@ -117,7 +119,7 @@ export class MarkerDialog extends LitElement {
   protected override updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
 
-    if (changedProperties.has('open') && this.open) {
+    if (changedProperties.has('open') && this.open && this.mode === 'create') {
       void this._focusAndSelectMarkerNameInput();
     }
   }
@@ -242,6 +244,31 @@ export class MarkerDialog extends LitElement {
     this.markerColor = event.detail.value || '';
   }
 
+  private _handleDeleteClick() {
+    if (this.mode === 'edit') {
+      this.dispatchEvent(
+        new CustomEvent('marker-deleted', {
+          detail: { markerId: this.markerData?.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      this.dispatchEvent(
+        new CustomEvent('dialog-completed', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    } else {
+      this.dispatchEvent(
+        new CustomEvent('dialog-cancelled', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
   public handleOkClick() {
     const currentName = this._markerNameInput?.value ?? this.markerName;
     const currentInfo = this._markerInfoInput?.value ?? this.markerInfo;
@@ -296,6 +323,7 @@ export class MarkerDialog extends LitElement {
           placeholder="Enter Name of marker"
           helper-text="Enter a name for the marker"
           .value=${this.markerName}
+          clearable
           @input=${this._handleNameChange}
         ></t-input>
         <t-textarea
@@ -321,7 +349,12 @@ export class MarkerDialog extends LitElement {
           .value=${this.markerColor}
           @change=${this._handleColorChange}
         ></t-color-picker>
-        <t-butt important @click=${this.handleOkClick}>OK</t-butt>
+        <div class="button-row">
+          <t-butt confirm confirmText="Delete marker?" @click=${this._handleDeleteClick}
+            ><t-icon name="delete"></t-icon
+          ></t-butt>
+          <t-butt important @click=${this.handleOkClick}>OK</t-butt>
+        </div>
       </div>
     `;
   }

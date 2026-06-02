@@ -136,6 +136,37 @@ export class TInput extends LitElement {
     .input-wrapper.has-icon-right input {
       padding-right: 40px;
     }
+
+    /* Clearable input padding */
+    .input-wrapper.clearable input {
+      padding-right: 40px;
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--on-gray-out, #595959);
+      font-size: 20px;
+      line-height: 1;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      transition: background-color 0.15s;
+      z-index: 1;
+    }
+
+    .clear-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
   `;
 
   @property({ type: String }) type = 'text';
@@ -149,6 +180,7 @@ export class TInput extends LitElement {
   @property({ type: Boolean }) readonly = false;
   @property({ type: Boolean }) slim = false;
   @property({ type: Boolean }) underline = false;
+  @property({ type: Boolean }) clearable = false;
   @property({ type: String }) name = '';
   @property({ type: String }) id = '';
   @property({ type: String }) autocomplete = '';
@@ -209,10 +241,24 @@ export class TInput extends LitElement {
     );
   }
 
+  private _handleClear() {
+    this.value = '';
+    this._input.value = '';
+    this.dispatchEvent(
+      new CustomEvent('input', {
+        detail: { value: '' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    this._input.focus();
+  }
+
   private _getWrapperClasses() {
     const classes = ['input-wrapper'];
     if (this.slim) classes.push('slim');
     if (this.underline) classes.push('underline');
+    if (this.clearable) classes.push('clearable');
     return classes.join(' ');
   }
 
@@ -272,6 +318,18 @@ export class TInput extends LitElement {
             @focus="${this._handleFocus}"
             @blur="${this._handleBlur}"
           />
+          ${this.clearable && this.value
+            ? html`
+                <button
+                  class="clear-btn"
+                  aria-label="Clear input"
+                  @click=${this._handleClear}
+                  tabindex="-1"
+                >
+                  ×
+                </button>
+              `
+            : ''}
         </div>
 
         ${hasError

@@ -14,7 +14,9 @@ type ToggleSetting =
   | 'spaceGoToMarker'
   | 'playUseTimer'
   | 'playResetCounter'
-  | 'playGoToMarker';
+  | 'playGoToMarker'
+  | 'extendedMarkerColor'
+  | 'extraExtendedMarkerColor';
 
 type SongAction =
   | 'zoomOut'
@@ -335,6 +337,8 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) playUseTimer = false;
   @property({ type: Boolean }) playResetCounter = false;
   @property({ type: Boolean }) playGoToMarker = false;
+  @property({ type: Boolean }) extendedMarkerColor = false;
+  @property({ type: Boolean }) extraExtendedMarkerColor = false;
 
   // Global default song values
   @property({ type: Number }) defaultStartBeforeValue = 4;
@@ -470,6 +474,12 @@ export class SettingsPanel extends LitElement {
         break;
       case 'playGoToMarker':
         this.playGoToMarker = nextValue;
+        break;
+      case 'extendedMarkerColor':
+        this.extendedMarkerColor = nextValue;
+        break;
+      case 'extraExtendedMarkerColor':
+        this.extraExtendedMarkerColor = nextValue;
         break;
       default:
         return;
@@ -771,6 +781,43 @@ export class SettingsPanel extends LitElement {
                             Reset counter
                           </t-butt>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="advanced-panel" style="margin-top: 16px;">
+                <summary class="advanced-summary">
+                  <div class="advanced-summary-copy">
+                    <p class="advanced-summary-title">Marker color</p>
+                    <p class="advanced-summary-text">
+                      Control how markers extend their color across the timeline.
+                    </p>
+                  </div>
+                  <span class="advanced-chevron">⌄</span>
+                </summary>
+                <div class="advanced-content">
+                  <div class="settings-grid">
+                    <div class="setting-item">
+                      <div class="action-buttons">
+                        <t-butt
+                          toggle
+                          ellipsis
+                          .active=${this.extendedMarkerColor}
+                          @click=${() => this._toggleSetting('extendedMarkerColor', this.extendedMarkerColor)}
+                        >
+                          Fill to next marker
+                        </t-butt>
+                        <t-butt
+                          toggle
+                          ellipsis
+                          .active=${this.extraExtendedMarkerColor}
+                          @click=${() =>
+                            this._toggleSetting('extraExtendedMarkerColor', this.extraExtendedMarkerColor)}
+                        >
+                          Fill to next colored marker
+                        </t-butt>
                       </div>
                     </div>
                   </div>

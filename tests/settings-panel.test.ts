@@ -318,4 +318,94 @@ describe('SettingsPanel numeric settings integration', () => {
       expect(settingsPanel.stopAfterValue).toBe(2);
     });
   });
+
+  describe('Marker color settings', () => {
+    describe('default property values', () => {
+      it('should have default extendedMarkerColor of false', () => {
+        expect(settingsPanel.extendedMarkerColor).toBe(false);
+      });
+
+      it('should have default extraExtendedMarkerColor of false', () => {
+        expect(settingsPanel.extraExtendedMarkerColor).toBe(false);
+      });
+    });
+
+    describe('setting values from parent', () => {
+      it('should update extendedMarkerColor when property is set', async () => {
+        settingsPanel.extendedMarkerColor = true;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.extendedMarkerColor).toBe(true);
+      });
+
+      it('should update extraExtendedMarkerColor when property is set', async () => {
+        settingsPanel.extraExtendedMarkerColor = true;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.extraExtendedMarkerColor).toBe(true);
+      });
+
+      it('should toggle extendedMarkerColor back to false', async () => {
+        settingsPanel.extendedMarkerColor = true;
+        await settingsPanel.updateComplete;
+        settingsPanel.extendedMarkerColor = false;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.extendedMarkerColor).toBe(false);
+      });
+    });
+
+    describe('setting-changed event dispatch', () => {
+      it('should dispatch setting-changed when extendedMarkerColor is toggled', () => {
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('extendedMarkerColor', false);
+
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'extendedMarkerColor', value: true },
+          })
+        );
+      });
+
+      it('should dispatch setting-changed when extraExtendedMarkerColor is toggled', () => {
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('extraExtendedMarkerColor', false);
+
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'extraExtendedMarkerColor', value: true },
+          })
+        );
+      });
+
+      it('should toggle extendedMarkerColor off via _toggleSetting', () => {
+        settingsPanel.extendedMarkerColor = true;
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('extendedMarkerColor', true);
+
+        expect(settingsPanel.extendedMarkerColor).toBe(false);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'extendedMarkerColor', value: false },
+          })
+        );
+      });
+    });
+
+    describe('both settings can be active simultaneously', () => {
+      it('should allow both extendedMarkerColor and extraExtendedMarkerColor to be true', async () => {
+        settingsPanel.extendedMarkerColor = true;
+        settingsPanel.extraExtendedMarkerColor = true;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.extendedMarkerColor).toBe(true);
+        expect(settingsPanel.extraExtendedMarkerColor).toBe(true);
+      });
+    });
+  });
 });

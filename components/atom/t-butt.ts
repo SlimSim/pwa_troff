@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('t-butt')
 export class TButt extends LitElement {
@@ -111,6 +111,14 @@ export class TButt extends LitElement {
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
+    /* Confirming state */
+    button.confirming {
+      background-color: var(--important-button, #dd2c00);
+      color: var(--on-important-button, #fff);
+    }
+
+    .confirm-text {
+      white-space: nowrap;
     }
   `;
 
@@ -124,6 +132,11 @@ export class TButt extends LitElement {
   @property({ type: String, reflect: true }) key = '';
   @property({ type: Boolean, reflect: true }) alt = false;
   @property({ type: Boolean, reflect: true }) shift = false;
+  @property({ type: Boolean }) confirm = false;
+  @property({ type: String }) confirmText = 'Are you sure?';
+
+  @state() private _confirming = false;
+  private _confirmTimerId?: number;
 
   private _boundKeyDownHandler?: (event: KeyboardEvent) => void;
 
@@ -138,10 +151,17 @@ export class TButt extends LitElement {
       document.removeEventListener('keydown', this._boundKeyDownHandler);
       this._boundKeyDownHandler = undefined;
     }
+    this._cancelConfirmTimer();
   }
 
   private _handleKeyDown(event: KeyboardEvent) {
     if (this._isEditableKeyEvent(event)) return;
+
+    if (this._confirming && event.key === 'Escape') {
+      event.preventDefault();
+      this._cancelConfirm();
+      return;
+    }
 
     if (
       event.key.toLowerCase() === this.key.toLowerCase() &&
@@ -188,6 +208,41 @@ export class TButt extends LitElement {
     return false;
   }
 
+  private _handleClick(event: Event) {
+    if (!this.confirm) return;
+
+    if (this._confirming) {
+      // Second click — confirmed, let event bubble to parent handler
+      this._cancelConfirmTimer();
+      this._confirming = false;
+      return;
+    }
+
+    // First click with confirm enabled — enter confirming state
+    event.preventDefault();
+    event.stopPropagation();
+    this._confirming = true;
+    this._startConfirmTimer();
+  }
+
+  private _startConfirmTimer() {
+    this._confirmTimerId = window.setTimeout(() => {
+      this._cancelConfirm();
+    }, 3000);
+  }
+
+  private _cancelConfirmTimer() {
+    if (this._confirmTimerId !== undefined) {
+      clearTimeout(this._confirmTimerId);
+      this._confirmTimerId = undefined;
+    }
+  }
+
+  private _cancelConfirm() {
+    this._confirming = false;
+    this._cancelConfirmTimer();
+  }
+
   private _getClasses() {
     const classes = [];
     if (this.toggle) {
@@ -208,12 +263,15 @@ export class TButt extends LitElement {
     if (this.slim) {
       classes.push('slim');
     }
+    if (this._confirming) {
+      classes.push('confirming');
+    }
     return classes.join(' ');
   }
 
   render() {
-    return html`<button class="${this._getClasses()}">
-      <slot></slot>
+    return html`<button class="${this._getClasses()}" @click=${this._handleClick}>
+      ${this._confirming ? html`<span class="confirm-text">${this.confirmText}</span>` : html`<slot></slot>`}
     </button>`;
   }
 }
