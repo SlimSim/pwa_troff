@@ -30,6 +30,6 @@ export function formatSongForUI(songKey: string, songData: TroffObjectLocal): an
     album: fileData.album || '',
     genre: fileData.genre || '',
     duration: formatDuration(fileData.duration),
-    // Add other fields as needed
+    playsTotal: songData.localInformation?.nrTimesLoaded || 0,
   };
 }
