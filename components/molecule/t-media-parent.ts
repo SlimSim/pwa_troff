@@ -923,7 +923,13 @@ export class MediaParent extends LitElement {
                 </t-dropdown-button>
 
                 <!-- Search Songs Button -->
-                <t-butt icon @click=${this._handleSearchSongs} title="Search songs">
+                <t-butt
+                  href="/find.html"
+                  target="_blank"
+                  icon
+                  @click=${this._handleSearchSongs}
+                  title="Search songs"
+                >
                   <t-icon name="note-search"></t-icon>
                 </t-butt>
 
