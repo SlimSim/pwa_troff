@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await applyMarkerSliderZoom(normalized.startTime, normalized.endTime, false);
   };
 
-  const selectFirstAndLastMarkers = () => {
+  const selectFirstAndLastMarkers = (force: boolean = false) => {
     const songKey = getCurrentSongKey();
     if (!songKey) {
       return;
@@ -326,15 +326,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markers.sort((a, b) => markerToNumericTime(a.time) - markerToNumericTime(b.time));
 
-    const firstMarkerId = String(markers[0].id);
-    const lastMarkerId = String(markers[markers.length - 1].id);
+    const knownMarkerIds = new Set(markers.map(m => String(m.id)));
 
-    songData.currentStartMarker = firstMarkerId;
-    songData.currentStopMarker = `${lastMarkerId}S`;
+    // Preserve existing start marker if it still exists (unless forced)
+    if (!force && songData.currentStartMarker && knownMarkerIds.has(songData.currentStartMarker)) {
+      markerSlider.startMarkerId = songData.currentStartMarker;
+    } else {
+      const firstMarkerId = String(markers[0].id);
+      songData.currentStartMarker = firstMarkerId;
+      markerSlider.startMarkerId = firstMarkerId;
+    }
+
+    // Preserve existing stop marker if it still exists (unless forced)
+    const stopIdWithoutS = songData.currentStopMarker?.replace(/S$/, '');
+    if (!force && songData.currentStopMarker && stopIdWithoutS && knownMarkerIds.has(stopIdWithoutS)) {
+      markerSlider.stopMarkerId = songData.currentStopMarker;
+    } else {
+      const lastMarkerId = String(markers[markers.length - 1].id);
+      songData.currentStopMarker = `${lastMarkerId}S`;
+      markerSlider.stopMarkerId = `${lastMarkerId}S`;
+    }
+
     nDB.set(songKey, songData);
-
-    markerSlider.startMarkerId = firstMarkerId;
-    markerSlider.stopMarkerId = `${lastMarkerId}S`;
     markerSlider.requestUpdate();
   };
 
@@ -750,7 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Setting changed. setting:', setting, ' value:', value, 'songKey:', songKey);
 
       if (setting === 'playFullSong') {
-        selectFirstAndLastMarkers();
+        selectFirstAndLastMarkers(true);
         settingsPanel.playFullSong = false;
         return;
       }
