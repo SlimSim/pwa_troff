@@ -523,7 +523,7 @@ export class SettingsPanel extends LitElement {
               <div class="settings-group-title-block">
                 <h3 class="settings-group-title">Current Song</h3>
                 <p class="settings-group-copy">
-                  These controls belong to the selected song and should be saved with it.
+                  These controls belong to the selected song and are saved with the song.
                 </p>
               </div>
               <div class="scope-badge">Saved per song</div>
@@ -1021,7 +1021,9 @@ export class SettingsPanel extends LitElement {
           </details>
         </div>
 
-        <div>Version: ${this.versionNumber}</div>
+        <div style="margin-top: 16px;">
+          <span class="scope-badge">Version: ${this.versionNumber}</span>
+        </div>
       </div>
     `;
   }
