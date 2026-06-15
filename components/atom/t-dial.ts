@@ -521,7 +521,6 @@ export class Dial extends LitElement {
                     ${this._hasDefaultValue()
                       ? html`
                           <t-butt
-                            .key=${this.key}
                             @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
                             title="${this.defaultValue}"
                           >

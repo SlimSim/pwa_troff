@@ -412,6 +412,7 @@ export class SettingsPanel extends LitElement {
   }
 
   private _setSongNumericSetting(setting: SongNumericSetting, value: number, disabled?: boolean) {
+    console.log('_setSongNumericSetting: Setting', setting, 'Value:', value, 'Disabled:', disabled);
     switch (setting) {
       case 'startBefore':
         this.startBeforeValue = value;
@@ -574,6 +575,7 @@ export class SettingsPanel extends LitElement {
                   <div class="song-stepper-grid">
                     <t-dial
                       unit="s"
+                      key="b"
                       label="Start before"
                       show-disable-button
                       defaultValue="4"
@@ -593,6 +595,7 @@ export class SettingsPanel extends LitElement {
                     ></t-dial>
                     <t-dial
                       label="Stop after"
+                      key="a"
                       show-disable-button
                       unit="s"
                       defaultValue="2"
@@ -675,7 +678,8 @@ export class SettingsPanel extends LitElement {
                   <div class="advanced-summary-copy">
                     <p class="advanced-summary-title">Behaviour of keys and buttons</p>
                     <p class="advanced-summary-text">
-                      Configure what happens when you press the Enter key, Space key, or Play button.
+                      Configure what happens when you press the Enter key, Space key, or Play
+                      button.
                     </p>
                   </div>
                   <span class="advanced-chevron">⌄</span>
@@ -690,7 +694,8 @@ export class SettingsPanel extends LitElement {
                             toggle
                             ellipsis
                             .active=${this.enterGoToMarker}
-                            @click=${() => this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
+                            @click=${() =>
+                              this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
                           >
                             Go to marker
                           </t-butt>
@@ -725,7 +730,8 @@ export class SettingsPanel extends LitElement {
                             toggle
                             ellipsis
                             .active=${this.spaceGoToMarker}
-                            @click=${() => this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
+                            @click=${() =>
+                              this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
                           >
                             Go to marker
                           </t-butt>
@@ -760,7 +766,8 @@ export class SettingsPanel extends LitElement {
                             toggle
                             ellipsis
                             .active=${this.playGoToMarker}
-                            @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
+                            @click=${() =>
+                              this._toggleSetting('playGoToMarker', this.playGoToMarker)}
                           >
                             Go to marker
                           </t-butt>
@@ -776,7 +783,8 @@ export class SettingsPanel extends LitElement {
                             toggle
                             ellipsis
                             .active=${this.playResetCounter}
-                            @click=${() => this._toggleSetting('playResetCounter', this.playResetCounter)}
+                            @click=${() =>
+                              this._toggleSetting('playResetCounter', this.playResetCounter)}
                           >
                             Reset counter
                           </t-butt>
@@ -805,7 +813,8 @@ export class SettingsPanel extends LitElement {
                           toggle
                           ellipsis
                           .active=${this.extendedMarkerColor}
-                          @click=${() => this._toggleSetting('extendedMarkerColor', this.extendedMarkerColor)}
+                          @click=${() =>
+                            this._toggleSetting('extendedMarkerColor', this.extendedMarkerColor)}
                         >
                           Fill to next marker
                         </t-butt>
@@ -814,7 +823,10 @@ export class SettingsPanel extends LitElement {
                           ellipsis
                           .active=${this.extraExtendedMarkerColor}
                           @click=${() =>
-                            this._toggleSetting('extraExtendedMarkerColor', this.extraExtendedMarkerColor)}
+                            this._toggleSetting(
+                              'extraExtendedMarkerColor',
+                              this.extraExtendedMarkerColor
+                            )}
                         >
                           Fill to next colored marker
                         </t-butt>
@@ -846,7 +858,9 @@ export class SettingsPanel extends LitElement {
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
                         this.defaultStartBeforeValue = event.detail.value;
                         this._handleSettingChange('defaultStartBeforeValue', event.detail.value);
                         if (event.detail.disabled !== undefined) {
@@ -865,7 +879,9 @@ export class SettingsPanel extends LitElement {
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
                         this.defaultStopAfterValue = event.detail.value;
                         this._handleSettingChange('defaultStopAfterValue', event.detail.value);
                         if (event.detail.disabled !== undefined) {
@@ -884,7 +900,9 @@ export class SettingsPanel extends LitElement {
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
                         this.defaultPauseBeforeValue = event.detail.value;
                         this._handleSettingChange('defaultPauseBeforeValue', event.detail.value);
                         if (event.detail.disabled !== undefined) {
@@ -903,7 +921,9 @@ export class SettingsPanel extends LitElement {
                       .min=${0}
                       .max=${999}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
                         this.defaultWaitBetweenValue = event.detail.value;
                         this._handleSettingChange('defaultWaitBetweenValue', event.detail.value);
                         if (event.detail.disabled !== undefined) {
@@ -922,12 +942,17 @@ export class SettingsPanel extends LitElement {
                       .min=${50}
                       .max=${200}
                       .step=${1}
-                      @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
                         this.defaultIncrementUntilValue = event.detail.value;
                         this._handleSettingChange('defaultIncrementUntilValue', event.detail.value);
                         if (event.detail.disabled !== undefined) {
                           this.defaultIncrementUntilOn = !event.detail.disabled;
-                          this._handleSettingChange('defaultIncrementUntilOn', !event.detail.disabled);
+                          this._handleSettingChange(
+                            'defaultIncrementUntilOn',
+                            !event.detail.disabled
+                          );
                         }
                       }}
                     ></t-dial>

@@ -118,7 +118,9 @@ function recordSongStart(songKey: string): void {
   // Track song starts for last-30-days count
   const now = Date.now();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-  const songStarts = (localInfo.songStartsLastMonth || []).filter((t: number) => now - t < thirtyDaysMs);
+  const songStarts = (localInfo.songStartsLastMonth || []).filter(
+    (t: number) => now - t < thirtyDaysMs
+  );
   songStarts.push(now);
   nDB.setOnSong(songKey, ['localInformation', 'songStartsLastMonth'], songStarts);
 }
@@ -604,7 +606,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
       }
 
-      if (shadowActiveElement instanceof HTMLElement && isEditableHostElement(shadowActiveElement)) {
+      if (
+        shadowActiveElement instanceof HTMLElement &&
+        isEditableHostElement(shadowActiveElement)
+      ) {
         return true;
       }
     }
@@ -742,6 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const setting = String(event.detail.setting ?? '');
       const value = event.detail.value;
       const songKey = getCurrentSongKey();
+      console.log('Setting changed. setting:', setting, ' value:', value, 'songKey:', songKey);
 
       if (setting === 'playFullSong') {
         selectFirstAndLastMarkers();
@@ -757,11 +763,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentSongData = nDB.get(songKey) || {};
         if (setting === 'startBefore') {
           currentSongData.TROFF_VALUE_startBefore = value;
-          markerSlider.startBefore = Number(value) || 0;
+          // If startBefore is disabled, set the slider to 0 so the region doesn't extend
+          markerSlider.startBefore = settingsPanel.startBeforeDisabled
+            ? 0
+            : Number(value) || 0;
         }
         if (setting === 'stopAfter') {
           currentSongData.TROFF_VALUE_stopAfter = value;
-          markerSlider.stopAfter = Number(value) || 0;
+          markerSlider.stopAfter = settingsPanel.stopAfterDisabled
+            ? 0
+            : Number(value) || 0;
         }
         if (setting === 'incrementUntill') {
           currentSongData.TROFF_VALUE_incrementUntilValue = value;
@@ -784,15 +795,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentSongData = nDB.get(songKey) || {};
         if (setting === 'startBeforeDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStartBefore = !value;
+          // Update the marker slider immediately: 0 when disabled, restore when enabled
+          markerSlider.startBefore = value
+            ? 0
+            : Number(settingsPanel.startBeforeValue) || 0;
         }
         if (setting === 'stopAfterDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !value;
+          markerSlider.stopAfter = value
+            ? 0
+            : Number(settingsPanel.stopAfterValue) || 0;
         }
         if (setting === 'incrementUntillDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = !value;
         }
 
         nDB.set(songKey, currentSongData);
+        markerSlider.requestUpdate();
         return;
       }
 
