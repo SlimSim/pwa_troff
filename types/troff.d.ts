@@ -61,6 +61,7 @@ export type State_WithTime = Omit<State, 'currentStopMarker', 'currentMarker'> &
 export interface TroffLocalInformation {
   nrTimesLoaded?: number;
   addedFromThisDevice?: boolean;
+  songStartsLastMonth?: number[];
 }
 
 export interface TroffFileData {

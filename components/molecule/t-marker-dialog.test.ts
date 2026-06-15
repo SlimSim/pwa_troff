@@ -17,6 +17,7 @@ describe('t-marker-dialog', () => {
     if (document.body.contains(element)) {
       document.body.removeChild(element);
     }
+    vi.restoreAllMocks();
   });
 
   it('renders in create mode', async () => {
@@ -132,14 +133,18 @@ describe('t-marker-dialog', () => {
     }
 
     await infoComponent.updateComplete;
-    const infoTextareaBefore = infoComponent.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
+    const infoTextareaBefore = infoComponent.shadowRoot?.querySelector(
+      'textarea'
+    ) as HTMLTextAreaElement;
     expect(infoTextareaBefore.value).toBe('Info One');
 
     element.markerData = markerTwo;
     await element.updateComplete;
     await infoComponent.updateComplete;
 
-    const infoTextareaAfter = infoComponent.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
+    const infoTextareaAfter = infoComponent.shadowRoot?.querySelector(
+      'textarea'
+    ) as HTMLTextAreaElement;
     expect(infoTextareaAfter.value).toBe('Info Two');
   });
 
@@ -216,6 +221,9 @@ describe('t-marker-dialog', () => {
     const dialogCancelledSpy = vi.fn();
     element.addEventListener('dialog-cancelled', dialogCancelledSpy);
 
+    element.open = true;
+    await element.updateComplete;
+
     const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
     document.dispatchEvent(escapeEvent);
     await element.updateComplete;
@@ -227,6 +235,7 @@ describe('t-marker-dialog', () => {
     const markerCreatedSpy = vi.fn();
     element.addEventListener('marker-created', markerCreatedSpy);
 
+    element.open = true;
     element.markerName = 'Test Marker';
     await element.updateComplete;
 

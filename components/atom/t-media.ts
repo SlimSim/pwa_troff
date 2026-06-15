@@ -15,9 +15,10 @@ export class MediaItem extends LitElement {
       align-items: flex-start;
       gap: 12px;
       padding: 12px 16px;
+      border-left: 4px solid transparent;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
     .media-container:hover {
@@ -27,6 +28,33 @@ export class MediaItem extends LitElement {
     .media-container.active {
       background-color: var(--toggle-button-active-color, #431c5d);
       color: var(--on-toggle-button-active-color, white);
+    }
+
+    .media-container.highlighted {
+      border-left-color: var(--accent-color-1, #431c5d);
+      background-color: color-mix(
+        in srgb,
+        var(--accent-color-1, #431c5d) 18%,
+        transparent
+      );
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
+    }
+
+    .media-container.highlighted:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--accent-color-1, #431c5d) 26%,
+        transparent
+      );
+    }
+
+    .media-container.active.highlighted {
+      box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 35%, transparent);
+    }
+
+    .media-container.highlighted .media-title {
+      font-weight: 650;
     }
 
     /* Album Art Section */
@@ -168,11 +196,12 @@ export class MediaItem extends LitElement {
   @property({ type: String }) duration = '';
   @property({ type: Number, reflect: true }) rating = 0;
   @property({ type: String }) tempo = '';
-  @property({ type: Number }) playsWeek = 0;
+  @property({ type: Number }) playsMonth = 0;
   @property({ type: Number }) playsTotal = 0;
   @property({ type: String }) albumArt = '';
   @property({ type: String }) songKey = '';
   @property({ type: Boolean, reflect: true }) active = false;
+  @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
 
   private _handleClick() {
@@ -188,7 +217,7 @@ export class MediaItem extends LitElement {
           duration: this.duration,
           rating: this.rating,
           tempo: this.tempo,
-          playsWeek: this.playsWeek,
+          playsMonth: this.playsMonth,
           playsTotal: this.playsTotal,
           albumArt: this.albumArt,
           songKey: this.songKey,
@@ -283,7 +312,12 @@ export class MediaItem extends LitElement {
     const { text, hasMoreToShow } = this._getFormattedDetailsWithComment();
 
     return html`
-      <div class="media-container ${this.active ? 'active' : ''}" @click=${this._handleClick}>
+      <div
+        class="media-container ${this.active ? 'active' : ''} ${this.highlighted
+          ? 'highlighted'
+          : ''}"
+        @click=${this._handleClick}
+      >
         <div class="album-art">
           ${this.albumArt ? html`<img src="${this.albumArt}" alt="Album art" />` : html`♪`}
         </div>
@@ -298,7 +332,7 @@ export class MediaItem extends LitElement {
         </div>
 
         <div class="play-stats">
-          <t-number-label variant="week" .value=${this.playsWeek}></t-number-label>
+          <t-number-label variant="month" .value=${this.playsMonth}></t-number-label>
           <t-number-label variant="total" .value=${this.playsTotal}></t-number-label>
         </div>
 

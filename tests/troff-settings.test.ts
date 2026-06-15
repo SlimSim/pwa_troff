@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import type { TroffMarker } from '../types/troff.d.js';
 
 // Mock nDB before importing the module under test
 const nDBGetMock = vi.fn();
@@ -103,15 +104,102 @@ describe('getIncrementUntil', () => {
     expect(getIncrementUntil(songData)).toBe(75);
   });
 
-  it('should return 100 when songData has no incrementUntil value', () => {
+  it('should fall back to nDB default when songData has no incrementUntil value', () => {
+    nDBGetMock.mockReturnValue('150');
+    expect(getIncrementUntil({})).toBe(150);
+  });
+
+  it('should return 100 when no value is found anywhere', () => {
+    nDBGetMock.mockReturnValue(undefined);
     expect(getIncrementUntil({})).toBe(100);
   });
 
   it('should return 100 when songData is null', () => {
+    nDBGetMock.mockReturnValue(undefined);
     expect(getIncrementUntil(null)).toBe(100);
   });
 
   it('should return 100 when songData is undefined', () => {
+    nDBGetMock.mockReturnValue(undefined);
     expect(getIncrementUntil(undefined)).toBe(100);
+  });
+});
+
+describe('ensureDefaultMarkers', () => {
+  let ensureDefaultMarkers: (
+    songData: Record<string, unknown> | null | undefined,
+    songDuration: number
+  ) => TroffMarker[];
+
+  beforeAll(async () => {
+    const mod = await import('../utils/troff-settings.js');
+    ensureDefaultMarkers = mod.ensureDefaultMarkers;
+  });
+
+  it('should create Start and End markers when songData has no markers and duration > 0', () => {
+    const songData: Record<string, unknown> = {};
+    const markers = ensureDefaultMarkers(songData, 120);
+
+    expect(markers).toHaveLength(2);
+    expect(markers[0].name).toBe('Start');
+    expect(markers[0].time).toBe(0);
+    expect(markers[0].id).toBe('markerNr0');
+    expect(markers[1].name).toBe('End');
+    expect(markers[1].time).toBe(120);
+    expect(markers[1].id).toBe('markerNr1');
+  });
+
+  it('should modify songData.markers in place', () => {
+    const songData: Record<string, unknown> = {};
+    ensureDefaultMarkers(songData, 120);
+
+    expect(Array.isArray(songData.markers)).toBe(true);
+    const markers = songData.markers as Array<{ name: string; time: number }>;
+    expect(markers).toHaveLength(2);
+    expect(markers[0].name).toBe('Start');
+    expect(markers[1].name).toBe('End');
+  });
+
+  it('should return empty array when songData is null', () => {
+    const markers = ensureDefaultMarkers(null, 120);
+    expect(markers).toEqual([]);
+  });
+
+  it('should return empty array when songData is undefined', () => {
+    const markers = ensureDefaultMarkers(undefined, 120);
+    expect(markers).toEqual([]);
+  });
+
+  it('should return empty array when songDuration is 0', () => {
+    const songData: Record<string, unknown> = {};
+    const markers = ensureDefaultMarkers(songData, 0);
+    expect(markers).toEqual([]);
+  });
+
+  it('should return existing markers instead of creating defaults', () => {
+    const existingMarkers = [
+      { name: 'Custom', time: 10, info: '', color: 'None', id: 'custom1' },
+    ];
+    const songData: Record<string, unknown> = { markers: existingMarkers };
+    const result = ensureDefaultMarkers(songData, 120);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Custom');
+    // songData.markers should not have been overwritten
+    expect(songData.markers).toBe(existingMarkers);
+  });
+
+  it('should set End marker time to the song duration', () => {
+    const songData: Record<string, unknown> = {};
+    const markers = ensureDefaultMarkers(songData, 300);
+
+    expect(markers[1].time).toBe(300);
+  });
+
+  it('should handle fractional song duration', () => {
+    const songData: Record<string, unknown> = {};
+    const markers = ensureDefaultMarkers(songData, 124.5);
+
+    expect(markers[1].time).toBe(124.5);
   });
 });

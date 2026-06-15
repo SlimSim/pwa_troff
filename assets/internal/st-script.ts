@@ -58,6 +58,7 @@ $(document).ready(function () {
     document.addEventListener('keydown', onKeyDown);
 
     function onKeyDown(event: KeyboardEvent) {
+      console.log('Keydown in confirm dialog:', event.key);
       event.preventDefault();
       if (event.key === 'Enter') {
         clickOk();

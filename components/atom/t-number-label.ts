@@ -26,6 +26,10 @@ export class NumberLabel extends LitElement {
       background-color: rgba(76, 175, 80, 0.4);
     }
 
+    .number-circle.month {
+      background-color: rgba(255, 152, 0, 0.4);
+    }
+
     .number-circle.total {
       background-color: rgba(33, 150, 243, 0.4);
     }
@@ -40,10 +44,11 @@ export class NumberLabel extends LitElement {
     }
   `;
 
-  @property({ type: String }) variant: 'week' | 'total' = 'week';
+  @property({ type: String }) variant: 'week' | 'month' | 'total' = 'week';
   @property({ type: Number }) value = 0;
 
   render() {
-    return html` <div class="number-circle ${this.variant}">${this.value}</div> `;
+    const labels: Record<string, string> = { week: 'Plays this week', month: 'Plays this month', total: 'Total plays' };
+    return html` <div class="number-circle ${this.variant}" title=${labels[this.variant]}>${this.value}</div> `;
   }
 }

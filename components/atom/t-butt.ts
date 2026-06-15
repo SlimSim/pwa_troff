@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('t-butt')
 export class TButt extends LitElement {
@@ -9,8 +9,8 @@ export class TButt extends LitElement {
       font-size: 14px;
     }
 
-    /* style for REGULAR BUTTON */
-    button {
+    /* base styles for both <button> and link-mode <a> */
+    .base {
       min-width: 42px;
       min-height: 35px;
       font-size: inherit;
@@ -26,91 +26,105 @@ export class TButt extends LitElement {
       align-items: center;
     }
 
-    button.slim {
+    /* link-specific resets */
+    a.base {
+      text-decoration: none;
+      color: var(--on-regular-buton-color, black);
+    }
+
+    .base.slim {
       min-width: 20px;
       min-height: 20px;
       height: 20px;
       font-size: 0.8rem;
     }
 
-    button.ellipsis {
+    .base.ellipsis {
       display: block;
       width: 100%;
       text-overflow: ellipsis;
       overflow: hidden;
     }
 
-    button.round {
+    .base.round {
       min-height: 42px;
     }
 
-    button:not(:disabled) {
+    .base:not(:disabled) {
       cursor: pointer;
     }
 
-    button:hover {
+    .base:hover {
       box-shadow: 0px 0px var(--hover-fuzzy) var(--hover-size) var(--regular-button-color, #b0bec5);
     }
-    button:active {
+    .base:active {
       box-shadow: 0px 0px var(--active-fuzzy) var(--active-size)
         var(--regular-button-color, #b0bec5);
     }
 
     /* Style for ROUND button */
-    button.round {
+    .base.round {
       border-radius: 50%;
       width: 3.2rem;
       height: 3.2rem;
     }
 
     /* STYLE for the TOGGLE button */
-    :host([toggle]) button {
+    :host([toggle]) .base {
       background-color: var(--toggle-button-color, lightgray);
       color: var(--on-toggle-button-color, black);
     }
 
-    :host([toggle]) button:hover {
+    :host([toggle]) .base:hover {
       box-shadow: 0px 0px 0px 2px var(--toggle-button-color, lightgray);
     }
-    :host([toggle]) button:active {
+    :host([toggle]) .base:active {
       box-shadow: 0px 0px 0px 4px var(--toggle-button-color, lightgray);
     }
 
-    :host([active]) button {
+    :host([active]) .base {
       background-color: var(--toggle-button-active-color, #431c5d);
       color: var(--on-toggle-button-active-color, white);
     }
 
-    :host([active]) button:hover {
+    :host([active]) .base:hover {
       box-shadow: 0px 0px 0px 2px var(--toggle-button-active-color, #431c5d);
     }
 
-    :host([active]) button:active {
+    :host([active]) .base:active {
       box-shadow: 0px 0px 0px 4px var(--toggle-button-active-color, #431c5d);
     }
 
     /* Style for IMPORTANT button */
-    button.important {
+    .base.important {
       background: var(--important-button, #dd2c00);
       color: var(--on-important-button, #fff);
     }
 
-    button.important:hover {
+    .base.important:hover {
       box-shadow: 0px 0px 0px 2px var(--important-button, #dd2c00);
     }
-    button.important:active {
+    .base.important:active {
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
     /* STYLE for the SPECIAL button */
-    .special:hover {
+    .base.special:hover {
       box-shadow: 0px 0px 0px 2px var(--important-button, #dd2c00);
     }
-    .special:active {
+    .base.special:active {
       z-index: 1;
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
+    /* Confirming state */
+    .base.confirming {
+      background-color: var(--important-button, #dd2c00);
+      color: var(--on-important-button, #fff);
+    }
+
+    .confirm-text {
+      white-space: nowrap;
     }
   `;
 
@@ -124,6 +138,13 @@ export class TButt extends LitElement {
   @property({ type: String, reflect: true }) key = '';
   @property({ type: Boolean, reflect: true }) alt = false;
   @property({ type: Boolean, reflect: true }) shift = false;
+  @property({ type: Boolean }) confirm = false;
+  @property({ type: String }) confirmText = 'Are you sure?';
+  @property({ type: String }) href = '';
+  @property({ type: String }) target = '';
+
+  @state() private _confirming = false;
+  private _confirmTimerId?: number;
 
   private _boundKeyDownHandler?: (event: KeyboardEvent) => void;
 
@@ -138,10 +159,17 @@ export class TButt extends LitElement {
       document.removeEventListener('keydown', this._boundKeyDownHandler);
       this._boundKeyDownHandler = undefined;
     }
+    this._cancelConfirmTimer();
   }
 
   private _handleKeyDown(event: KeyboardEvent) {
     if (this._isEditableKeyEvent(event)) return;
+
+    if (this._confirming && event.key === 'Escape') {
+      event.preventDefault();
+      this._cancelConfirm();
+      return;
+    }
 
     if (
       event.key.toLowerCase() === this.key.toLowerCase() &&
@@ -149,7 +177,7 @@ export class TButt extends LitElement {
       event.shiftKey === this.shift
     ) {
       event.preventDefault();
-      this.shadowRoot?.querySelector('button')?.click();
+      (this.shadowRoot?.querySelector('.base') as HTMLElement)?.click();
     }
   }
 
@@ -164,6 +192,21 @@ export class TButt extends LitElement {
 
       if (target.isContentEditable) {
         return true;
+      }
+
+      // Check if this node's shadow root has a focused editable element.
+      // This catches forwarded events from custom elements like <t-input> or
+      // <t-textarea> whose composedPath starts at the host, not the native
+      // <input>/<textarea> inside their shadow DOM.
+      if (target.shadowRoot) {
+        const shadowActive = target.shadowRoot.activeElement;
+        if (
+          shadowActive instanceof HTMLInputElement ||
+          shadowActive instanceof HTMLTextAreaElement ||
+          (shadowActive instanceof HTMLElement && shadowActive.isContentEditable)
+        ) {
+          return true;
+        }
       }
     }
 
@@ -188,8 +231,43 @@ export class TButt extends LitElement {
     return false;
   }
 
+  private _handleClick(event: Event) {
+    if (!this.confirm) return;
+
+    if (this._confirming) {
+      // Second click — confirmed, let event bubble / navigation proceed
+      this._cancelConfirmTimer();
+      this._confirming = false;
+      return;
+    }
+
+    // First click with confirm enabled — enter confirming state
+    event.preventDefault();
+    event.stopPropagation();
+    this._confirming = true;
+    this._startConfirmTimer();
+  }
+
+  private _startConfirmTimer() {
+    this._confirmTimerId = window.setTimeout(() => {
+      this._cancelConfirm();
+    }, 3000);
+  }
+
+  private _cancelConfirmTimer() {
+    if (this._confirmTimerId !== undefined) {
+      clearTimeout(this._confirmTimerId);
+      this._confirmTimerId = undefined;
+    }
+  }
+
+  private _cancelConfirm() {
+    this._confirming = false;
+    this._cancelConfirmTimer();
+  }
+
   private _getClasses() {
-    const classes = [];
+    const classes = ['base'];
     if (this.toggle) {
       classes.push('toggle');
     }
@@ -208,12 +286,20 @@ export class TButt extends LitElement {
     if (this.slim) {
       classes.push('slim');
     }
+    if (this._confirming) {
+      classes.push('confirming');
+    }
     return classes.join(' ');
   }
 
   render() {
-    return html`<button class="${this._getClasses()}">
-      <slot></slot>
+    if (this.href) {
+      return html`<a class="${this._getClasses()}" href=${this.href} target=${this.target || undefined} @click=${this._handleClick}>
+        ${this._confirming ? html`<span class="confirm-text">${this.confirmText}</span>` : html`<slot></slot>`}
+      </a>`;
+    }
+    return html`<button class="${this._getClasses()}" @click=${this._handleClick}>
+      ${this._confirming ? html`<span class="confirm-text">${this.confirmText}</span>` : html`<slot></slot>`}
     </button>`;
   }
 }

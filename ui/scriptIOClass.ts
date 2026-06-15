@@ -537,6 +537,7 @@ class IOClass {
       return;
     }
 
+    console.log('Keydown:', event.key);
     switch (event.keyCode) {
       case 32: //space bar
         Troff.space();

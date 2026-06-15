@@ -266,7 +266,7 @@ export class BottomNav extends LitElement {
             .open=${this.showSpeedDropdown}
             @dropdown-toggled=${this._handleSpeedDropdownToggled}
           >
-            <t-butt icon slot="button" title="Speed control">
+            <t-butt icon slot="button" title="Speed and volume control">
               <t-icon name="speed" label="${Math.round(this.speed)}" unit="%"></t-icon>
             </t-butt>
             <div slot="dropdown" class="speed-dropdown-content">
@@ -299,7 +299,7 @@ export class BottomNav extends LitElement {
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
-          <t-butt round important key=" ">
+          <t-butt title="Play song" round important key=" ">
             <div class="play-button-content">
               ${this.isStartingPlayback
                 ? html`<div class="play-countdown">${this.playbackCountdown}</div>`
@@ -320,7 +320,7 @@ export class BottomNav extends LitElement {
             .open=${this.showMarkerDropdown}
             @dropdown-toggled=${this._handleMarkerDropdownToggled}
           >
-            <t-butt key="m" icon slot="button">
+            <t-butt key="m" title="Add a marker" icon slot="button">
               <t-icon name="marker-plus"></t-icon>
             </t-butt>
             <t-marker-dialog
@@ -338,7 +338,7 @@ export class BottomNav extends LitElement {
         </div>
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
-          <t-butt icon>
+          <t-butt title="Settings" icon>
             <t-icon
               name="chevron-up"
               class="${this.settingsPanelVisible ? 'flipped' : ''}"
