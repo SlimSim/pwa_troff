@@ -7,10 +7,35 @@ import './t-group-list.js';
 import './t-media-footer.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
+import '../atom/t-input.js';
+import type { TInput } from '../atom/t-input.js';
 import { LocalSongDataService } from '../../utils/local-song-data.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
 import { nDB } from '../../assets/internal/db.js';
 import { getCurrentSongKey } from '../../utils/current-song.js';
+import {
+  filterTracks,
+  filterArtists,
+  filterGenres,
+  filterGroups,
+} from '../../utils/media-search.js';
+import type { TrackLike } from '../../utils/media-search.js';
+import log from '../../utils/log.js';
+
+// Module-level diagnostic listener: registers at module load time to verify
+// whether the Esc keydown reaches the window at all. This bypasses any
+// component lifecycle issues with connectedCallback registration.
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      console.log('[t-media-parent MODULE] Esc keydown on window', {
+        key: event.key,
+        target: (event.target as Element | null)?.tagName,
+        activeElement: (document.activeElement as Element | null)?.tagName,
+      });
+    }
+  });
+}
 
 @customElement('t-media-parent')
 export class MediaParent extends LitElement {
@@ -57,6 +82,19 @@ export class MediaParent extends LitElement {
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .search-input {
+      display: block;
+      max-width: 160px;
+      min-width: 100px;
+    }
+
+    /* On wider screens there's room for a more comfortable search input width. */
+    @media (min-width: 576px) {
+      .search-input {
+        max-width: 200px;
+      }
     }
 
     .song-count {
@@ -206,6 +244,11 @@ export class MediaParent extends LitElement {
   @property({ type: String }) genreSortBy = 'name';
   @property({ type: String }) genreSortOrder = 'ascending';
   @property({ type: Boolean }) showGenreSortDropdown = false;
+  @property({ type: String }) searchQuery = '';
+  @property({ type: Boolean }) isDesktop = false;
+  @property({ type: Number }) highlightedIndex = -1;
+  @property({ type: Boolean, state: true })
+  isSearchFocused = false;
   @property({ type: Array }) private songs: any[] = [];
   @property({ type: Array }) private groups: TroffFirebaseGroupIdentifyer[] = [];
   @property({ type: String }) currentSongKey = '';
@@ -213,6 +256,7 @@ export class MediaParent extends LitElement {
   // Add lifecycle method to load songs
   async connectedCallback() {
     super.connectedCallback();
+    this.isDesktop = window.matchMedia('(pointer: fine)').matches;
     await this._loadSongs();
     this.currentSongKey = getCurrentSongKey() || '';
     this.addEventListener('media-selected', (e: any) => {
@@ -220,6 +264,14 @@ export class MediaParent extends LitElement {
       this.requestUpdate(); // Force re-render to update active states
       this.visible = false; // Close the song list panel
     });
+    window.addEventListener('keydown', this._handleGlobalKeydown);
+    window.addEventListener('keydown', this._handleGlobalEsc);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('keydown', this._handleGlobalKeydown);
+    window.removeEventListener('keydown', this._handleGlobalEsc);
   }
 
   updated(changedProperties: PropertyValues) {
@@ -231,7 +283,56 @@ export class MediaParent extends LitElement {
         })
       );
     }
+    if (changedProperties.has('searchQuery')) {
+      const visibleTracks = this._getVisibleTracks();
+      this.highlightedIndex = visibleTracks.length > 0 ? 0 : -1;
+    }
   }
+
+  // Ctrl/Cmd+F opens the song view and focuses the search input.
+  // Esc clears the search input — handled here (not on the <t-input> keydown)
+  // because in some browsers the Esc keydown does not cross the shadow DOM
+  // boundary to the host element, but the window listener always fires.
+  private _handleGlobalKeydown = (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key.toLowerCase() !== 'f') return;
+      event.preventDefault();
+      if (!this.visible) {
+        this.visible = true;
+      }
+      void this.updateComplete.then(() => {
+        const tInput = this.shadowRoot?.querySelector<TInput>('t-input.search-input');
+        if (!tInput) return;
+        tInput.focus();
+        if (this.searchQuery) {
+          tInput.select();
+        }
+      });
+      return;
+    }
+    if (event.key === 'Escape' && this.isSearchFocused) {
+      log.d('Esc pressed in search input');
+      event.preventDefault();
+      this.searchQuery = '';
+      this._blurSearchInput();
+    }
+  };
+
+  // Dedicated global Esc handler — blurs any active field. Separate from
+  // _handleGlobalKeydown (which also handles Ctrl+F and search-specific Esc
+  // behavior) so we can verify it fires independently.
+  private _handleGlobalEsc = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape') return;
+    console.log('[t-media-parent] Global Esc handler fired', {
+      key: event.key,
+      activeElement: document.activeElement?.tagName,
+      activeElementId: (document.activeElement as HTMLElement)?.id,
+    });
+    const activeElement = document.activeElement as HTMLElement | null;
+    if (activeElement && activeElement !== document.body) {
+      activeElement.blur();
+    }
+  };
 
   // Add method to load songs
   private async _loadSongs() {
@@ -279,6 +380,10 @@ export class MediaParent extends LitElement {
     return sorted;
   }
 
+  private _getVisibleTracks(): TrackLike[] {
+    return this._getSortedSongs(filterTracks(this.songs, this.searchQuery));
+  }
+
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
   }
@@ -307,6 +412,150 @@ export class MediaParent extends LitElement {
   private _handleSearchSongs() {
     // Logic to be implemented later
     console.log('Search songs button clicked');
+  }
+
+  private _handleSearchInput(event: Event) {
+    // <t-input> dispatches a custom 'input' event with detail = { value, event }
+    // AND the original native 'input' event also bubbles out of its shadow DOM.
+    // Only react to the custom event (identified by detail being an object with
+    // a string `value`); ignore the native InputEvent (detail is a number).
+    const detail = (event as CustomEvent).detail;
+    if (typeof detail?.value === 'string') {
+      this.searchQuery = detail.value;
+    }
+    const visibleTracks = this._getVisibleTracks();
+    this.highlightedIndex = visibleTracks.length > 0 ? 0 : -1;
+  }
+
+  private _handleSearchKeydown(event: KeyboardEvent) {
+    console.log('[t-media-parent] _handleSearchKeydown fired', {
+      key: event.key,
+      currentFilter: this.currentFilter,
+      isDesktop: this.isDesktop,
+      isSearchFocused: this.isSearchFocused,
+      searchQuery: this.searchQuery,
+      highlightedIndex: this.highlightedIndex,
+    });
+
+    if (this.currentFilter !== 'tracks') return;
+
+    // Enter should always load the currently highlighted search result,
+    // even on devices where pointer detection is not "fine".
+    if (event.key === 'Enter') {
+      console.log('[t-media-parent] Enter detected in search input', {
+        highlightedIndexBeforeSelect: this.highlightedIndex,
+        visibleTrackCount: this._getVisibleTracks().length,
+      });
+      event.preventDefault();
+      this._selectHighlightedTrack();
+      console.log('[t-media-parent] Enter path completed', {
+        defaultPrevented: event.defaultPrevented,
+      });
+      return;
+    }
+
+    if (!this.isDesktop) {
+      console.log('[t-media-parent] Non-Enter key ignored because isDesktop is false', {
+        key: event.key,
+      });
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowUp': {
+        event.preventDefault();
+        const tracks = this._getVisibleTracks();
+        if (tracks.length === 0) return;
+        const max = tracks.length - 1;
+        const direction = event.key;
+        console.log('[t-media-parent] Arrow navigation before update', {
+          direction,
+          highlightedIndexBefore: this.highlightedIndex,
+          max,
+        });
+        if (this.highlightedIndex === -1) {
+          this.highlightedIndex = direction === 'ArrowDown' ? 0 : max;
+        } else {
+          const next = this.highlightedIndex + (direction === 'ArrowDown' ? 1 : -1);
+          this.highlightedIndex = Math.max(0, Math.min(max, next));
+        }
+        console.log('[t-media-parent] Arrow navigation after update', {
+          highlightedIndexAfter: this.highlightedIndex,
+        });
+        break;
+      }
+      default:
+        console.log('[t-media-parent] Key ignored in search handler', {
+          key: event.key,
+        });
+        break;
+    }
+  }
+
+  private _handleSearchFocus = (): void => {
+    this.isSearchFocused = true;
+  };
+
+  private _handleSearchBlur = (): void => {
+    this.isSearchFocused = false;
+  };
+
+  private _blurSearchInput() {
+    const tInput = this.shadowRoot?.querySelector<TInput>('t-input.search-input');
+    const innerInput = tInput?.shadowRoot?.querySelector<HTMLInputElement>('input');
+    innerInput?.blur();
+  }
+
+  private _selectHighlightedTrack() {
+    const visibleTracks = this._getVisibleTracks();
+    const track = visibleTracks[this.highlightedIndex];
+
+    console.log('[t-media-parent] _selectHighlightedTrack called', {
+      highlightedIndex: this.highlightedIndex,
+      visibleTrackCount: visibleTracks.length,
+      visibleTrackSongKeysPreview: visibleTracks.slice(0, 5).map((t) => t.songKey),
+      selectedTrackSongKey: track?.songKey,
+    });
+
+    if (!track) {
+      console.log('[t-media-parent] Selection aborted: no track at highlighted index', {
+        highlightedIndex: this.highlightedIndex,
+        visibleTrackCount: visibleTracks.length,
+      });
+      return;
+    }
+
+    console.log('[t-media-parent] Dispatching media-selected event', {
+      songKey: track.songKey,
+      title: track.title,
+    });
+
+    this.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: {
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          genre: track.genre,
+          year: track.year,
+          comment: track.comment,
+          duration: track.duration,
+          rating: track.rating,
+          tempo: track.tempo,
+          playsWeek: track.playsWeek,
+          playsTotal: track.playsTotal,
+          albumArt: track.albumArt,
+          songKey: track.songKey,
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    console.log('[t-media-parent] media-selected event dispatched', {
+      songKey: track.songKey,
+    });
   }
 
   private _renderSortDropdown() {
@@ -621,15 +870,31 @@ export class MediaParent extends LitElement {
 
   render() {
     const songs = this.songs;
+    const query = this.searchQuery;
 
-    const groups = this.groups.map((group) => ({
-      ...group,
-      tracks: songs.filter((song) =>
-        group.songs.some(
-          (groupSong) => groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
-        )
-      ),
-    }));
+    // Tracks: filter by title, then sort.
+    const visibleTracks = this._getVisibleTracks();
+
+    // Artists / genres: the existing sort helpers take raw songs and compute
+    // unique artists/genres internally, so we sort first and then filter the
+    // result. The user-visible order (filtered + sorted) is unchanged.
+    const visibleArtists = filterArtists(this._getSortedArtists(songs), query);
+    const visibleGenres = filterGenres(this._getSortedGenres(songs), query);
+
+    // Groups: filter the raw group list by name, then map each group to its
+    // tracks, then sort. Filtering against the raw list (before mapping) keeps
+    // the name comparison against the source-of-truth value.
+    const visibleGroups = this._getSortedGroups(
+      filterGroups(this.groups, query).map((group) => ({
+        ...group,
+        tracks: songs.filter((song) =>
+          group.songs.some(
+            (groupSong) =>
+              groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+          )
+        ),
+      }))
+    );
 
     return html`
       <div class="song-list-header">
@@ -661,6 +926,20 @@ export class MediaParent extends LitElement {
                 <t-butt icon @click=${this._handleSearchSongs} title="Search songs">
                   <t-icon name="note-search"></t-icon>
                 </t-butt>
+
+                <!-- Search Tracks Input -->
+                <t-input
+                  class="search-input"
+                  slim
+                  clearable
+                  placeholder="Search tracks…"
+                  aria-label="Search tracks…"
+                  .value=${this.searchQuery}
+                  @input=${this._handleSearchInput}
+                  @keydown=${this._handleSearchKeydown}
+                  @focus=${this._handleSearchFocus}
+                  @blur=${this._handleSearchBlur}
+                ></t-input>
               </div>
             `
           : ''}
@@ -687,6 +966,20 @@ export class MediaParent extends LitElement {
                   </t-butt>
                   <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
                 </t-dropdown-button>
+
+                <!-- Search Artists Input -->
+                <t-input
+                  class="search-input"
+                  slim
+                  clearable
+                  placeholder="Search artists…"
+                  aria-label="Search artists…"
+                  .value=${this.searchQuery}
+                  @input=${this._handleSearchInput}
+                  @keydown=${this._handleSearchKeydown}
+                  @focus=${this._handleSearchFocus}
+                  @blur=${this._handleSearchBlur}
+                ></t-input>
               </div>
             `
           : ''}
@@ -713,6 +1006,20 @@ export class MediaParent extends LitElement {
                   </t-butt>
                   <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
                 </t-dropdown-button>
+
+                <!-- Search Genres Input -->
+                <t-input
+                  class="search-input"
+                  slim
+                  clearable
+                  placeholder="Search genres…"
+                  aria-label="Search genres…"
+                  .value=${this.searchQuery}
+                  @input=${this._handleSearchInput}
+                  @keydown=${this._handleSearchKeydown}
+                  @focus=${this._handleSearchFocus}
+                  @blur=${this._handleSearchBlur}
+                ></t-input>
               </div>
             `
           : ''}
@@ -737,6 +1044,20 @@ export class MediaParent extends LitElement {
                   </t-butt>
                   <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
                 </t-dropdown-button>
+
+                <!-- Search Groups Input -->
+                <t-input
+                  class="search-input"
+                  slim
+                  clearable
+                  placeholder="Search groups…"
+                  aria-label="Search groups…"
+                  .value=${this.searchQuery}
+                  @input=${this._handleSearchInput}
+                  @keydown=${this._handleSearchKeydown}
+                  @focus=${this._handleSearchFocus}
+                  @blur=${this._handleSearchBlur}
+                ></t-input>
               </div>
             `
           : ''}
@@ -746,7 +1067,8 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'tracks'
           ? html`
               <t-track-list
-                .tracks=${this._getSortedSongs(songs)}
+                .tracks=${visibleTracks}
+                .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                 currentSongKey=${this.currentSongKey}
               ></t-track-list>
             `
@@ -754,7 +1076,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'artists'
           ? html`
               <t-artist-list
-                .artists=${this._getSortedArtists(songs)}
+                .artists=${visibleArtists}
                 .tracks=${songs}
                 currentSongKey=${this.currentSongKey}
               ></t-artist-list>
@@ -763,7 +1085,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'genre'
           ? html`
               <t-genre-list
-                .genres=${this._getSortedGenres(songs)}
+                .genres=${visibleGenres}
                 .tracks=${songs}
                 currentSongKey=${this.currentSongKey}
               ></t-genre-list>
@@ -772,7 +1094,7 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'groups'
           ? html`
               <t-group-list
-                .groups=${this._getSortedGroups(groups)}
+                .groups=${visibleGroups}
                 .tracks=${songs}
                 currentSongKey=${this.currentSongKey}
               ></t-group-list>

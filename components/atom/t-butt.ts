@@ -185,6 +185,21 @@ export class TButt extends LitElement {
       if (target.isContentEditable) {
         return true;
       }
+
+      // Check if this node's shadow root has a focused editable element.
+      // This catches forwarded events from custom elements like <t-input> or
+      // <t-textarea> whose composedPath starts at the host, not the native
+      // <input>/<textarea> inside their shadow DOM.
+      if (target.shadowRoot) {
+        const shadowActive = target.shadowRoot.activeElement;
+        if (
+          shadowActive instanceof HTMLInputElement ||
+          shadowActive instanceof HTMLTextAreaElement ||
+          (shadowActive instanceof HTMLElement && shadowActive.isContentEditable)
+        ) {
+          return true;
+        }
+      }
     }
 
     const active = document.activeElement;

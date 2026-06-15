@@ -535,6 +535,11 @@ document.addEventListener('DOMContentLoaded', () => {
     clearPlaybackCountdown();
   };
 
+  const isEditableHostElement = (element: HTMLElement): boolean => {
+    const tagName = element.tagName.toLowerCase();
+    return tagName === 't-input' || tagName === 't-textarea';
+  };
+
   const isEditableKeyEvent = (event: KeyboardEvent) => {
     const path = event.composedPath();
     for (const target of path) {
@@ -549,6 +554,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target.isContentEditable) {
         return true;
       }
+
+      if (isEditableHostElement(target)) {
+        return true;
+      }
     }
 
     const activeElement = document.activeElement;
@@ -557,6 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (activeElement instanceof HTMLElement && activeElement.isContentEditable) {
+      return true;
+    }
+
+    if (activeElement instanceof HTMLElement && isEditableHostElement(activeElement)) {
       return true;
     }
 
@@ -570,6 +583,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (shadowActiveElement instanceof HTMLElement && shadowActiveElement.isContentEditable) {
+        return true;
+      }
+
+      if (shadowActiveElement instanceof HTMLElement && isEditableHostElement(shadowActiveElement)) {
         return true;
       }
     }

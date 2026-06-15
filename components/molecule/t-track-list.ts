@@ -17,14 +17,25 @@ export class TrackList extends LitElement {
 
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: String }) currentSongKey = '';
+  @property({ type: Number }) highlightedIndex = -1;
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('t-media[highlighted]');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
 
   render() {
     return html`
       <div class="tracks-container">
         ${this.tracks.map(
-          (track) => html`
+          (track, index) => html`
             <t-media
               .active=${track.songKey === this.currentSongKey}
+              ?highlighted=${index === this.highlightedIndex}
               title=${track.title}
               artist=${track.artist}
               album=${track.album}

@@ -69,13 +69,13 @@ export class MarkerDialog extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._boundKeyHandler = (event: KeyboardEvent) => this._handleKeyboardShortcut(event);
-    document.addEventListener('keydown', this._boundKeyHandler, { capture: true });
+    document.addEventListener('keydown', this._boundKeyHandler);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this._boundKeyHandler) {
-      document.removeEventListener('keydown', this._boundKeyHandler, { capture: true });
+      document.removeEventListener('keydown', this._boundKeyHandler);
       this._boundKeyHandler = undefined;
     }
 
@@ -202,6 +202,10 @@ export class MarkerDialog extends LitElement {
   }
 
   private _handleKeyboardShortcut(event: KeyboardEvent) {
+    if (!this.open) {
+      return;
+    }
+
     if (event.isComposing) return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
 

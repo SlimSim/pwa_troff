@@ -241,6 +241,49 @@ export class TInput extends LitElement {
     );
   }
 
+  private _handleKeydown(event: KeyboardEvent) {
+    console.log('[t-input] native input keydown captured', {
+      key: event.key,
+      code: event.code,
+      ctrlKey: event.ctrlKey,
+      altKey: event.altKey,
+      shiftKey: event.shiftKey,
+      metaKey: event.metaKey,
+    });
+
+    // Stop the native event and forward a normalized keydown from the host,
+    // so parent listeners on <t-input> receive it consistently.
+    event.stopPropagation();
+
+    const forwarded = new KeyboardEvent('keydown', {
+      key: event.key,
+      code: event.code,
+      location: event.location,
+      repeat: event.repeat,
+      isComposing: event.isComposing,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    });
+
+    const notCanceled = this.dispatchEvent(forwarded);
+
+    console.log('[t-input] forwarded keydown dispatched from host', {
+      key: forwarded.key,
+      notCanceled,
+      forwardedDefaultPrevented: forwarded.defaultPrevented,
+    });
+
+    if (!notCanceled || forwarded.defaultPrevented) {
+      event.preventDefault();
+      console.log('[t-input] native input keydown default prevented due to forwarded event');
+    }
+  }
+
   private _handleClear() {
     this.value = '';
     this._input.value = '';
@@ -317,6 +360,7 @@ export class TInput extends LitElement {
             @change="${this._handleChange}"
             @focus="${this._handleFocus}"
             @blur="${this._handleBlur}"
+            @keydown="${this._handleKeydown}"
           />
           ${this.clearable && this.value
             ? html`
