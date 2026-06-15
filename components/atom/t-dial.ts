@@ -210,8 +210,10 @@ export class Dial extends LitElement {
   }
 
   private _clamp(value: number) {
-    if (this.min !== undefined && this.min !== null && !Number.isNaN(this.min)) value = Math.max(this.min, value);
-    if (this.max !== undefined && this.max !== null && !Number.isNaN(this.max)) value = Math.min(this.max, value);
+    if (this.min !== undefined && this.min !== null && !Number.isNaN(this.min))
+      value = Math.max(this.min, value);
+    if (this.max !== undefined && this.max !== null && !Number.isNaN(this.max))
+      value = Math.min(this.max, value);
     return value;
   }
 
@@ -511,41 +513,30 @@ export class Dial extends LitElement {
             </div>`
           : ''}
         <div class="value-controls ${this.disabled ? 'disabled' : ''}">
-          ${this._hasDefaultValue() || this.showDisableButton
+          ${this._hasDefaultValue()
             ? html`
-                <t-dropdown-button position="up" align="left">
-                  <t-butt class="side-button" slot="button" title="Options">
-                    <t-icon name="chevron-up"></t-icon>
-                  </t-butt>
-                  <div class="dropdown-row" slot="dropdown">
-                    ${this._hasDefaultValue()
-                      ? html`
-                          <t-butt
-                            @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
-                            title="${this.defaultValue}"
-                          >
-                            <span class="reset-content">
-                              <t-icon class="reset-icon" name="reset"></t-icon>
-                              <span class="reset-text">${this.defaultValue}${this.unit}</span>
-                            </span>
-                          </t-butt>
-                        `
-                      : ''}
-                    ${this.showDisableButton
-                      ? html`
-                          <t-butt
-                            class="icon side-button"
-                            .active=${this.disabled}
-                            .key=${this.key}
-                            @click=${this._handleDisabledToggle}
-                            title="Disable ${this.label}"
-                          >
-                            <t-icon name="disable"></t-icon>
-                          </t-butt>
-                        `
-                      : ''}
-                  </div>
-                </t-dropdown-button>
+                <t-butt
+                  @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
+                  title="${this.defaultValue}"
+                >
+                  <span class="reset-content">
+                    <t-icon class="reset-icon" name="reset"></t-icon>
+                    <span class="reset-text">${this.defaultValue}${this.unit}</span>
+                  </span>
+                </t-butt>
+              `
+            : ''}
+          ${this.showDisableButton
+            ? html`
+                <t-butt
+                  class="icon side-button"
+                  .active=${this.disabled}
+                  .key=${this.key}
+                  @click=${this._handleDisabledToggle}
+                  title="Disable ${this.label}"
+                >
+                  <t-icon name="disable"></t-icon>
+                </t-butt>
               `
             : ''}
           <t-butt
