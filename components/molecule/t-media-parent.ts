@@ -543,7 +543,7 @@ export class MediaParent extends LitElement {
           duration: track.duration,
           rating: track.rating,
           tempo: track.tempo,
-          playsWeek: track.playsWeek,
+          playsMonth: track.playsMonth,
           playsTotal: track.playsTotal,
           albumArt: track.albumArt,
           songKey: track.songKey,
@@ -611,10 +611,10 @@ export class MediaParent extends LitElement {
         By Tempo
       </div>
       <div
-        class="sort-option-item ${this.sortBy === 'playsWeek' ? 'active' : ''}"
-        @click=${() => this._handleSortOption('playsWeek')}
+        class="sort-option-item ${this.sortBy === 'playsMonth' ? 'active' : ''}"
+        @click=${() => this._handleSortOption('playsMonth')}
       >
-        By Plays (Week)
+        By Plays (Month)
       </div>
       <div
         class="sort-option-item ${this.sortBy === 'playsTotal' ? 'active' : ''}"

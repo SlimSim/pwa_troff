@@ -196,7 +196,7 @@ export class MediaItem extends LitElement {
   @property({ type: String }) duration = '';
   @property({ type: Number, reflect: true }) rating = 0;
   @property({ type: String }) tempo = '';
-  @property({ type: Number }) playsWeek = 0;
+  @property({ type: Number }) playsMonth = 0;
   @property({ type: Number }) playsTotal = 0;
   @property({ type: String }) albumArt = '';
   @property({ type: String }) songKey = '';
@@ -217,7 +217,7 @@ export class MediaItem extends LitElement {
           duration: this.duration,
           rating: this.rating,
           tempo: this.tempo,
-          playsWeek: this.playsWeek,
+          playsMonth: this.playsMonth,
           playsTotal: this.playsTotal,
           albumArt: this.albumArt,
           songKey: this.songKey,
@@ -332,7 +332,7 @@ export class MediaItem extends LitElement {
         </div>
 
         <div class="play-stats">
-          <t-number-label variant="week" .value=${this.playsWeek}></t-number-label>
+          <t-number-label variant="month" .value=${this.playsMonth}></t-number-label>
           <t-number-label variant="total" .value=${this.playsTotal}></t-number-label>
         </div>
 

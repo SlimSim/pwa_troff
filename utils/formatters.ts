@@ -1,6 +1,8 @@
 import { TroffObjectLocal } from 'types/troff';
 import { getSongDisplayName } from './song.js';
 
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
 /**
  * Format duration in seconds to MM:SS format
  * @param seconds The duration in seconds
@@ -12,6 +14,18 @@ export function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Count how many timestamps in the given array fall within the last 30 days.
+ * Exported for testing.
+ * @param timestamps Array of millisecond timestamps
+ * @returns Count of entries within the last 30 days
+ */
+export function countLast30Days(timestamps: number[] | undefined): number {
+  if (!timestamps || timestamps.length === 0) return 0;
+  const cutoff = Date.now() - THIRTY_DAYS_MS;
+  return timestamps.filter((t) => t > cutoff).length;
 }
 
 /**
@@ -31,5 +45,6 @@ export function formatSongForUI(songKey: string, songData: TroffObjectLocal): an
     genre: fileData.genre || '',
     duration: formatDuration(fileData.duration),
     playsTotal: songData.localInformation?.nrTimesLoaded || 0,
+    playsMonth: countLast30Days(songData.localInformation?.songStartsLastMonth),
   };
 }

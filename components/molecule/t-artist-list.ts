@@ -152,7 +152,7 @@ export class ArtistList extends LitElement {
                 duration=${track.duration}
                 .rating=${track.rating}
                 tempo=${track.tempo}
-                .playsWeek=${track.playsWeek}
+                .playsMonth=${track.playsMonth}
                 .playsTotal=${track.playsTotal}
                 .songKey=${track.songKey}
               ></t-media>

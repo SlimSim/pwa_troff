@@ -15,7 +15,7 @@ import {
 } from './utils/current-song.js';
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
-import { formatDuration } from './utils/formatters.js';
+import { formatDuration, countLast30Days } from './utils/formatters.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import {
   configureMarkerSlider,
@@ -104,6 +104,24 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     }
   }
 };
+
+/** Record a song start: increment nrTimesLoaded and save a timestamp for the month badge */
+function recordSongStart(songKey: string): void {
+  const songData = nDB.get(songKey);
+  if (!songData) return;
+  const localInfo = songData.localInformation || {};
+
+  // Increment total play count
+  const nrTimesLoaded = localInfo.nrTimesLoaded || 0;
+  nDB.setOnSong(songKey, ['localInformation', 'nrTimesLoaded'], nrTimesLoaded + 1);
+
+  // Track song starts for last-30-days count
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const songStarts = (localInfo.songStartsLastMonth || []).filter((t: number) => now - t < thirtyDaysMs);
+  songStarts.push(now);
+  nDB.setOnSong(songKey, ['localInformation', 'songStartsLastMonth'], songStarts);
+}
 
 // Initialize components and set up event listeners
 
@@ -1017,6 +1035,17 @@ document.addEventListener('DOMContentLoaded', () => {
           clearPendingPlaybackStart();
           setCurrentSong(songKey);
           loadSong(songKey);
+          recordSongStart(songKey);
+
+          // Update badge on the clicked media element immediately
+          const mediaItem = event.composedPath?.().find((el: any) => el?.tagName === 'T-MEDIA');
+          if (mediaItem) {
+            const songData = nDB.get(songKey);
+            if (songData?.localInformation) {
+              mediaItem.playsTotal = songData.localInformation.nrTimesLoaded || 0;
+              mediaItem.playsMonth = countLast30Days(songData.localInformation.songStartsLastMonth);
+            }
+          }
 
           updateFooterWithCurrentSong();
           syncLoopTimesFromSong();
@@ -1037,6 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSongKey) {
       clearPendingPlaybackStart();
       loadSong(currentSongKey);
+      recordSongStart(currentSongKey);
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
       updateHeaderCountdownDisplay();
