@@ -48,6 +48,7 @@ export class NumberLabel extends LitElement {
   @property({ type: Number }) value = 0;
 
   render() {
-    return html` <div class="number-circle ${this.variant}">${this.value}</div> `;
+    const labels: Record<string, string> = { week: 'Plays this week', month: 'Plays this month', total: 'Total plays' };
+    return html` <div class="number-circle ${this.variant}" title=${labels[this.variant]}>${this.value}</div> `;
   }
 }
