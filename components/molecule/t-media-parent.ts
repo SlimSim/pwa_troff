@@ -356,6 +356,13 @@ export class MediaParent extends LitElement {
     }
   }
 
+  /**
+   * Public wrapper to reload the song list after external changes (e.g., hash download).
+   */
+  async reloadSongs(): Promise<void> {
+    await this._loadSongs();
+  }
+
   private _getSortedSongs(songs: any[]): any[] {
     const sorted = [...songs];
     sorted.sort((a, b) => {

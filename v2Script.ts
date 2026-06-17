@@ -48,6 +48,7 @@ import {
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
 } from './constants/constants.js';
+import log from './utils/log.js';
 
 type FooterElement = HTMLElement & {
   settingsPanelVisible?: boolean;
@@ -1203,4 +1204,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Hash-based song download: check URL hash on boot (e.g. `#serverId&fileName`)
+  const handleHashDownload = async (hash: string) => {
+    const { downloadSongFromHash } = await import('./utils/hash-download.js');
+    const fileName = await downloadSongFromHash(hash);
+    if (fileName) {
+      window.location.hash = '';
+      if (songList && typeof songList.reloadSongs === 'function') {
+        await songList.reloadSongs();
+      }
+    }
+  };
+
+  if (window.location.hash) {
+    handleHashDownload(window.location.hash).catch((error) => {
+      log.e('Hash download on boot failed:', error);
+    });
+  }
+
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash) {
+      handleHashDownload(window.location.hash).catch((error) => {
+        log.e('Hash download on hashchange failed:', error);
+      });
+    }
+  });
 });
