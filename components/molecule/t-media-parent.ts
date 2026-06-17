@@ -206,6 +206,11 @@ export class MediaParent extends LitElement {
       opacity: 0.6;
     }
 
+    /* Hidden file input used for adding songs */
+    #fileInput {
+      display: none;
+    }
+
     /* Mobile responsive */
     @media (max-width: 768px) {
       .song-list-header {
@@ -405,8 +410,112 @@ export class MediaParent extends LitElement {
   }
 
   private _handleAddSong() {
-    // Logic to be implemented later
-    console.log('Add song button clicked');
+    const input = this.shadowRoot?.getElementById('fileInput') as HTMLInputElement | null;
+    if (input) {
+      input.click();
+    }
+  }
+
+  private async _handleFilesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!this._isSupportedFileType(file)) {
+        console.warn(`Skipping unsupported file: ${file.name} (type: ${file.type})`);
+        continue;
+      }
+      try {
+        await this._saveFileToCache(file);
+        this._createSongEntry(file);
+      } catch (err) {
+        console.error(`Failed to add file "${file.name}":`, err);
+      }
+    }
+
+    // Reset the input so the same files can be picked again
+    input.value = '';
+
+    // Refresh the song list to include the newly added songs
+    await this._loadSongs();
+  }
+
+  /**
+   * Check whether the given file is a supported type (audio, video, or image).
+   * Falls back to extension-based check when the browser does not provide a MIME type.
+   */
+  private _isSupportedFileType(file: File): boolean {
+    if (file.type) {
+      return /^(audio|video|image)\//.test(file.type);
+    }
+    // No MIME type provided — check by file extension
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const supportedExtensions = [
+      'mp3',
+      'm4a',
+      'wav',
+      'ogg',
+      'mp4',
+      'webm',
+      'avi',
+      'mov',
+      'wmv',
+      'flv',
+      '3gp',
+      'mpeg',
+      'png',
+      'jpg',
+      'jpeg',
+      'gif',
+      'webp',
+      'bmp',
+    ];
+    return ext ? supportedExtensions.includes(ext) : false;
+  }
+
+  /**
+   * Save the raw file to the Cache Storage API so it can be played offline.
+   */
+  private async _saveFileToCache(file: File): Promise<void> {
+    const cache = await caches.open('songCache-v1.0');
+    const response = new Response(file, {
+      status: 200,
+      statusText: 'OK',
+    });
+    await cache.put(file.name, response);
+  }
+
+  /**
+   * Create or update the song metadata entry in nDB (localStorage).
+   * When the song already exists we only mark it as added-from-device.
+   */
+  private _createSongEntry(file: File): void {
+    const existing = nDB.get(file.name);
+
+    if (!existing) {
+      nDB.set(file.name, {
+        fileData: {
+          album: '',
+          artist: '',
+          choreographer: '',
+          choreography: '',
+          customName: file.name,
+          duration: 0,
+          genre: '',
+          tags: '',
+          title: '',
+          lastModified: file.lastModified,
+          size: file.size,
+        },
+        localInformation: {
+          addedFromThisDevice: true,
+        },
+      });
+    } else {
+      nDB.setOnSong(file.name, ['localInformation', 'addedFromThisDevice'], true);
+    }
   }
 
   private _handleSearchSongs() {
@@ -1067,6 +1176,15 @@ export class MediaParent extends LitElement {
             `
           : ''}
       </div>
+
+      <!-- Hidden file input for adding songs -->
+      <input
+        type="file"
+        id="fileInput"
+        multiple
+        accept="audio/*,video/*,image/*"
+        @change=${this._handleFilesSelected}
+      />
 
       <div class="songs-container">
         ${this.currentFilter === 'tracks'
