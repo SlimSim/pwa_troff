@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-media.js';
+import '../atom/t-icon.js';
 
 interface GenreGroup {
   genre: string;
@@ -62,8 +63,15 @@ export class GenreList extends LitElement {
     }
 
     .back-arrow {
-      font-size: 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+    }
+
+    .back-arrow t-icon {
+      transform: rotate(-90deg);
+      font-size: 1.3rem;
     }
 
     .detail-title {
@@ -118,12 +126,40 @@ export class GenreList extends LitElement {
       .sort((a, b) => a.genre.localeCompare(b.genre));
   }
 
+  /** Public method so t-media-parent can programmatically open a genre. */
+  public openGenre(genre: string) {
+    if (this.selectedGenre === genre) return;
+    this.selectedGenre = genre;
+    this._dispatchGenreOpened();
+  }
+
+  private _dispatchGenreOpened() {
+    this.dispatchEvent(
+      new CustomEvent('genre-detail-opened', {
+        detail: { genre: this.selectedGenre },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _dispatchGenreClosed() {
+    this.dispatchEvent(
+      new CustomEvent('genre-detail-closed', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _handleGenreClick(genre: string) {
     this.selectedGenre = genre;
+    this._dispatchGenreOpened();
   }
 
   private _handleBack() {
     this.selectedGenre = '';
+    this._dispatchGenreClosed();
   }
 
   render() {
@@ -135,7 +171,9 @@ export class GenreList extends LitElement {
       return html`
         <div class="detail-view">
           <div class="detail-header">
-            <span class="back-arrow" @click=${this._handleBack}>←</span>
+            <span class="back-arrow" @click=${this._handleBack}>
+              <t-icon name="chevron-up"></t-icon>
+            </span>
             <h2 class="detail-title">${this.selectedGenre}</h2>
           </div>
           ${selectedGroup.tracks.map(

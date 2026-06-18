@@ -206,6 +206,11 @@ export class MediaParent extends LitElement {
       opacity: 0.6;
     }
 
+    /* Hidden file input used for adding songs */
+    #fileInput {
+      display: none;
+    }
+
     /* Mobile responsive */
     @media (max-width: 768px) {
       .song-list-header {
@@ -253,6 +258,35 @@ export class MediaParent extends LitElement {
   @property({ type: Array }) private groups: TroffFirebaseGroupIdentifyer[] = [];
   @property({ type: String }) currentSongKey = '';
 
+  /** The group key of the currently open group detail view (empty = not in a group). */
+  @property({ type: String, state: true }) private _currentGroupKey = '';
+  /** Type of the current detail context ('group' | 'artist' | 'genre' | ''). */
+  @property({ type: String, state: true }) private _contextType: 'group' | 'artist' | 'genre' | '' = '';
+  /** Display name for the context bar. */
+  @property({ type: String, state: true }) private _contextName = '';
+  /** Color for the context bar. */
+  @property({ type: String, state: true }) private _contextColor = '';
+  /** Context key (group firebaseGroupDocId/id). */
+  private _contextKey = '';
+  /** Saved nav state from nDB, applied on first song-list expansion. */
+  private _pendingNavState: { tab: string; entity: string } | null = null;
+  /** When set, the next file upload will also add songs to this group. */
+  private _pendingGroupKey: string | null = null;
+
+  /** Persist the current navigation state (tab + selected entity) to nDB. */
+  private _saveNavigationState() {
+    let entity = '';
+    if (this._contextType === 'group') {
+      entity = this._contextKey;
+    } else if (this._contextType === 'artist' || this._contextType === 'genre') {
+      entity = this._contextName;
+    }
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: this.currentFilter,
+      selected_entity: entity,
+    });
+  }
+
   // Add lifecycle method to load songs
   async connectedCallback() {
     super.connectedCallback();
@@ -262,10 +296,73 @@ export class MediaParent extends LitElement {
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
       this.requestUpdate(); // Force re-render to update active states
-      this.visible = false; // Close the song list panel
     });
+
+    // Listen for group detail open/close to change header controls
+    this.addEventListener('group-detail-opened', this._handleGroupDetailOpened);
+    this.addEventListener('group-detail-closed', this._handleGroupDetailClosed);
+    // Listen for artist detail open/close
+    this.addEventListener('artist-detail-opened', this._handleArtistDetailOpened);
+    this.addEventListener('artist-detail-closed', this._handleContextDetailClosed);
+    // Listen for genre detail open/close
+    this.addEventListener('genre-detail-opened', this._handleGenreDetailOpened);
+    this.addEventListener('genre-detail-closed', this._handleContextDetailClosed);
     window.addEventListener('keydown', this._handleGlobalKeydown);
     window.addEventListener('keydown', this._handleGlobalEsc);
+  }
+
+  protected firstUpdated() {
+    // Read saved nav state but don't apply it yet — wait until the user
+    // expands the song list so they arrive at the same place as last time.
+    let saved = nDB.get('TROFF_SONG_LIST_NAVIGATION_STATE');
+
+    // Migrate from previous keys (_activeGroup / _activeContext) if present
+    if (!saved) {
+      const old = nDB.get('_activeGroup') || nDB.get('_activeContext');
+      if (old?.type) {
+        saved = {
+          tab: old.type === 'artist' ? 'artists' : old.type === 'genre' ? 'genre' : 'groups',
+          selected_entity: old.key || old.name || '',
+        };
+        nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', saved);
+        nDB.delete('_activeGroup');
+        nDB.delete('_activeContext');
+      }
+    }
+
+    if (saved?.tab) {
+      this._pendingNavState = { tab: saved.tab, entity: saved.selected_entity || '' };
+    }
+  }
+
+  /** Apply a saved navigation state (tab + entity) after the song list renders. */
+  private _applyNavigationState(state: { tab: string; entity: string }) {
+    this.currentFilter = state.tab;
+    if (!state.entity) return;
+
+    if (state.tab === 'groups') {
+      const exists = this.groups.some((g) => {
+        const gKey = (g as any).firebaseGroupDocId || String((g as any).id);
+        return gKey === state.entity;
+      });
+      if (exists) {
+        void this.updateComplete.then(() => this.openGroupDetail(state.entity));
+      }
+    } else if (state.tab === 'artists') {
+      const exists = this.songs.some((s: any) =>
+        (s.artist || 'Unknown').toLowerCase() === state.entity.toLowerCase()
+      );
+      if (exists) {
+        void this.updateComplete.then(() => this.openArtistDetail(state.entity));
+      }
+    } else if (state.tab === 'genre') {
+      const exists = this.songs.some((s: any) =>
+        (s.genre || 'Unknown').toLowerCase() === state.entity.toLowerCase()
+      );
+      if (exists) {
+        void this.updateComplete.then(() => this.openGenreDetail(state.entity));
+      }
+    }
   }
 
   disconnectedCallback() {
@@ -282,6 +379,11 @@ export class MediaParent extends LitElement {
           composed: true,
         })
       );
+    }
+    if (changedProperties.has('visible') && this.visible && this._pendingNavState) {
+      // First song-list expansion after load — restore saved nav state
+      this._applyNavigationState(this._pendingNavState);
+      this._pendingNavState = null;
     }
     if (changedProperties.has('searchQuery')) {
       const visibleTracks = this._getVisibleTracks();
@@ -351,6 +453,13 @@ export class MediaParent extends LitElement {
     }
   }
 
+  /**
+   * Public wrapper to reload the song list after external changes (e.g., hash download).
+   */
+  async reloadSongs(): Promise<void> {
+    await this._loadSongs();
+  }
+
   private _getSortedSongs(songs: any[]): any[] {
     const sorted = [...songs];
     sorted.sort((a, b) => {
@@ -386,6 +495,9 @@ export class MediaParent extends LitElement {
 
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
+    this._clearContext();
+    this._saveNavigationState();
+    this._dispatchHeaderColor();
   }
 
   private _handleToggleSortDropdown() {
@@ -404,9 +516,304 @@ export class MediaParent extends LitElement {
     this.sortOrder = order;
   }
 
+  /** Open a group's detail view in the group-list, if present. */
+  public openGroupDetail(groupKey: string) {
+    const groupList = this.shadowRoot?.querySelector('t-group-list') as any;
+    if (groupList && typeof groupList.openGroup === 'function') {
+      groupList.openGroup(groupKey);
+    }
+  }
+
+  /** Open an artist's detail view in the artist-list, if present. */
+  public openArtistDetail(artist: string) {
+    const artistList = this.shadowRoot?.querySelector('t-artist-list') as any;
+    if (artistList && typeof artistList.openArtist === 'function') {
+      artistList.openArtist(artist);
+    }
+  }
+
+  /** Open a genre's detail view in the genre-list, if present. */
+  public openGenreDetail(genre: string) {
+    const genreList = this.shadowRoot?.querySelector('t-genre-list') as any;
+    if (genreList && typeof genreList.openGenre === 'function') {
+      genreList.openGenre(genre);
+    }
+  }
+
   private _handleAddSong() {
-    // Logic to be implemented later
-    console.log('Add song button clicked');
+    const input = this.shadowRoot?.getElementById('fileInput') as HTMLInputElement | null;
+    if (input) {
+      input.click();
+    }
+  }
+
+  private _handleAddGroup() {
+    this.dispatchEvent(
+      new CustomEvent('group-create-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /** Handle "Add song" while inside a group detail — uploads file AND adds to group. */
+  private _handleAddSongToGroup() {
+    this._pendingGroupKey = this._currentGroupKey;
+    this._handleAddSong();
+  }
+
+  /** Return black or white text color depending on background luminance. */
+  private _contrastColor(bg: string | undefined): string {
+    if (!bg) return 'inherit';
+    const hex = bg.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55 ? '#111111' : '#ffffff';
+  }
+
+  /** Dispatch the group colour to the parent so it can tint the <t-header>. */
+  private _dispatchHeaderColor() {
+    const color = this._contextType === 'group' ? this._contextColor : '';
+    this.dispatchEvent(
+      new CustomEvent('group-header-color', {
+        detail: { color },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /** Listen for group detail open/close events from the group-list. */
+  private _handleGroupDetailOpened(event: Event) {
+    const detail = (event as CustomEvent<{ groupKey?: string }>).detail;
+    const key = detail?.groupKey || '';
+    this._currentGroupKey = key;
+
+    if (key) {
+      const group = this.groups.find((g) => {
+        const gKey = (g as any).firebaseGroupDocId || String((g as any).id);
+        return gKey === key;
+      }) as any;
+      this._contextType = 'group';
+      this._contextKey = key;
+      this._contextName = group?.name || '';
+      this._contextColor = group?.color || '';
+    } else {
+      this._clearContext();
+    }
+    this._saveNavigationState();
+    this._dispatchHeaderColor();
+  }
+
+  private _handleGroupDetailClosed() {
+    this._currentGroupKey = '';
+    this._clearContext();
+    this._saveNavigationState();
+    this._dispatchHeaderColor();
+  }
+
+  /** Listen for artist detail open/close. */
+  private _handleArtistDetailOpened(event: Event) {
+    const detail = (event as CustomEvent<{ artist?: string }>).detail;
+    const artist = detail?.artist || '';
+    if (artist) {
+      this._contextType = 'artist';
+      this._contextKey = artist;
+      this._contextName = artist;
+      this._contextColor = '';
+    }
+    this._saveNavigationState();
+    // Not dispatching header colour for non‑group contexts
+  }
+
+  /** Listen for genre detail open/close. */
+  private _handleGenreDetailOpened(event: Event) {
+    const detail = (event as CustomEvent<{ genre?: string }>).detail;
+    const genre = detail?.genre || '';
+    if (genre) {
+      this._contextType = 'genre';
+      this._contextKey = genre;
+      this._contextName = genre;
+      this._contextColor = '';
+    }
+    this._saveNavigationState();
+    // Not dispatching header colour for non‑group contexts
+  }
+
+  /** Shared handler for artist/genre closed — clears the context. */
+  private _handleContextDetailClosed() {
+    this._clearContext();
+    this._saveNavigationState();
+    // Artist/genre close always clears the group colour too.
+    this._dispatchHeaderColor();
+  }
+
+  /** Clear the current context. */
+  private _clearContext() {
+    this._contextType = '';
+    this._contextKey = '';
+    this._contextName = '';
+    this._contextColor = '';
+  }
+
+  /** Navigate to the persisted active context. */
+  private _goToActiveContext() {
+    if (!this._contextType) return;
+    if (this._contextType === 'group') {
+      this.currentFilter = 'groups';
+      void this.updateComplete.then(() => {
+        this.openGroupDetail(this._contextKey);
+      });
+    } else if (this._contextType === 'artist') {
+      this.currentFilter = 'artists';
+      void this.updateComplete.then(() => {
+        this.openArtistDetail(this._contextName);
+      });
+    } else if (this._contextType === 'genre') {
+      this.currentFilter = 'genre';
+      void this.updateComplete.then(() => {
+        this.openGenreDetail(this._contextName);
+      });
+    }
+  }
+
+  /** Count of resolved tracks in the currently open group. */
+  private _getCurrentGroupSongCount(): number {
+    if (!this._currentGroupKey) return 0;
+    const group = this.groups.find((g) => {
+      const key = (g as any).firebaseGroupDocId || String((g as any).id);
+      return key === this._currentGroupKey;
+    });
+    if (!group) return 0;
+    // Resolve tracks from songs
+    const groupSongs: Array<{ fullPath?: string; galleryId?: string }> = (group as any).songs || [];
+    return this.songs.filter((song: any) =>
+      groupSongs.some(
+        (gs) => gs.fullPath === song.songKey || gs.galleryId === song.songKey
+      )
+    ).length;
+  }
+
+  private async _handleFilesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    const addedKeys: string[] = [];
+    const groupKey = this._pendingGroupKey; // capture before reset
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!this._isSupportedFileType(file)) {
+        console.warn(`Skipping unsupported file: ${file.name} (type: ${file.type})`);
+        continue;
+      }
+      try {
+        await this._saveFileToCache(file);
+        this._createSongEntry(file);
+        addedKeys.push(file.name);
+      } catch (err) {
+        console.error(`Failed to add file "${file.name}":`, err);
+      }
+    }
+
+    // Reset the input so the same files can be picked again
+    input.value = '';
+
+    // Refresh the song list to include the newly added songs
+    await this._loadSongs();
+
+    // If we were inside a group, add the new songs to the group
+    if (groupKey) {
+      this._pendingGroupKey = null;
+      for (const songKey of addedKeys) {
+        this.dispatchEvent(
+          new CustomEvent('group-song-added', {
+            detail: { groupKey, songKey, title: songKey },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      }
+    }
+  }
+
+  /**
+   * Check whether the given file is a supported type (audio, video, or image).
+   * Falls back to extension-based check when the browser does not provide a MIME type.
+   */
+  private _isSupportedFileType(file: File): boolean {
+    if (file.type) {
+      return /^(audio|video|image)\//.test(file.type);
+    }
+    // No MIME type provided — check by file extension
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const supportedExtensions = [
+      'mp3',
+      'm4a',
+      'wav',
+      'ogg',
+      'mp4',
+      'webm',
+      'avi',
+      'mov',
+      'wmv',
+      'flv',
+      '3gp',
+      'mpeg',
+      'png',
+      'jpg',
+      'jpeg',
+      'gif',
+      'webp',
+      'bmp',
+    ];
+    return ext ? supportedExtensions.includes(ext) : false;
+  }
+
+  /**
+   * Save the raw file to the Cache Storage API so it can be played offline.
+   */
+  private async _saveFileToCache(file: File): Promise<void> {
+    const cache = await caches.open('songCache-v1.0');
+    const response = new Response(file, {
+      status: 200,
+      statusText: 'OK',
+    });
+    await cache.put(file.name, response);
+  }
+
+  /**
+   * Create or update the song metadata entry in nDB (localStorage).
+   * When the song already exists we only mark it as added-from-device.
+   */
+  private _createSongEntry(file: File): void {
+    const existing = nDB.get(file.name);
+
+    if (!existing) {
+      nDB.set(file.name, {
+        fileData: {
+          album: '',
+          artist: '',
+          choreographer: '',
+          choreography: '',
+          customName: file.name,
+          duration: 0,
+          genre: '',
+          tags: '',
+          title: '',
+          lastModified: file.lastModified,
+          size: file.size,
+        },
+        localInformation: {
+          addedFromThisDevice: true,
+        },
+      });
+    } else {
+      nDB.setOnSong(file.name, ['localInformation', 'addedFromThisDevice'], true);
+    }
   }
 
   private _handleSearchSongs() {
@@ -884,7 +1291,7 @@ export class MediaParent extends LitElement {
     // Groups: filter the raw group list by name, then map each group to its
     // tracks, then sort. Filtering against the raw list (before mapping) keeps
     // the name comparison against the source-of-truth value.
-    const visibleGroups = this._getSortedGroups(
+    let visibleGroups = this._getSortedGroups(
       filterGroups(this.groups, query).map((group) => ({
         ...group,
         tracks: songs.filter((song) =>
@@ -895,6 +1302,35 @@ export class MediaParent extends LitElement {
         ),
       }))
     );
+
+    // When inside a group detail, ensure the current group is always present
+    // even if the search query would filter it out.
+    if (this._currentGroupKey) {
+      const hasCurrent = visibleGroups.some((g: any) => {
+        const key = (g as any).firebaseGroupDocId || String((g as any).id);
+        return key === this._currentGroupKey;
+      });
+      if (!hasCurrent) {
+        const rawGroup = this.groups.find((g: any) => {
+          const key = (g as any).firebaseGroupDocId || String((g as any).id);
+          return key === this._currentGroupKey;
+        });
+        if (rawGroup) {
+          visibleGroups = [
+            ...visibleGroups,
+            {
+              ...rawGroup,
+              tracks: songs.filter((song) =>
+                (rawGroup as any).songs?.some(
+                  (groupSong: any) =>
+                    groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+                )
+              ),
+            } as any,
+          ];
+        }
+      }
+    }
 
     return html`
       <div class="song-list-header">
@@ -1031,42 +1467,73 @@ export class MediaParent extends LitElement {
         ${this.currentFilter === 'groups'
           ? html`
               <div class="header-controls">
-                <!-- Add Group Button -->
-                <t-butt icon @click=${this._handleAddSong} title="Add group">
-                  <t-icon name="group-plus"></t-icon>
-                </t-butt>
+                ${this._currentGroupKey
+                  ? html`
+                      <!-- Inside a group: Add song (upload + add to group) -->
+                      <t-butt icon @click=${this._handleAddSongToGroup} title="Add song to group">
+                        <t-icon name="note-plus"></t-icon>
+                      </t-butt>
+                      <div class="song-count">
+                        <t-icon name="note"></t-icon> ${this._getCurrentGroupSongCount()}
+                      </div>
+                      <t-input
+                        class="search-input"
+                        slim
+                        clearable
+                        placeholder="Search songs…"
+                        aria-label="Search songs…"
+                        .value=${this.searchQuery}
+                        @input=${this._handleSearchInput}
+                        @keydown=${this._handleSearchKeydown}
+                        @focus=${this._handleSearchFocus}
+                        @blur=${this._handleSearchBlur}
+                      ></t-input>
+                    `
+                  : html`
+                      <!-- Not in a group: Add group, group count, search groups -->
+                      <t-butt icon @click=${this._handleAddGroup} title="Add group">
+                        <t-icon name="group-plus"></t-icon>
+                      </t-butt>
+                      <div class="song-count"><t-icon name="note"></t-icon> ${this.groups.length}</div>
 
-                <!-- Group Count -->
-                <div class="song-count"><t-icon name="note"></t-icon> ${this.groups.length}</div>
+                      <!-- Sort/Filter Button with Dropdown -->
+                      <t-dropdown-button
+                        .open=${this.showGroupSortDropdown}
+                        @dropdown-toggled=${this._handleGroupSortDropdownToggled}
+                      >
+                        <t-butt icon slot="button" title="Sort options">
+                          <t-icon name="sort"></t-icon>
+                        </t-butt>
+                        <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
+                      </t-dropdown-button>
 
-                <!-- Sort/Filter Button with Dropdown -->
-                <t-dropdown-button
-                  .open=${this.showGroupSortDropdown}
-                  @dropdown-toggled=${this._handleGroupSortDropdownToggled}
-                >
-                  <t-butt icon slot="button" title="Sort options">
-                    <t-icon name="sort"></t-icon>
-                  </t-butt>
-                  <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
-                </t-dropdown-button>
-
-                <!-- Search Groups Input -->
-                <t-input
-                  class="search-input"
-                  slim
-                  clearable
-                  placeholder="Search groups…"
-                  aria-label="Search groups…"
-                  .value=${this.searchQuery}
-                  @input=${this._handleSearchInput}
-                  @keydown=${this._handleSearchKeydown}
-                  @focus=${this._handleSearchFocus}
-                  @blur=${this._handleSearchBlur}
-                ></t-input>
+                      <t-input
+                        class="search-input"
+                        slim
+                        clearable
+                        placeholder="Search groups…"
+                        aria-label="Search groups…"
+                        .value=${this.searchQuery}
+                        @input=${this._handleSearchInput}
+                        @keydown=${this._handleSearchKeydown}
+                        @focus=${this._handleSearchFocus}
+                        @blur=${this._handleSearchBlur}
+                      ></t-input>
+                    `
+                }
               </div>
             `
           : ''}
       </div>
+
+      <!-- Hidden file input for adding songs -->
+      <input
+        type="file"
+        id="fileInput"
+        multiple
+        accept="audio/*,video/*,image/*"
+        @change=${this._handleFilesSelected}
+      />
 
       <div class="songs-container">
         ${this.currentFilter === 'tracks'
@@ -1102,6 +1569,7 @@ export class MediaParent extends LitElement {
                 .groups=${visibleGroups}
                 .tracks=${songs}
                 currentSongKey=${this.currentSongKey}
+                groupTrackSearch=${this.searchQuery}
               ></t-group-list>
             `
           : ''}

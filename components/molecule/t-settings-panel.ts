@@ -355,6 +355,8 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) defaultNrLoopsInfiniteOn = false;
   @property({ type: Number }) defaultVolumeValue = 75;
   @property({ type: Number }) defaultSpeedValue = 100;
+  @property({ type: Boolean }) signedIn = false;
+  @property({ type: String }) userName = '';
 
   connectedCallback() {
     super.connectedCallback();
@@ -379,6 +381,16 @@ export class SettingsPanel extends LitElement {
       const customEvent = event as CustomEvent<{ value: number; disabled?: boolean }>;
       console.log('asdf value:', customEvent.detail.value);
     });
+  }
+
+  private _handleSignInClick() {
+    this.dispatchEvent(
+      new CustomEvent('sign-in-requested', {
+        detail: { action: this.signedIn ? 'sign-out' : 'sign-in' },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleClose() {
@@ -514,7 +526,13 @@ export class SettingsPanel extends LitElement {
       <div class="panel-content">
         <div class="panel-header">
           <h2 class="panel-title">Settings</h2>
-          <button class="close-button" @click=${this._handleClose}>×</button>
+          <div style="display:flex; gap:8px; align-items:center;">
+            ${this.signedIn ? html`<span style="font-size:0.9rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${this.userName || 'Signed in'}</span>` : ''}
+            <t-butt @click=${this._handleSignInClick}>
+              ${this.signedIn ? 'Sign out' : 'Sign in'}
+            </t-butt>
+            <button class="close-button" @click=${this._handleClose}>×</button>
+          </div>
         </div>
 
         <div class="settings-shell">

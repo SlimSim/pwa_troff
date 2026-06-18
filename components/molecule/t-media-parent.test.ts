@@ -930,3 +930,136 @@ describe('Search focus state and visual indication', () => {
     expect(tTrackList?.highlightedIndex).toBe(-1);
   });
 });
+
+describe('add song feature', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    (element as any).songs = [];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  function getFileInput(): HTMLInputElement | null {
+    return element.shadowRoot?.getElementById('fileInput') as HTMLInputElement | null;
+  }
+
+  describe('_handleAddSong', () => {
+    it('triggers a click on the hidden file input', async () => {
+      await element.updateComplete;
+
+      const input = getFileInput();
+      expect(input).toBeTruthy();
+
+      const clickSpy = vi.spyOn(input!, 'click');
+
+      (element as any)._handleAddSong();
+
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw when the file input is not in the DOM', async () => {
+      await element.updateComplete;
+
+      // Remove the file input to simulate a partial render
+      const input = getFileInput();
+      input?.remove();
+
+      // Must not throw
+      expect(() => (element as any)._handleAddSong()).not.toThrow();
+    });
+  });
+
+  describe('_isSupportedFileType', () => {
+    it('returns true for audio/mpeg', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'song.mp3', { type: 'audio/mpeg' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('returns true for video/mp4', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'video.mp4', { type: 'video/mp4' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('returns true for image/png', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'image.png', { type: 'image/png' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('returns true for audio/* wildcard types', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'audio.weba', { type: 'audio/webm' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('returns true for video/* wildcard types', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'video.ogg', { type: 'video/ogg' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('returns false for text/plain', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'notes.txt', { type: 'text/plain' });
+      expect((element as any)._isSupportedFileType(file)).toBe(false);
+    });
+
+    it('returns false for application/pdf', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'doc.pdf', { type: 'application/pdf' });
+      expect((element as any)._isSupportedFileType(file)).toBe(false);
+    });
+
+    it('returns false for application/octet-stream (unknown binary)', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'data.bin', { type: 'application/octet-stream' });
+      expect((element as any)._isSupportedFileType(file)).toBe(false);
+    });
+
+    it('falls back to extension when MIME type is empty — supported extension', async () => {
+      await element.updateComplete;
+      // File with no MIME type but a known extension
+      const file = new File([''], 'song.mp3', { type: '' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('falls back to extension when MIME type is empty — unsupported extension', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'notes.txt', { type: '' });
+      expect((element as any)._isSupportedFileType(file)).toBe(false);
+    });
+
+    it('handles uppercase extensions in the fallback', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'song.MP3', { type: '' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+
+    it('returns false for files with no extension and no MIME type', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'README', { type: '' });
+      expect((element as any)._isSupportedFileType(file)).toBe(false);
+    });
+
+    it('handles composite extensions like .jpeg', async () => {
+      await element.updateComplete;
+      const file = new File([''], 'photo.jpeg', { type: 'image/jpeg' });
+      expect((element as any)._isSupportedFileType(file)).toBe(true);
+    });
+  });
+});
