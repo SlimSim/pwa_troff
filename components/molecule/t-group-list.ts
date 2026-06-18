@@ -32,11 +32,11 @@ export class GroupList extends LitElement {
       padding: 12px 16px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      transition: filter 0.2s ease;
     }
 
     .group-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      filter: brightness(1.15);
     }
 
     .group-info {
@@ -52,6 +52,19 @@ export class GroupList extends LitElement {
     .group-track-count {
       font-size: 0.8rem;
       opacity: 0.7;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .group-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .group-stat + .group-stat {
+      margin-left: 8px;
     }
 
     .detail-view {
@@ -68,8 +81,21 @@ export class GroupList extends LitElement {
     }
 
     .back-arrow {
-      font-size: 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+    }
+
+    .back-arrow t-icon {
+      transform: rotate(-90deg);
+      font-size: 1.3rem;
+    }
+
+    .shared-with {
+      font-size: 0.65rem;
+      opacity: 0.5;
+      line-height: 1.2;
     }
 
     .detail-title-group {
@@ -224,6 +250,7 @@ export class GroupList extends LitElement {
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) currentSongKey = '';
+  @property({ type: String }) groupTrackSearch = '';
 
   /**
    * Key of the currently open group detail view.
@@ -241,6 +268,17 @@ export class GroupList extends LitElement {
   /** Whether song management (remove buttons + add songs section) is visible. */
   @state() private _songManagementOpen = false;
 
+  /** Return black or white text color depending on background luminance. */
+  private _contrastColor(bg: string | undefined): string {
+    if (!bg) return 'inherit';
+    const hex = bg.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55 ? '#111111' : '#ffffff';
+  }
+
   /** Derive a stable string key for a group (firebaseGroupDocId or id or index). */
   private _groupKey(group: { firebaseGroupDocId?: string; id?: number }): string {
     if (group.firebaseGroupDocId) return group.firebaseGroupDocId;
@@ -254,6 +292,13 @@ export class GroupList extends LitElement {
     this._addSongQuery = '';
     this._infoExpanded = false;
     this._songManagementOpen = false;
+    this.dispatchEvent(
+      new CustomEvent('group-detail-opened', {
+        detail: { groupKey: key },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleGroupClick(group: Group) {
@@ -262,6 +307,12 @@ export class GroupList extends LitElement {
 
   private _handleBack() {
     this._selectedGroupKey = '';
+    this.dispatchEvent(
+      new CustomEvent('group-detail-closed', {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleEditGroup(event: Event, group: Group) {
@@ -335,11 +386,22 @@ export class GroupList extends LitElement {
     if (isDetailView && selectedGroup) {
       const availableSongs = this._getAvailableSongs();
       const infoText = selectedGroup.info || '';
+      const trackQuery = this.groupTrackSearch.trim().toLowerCase();
+      const filteredTracks = trackQuery
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(trackQuery))
+        : selectedGroup.tracks;
 
       return html`
         <div class="detail-view">
-          <div class="detail-header">
-            <span class="back-arrow" @click=${this._handleBack}>←</span>
+          <div
+            class="detail-header"
+            style=${selectedGroup.color
+              ? `background-color: ${selectedGroup.color}; color: ${this._contrastColor(selectedGroup.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent);`
+              : ''}
+          >
+            <span class="back-arrow" @click=${this._handleBack}>
+              <t-icon name="chevron-up"></t-icon>
+            </span>
             <div class="detail-title-group">
               <h2 class="detail-title">${selectedGroup.name}</h2>
               ${infoText
@@ -349,6 +411,9 @@ export class GroupList extends LitElement {
                     title="${this._infoExpanded ? 'Collapse' : 'Expand info'}"
                   >${infoText}</span>`
                 : ''}
+              ${selectedGroup.owners && selectedGroup.owners.length > 0
+                ? html`<span class="shared-with">Shared with ${selectedGroup.owners.length} ${selectedGroup.owners.length === 1 ? 'person' : 'people'}</span>`
+                : ''}
             </div>
             <t-butt class="detail-edit-btn" icon @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)} title="Edit group">
               <t-icon name="edit"></t-icon>
@@ -356,7 +421,7 @@ export class GroupList extends LitElement {
           </div>
 
           <!-- Current songs: with delete overlay when management is open -->
-          ${selectedGroup.tracks.map(
+          ${filteredTracks.map(
             (track) => html`
               <div class="track-row">
                 <t-media
@@ -393,12 +458,16 @@ export class GroupList extends LitElement {
             `
           )}
 
-          ${selectedGroup.tracks.length === 0 && !this._songManagementOpen
+          ${filteredTracks.length === 0 && !trackQuery && !this._songManagementOpen
             ? html`<div class="empty-text" style="padding: 16px;">No songs in this group.</div>`
             : ''}
 
-          ${selectedGroup.tracks.length === 0 && this._songManagementOpen
+          ${filteredTracks.length === 0 && !trackQuery && this._songManagementOpen
             ? html`<div class="empty-text" style="padding: 16px;">No songs in this group yet. Add some below!</div>`
+            : ''}
+
+          ${filteredTracks.length === 0 && trackQuery
+            ? html`<div class="empty-text" style="padding: 16px;">No songs match "${this.groupTrackSearch}".</div>`
             : ''}
 
           <!-- Add songs section + toggle at the bottom -->
@@ -467,11 +536,28 @@ export class GroupList extends LitElement {
       <div class="group-list-container">
         ${this.groups.map(
           (group) => html`
-            <div class="group-item" @click=${() => this._handleGroupClick(group)}>
+            <div
+              class="group-item"
+              style=${group.color
+                ? `background-color: ${group.color}; color: ${this._contrastColor(group.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(group.color)} 15%, transparent);`
+                : ''}
+              @click=${() => this._handleGroupClick(group)}
+            >
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
                 <div class="group-track-count">
-                  ${group.tracks.length} track${group.tracks.length !== 1 ? 's' : ''}
+                  <span class="group-stat">
+                    <t-icon name="note"></t-icon>
+                    ${group.tracks.length}
+                  </span>
+                  ${group.owners && group.owners.length > 0
+                    ? html`
+                        <span class="group-stat">
+                          <t-icon name="group-plus"></t-icon>
+                          ${group.owners.length}
+                        </span>
+                      `
+                    : ''}
                 </div>
               </div>
             </div>

@@ -1179,6 +1179,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for song list close events
     if (songList) {
+      // Apply group colour to the header when a group detail is opened/closed
+      songList.addEventListener('group-header-color', (event: any) => {
+        const color = event.detail?.color || '';
+        if (color) {
+          header.style.setProperty('--theme-color', color);
+        } else {
+          header.style.removeProperty('--theme-color');
+        }
+      });
+
       songList.addEventListener('song-list-closed', () => {
         header.expanded = false;
       });

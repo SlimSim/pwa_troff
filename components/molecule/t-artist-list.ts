@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-media.js';
 import '../atom/t-butt.js';
+import '../atom/t-icon.js';
 
 interface ArtistGroup {
   artist: string;
@@ -63,8 +64,15 @@ export class ArtistList extends LitElement {
     }
 
     .back-arrow {
-      font-size: 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+    }
+
+    .back-arrow t-icon {
+      transform: rotate(-90deg);
+      font-size: 1.3rem;
     }
 
     .detail-title {
@@ -119,12 +127,40 @@ export class ArtistList extends LitElement {
       .sort((a, b) => a.artist.localeCompare(b.artist));
   }
 
+  /** Public method so t-media-parent can programmatically open an artist. */
+  public openArtist(artist: string) {
+    if (this.selectedArtist === artist) return;
+    this.selectedArtist = artist;
+    this._dispatchArtistOpened();
+  }
+
+  private _dispatchArtistOpened() {
+    this.dispatchEvent(
+      new CustomEvent('artist-detail-opened', {
+        detail: { artist: this.selectedArtist },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _dispatchArtistClosed() {
+    this.dispatchEvent(
+      new CustomEvent('artist-detail-closed', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _handleArtistClick(artist: string) {
     this.selectedArtist = artist;
+    this._dispatchArtistOpened();
   }
 
   private _handleBack() {
     this.selectedArtist = '';
+    this._dispatchArtistClosed();
   }
 
   render() {
@@ -136,7 +172,9 @@ export class ArtistList extends LitElement {
       return html`
         <div class="detail-view">
           <div class="detail-header">
-            <span class="back-arrow" @click=${this._handleBack}>←</span>
+            <span class="back-arrow" @click=${this._handleBack}>
+              <t-icon name="chevron-up"></t-icon>
+            </span>
             <h2 class="detail-title">${this.selectedArtist}</h2>
           </div>
           ${selectedGroup.tracks.map(
