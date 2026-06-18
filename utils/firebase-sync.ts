@@ -129,6 +129,7 @@ export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<voi
         name: (groupData.name as string) || 'Unnamed Group',
         firebaseGroupDocId: groupDoc.id,
         owners: (groupData.owners as string[]) || [],
+        info: groupData.info as string | undefined,
         color: groupData.color as string | undefined,
         icon: groupData.icon as string | undefined,
         songs: groupSongs,

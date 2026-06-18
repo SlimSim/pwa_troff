@@ -1,10 +1,14 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import '../atom/t-media.js';
+import '../atom/t-butt.js';
+import '../atom/t-icon.js';
+import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
 
-interface Group {
-  id: string;
-  name: string;
+// Re-export so group-list can double as barrel if needed
+export type { TroffFirebaseGroupIdentifyer };
+
+interface Group extends TroffFirebaseGroupIdentifyer {
   tracks: any[];
 }
 
@@ -73,6 +77,11 @@ export class GroupList extends LitElement {
       margin: 0;
     }
 
+    .detail-edit-btn {
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .group-item {
@@ -95,20 +104,46 @@ export class GroupList extends LitElement {
 
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: Array }) groups: Group[] = [];
-  @property({ type: String }) selectedGroupId: string = '';
   @property({ type: String }) currentSongKey = '';
 
-  private _handleGroupClick(groupId: string) {
-    this.selectedGroupId = groupId;
+  /**
+   * Key of the currently open group detail view.
+   * Built from firebaseGroupDocId || String(id) — whichever is available first.
+   * Empty string means list view (no detail open).
+   */
+  @state() private _selectedGroupKey: string = '';
+
+  /** Derive a stable string key for a group (firebaseGroupDocId or id or index). */
+  private _groupKey(group: { firebaseGroupDocId?: string; id?: number }): string {
+    if (group.firebaseGroupDocId) return group.firebaseGroupDocId;
+    if (group.id != null) return String(group.id);
+    return '';
+  }
+
+  private _handleGroupClick(group: Group) {
+    this._selectedGroupKey = this._groupKey(group);
   }
 
   private _handleBack() {
-    this.selectedGroupId = '';
+    this._selectedGroupKey = '';
+  }
+
+  private _handleEditGroup(event: Event, group: Group) {
+    event.stopPropagation();
+    this.dispatchEvent(
+      new CustomEvent('group-edit-requested', {
+        detail: { group },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   render() {
-    const isDetailView = this.selectedGroupId !== '';
-    const selectedGroup = this.groups.find((g) => g.id === this.selectedGroupId);
+    const isDetailView = this._selectedGroupKey !== '';
+    const selectedGroup = this.groups.find(
+      (g) => this._groupKey(g) === this._selectedGroupKey
+    );
 
     if (isDetailView && selectedGroup) {
       return html`
@@ -116,6 +151,9 @@ export class GroupList extends LitElement {
           <div class="detail-header">
             <span class="back-arrow" @click=${this._handleBack}>←</span>
             <h2 class="detail-title">${selectedGroup.name}</h2>
+            <t-butt class="detail-edit-btn" icon @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)} title="Edit group">
+              <t-icon name="edit"></t-icon>
+            </t-butt>
           </div>
           ${selectedGroup.tracks.map(
             (track) => html`
@@ -152,7 +190,7 @@ export class GroupList extends LitElement {
       <div class="group-list-container">
         ${this.groups.map(
           (group) => html`
-            <div class="group-item" @click=${() => this._handleGroupClick(group.id)}>
+            <div class="group-item" @click=${() => this._handleGroupClick(group)}>
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
                 <div class="group-track-count">

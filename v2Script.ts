@@ -6,6 +6,7 @@ import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
 import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
+import './components/molecule/t-group-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import {
   updateHeaderWithCurrentSong,
@@ -1643,6 +1644,113 @@ document.addEventListener('DOMContentLoaded', () => {
     // Different or missing serverId — show import dialog
     createImportDialog(fileName, hashServerId);
   };
+
+  // -------- Group edit dialog (V2) --------
+  let groupDialog: any = null;
+
+  const ensureGroupDialog = () => {
+    if (!groupDialog) {
+      groupDialog = document.createElement('t-group-dialog') as any;
+      document.body.append(groupDialog);
+    }
+    // Refresh the song list before opening
+    groupDialog.allSongs = (songList?.songs || []).map((s: any) => ({
+      songKey: s.songKey || s.fullPath || '',
+      title: s.title || s.name || s.songKey || 'Unknown',
+    }));
+    return groupDialog;
+  };
+
+  // Listen for group edit requests from the song list
+  if (songList) {
+    if (typeof songList.addEventListener === 'function') {
+      songList.addEventListener('group-edit-requested', (event: Event) => {
+        const customEvent = event as CustomEvent<{ group?: any }>;
+        const group = customEvent.detail?.group;
+        if (!group) return;
+
+        const dlg = ensureGroupDialog();
+        dlg.group = group;
+        dlg.open = true;
+      });
+    }
+  }
+
+  // Listen for group-saved events from the dialog
+  document.addEventListener('group-saved', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ group?: any }>;
+    const group = customEvent.detail?.group;
+    if (!group) return;
+
+    try {
+      // Update local nDB
+      const songLists: any[] = nDB.get('aoSongLists') || [];
+      let found = false;
+
+      for (let i = 0; i < songLists.length; i++) {
+        const sl = songLists[i];
+        // Match by firebaseGroupDocId first, then by id
+        const matchKey = group.firebaseGroupDocId || group.id;
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        if (matchKey != null && slKey != null && String(matchKey) === String(slKey)) {
+          songLists[i] = { ...group };
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        // New group — append
+        songLists.push({ ...group });
+      }
+
+      nDB.set('aoSongLists', songLists);
+
+      // Sync to Firebase if it has a firebaseGroupDocId
+      if (group.firebaseGroupDocId || !found) {
+        const { saveGroupToFirebase } = await import('./utils/firebase-group-sync.js');
+        await saveGroupToFirebase(group);
+      }
+
+      // Reload the song list to reflect changes
+      if (songList && typeof songList.reloadSongs === 'function') {
+        await songList.reloadSongs();
+      }
+    } catch (error) {
+      log.e('Error saving group:', error);
+    }
+  });
+
+  // Listen for group-deleted events from the dialog
+  document.addEventListener('group-deleted', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ groupId?: string; group?: any }>;
+    const groupId = customEvent.detail?.groupId;
+    const group = customEvent.detail?.group;
+    if (!groupId) return;
+
+    try {
+      // Remove from local nDB
+      const songLists: any[] = nDB.get('aoSongLists') || [];
+      const updatedLists = songLists.filter((sl: any) => {
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        return slKey != null && String(slKey) !== String(groupId);
+      });
+      nDB.set('aoSongLists', updatedLists);
+
+      // Delete from Firebase if it's a Firebase group
+      if (group?.firebaseGroupDocId) {
+        const { deleteGroupFromFirebase } = await import('./utils/firebase-group-sync.js');
+        await deleteGroupFromFirebase(group.firebaseGroupDocId);
+      }
+
+      // Reload the song list
+      if (songList && typeof songList.reloadSongs === 'function') {
+        await songList.reloadSongs();
+      }
+    } catch (error) {
+      log.e('Error deleting group:', error);
+    }
+  });
 
   if (window.location.hash) {
     handleHashDownload(window.location.hash).catch((error) => {
