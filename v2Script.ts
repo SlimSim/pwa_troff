@@ -1653,11 +1653,6 @@ document.addEventListener('DOMContentLoaded', () => {
       groupDialog = document.createElement('t-group-dialog') as any;
       document.body.append(groupDialog);
     }
-    // Refresh the song list before opening
-    groupDialog.allSongs = (songList?.songs || []).map((s: any) => ({
-      songKey: s.songKey || s.fullPath || '',
-      title: s.title || s.name || s.songKey || 'Unknown',
-    }));
     return groupDialog;
   };
 
@@ -1673,6 +1668,13 @@ document.addEventListener('DOMContentLoaded', () => {
         dlg.group = group;
         dlg.open = true;
       });
+
+      // Listen for create-group requests
+      songList.addEventListener('group-create-requested', () => {
+        const dlg = ensureGroupDialog();
+        dlg.group = null; // create mode
+        dlg.open = true;
+      });
     }
   }
 
@@ -1683,9 +1685,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!group) return;
 
     try {
-      // Update local nDB
       const songLists: any[] = nDB.get('aoSongLists') || [];
       let found = false;
+      let matchIndex = -1;
 
       for (let i = 0; i < songLists.length; i++) {
         const sl = songLists[i];
@@ -1693,28 +1695,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const matchKey = group.firebaseGroupDocId || group.id;
         const slKey = sl.firebaseGroupDocId || sl.id;
         if (matchKey != null && slKey != null && String(matchKey) === String(slKey)) {
-          songLists[i] = { ...group };
+          matchIndex = i;
           found = true;
           break;
         }
       }
 
-      if (!found) {
-        // New group — append
-        songLists.push({ ...group });
-      }
-
-      nDB.set('aoSongLists', songLists);
-
-      // Sync to Firebase if it has a firebaseGroupDocId
+      // Sync to Firebase first (this may set firebaseGroupDocId on the group for new groups)
       if (group.firebaseGroupDocId || !found) {
         const { saveGroupToFirebase } = await import('./utils/firebase-group-sync.js');
         await saveGroupToFirebase(group);
       }
 
+      // Now save to nDB (with any firebaseGroupDocId set by Firebase sync)
+      if (found) {
+        songLists[matchIndex] = { ...group };
+      } else {
+        // New group — ensure it has an identifier
+        if (!group.firebaseGroupDocId && !group.id) {
+          group.id = Date.now();
+        }
+        songLists.push({ ...group });
+      }
+      nDB.set('aoSongLists', songLists);
+
       // Reload the song list to reflect changes
       if (songList && typeof songList.reloadSongs === 'function') {
         await songList.reloadSongs();
+      }
+
+      // Navigate to the new group's detail view after creation
+      if (!found) {
+        const groupKey = group.firebaseGroupDocId || String(group.id);
+        if (songList && typeof songList.openGroupDetail === 'function') {
+          songList.openGroupDetail(groupKey);
+        }
       }
     } catch (error) {
       log.e('Error saving group:', error);
@@ -1749,6 +1764,82 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       log.e('Error deleting group:', error);
+    }
+  });
+
+  // -------- Group song management (add/remove from detail view) --------
+
+  /** Helper: update a group's songs array in nDB and optionally save to Firebase. */
+  async function _updateGroupSongs(
+    groupKey: string,
+    updater: (songs: any[]) => any[]
+  ): Promise<void> {
+    const songLists: any[] = nDB.get('aoSongLists') || [];
+    let found = false;
+    for (let i = 0; i < songLists.length; i++) {
+      const sl = songLists[i];
+      const slKey = sl.firebaseGroupDocId || sl.id;
+      if (slKey != null && String(slKey) === String(groupKey)) {
+        songLists[i] = {
+          ...sl,
+          songs: updater(sl.songs || []),
+        };
+        found = true;
+        break;
+      }
+    }
+    if (!found) return;
+    nDB.set('aoSongLists', songLists);
+
+    // Save to Firebase if it's a Firebase group
+    const updated = songLists.find((sl: any) => {
+      const slKey = sl.firebaseGroupDocId || sl.id;
+      return slKey != null && String(slKey) === String(groupKey);
+    });
+    if (updated?.firebaseGroupDocId) {
+      try {
+        const { saveGroupToFirebase } = await import('./utils/firebase-group-sync.js');
+        await saveGroupToFirebase(updated);
+      } catch (err) {
+        log.e('Error saving group songs to Firebase:', err);
+      }
+    }
+
+    // Reload the song list
+    if (songList && typeof songList.reloadSongs === 'function') {
+      await songList.reloadSongs();
+    }
+  }
+
+  // Listen for song removal from group detail view
+  document.addEventListener('group-song-removed', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ groupKey: string; songKey: string }>;
+    const { groupKey, songKey } = customEvent.detail || {};
+    if (!groupKey || !songKey) return;
+
+    try {
+      await _updateGroupSongs(groupKey, (songs) =>
+        songs.filter((s: any) => s.fullPath !== songKey)
+      );
+    } catch (error) {
+      log.e('Error removing song from group:', error);
+    }
+  });
+
+  // Listen for song addition to group detail view
+  document.addEventListener('group-song-added', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ groupKey: string; songKey: string; title: string }>;
+    const { groupKey, songKey, title } = customEvent.detail || {};
+    if (!groupKey || !songKey) return;
+
+    try {
+      await _updateGroupSongs(groupKey, (songs) => {
+        // Don't add duplicates
+        if (songs.some((s: any) => s.fullPath === songKey)) return songs;
+        return [...songs, { fullPath: songKey, galleryId: title || songKey }];
+      });
+    } catch (error) {
+      log.e('Error adding song to group:', error);
     }
   });
 

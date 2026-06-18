@@ -1,7 +1,8 @@
 /**
  * Group edit dialog (V2).
  *
- * A modal overlay for editing a group's name, info, owners, songs, and color.
+ * A modal overlay for editing a group's name, info, icon, color, and owners.
+ * Song management is done directly in the group detail view.
  * Does NOT import Firebase — all persistence is handled by the parent via events.
  *
  * Events (bubbles, composed):
@@ -17,7 +18,7 @@ import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-color-picker.js';
 import '../atom/t-icon-picker.js';
-import type { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../../types/troff.d.js';
+import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
 
 @customElement('t-group-dialog')
 export class GroupDialog extends LitElement {
@@ -115,58 +116,6 @@ export class GroupDialog extends LitElement {
       margin-top: 4px;
     }
 
-    /* Songs section */
-    .song-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    }
-
-    .song-item:last-child {
-      border-bottom: none;
-    }
-
-    .song-item-name {
-      font-size: 0.9rem;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .song-add-search {
-      margin-bottom: 8px;
-    }
-
-    .song-add-list {
-      max-height: 160px;
-      overflow-y: auto;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      border-radius: 4px;
-      padding: 4px;
-    }
-
-    .song-add-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 6px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 0.85rem;
-    }
-
-    .song-add-item:hover {
-      background-color: rgba(0, 0, 0, 0.06);
-    }
-
-    .song-add-item.added {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
     /* Empty state */
     .empty-text {
       font-size: 0.85rem;
@@ -185,9 +134,6 @@ export class GroupDialog extends LitElement {
   /** The group being edited. When `null`, a new group is being created. */
   @property({ type: Object }) group: TroffFirebaseGroupIdentifyer | null = null;
 
-  /** All songs available in the library for the "add songs" picker. */
-  @property({ type: Array }) allSongs: Array<{ songKey: string; title: string }> = [];
-
   // ── Internal editing state (cloned from `group` when opened) ───────────────
 
   @state() private _editName = '';
@@ -195,10 +141,6 @@ export class GroupDialog extends LitElement {
   @state() private _editColor = '';
   @state() private _editIcon = '';
   @state() private _editOwners: string[] = [];
-  @state() private _editSongs: TroffFirebaseSongIdentifyer[] = [];
-
-  /** Search query for filtering available songs to add. */
-  @state() private _songSearchQuery = '';
 
   /** Whether this group has a Firebase backing. */
   private get _isFirebaseGroup(): boolean {
@@ -220,8 +162,6 @@ export class GroupDialog extends LitElement {
     this._editColor = g?.color ?? '';
     this._editIcon = g?.icon ?? '';
     this._editOwners = g?.owners ? [...g.owners] : [];
-    this._editSongs = g?.songs ? g.songs.map((s) => ({ ...s })) : [];
-    this._songSearchQuery = '';
   }
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -243,14 +183,16 @@ export class GroupDialog extends LitElement {
   }
 
   private _save() {
+    // Preserve original songs (song management is done in the group detail view)
     const updatedGroup: TroffFirebaseGroupIdentifyer = {
-      ...(this.group || {}),
       name: this._editName,
       info: this._editInfo,
       color: this._editColor,
       icon: this._editIcon,
       owners: this._editOwners,
-      songs: this._editSongs,
+      songs: this.group?.songs ?? [],
+      firebaseGroupDocId: this.group?.firebaseGroupDocId,
+      id: this.group?.id,
     };
 
     this.open = false;
@@ -322,33 +264,6 @@ export class GroupDialog extends LitElement {
     this._editOwners = this._editOwners.filter((_, i) => i !== index);
   }
 
-  // ── Songs handlers ─────────────────────────────────────────────────────────
-
-  private _removeSong(index: number) {
-    this._editSongs = this._editSongs.filter((_, i) => i !== index);
-  }
-
-  private _addSongToGroup(songKey: string, title: string) {
-    // Check if already added
-    if (this._editSongs.some((s) => s.fullPath === songKey)) return;
-
-    this._editSongs = [
-      ...this._editSongs,
-      { fullPath: songKey, galleryId: title },
-    ];
-  }
-
-  private _getFilteredAvailableSongs() {
-    const query = this._songSearchQuery.trim().toLowerCase();
-    const addedKeys = new Set(this._editSongs.map((s) => s.fullPath));
-
-    return this.allSongs.filter((s) => {
-      if (addedKeys.has(s.songKey)) return false;
-      if (!query) return true;
-      return s.title.toLowerCase().includes(query);
-    });
-  }
-
   // ── Color handler ──────────────────────────────────────────────────────────
 
   private _handleColorChange(event: CustomEvent) {
@@ -383,70 +298,6 @@ export class GroupDialog extends LitElement {
         <t-butt class="add-owner-btn" @click=${this._addOwner} title="Add owner">
           + Add owner
         </t-butt>
-      </div>
-    `;
-  }
-
-  /** Look up the display title for a song from the allSongs array. */
-  private _getSongTitle(song: TroffFirebaseSongIdentifyer): string {
-    const match = this.allSongs.find((s) => s.songKey === song.fullPath);
-    return match?.title || song.galleryId || song.fullPath || 'Unknown';
-  }
-
-  private _renderSongs() {
-    const filteredAvailable = this._getFilteredAvailableSongs();
-
-    return html`
-      <div>
-        <div class="section-label">Songs in group</div>
-        ${this._editSongs.length === 0
-          ? html`<div class="empty-text">No songs in this group</div>`
-          : ''}
-        ${this._editSongs.map(
-          (song, i) => html`
-            <div class="song-item">
-              <span class="song-item-name">${this._getSongTitle(song)}</span>
-              <t-butt icon @click=${() => this._removeSong(i)} title="Remove song">
-                <t-icon name="delete"></t-icon>
-              </t-butt>
-            </div>
-          `
-        )}
-
-        <div class="section-label" style="margin-top: 12px;">Add songs</div>
-        <t-input
-          class="song-add-search"
-          .value=${this._songSearchQuery}
-          placeholder="Search songs..."
-          slim
-          @input=${(e: CustomEvent) => {
-            if (e.detail && typeof e.detail.value === 'string') {
-              this._songSearchQuery = e.detail.value;
-            }
-          }}
-        ></t-input>
-        ${this.allSongs.length === 0
-          ? html`<div class="empty-text">No songs in library</div>`
-          : ''}
-        ${filteredAvailable.length > 0
-          ? html`
-              <div class="song-add-list">
-                ${filteredAvailable.map(
-                  (s) => html`
-                    <div
-                      class="song-add-item"
-                      @click=${() => this._addSongToGroup(s.songKey, s.title)}
-                    >
-                      <span>${s.title}</span>
-                      <t-icon name="note-plus"></t-icon>
-                    </div>
-                  `
-                )}
-              </div>
-            `
-          : this._songSearchQuery.trim()
-            ? html`<div class="empty-text">No songs match "${this._songSearchQuery}"</div>`
-            : ''}
       </div>
     `;
   }
@@ -503,9 +354,6 @@ export class GroupDialog extends LitElement {
 
             <!-- Owners -->
             ${this._isFirebaseGroup ? this._renderOwners() : ''}
-
-            <!-- Songs -->
-            ${this._renderSongs()}
 
             <!-- Color -->
             ${this._renderColorPicker()}

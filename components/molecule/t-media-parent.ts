@@ -416,11 +416,28 @@ export class MediaParent extends LitElement {
     this.sortOrder = order;
   }
 
+  /** Open a group's detail view in the group-list, if present. */
+  public openGroupDetail(groupKey: string) {
+    const groupList = this.shadowRoot?.querySelector('t-group-list') as any;
+    if (groupList && typeof groupList.openGroup === 'function') {
+      groupList.openGroup(groupKey);
+    }
+  }
+
   private _handleAddSong() {
     const input = this.shadowRoot?.getElementById('fileInput') as HTMLInputElement | null;
     if (input) {
       input.click();
     }
+  }
+
+  private _handleAddGroup() {
+    this.dispatchEvent(
+      new CustomEvent('group-create-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private async _handleFilesSelected(event: Event) {
@@ -1148,7 +1165,7 @@ export class MediaParent extends LitElement {
           ? html`
               <div class="header-controls">
                 <!-- Add Group Button -->
-                <t-butt icon @click=${this._handleAddSong} title="Add group">
+                <t-butt icon @click=${this._handleAddGroup} title="Add group">
                   <t-icon name="group-plus"></t-icon>
                 </t-butt>
 
