@@ -1,5 +1,6 @@
 import './components/atom/t-butt.js';
 import './components/atom/t-icon.js';
+import './assets/external/jquery-3.6.0.min.js';
 import './components/molecule/t-footer.js';
 import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
@@ -49,6 +50,8 @@ import {
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
 } from './constants/constants.js';
 import log from './utils/log.js';
+import { syncFirebaseGroups } from './utils/firebase-sync.js';
+import { setupListeners, teardownListeners, saveSongData, setLiveUpdateCallback } from './utils/firebase-realtime.js';
 
 type FooterElement = HTMLElement & {
   settingsPanelVisible?: boolean;
@@ -814,6 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         nDB.set(songKey, currentSongData);
+        void saveSongData(songKey);
         markerSlider.requestUpdate();
         return;
       }
@@ -846,6 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         nDB.set(songKey, currentSongData);
+        void saveSongData(songKey);
         markerSlider.requestUpdate();
         return;
       }
@@ -857,6 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const normalizedLoopTimes = normalizeLoopTimesInput(value);
         nDB.setOnSong(songKey, 'loopTimes', normalizedLoopTimes);
+        void saveSongData(songKey);
         syncLoopTimesFromSong();
         syncSettingsPanelValues();
         return;
@@ -935,7 +941,74 @@ document.addEventListener('DOMContentLoaded', () => {
         await zoomOutTimeline();
       }
     });
+
+    // Handle sign-in / sign-out requests from the settings panel
+    settingsPanel.addEventListener('sign-in-requested', async (event: Event) => {
+      const customEvent = event as CustomEvent<{ action: string }>;
+      const action = customEvent.detail?.action;
+
+      try {
+        // Ensure notify.js is loaded so cookie_consent doesn't enter an infinite retry loop
+        await import('./assets/internal/notify-js/notify.config.js');
+        const { auth, GoogleAuthProvider, signInWithPopup, signOut } =
+          await import('./services/firebaseClient.js');
+
+        if (action === 'sign-in') {
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+        } else if (action === 'sign-out') {
+          await signOut(auth);
+        }
+      } catch (error) {
+        log.e('Auth error:', error);
+      }
+    });
   }
+
+  // Keep the settings panel auth state in sync with Firebase on every page load
+  (async () => {
+    try {
+      // Ensure notify.js is loaded so cookie_consent doesn't enter an infinite retry loop
+      await import('./assets/internal/notify-js/notify.config.js');
+      const { auth, onAuthStateChanged } = await import('./services/firebaseClient.js');
+      onAuthStateChanged(auth, async (user) => {
+        if (settingsPanel) {
+          settingsPanel.signedIn = user !== null;
+          settingsPanel.userName = user?.displayName ?? '';
+        }
+
+        if (!user) {
+          // Tear down any active Firestore listeners when signing out
+          teardownListeners();
+        }
+
+        if (user) {
+          // Fetch groups and songs from Firestore, cache them, and update local DB
+          await syncFirebaseGroups(user.email ?? '');
+
+          // Reload song list to reflect newly cached Firebase songs
+          if (songList && typeof (songList as any).reloadSongs === 'function') {
+            await (songList as any).reloadSongs();
+          }
+
+          // Set up real-time listeners for Firebase song changes
+          await setupListeners();
+          setLiveUpdateCallback((songKey: string) => {
+            // If the updated song is currently selected, refresh UI without interrupting playback
+            const currentKey = getCurrentSongKey();
+            if (currentKey === songKey && markerSlider) {
+              updateMarkerSlider(markerSlider, false);
+              syncSettingsPanelValues();
+              syncLoopTimesFromSong();
+            }
+          });
+        }
+      });
+    } catch (error) {
+      // Firebase may not be available (e.g. tests, offline)
+      log.i('Firebase auth not available:', error);
+    }
+  })();
 
   if (footer) {
     updateFooterWithCurrentSong();
@@ -959,6 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const songKey = getCurrentSongKey();
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
+        void saveSongData(songKey);
       }
     });
 
@@ -967,6 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const songKey = getCurrentSongKey();
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_volumeBar', event.detail.volume);
+        void saveSongData(songKey);
       }
     });
 
@@ -976,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_pauseBeforeStart', event.detail.pauseBefore);
         nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttPauseBefStart', !event.detail.disabled);
+        void saveSongData(songKey);
       }
       updateHeaderCountdownDisplay();
     });
@@ -989,6 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
           'TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops',
           !event.detail.disabled
         );
+        void saveSongData(songKey);
       }
     });
 
@@ -1000,6 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingMarkers = currentSongData.markers || [];
         existingMarkers.push(event.detail.marker);
         nDB.setOnSong(songKey, 'markers', existingMarkers);
+        void saveSongData(songKey);
       }
 
       // When markers are modified, the URL hash is no longer valid for sharing
@@ -1033,6 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
           existingMarkers[markerIndex] = event.detail.marker;
           nDB.setOnSong(songKey, 'markers', existingMarkers);
         }
+        void saveSongData(songKey);
       }
 
       // When markers are modified, the URL hash is no longer valid for sharing
@@ -1057,6 +1136,7 @@ document.addEventListener('DOMContentLoaded', () => {
           (m: TroffMarker) => m.id !== customEvent.detail.markerId
         );
         nDB.setOnSong(songKey, 'markers', updatedMarkers);
+        void saveSongData(songKey);
       }
 
       // When markers are modified, the URL hash is no longer valid for sharing
@@ -1240,6 +1320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSongData) {
           currentSongData.currentStartMarker = markerId;
           nDB.set(songKey, currentSongData);
+          void saveSongData(songKey);
           updateMarkerSlider(markerSlider);
         }
       }
@@ -1254,6 +1335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSongData) {
           currentSongData.currentStopMarker = markerId + 'S';
           nDB.set(songKey, currentSongData);
+          void saveSongData(songKey);
           updateMarkerSlider(markerSlider, false);
         }
       }
