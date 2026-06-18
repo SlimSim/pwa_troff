@@ -24,7 +24,7 @@ import {
   getIncrementUntil,
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
-import type { TroffMarker } from './types/troff.d.js';
+import type { TroffMarker, State } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
@@ -125,6 +125,27 @@ function recordSongStart(songKey: string): void {
   songStarts.push(now);
   nDB.setOnSong(songKey, ['localInformation', 'songStartsLastMonth'], songStarts);
 }
+
+/**
+ * Set or clear the URL hash to show the current song.
+ * When a `serverId` exists (song was uploaded/downloaded from server),
+ * the hash is `#serverId&encodedSongKey` so the URL can be shared.
+ * When called with no serverId, the hash is cleared (markers/settings changed).
+ */
+const setUrlToSong = (serverId: string | number | undefined, songKey: string | null) => {
+  if (serverId === undefined) {
+    if (!window.location.hash) {
+      return;
+    }
+    // Remove URL hash completely:
+    history.pushState('', document.title, window.location.pathname + window.location.search);
+    return;
+  }
+  if (songKey === null) {
+    return;
+  }
+  window.location.hash = '#' + String(serverId) + '&' + encodeURIComponent(songKey);
+};
 
 // Initialize components and set up event listeners
 
@@ -981,6 +1002,13 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'markers', existingMarkers);
       }
 
+      // When markers are modified, the URL hash is no longer valid for sharing
+      // Also clear the serverId so a future hash link shows the import dialog
+      if (songKey) {
+        nDB.setOnSong(songKey, 'serverId', undefined);
+      }
+      setUrlToSong(undefined, null);
+
       // Update the marker slider UI
       updateMarkerSlider(markerSlider, false);
     });
@@ -1007,6 +1035,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // When markers are modified, the URL hash is no longer valid for sharing
+      // Also clear the serverId so a future hash link shows the import dialog
+      if (songKey) {
+        nDB.setOnSong(songKey, 'serverId', undefined);
+      }
+      setUrlToSong(undefined, null);
+
       // Update the marker slider UI
       updateMarkerSlider(markerSlider, false);
     });
@@ -1023,6 +1058,13 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         nDB.setOnSong(songKey, 'markers', updatedMarkers);
       }
+
+      // When markers are modified, the URL hash is no longer valid for sharing
+      // Also clear the serverId so a future hash link shows the import dialog
+      if (songKey) {
+        nDB.setOnSong(songKey, 'serverId', undefined);
+      }
+      setUrlToSong(undefined, null);
 
       // Update the marker slider UI
       updateMarkerSlider(markerSlider, false);
@@ -1070,10 +1112,13 @@ document.addEventListener('DOMContentLoaded', () => {
           loadSong(songKey);
           recordSongStart(songKey);
 
+          // Set URL hash for shareability if the song has a serverId
+          const songData = nDB.get(songKey);
+          setUrlToSong(songData?.serverId, songKey);
+
           // Update badge on the clicked media element immediately
           const mediaItem = event.composedPath?.().find((el: any) => el?.tagName === 'T-MEDIA');
           if (mediaItem) {
-            const songData = nDB.get(songKey);
             if (songData?.localInformation) {
               mediaItem.playsTotal = songData.localInformation.nrTimesLoaded || 0;
               mediaItem.playsMonth = countLast30Days(songData.localInformation.songStartsLastMonth);
@@ -1100,6 +1145,16 @@ document.addEventListener('DOMContentLoaded', () => {
       clearPendingPlaybackStart();
       loadSong(currentSongKey);
       recordSongStart(currentSongKey);
+
+      // Set URL hash for shareability ONLY if there's no navigation hash.
+      // If there IS a navigation hash, handleHashDownload will process it
+      // (triggered via the hashchange listener below) and will select the
+      // correct song — we shouldn't overwrite that hash here.
+      if (!window.location.hash) {
+        const bootSongData = nDB.get(currentSongKey);
+        setUrlToSong(bootSongData?.serverId, currentSongKey);
+      }
+
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
       updateHeaderCountdownDisplay();
@@ -1205,16 +1260,306 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Hash-based song download: check URL hash on boot (e.g. `#serverId&fileName`)
-  const handleHashDownload = async (hash: string) => {
-    const { downloadSongFromHash } = await import('./utils/hash-download.js');
-    const fileName = await downloadSongFromHash(hash);
-    if (fileName) {
-      window.location.hash = '';
-      if (songList && typeof songList.reloadSongs === 'function') {
-        await songList.reloadSongs();
+  // -------- Helper: load/select a song (shared by hash download and dialog actions) --------
+  const selectSongFromHash = async (fileName: string) => {
+    if (songList && typeof songList.reloadSongs === 'function') {
+      await songList.reloadSongs();
+    }
+    clearPendingPlaybackStart();
+    setCurrentSong(fileName);
+    loadSong(fileName);
+    recordSongStart(fileName);
+
+    updateFooterWithCurrentSong();
+    syncLoopTimesFromSong();
+    syncSettingsPanelValues();
+    updateHeaderCountdownDisplay();
+
+    updateMarkerSlider(markerSlider);
+    void applySavedZoomWindowForCurrentSong();
+
+    // Highlight the song in the song list.  This must happen after all other
+    // updates so the Lit render cycle from reloadSongs() has settled.
+    if (songList) {
+      songList.currentSongKey = fileName;
+      if (typeof songList.requestUpdate === 'function') {
+        songList.requestUpdate();
       }
     }
+  };
+
+  // -------- Import dialog for songs that already exist locally --------
+  let importDialogOverlay: HTMLDivElement | null = null;
+
+  const destroyImportDialog = () => {
+    if (importDialogOverlay) {
+      importDialogOverlay.remove();
+      importDialogOverlay = null;
+    }
+  };
+
+  const createImportDialog = (fileName: string, hashServerId: number) => {
+    destroyImportDialog();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'import-dialog-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6); z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+    `;
+
+    const box = document.createElement('div');
+    box.className = 'import-dialog-box';
+    box.style.cssText = `
+      background: var(--on-theme-color, #fff); color: var(--theme-color, #000);
+      padding: 24px; border-radius: 8px; max-width: 400px; width: 90%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column; gap: 16px;
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = 'Update markers?';
+    title.style.cssText = 'margin: 0; font-size: 1.2em;';
+
+    const message = document.createElement('p');
+    message.style.cssText = 'margin: 0; line-height: 1.5;';
+    message.textContent = `You seem to already have the song "${fileName}". Do you want to update that song with the new markers or merge them or abort?`;
+
+    const buttonRow = document.createElement('div');
+    buttonRow.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+
+    const btnImport = document.createElement('button');
+    btnImport.textContent = 'Import new markers';
+    btnImport.className = 'regularButton';
+    btnImport.onclick = () => {
+      destroyImportDialog();
+      handleImportNewMarkers(fileName, hashServerId);
+    };
+
+    const btnMerge = document.createElement('button');
+    btnMerge.textContent = 'Merge with existing markers';
+    btnMerge.className = 'regularButton';
+    btnMerge.onclick = () => {
+      destroyImportDialog();
+      handleMergeMarkers(fileName, hashServerId);
+    };
+
+    const btnKeep = document.createElement('button');
+    btnKeep.textContent = 'Keep existing markers';
+    btnKeep.className = 'regularButton';
+    btnKeep.onclick = () => {
+      destroyImportDialog();
+      handleKeepExistingMarkers(fileName);
+    };
+
+    // Style buttons
+    [btnImport, btnMerge, btnKeep].forEach((btn) => {
+      btn.style.cssText = `
+        padding: 10px 16px; border: 1px solid var(--theme-color, #000);
+        border-radius: 4px; background: var(--secondary-color, #eee);
+        color: var(--theme-color, #000); cursor: pointer; font-size: 0.95em;
+      `;
+    });
+
+    buttonRow.append(btnImport, btnMerge, btnKeep);
+    box.append(title, message, buttonRow);
+    overlay.append(box);
+    document.body.append(overlay);
+    importDialogOverlay = overlay;
+  };
+
+  // -------- Dialog actions --------
+  const handleImportNewMarkers = async (fileName: string, hashServerId: number) => {
+    const { fetchServerTroffData } = await import('./utils/hash-download.js');
+    const serverData = await fetchServerTroffData(hashServerId, fileName);
+    if (!serverData) return;
+
+    const songData = nDB.get(fileName) || {};
+    songData.markers = serverData.markers;
+    songData.aStates = serverData.states;
+    songData.info = serverData.info;
+    songData.serverId = hashServerId;
+    nDB.set(fileName, songData);
+
+    await selectSongFromHash(fileName);
+    // Keep the hash — the song now matches the server
+  };
+
+  const handleMergeMarkers = async (fileName: string, hashServerId: number) => {
+    const { fetchServerTroffData } = await import('./utils/hash-download.js');
+    const serverData = await fetchServerTroffData(hashServerId, fileName);
+    if (!serverData) return;
+
+    const songData = nDB.get(fileName) || {};
+    const existingMarkers: TroffMarker[] = songData.markers || [];
+    const existingStates: string[] = songData.aStates || [];
+
+    // ----- Step 1: Build merged marker list (matching v1's addMarkers behavior) -----
+    // Shallow copy existing markers to avoid mutation
+    const mergedMarkers: TroffMarker[] = existingMarkers.map((m) => ({ ...m }));
+    const serverMarkerIdToLocalId: Record<string, string> = {};
+
+    // Helper matching v1's getNewMarkerIds — finds the next free markerNrN
+    const getNextMarkerId = (): string => {
+      let nr = 0;
+      while (mergedMarkers.some((m) => m.id === 'markerNr' + nr)) {
+        nr++;
+      }
+      return 'markerNr' + nr;
+    };
+
+    for (const serverMarker of serverData.markers) {
+      const time = Number(serverMarker.time);
+      const name = serverMarker.name;
+      const info = serverMarker.info || '';
+      const color = serverMarker.color || 'None';
+
+      // v1's addMarkers: check for existing marker at the same time (±0.001s)
+      const existing = mergedMarkers.find(
+        (m) => Math.abs(Number(m.time) - time) < 0.001
+      );
+
+      if (existing) {
+        // v1: merge name (comma-separated) and info (newline-separated)
+        if (existing.info !== info) {
+          existing.info = existing.info + '\n\n' + info;
+        }
+        if (existing.name !== name) {
+          existing.name = existing.name + ', ' + name;
+        }
+        serverMarkerIdToLocalId[serverMarker.id] = existing.id;
+      } else {
+        // New marker: assign a new ID in markerNrN format (matching v1)
+        const newId = getNextMarkerId();
+        serverMarkerIdToLocalId[serverMarker.id] = newId;
+        mergedMarkers.push({
+          id: newId,
+          name,
+          time,
+          info,
+          color,
+        });
+      }
+    }
+
+    songData.markers = mergedMarkers;
+
+    // ----- Step 2: Merge states (matching v1's importStates behavior) -----
+    // v1 flow: convert server state marker IDs → time values (replaceMarkerIdWithMarkerTimeInState),
+    // then look up by time in the merged markers (importStates / getMarkerFromTime)
+    const mergedStates: string[] = [...existingStates];
+    for (const stateJson of serverData.states) {
+      const state: State = JSON.parse(stateJson);
+
+      // replaceMarkerIdWithMarkerTimeInState: find time values from server markers
+      let markerTime: number | undefined;
+      let stopMarkerTime: number | undefined;
+      for (const serverMarker of serverData.markers) {
+        if (state.currentMarker === serverMarker.id) {
+          markerTime = Number(serverMarker.time);
+        }
+        if (state.currentStopMarker === serverMarker.id + 'S') {
+          stopMarkerTime = Number(serverMarker.time);
+        }
+      }
+
+      // importStates / getMarkerFromTime: look up markers by time in merged array
+      const newState: State = { ...state };
+      if (markerTime !== undefined) {
+        const markerByTime = mergedMarkers.find(
+          (m) => Math.abs(Number(m.time) - markerTime) < 0.001
+        );
+        if (markerByTime) {
+          newState.currentMarker = markerByTime.id;
+        } else {
+          // v1 fallback: log error and use the first marker
+          log.e(
+            'Could not find a marker at the time ' +
+              markerTime +
+              '; returning the first marker'
+          );
+          newState.currentMarker = mergedMarkers[0]?.id || '';
+        }
+      }
+      if (stopMarkerTime !== undefined) {
+        const markerByTime = mergedMarkers.find(
+          (m) => Math.abs(Number(m.time) - stopMarkerTime) < 0.001
+        );
+        if (markerByTime) {
+          newState.currentStopMarker = markerByTime.id + 'S';
+        } else {
+          log.e(
+            'Could not find a marker at the time ' +
+              stopMarkerTime +
+              '; returning the first marker'
+          );
+          newState.currentStopMarker = (mergedMarkers[0]?.id || '') + 'S';
+        }
+      }
+
+      mergedStates.push(JSON.stringify(newState));
+    }
+    songData.aStates = mergedStates;
+
+    // ----- Step 3: Merge song info (v1: append text) -----
+    if (serverData.info) {
+      songData.info = (songData.info || '') + serverData.info;
+    }
+
+    // Clear serverId so the hash won't match next time (markers are modified)
+    songData.serverId = undefined;
+    nDB.set(fileName, songData);
+
+    await selectSongFromHash(fileName);
+    setUrlToSong(undefined, null); // Clear hash — markers are modified
+  };
+
+  const handleKeepExistingMarkers = async (fileName: string) => {
+    await selectSongFromHash(fileName);
+    setUrlToSong(undefined, null); // Clear hash — we chose not to sync with server
+  };
+
+  // -------- Main hash download handler --------
+  const handleHashDownload = async (hash: string) => {
+    const { parseHash, downloadSongFromHash } = await import('./utils/hash-download.js');
+    const parsed = parseHash(hash);
+    if (!parsed) return;
+
+    const { serverId: hashServerId, fileName } = parsed;
+
+    // Check if the song already exists locally
+    const existingSongData = nDB.get(fileName);
+
+    if (!existingSongData) {
+      // New song — download it with progress notification
+      const { showDownloadProgress, showToast } = await import(
+        './utils/notification.js'
+      );
+      const progress = showDownloadProgress(fileName);
+      const downloadedFileName = await downloadSongFromHash(hash, {
+        onProgress: (loaded, total) =>
+          progress.update(Math.round((loaded / total) * 100)),
+      });
+      progress.done();
+      if (!downloadedFileName) return;
+
+      showToast(`"${downloadedFileName}" downloaded successfully!`, 'success');
+      await selectSongFromHash(downloadedFileName);
+      // Hash stays — song is now downloaded with serverId set
+      return;
+    }
+
+    // Song exists locally — check if it's from the same server
+    const localServerId = existingSongData.serverId;
+    if (localServerId != null && String(localServerId) === String(hashServerId)) {
+      // Same serverId — just select the song (no dialog needed)
+      await selectSongFromHash(fileName);
+      return;
+    }
+
+    // Different or missing serverId — show import dialog
+    createImportDialog(fileName, hashServerId);
   };
 
   if (window.location.hash) {
