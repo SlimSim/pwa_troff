@@ -4,6 +4,7 @@ import '../atom/t-media.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-input.js';
+import { getBgColor } from '../../utils/colorHelpers.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
 
 // Re-export so group-list can double as barrel if needed
@@ -268,10 +269,20 @@ export class GroupList extends LitElement {
   /** Whether song management (remove buttons + add songs section) is visible. */
   @state() private _songManagementOpen = false;
 
-  /** Return black or white text color depending on background luminance. */
+  /** Resolve a legacy class-name colour (e.g. `bg-red-3`) to a CSS-safe value. */
+  private _cssColor(c: string | undefined): string {
+    if (!c) return '';
+    const resolved = getBgColor(c).color;
+    return resolved || c;
+  }
+
+  /** Return black or white text colour depending on background luminance. */
   private _contrastColor(bg: string | undefined): string {
-    if (!bg) return 'inherit';
-    const hex = bg.replace('#', '');
+    const cssBg = bg ? getBgColor(bg).color || bg : '';
+    if (!cssBg) return 'inherit';
+    const hex = cssBg.replace('#', '');
+    // Handle named colours like "Bisque" – can't parse those, fall back to white
+    if (!/^[0-9a-f]{6}$/i.test(hex)) return '#ffffff';
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
@@ -396,7 +407,7 @@ export class GroupList extends LitElement {
           <div
             class="detail-header"
             style=${selectedGroup.color
-              ? `background-color: ${selectedGroup.color}; color: ${this._contrastColor(selectedGroup.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent);`
+              ? `background-color: ${this._cssColor(selectedGroup.color)}; color: ${this._contrastColor(selectedGroup.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent);`
               : ''}
           >
             <span class="back-arrow" @click=${this._handleBack}>
@@ -539,7 +550,7 @@ export class GroupList extends LitElement {
             <div
               class="group-item"
               style=${group.color
-                ? `background-color: ${group.color}; color: ${this._contrastColor(group.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(group.color)} 15%, transparent);`
+                ? `background-color: ${this._cssColor(group.color)}; color: ${this._contrastColor(group.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(group.color)} 15%, transparent);`
                 : ''}
               @click=${() => this._handleGroupClick(group)}
             >

@@ -13,6 +13,7 @@ import { LocalSongDataService } from '../../utils/local-song-data.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
 import { nDB } from '../../assets/internal/db.js';
 import { getCurrentSongKey } from '../../utils/current-song.js';
+import { getBgColor } from '../../utils/colorHelpers.js';
 import {
   filterTracks,
   filterArtists,
@@ -562,10 +563,12 @@ export class MediaParent extends LitElement {
     this._handleAddSong();
   }
 
-  /** Return black or white text color depending on background luminance. */
+  /** Return black or white text colour depending on background luminance. */
   private _contrastColor(bg: string | undefined): string {
-    if (!bg) return 'inherit';
-    const hex = bg.replace('#', '');
+    const cssBg = bg ? getBgColor(bg).color || bg : '';
+    if (!cssBg) return 'inherit';
+    const hex = cssBg.replace('#', '');
+    if (!/^[0-9a-f]{6}$/i.test(hex)) return '#ffffff';
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
@@ -599,7 +602,7 @@ export class MediaParent extends LitElement {
       this._contextType = 'group';
       this._contextKey = key;
       this._contextName = group?.name || '';
-      this._contextColor = group?.color || '';
+      this._contextColor = group?.color ? (getBgColor(group.color).color || group.color) : '';
     } else {
       this._clearContext();
     }
