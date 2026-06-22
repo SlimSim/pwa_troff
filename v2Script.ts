@@ -507,9 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
-    settingsPanel.extendedMarkerColor = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR) === true;
+    const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
+    const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
+    settingsPanel.extendedMarkerColor = extendedColorSetting === true;
     settingsPanel.extraExtendedMarkerColor =
-      nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) === true;
+      (extendedColorSetting === null && extraExtendedColorSetting === null) ||
+      extraExtendedColorSetting === true;
 
     // Load global default song values from nDB
     settingsPanel.defaultStartBeforeValue =

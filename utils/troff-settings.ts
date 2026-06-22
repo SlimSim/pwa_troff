@@ -68,8 +68,11 @@ export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any)
   markerSlider.startBefore = isStartBeforeDisabled(songData) ? 0 : getStartBefore(songData);
   markerSlider.stopAfter = isStopAfterDisabled(songData) ? 0 : getStopAfter(songData);
 
-  const isExtraExtended = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) === true;
-  const isExtended = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR) === true;
+  const extraExtendedSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
+  const extendedSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
+  const bothUnset = extraExtendedSetting === null && extendedSetting === null;
+  const isExtraExtended = bothUnset || extraExtendedSetting === true;
+  const isExtended = extendedSetting === true;
 
   if (isExtraExtended) {
     markerSlider.fillColor = 'through';

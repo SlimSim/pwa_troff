@@ -13,6 +13,11 @@ body {
   background: var(--on-theme-color, #eee);
   color: var(--theme-color, #003366);
   border: 1px solid rgba(0, 0, 0, 0.1);
+
+  background: var(--primary-color) !important;
+  color: var(--on-primary-color) !important;
+  border-color: var(--primary-color) !important;
+
   background-image: none;
   width: 280px;
   border-radius: 8px;
