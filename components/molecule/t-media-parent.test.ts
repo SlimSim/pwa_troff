@@ -1132,7 +1132,17 @@ describe('empty state (no songs, no groups)', () => {
     expect(buttons.length).toBe(3);
   });
 
-  it('first action button triggers file input click (Add songs from device)', async () => {
+  it('first action button links to the demo song hash URL', async () => {
+    await element.updateComplete;
+
+    const buttons = getActionButtons();
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
+
+    const demoBtn = buttons[0] as any;
+    expect(demoBtn.href).toBe('/#2582986745&demo.mp4');
+  });
+
+  it('second action button triggers file input click (Add songs from device)', async () => {
     await element.updateComplete;
 
     const fileInput = element.shadowRoot?.getElementById('fileInput') as HTMLInputElement | null;
@@ -1145,16 +1155,6 @@ describe('empty state (no songs, no groups)', () => {
     (element as any)._handleAddSong();
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('second action button links to the demo song hash URL', async () => {
-    await element.updateComplete;
-
-    const buttons = getActionButtons();
-    expect(buttons.length).toBeGreaterThanOrEqual(2);
-
-    const demoBtn = buttons[1] as any;
-    expect(demoBtn.href).toBe('/#2582986745&demo.mp4');
   });
 
   it('third action button links to find.html with target _blank', async () => {
@@ -1191,5 +1191,24 @@ describe('empty state (no songs, no groups)', () => {
     // Normal track list should now be visible
     const trackList = element.shadowRoot?.querySelector('t-track-list');
     expect(trackList).toBeTruthy();
+  });
+
+  it('slides down via CSS transform when visible attribute is set', async () => {
+    await element.updateComplete;
+
+    // Default state: no visible attribute
+    expect(element.hasAttribute('visible')).toBe(false);
+
+    // The transition property should be set on the host for smooth animation
+    const defaultStyles = getComputedStyle(element);
+    expect(defaultStyles.transition).toContain('transform');
+
+    // Make it visible (reflects to attribute, triggering the CSS rule)
+    element.visible = true;
+    await element.updateComplete;
+
+    expect(element.hasAttribute('visible')).toBe(true);
+    const visibleStyles = getComputedStyle(element);
+    expect(visibleStyles.transform).toMatch(/translateY\(100%/);
   });
 });

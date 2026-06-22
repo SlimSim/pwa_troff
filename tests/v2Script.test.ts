@@ -6,6 +6,26 @@ describe('v2Script utilities and related functions', () => {
   beforeEach(() => {
     vi.resetModules();
     document.body.innerHTML = '';
+    // Make requestAnimationFrame fire synchronously in tests.
+    // Happy-dom doesn't implement rAF, so the auto-open code
+    // (which uses rAF to defer the expand until after first paint)
+    // would never execute without this mock.
+    const raf = (cb: Function) => { cb(); return 0; };
+    vi.stubGlobal('requestAnimationFrame', raf);
+    window.requestAnimationFrame = raf;
+    // Silence duplicate custom element definitions that happen when
+    // multiple tests import v2Script.js (which registers components).
+    // Without this guard, the second import throws:
+    //   "the name "t-butt" has already been used with this registry"
+    const registry = customElements;
+    const originalDefine = registry.define.bind(registry);
+    const patched = Object.create(registry);
+    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+      if (!registry.get(name)) {
+        originalDefine(name, constructor, options);
+      }
+    };
+    vi.stubGlobal('customElements', patched);
   });
 
   afterEach(() => {
@@ -66,6 +86,74 @@ describe('v2Script utilities and related functions', () => {
       );
       expect(constants.TROFF_SETTING_SPACE_RESET_COUNTER).toBe('TROFF_SETTING_SPACE_RESET_COUNTER');
     });
+  });
+
+  describe('auto-open on app load when no song selected', () => {
+    it('expands the header and opens the song list when no current song and no hash', async () => {
+      // Create the DOM elements v2Script queries on DOMContentLoaded
+      const header = document.createElement('div');
+      header.id = 'header';
+      document.body.appendChild(header);
+
+      const songList = document.createElement('div');
+      songList.id = 'songList';
+      document.body.appendChild(songList);
+
+      const footer = document.createElement('div');
+      footer.id = 'footer';
+      document.body.appendChild(footer);
+
+      const settingsPanel = document.createElement('div');
+      settingsPanel.id = 'settingsPanel';
+      document.body.appendChild(settingsPanel);
+
+      const markerSlider = document.createElement('div');
+      markerSlider.id = 'markerSlider';
+      (markerSlider as any).getPlaybackStart = vi.fn(() => 0);
+      document.body.appendChild(markerSlider);
+
+      // Mock current-song to return null (no current song selected)
+      vi.doMock('../utils/current-song.js', () => ({
+        updateHeaderWithCurrentSong: vi.fn(),
+        setCurrentSong: vi.fn(),
+        getCurrentSongMetadata: vi.fn(() => ({ duration: 120 })),
+        getCurrentSongKey: vi.fn(() => null),
+        updateFooterWithCurrentSong: vi.fn(),
+      }));
+
+      vi.doMock('../assets/internal/db.js', () => ({
+        nDB: {
+          get: vi.fn(() => null),
+          set: vi.fn(),
+          setOnSong: vi.fn(),
+        },
+      }));
+
+      vi.doMock('../services/audio.js', () => ({
+        audio: {
+          currentTime: 0,
+          duration: 120,
+          playbackRate: 1,
+          volume: 1,
+          paused: true,
+          addEventListener: vi.fn(),
+        },
+        loadSong: vi.fn(),
+      }));
+
+      // Ensure no URL hash
+      window.location.hash = '';
+
+      await import('../v2Script.js');
+
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      // rAF fires synchronously in tests, so the condition is met immediately
+      expect((header as any).expanded).toBe(true);
+
+      // The event handler sets songList.visible when header-expand fires
+      expect((songList as any).visible).toBe(true);
+    }, 30000);
   });
 
   describe('marker dialog defaults integration', () => {

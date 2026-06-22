@@ -1260,11 +1260,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // navigation hash (which would trigger a download). The empty
     // state / getting-started screen inside t-media-parent greets
     // the user with actionable options when the library is empty.
-    if (!currentSongKey && !window.location.hash && songList) {
-      songList.visible = true;
-      if (header) {
+    //
+    // We use requestAnimationFrame + the header-expand event so the
+    // CSS transition plays (the component has a chance to render its
+    // initial hidden state before visible is set) and goes through
+    // the same code path as if the user clicked the header.
+    if (!currentSongKey && !window.location.hash && header) {
+      requestAnimationFrame(() => {
         header.expanded = true;
-      }
+        header.dispatchEvent(
+          new CustomEvent('header-expand', {
+            detail: { expanded: true },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      });
     }
 
     // Add audio event listeners for timing

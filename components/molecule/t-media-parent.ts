@@ -1596,7 +1596,7 @@ export class MediaParent extends LitElement {
                   <h2 class="empty-state-title">Welcome to Troff!</h2>
                   <p class="empty-state-subtitle">Get started by adding your first song</p>
                   <div class="empty-state-actions">
-                    <t-butt class="empty-action-btn" href="/#2582986745&demo.mp4">
+                    <t-butt class="empty-action-btn" href="#2582986745&demo.mp4">
                       <t-icon name="note"></t-icon>
                       <span>Download the demo song</span>
                     </t-butt>
