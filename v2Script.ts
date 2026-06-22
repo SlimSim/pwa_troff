@@ -756,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
+    if (typeof document === 'undefined') return;
     if (header) {
       const headerHeight = header.getBoundingClientRect().height;
       document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
@@ -1253,6 +1254,17 @@ document.addEventListener('DOMContentLoaded', () => {
       syncSettingsPanelValues();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
+    }
+
+    // Auto-open song list if no song is selected and there's no
+    // navigation hash (which would trigger a download). The empty
+    // state / getting-started screen inside t-media-parent greets
+    // the user with actionable options when the library is empty.
+    if (!currentSongKey && !window.location.hash && songList) {
+      songList.visible = true;
+      if (header) {
+        header.expanded = true;
+      }
     }
 
     // Add audio event listeners for timing

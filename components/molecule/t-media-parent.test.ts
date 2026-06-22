@@ -1063,3 +1063,133 @@ describe('add song feature', () => {
     });
   });
 });
+
+describe('empty state (no songs, no groups)', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    // Empty library: no songs and no groups
+    (element as any).songs = [];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  // ---- helpers ----
+
+  function getEmptyState(): Element | null {
+    return element.shadowRoot?.querySelector('.empty-state') ?? null;
+  }
+
+  function getActionButtons(): NodeListOf<Element> {
+    return element.shadowRoot?.querySelectorAll('.empty-action-btn') ?? document.querySelectorAll(':none');
+  }
+
+  // ---- tests ----
+
+  it('renders the empty state when there are no songs and no groups', async () => {
+    await element.updateComplete;
+
+    const emptyState = getEmptyState();
+    expect(emptyState).toBeTruthy();
+
+    const title = emptyState?.querySelector('.empty-state-title');
+    expect(title?.textContent).toBe('Welcome to Troff!');
+
+    const subtitle = emptyState?.querySelector('.empty-state-subtitle');
+    expect(subtitle?.textContent).toBe('Get started by adding your first song');
+  });
+
+  it('does not render empty state when songs exist', async () => {
+    (element as any).songs = [{ songKey: '1', title: 'Test Song' }];
+    await element.updateComplete;
+
+    expect(getEmptyState()).toBeFalsy();
+  });
+
+  it('does not render empty state when groups exist (even without songs)', async () => {
+    (element as any).groups = [{ id: '1', name: 'Test Group' }];
+    await element.updateComplete;
+
+    expect(getEmptyState()).toBeFalsy();
+  });
+
+  it('renders three action buttons in the empty state', async () => {
+    await element.updateComplete;
+
+    const buttons = getActionButtons();
+    expect(buttons.length).toBe(3);
+  });
+
+  it('first action button triggers file input click (Add songs from device)', async () => {
+    await element.updateComplete;
+
+    const fileInput = element.shadowRoot?.getElementById('fileInput') as HTMLInputElement | null;
+    expect(fileInput).toBeTruthy();
+
+    const clickSpy = vi.spyOn(fileInput!, 'click');
+
+    // Invoke the handler directly (clicking the t-butt host doesn't cross
+    // the shadow boundary, so we verify the bound method works)
+    (element as any)._handleAddSong();
+
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('second action button links to the demo song hash URL', async () => {
+    await element.updateComplete;
+
+    const buttons = getActionButtons();
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
+
+    const demoBtn = buttons[1] as any;
+    expect(demoBtn.href).toBe('/#2582986745&demo.mp4');
+  });
+
+  it('third action button links to find.html with target _blank', async () => {
+    await element.updateComplete;
+
+    const buttons = getActionButtons();
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
+
+    const findBtn = buttons[2] as any;
+    expect(findBtn.href).toBe('/find.html');
+    expect(findBtn.target).toBe('_blank');
+  });
+
+  it('keeps the header and footer visible when empty', async () => {
+    await element.updateComplete;
+
+    const header = element.shadowRoot?.querySelector('.song-list-header');
+    expect(header).toBeTruthy();
+
+    const footer = element.shadowRoot?.querySelector('t-media-footer');
+    expect(footer).toBeTruthy();
+  });
+
+  it('transitions away from empty state when a song is added', async () => {
+    await element.updateComplete;
+    expect(getEmptyState()).toBeTruthy();
+
+    // Simulate adding a song by populating the songs array
+    (element as any).songs = [{ songKey: 'new', title: 'New Song' }];
+    await element.updateComplete;
+
+    expect(getEmptyState()).toBeFalsy();
+
+    // Normal track list should now be visible
+    const trackList = element.shadowRoot?.querySelector('t-track-list');
+    expect(trackList).toBeTruthy();
+  });
+});

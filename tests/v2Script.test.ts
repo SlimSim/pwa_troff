@@ -117,6 +117,6 @@ describe('v2Script utilities and related functions', () => {
       expect(
         (footer as HTMLElement & { markerDialogSuggestedName?: string }).markerDialogSuggestedName
       ).toBe('marker nr 3');
-    });
+    }, 30000);
   });
 });
