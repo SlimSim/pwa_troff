@@ -295,7 +295,7 @@ export class SettingsPanel extends LitElement {
     }
 
     /* Responsive design */
-    @media (min-width: 576px) {
+@media (min-width: 576px) {
       .panel-content {
         padding: 15px;
       }
@@ -315,11 +315,20 @@ export class SettingsPanel extends LitElement {
       .loop-buttons {
         grid-template-columns: repeat(10, minmax(0, 1fr));
       }
+
+      /* Hide Current Song controls in settings panel on wide screens — sidebar takes over */
+      :host t-current-song-controls {
+        display: none;
+      }
     }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
   @property({ type: String }) versionNumber = '';
+  @property({ type: Boolean }) signedIn = false;
+  @property({ type: String }) userName = '';
+
+  // Current Song Controls - forwarded to t-current-song-controls (for mobile settings panel)
   @property({ type: String }) loopTimesValue = '1';
   @property({ type: Boolean }) playFullSong = false;
   @property({ type: Number }) startBeforeValue = 0;
@@ -328,19 +337,8 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) stopAfterDisabled = false;
   @property({ type: Number }) incrementUntillValue = 0;
   @property({ type: Boolean }) incrementUntillDisabled = false;
-  @property({ type: Boolean }) enterUseTimer = false;
-  @property({ type: Boolean }) enterResetCounter = false;
-  @property({ type: Boolean }) enterGoToMarker = false;
-  @property({ type: Boolean }) spaceUseTimer = false;
-  @property({ type: Boolean }) spaceResetCounter = false;
-  @property({ type: Boolean }) spaceGoToMarker = false;
-  @property({ type: Boolean }) playUseTimer = false;
-  @property({ type: Boolean }) playResetCounter = false;
-  @property({ type: Boolean }) playGoToMarker = false;
-  @property({ type: Boolean }) extendedMarkerColor = false;
-  @property({ type: Boolean }) extraExtendedMarkerColor = false;
 
-  // Global default song values
+  // Global default song values (for advanced panel)
   @property({ type: Number }) defaultStartBeforeValue = 4;
   @property({ type: Boolean }) defaultStartBeforeOn = false;
   @property({ type: Number }) defaultStopAfterValue = 2;
@@ -355,8 +353,19 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) defaultNrLoopsInfiniteOn = false;
   @property({ type: Number }) defaultVolumeValue = 75;
   @property({ type: Number }) defaultSpeedValue = 100;
-  @property({ type: Boolean }) signedIn = false;
-  @property({ type: String }) userName = '';
+
+  // Global controls (app-wide settings)
+  @property({ type: Boolean }) enterUseTimer = false;
+  @property({ type: Boolean }) enterResetCounter = false;
+  @property({ type: Boolean }) enterGoToMarker = false;
+  @property({ type: Boolean }) spaceUseTimer = false;
+  @property({ type: Boolean }) spaceResetCounter = false;
+  @property({ type: Boolean }) spaceGoToMarker = false;
+  @property({ type: Boolean }) playUseTimer = false;
+  @property({ type: Boolean }) playResetCounter = false;
+  @property({ type: Boolean }) playGoToMarker = false;
+  @property({ type: Boolean }) extendedMarkerColor = false;
+  @property({ type: Boolean }) extraExtendedMarkerColor = false;
 
   connectedCallback() {
     super.connectedCallback();
@@ -521,6 +530,17 @@ export class SettingsPanel extends LitElement {
     `;
   }
 
+  private _handleCurrentSongSettingChange(event: CustomEvent) {
+    const { setting, value } = event.detail;
+    // Forward the event from t-current-song-controls
+    this._handleSettingChange(setting, value);
+  }
+
+  private _handleCurrentSongAction(event: CustomEvent) {
+    const { action } = event.detail;
+    this._handleSongAction(action);
+  }
+
   render() {
     return html`
       <div class="panel-content">
@@ -536,146 +556,19 @@ export class SettingsPanel extends LitElement {
         </div>
 
         <div class="settings-shell">
-          <section class="settings-group">
-            <div class="settings-group-header">
-              <div class="settings-group-title-block">
-                <h3 class="settings-group-title">Current Song</h3>
-                <p class="settings-group-copy">
-                  These controls belong to the selected song and are saved with the song.
-                </p>
-              </div>
-              <div class="scope-badge">Saved per song</div>
-            </div>
-
-            <div class="settings-section">
-              <h3>Song Loop</h3>
-              <div class="settings-grid">
-                <div class="setting-item">
-                  <div class="loop-buttons">
-                    ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
-                      (loopTimes) => html`
-                        <t-butt
-                          toggle
-                          .active=${this._isLoopButtonActive(loopTimes)}
-                          @click=${() => this._setLoopTimes(loopTimes)}
-                        >
-                          ${loopTimes === 'Inf' ? '∞' : loopTimes}
-                        </t-butt>
-                      `
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-section">
-              <h3>Song Options</h3>
-              <p class="setting-group-copy">Core playback and practice controls for this song.</p>
-              <div class="settings-grid">
-                <div class="setting-item">
-                  <div class="action-buttons">
-                    <t-butt
-                      ellipsis
-                      .active=${this.playFullSong}
-                      @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
-                    >
-                      Play full song
-                    </t-butt>
-                  </div>
-                </div>
-                <div class="setting-item">
-                  <div class="song-action-buttons">
-                    ${this._renderSongActionButton('zoomOut', 'Zoom out')}
-                    ${this._renderSongActionButton('zoom', 'Zoom')}
-                  </div>
-                </div>
-                <div class="setting-item song-stepper-item">
-                  <div class="song-stepper-grid">
-                    <t-dial
-                      unit="s"
-                      key="b"
-                      label="Start before"
-                      show-disable-button
-                      defaultValue="4"
-                      .value=${this.startBeforeValue}
-                      .disabled=${this.startBeforeDisabled}
-                      .min=${0}
-                      .max=${999}
-                      .step=${1}
-                      @value-changed=${(
-                        event: CustomEvent<{ value: number; disabled?: boolean }>
-                      ) =>
-                        this._setSongNumericSetting(
-                          'startBefore',
-                          event.detail.value,
-                          event.detail.disabled
-                        )}
-                    ></t-dial>
-                    <t-dial
-                      label="Stop after"
-                      key="a"
-                      show-disable-button
-                      unit="s"
-                      defaultValue="2"
-                      .value=${this.stopAfterValue}
-                      .disabled=${this.stopAfterDisabled}
-                      .min=${0}
-                      .max=${999}
-                      .step=${1}
-                      @value-changed=${(
-                        event: CustomEvent<{ value: number; disabled?: boolean }>
-                      ) =>
-                        this._setSongNumericSetting(
-                          'stopAfter',
-                          event.detail.value,
-                          event.detail.disabled
-                        )}
-                    ></t-dial>
-                    <t-dial
-                      label="Increment until"
-                      unit="%"
-                      show-disable-button
-                      defaultValue="100"
-                      .value=${this.incrementUntillValue}
-                      .disabled=${this.incrementUntillDisabled}
-                      .min=${50}
-                      .max=${200}
-                      .step=${1}
-                      @value-changed=${(
-                        event: CustomEvent<{ value: number; disabled?: boolean }>
-                      ) =>
-                        this._setSongNumericSetting(
-                          'incrementUntill',
-                          event.detail.value,
-                          event.detail.disabled
-                        )}
-                    ></t-dial>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-section">
-              <details class="advanced-panel">
-                <summary class="advanced-summary">
-                  <div class="advanced-summary-copy">
-                    <p class="advanced-summary-title">Advanced</p>
-                    <p class="advanced-summary-text">Song-specific marker and transfer actions.</p>
-                  </div>
-                  <span class="advanced-chevron">⌄</span>
-                </summary>
-                <div class="advanced-content">
-                  <div class="song-action-buttons">
-                    ${this._renderSongActionButton('importExport', 'Import / export')}
-                    ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
-                    ${this._renderSongActionButton('moveMarkers', 'Move markers')}
-                    ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
-                    ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
-                  </div>
-                </div>
-              </details>
-            </div>
-          </section>
+          <!-- Current Song Controls - now using the shared component -->
+          <t-current-song-controls
+            .loopTimesValue=${this.loopTimesValue}
+            .playFullSong=${this.playFullSong}
+            .startBeforeValue=${this.startBeforeValue}
+            .startBeforeDisabled=${this.startBeforeDisabled}
+            .stopAfterValue=${this.stopAfterValue}
+            .stopAfterDisabled=${this.stopAfterDisabled}
+            .incrementUntillValue=${this.incrementUntillValue}
+            .incrementUntillDisabled=${this.incrementUntillDisabled}
+            @setting-changed=${this._handleCurrentSongSettingChange}
+            @song-action-requested=${this._handleCurrentSongAction}
+          ></t-current-song-controls>
 
           <details class="advanced-panel">
             <summary class="advanced-summary">

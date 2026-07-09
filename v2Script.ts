@@ -6,6 +6,7 @@ import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
 import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
+import './components/molecule/t-current-song-controls.js';
 import './components/molecule/t-group-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import {
@@ -156,6 +157,7 @@ const setUrlToSong = (serverId: string | number | undefined, songKey: string | n
 document.addEventListener('DOMContentLoaded', () => {
   const footer = document.getElementById('footer') as FooterElement | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
+  const currentSongControls = document.getElementById('currentSongControls') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
@@ -544,6 +546,59 @@ document.addEventListener('DOMContentLoaded', () => {
       Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
   };
 
+  const syncCurrentSongControlsValues = () => {
+    if (!currentSongControls) {
+      return;
+    }
+
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    const rawLoopTimes =
+      songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
+    const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
+
+    currentSongControls.loopTimesValue = Number.isFinite(configuredLoops)
+      ? String(configuredLoops)
+      : 'Inf';
+
+    // Load song-specific numeric settings and their disabled states.
+    // Disabled state must be set BEFORE value so the t-dial knows its disabled
+    // state when receiving the new value (for correct display).
+    if (songKey && songData) {
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === undefined) {
+        const globalStartBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
+        currentSongControls.startBeforeDisabled = !globalStartBeforeOn;
+      } else {
+        currentSongControls.startBeforeDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      }
+      currentSongControls.startBeforeValue = getStartBefore(songData);
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === undefined) {
+        const globalStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
+        currentSongControls.stopAfterDisabled = !globalStopAfterOn;
+      } else {
+        currentSongControls.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      }
+      currentSongControls.stopAfterValue = getStopAfter(songData);
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
+        const globalIncrementUntilOn =
+          nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
+        currentSongControls.incrementUntillDisabled = !globalIncrementUntilOn;
+      } else {
+        currentSongControls.incrementUntillDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      }
+      currentSongControls.incrementUntillValue = getIncrementUntil(songData);
+    } else {
+      currentSongControls.startBeforeValue = 0;
+      currentSongControls.startBeforeDisabled = false;
+      currentSongControls.stopAfterValue = 0;
+      currentSongControls.stopAfterDisabled = false;
+      currentSongControls.incrementUntillValue = 0;
+      currentSongControls.incrementUntillDisabled = false;
+    }
+  };
+
   const syncLoopTimesFromSong = () => {
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
@@ -795,6 +850,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (setting === 'playFullSong') {
         selectFirstAndLastMarkers(true);
         settingsPanel.playFullSong = false;
+        if (currentSongControls) {
+          currentSongControls.playFullSong = false;
+        }
         return;
       }
 
@@ -824,6 +882,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.set(songKey, currentSongData);
         void saveSongData(songKey);
         markerSlider.requestUpdate();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
         return;
       }
 
@@ -857,6 +917,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.set(songKey, currentSongData);
         void saveSongData(songKey);
         markerSlider.requestUpdate();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
         return;
       }
 
@@ -870,6 +932,7 @@ document.addEventListener('DOMContentLoaded', () => {
         void saveSongData(songKey);
         syncLoopTimesFromSong();
         syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
         return;
       }
 
@@ -924,6 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       nDB.set(storageKey, value === true);
       syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
 
       if (setting === 'extendedMarkerColor' || setting === 'extraExtendedMarkerColor') {
         const songKey = getCurrentSongKey();
@@ -946,6 +1010,19 @@ document.addEventListener('DOMContentLoaded', () => {
         await zoomOutTimeline();
       }
     });
+
+    // Forward events from the sidebar current-song-controls to the settings panel,
+    // so the existing handlers process them (single source of truth).
+    if (currentSongControls) {
+      currentSongControls.addEventListener('setting-changed', (event: Event) => {
+        const detail = (event as CustomEvent).detail;
+        settingsPanel.dispatchEvent(new CustomEvent('setting-changed', { detail, bubbles: true, composed: true }));
+      });
+      currentSongControls.addEventListener('song-action-requested', (event: Event) => {
+        const detail = (event as CustomEvent).detail;
+        settingsPanel.dispatchEvent(new CustomEvent('song-action-requested', { detail, bubbles: true, composed: true }));
+      });
+    }
 
     // Handle sign-in / sign-out requests from the settings panel
     settingsPanel.addEventListener('sign-in-requested', async (event: Event) => {
@@ -1004,6 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentKey === songKey && markerSlider) {
               updateMarkerSlider(markerSlider, false);
               syncSettingsPanelValues();
+              syncCurrentSongControlsValues();
               syncLoopTimesFromSong();
             }
           });
@@ -1019,6 +1097,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
     updateHeaderCountdownDisplay();
 
     // Listen for nav-click events
@@ -1223,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateFooterWithCurrentSong();
           syncLoopTimesFromSong();
           syncSettingsPanelValues();
+          syncCurrentSongControlsValues();
           updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
@@ -1252,6 +1332,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
     }
@@ -1392,6 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
     updateHeaderCountdownDisplay();
 
     updateMarkerSlider(markerSlider);
