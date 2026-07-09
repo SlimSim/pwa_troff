@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import type { TroffMarker } from '../types/troff.d.js';
+import {
+  TROFF_SETTING_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+} from '../constants/constants.js';
 
 // Mock nDB before importing the module under test
 const nDBGetMock = vi.fn();
@@ -122,6 +126,88 @@ describe('getIncrementUntil', () => {
   it('should return 100 when songData is undefined', () => {
     nDBGetMock.mockReturnValue(undefined);
     expect(getIncrementUntil(undefined)).toBe(100);
+  });
+});
+
+describe('configureMarkerSlider', () => {
+  let configureMarkerSlider: (markerSlider: any, songData: any) => void;
+
+  beforeAll(async () => {
+    const mod = await import('../utils/troff-settings.js');
+    configureMarkerSlider = mod.configureMarkerSlider;
+  });
+
+  beforeEach(() => {
+    nDBGetMock.mockReset();
+  });
+
+  it('should set fillColor to "through" when both settings are unset (null)', () => {
+    nDBGetMock.mockReturnValue(null);
+    const slider = { fillColor: '' };
+    configureMarkerSlider(slider, {});
+    expect(slider.fillColor).toBe('through');
+  });
+
+  it('should set fillColor to "through" when extraExtended is true', () => {
+    nDBGetMock.mockImplementation((key: string) => {
+      if (key === TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) return true;
+      if (key === TROFF_SETTING_EXTENDED_MARKER_COLOR) return false;
+      return null;
+    });
+    const slider = { fillColor: '' };
+    configureMarkerSlider(slider, {});
+    expect(slider.fillColor).toBe('through');
+  });
+
+  it('should set fillColor to "marker" when extended is true and extraExtended is false', () => {
+    nDBGetMock.mockImplementation((key: string) => {
+      if (key === TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) return false;
+      if (key === TROFF_SETTING_EXTENDED_MARKER_COLOR) return true;
+      return null;
+    });
+    const slider = { fillColor: '' };
+    configureMarkerSlider(slider, {});
+    expect(slider.fillColor).toBe('marker');
+  });
+
+  it('should set fillColor to "" when both are false', () => {
+    nDBGetMock.mockImplementation((key: string) => {
+      if (key === TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) return false;
+      if (key === TROFF_SETTING_EXTENDED_MARKER_COLOR) return false;
+      return null;
+    });
+    const slider = { fillColor: '' };
+    configureMarkerSlider(slider, {});
+    expect(slider.fillColor).toBe('');
+  });
+
+  it('should NOT default to "through" when only extraExtended is unset but extended is set', () => {
+    nDBGetMock.mockImplementation((key: string) => {
+      if (key === TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) return null;
+      if (key === TROFF_SETTING_EXTENDED_MARKER_COLOR) return false;
+      return null;
+    });
+    const slider = { fillColor: '' };
+    configureMarkerSlider(slider, {});
+    expect(slider.fillColor).toBe('');
+  });
+
+  it('should NOT default to "through" when only extended is unset but extraExtended is set', () => {
+    nDBGetMock.mockImplementation((key: string) => {
+      if (key === TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) return true;
+      if (key === TROFF_SETTING_EXTENDED_MARKER_COLOR) return null;
+      return null;
+    });
+    const slider = { fillColor: '' };
+    configureMarkerSlider(slider, {});
+    expect(slider.fillColor).toBe('through');
+  });
+
+  it('should handle null songData gracefully', () => {
+    nDBGetMock.mockReturnValue(null);
+    const slider = { fillColor: '' };
+    expect(() => configureMarkerSlider(slider, null)).not.toThrow();
+    expect(slider.fillColor).toBe('through');
   });
 });
 

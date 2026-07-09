@@ -234,6 +234,54 @@ export class MediaParent extends LitElement {
         font-size: 0.7rem;
       }
     }
+
+    /* ── Empty state (no songs, no groups) ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 32px 24px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      display: block;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      color: var(--on-primary-color);
+    }
+
+    .empty-state-subtitle {
+      font-size: 0.95rem;
+      margin: 0 0 28px 0;
+      opacity: 0.65;
+      color: var(--on-primary-color);
+      line-height: 1.5;
+    }
+
+    .empty-state-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .empty-action-btn {
+      display: flex;
+      width: 100%;
+      font-size: 1rem;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
@@ -262,7 +310,8 @@ export class MediaParent extends LitElement {
   /** The group key of the currently open group detail view (empty = not in a group). */
   @property({ type: String, state: true }) private _currentGroupKey = '';
   /** Type of the current detail context ('group' | 'artist' | 'genre' | ''). */
-  @property({ type: String, state: true }) private _contextType: 'group' | 'artist' | 'genre' | '' = '';
+  @property({ type: String, state: true }) private _contextType: 'group' | 'artist' | 'genre' | '' =
+    '';
   /** Display name for the context bar. */
   @property({ type: String, state: true }) private _contextName = '';
   /** Color for the context bar. */
@@ -350,15 +399,15 @@ export class MediaParent extends LitElement {
         void this.updateComplete.then(() => this.openGroupDetail(state.entity));
       }
     } else if (state.tab === 'artists') {
-      const exists = this.songs.some((s: any) =>
-        (s.artist || 'Unknown').toLowerCase() === state.entity.toLowerCase()
+      const exists = this.songs.some(
+        (s: any) => (s.artist || 'Unknown').toLowerCase() === state.entity.toLowerCase()
       );
       if (exists) {
         void this.updateComplete.then(() => this.openArtistDetail(state.entity));
       }
     } else if (state.tab === 'genre') {
-      const exists = this.songs.some((s: any) =>
-        (s.genre || 'Unknown').toLowerCase() === state.entity.toLowerCase()
+      const exists = this.songs.some(
+        (s: any) => (s.genre || 'Unknown').toLowerCase() === state.entity.toLowerCase()
       );
       if (exists) {
         void this.updateComplete.then(() => this.openGenreDetail(state.entity));
@@ -602,7 +651,7 @@ export class MediaParent extends LitElement {
       this._contextType = 'group';
       this._contextKey = key;
       this._contextName = group?.name || '';
-      this._contextColor = group?.color ? (getBgColor(group.color).color || group.color) : '';
+      this._contextColor = group?.color ? getBgColor(group.color).color || group.color : '';
     } else {
       this._clearContext();
     }
@@ -693,9 +742,7 @@ export class MediaParent extends LitElement {
     // Resolve tracks from songs
     const groupSongs: Array<{ fullPath?: string; galleryId?: string }> = (group as any).songs || [];
     return this.songs.filter((song: any) =>
-      groupSongs.some(
-        (gs) => gs.fullPath === song.songKey || gs.galleryId === song.songKey
-      )
+      groupSongs.some((gs) => gs.fullPath === song.songKey || gs.galleryId === song.songKey)
     ).length;
   }
 
@@ -1281,6 +1328,7 @@ export class MediaParent extends LitElement {
   render() {
     const songs = this.songs;
     const query = this.searchQuery;
+    const isEmpty = songs.length === 0 && this.groups.length === 0;
 
     // Tracks: filter by title, then sort.
     const visibleTracks = this._getVisibleTracks();
@@ -1497,7 +1545,9 @@ export class MediaParent extends LitElement {
                       <t-butt icon @click=${this._handleAddGroup} title="Add group">
                         <t-icon name="group-plus"></t-icon>
                       </t-butt>
-                      <div class="song-count"><t-icon name="note"></t-icon> ${this.groups.length}</div>
+                      <div class="song-count">
+                        <t-icon name="note"></t-icon> ${this.groups.length}
+                      </div>
 
                       <!-- Sort/Filter Button with Dropdown -->
                       <t-dropdown-button
@@ -1522,8 +1572,7 @@ export class MediaParent extends LitElement {
                         @focus=${this._handleSearchFocus}
                         @blur=${this._handleSearchBlur}
                       ></t-input>
-                    `
-                }
+                    `}
               </div>
             `
           : ''}
@@ -1539,43 +1588,69 @@ export class MediaParent extends LitElement {
       />
 
       <div class="songs-container">
-        ${this.currentFilter === 'tracks'
+        ${isEmpty
           ? html`
-              <t-track-list
-                .tracks=${visibleTracks}
-                .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                currentSongKey=${this.currentSongKey}
-              ></t-track-list>
+              <div class="empty-state">
+                <div class="empty-state-content">
+                  <t-icon name="note" class="empty-state-icon" large></t-icon>
+                  <h2 class="empty-state-title">Welcome to Troff!</h2>
+                  <p class="empty-state-subtitle">Get started by adding your first song</p>
+                  <div class="empty-state-actions">
+                    <t-butt class="empty-action-btn" href="#2582986745&demo.mp4">
+                      <t-icon name="note"></t-icon>
+                      <span>Download the demo song</span>
+                    </t-butt>
+                    <t-butt class="empty-action-btn" @click=${this._handleAddSong}>
+                      <t-icon name="note-plus"></t-icon>
+                      <span>Add songs from device</span>
+                    </t-butt>
+                    <t-butt class="empty-action-btn" href="/find.html" target="_blank">
+                      <t-icon name="note-search"></t-icon>
+                      <span>Find songs online</span>
+                    </t-butt>
+                  </div>
+                </div>
+              </div>
             `
-          : ''}
-        ${this.currentFilter === 'artists'
-          ? html`
-              <t-artist-list
-                .artists=${visibleArtists}
-                .tracks=${songs}
-                currentSongKey=${this.currentSongKey}
-              ></t-artist-list>
-            `
-          : ''}
-        ${this.currentFilter === 'genre'
-          ? html`
-              <t-genre-list
-                .genres=${visibleGenres}
-                .tracks=${songs}
-                currentSongKey=${this.currentSongKey}
-              ></t-genre-list>
-            `
-          : ''}
-        ${this.currentFilter === 'groups'
-          ? html`
-              <t-group-list
-                .groups=${visibleGroups}
-                .tracks=${songs}
-                currentSongKey=${this.currentSongKey}
-                groupTrackSearch=${this.searchQuery}
-              ></t-group-list>
-            `
-          : ''}
+          : html`
+              ${this.currentFilter === 'tracks'
+                ? html`
+                    <t-track-list
+                      .tracks=${visibleTracks}
+                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                      currentSongKey=${this.currentSongKey}
+                    ></t-track-list>
+                  `
+                : ''}
+              ${this.currentFilter === 'artists'
+                ? html`
+                    <t-artist-list
+                      .artists=${visibleArtists}
+                      .tracks=${songs}
+                      currentSongKey=${this.currentSongKey}
+                    ></t-artist-list>
+                  `
+                : ''}
+              ${this.currentFilter === 'genre'
+                ? html`
+                    <t-genre-list
+                      .genres=${visibleGenres}
+                      .tracks=${songs}
+                      currentSongKey=${this.currentSongKey}
+                    ></t-genre-list>
+                  `
+                : ''}
+              ${this.currentFilter === 'groups'
+                ? html`
+                    <t-group-list
+                      .groups=${visibleGroups}
+                      .tracks=${songs}
+                      currentSongKey=${this.currentSongKey}
+                      groupTrackSearch=${this.searchQuery}
+                    ></t-group-list>
+                  `
+                : ''}
+            `}
       </div>
 
       <t-media-footer

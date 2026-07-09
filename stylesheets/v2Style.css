@@ -5,3 +5,60 @@ body {
   background-color: var(--secondary-color);
   color: var(--on-secondary-color);
 }
+
+/* Cookie consent notification — v2 theme
+   Matches the dialog style used by v2 components (t-group-dialog, etc.):
+   light background, theme-colored text, subtle shadow, clean look. */
+.notifyjs-corner .notifyjs-html-info-base {
+  background: var(--on-theme-color, #eee);
+  color: var(--theme-color, #003366);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  background: var(--primary-color) !important;
+  color: var(--on-primary-color) !important;
+  border-color: var(--primary-color) !important;
+
+  background-image: none;
+  width: 280px;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.notifyjs-corner .notifyjs-html-info-base .title {
+  float: none;
+}
+
+.notifyjs-corner .notifyjs-html-info-base h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.notifyjs-corner .notifyjs-html-info-base p {
+  float: none;
+  padding: 0;
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.notifyjs-corner .notifyjs-html-info-base a {
+  color: var(--on-primary-color-link, #0051a8);
+  font-size: 0.85rem;
+}
+
+.notifyjs-corner .notifyjs-html-info-base button {
+  min-width: 42px;
+  min-height: 35px;
+  font-size: 0.85rem;
+  margin: 0;
+  border-width: 0;
+  border-radius: var(--button-border-radius);
+  padding: 1px 6px;
+  background-color: var(--regular-button-color, #b0bec5);
+  color: var(--on-regular-buton-color, black);
+  cursor: pointer;
+  float: none;
+}

@@ -507,9 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
-    settingsPanel.extendedMarkerColor = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR) === true;
+    const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
+    const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
+    settingsPanel.extendedMarkerColor = extendedColorSetting === true;
     settingsPanel.extraExtendedMarkerColor =
-      nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR) === true;
+      (extendedColorSetting === null && extraExtendedColorSetting === null) ||
+      extraExtendedColorSetting === true;
 
     // Load global default song values from nDB
     settingsPanel.defaultStartBeforeValue =
@@ -753,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
+    if (typeof document === 'undefined') return;
     if (header) {
       const headerHeight = header.getBoundingClientRect().height;
       document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
@@ -1250,6 +1254,28 @@ document.addEventListener('DOMContentLoaded', () => {
       syncSettingsPanelValues();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
+    }
+
+    // Auto-open song list if no song is selected and there's no
+    // navigation hash (which would trigger a download). The empty
+    // state / getting-started screen inside t-media-parent greets
+    // the user with actionable options when the library is empty.
+    //
+    // We use requestAnimationFrame + the header-expand event so the
+    // CSS transition plays (the component has a chance to render its
+    // initial hidden state before visible is set) and goes through
+    // the same code path as if the user clicked the header.
+    if (!currentSongKey && !window.location.hash && header) {
+      requestAnimationFrame(() => {
+        header.expanded = true;
+        header.dispatchEvent(
+          new CustomEvent('header-expand', {
+            detail: { expanded: true },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      });
     }
 
     // Add audio event listeners for timing
