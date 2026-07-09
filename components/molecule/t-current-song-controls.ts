@@ -302,6 +302,8 @@ export class CurrentSongControls extends LitElement {
   @property({ type: Number }) defaultVolumeValue = 75;
   @property({ type: Number }) defaultSpeedValue = 100;
 
+  @property({ type: Boolean }) hideGlobalControls = false;
+
   private _handleSettingChange(setting: string, value: unknown) {
     this.dispatchEvent(
       new CustomEvent('setting-changed', {
@@ -563,6 +565,7 @@ export class CurrentSongControls extends LitElement {
           </div>
         </section>
 
+        ${!this.hideGlobalControls ? html`
         <details class="advanced-panel" style="margin-top: 16px;">
           <summary class="advanced-summary">
             <div class="advanced-summary-copy">
@@ -909,6 +912,7 @@ export class CurrentSongControls extends LitElement {
             </details>
           </div>
         </details>
+        ` : ''}
       </div>
     `;
   }
