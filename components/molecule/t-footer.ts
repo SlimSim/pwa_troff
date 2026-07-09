@@ -90,6 +90,12 @@ export class BottomNav extends LitElement {
       font-weight: 700;
       margin-bottom: 2px;
     }
+
+    @media (min-width: 576px) {
+      .hide-on-wide {
+        display: none;
+      }
+    }
   `;
 
   private _handleNavClick(event: Event, action: string) {
@@ -216,7 +222,7 @@ export class BottomNav extends LitElement {
   render() {
     return html`
       <div class="nav-container">
-        <div class="nav-item">
+        <div class="nav-item hide-on-wide">
           <t-dropdown-button
             position="up"
             align="left"
@@ -259,7 +265,7 @@ export class BottomNav extends LitElement {
           </t-dropdown-button>
         </div>
 
-        <div class="nav-item">
+        <div class="nav-item hide-on-wide">
           <t-dropdown-button
             position="up"
             align="left"

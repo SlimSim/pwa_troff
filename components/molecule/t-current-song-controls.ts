@@ -191,6 +191,16 @@ export class CurrentSongControls extends LitElement {
       min-width: 0;
     }
 
+    .playback-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .playback-grid t-dial {
+      min-width: 0;
+    }
+
     .setting-item.song-stepper-item {
       align-items: stretch;
       justify-content: stretch;
@@ -277,6 +287,12 @@ export class CurrentSongControls extends LitElement {
   @property({ type: Boolean }) stopAfterDisabled = false;
   @property({ type: Number }) incrementUntillValue = 0;
   @property({ type: Boolean }) incrementUntillDisabled = false;
+  @property({ type: Number }) pauseBefore = 3;
+  @property({ type: Number }) waitBetween = 1;
+  @property({ type: Boolean }) disablePauseBefore = false;
+  @property({ type: Boolean }) disableWaitBetween = false;
+  @property({ type: Number }) volume = 75;
+  @property({ type: Number }) speed = 100;
   @property({ type: Boolean }) enterUseTimer = false;
   @property({ type: Boolean }) enterResetCounter = false;
   @property({ type: Boolean }) enterGoToMarker = false;
@@ -540,6 +556,82 @@ export class CurrentSongControls extends LitElement {
                         event.detail.value,
                         event.detail.disabled
                       )}
+                  ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Playback Controls</h3>
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid playback-grid">
+                  <t-dial
+                    key="p"
+                    label="Pause before"
+                    iconName="pause-before"
+                    unit="s"
+                    defaultValue="3"
+                    show-disable-button
+                    .value=${this.pauseBefore}
+                    .disabled=${this.disablePauseBefore}
+                    @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      this.pauseBefore = event.detail.value;
+                      if (event.detail.disabled !== undefined) {
+                        this.disablePauseBefore = event.detail.disabled;
+                        this._handleSettingChange('pauseBeforeDisabled', event.detail.disabled);
+                      }
+                      this._handleSettingChange('pauseBefore', event.detail.value);
+                    }}
+                  ></t-dial>
+                  <t-dial
+                    key="w"
+                    label="Wait between"
+                    iconName="wait-between"
+                    unit="s"
+                    defaultValue="1"
+                    show-disable-button
+                    .value=${this.waitBetween}
+                    .disabled=${this.disableWaitBetween}
+                    @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) => {
+                      this.waitBetween = event.detail.value;
+                      if (event.detail.disabled !== undefined) {
+                        this.disableWaitBetween = event.detail.disabled;
+                        this._handleSettingChange('waitBetweenDisabled', event.detail.disabled);
+                      }
+                      this._handleSettingChange('waitBetween', event.detail.value);
+                    }}
+                  ></t-dial>
+                  <t-dial
+                    key="v"
+                    min="0"
+                    max="100"
+                    step="5"
+                    label="Volume"
+                    iconName="volume"
+                    unit=""
+                    defaultValue="75"
+                    .value=${this.volume}
+                    @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                      this.volume = event.detail.value;
+                      this._handleSettingChange('volume', event.detail.value);
+                    }}
+                  ></t-dial>
+                  <t-dial
+                    key="s"
+                    min="50"
+                    max="200"
+                    step="5"
+                    label="Speed"
+                    iconName="speed"
+                    unit="%"
+                    defaultValue="100"
+                    .value=${this.speed}
+                    @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                      this.speed = event.detail.value;
+                      this._handleSettingChange('speed', event.detail.value);
+                    }}
                   ></t-dial>
                 </div>
               </div>

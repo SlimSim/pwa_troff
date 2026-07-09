@@ -589,6 +589,40 @@ document.addEventListener('DOMContentLoaded', () => {
           songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       }
       currentSongControls.incrementUntillValue = getIncrementUntil(songData);
+
+      // Sync playback controls (pause before, wait between, volume, speed)
+      const parseStoredNumber = (value: unknown, fallback: number) => {
+        const parsedValue = Number(value);
+        return Number.isFinite(parsedValue) ? parsedValue : fallback;
+      };
+      currentSongControls.pauseBefore = parseStoredNumber(
+        songData.TROFF_VALUE_pauseBeforeStart,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE')) || 3
+      );
+      currentSongControls.waitBetween = parseStoredNumber(
+        songData.TROFF_VALUE_waitBetweenLoops,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE')) || 1
+      );
+      currentSongControls.volume = parseStoredNumber(
+        songData.TROFF_VALUE_volumeBar,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE')) || 75
+      );
+      currentSongControls.speed = parseStoredNumber(
+        songData.TROFF_VALUE_speedBar,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100
+      );
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart === undefined) {
+        const globalPauseBeforeOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON') ?? true;
+        currentSongControls.disablePauseBefore = !globalPauseBeforeOn;
+      } else {
+        currentSongControls.disablePauseBefore = !songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart;
+      }
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops === undefined) {
+        const globalWaitBetweenOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON') ?? true;
+        currentSongControls.disableWaitBetween = !globalWaitBetweenOn;
+      } else {
+        currentSongControls.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+      }
     } else {
       currentSongControls.startBeforeValue = 0;
       currentSongControls.startBeforeDisabled = false;
@@ -596,6 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
       currentSongControls.stopAfterDisabled = false;
       currentSongControls.incrementUntillValue = 0;
       currentSongControls.incrementUntillDisabled = false;
+      currentSongControls.pauseBefore = 3;
+      currentSongControls.waitBetween = 1;
+      currentSongControls.volume = 75;
+      currentSongControls.speed = 100;
+      currentSongControls.disablePauseBefore = false;
+      currentSongControls.disableWaitBetween = false;
     }
   };
 
@@ -936,6 +976,50 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Handle playback controls (pause before, wait between, volume, speed)
+      if (
+        setting === 'pauseBefore' ||
+        setting === 'waitBetween' ||
+        setting === 'volume' ||
+        setting === 'speed' ||
+        setting === 'pauseBeforeDisabled' ||
+        setting === 'waitBetweenDisabled'
+      ) {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        if (setting === 'pauseBefore') {
+          currentSongData.TROFF_VALUE_pauseBeforeStart = value;
+        }
+        if (setting === 'waitBetween') {
+          currentSongData.TROFF_VALUE_waitBetweenLoops = value;
+        }
+        if (setting === 'volume') {
+          currentSongData.TROFF_VALUE_volumeBar = value;
+          audio.volume = Number(value) / 100;
+        }
+        if (setting === 'speed') {
+          currentSongData.TROFF_VALUE_speedBar = value;
+          audio.playbackRate = Number(value) / 100;
+        }
+        if (setting === 'pauseBeforeDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = !value;
+        }
+        if (setting === 'waitBetweenDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops = !value;
+        }
+
+        nDB.set(songKey, currentSongData);
+        void saveSongData(songKey);
+        updateFooterWithCurrentSong();
+        updateHeaderCountdownDisplay();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+        return;
+      }
+
       // Save global default song values to nDB
       const defaultNumericKeyBySetting: Record<string, string> = {
         defaultStartBeforeValue: TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
@@ -1118,6 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
         void saveSongData(songKey);
       }
+      syncCurrentSongControlsValues();
     });
 
     footer.addEventListener('volume-changed', (event: any) => {
@@ -1127,6 +1212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_volumeBar', event.detail.volume);
         void saveSongData(songKey);
       }
+      syncCurrentSongControlsValues();
     });
 
     // Listen for pause before and wait between changes
@@ -1138,6 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         void saveSongData(songKey);
       }
       updateHeaderCountdownDisplay();
+      syncCurrentSongControlsValues();
     });
 
     footer.addEventListener('wait-between-changed', (event: any) => {
@@ -1151,6 +1238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         void saveSongData(songKey);
       }
+      syncCurrentSongControlsValues();
     });
 
     footer.addEventListener('marker-created', (event: any) => {
