@@ -125,10 +125,17 @@ export class CurrentSongControls extends LitElement {
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 8px;
       width: 100%;
+      container-type: inline-size;
     }
 
     .loop-buttons t-butt {
       width: 100%;
+    }
+
+    @container (min-width: 450px) {
+      .loop-buttons {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+      }
     }
 
     .setting-group-title {
@@ -258,10 +265,6 @@ export class CurrentSongControls extends LitElement {
 
       .song-action-buttons {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .loop-buttons {
-        grid-template-columns: repeat(10, minmax(0, 1fr));
       }
     }
   `;
