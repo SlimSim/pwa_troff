@@ -45,7 +45,7 @@
      id="g1"
      transform="scale(0.85713721)">
     <path
-       stroke="#222222"
+       stroke="currentColor"
        id="circle1"
        style="fill:none;stroke-width:2.15706;stroke-dasharray:none"
        sodipodi:type="arc"
@@ -61,7 +61,7 @@
        transform="rotate(83.862524)" />
     <path
        d="M 8.0864278,15.184136 12.025096,12.079459 12.000004,5.6651297"
-       stroke="#222222"
+       stroke="currentColor"
        stroke-linecap="round"
        id="path1"
        style="fill:none;stroke-width:2.15706;stroke-dasharray:none"
