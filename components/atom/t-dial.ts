@@ -110,19 +110,6 @@ export class Dial extends LitElement {
       align-items: flex-start;
     }
 
-    .title-inline {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      white-space: nowrap;
-    }
-
-    .title-label {
-      margin: 0;
-      font-size: 0.7em;
-      line-height: 1;
-    }
-
     .value-controls t-butt {
       margin: -2px;
     }
@@ -199,6 +186,21 @@ export class Dial extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .name-button {
+      font-size: 0.6em;
+    }
+
+    .name-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .non-interactive {
+      pointer-events: none;
+      cursor: default;
     }
   `;
 
@@ -506,13 +508,32 @@ export class Dial extends LitElement {
   render() {
     return html`
       <div class="dial-row">
-        ${this.iconName || this.label
-          ? html`<div class="title-inline">
-              ${this.iconName ? html`<t-icon name="${this.iconName}"></t-icon>` : ''}
-              ${this.label ? html`<p class="title-label">${this.label}</p>` : ''}
-            </div>`
-          : ''}
         <div class="value-controls ${this.disabled ? 'disabled' : ''}">
+          ${this.showDisableButton
+            ? html`
+                <t-butt
+                  class="side-button name-button"
+                  .active=${!this.disabled}
+                  .key=${this.key}
+                  @click=${this._handleDisabledToggle}
+                  title="${this.label}"
+                >
+                  <span class="name-content">
+                    ${this.iconName ? html`<t-icon name="${this.iconName}"></t-icon>` : ''}
+                    ${this.label ? html`<span>${this.label}</span>` : ''}
+                  </span>
+                </t-butt>
+              `
+            : this.iconName || this.label
+              ? html`
+                  <t-butt class="name-button non-interactive">
+                    <span class="name-content">
+                      ${this.iconName ? html`<t-icon name="${this.iconName}"></t-icon>` : ''}
+                      ${this.label ? html`<span>${this.label}</span>` : ''}
+                    </span>
+                  </t-butt>
+                `
+              : ''}
           ${this._hasDefaultValue()
             ? html`
                 <t-butt
@@ -523,19 +544,6 @@ export class Dial extends LitElement {
                     <t-icon class="reset-icon" name="reset"></t-icon>
                     <span class="reset-text">${this.defaultValue}${this.unit}</span>
                   </span>
-                </t-butt>
-              `
-            : ''}
-          ${this.showDisableButton
-            ? html`
-                <t-butt
-                  class="icon side-button"
-                  .active=${this.disabled}
-                  .key=${this.key}
-                  @click=${this._handleDisabledToggle}
-                  title="Disable ${this.label}"
-                >
-                  <t-icon name="disable"></t-icon>
                 </t-butt>
               `
             : ''}

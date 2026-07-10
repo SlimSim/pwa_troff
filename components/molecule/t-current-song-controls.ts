@@ -200,8 +200,9 @@ export class CurrentSongControls extends LitElement {
     }
 
     .playback-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       gap: 12px;
     }
 
@@ -485,8 +486,24 @@ export class CurrentSongControls extends LitElement {
           </div>
 
           <div class="settings-section">
-            <h3>Song Options</h3>
-            <p class="setting-group-copy">Core playback and practice controls for this song.</p>
+            <h3>
+              Song Options
+              <t-help-tip>
+                <p>These options control how the song is played back.</p>
+                <ul>
+                  <li><b>Play full song</b> will select the first and last markers</li>
+                  <li><b>Zoom</b> will zoom in to the active playing region</li>
+                  <li>
+                    <b>Start before</b> and <b>stop after</b> determine how many seconds before and
+                    after the selected markers is played back.
+                  </li>
+                  <li>
+                    <b>Increment until</b> will determine at what speed the song will play the final
+                    loop, and it will increment every loop until it reaches that speed.
+                  </li>
+                </ul>
+              </t-help-tip>
+            </h3>
             <div class="settings-grid">
               <div class="setting-item">
                 <div class="action-buttons">
