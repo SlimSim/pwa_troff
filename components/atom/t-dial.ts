@@ -195,7 +195,15 @@ export class Dial extends LitElement {
     .name-content {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 4px;
+      min-width: 50px;
+    }
+
+    .value-content {
+      display: inline-block;
+      min-width: 37px;
+      text-align: center;
     }
 
     .non-interactive {
@@ -562,7 +570,7 @@ export class Dial extends LitElement {
             @touchstart=${this._handleValueTouchStart}
             title="Press and hold to use dial"
           >
-            ${this._value}${this.unit}
+            <span class="value-content">${this._value}${this.unit}</span>
           </t-butt>
           <t-butt
             class="icon"

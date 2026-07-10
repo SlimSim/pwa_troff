@@ -147,9 +147,6 @@ export class SettingsPanel extends LitElement {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px;
-      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
-      border-radius: 5px;
     }
 
     .setting-item > * {
