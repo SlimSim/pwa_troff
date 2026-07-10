@@ -57,6 +57,12 @@ export class BottomNav extends LitElement {
       margin: 0 auto;
     }
 
+    @media (min-width: 768px) {
+      .nav-container {
+        justify-content: space-around;
+      }
+    }
+
     .nav-item t-icon {
       transition: transform 0.3s ease-in-out;
       transform-style: preserve-3d;
@@ -91,7 +97,7 @@ export class BottomNav extends LitElement {
       margin-bottom: 2px;
     }
 
-    @media (min-width: 576px) {
+    @media (min-width: 768px) {
       .hide-on-wide {
         display: none;
       }
@@ -222,47 +228,13 @@ export class BottomNav extends LitElement {
   render() {
     return html`
       <div class="nav-container">
-        <div class="nav-item hide-on-wide">
-          <t-dropdown-button
-            position="up"
-            align="left"
-            .open=${this.showTimeDropdown}
-            @dropdown-toggled=${this._handleTimeDropdownToggled}
-          >
-            <t-butt slot="button" title="Wait control">
-              <t-icon
-                name="time"
-                label="${this.isPlaying
-                  ? `${this.disableWaitBetween ? 0 : this.waitBetween}`
-                  : `${this.disablePauseBefore ? 0 : this.pauseBefore}`}"
-                unit="s"
-              ></t-icon>
-            </t-butt>
-            <div slot="dropdown" class="time-dropdown-content">
-              <t-dial
-                key="p"
-                label="Pause before"
-                iconName="pause-before"
-                unit="s"
-                defaultValue="3"
-                show-disable-button
-                .value=${this.pauseBefore}
-                .disabled=${this.disablePauseBefore}
-                @value-changed=${this._handlePauseBeforeChanged}
-              ></t-dial>
-              <t-dial
-                key="w"
-                label="Wait between"
-                iconName="wait-between"
-                unit="s"
-                defaultValue="1"
-                show-disable-button
-                .value=${this.waitBetween}
-                .disabled=${this.disableWaitBetween}
-                @value-changed=${this._handleWaitBetweenChanged}
-              ></t-dial>
-            </div>
-          </t-dropdown-button>
+        <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
+          <t-butt title="Settings" icon>
+            <t-icon
+              name="chevron-up"
+              class="${this.settingsPanelVisible ? 'flipped' : ''}"
+            ></t-icon>
+          </t-butt>
         </div>
 
         <div class="nav-item hide-on-wide">
@@ -343,13 +315,47 @@ export class BottomNav extends LitElement {
           </t-dropdown-button>
         </div>
 
-        <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
-          <t-butt title="Settings" icon>
-            <t-icon
-              name="chevron-up"
-              class="${this.settingsPanelVisible ? 'flipped' : ''}"
-            ></t-icon>
-          </t-butt>
+        <div class="nav-item hide-on-wide">
+          <t-dropdown-button
+            position="up"
+            align="left"
+            .open=${this.showTimeDropdown}
+            @dropdown-toggled=${this._handleTimeDropdownToggled}
+          >
+            <t-butt slot="button" title="Wait control">
+              <t-icon
+                name="time"
+                label="${this.isPlaying
+                  ? `${this.disableWaitBetween ? 0 : this.waitBetween}`
+                  : `${this.disablePauseBefore ? 0 : this.pauseBefore}`}"
+                unit="s"
+              ></t-icon>
+            </t-butt>
+            <div slot="dropdown" class="time-dropdown-content">
+              <t-dial
+                key="p"
+                label="Pause before"
+                iconName="pause-before"
+                unit="s"
+                defaultValue="3"
+                show-disable-button
+                .value=${this.pauseBefore}
+                .disabled=${this.disablePauseBefore}
+                @value-changed=${this._handlePauseBeforeChanged}
+              ></t-dial>
+              <t-dial
+                key="w"
+                label="Wait between"
+                iconName="wait-between"
+                unit="s"
+                defaultValue="1"
+                show-disable-button
+                .value=${this.waitBetween}
+                .disabled=${this.disableWaitBetween}
+                @value-changed=${this._handleWaitBetweenChanged}
+              ></t-dial>
+            </div>
+          </t-dropdown-button>
         </div>
       </div>
     `;

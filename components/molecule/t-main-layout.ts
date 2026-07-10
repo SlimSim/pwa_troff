@@ -41,7 +41,7 @@ export class MainLayout extends LitElement {
     }
 
     /* Responsive: show sidebar on wide screens */
-    @media (min-width: 576px) {
+    @media (min-width: 768px) {
       .sidebar {
         display: flex;
       }

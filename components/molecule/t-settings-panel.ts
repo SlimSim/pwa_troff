@@ -295,7 +295,7 @@ export class SettingsPanel extends LitElement {
     }
 
     /* Responsive design */
-@media (min-width: 576px) {
+    @media (min-width: 576px) {
       .panel-content {
         padding: 15px;
       }
@@ -315,8 +315,10 @@ export class SettingsPanel extends LitElement {
       .loop-buttons {
         grid-template-columns: repeat(10, minmax(0, 1fr));
       }
+    }
 
-      /* Hide Current Song controls in settings panel on wide screens — sidebar takes over */
+    /* Hide Current Song controls in settings panel on wide screens — sidebar takes over */
+    @media (min-width: 768px) {
       :host t-current-song-controls {
         display: none;
       }
@@ -547,7 +549,12 @@ export class SettingsPanel extends LitElement {
         <div class="panel-header">
           <h2 class="panel-title">Settings</h2>
           <div style="display:flex; gap:8px; align-items:center;">
-            ${this.signedIn ? html`<span style="font-size:0.9rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${this.userName || 'Signed in'}</span>` : ''}
+            ${this.signedIn
+              ? html`<span
+                  style="font-size:0.9rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                  >${this.userName || 'Signed in'}</span
+                >`
+              : ''}
             <t-butt @click=${this._handleSignInClick}>
               ${this.signedIn ? 'Sign out' : 'Sign in'}
             </t-butt>
