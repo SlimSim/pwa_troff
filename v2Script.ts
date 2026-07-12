@@ -637,6 +637,24 @@ document.addEventListener('DOMContentLoaded', () => {
       currentSongControls.disablePauseBefore = false;
       currentSongControls.disableWaitBetween = false;
     }
+
+    // Also sync the settings panel's instance (visible on mobile when sidebar is hidden)
+    const settingsControls = document.querySelector('#settingsCurrentSongControls') as any;
+    if (settingsControls) {
+      settingsControls.loopTimesValue = currentSongControls.loopTimesValue;
+      settingsControls.startBeforeDisabled = currentSongControls.startBeforeDisabled;
+      settingsControls.startBeforeValue = currentSongControls.startBeforeValue;
+      settingsControls.stopAfterDisabled = currentSongControls.stopAfterDisabled;
+      settingsControls.stopAfterValue = currentSongControls.stopAfterValue;
+      settingsControls.incrementUntillDisabled = currentSongControls.incrementUntillDisabled;
+      settingsControls.incrementUntillValue = currentSongControls.incrementUntillValue;
+      settingsControls.pauseBefore = currentSongControls.pauseBefore;
+      settingsControls.waitBetween = currentSongControls.waitBetween;
+      settingsControls.volume = currentSongControls.volume;
+      settingsControls.speed = currentSongControls.speed;
+      settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
+      settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
+    }
   };
 
   const syncLoopTimesFromSong = () => {

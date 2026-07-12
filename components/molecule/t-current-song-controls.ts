@@ -196,20 +196,21 @@ export class CurrentSongControls extends LitElement {
       min-width: 0;
     }
 
-    .playback-grid {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .playback-grid t-dial {
-      min-width: 0;
-    }
-
     .setting-item.song-stepper-item {
       align-items: stretch;
       justify-content: stretch;
+    }
+
+    /* Hide playback controls (pause before, wait between, volume, speed) on narrow screens
+       — they live in the footer on mobile. Visible in sidebar on wide screens. */
+    .playback-control-section {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .playback-control-section {
+        display: block;
+      }
     }
 
     details.advanced-panel {
@@ -453,54 +454,46 @@ export class CurrentSongControls extends LitElement {
           <div class="settings-group-header">
             <div class="settings-group-title-block">
               <h3 class="settings-group-title">
-                Settings
+                Settings Marker
                 <t-help-tip>
-                  These controls are specific to the selected song and will be saved with it.
+                  These options control how the song is played back.
+                  <ul>
+                    <li>Play full song will select the first and last markers.</li>
+                    <li>Zoom will zoom in to the active playing region.</li>
+                    <li>
+                      Start before and stop after determine how many seconds before and after the
+                      selected markers is played back.
+                    </li>
+                  </ul>
                 </t-help-tip>
               </h3>
             </div>
           </div>
 
+          <!-- 1. Advanced -->
           <div class="settings-section">
-            <h3>Song Loop</h3>
-            <div class="settings-grid">
-              <div class="setting-item">
-                <div class="loop-buttons">
-                  ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
-                    (loopTimes) => html`
-                      <t-butt
-                        toggle
-                        .active=${this._isLoopButtonActive(loopTimes)}
-                        @click=${() => this._setLoopTimes(loopTimes)}
-                      >
-                        ${loopTimes === 'Inf' ? '∞' : loopTimes}
-                      </t-butt>
-                    `
-                  )}
+            <details class="advanced-panel">
+              <summary class="advanced-summary">
+                <div class="advanced-summary-copy">
+                  <p class="advanced-summary-title">Advanced</p>
+                  <p class="advanced-summary-text">Song-specific marker and transfer actions.</p>
+                </div>
+                <span class="advanced-chevron">⌄</span>
+              </summary>
+              <div class="advanced-content">
+                <div class="song-action-buttons">
+                  ${this._renderSongActionButton('importExport', 'Import / export')}
+                  ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
+                  ${this._renderSongActionButton('moveMarkers', 'Move markers')}
+                  ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
+                  ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
                 </div>
               </div>
-            </div>
+            </details>
           </div>
 
+          <!-- 2. Play full song -->
           <div class="settings-section">
-            <h3>
-              Song Options
-              <t-help-tip>
-                <p>These options control how the song is played back.</p>
-                <ul>
-                  <li><b>Play full song</b> will select the first and last markers</li>
-                  <li><b>Zoom</b> will zoom in to the active playing region</li>
-                  <li>
-                    <b>Start before</b> and <b>stop after</b> determine how many seconds before and
-                    after the selected markers is played back.
-                  </li>
-                  <li>
-                    <b>Increment until</b> will determine at what speed the song will play the final
-                    loop, and it will increment every loop until it reaches that speed.
-                  </li>
-                </ul>
-              </t-help-tip>
-            </h3>
             <div class="settings-grid">
               <div class="setting-item">
                 <div class="action-buttons">
@@ -513,12 +506,24 @@ export class CurrentSongControls extends LitElement {
                   </t-butt>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 3. Zoom out / Zoom -->
+          <div class="settings-section">
+            <div class="settings-grid">
               <div class="setting-item">
                 <div class="song-action-buttons">
                   ${this._renderSongActionButton('zoomOut', 'Zoom out')}
                   ${this._renderSongActionButton('zoom', 'Zoom')}
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 4. Start before -->
+          <div class="settings-section">
+            <div class="settings-grid">
               <div class="setting-item song-stepper-item">
                 <div class="song-stepper-grid">
                   <t-dial
@@ -539,6 +544,16 @@ export class CurrentSongControls extends LitElement {
                         event.detail.disabled
                       )}
                   ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Stop after -->
+          <div class="settings-section">
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid">
                   <t-dial
                     label="Stop after"
                     key="a"
@@ -557,6 +572,91 @@ export class CurrentSongControls extends LitElement {
                         event.detail.disabled
                       )}
                   ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Loop headline -->
+          <div class="settings-section">
+            <h3>
+              Loop
+              <t-help-tip>
+                <ul>
+                  <li>
+                    Increment until will determine at what speed the song will play the final loop,
+                    and it will increment every loop until it reaches that speed.
+                  </li>
+                </ul>
+              </t-help-tip>
+            </h3>
+          </div>
+
+          <!-- 7. Pause before -->
+          <div class="settings-section playback-control-section">
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid">
+                  <t-dial
+                    key="p"
+                    label="Pause before"
+                    iconName="pause-before"
+                    unit="s"
+                    defaultValue="3"
+                    show-disable-button
+                    .value=${this.pauseBefore}
+                    .disabled=${this.disablePauseBefore}
+                    @value-changed=${(
+                      event: CustomEvent<{ value: number; disabled?: boolean }>
+                    ) => {
+                      this.pauseBefore = event.detail.value;
+                      if (event.detail.disabled !== undefined) {
+                        this.disablePauseBefore = event.detail.disabled;
+                        this._handleSettingChange('pauseBeforeDisabled', event.detail.disabled);
+                      }
+                      this._handleSettingChange('pauseBefore', event.detail.value);
+                    }}
+                  ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. Wait between -->
+          <div class="settings-section playback-control-section">
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid">
+                  <t-dial
+                    key="w"
+                    label="Wait between"
+                    iconName="wait-between"
+                    unit="s"
+                    defaultValue="1"
+                    show-disable-button
+                    .value=${this.waitBetween}
+                    .disabled=${this.disableWaitBetween}
+                    @value-changed=${(
+                      event: CustomEvent<{ value: number; disabled?: boolean }>
+                    ) => {
+                      this.waitBetween = event.detail.value;
+                      if (event.detail.disabled !== undefined) {
+                        this.disableWaitBetween = event.detail.disabled;
+                        this._handleSettingChange('waitBetweenDisabled', event.detail.disabled);
+                      }
+                      this._handleSettingChange('waitBetween', event.detail.value);
+                    }}
+                  ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 9. Increment until -->
+          <div class="settings-section">
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid">
                   <t-dial
                     label="Increment until"
                     unit="%"
@@ -579,51 +679,32 @@ export class CurrentSongControls extends LitElement {
             </div>
           </div>
 
+          <!-- 10. Loop buttons (nr of loops) -->
           <div class="settings-section">
-            <h3>Playback Controls</h3>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <div class="loop-buttons">
+                  ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
+                    (loopTimes) => html`
+                      <t-butt
+                        toggle
+                        .active=${this._isLoopButtonActive(loopTimes)}
+                        @click=${() => this._setLoopTimes(loopTimes)}
+                      >
+                        ${loopTimes === 'Inf' ? '∞' : loopTimes}
+                      </t-butt>
+                    `
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 11. Volume -->
+          <div class="settings-section playback-control-section">
             <div class="settings-grid">
               <div class="setting-item song-stepper-item">
-                <div class="song-stepper-grid playback-grid">
-                  <t-dial
-                    key="p"
-                    label="Pause before"
-                    iconName="pause-before"
-                    unit="s"
-                    defaultValue="3"
-                    show-disable-button
-                    .value=${this.pauseBefore}
-                    .disabled=${this.disablePauseBefore}
-                    @value-changed=${(
-                      event: CustomEvent<{ value: number; disabled?: boolean }>
-                    ) => {
-                      this.pauseBefore = event.detail.value;
-                      if (event.detail.disabled !== undefined) {
-                        this.disablePauseBefore = event.detail.disabled;
-                        this._handleSettingChange('pauseBeforeDisabled', event.detail.disabled);
-                      }
-                      this._handleSettingChange('pauseBefore', event.detail.value);
-                    }}
-                  ></t-dial>
-                  <t-dial
-                    key="w"
-                    label="Wait between"
-                    iconName="wait-between"
-                    unit="s"
-                    defaultValue="1"
-                    show-disable-button
-                    .value=${this.waitBetween}
-                    .disabled=${this.disableWaitBetween}
-                    @value-changed=${(
-                      event: CustomEvent<{ value: number; disabled?: boolean }>
-                    ) => {
-                      this.waitBetween = event.detail.value;
-                      if (event.detail.disabled !== undefined) {
-                        this.disableWaitBetween = event.detail.disabled;
-                        this._handleSettingChange('waitBetweenDisabled', event.detail.disabled);
-                      }
-                      this._handleSettingChange('waitBetween', event.detail.value);
-                    }}
-                  ></t-dial>
+                <div class="song-stepper-grid">
                   <t-dial
                     key="v"
                     min="0"
@@ -639,6 +720,16 @@ export class CurrentSongControls extends LitElement {
                       this._handleSettingChange('volume', event.detail.value);
                     }}
                   ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12. Speed -->
+          <div class="settings-section playback-control-section">
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid">
                   <t-dial
                     key="s"
                     min="50"
@@ -657,27 +748,6 @@ export class CurrentSongControls extends LitElement {
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="settings-section">
-            <details class="advanced-panel">
-              <summary class="advanced-summary">
-                <div class="advanced-summary-copy">
-                  <p class="advanced-summary-title">Advanced</p>
-                  <p class="advanced-summary-text">Song-specific marker and transfer actions.</p>
-                </div>
-                <span class="advanced-chevron">⌄</span>
-              </summary>
-              <div class="advanced-content">
-                <div class="song-action-buttons">
-                  ${this._renderSongActionButton('importExport', 'Import / export')}
-                  ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
-                  ${this._renderSongActionButton('moveMarkers', 'Move markers')}
-                  ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
-                  ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
-                </div>
-              </div>
-            </details>
           </div>
         </section>
 

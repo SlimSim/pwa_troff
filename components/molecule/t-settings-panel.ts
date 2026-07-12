@@ -562,6 +562,7 @@ export class SettingsPanel extends LitElement {
         <div class="settings-shell">
           <!-- Current Song Controls - now using the shared component -->
           <t-current-song-controls
+            id="settingsCurrentSongControls"
             .loopTimesValue=${this.loopTimesValue}
             .playFullSong=${this.playFullSong}
             .startBeforeValue=${this.startBeforeValue}
