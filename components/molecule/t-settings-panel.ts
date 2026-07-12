@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import '../atom/t-butt.js';
 import '../atom/t-slide-stepper.js';
+import '../atom/t-icon.js';
 
 type ToggleSetting =
   | 'playFullSong'
@@ -280,11 +281,12 @@ export class SettingsPanel extends LitElement {
 
     .advanced-chevron {
       font-size: 1rem;
-      transition: transform 0.2s ease;
+      transition: transform 0.3s ease-in-out;
+      transform-style: preserve-3d;
     }
 
     details.advanced-panel[open] .advanced-chevron {
-      transform: rotate(180deg);
+      transform: rotateX(180deg) translateY(-1px);
     }
 
     .advanced-content {
@@ -563,6 +565,7 @@ export class SettingsPanel extends LitElement {
           <!-- Current Song Controls - now using the shared component -->
           <t-current-song-controls
             id="settingsCurrentSongControls"
+            hideGlobalControls
             .loopTimesValue=${this.loopTimesValue}
             .playFullSong=${this.playFullSong}
             .startBeforeValue=${this.startBeforeValue}
@@ -575,20 +578,14 @@ export class SettingsPanel extends LitElement {
             @song-action-requested=${this._handleCurrentSongAction}
           ></t-current-song-controls>
 
-          <details class="advanced-panel">
-            <summary class="advanced-summary">
-              <div class="advanced-summary-copy">
-                <p class="advanced-summary-title">Global Controls</p>
-                <p class="advanced-summary-text">
-                  These key and button behaviors apply across Troff, not just this song.
-                </p>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                <span class="scope-badge">App-wide</span>
-                <span class="advanced-chevron">⌄</span>
-              </div>
-            </summary>
-            <div class="advanced-content">
+          <div class="settings-section" style="margin-top: 16px;">
+            <h3>
+              Global Controls
+              <t-help-tip>
+                These key and button behaviors apply across Troff, not just this song.
+              </t-help-tip>
+            </h3>
+          </div>
               <details class="advanced-panel">
                 <summary class="advanced-summary">
                   <div class="advanced-summary-copy">
@@ -598,7 +595,7 @@ export class SettingsPanel extends LitElement {
                       button.
                     </p>
                   </div>
-                  <span class="advanced-chevron">⌄</span>
+                  <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
                 </summary>
                 <div class="advanced-content">
                   <div class="settings-section">
@@ -719,7 +716,7 @@ export class SettingsPanel extends LitElement {
                       Control how markers extend their color across the timeline.
                     </p>
                   </div>
-                  <span class="advanced-chevron">⌄</span>
+                  <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
                 </summary>
                 <div class="advanced-content">
                   <div class="settings-grid">
@@ -760,7 +757,7 @@ export class SettingsPanel extends LitElement {
                       When loading a new song, these values will be the ones that the song get.
                     </p>
                   </div>
-                  <span class="advanced-chevron">⌄</span>
+                  <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
                 </summary>
                 <div class="advanced-content">
                   <div class="song-stepper-grid">
@@ -933,8 +930,6 @@ export class SettingsPanel extends LitElement {
                   </div>
                 </div>
               </details>
-            </div>
-          </details>
         </div>
 
         <div style="margin-top: 16px;">
