@@ -31,9 +31,9 @@ describe('t-media-parent search input', () => {
   // ---- helpers ----
 
   async function getSearchInput(): Promise<HTMLElement & { updateComplete: Promise<void> }> {
-    const tInputEl = element.shadowRoot?.querySelector(
-      't-input.search-input'
-    ) as (HTMLElement & { updateComplete: Promise<void> }) | null;
+    const tInputEl = element.shadowRoot?.querySelector('t-input.search-input') as
+      | (HTMLElement & { updateComplete: Promise<void> })
+      | null;
     if (!tInputEl) {
       throw new Error('Expected t-input.search-input to be in the shadow root');
     }
@@ -695,9 +695,7 @@ describe('Search focus state and visual indication', () => {
 
   // ---- helpers ----
 
-  function getSearchInput():
-    | (HTMLElement & { focus: () => void; blur: () => void })
-    | null {
+  function getSearchInput(): (HTMLElement & { focus: () => void; blur: () => void }) | null {
     return element.shadowRoot?.querySelector('t-input.search-input') as
       | (HTMLElement & { focus: () => void; blur: () => void })
       | null;
@@ -857,9 +855,7 @@ describe('Search focus state and visual indication', () => {
     if (!tInput) {
       throw new Error('Expected t-input.search-input in shadow root');
     }
-    const nativeInput = tInput.shadowRoot?.querySelector('input') as
-      | HTMLInputElement
-      | null;
+    const nativeInput = tInput.shadowRoot?.querySelector('input') as HTMLInputElement | null;
     if (!nativeInput) {
       throw new Error('Expected inner native input in t-input shadow root');
     }
@@ -1093,7 +1089,10 @@ describe('empty state (no songs, no groups)', () => {
   }
 
   function getActionButtons(): NodeListOf<Element> {
-    return element.shadowRoot?.querySelectorAll('.empty-action-btn') ?? document.querySelectorAll(':none');
+    return (
+      element.shadowRoot?.querySelectorAll('.empty-action-btn') ??
+      document.querySelectorAll(':none')
+    );
   }
 
   // ---- tests ----
@@ -1139,7 +1138,7 @@ describe('empty state (no songs, no groups)', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(1);
 
     const demoBtn = buttons[0] as any;
-    expect(demoBtn.href).toBe('/#2582986745&demo.mp4');
+    expect(demoBtn.href).toBe('#2582986745&demo.mp4');
   });
 
   it('second action button triggers file input click (Add songs from device)', async () => {

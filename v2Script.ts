@@ -6,6 +6,7 @@ import './components/molecule/t-settings-panel.js';
 import './components/molecule/t-header.js';
 import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
+import './components/molecule/t-current-song-controls.js';
 import './components/molecule/t-group-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import {
@@ -156,6 +157,7 @@ const setUrlToSong = (serverId: string | number | undefined, songKey: string | n
 document.addEventListener('DOMContentLoaded', () => {
   const footer = document.getElementById('footer') as FooterElement | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
+  const currentSongControls = document.getElementById('currentSongControls') as any;
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
@@ -544,6 +546,117 @@ document.addEventListener('DOMContentLoaded', () => {
       Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
   };
 
+  const syncCurrentSongControlsValues = () => {
+    if (!currentSongControls) {
+      return;
+    }
+
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    const rawLoopTimes =
+      songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
+    const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
+
+    currentSongControls.loopTimesValue = Number.isFinite(configuredLoops)
+      ? String(configuredLoops)
+      : 'Inf';
+
+    // Load song-specific numeric settings and their disabled states.
+    // Disabled state must be set BEFORE value so the t-dial knows its disabled
+    // state when receiving the new value (for correct display).
+    if (songKey && songData) {
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === undefined) {
+        const globalStartBeforeOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_START_BEFORE_ON) ?? false;
+        currentSongControls.startBeforeDisabled = !globalStartBeforeOn;
+      } else {
+        currentSongControls.startBeforeDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore === false;
+      }
+      currentSongControls.startBeforeValue = getStartBefore(songData);
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === undefined) {
+        const globalStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
+        currentSongControls.stopAfterDisabled = !globalStopAfterOn;
+      } else {
+        currentSongControls.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+      }
+      currentSongControls.stopAfterValue = getStopAfter(songData);
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
+        const globalIncrementUntilOn =
+          nDB.get(TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON) ?? false;
+        currentSongControls.incrementUntillDisabled = !globalIncrementUntilOn;
+      } else {
+        currentSongControls.incrementUntillDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      }
+      currentSongControls.incrementUntillValue = getIncrementUntil(songData);
+
+      // Sync playback controls (pause before, wait between, volume, speed)
+      const parseStoredNumber = (value: unknown, fallback: number) => {
+        const parsedValue = Number(value);
+        return Number.isFinite(parsedValue) ? parsedValue : fallback;
+      };
+      currentSongControls.pauseBefore = parseStoredNumber(
+        songData.TROFF_VALUE_pauseBeforeStart,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE')) || 3
+      );
+      currentSongControls.waitBetween = parseStoredNumber(
+        songData.TROFF_VALUE_waitBetweenLoops,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE')) || 1
+      );
+      currentSongControls.volume = parseStoredNumber(
+        songData.TROFF_VALUE_volumeBar,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE')) || 75
+      );
+      currentSongControls.speed = parseStoredNumber(
+        songData.TROFF_VALUE_speedBar,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100
+      );
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart === undefined) {
+        const globalPauseBeforeOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON') ?? true;
+        currentSongControls.disablePauseBefore = !globalPauseBeforeOn;
+      } else {
+        currentSongControls.disablePauseBefore = !songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart;
+      }
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops === undefined) {
+        const globalWaitBetweenOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON') ?? true;
+        currentSongControls.disableWaitBetween = !globalWaitBetweenOn;
+      } else {
+        currentSongControls.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+      }
+    } else {
+      currentSongControls.startBeforeValue = 0;
+      currentSongControls.startBeforeDisabled = false;
+      currentSongControls.stopAfterValue = 0;
+      currentSongControls.stopAfterDisabled = false;
+      currentSongControls.incrementUntillValue = 0;
+      currentSongControls.incrementUntillDisabled = false;
+      currentSongControls.pauseBefore = 3;
+      currentSongControls.waitBetween = 1;
+      currentSongControls.volume = 75;
+      currentSongControls.speed = 100;
+      currentSongControls.disablePauseBefore = false;
+      currentSongControls.disableWaitBetween = false;
+    }
+
+    // Also sync the settings panel's instance (visible on mobile when sidebar is hidden)
+    const settingsControls = document.querySelector('#settingsCurrentSongControls') as any;
+    if (settingsControls) {
+      settingsControls.loopTimesValue = currentSongControls.loopTimesValue;
+      settingsControls.startBeforeDisabled = currentSongControls.startBeforeDisabled;
+      settingsControls.startBeforeValue = currentSongControls.startBeforeValue;
+      settingsControls.stopAfterDisabled = currentSongControls.stopAfterDisabled;
+      settingsControls.stopAfterValue = currentSongControls.stopAfterValue;
+      settingsControls.incrementUntillDisabled = currentSongControls.incrementUntillDisabled;
+      settingsControls.incrementUntillValue = currentSongControls.incrementUntillValue;
+      settingsControls.pauseBefore = currentSongControls.pauseBefore;
+      settingsControls.waitBetween = currentSongControls.waitBetween;
+      settingsControls.volume = currentSongControls.volume;
+      settingsControls.speed = currentSongControls.speed;
+      settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
+      settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
+    }
+  };
+
   const syncLoopTimesFromSong = () => {
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
@@ -795,6 +908,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (setting === 'playFullSong') {
         selectFirstAndLastMarkers(true);
         settingsPanel.playFullSong = false;
+        if (currentSongControls) {
+          currentSongControls.playFullSong = false;
+        }
         return;
       }
 
@@ -824,6 +940,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.set(songKey, currentSongData);
         void saveSongData(songKey);
         markerSlider.requestUpdate();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
         return;
       }
 
@@ -857,6 +975,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.set(songKey, currentSongData);
         void saveSongData(songKey);
         markerSlider.requestUpdate();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
         return;
       }
 
@@ -870,6 +990,51 @@ document.addEventListener('DOMContentLoaded', () => {
         void saveSongData(songKey);
         syncLoopTimesFromSong();
         syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+        return;
+      }
+
+      // Handle playback controls (pause before, wait between, volume, speed)
+      if (
+        setting === 'pauseBefore' ||
+        setting === 'waitBetween' ||
+        setting === 'volume' ||
+        setting === 'speed' ||
+        setting === 'pauseBeforeDisabled' ||
+        setting === 'waitBetweenDisabled'
+      ) {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        if (setting === 'pauseBefore') {
+          currentSongData.TROFF_VALUE_pauseBeforeStart = value;
+        }
+        if (setting === 'waitBetween') {
+          currentSongData.TROFF_VALUE_waitBetweenLoops = value;
+        }
+        if (setting === 'volume') {
+          currentSongData.TROFF_VALUE_volumeBar = value;
+          audio.volume = Number(value) / 100;
+        }
+        if (setting === 'speed') {
+          currentSongData.TROFF_VALUE_speedBar = value;
+          audio.playbackRate = Number(value) / 100;
+        }
+        if (setting === 'pauseBeforeDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = !value;
+        }
+        if (setting === 'waitBetweenDisabled') {
+          currentSongData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops = !value;
+        }
+
+        nDB.set(songKey, currentSongData);
+        void saveSongData(songKey);
+        updateFooterWithCurrentSong();
+        updateHeaderCountdownDisplay();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
         return;
       }
 
@@ -924,6 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       nDB.set(storageKey, value === true);
       syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
 
       if (setting === 'extendedMarkerColor' || setting === 'extraExtendedMarkerColor') {
         const songKey = getCurrentSongKey();
@@ -946,6 +1112,19 @@ document.addEventListener('DOMContentLoaded', () => {
         await zoomOutTimeline();
       }
     });
+
+    // Forward events from the sidebar current-song-controls to the settings panel,
+    // so the existing handlers process them (single source of truth).
+    if (currentSongControls) {
+      currentSongControls.addEventListener('setting-changed', (event: Event) => {
+        const detail = (event as CustomEvent).detail;
+        settingsPanel.dispatchEvent(new CustomEvent('setting-changed', { detail, bubbles: true, composed: true }));
+      });
+      currentSongControls.addEventListener('song-action-requested', (event: Event) => {
+        const detail = (event as CustomEvent).detail;
+        settingsPanel.dispatchEvent(new CustomEvent('song-action-requested', { detail, bubbles: true, composed: true }));
+      });
+    }
 
     // Handle sign-in / sign-out requests from the settings panel
     settingsPanel.addEventListener('sign-in-requested', async (event: Event) => {
@@ -1004,6 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentKey === songKey && markerSlider) {
               updateMarkerSlider(markerSlider, false);
               syncSettingsPanelValues();
+              syncCurrentSongControlsValues();
               syncLoopTimesFromSong();
             }
           });
@@ -1019,6 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
     updateHeaderCountdownDisplay();
 
     // Listen for nav-click events
@@ -1039,6 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
         void saveSongData(songKey);
       }
+      syncCurrentSongControlsValues();
     });
 
     footer.addEventListener('volume-changed', (event: any) => {
@@ -1048,6 +1230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'TROFF_VALUE_volumeBar', event.detail.volume);
         void saveSongData(songKey);
       }
+      syncCurrentSongControlsValues();
     });
 
     // Listen for pause before and wait between changes
@@ -1059,6 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         void saveSongData(songKey);
       }
       updateHeaderCountdownDisplay();
+      syncCurrentSongControlsValues();
     });
 
     footer.addEventListener('wait-between-changed', (event: any) => {
@@ -1072,6 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         void saveSongData(songKey);
       }
+      syncCurrentSongControlsValues();
     });
 
     footer.addEventListener('marker-created', (event: any) => {
@@ -1223,6 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateFooterWithCurrentSong();
           syncLoopTimesFromSong();
           syncSettingsPanelValues();
+          syncCurrentSongControlsValues();
           updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
@@ -1252,6 +1438,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
     }
@@ -1392,6 +1579,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
     updateHeaderCountdownDisplay();
 
     updateMarkerSlider(markerSlider);

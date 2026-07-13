@@ -25,6 +25,26 @@ export class MainLayout extends LitElement {
       overflow: auto;
       flex: 1;
       padding: 0;
+      min-width: 0;
+    }
+
+    /* Left sidebar for current song controls on wide screens */
+    .sidebar {
+      display: none;
+      flex-direction: column;
+      flex-shrink: 0;
+      width: 275px;
+      max-width: 100%;
+      border-right: 1px solid var(--border-color, #333);
+      background-color: var(--tertiary-color);
+      overflow-y: auto;
+    }
+
+    /* Responsive: show sidebar on wide screens */
+    @media (min-width: 768px) {
+      .sidebar {
+        display: flex;
+      }
     }
   `;
 
@@ -33,6 +53,10 @@ export class MainLayout extends LitElement {
       <slot name="header"></slot>
       <div class="main-content-parent">
         <slot name="song-list"></slot>
+        <!-- Left sidebar for current song controls (visible on wide screens) -->
+        <aside class="sidebar" aria-label="Current song controls">
+          <slot name="sidebar"></slot>
+        </aside>
         <div class="main-content">
           <slot name="main-content"></slot>
         </div>

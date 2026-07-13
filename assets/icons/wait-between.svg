@@ -39,7 +39,7 @@
   <title
      id="title1">Time Icon</title>
   <path
-     stroke="#222222"
+     stroke="currentColor"
      id="circle1"
      style="fill:none;stroke-width:1.85518;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:none"
      sodipodi:type="arc"
@@ -54,20 +54,20 @@
      d="M 21.393029,12 A 9.3930292,9.3930292 0 0 1 14.315975,21.103036 9.3930292,9.3930292 0 0 1 3.7490386,16.488946" />
   <path
      d="M 15.108415,14.782866 12.021584,12.068339 12.000003,6.5516835"
-     stroke="#222222"
+     stroke="currentColor"
      stroke-linecap="round"
      id="path1"
      style="fill:none;stroke-width:1.85518;stroke-dasharray:none"
      sodipodi:nodetypes="ccc" />
   <path
      d="m 23.085455,14.365591 -1.649331,-2.823902 -2.316235,2.170844"
-     style="fill:none;stroke:#222222;stroke-width:1.85518;stroke-linecap:round;stroke-dasharray:none"
+     style="fill:none;stroke:currentColor;stroke-width:1.85518;stroke-linecap:round;stroke-dasharray:none"
      id="path1-0"
      sodipodi:nodetypes="ccc" />
   <path
-     stroke="#222222"
+     stroke="currentColor"
      id="circle1-6"
-     style="fill:none;stroke:#222222;stroke-width:1.85518;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:0.961538"
+     style="fill:none;stroke:currentColor;stroke-width:1.85518;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:0.961538"
      sodipodi:type="arc"
      sodipodi:cx="-12.013531"
      sodipodi:cy="-11.999023"
@@ -81,7 +81,7 @@
      transform="scale(-1)" />
   <path
      d="M 0.93150994,9.6800859 2.5773945,12.457341 4.6936452,10.476219"
-     style="fill:none;stroke:#222222;stroke-width:1.85518;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:0.961538"
+     style="fill:none;stroke:currentColor;stroke-width:1.85518;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:0.961538"
      id="path1-0-8"
      sodipodi:nodetypes="ccc" />
 </svg>

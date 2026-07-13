@@ -232,6 +232,8 @@
     <t-main-layout>
       <t-header id="header" slot="header"></t-header>
       <t-media-parent id="songList" slot="song-list"></t-media-parent>
+      <!-- Left sidebar for current song controls (visible on wide screens) -->
+      <t-current-song-controls id="currentSongControls" slot="sidebar" hideGlobalControls></t-current-song-controls>
       <div slot="main-content" style="height: 100%; min-height: 400px">
         <t-marker-slider id="markerSlider"></t-marker-slider>
       </div>
