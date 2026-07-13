@@ -98,7 +98,6 @@ export class Dial extends LitElement {
       display: flex;
       align-items: center;
       gap: 0;
-      margin-bottom: 8px;
     }
 
     .dial-row {

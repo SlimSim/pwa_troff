@@ -40,7 +40,7 @@ export class CurrentSongControls extends LitElement {
     }
 
     .controls-container {
-      padding: 16px;
+      padding: 0;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -48,9 +48,8 @@ export class CurrentSongControls extends LitElement {
 
     .settings-group {
       padding: 14px;
-      border-radius: 10px;
+
       background-color: var(--item-background, rgba(255, 255, 255, 0.1));
-      border: 1px solid var(--border-color, #333);
     }
 
     .settings-group-header {
@@ -90,7 +89,7 @@ export class CurrentSongControls extends LitElement {
     }
 
     .settings-section {
-      margin-bottom: 16px;
+      margin-bottom: 6px;
     }
 
     .settings-section h3 {
@@ -455,20 +454,17 @@ export class CurrentSongControls extends LitElement {
         <section class="settings-group">
           <div class="settings-group-header">
             <div class="settings-group-title-block">
-              <h3 class="settings-group-title">
-                Settings Marker
-                <t-help-tip>
-                  These options control how the song is played back.
-                  <ul>
-                    <li>Play full song will select the first and last markers.</li>
-                    <li>Zoom will zoom in to the active playing region.</li>
-                    <li>
-                      Start before and stop after determine how many seconds before and after the
-                      selected markers is played back.
-                    </li>
-                  </ul>
-                </t-help-tip>
-              </h3>
+              <t-help-tip h3="Marker">
+                These options control how the song is played back.
+                <ul>
+                  <li>Play full song will select the first and last markers.</li>
+                  <li>Zoom will zoom in to the active playing region.</li>
+                  <li>
+                    Start before and stop after determine how many seconds before and after the
+                    selected markers is played back.
+                  </li>
+                </ul>
+              </t-help-tip>
             </div>
           </div>
 
@@ -478,11 +474,11 @@ export class CurrentSongControls extends LitElement {
               <summary class="advanced-summary">
                 <div class="advanced-summary-copy">
                   <p class="advanced-summary-title">Advanced</p>
-                  <p class="advanced-summary-text">Song-specific marker and transfer actions.</p>
                 </div>
                 <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
               </summary>
               <div class="advanced-content">
+                <p class="advanced-summary-text">TO BE IMPLEMENTED: Advanced marker actions!</p>
                 <div class="song-action-buttons">
                   ${this._renderSongActionButton('importExport', 'Import / export')}
                   ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
@@ -581,17 +577,14 @@ export class CurrentSongControls extends LitElement {
 
           <!-- 6. Loop headline -->
           <div class="settings-section">
-            <h3>
-              Loop
-              <t-help-tip>
-                <ul>
-                  <li>
-                    Increment until will determine at what speed the song will play the final loop,
-                    and it will increment every loop until it reaches that speed.
-                  </li>
-                </ul>
-              </t-help-tip>
-            </h3>
+            <t-help-tip h3="Loop">
+              <ul>
+                <li>
+                  Increment until will determine at what speed the song will play the final loop,
+                  and it will increment every loop until it reaches that speed.
+                </li>
+              </ul>
+            </t-help-tip>
           </div>
 
           <!-- 7. Pause before -->

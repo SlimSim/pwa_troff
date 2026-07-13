@@ -85,7 +85,6 @@ export class VerticalSlider extends LitElement {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-top: 8px;
     }
     .value-display {
       font-size: 0.9rem;

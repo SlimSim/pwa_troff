@@ -33,7 +33,7 @@ export class MainLayout extends LitElement {
       display: none;
       flex-direction: column;
       flex-shrink: 0;
-      width: 320px;
+      width: 275px;
       max-width: 100%;
       border-right: 1px solid var(--border-color, #333);
       background-color: var(--tertiary-color);
