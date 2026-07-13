@@ -128,7 +128,6 @@ export class CurrentSongControls extends LitElement {
     .loop-buttons {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 8px;
       width: 100%;
       container-type: inline-size;
     }
@@ -245,7 +244,7 @@ export class CurrentSongControls extends LitElement {
 
     .advanced-summary-title {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text-color, #000);
     }
@@ -503,19 +502,14 @@ export class CurrentSongControls extends LitElement {
 
           <!-- 2. Play full song -->
           <div class="settings-section">
-            <div class="settings-grid">
-              <div class="setting-item">
-                <div class="action-buttons">
-                  <t-butt
-                    ellipsis
-                    .active=${this.playFullSong}
-                    @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
-                  >
-                    Play full song
-                  </t-butt>
-                </div>
-              </div>
-            </div>
+            <t-butt
+              ellipsis
+              .active=${this.playFullSong}
+              @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
+              style="width:100%"
+            >
+              Play full song
+            </t-butt>
           </div>
 
           <!-- 3. Zoom out / Zoom -->
