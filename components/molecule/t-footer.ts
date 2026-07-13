@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-dial.js';
+import '../atom/t-help-tip.js';
 import './t-marker-dialog.js';
 import { audio } from '../../services/audio.js';
 
@@ -318,7 +319,7 @@ export class BottomNav extends LitElement {
         <div class="nav-item hide-on-wide">
           <t-dropdown-button
             position="up"
-            align="left"
+            align="right"
             .open=${this.showTimeDropdown}
             @dropdown-toggled=${this._handleTimeDropdownToggled}
           >
@@ -332,6 +333,17 @@ export class BottomNav extends LitElement {
               ></t-icon>
             </t-butt>
             <div slot="dropdown" class="time-dropdown-content">
+              <t-help-tip>
+                <ul>
+                  <li>
+                    "Pause before" sets how long the player will wait before starting to play the
+                    song when you press play.
+                  </li>
+                  <li>
+                    "Wait between" sets how long the player will wait between loops of the song.
+                  </li>
+                </ul>
+              </t-help-tip>
               <t-dial
                 key="p"
                 label="Pause before"

@@ -285,6 +285,17 @@ export class CurrentSongControls extends LitElement {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
+
+    /* Hide pause before/wait between help items on narrow screens (they're in the footer on mobile) */
+    .loop-help-item-footer-only {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .loop-help-item-footer-only {
+        display: list-item;
+      }
+    }
   `;
 
   @property({ type: String }) loopTimesValue = '1';
@@ -579,10 +590,18 @@ export class CurrentSongControls extends LitElement {
           <div class="settings-section">
             <t-help-tip h3="Loop">
               <ul>
+                <li class="loop-help-item-footer-only">
+                  "Pause before" sets how long the player will wait before starting to play the song
+                  when you press play.
+                </li>
+                <li class="loop-help-item-footer-only">
+                  "Wait between" sets how long the player will wait between loops of the song.
+                </li>
                 <li>
-                  Increment until will determine at what speed the song will play the final loop,
+                  "Increment until" will determine at what speed the song will play the final loop,
                   and it will increment every loop until it reaches that speed.
                 </li>
+                <li>The "1 - 9" buttons determine how many times the song will loop.</li>
               </ul>
             </t-help-tip>
           </div>
