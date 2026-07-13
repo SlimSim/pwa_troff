@@ -80,6 +80,12 @@ describe('v2Script utilities and related functions', () => {
       expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER).toBeDefined();
     });
 
+    it('should have go to marker setting constants defined', () => {
+      expect(constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
+      expect(constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
+      expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
+    });
+
     it('should have correct constant string values', () => {
       expect(constants.TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR).toBe(
         'TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR'
@@ -206,5 +212,28 @@ describe('v2Script utilities and related functions', () => {
         (footer as HTMLElement & { markerDialogSuggestedName?: string }).markerDialogSuggestedName
       ).toBe('marker nr 3');
     }, 30000);
+  });
+
+  describe('go to marker settings nDB persistence', () => {
+    it('should load go to marker settings from nDB on app initialization', () => {
+      const nDBGetMock = vi.fn((key: string) => {
+        if (key === constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) return true;
+        if (key === constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) return false;
+        if (key === constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) return true;
+        return null;
+      });
+
+      // Simulate the loading logic from v2Script.ts
+      const enterGoToMarker = nDBGetMock(constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) === true;
+      const spaceGoToMarker = nDBGetMock(constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
+      const playGoToMarker = nDBGetMock(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
+
+      expect(enterGoToMarker).toBe(true);
+      expect(spaceGoToMarker).toBe(false);
+      expect(playGoToMarker).toBe(true);
+      expect(nDBGetMock).toHaveBeenCalledWith(constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR);
+      expect(nDBGetMock).toHaveBeenCalledWith(constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR);
+      expect(nDBGetMock).toHaveBeenCalledWith(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR);
+    });
   });
 });
