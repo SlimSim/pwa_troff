@@ -1,3 +1,5 @@
+import { safeDecodeURIComponent } from '../utils/utils.js';
+
 export const cacheImplementation = {
   nameOfCache: 'songCache-v1.0',
 
@@ -43,7 +45,7 @@ export const cacheImplementation = {
     return caches.open(this.nameOfCache).then((cache) => {
       return cache
         .keys()
-        .then((keys) => keys.map((key) => decodeURIComponent(key.url.split('/').pop() || '')));
+        .then((keys) => keys.map((key) => safeDecodeURIComponent(key.url.split('/').pop() || '')));
     });
   },
 };

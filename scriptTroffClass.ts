@@ -43,7 +43,7 @@ import { gtag } from './services/analytics.js';
 import { isSafari } from './utils/browserEnv.js';
 import { errorHandler } from './scriptErrorHandler.js';
 import log from './utils/log.js';
-import { blurHack, removeLocalInfo } from './utils/utils.js';
+import { blurHack, removeLocalInfo, safeDecodeURIComponent } from './utils/utils.js';
 import {
   TROFF_SETTING_SET_THEME,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
@@ -596,7 +596,7 @@ class TroffClass {
     const hashNoHashtag = hash.substr(1);
     const ampersandIndex = hashNoHashtag.indexOf('&');
     const serverId = hashNoHashtag.substring(0, ampersandIndex);
-    const fileName = decodeURI(hashNoHashtag.substring(ampersandIndex + 1));
+    const fileName = safeDecodeURIComponent(hashNoHashtag.substring(ampersandIndex + 1));
 
     const troffDataFromCache = nDB.get(fileName);
     let troffData;

@@ -30,4 +30,20 @@ const blurHack = () => {
   document.getElementById('blur-hack')?.focus({ preventScroll: true });
 };
 
+/**
+ * Safely decodes a URI component, falling back to decodeURI and then the original string
+ * if the input contains invalid percent-encoding.
+ */
+export function safeDecodeURIComponent(str: string): string {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    try {
+      return decodeURI(str);
+    } catch {
+      return str;
+    }
+  }
+}
+
 export { blurHack, escapeRegExp, getFileExtension, removeLocalInfo, fileUrlToStorageFileName };
