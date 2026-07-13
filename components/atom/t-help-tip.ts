@@ -10,7 +10,7 @@ export class THelpTip extends LitElement {
 
     .summary-button {
       display: inline-flex;
-      align-items: center;
+      align-items: flex-start;
       gap: var(--spacing-xs, 4px);
       cursor: pointer;
       list-style: none;
@@ -31,33 +31,79 @@ export class THelpTip extends LitElement {
 
     .help-icon {
       flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .chevron-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+      opacity: 0;
+      transform: rotateX(0deg);
+    }
+
+    :host([open]) .chevron-icon {
+      opacity: 1;
+      transform: rotateX(180deg);
     }
 
     .summary-content {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--spacing-xs, 4px);
-      flex-wrap: wrap;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xxs, 2px);
     }
 
     .summary-h3 {
       margin: 0;
-      font-size: inherit;
+      font-size: var(--font-size-sm, 0.875rem);
       font-weight: 600;
       line-height: 1.2;
     }
 
     .summary-p {
       margin: 0;
-      font-size: inherit;
+      font-size: var(--font-size-sm, 0.875rem);
       line-height: 1.3;
       opacity: 0.8;
     }
 
     .detail-content {
       display: none;
-      padding: var(--spacing-sm, 8px) 0;
+      padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+      margin: var(--spacing-xs, 4px) calc(var(--spacing-xs, 4px) * -1) 0;
+      background-color: var(--help-tip-background);
+      color: var(--on-help-tip-background);
+      border-radius: var(--button-border-radius, 4px);
       animation: fadeIn 0.2s ease-out;
+      font-size: var(--font-size-xs, 0.75rem);
+      line-height: 1.4;
+    }
+
+    .detail-content ::slotted(*) {
+      margin: 0;
+    }
+
+    .detail-content ::slotted(:first-child) {
+      margin-top: 0;
+    }
+
+    .detail-content ::slotted(:last-child) {
+      margin-bottom: 0;
+    }
+
+    .detail-content ::slotted(p) {
+      margin: var(--spacing-xs, 4px) 0;
+    }
+
+    .detail-content ::slotted(ul) {
+      margin: var(--spacing-xs, 4px) 0;
+      padding-left: var(--spacing-lg, 16px);
+    }
+
+    .detail-content ::slotted(li) {
+      margin: var(--spacing-xxs, 2px) 0;
     }
 
     :host([open]) .detail-content {
@@ -99,17 +145,20 @@ export class THelpTip extends LitElement {
         class="summary-button"
         id=${this._summaryId}
         aria-expanded=${this.open}
-        aria-controls=${this._summaryId}-content
+        aria-controls="${this._summaryId}-content"
         @click=${this._handleSummaryClick}
         @keydown=${this._handleKeyDown}
       >
-        ${this.h3 ? html`<h3 class="summary-h3">${this.h3}</h3>` : ''}
-        ${this.p ? html`<p class="summary-p">${this.p}</p>` : ''}
+        <span class="summary-content">
+          ${this.h3 ? html`<h3 class="summary-h3">${this.h3}</h3>` : ''}
+          ${this.p ? html`<p class="summary-p">${this.p}</p>` : ''}
+        </span>
         <t-icon class="help-icon" name="help" slim></t-icon>
-        <span class="summary-content"><slot name="summary"></slot></span>
+        <t-icon class="chevron-icon" name="chevron-down" slim></t-icon>
+        <slot name="summary"></slot>
       </button>
       <div
-        id=${this._summaryId}-content
+        id="${this._summaryId}-content"
         class="detail-content"
         role="region"
         aria-labelledby=${this._summaryId}

@@ -51,6 +51,9 @@
 
   --slider-color: var(--regular-button-color);
   --slider-playback-region-color: var(--accent-color-1);
+
+  --help-tip-background: var(--secondary-color);
+  --on-help-tip-background: var(--on-secondary-color);
 }
 
 .theme-col2 {
