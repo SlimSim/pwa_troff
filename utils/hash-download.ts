@@ -2,6 +2,7 @@ import { nDB } from '../assets/internal/db.js';
 import { TROFF_TROFF_DATA_ID_AND_FILE_NAME } from '../constants/constants.js';
 import log from './log.js';
 import { getFirestore } from './firebase-getter.js';
+import { safeDecodeURIComponent } from './utils.js';
 import type { TroffData, TroffMarker, TroffHistoryList, TroffDataIdObject } from '../types/troff.d.js';
 
 const CACHE_NAME = 'songCache-v1.0';
@@ -28,7 +29,7 @@ export function parseHash(hash: string): { serverId: number; fileName: string } 
     return null;
   }
   const serverIdStr = hashNoHashtag.substring(0, ampersandIndex);
-  const fileName = decodeURIComponent(hashNoHashtag.substring(ampersandIndex + 1));
+  const fileName = safeDecodeURIComponent(hashNoHashtag.substring(ampersandIndex + 1));
   const serverId = Number(serverIdStr);
   if (!Number.isFinite(serverId) || !fileName) {
     return null;

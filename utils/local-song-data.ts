@@ -1,6 +1,7 @@
 import { nDB } from '../assets/internal/db.js';
-import { TroffObjectLocal } from 'types/troff';
+import { TroffObjectLocal } from 'types/troff.js';
 import { formatSongForUI } from './formatters.js';
+import { safeDecodeURIComponent } from './utils.js';
 
 export class LocalSongDataService {
   static CACHE_NAME = 'songCache-v1.0';
@@ -17,7 +18,7 @@ export class LocalSongDataService {
     const cacheKeys = await cache.keys();
 
     for (const cacheRequest of cacheKeys) {
-      const songKey = decodeURIComponent(cacheRequest.url.split('/').pop() || cacheRequest.url);
+      const songKey = safeDecodeURIComponent(cacheRequest.url.split('/').pop() || cacheRequest.url);
       const songData = nDB.get(songKey);
 
       // TODO: If songData is null, The song should still be added, with fileData set to "standard values"

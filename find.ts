@@ -26,6 +26,7 @@ import './assets/external/notify-js/notify.min.js';
 import './assets/internal/notify-js/notify.config.js';
 import './assets/external/DataTables/js/jquery.dataTables.min.js';
 import { nDB } from './assets/internal/db.js';
+import { safeDecodeURIComponent } from './utils/utils.js';
 import {
   auth,
   db,
@@ -245,7 +246,7 @@ $(document).ready(async function () {
 
     if (!id) return;
 
-    const element = document.getElementById(fileNameToId(decodeURI(id)));
+    const element = document.getElementById(fileNameToId(safeDecodeURIComponent(id)));
 
     if (!element) return;
 
@@ -441,7 +442,7 @@ $(document).ready(async function () {
     $.each(serverSongListHistory, (i, serverSong) => {
       const newDiv = $('#serverSongTemplate').children().clone(true, true);
 
-      const fileName = decodeURI(serverSong.fileNameUri);
+      const fileName = safeDecodeURIComponent(serverSong.fileNameUri);
       newDiv.attr('id', fileNameToId(fileName));
       if (serverSong.fromServer) {
         newDiv.addClass('fromServer');
