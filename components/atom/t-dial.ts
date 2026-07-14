@@ -17,16 +17,16 @@ export class Dial extends LitElement {
 
     .dial-container {
       position: relative;
-      width: 100px;
-      height: 100px;
+      width: 140px;
+      height: 140px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .dial-knob {
-      width: 80px;
-      height: 80px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       background-color: var(--theme-color);
       cursor: grab;
@@ -147,21 +147,29 @@ export class Dial extends LitElement {
       z-index: 1000;
     }
 
-    .floating-dial-icon {
+    .floating-dial-badge {
       position: absolute;
       left: 50%;
-      bottom: calc(100% - 6px);
+      bottom: calc(100% + 12px);
       transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--secondary-color, rgba(0, 0, 0, 0.08));
+      color: var(--on-secondary-color, #000);
+      white-space: nowrap;
+      z-index: 11;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .floating-dial-value {
-      position: absolute;
-      left: 50%;
-      bottom: calc(100% + 10px);
-      transform: translateX(-50%);
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 600;
       white-space: nowrap;
+      line-height: 1.2;
     }
 
     .floating-dial-value.disabled {
@@ -587,10 +595,12 @@ export class Dial extends LitElement {
             class="floating-dial"
             style="--dial-x: ${this.dialPositionX}px; --dial-y: ${this.dialPositionY}px;"
           >
-            <div class="floating-dial-value ${this.disabled ? 'disabled' : ''}">
-              ${this._value}${this.unit}
+            <div class="floating-dial-badge">
+              <div class="floating-dial-value ${this.disabled ? 'disabled' : ''}">
+                ${this._value}${this.unit}
+              </div>
+              <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
             </div>
-            <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
             <div class="dial-container">
               <div
                 class="dial-knob ${this.disabled ? 'disabled' : ''}"
