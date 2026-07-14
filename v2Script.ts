@@ -31,10 +31,13 @@ import type { TroffMarker, State } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR,
   TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
   TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
   TROFF_SETTING_SPACE_RESET_COUNTER,
   TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+  TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE,
@@ -505,10 +508,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
+    settingsPanel.enterGoToMarker = nDB.get(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) === true;
     settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
+    settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
+    settingsPanel.playGoToMarker = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -819,7 +825,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const shouldResetLoopCounter = (settingKey: string) => nDB.get(settingKey) === true;
 
-  const startPlayback = (timerSettingKey: string, resetCounterSettingKey: string) => {
+  const startPlayback = (
+    timerSettingKey: string,
+    resetCounterSettingKey: string,
+    goToMarkerSettingKey?: string
+  ) => {
     if (pendingPlaybackStart !== undefined) {
       if (shouldResetLoopCounter(resetCounterSettingKey)) {
         resetLoopTimesCounter();
@@ -838,6 +848,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // If "go to marker" is enabled, seek to the start marker time before playing
+    if (goToMarkerSettingKey && nDB.get(goToMarkerSettingKey) === true) {
+      const startTime = markerSlider.getPlaybackStart();
+      if (Number.isFinite(startTime)) {
+        audio.currentTime = startTime;
+      }
+    }
+
     schedulePlaybackAfterDelay(getPauseBeforeDelay(timerSettingKey));
     updateHeaderCountdownDisplay();
   };
@@ -854,14 +872,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
-      startPlayback(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR, TROFF_SETTING_ENTER_RESET_COUNTER);
+      startPlayback(
+        TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
+        TROFF_SETTING_ENTER_RESET_COUNTER,
+        TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR
+      );
       return;
     }
 
     if (event.key === ' ' || event.key === 'Spacebar') {
       event.preventDefault();
       event.stopPropagation();
-      startPlayback(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, TROFF_SETTING_SPACE_RESET_COUNTER);
+      startPlayback(
+        TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
+        TROFF_SETTING_SPACE_RESET_COUNTER,
+        TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR
+      );
     }
   };
 
@@ -1074,10 +1100,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const settingsKeyByPanelSetting: Record<string, string> = {
         enterUseTimer: TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
         enterResetCounter: TROFF_SETTING_ENTER_RESET_COUNTER,
+        enterGoToMarker: TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR,
         spaceUseTimer: TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
         spaceResetCounter: TROFF_SETTING_SPACE_RESET_COUNTER,
+        spaceGoToMarker: TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR,
         playUseTimer: TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
         playResetCounter: TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+        playGoToMarker: TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
         extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
       };
@@ -1207,7 +1236,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (event.detail.action === 'play') {
         startPlayback(
           TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
-          TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER
+          TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
+          TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR
         );
       }
     });

@@ -408,4 +408,105 @@ describe('SettingsPanel numeric settings integration', () => {
       });
     });
   });
+
+  describe('go to marker settings nDB persistence', () => {
+    it('should dispatch setting-changed when enterGoToMarker is toggled', () => {
+      const handler = vi.fn();
+      settingsPanel.addEventListener('setting-changed', handler);
+
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._toggleSetting('enterGoToMarker', false);
+
+      expect(settingsPanel.enterGoToMarker).toBe(true);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { setting: 'enterGoToMarker', value: true },
+        })
+      );
+    });
+
+    it('should dispatch setting-changed when spaceGoToMarker is toggled', () => {
+      const handler = vi.fn();
+      settingsPanel.addEventListener('setting-changed', handler);
+
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._toggleSetting('spaceGoToMarker', false);
+
+      expect(settingsPanel.spaceGoToMarker).toBe(true);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { setting: 'spaceGoToMarker', value: true },
+        })
+      );
+    });
+
+    it('should dispatch setting-changed when playGoToMarker is toggled', () => {
+      const handler = vi.fn();
+      settingsPanel.addEventListener('setting-changed', handler);
+
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._toggleSetting('playGoToMarker', false);
+
+      expect(settingsPanel.playGoToMarker).toBe(true);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { setting: 'playGoToMarker', value: true },
+        })
+      );
+    });
+
+    it('should toggle enterGoToMarker off when already on', () => {
+      settingsPanel.enterGoToMarker = true;
+      const handler = vi.fn();
+      settingsPanel.addEventListener('setting-changed', handler);
+
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._toggleSetting('enterGoToMarker', true);
+
+      expect(settingsPanel.enterGoToMarker).toBe(false);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { setting: 'enterGoToMarker', value: false },
+        })
+      );
+    });
+
+    it('should toggle spaceGoToMarker off when already on', () => {
+      settingsPanel.spaceGoToMarker = true;
+      const handler = vi.fn();
+      settingsPanel.addEventListener('setting-changed', handler);
+
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._toggleSetting('spaceGoToMarker', true);
+
+      expect(settingsPanel.spaceGoToMarker).toBe(false);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { setting: 'spaceGoToMarker', value: false },
+        })
+      );
+    });
+
+    it('should toggle playGoToMarker off when already on', () => {
+      settingsPanel.playGoToMarker = true;
+      const handler = vi.fn();
+      settingsPanel.addEventListener('setting-changed', handler);
+
+      // @ts-expect-error - accessing private method for testing
+      settingsPanel._toggleSetting('playGoToMarker', true);
+
+      expect(settingsPanel.playGoToMarker).toBe(false);
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: { setting: 'playGoToMarker', value: false },
+        })
+      );
+    });
+
+    it('should have default go to marker values as false', () => {
+      expect(settingsPanel.enterGoToMarker).toBe(false);
+      expect(settingsPanel.spaceGoToMarker).toBe(false);
+      expect(settingsPanel.playGoToMarker).toBe(false);
+    });
+  });
 });
