@@ -97,14 +97,6 @@ export class SettingsPanel extends LitElement {
       border: 1px solid var(--border-color, #333);
     }
 
-    .settings-group-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
     .settings-group-title-block {
       display: grid;
       gap: 4px;
