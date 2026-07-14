@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as constants from '../constants/constants.js';
-import { nDB } from '../assets/internal/db.js';
 
 // Mock nDB
 const nDBGetMock = vi.fn();
@@ -119,7 +118,10 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
     document.body.innerHTML = '';
 
     // Make requestAnimationFrame fire synchronously
-    const raf = (cb: Function) => { cb(); return 0; };
+    const raf = (cb: Function) => {
+      cb();
+      return 0;
+    };
     vi.stubGlobal('requestAnimationFrame', raf);
     window.requestAnimationFrame = raf;
 
@@ -127,7 +129,11 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
     const registry = customElements;
     const originalDefine = registry.define.bind(registry);
     const patched = Object.create(registry);
-    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+    patched.define = (
+      name: string,
+      constructor: CustomElementConstructor,
+      options?: ElementDefinitionOptions
+    ) => {
       if (!registry.get(name)) {
         originalDefine(name, constructor, options);
       }
@@ -293,7 +299,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       // Press Enter key
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Should seek to 25 (marker time - startBefore)
       expect(audioMock.currentTime).toBe(25);
@@ -317,7 +323,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       expect(audioMock.currentTime).toBe(0);
 
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(30);
     });
@@ -341,7 +347,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       expect(audioMock.currentTime).toBe(0);
 
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Should not seek
       expect(audioMock.currentTime).toBe(0);
@@ -364,7 +370,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       expect(audioMock.currentTime).toBe(0);
 
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
     });
@@ -385,7 +391,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await settingsPanel.updateComplete;
 
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
     });
@@ -411,7 +417,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       // Press Space key
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(25);
     });
@@ -432,7 +438,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await settingsPanel.updateComplete;
 
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(30);
     });
@@ -455,7 +461,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       expect(audioMock.currentTime).toBe(0);
 
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
     });
@@ -475,7 +481,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await settingsPanel.updateComplete();
 
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
     });
@@ -496,7 +502,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await settingsPanel.updateComplete();
 
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
     });
@@ -517,7 +523,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await settingsPanel.updateComplete();
 
       dispatchKeyDown('Spacebar');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(25);
     });
@@ -542,7 +548,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       // Press Enter - should seek
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
       expect(audioMock.currentTime).toBe(25);
 
       // Reset
@@ -550,7 +556,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       // Press Space - should NOT seek
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
       expect(audioMock.currentTime).toBe(0);
     });
 
@@ -572,7 +578,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       // Press Space - should seek
       dispatchKeyDown(' ');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
       expect(audioMock.currentTime).toBe(25);
 
       // Reset
@@ -580,7 +586,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       // Press Enter - should NOT seek
       dispatchKeyDown('Enter');
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
       expect(audioMock.currentTime).toBe(0);
     });
   });

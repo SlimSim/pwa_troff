@@ -31,11 +31,6 @@ describe('play button "go to marker" behavior', () => {
   let header: HTMLElement & Record<string, any>;
   let songList: HTMLElement & Record<string, any>;
 
-  const dispatchKeyDown = (key: string) => {
-    const event = new KeyboardEvent('keydown', { key, bubbles: true, composed: true });
-    document.dispatchEvent(event);
-  };
-
   beforeEach(() => {
     vi.resetModules();
     document.body.innerHTML = '';
@@ -47,7 +42,11 @@ describe('play button "go to marker" behavior', () => {
     const originalDefine = customElements.define.bind(customElements);
     const registry = customElements;
     const patched = Object.create(registry);
-    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+    patched.define = (
+      name: string,
+      constructor: CustomElementConstructor,
+      options?: ElementDefinitionOptions
+    ) => {
       if (!registry.get(name)) {
         originalDefine(name, constructor, options);
       }
@@ -55,7 +54,10 @@ describe('play button "go to marker" behavior', () => {
     vi.stubGlobal('customElements', patched);
 
     // Mock requestAnimationFrame
-    const raf = (cb: Function) => { cb(); return 0; };
+    const raf = (cb: Function) => {
+      cb();
+      return 0;
+    };
     vi.stubGlobal('requestAnimationFrame', raf);
     window.requestAnimationFrame = raf;
 
@@ -236,11 +238,13 @@ describe('play button "go to marker" behavior', () => {
         TROFF_VALUE_startBefore: 5,
         TROFF_CLASS_TO_TOGGLE_buttStartBefore: true,
       };
-      nDBSetOnSongMock.mockImplementation((songKey: string, path: string | string[], value: any) => {
-        if (songKey === 'test-song-key') {
-          // Store the value for retrieval
+      nDBSetOnSongMock.mockImplementation(
+        (songKey: string, _path: string | string[], _value: any) => {
+          if (songKey === 'test-song-key') {
+            // Store the value for retrieval
+          }
         }
-      });
+      );
       nDBGetMock.mockImplementation((key: string) => {
         if (key === 'test-song-key') {
           return songData;
@@ -250,7 +254,7 @@ describe('play button "go to marker" behavior', () => {
       });
     });
 
-it('should seek to marker start time minus startBefore on initialization and play from there', async () => {
+    it('should seek to marker start time minus startBefore on initialization and play from there', async () => {
       // Set up marker slider with the marker
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
@@ -267,7 +271,7 @@ it('should seek to marker start time minus startBefore on initialization and pla
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
       // Wait for async initialization
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Audio should have sought to the marker start minus startBefore (30 - 5 = 25) on init
       expect(audioMock.currentTime).toBe(25);
@@ -285,13 +289,13 @@ it('should seek to marker start time minus startBefore on initialization and pla
       );
 
       // Wait for async operations
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Audio should still be at 25 (playback starts from there, no additional seek)
       expect(audioMock.currentTime).toBe(25);
     });
 
-it('should seek to marker start time when startBefore is disabled (0)', async () => {
+    it('should seek to marker start time when startBefore is disabled (0)', async () => {
       // Set up marker slider with startBefore disabled
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
@@ -308,7 +312,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
       // Wait for async initialization
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Audio should have sought to the marker start time (30 - 0 = 30) on init
       expect(audioMock.currentTime).toBe(30);
@@ -325,7 +329,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
       );
 
       // Wait for async operations
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Should still be at marker time (30) since startBefore is 0
       expect(audioMock.currentTime).toBe(30);
@@ -345,7 +349,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
       await import('../v2Script.js');
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // playGoToMarker is disabled (default)
       settingsPanel.playGoToMarker = false;
@@ -363,7 +367,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
         })
       );
 
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Should NOT seek to marker, stay at 0
       expect(audioMock.currentTime).toBe(0);
@@ -382,7 +386,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
       await import('../v2Script.js');
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       settingsPanel.playGoToMarker = true;
 
@@ -399,7 +403,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
         })
       );
 
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Should stay at 0 since no start marker is selected
       expect(audioMock.currentTime).toBe(0);
@@ -419,7 +423,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
       await import('../v2Script.js');
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       settingsPanel.playGoToMarker = true;
 
@@ -434,7 +438,7 @@ it('should seek to marker start time when startBefore is disabled (0)', async ()
         })
       );
 
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
 
       // Should clamp at 0, not go negative
       expect(audioMock.currentTime).toBe(0);
