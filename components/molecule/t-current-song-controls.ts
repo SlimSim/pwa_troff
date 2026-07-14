@@ -57,7 +57,7 @@ export class CurrentSongControls extends LitElement {
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 4px;
     }
 
     .settings-group-title-block {
@@ -478,28 +478,6 @@ export class CurrentSongControls extends LitElement {
             </div>
           </div>
 
-          <!-- 1. Advanced -->
-          <div class="settings-section">
-            <details class="advanced-panel">
-              <summary class="advanced-summary">
-                <div class="advanced-summary-copy">
-                  <p class="advanced-summary-title">Advanced</p>
-                </div>
-                <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
-              </summary>
-              <div class="advanced-content">
-                <p class="advanced-summary-text">TO BE IMPLEMENTED: Advanced marker actions!</p>
-                <div class="song-action-buttons">
-                  ${this._renderSongActionButton('importExport', 'Import / export')}
-                  ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
-                  ${this._renderSongActionButton('moveMarkers', 'Move markers')}
-                  ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
-                  ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
-                </div>
-              </div>
-            </details>
-          </div>
-
           <!-- 2. Play full song -->
           <div class="settings-section">
             <t-butt
@@ -756,6 +734,28 @@ export class CurrentSongControls extends LitElement {
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- 1. Advanced -->
+          <div class="settings-section">
+            <details class="advanced-panel">
+              <summary class="advanced-summary">
+                <div class="advanced-summary-copy">
+                  <p class="advanced-summary-title">Advanced</p>
+                </div>
+                <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+              </summary>
+              <div class="advanced-content">
+                <p class="advanced-summary-text">TO BE IMPLEMENTED: Advanced marker actions!</p>
+                <div class="song-action-buttons">
+                  ${this._renderSongActionButton('importExport', 'Import / export')}
+                  ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
+                  ${this._renderSongActionButton('moveMarkers', 'Move markers')}
+                  ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
+                  ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
+                </div>
+              </div>
+            </details>
           </div>
         </section>
 
