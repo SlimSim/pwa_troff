@@ -160,7 +160,7 @@ export class GroupDialog extends LitElement {
     this._editName = g?.name ?? '';
     this._editInfo = g?.info ?? '';
     this._editColor = g?.color ?? '';
-    this._editIcon = g?.icon ?? '';
+    this._editIcon = (g?.icon ?? '').replace(/^fa-/, '');
     this._editOwners = g?.owners ? [...g.owners] : [];
   }
 

@@ -328,6 +328,7 @@ export class GroupList extends LitElement {
 
   private _handleEditGroup(event: Event, group: Group) {
     event.stopPropagation();
+    console.log('Edit group:', group.name, '- icon:', group.icon);
     this.dispatchEvent(
       new CustomEvent('group-edit-requested', {
         detail: { group },
@@ -352,9 +353,7 @@ export class GroupList extends LitElement {
 
   private _handleAddSong(songKey: string, title: string) {
     // Don't dispatch if song is already in the group
-    const selectedGroup = this.groups.find(
-      (g) => this._groupKey(g) === this._selectedGroupKey
-    );
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
     if (!selectedGroup) return;
     if (selectedGroup.songs.some((s) => s.fullPath === songKey)) return;
 
@@ -373,9 +372,7 @@ export class GroupList extends LitElement {
 
   /** Songs from `tracks` that are NOT already in the selected group. */
   private _getAvailableSongs(): any[] {
-    const selectedGroup = this.groups.find(
-      (g) => this._groupKey(g) === this._selectedGroupKey
-    );
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
     if (!selectedGroup) return [];
 
     const inGroup = new Set(selectedGroup.songs.map((s) => s.fullPath));
@@ -390,16 +387,16 @@ export class GroupList extends LitElement {
 
   render() {
     const isDetailView = this._selectedGroupKey !== '';
-    const selectedGroup = this.groups.find(
-      (g) => this._groupKey(g) === this._selectedGroupKey
-    );
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
 
     if (isDetailView && selectedGroup) {
       const availableSongs = this._getAvailableSongs();
       const infoText = selectedGroup.info || '';
       const trackQuery = this.groupTrackSearch.trim().toLowerCase();
       const filteredTracks = trackQuery
-        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(trackQuery))
+        ? selectedGroup.tracks.filter((t: any) =>
+            (t.title || '').toLowerCase().includes(trackQuery)
+          )
         : selectedGroup.tracks;
 
       return html`
@@ -418,15 +415,26 @@ export class GroupList extends LitElement {
               ${infoText
                 ? html`<span
                     class="detail-info-text ${this._infoExpanded ? 'expanded' : ''}"
-                    @click=${() => { this._infoExpanded = !this._infoExpanded; }}
+                    @click=${() => {
+                      this._infoExpanded = !this._infoExpanded;
+                    }}
                     title="${this._infoExpanded ? 'Collapse' : 'Expand info'}"
-                  >${infoText}</span>`
+                    >${infoText}</span
+                  >`
                 : ''}
               ${selectedGroup.owners && selectedGroup.owners.length > 0
-                ? html`<span class="shared-with">Shared with ${selectedGroup.owners.length} ${selectedGroup.owners.length === 1 ? 'person' : 'people'}</span>`
+                ? html`<span class="shared-with"
+                    >Shared with ${selectedGroup.owners.length}
+                    ${selectedGroup.owners.length === 1 ? 'person' : 'people'}</span
+                  >`
                 : ''}
             </div>
-            <t-butt class="detail-edit-btn" icon @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)} title="Edit group">
+            <t-butt
+              class="detail-edit-btn"
+              icon
+              @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
+              title="Edit group"
+            >
               <t-icon name="edit"></t-icon>
             </t-butt>
           </div>
@@ -468,66 +476,74 @@ export class GroupList extends LitElement {
               </div>
             `
           )}
-
           ${filteredTracks.length === 0 && !trackQuery && !this._songManagementOpen
             ? html`<div class="empty-text" style="padding: 16px;">No songs in this group.</div>`
             : ''}
-
           ${filteredTracks.length === 0 && !trackQuery && this._songManagementOpen
-            ? html`<div class="empty-text" style="padding: 16px;">No songs in this group yet. Add some below!</div>`
+            ? html`<div class="empty-text" style="padding: 16px;">
+                No songs in this group yet. Add some below!
+              </div>`
             : ''}
-
           ${filteredTracks.length === 0 && trackQuery
-            ? html`<div class="empty-text" style="padding: 16px;">No songs match "${this.groupTrackSearch}".</div>`
+            ? html`<div class="empty-text" style="padding: 16px;">
+                No songs match "${this.groupTrackSearch}".
+              </div>`
             : ''}
 
           <!-- Add songs section + toggle at the bottom -->
           ${this._songManagementOpen
             ? html`
-              <div class="add-songs-section">
-                <div class="add-songs-label">Add songs</div>
-                <t-input
-                  class="add-songs-search"
-                  .value=${this._addSongQuery}
-                  placeholder="Search songs..."
-                  slim
-                  clearable
-                  @input=${(e: CustomEvent) => {
-                    if (e.detail && typeof e.detail.value === 'string') {
-                      this._addSongQuery = e.detail.value;
-                    }
-                  }}
-                ></t-input>
+                <div class="add-songs-section">
+                  <div class="add-songs-label">Add songs</div>
+                  <t-input
+                    class="add-songs-search"
+                    .value=${this._addSongQuery}
+                    placeholder="Search songs..."
+                    slim
+                    clearable
+                    @input=${(e: CustomEvent) => {
+                      if (e.detail && typeof e.detail.value === 'string') {
+                        this._addSongQuery = e.detail.value;
+                      }
+                    }}
+                  ></t-input>
 
-                ${this.tracks.length === 0
-                  ? html`<div class="empty-text">No songs in library</div>`
-                  : ''}
-                ${availableSongs.length > 0
-                  ? html`
-                      <div class="add-songs-list">
-                        ${availableSongs.map(
-                          (s) => html`
-                            <div
-                              class="add-songs-item"
-                              @click=${() => this._handleAddSong(s.songKey, s.title)}
-                            >
-                              <span>${s.title}</span>
-                              <t-icon name="note-plus"></t-icon>
-                            </div>
-                          `
-                        )}
-                      </div>
-                    `
-                  : this._addSongQuery.trim()
-                    ? html`<div class="empty-text">No songs match "${this._addSongQuery}"</div>`
-                    : html`<div class="empty-text">All songs are already in this group</div>`}
-              </div>
-            `
+                  ${this.tracks.length === 0
+                    ? html`<div class="empty-text">No songs in library</div>`
+                    : ''}
+                  ${availableSongs.length > 0
+                    ? html`
+                        <div class="add-songs-list">
+                          ${availableSongs.map(
+                            (s) => html`
+                              <div
+                                class="add-songs-item"
+                                @click=${() => this._handleAddSong(s.songKey, s.title)}
+                              >
+                                <span>${s.title}</span>
+                                <t-icon name="note-plus"></t-icon>
+                              </div>
+                            `
+                          )}
+                        </div>
+                      `
+                    : this._addSongQuery.trim()
+                      ? html`<div class="empty-text">No songs match "${this._addSongQuery}"</div>`
+                      : html`<div class="empty-text">All songs are already in this group</div>`}
+                </div>
+              `
             : ''}
 
           <!-- Toggle button at the bottom -->
           <div class="manage-toggle-wrap">
-            <t-butt slim @click=${() => { this._songManagementOpen = !this._songManagementOpen; this._addSongQuery = ''; this._infoExpanded = false; }}>
+            <t-butt
+              slim
+              @click=${() => {
+                this._songManagementOpen = !this._songManagementOpen;
+                this._addSongQuery = '';
+                this._infoExpanded = false;
+              }}
+            >
               ${this._songManagementOpen ? 'Done' : 'Add / Remove songs'}
             </t-butt>
           </div>
