@@ -312,7 +312,10 @@ export class TIconPicker extends LitElement {
                 }
               }}"
             >
-              <span class="icon-preview no-icon" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;">
+              <span
+                class="icon-preview no-icon"
+                style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;"
+              >
                 <span style="font-size:16px; opacity:0.5;">?</span>
               </span>
               <span style="flex:1; text-align:left;">No icon</span>
@@ -337,7 +340,7 @@ export class TIconPicker extends LitElement {
                     }
                   }}"
                 >
-                  <t-icon name=${name}></t-icon>
+                  <t-icon large name=${name}></t-icon>
                 </div>
               `
             )}
