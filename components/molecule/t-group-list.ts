@@ -117,6 +117,15 @@ export class GroupList extends LitElement {
       gap: 1px;
     }
 
+    .detail-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .detail-title {
       font-size: 1rem;
       font-weight: 600;
@@ -420,6 +429,11 @@ export class GroupList extends LitElement {
             <span class="back-arrow" @click=${this._handleBack}>
               <t-icon name="chevron-up"></t-icon>
             </span>
+            ${selectedGroup.icon
+              ? html`<div class="detail-icon">
+                  <t-icon large name=${(selectedGroup.icon ?? '').replace(/^fa-/, '')}></t-icon>
+                </div>`
+              : ''}
             <div class="detail-title-group">
               <h2 class="detail-title">${selectedGroup.name}</h2>
               ${infoText
@@ -580,7 +594,11 @@ export class GroupList extends LitElement {
                 : ''}
               @click=${() => this._handleGroupClick(group)}
             >
-              ${group.icon ? html`<div class="group-icon"><t-icon large name=${(group.icon ?? '').replace(/^fa-/, '')}></t-icon></div>` : ''}
+              ${group.icon
+                ? html`<div class="group-icon">
+                    <t-icon large name=${(group.icon ?? '').replace(/^fa-/, '')}></t-icon>
+                  </div>`
+                : ''}
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
                 <div class="group-track-count">
