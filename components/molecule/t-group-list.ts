@@ -44,6 +44,16 @@ export class GroupList extends LitElement {
       flex: 1;
     }
 
+    .group-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
     .group-name {
       font-size: 0.95rem;
       font-weight: 500;
@@ -570,6 +580,7 @@ export class GroupList extends LitElement {
                 : ''}
               @click=${() => this._handleGroupClick(group)}
             >
+              ${group.icon ? html`<div class="group-icon"><t-icon large name=${(group.icon ?? '').replace(/^fa-/, '')}></t-icon></div>` : ''}
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
                 <div class="group-track-count">
