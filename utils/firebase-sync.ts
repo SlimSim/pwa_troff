@@ -136,14 +136,36 @@ export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<voi
       });
     }
 
-    // Merge into aoSongLists: keep local-only groups, replace Firebase groups
+    // Merge into aoSongLists: keep all local songlists, replace those with
+    // a matching Firebase group, and add any new Firebase groups.
     const existingSongLists: TroffFirebaseGroupIdentifyer[] =
       (nDB.get('aoSongLists') as TroffFirebaseGroupIdentifyer[]) || [];
-    const localOnly = existingSongLists.filter(
-      (sl: TroffFirebaseGroupIdentifyer) => !sl.firebaseGroupDocId
+
+    const fbById = new Map<string, TroffFirebaseGroupIdentifyer>();
+    for (const g of firebaseSongLists) {
+      if (g.firebaseGroupDocId) {
+        fbById.set(g.firebaseGroupDocId, g);
+      }
+    }
+
+    const merged = existingSongLists.map((local) =>
+      local.firebaseGroupDocId && fbById.has(local.firebaseGroupDocId)
+        ? fbById.get(local.firebaseGroupDocId)!
+        : local
     );
-    const updatedSongLists = [...localOnly, ...firebaseSongLists];
-    nDB.set('aoSongLists', updatedSongLists);
+
+    const localFbIds = new Set(
+      existingSongLists
+        .filter((g) => g.firebaseGroupDocId)
+        .map((g) => g.firebaseGroupDocId)
+    );
+    for (const g of firebaseSongLists) {
+      if (!localFbIds.has(g.firebaseGroupDocId)) {
+        merged.push(g);
+      }
+    }
+
+    nDB.set('aoSongLists', merged);
 
     log.i(
       `Firebase sync complete: ${firebaseSongLists.length} group(s), ` +

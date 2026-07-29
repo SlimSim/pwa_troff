@@ -388,4 +388,78 @@ describe('syncFirebaseGroups', () => {
     expect(songLists[0].songs).toHaveLength(1);
     expect(songLists[0].songs[0].fullPath).toBe('valid-song.mp3');
   });
+
+  // -----------------------------------------------------------------------
+  // Preserves local group with firebaseGroupDocId when Firebase does not
+  // return it (regression test for bug that dropped such groups)
+  // -----------------------------------------------------------------------
+  it('preserves local group that has firebaseGroupDocId when Firebase does not return it', async () => {
+    // Pre-populate with a local songlist that has a firebaseGroupDocId
+    nDBStore['aoSongLists'] = [
+      {
+        id: 'local-group',
+        name: 'My Local Group',
+        firebaseGroupDocId: 'missing-group',
+        songs: [{ fullPath: 'local-song.mp3', galleryId: 'local' }],
+      },
+    ];
+
+    // Firebase returns no groups at all
+    mockFirebaseGroupSnapshot.docs = [];
+
+    await expect(syncFirebaseGroups('user@example.com')).resolves.toBeUndefined();
+
+    const songLists = nDBStore['aoSongLists'] as any[];
+    expect(songLists).toHaveLength(1);
+    expect(songLists[0].firebaseGroupDocId).toBe('missing-group');
+    expect(songLists[0].name).toBe('My Local Group');
+  });
+
+  // -----------------------------------------------------------------------
+  // Replaces local group with Firebase version when firebaseGroupDocId
+  // matches (ensures upstream update is picked up)
+  // -----------------------------------------------------------------------
+  it('replaces local group with Firebase version when firebaseGroupDocId matches', async () => {
+    // Pre-populate with a local songlist that has a firebaseGroupDocId
+    nDBStore['aoSongLists'] = [
+      {
+        id: 'local-group',
+        name: 'Old Name',
+        color: '#000',
+        firebaseGroupDocId: 'existing-group',
+        songs: [{ fullPath: 'old-song.mp3', galleryId: 'local' }],
+      },
+    ];
+
+    // Firebase returns a group with the SAME firebaseGroupDocId but DIFFERENT data
+    const groupId = 'existing-group';
+    mockFirebaseGroupSnapshot.docs = [
+      groupDoc(groupId, {
+        name: 'Updated Name',
+        owners: ['user@example.com'],
+        color: '#ff0000',
+      }),
+    ];
+
+    // Need a song for the Firebase group so the group is valid
+    const songKey = 'song.mp3';
+    mockFirebaseSongsSnapshot.docs = [
+      songDoc('s1', {
+        songKey,
+        fileUrl: 'https://example.com/song.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 1 }),
+      }),
+    ];
+
+    // Pre-cache the song file
+    mockCache[songKey] = new Response('audio data');
+
+    await expect(syncFirebaseGroups('user@example.com')).resolves.toBeUndefined();
+
+    const songLists = nDBStore['aoSongLists'] as any[];
+    expect(songLists).toHaveLength(1);
+    expect(songLists[0].name).toBe('Updated Name');
+    expect(songLists[0].color).toBe('#ff0000');
+    expect(songLists[0].firebaseGroupDocId).toBe(groupId);
+  });
 });

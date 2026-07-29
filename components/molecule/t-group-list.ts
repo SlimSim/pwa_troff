@@ -594,11 +594,9 @@ export class GroupList extends LitElement {
                 : ''}
               @click=${() => this._handleGroupClick(group)}
             >
-              ${group.icon
-                ? html`<div class="group-icon">
-                    <t-icon large name=${(group.icon ?? '').replace(/^fa-/, '')}></t-icon>
-                  </div>`
-                : ''}
+              <div class="group-icon">
+                <t-icon large name=${(group.icon || 'users').replace(/^fa-/, '')}></t-icon>
+              </div>
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
                 <div class="group-track-count">
