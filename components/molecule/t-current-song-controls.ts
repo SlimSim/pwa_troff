@@ -743,7 +743,7 @@ export class CurrentSongControls extends LitElement {
                 <div class="advanced-summary-copy">
                   <p class="advanced-summary-title">Advanced</p>
                 </div>
-                <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+                <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
               </summary>
               <div class="advanced-content">
                 <p class="advanced-summary-text">TO BE IMPLEMENTED: Advanced marker actions!</p>
@@ -771,7 +771,7 @@ export class CurrentSongControls extends LitElement {
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                     <span class="scope-badge">App-wide</span>
-                    <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+                    <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
                   </div>
                 </summary>
                 <div class="advanced-content">
@@ -784,7 +784,7 @@ export class CurrentSongControls extends LitElement {
                           button.
                         </p>
                       </div>
-                      <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+                      <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
                     </summary>
                     <div class="advanced-content">
                       <div class="settings-section">
@@ -908,7 +908,7 @@ export class CurrentSongControls extends LitElement {
                           Control how markers extend their color across the timeline.
                         </p>
                       </div>
-                      <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+                      <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
                     </summary>
                     <div class="advanced-content">
                       <div class="settings-grid">
@@ -952,7 +952,7 @@ export class CurrentSongControls extends LitElement {
                           When loading a new song, these values will be the ones that the song get.
                         </p>
                       </div>
-                      <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+                      <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
                     </summary>
                     <div class="advanced-content">
                       <div class="song-stepper-grid">
