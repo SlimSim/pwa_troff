@@ -351,6 +351,8 @@ export class MediaParent extends LitElement {
     // Listen for group detail open/close to change header controls
     this.addEventListener('group-detail-opened', this._handleGroupDetailOpened);
     this.addEventListener('group-detail-closed', this._handleGroupDetailClosed);
+    // Listen for add-song-to-group requests from the group detail header
+    this.addEventListener('group-add-song-requested', this._handleGroupAddSongRequested);
     // Listen for artist detail open/close
     this.addEventListener('artist-detail-opened', this._handleArtistDetailOpened);
     this.addEventListener('artist-detail-closed', this._handleContextDetailClosed);
@@ -606,9 +608,10 @@ export class MediaParent extends LitElement {
     );
   }
 
-  /** Handle "Add song" while inside a group detail — uploads file AND adds to group. */
-  private _handleAddSongToGroup() {
-    this._pendingGroupKey = this._currentGroupKey;
+  /** Handle add-song-to-group request from t-group-list detail-header. */
+  private _handleGroupAddSongRequested(event: Event) {
+    const detail = (event as CustomEvent<{ groupKey?: string }>).detail;
+    this._pendingGroupKey = detail?.groupKey || this._currentGroupKey;
     this._handleAddSong();
   }
 
@@ -729,21 +732,6 @@ export class MediaParent extends LitElement {
         this.openGenreDetail(this._contextName);
       });
     }
-  }
-
-  /** Count of resolved tracks in the currently open group. */
-  private _getCurrentGroupSongCount(): number {
-    if (!this._currentGroupKey) return 0;
-    const group = this.groups.find((g) => {
-      const key = (g as any).firebaseGroupDocId || String((g as any).id);
-      return key === this._currentGroupKey;
-    });
-    if (!group) return 0;
-    // Resolve tracks from songs
-    const groupSongs: Array<{ fullPath?: string; galleryId?: string }> = (group as any).songs || [];
-    return this.songs.filter((song: any) =>
-      groupSongs.some((gs) => gs.fullPath === song.songKey || gs.galleryId === song.songKey)
-    ).length;
   }
 
   private async _handleFilesSelected(event: Event) {
@@ -1383,7 +1371,12 @@ export class MediaParent extends LitElement {
       }
     }
 
+    // Hide the song-list-header entirely when inside a group detail view
+    // (controls moved to t-group-list's detail-header).
+    const hideSongListHeader = this.currentFilter === 'groups' && this._currentGroupKey;
+
     return html`
+      ${hideSongListHeader ? '' : html`
       <div class="song-list-header">
         <h3 class="song-list-title">Song List</h3>
 
@@ -1519,27 +1512,7 @@ export class MediaParent extends LitElement {
           ? html`
               <div class="header-controls">
                 ${this._currentGroupKey
-                  ? html`
-                      <!-- Inside a group: Add song (upload + add to group) -->
-                      <t-butt icon @click=${this._handleAddSongToGroup} title="Add song to group">
-                        <t-icon name="note-plus"></t-icon>
-                      </t-butt>
-                      <div class="song-count">
-                        <t-icon name="note"></t-icon> ${this._getCurrentGroupSongCount()}
-                      </div>
-                      <t-input
-                        class="search-input"
-                        slim
-                        clearable
-                        placeholder="Search songs…"
-                        aria-label="Search songs…"
-                        .value=${this.searchQuery}
-                        @input=${this._handleSearchInput}
-                        @keydown=${this._handleSearchKeydown}
-                        @focus=${this._handleSearchFocus}
-                        @blur=${this._handleSearchBlur}
-                      ></t-input>
-                    `
+                  ? '' /* Controls moved to t-group-list detail-header */
                   : html`
                       <!-- Not in a group: Add group, group count, search groups -->
                       <t-butt icon @click=${this._handleAddGroup} title="Add group">
@@ -1577,7 +1550,7 @@ export class MediaParent extends LitElement {
             `
           : ''}
       </div>
-
+      `}
       <!-- Hidden file input for adding songs -->
       <input
         type="file"
@@ -1646,7 +1619,6 @@ export class MediaParent extends LitElement {
                       .groups=${visibleGroups}
                       .tracks=${songs}
                       currentSongKey=${this.currentSongKey}
-                      groupTrackSearch=${this.searchQuery}
                     ></t-group-list>
                   `
                 : ''}

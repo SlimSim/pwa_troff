@@ -155,6 +155,83 @@ export class GroupList extends LitElement {
     .detail-edit-btn {
       flex-shrink: 0;
       margin-left: auto;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+    }
+
+    .detail-edit-btn.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Controls section in the detail header (song count, search, add button) */
+    .detail-header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 1;
+      min-width: 0;
+      overflow: hidden;
+      transition: gap 0.2s ease;
+    }
+
+    .detail-header-controls.search-expanded {
+      gap: 0;
+    }
+
+    .group-song-count {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .group-song-count.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .detail-add-song-btn {
+      flex-shrink: 0;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+    }
+
+    .detail-add-song-btn.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Compact search input that expands on focus */
+    .search-compact-wrap {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      transition: width 0.3s ease;
+      width: 32px;
+      flex-shrink: 0;
+    }
+
+    .search-compact-wrap.search-expanded {
+      width: 160px;
+      flex-shrink: 1;
+    }
+
+    @media (min-width: 576px) {
+      .search-compact-wrap.search-expanded {
+        width: 200px;
+      }
     }
 
     /* Track row — relative container for absolute delete overlay */
@@ -270,7 +347,6 @@ export class GroupList extends LitElement {
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) currentSongKey = '';
-  @property({ type: String }) groupTrackSearch = '';
 
   /**
    * Key of the currently open group detail view.
@@ -287,6 +363,12 @@ export class GroupList extends LitElement {
 
   /** Whether song management (remove buttons + add songs section) is visible. */
   @state() private _songManagementOpen = false;
+
+  /** Local search query for filtering tracks inside the group detail. */
+  @state() private _groupTrackSearch = '';
+
+  /** Whether the inline search input is focused (expanded state). */
+  @state() private _isGroupSearchFocused = false;
 
   /** Resolve a legacy class-name colour (e.g. `bg-red-3`) to a CSS-safe value. */
   private _cssColor(c: string | undefined): string {
@@ -389,6 +471,32 @@ export class GroupList extends LitElement {
     );
   }
 
+  /** Handle click on "Add song to group" button in the detail header. */
+  private _handleAddSongToGroup() {
+    this.dispatchEvent(
+      new CustomEvent('group-add-song-requested', {
+        detail: { groupKey: this._selectedGroupKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /** Handle search input within the group detail header. */
+  private _handleGroupSearchInput(e: CustomEvent) {
+    if (e.detail && typeof e.detail.value === 'string') {
+      this._groupTrackSearch = e.detail.value;
+    }
+  }
+
+  private _handleGroupSearchFocus() {
+    this._isGroupSearchFocused = true;
+  }
+
+  private _handleGroupSearchBlur() {
+    this._isGroupSearchFocused = false;
+  }
+
   /** Songs from `tracks` that are NOT already in the selected group. */
   private _getAvailableSongs(): any[] {
     const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
@@ -411,7 +519,7 @@ export class GroupList extends LitElement {
     if (isDetailView && selectedGroup) {
       const availableSongs = this._getAvailableSongs();
       const infoText = selectedGroup.info || '';
-      const trackQuery = this.groupTrackSearch.trim().toLowerCase();
+      const trackQuery = this._groupTrackSearch.trim().toLowerCase();
       const filteredTracks = trackQuery
         ? selectedGroup.tracks.filter((t: any) =>
             (t.title || '').toLowerCase().includes(trackQuery)
@@ -453,8 +561,37 @@ export class GroupList extends LitElement {
                   >`
                 : ''}
             </div>
+
+            <!-- Controls: add song, song count, search (moved from song-list-header) -->
+            <div class="detail-header-controls ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+              <span class="group-song-count ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+                <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
+              </span>
+              <div class="search-compact-wrap ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+                <t-input
+                  class="search-input-compact"
+                  slim
+                  clearable
+                  placeholder="Search songs…"
+                  aria-label="Search songs in group"
+                  .value=${this._groupTrackSearch}
+                  @input=${this._handleGroupSearchInput}
+                  @focus=${this._handleGroupSearchFocus}
+                  @blur=${this._handleGroupSearchBlur}
+                ></t-input>
+              </div>
+              <t-butt
+                class="detail-add-song-btn ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
+                icon
+                @click=${this._handleAddSongToGroup}
+                title="Add song to group"
+              >
+                <t-icon name="note-plus"></t-icon>
+              </t-butt>
+            </div>
+
             <t-butt
-              class="detail-edit-btn"
+              class="detail-edit-btn ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
               icon
               @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
               title="Edit group"
@@ -510,7 +647,7 @@ export class GroupList extends LitElement {
             : ''}
           ${filteredTracks.length === 0 && trackQuery
             ? html`<div class="empty-text" style="padding: 16px;">
-                No songs match "${this.groupTrackSearch}".
+                No songs match "${this._groupTrackSearch}".
               </div>`
             : ''}
 
