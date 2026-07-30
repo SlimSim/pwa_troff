@@ -132,6 +132,14 @@ export class GroupList extends LitElement {
       margin: 0;
     }
 
+    .detail-category-label {
+      font-size: 0.65rem;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+
     .detail-info-text {
       font-size: 0.7rem;
       opacity: 0.6;
@@ -543,6 +551,7 @@ export class GroupList extends LitElement {
                 </div>`
               : ''}
             <div class="detail-title-group">
+              <span class="detail-category-label">Groups</span>
               <h2 class="detail-title">${selectedGroup.name}</h2>
               ${infoText
                 ? html`<span

@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import '../atom/t-media.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
+import '../atom/t-input.js';
 
 interface ArtistGroup {
   artist: string;
@@ -81,6 +82,90 @@ export class ArtistList extends LitElement {
       margin: 0;
     }
 
+    .detail-category-label {
+      font-size: 0.65rem;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+
+    .detail-title-group {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    /* Controls section in the detail header */
+    .detail-header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 1;
+      min-width: 0;
+      overflow: hidden;
+      transition: gap 0.2s ease;
+    }
+
+    .detail-header-controls.search-expanded {
+      gap: 0;
+    }
+
+    .artist-song-count {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .artist-song-count.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .detail-add-song-btn {
+      flex-shrink: 0;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+    }
+
+    .detail-add-song-btn.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Compact search input that expands on focus */
+    .search-compact-wrap {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      transition: width 0.3s ease;
+      width: 32px;
+      flex-shrink: 0;
+    }
+
+    .search-compact-wrap.search-expanded {
+      width: 160px;
+      flex-shrink: 1;
+    }
+
+    @media (min-width: 576px) {
+      .search-compact-wrap.search-expanded {
+        width: 200px;
+      }
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .artist-item {
@@ -105,6 +190,12 @@ export class ArtistList extends LitElement {
   @property({ type: Array }) artists: any[] = [];
   @property({ type: String }) selectedArtist: string = '';
   @property({ type: String }) currentSongKey = '';
+
+  /** Local search query for filtering tracks inside the artist detail. */
+  @state() private _artistTrackSearch = '';
+
+  /** Whether the inline search input is focused (expanded state). */
+  @state() private _isSearchFocused = false;
 
   private _getArtistGroups(): ArtistGroup[] {
     // Use pre-sorted artists if provided, otherwise generate from tracks
@@ -163,39 +254,105 @@ export class ArtistList extends LitElement {
     this._dispatchArtistClosed();
   }
 
+  /** Handle click on "Add song" button in the detail header. */
+  private _handleAddSong() {
+    this.dispatchEvent(
+      new CustomEvent('add-song-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /** Handle search input within the artist detail header. */
+  private _handleSearchInput(e: CustomEvent) {
+    if (e.detail && typeof e.detail.value === 'string') {
+      this._artistTrackSearch = e.detail.value;
+    }
+  }
+
+  private _handleSearchFocus() {
+    this._isSearchFocused = true;
+  }
+
+  private _handleSearchBlur() {
+    this._isSearchFocused = false;
+  }
+
   render() {
     const isDetailView = this.selectedArtist !== '';
     const artistGroups = this._getArtistGroups();
     const selectedGroup = artistGroups.find((g) => g.artist === this.selectedArtist);
 
     if (isDetailView && selectedGroup) {
+      const trackQuery = this._artistTrackSearch.trim().toLowerCase();
+      const filteredTracks = trackQuery
+        ? selectedGroup.tracks.filter((t: any) =>
+            (t.title || '').toLowerCase().includes(trackQuery)
+          )
+        : selectedGroup.tracks;
+
       return html`
         <div class="detail-view">
           <div class="detail-header">
             <span class="back-arrow" @click=${this._handleBack}>
               <t-icon name="chevron-up"></t-icon>
             </span>
-            <h2 class="detail-title">${this.selectedArtist}</h2>
+            <div class="detail-title-group">
+              <span class="detail-category-label">Artists</span>
+              <h2 class="detail-title">${this.selectedArtist}</h2>
+            </div>
+
+            <!-- Controls: add song, track count, search -->
+            <div class="detail-header-controls ${this._isSearchFocused ? 'search-expanded' : ''}">
+              <span class="artist-song-count ${this._isSearchFocused ? 'search-expanded' : ''}">
+                <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
+              </span>
+              <div class="search-compact-wrap ${this._isSearchFocused ? 'search-expanded' : ''}">
+                <t-input
+                  slim
+                  clearable
+                  placeholder="Search tracks…"
+                  aria-label="Search tracks in artist"
+                  .value=${this._artistTrackSearch}
+                  @input=${this._handleSearchInput}
+                  @focus=${this._handleSearchFocus}
+                  @blur=${this._handleSearchBlur}
+                ></t-input>
+              </div>
+              <t-butt
+                class="detail-add-song-btn ${this._isSearchFocused ? 'search-expanded' : ''}"
+                icon
+                @click=${this._handleAddSong}
+                title="Add songs"
+              >
+                <t-icon name="note-plus"></t-icon>
+              </t-butt>
+            </div>
           </div>
-          ${selectedGroup.tracks.map(
-            (track) => html`
-              <t-media
-                .active=${track.songKey === this.currentSongKey}
-                title=${track.title}
-                artist=${track.artist}
-                album=${track.album}
-                genre=${track.genre}
-                year=${track.year}
-                comment=${track.comment}
-                duration=${track.duration}
-                .rating=${track.rating}
-                tempo=${track.tempo}
-                .playsMonth=${track.playsMonth}
-                .playsTotal=${track.playsTotal}
-                .songKey=${track.songKey}
-              ></t-media>
-            `
-          )}
+          ${filteredTracks.length === 0 && trackQuery
+            ? html`<div style="padding: 16px; opacity: 0.6; font-size: 0.85rem;">
+                No tracks match "${this._artistTrackSearch}".
+              </div>`
+            : filteredTracks.map(
+                (track) => html`
+                  <t-media
+                    .active=${track.songKey === this.currentSongKey}
+                    title=${track.title}
+                    artist=${track.artist}
+                    album=${track.album}
+                    genre=${track.genre}
+                    year=${track.year}
+                    comment=${track.comment}
+                    duration=${track.duration}
+                    .rating=${track.rating}
+                    tempo=${track.tempo}
+                    .playsMonth=${track.playsMonth}
+                    .playsTotal=${track.playsTotal}
+                    .songKey=${track.songKey}
+                  ></t-media>
+                `
+              )}
         </div>
       `;
     }

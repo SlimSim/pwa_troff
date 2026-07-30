@@ -359,6 +359,8 @@ export class MediaParent extends LitElement {
     // Listen for genre detail open/close
     this.addEventListener('genre-detail-opened', this._handleGenreDetailOpened);
     this.addEventListener('genre-detail-closed', this._handleContextDetailClosed);
+    // Listen for add-song requests from artist/genre detail headers
+    this.addEventListener('add-song-requested', () => this._handleAddSong());
     window.addEventListener('keydown', this._handleGlobalKeydown);
     window.addEventListener('keydown', this._handleGlobalEsc);
   }
@@ -707,6 +709,7 @@ export class MediaParent extends LitElement {
 
   /** Clear the current context. */
   private _clearContext() {
+    this._currentGroupKey = '';
     this._contextType = '';
     this._contextKey = '';
     this._contextName = '';
@@ -1371,14 +1374,26 @@ export class MediaParent extends LitElement {
       }
     }
 
-    // Hide the song-list-header entirely when inside a group detail view
-    // (controls moved to t-group-list's detail-header).
-    const hideSongListHeader = this.currentFilter === 'groups' && this._currentGroupKey;
+    // Hide the song-list-header entirely when inside a group/artist/genre detail view
+    // (controls moved to the detail-header of the respective list components).
+    const hideSongListHeader =
+      (this.currentFilter === 'groups' && this._currentGroupKey) ||
+      this._contextType === 'artist' ||
+      this._contextType === 'genre';
+
+    // Map currentFilter to a display title for the song-list-header.
+    const filterTitles: Record<string, string> = {
+      tracks: 'Tracks',
+      groups: 'Groups',
+      artists: 'Artists',
+      genre: 'Genres',
+    };
+    const headerTitle = filterTitles[this.currentFilter] || 'Song List';
 
     return html`
       ${hideSongListHeader ? '' : html`
       <div class="song-list-header">
-        <h3 class="song-list-title">Song List</h3>
+        <h3 class="song-list-title">${headerTitle}</h3>
 
         ${this.currentFilter === 'tracks'
           ? html`
