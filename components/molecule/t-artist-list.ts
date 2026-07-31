@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '../atom/t-media.js';
 import '../atom/t-butt.js';
@@ -34,6 +34,17 @@ export class ArtistList extends LitElement {
 
     .artist-item:hover {
       background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .artist-item.highlighted {
+      border-left: 4px solid var(--accent-color-1, #431c5d);
+      background-color: color-mix(
+        in srgb,
+        var(--accent-color-1, #431c5d) 18%,
+        transparent
+      );
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
     }
 
     .artist-info {
@@ -191,11 +202,17 @@ export class ArtistList extends LitElement {
   @property({ type: String }) selectedArtist: string = '';
   @property({ type: String }) currentSongKey = '';
 
+  /** Index of the highlighted item in the list view (-1 = none). */
+  @property({ type: Number }) highlightedIndex = -1;
+
   /** Local search query for filtering tracks inside the artist detail. */
   @state() private _artistTrackSearch = '';
 
   /** Whether the inline search input is focused (expanded state). */
   @state() private _isSearchFocused = false;
+
+  /** Index of the highlighted track in filtered results (-1 = none). */
+  @state() private _highlightedIndex = -1;
 
   private _getArtistGroups(): ArtistGroup[] {
     // Use pre-sorted artists if provided, otherwise generate from tracks
@@ -222,6 +239,7 @@ export class ArtistList extends LitElement {
   public openArtist(artist: string) {
     if (this.selectedArtist === artist) return;
     this.selectedArtist = artist;
+    this._highlightedIndex = -1;
     this._dispatchArtistOpened();
   }
 
@@ -251,6 +269,7 @@ export class ArtistList extends LitElement {
 
   private _handleBack() {
     this.selectedArtist = '';
+    this._highlightedIndex = -1;
     this._dispatchArtistClosed();
   }
 
@@ -269,6 +288,69 @@ export class ArtistList extends LitElement {
     if (e.detail && typeof e.detail.value === 'string') {
       this._artistTrackSearch = e.detail.value;
     }
+    // Reset highlight to first result
+    const selectedGroup = this._getArtistGroups().find((g) => g.artist === this.selectedArtist);
+    if (!selectedGroup) return;
+    const query = this._artistTrackSearch.trim().toLowerCase();
+    const filtered = query
+      ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+      : selectedGroup.tracks;
+    this._highlightedIndex = filtered.length > 0 ? 0 : -1;
+  }
+
+  /** Handle arrow key navigation and Enter in the detail search. */
+  private _handleSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const selectedGroup = this._getArtistGroups().find((g) => g.artist === this.selectedArtist);
+      if (!selectedGroup) return;
+      const query = this._artistTrackSearch.trim().toLowerCase();
+      const filtered = query
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+        : selectedGroup.tracks;
+      if (filtered.length === 0) return;
+      const max = filtered.length - 1;
+      if (this._highlightedIndex === -1) {
+        this._highlightedIndex = e.key === 'ArrowDown' ? 0 : max;
+      } else {
+        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        this._highlightedIndex += delta;
+        if (this._highlightedIndex > max) this._highlightedIndex = 0;
+        if (this._highlightedIndex < 0) this._highlightedIndex = max;
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this._highlightedIndex < 0) return;
+      const selectedGroup = this._getArtistGroups().find((g) => g.artist === this.selectedArtist);
+      if (!selectedGroup) return;
+      const query = this._artistTrackSearch.trim().toLowerCase();
+      const filtered = query
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+        : selectedGroup.tracks;
+      const track = filtered[this._highlightedIndex];
+      if (!track) return;
+      this.dispatchEvent(
+        new CustomEvent('media-selected', {
+          detail: {
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            genre: track.genre,
+            year: track.year,
+            comment: track.comment,
+            duration: track.duration,
+            rating: track.rating,
+            tempo: track.tempo,
+            playsMonth: track.playsMonth,
+            playsTotal: track.playsTotal,
+            albumArt: track.albumArt,
+            songKey: track.songKey,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
   }
 
   private _handleSearchFocus() {
@@ -277,6 +359,22 @@ export class ArtistList extends LitElement {
 
   private _handleSearchBlur() {
     this._isSearchFocused = false;
+    this._artistTrackSearch = '';
+  }
+
+  updated(changedProperties: PropertyValues) {
+    if (changedProperties.has('_highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('t-media[highlighted]');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
+    if (changedProperties.has('highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('.artist-item.highlighted');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
   }
 
   render() {
@@ -316,6 +414,7 @@ export class ArtistList extends LitElement {
                   aria-label="Search tracks in artist"
                   .value=${this._artistTrackSearch}
                   @input=${this._handleSearchInput}
+                  @keydown=${this._handleSearchKeydown}
                   @focus=${this._handleSearchFocus}
                   @blur=${this._handleSearchBlur}
                 ></t-input>
@@ -335,9 +434,10 @@ export class ArtistList extends LitElement {
                 No tracks match "${this._artistTrackSearch}".
               </div>`
             : filteredTracks.map(
-                (track) => html`
+                (track, index) => html`
                   <t-media
                     .active=${track.songKey === this.currentSongKey}
+                    ?highlighted=${index === this._highlightedIndex}
                     title=${track.title}
                     artist=${track.artist}
                     album=${track.album}
@@ -360,8 +460,11 @@ export class ArtistList extends LitElement {
     return html`
       <div class="artist-list-container">
         ${artistGroups.map(
-          (group) => html`
-            <div class="artist-item" @click=${() => this._handleArtistClick(group.artist)}>
+          (group, index) => html`
+            <div
+              class="artist-item ${index === this.highlightedIndex ? 'highlighted' : ''}"
+              @click=${() => this._handleArtistClick(group.artist)}
+            >
               <div class="artist-info">
                 <div class="artist-name">${group.artist}</div>
                 <div class="artist-track-count">

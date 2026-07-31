@@ -440,8 +440,8 @@ export class MediaParent extends LitElement {
       this._pendingNavState = null;
     }
     if (changedProperties.has('searchQuery')) {
-      const visibleTracks = this._getVisibleTracks();
-      this.highlightedIndex = visibleTracks.length > 0 ? 0 : -1;
+      const items = this._getVisibleItems();
+      this.highlightedIndex = items.length > 0 ? 0 : -1;
     }
   }
 
@@ -545,6 +545,43 @@ export class MediaParent extends LitElement {
 
   private _getVisibleTracks(): TrackLike[] {
     return this._getSortedSongs(filterTracks(this.songs, this.searchQuery));
+  }
+
+  private _getVisibleArtists(): any[] {
+    return filterArtists(this._getSortedArtists(this.songs), this.searchQuery);
+  }
+
+  private _getVisibleGenres(): any[] {
+    return filterGenres(this._getSortedGenres(this.songs), this.searchQuery);
+  }
+
+  private _getVisibleGroups(): any[] {
+    return this._getSortedGroups(
+      filterGroups(this.groups, this.searchQuery).map((group) => ({
+        ...group,
+        tracks: this.songs.filter((song) =>
+          (group as any).songs?.some(
+            (gs: any) => gs.fullPath === song.songKey || gs.galleryId === song.songKey
+          )
+        ),
+      }))
+    );
+  }
+
+  /** Return the visible items for the current filter. */
+  private _getVisibleItems(): any[] {
+    switch (this.currentFilter) {
+      case 'tracks':
+        return this._getVisibleTracks();
+      case 'artists':
+        return this._getVisibleArtists();
+      case 'genre':
+        return this._getVisibleGenres();
+      case 'groups':
+        return this._getVisibleGroups();
+      default:
+        return [];
+    }
   }
 
   private _handleFilterChanged(event: CustomEvent) {
@@ -871,72 +908,55 @@ export class MediaParent extends LitElement {
     if (typeof detail?.value === 'string') {
       this.searchQuery = detail.value;
     }
-    const visibleTracks = this._getVisibleTracks();
-    this.highlightedIndex = visibleTracks.length > 0 ? 0 : -1;
+    const items = this._getVisibleItems();
+    this.highlightedIndex = items.length > 0 ? 0 : -1;
   }
 
   private _handleSearchKeydown(event: KeyboardEvent) {
-    console.log('[t-media-parent] _handleSearchKeydown fired', {
-      key: event.key,
-      currentFilter: this.currentFilter,
-      isDesktop: this.isDesktop,
-      isSearchFocused: this.isSearchFocused,
-      searchQuery: this.searchQuery,
-      highlightedIndex: this.highlightedIndex,
-    });
-
-    if (this.currentFilter !== 'tracks') return;
-
     // Enter should always load the currently highlighted search result,
     // even on devices where pointer detection is not "fine".
     if (event.key === 'Enter') {
-      console.log('[t-media-parent] Enter detected in search input', {
-        highlightedIndexBeforeSelect: this.highlightedIndex,
-        visibleTrackCount: this._getVisibleTracks().length,
-      });
       event.preventDefault();
-      this._selectHighlightedTrack();
-      console.log('[t-media-parent] Enter path completed', {
-        defaultPrevented: event.defaultPrevented,
-      });
+      const items = this._getVisibleItems();
+      const item = items[this.highlightedIndex];
+      if (!item) return;
+      switch (this.currentFilter) {
+        case 'tracks':
+          this._selectTrackForEnter(item);
+          break;
+        case 'artists':
+          this.openArtistDetail((item as any).name);
+          break;
+        case 'genre':
+          this.openGenreDetail((item as any).name);
+          break;
+        case 'groups': {
+          const gKey = (item as any).firebaseGroupDocId || String((item as any).id);
+          this.openGroupDetail(gKey);
+          break;
+        }
+      }
       return;
     }
 
-    if (!this.isDesktop) {
-      console.log('[t-media-parent] Non-Enter key ignored because isDesktop is false', {
-        key: event.key,
-      });
-      return;
-    }
+    if (!this.isDesktop) return;
 
     switch (event.key) {
       case 'ArrowDown':
       case 'ArrowUp': {
         event.preventDefault();
-        const tracks = this._getVisibleTracks();
-        if (tracks.length === 0) return;
-        const max = tracks.length - 1;
-        const direction = event.key;
-        console.log('[t-media-parent] Arrow navigation before update', {
-          direction,
-          highlightedIndexBefore: this.highlightedIndex,
-          max,
-        });
+        const items = this._getVisibleItems();
+        if (items.length === 0) return;
+        const max = items.length - 1;
         if (this.highlightedIndex === -1) {
-          this.highlightedIndex = direction === 'ArrowDown' ? 0 : max;
+          this.highlightedIndex = event.key === 'ArrowDown' ? 0 : max;
         } else {
-          const next = this.highlightedIndex + (direction === 'ArrowDown' ? 1 : -1);
+          const next = this.highlightedIndex + (event.key === 'ArrowDown' ? 1 : -1);
           this.highlightedIndex = Math.max(0, Math.min(max, next));
         }
-        console.log('[t-media-parent] Arrow navigation after update', {
-          highlightedIndexAfter: this.highlightedIndex,
-        });
         break;
       }
       default:
-        console.log('[t-media-parent] Key ignored in search handler', {
-          key: event.key,
-        });
         break;
     }
   }
@@ -947,6 +967,7 @@ export class MediaParent extends LitElement {
 
   private _handleSearchBlur = (): void => {
     this.isSearchFocused = false;
+    this.searchQuery = '';
   };
 
   private _blurSearchInput() {
@@ -955,30 +976,8 @@ export class MediaParent extends LitElement {
     innerInput?.blur();
   }
 
-  private _selectHighlightedTrack() {
-    const visibleTracks = this._getVisibleTracks();
-    const track = visibleTracks[this.highlightedIndex];
-
-    console.log('[t-media-parent] _selectHighlightedTrack called', {
-      highlightedIndex: this.highlightedIndex,
-      visibleTrackCount: visibleTracks.length,
-      visibleTrackSongKeysPreview: visibleTracks.slice(0, 5).map((t) => t.songKey),
-      selectedTrackSongKey: track?.songKey,
-    });
-
-    if (!track) {
-      console.log('[t-media-parent] Selection aborted: no track at highlighted index', {
-        highlightedIndex: this.highlightedIndex,
-        visibleTrackCount: visibleTracks.length,
-      });
-      return;
-    }
-
-    console.log('[t-media-parent] Dispatching media-selected event', {
-      songKey: track.songKey,
-      title: track.title,
-    });
-
+  private _selectTrackForEnter(track: any) {
+    if (!track) return;
     this.dispatchEvent(
       new CustomEvent('media-selected', {
         detail: {
@@ -1000,10 +999,6 @@ export class MediaParent extends LitElement {
         composed: true,
       })
     );
-
-    console.log('[t-media-parent] media-selected event dispatched', {
-      songKey: track.songKey,
-    });
   }
 
   private _renderSortDropdown() {
@@ -1615,6 +1610,7 @@ export class MediaParent extends LitElement {
                     <t-artist-list
                       .artists=${visibleArtists}
                       .tracks=${songs}
+                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                       currentSongKey=${this.currentSongKey}
                     ></t-artist-list>
                   `
@@ -1624,6 +1620,7 @@ export class MediaParent extends LitElement {
                     <t-genre-list
                       .genres=${visibleGenres}
                       .tracks=${songs}
+                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                       currentSongKey=${this.currentSongKey}
                     ></t-genre-list>
                   `
@@ -1633,6 +1630,7 @@ export class MediaParent extends LitElement {
                     <t-group-list
                       .groups=${visibleGroups}
                       .tracks=${songs}
+                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                       currentSongKey=${this.currentSongKey}
                     ></t-group-list>
                   `

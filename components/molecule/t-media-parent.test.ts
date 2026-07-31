@@ -476,6 +476,126 @@ describe('Search-mode keyboard navigation', () => {
     expect((element as any).highlightedIndex).toBe(2);
   });
 
+  // ---- artists filter arrow key navigation ----
+
+  it('ArrowDown increments highlightedIndex by 1 for artists', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', artist: 'Alpha' },
+      { songKey: '2', title: 'Waltz', artist: 'Bravo' },
+      { songKey: '3', title: 'Foxtrot', artist: 'Charlie' },
+    ];
+    (element as any).currentFilter = 'artists';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 0;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowDown');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  it('ArrowUp decrements highlightedIndex by 1 for artists', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', artist: 'Alpha' },
+      { songKey: '2', title: 'Waltz', artist: 'Bravo' },
+      { songKey: '3', title: 'Foxtrot', artist: 'Charlie' },
+    ];
+    (element as any).currentFilter = 'artists';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 2;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowUp');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  // ---- genres filter arrow key navigation ----
+
+  it('ArrowDown increments highlightedIndex by 1 for genres', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', genre: 'Jazz' },
+      { songKey: '2', title: 'Waltz', genre: 'Blues' },
+      { songKey: '3', title: 'Foxtrot', genre: 'Rock' },
+    ];
+    (element as any).currentFilter = 'genre';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 0;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowDown');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  it('ArrowUp decrements highlightedIndex by 1 for genres', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', genre: 'Jazz' },
+      { songKey: '2', title: 'Waltz', genre: 'Blues' },
+      { songKey: '3', title: 'Foxtrot', genre: 'Rock' },
+    ];
+    (element as any).currentFilter = 'genre';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 2;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowUp');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  // ---- groups filter arrow key navigation ----
+
+  it('ArrowDown increments highlightedIndex by 1 for groups', async () => {
+    await element.updateComplete;
+    (element as any).groups = [
+      { id: '1', name: 'Group A', songs: [] },
+      { id: '2', name: 'Group B', songs: [] },
+      { id: '3', name: 'Group C', songs: [] },
+    ];
+    (element as any).currentFilter = 'groups';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 0;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowDown');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  it('ArrowUp decrements highlightedIndex by 1 for groups', async () => {
+    await element.updateComplete;
+    (element as any).groups = [
+      { id: '1', name: 'Group A', songs: [] },
+      { id: '2', name: 'Group B', songs: [] },
+      { id: '3', name: 'Group C', songs: [] },
+    ];
+    (element as any).currentFilter = 'groups';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 2;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowUp');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
   it('Enter dispatches a media-selected event with the highlighted track songKey', async () => {
     await element.updateComplete;
     // Override the beforeEach fixture with titles already in alphabetical order

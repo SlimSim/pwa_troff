@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '../atom/t-media.js';
 import '../atom/t-butt.js';
@@ -38,6 +38,17 @@ export class GroupList extends LitElement {
 
     .group-item:hover {
       filter: brightness(1.15);
+    }
+
+    .group-item.highlighted {
+      border-left: 4px solid var(--accent-color-1, #431c5d);
+      background-color: color-mix(
+        in srgb,
+        var(--accent-color-1, #431c5d) 18%,
+        transparent
+      );
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
     }
 
     .group-info {
@@ -356,6 +367,9 @@ export class GroupList extends LitElement {
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) currentSongKey = '';
 
+  /** Index of the highlighted item in the list view (-1 = none). */
+  @property({ type: Number }) highlightedIndex = -1;
+
   /**
    * Key of the currently open group detail view.
    * Built from firebaseGroupDocId || String(id) — whichever is available first.
@@ -377,6 +391,9 @@ export class GroupList extends LitElement {
 
   /** Whether the inline search input is focused (expanded state). */
   @state() private _isGroupSearchFocused = false;
+
+  /** Index of the highlighted track in filtered results (-1 = none). */
+  @state() private _highlightedIndex = -1;
 
   /** Resolve a legacy class-name colour (e.g. `bg-red-3`) to a CSS-safe value. */
   private _cssColor(c: string | undefined): string {
@@ -412,6 +429,7 @@ export class GroupList extends LitElement {
     this._addSongQuery = '';
     this._infoExpanded = false;
     this._songManagementOpen = false;
+    this._highlightedIndex = -1;
     this.dispatchEvent(
       new CustomEvent('group-detail-opened', {
         detail: { groupKey: key },
@@ -427,6 +445,7 @@ export class GroupList extends LitElement {
 
   private _handleBack() {
     this._selectedGroupKey = '';
+    this._highlightedIndex = -1;
     this.dispatchEvent(
       new CustomEvent('group-detail-closed', {
         bubbles: true,
@@ -495,6 +514,69 @@ export class GroupList extends LitElement {
     if (e.detail && typeof e.detail.value === 'string') {
       this._groupTrackSearch = e.detail.value;
     }
+    // Reset highlight to first result
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
+    if (!selectedGroup) return;
+    const query = this._groupTrackSearch.trim().toLowerCase();
+    const filtered = query
+      ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+      : selectedGroup.tracks;
+    this._highlightedIndex = filtered.length > 0 ? 0 : -1;
+  }
+
+  /** Handle arrow key navigation and Enter selection in the detail search. */
+  private _handleGroupSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
+      if (!selectedGroup) return;
+      const query = this._groupTrackSearch.trim().toLowerCase();
+      const filtered = query
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+        : selectedGroup.tracks;
+      if (filtered.length === 0) return;
+      const max = filtered.length - 1;
+      if (this._highlightedIndex === -1) {
+        this._highlightedIndex = e.key === 'ArrowDown' ? 0 : max;
+      } else {
+        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        this._highlightedIndex += delta;
+        if (this._highlightedIndex > max) this._highlightedIndex = 0;
+        if (this._highlightedIndex < 0) this._highlightedIndex = max;
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this._highlightedIndex < 0) return;
+      const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
+      if (!selectedGroup) return;
+      const query = this._groupTrackSearch.trim().toLowerCase();
+      const filtered = query
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+        : selectedGroup.tracks;
+      const track = filtered[this._highlightedIndex];
+      if (!track) return;
+      this.dispatchEvent(
+        new CustomEvent('media-selected', {
+          detail: {
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            genre: track.genre,
+            year: track.year,
+            comment: track.comment,
+            duration: track.duration,
+            rating: track.rating,
+            tempo: track.tempo,
+            playsMonth: track.playsMonth,
+            playsTotal: track.playsTotal,
+            albumArt: track.albumArt,
+            songKey: track.songKey,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
   }
 
   private _handleGroupSearchFocus() {
@@ -503,6 +585,22 @@ export class GroupList extends LitElement {
 
   private _handleGroupSearchBlur() {
     this._isGroupSearchFocused = false;
+    this._groupTrackSearch = '';
+  }
+
+  updated(changedProperties: PropertyValues) {
+    if (changedProperties.has('_highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('t-media[highlighted]');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
+    if (changedProperties.has('highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('.group-item.highlighted');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
   }
 
   /** Songs from `tracks` that are NOT already in the selected group. */
@@ -585,6 +683,7 @@ export class GroupList extends LitElement {
                   aria-label="Search songs in group"
                   .value=${this._groupTrackSearch}
                   @input=${this._handleGroupSearchInput}
+                  @keydown=${this._handleGroupSearchKeydown}
                   @focus=${this._handleGroupSearchFocus}
                   @blur=${this._handleGroupSearchBlur}
                 ></t-input>
@@ -611,10 +710,11 @@ export class GroupList extends LitElement {
 
           <!-- Current songs: with delete overlay when management is open -->
           ${filteredTracks.map(
-            (track) => html`
+            (track, index) => html`
               <div class="track-row">
                 <t-media
                   .active=${track.songKey === this.currentSongKey}
+                  ?highlighted=${index === this._highlightedIndex}
                   title=${track.title}
                   artist=${track.artist}
                   album=${track.album}
@@ -732,9 +832,9 @@ export class GroupList extends LitElement {
     return html`
       <div class="group-list-container">
         ${this.groups.map(
-          (group) => html`
+          (group, index) => html`
             <div
-              class="group-item"
+              class="group-item ${index === this.highlightedIndex ? 'highlighted' : ''}"
               style=${group.color
                 ? `background-color: ${this._cssColor(group.color)}; color: ${this._contrastColor(group.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(group.color)} 15%, transparent);`
                 : ''}
