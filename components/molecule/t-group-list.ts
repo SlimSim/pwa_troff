@@ -234,6 +234,7 @@ export class GroupList extends LitElement {
 
     /* Compact search input that expands on focus */
     .search-compact-wrap {
+      position: relative;
       display: flex;
       align-items: center;
       overflow: hidden;
@@ -242,14 +243,70 @@ export class GroupList extends LitElement {
       flex-shrink: 0;
     }
 
+    .search-compact-icon {
+      position: absolute;
+      /* z-index keeps the icon above the t-input's background (its inner
+         .input-wrapper is position: relative). */
+      z-index: 1;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--on-gray-out, #595959);
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
     .search-compact-wrap.search-expanded {
       width: 160px;
       flex-shrink: 1;
     }
 
+    .search-compact-wrap.search-expanded .search-compact-icon {
+      opacity: 0;
+    }
+
+    /* On wider screens the search is always expanded (never collapses). */
     @media (min-width: 576px) {
+      .detail-header-controls.search-expanded {
+        gap: 6px;
+      }
+
+      .group-song-count.search-expanded {
+        opacity: 0.8;
+        width: auto;
+        margin: initial;
+        overflow: visible;
+        pointer-events: auto;
+      }
+
+      .detail-add-song-btn.search-expanded {
+        opacity: 1;
+        width: auto;
+        margin: initial;
+        overflow: visible;
+        pointer-events: auto;
+      }
+
+      .detail-edit-btn.search-expanded {
+        opacity: 1;
+        width: auto;
+        margin-left: auto;
+        overflow: visible;
+        pointer-events: auto;
+      }
+
+      .search-compact-wrap {
+        width: 200px;
+      }
+
       .search-compact-wrap.search-expanded {
         width: 200px;
+      }
+
+      .search-compact-icon {
+        display: none;
       }
     }
 
@@ -585,7 +642,15 @@ export class GroupList extends LitElement {
 
   private _handleGroupSearchBlur() {
     this._isGroupSearchFocused = false;
-    this._groupTrackSearch = '';
+    // The search only collapses (and thus clears) on small screens.
+    if (!this._isWideScreen()) {
+      this._groupTrackSearch = '';
+    }
+  }
+
+  /** True on screens where the search input stays expanded (>= 576px). */
+  private _isWideScreen(): boolean {
+    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
   }
 
   updated(changedProperties: PropertyValues) {
@@ -675,6 +740,7 @@ export class GroupList extends LitElement {
                 <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
               </span>
               <div class="search-compact-wrap ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+                <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
                 <t-input
                   class="search-input-compact"
                   slim

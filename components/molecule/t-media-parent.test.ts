@@ -827,6 +827,14 @@ describe('Search focus state and visual indication', () => {
       | null;
   }
 
+  function getHeaderControl(selector: string): Element {
+    const el = element.shadowRoot?.querySelector(selector);
+    if (!el) {
+      throw new Error(`Expected ${selector} in shadow root`);
+    }
+    return el;
+  }
+
   // ---- tests ----
 
   it('isSearchFocused starts as false', async () => {
@@ -875,6 +883,53 @@ describe('Search focus state and visual indication', () => {
     // The @blur handler must reset the focus state. In the current code
     // there's no listener, so isSearchFocused remains undefined.
     expect((element as any).isSearchFocused).toBe(false);
+  });
+
+  it('renders a search icon inside the collapsed search wrap', async () => {
+    await element.updateComplete;
+
+    const icon = element.shadowRoot?.querySelector('.search-compact-icon');
+    expect(icon).not.toBeNull();
+    expect(icon?.getAttribute('name')).toBe('search');
+  });
+
+  it('blur clears the search query on small screens', async () => {
+    await element.updateComplete;
+    // Simulate a small screen (search stays collapsed): _isWideScreen() is
+    // false. Spying on the prototype method (like _loadSongs above) keeps
+    // the environment clean — restoreAllMocks in afterEach reverts it.
+    vi.spyOn(MediaParent.prototype as any, '_isWideScreen').mockReturnValue(false);
+
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) throw new Error('Expected t-input.search-input in shadow root');
+    tInput.focus();
+    tInput.blur();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).searchQuery).toBe('');
+  });
+
+  it('blur does not clear the search query on wide screens', async () => {
+    await element.updateComplete;
+    // Simulate a wide screen (search stays expanded): _isWideScreen() is
+    // true. Prototype spy — reverted by restoreAllMocks in afterEach.
+    vi.spyOn(MediaParent.prototype as any, '_isWideScreen').mockReturnValue(true);
+
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) throw new Error('Expected t-input.search-input in shadow root');
+    tInput.focus();
+    tInput.blur();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).searchQuery).toBe('foo');
   });
 
   it('t-track-list receives highlightedIndex = -1 when the search input is not focused', async () => {
@@ -1044,6 +1099,152 @@ describe('Search focus state and visual indication', () => {
     expect((element as any).isSearchFocused).toBe(false);
     const tTrackList = getTrackList();
     expect(tTrackList?.highlightedIndex).toBe(-1);
+  });
+
+  // ---- header controls get the search-expanded class while focused ----
+  //
+  // Mirrors the detail-view pattern in t-artist-list.ts (lines 462-463):
+  // every header control next to the collapsed search input must receive
+  // `search-expanded` while the input is focused (the CSS hides them on
+  // small screens; a wide-screen media query restores them). In the
+  // current code none of the class bindings exist, so all of these tests
+  // fail (RED).
+
+  it('focused search adds search-expanded class to all tracks-header controls (add btn, count, sort, find btn)', async () => {
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+
+    const findBtn = getHeaderControl('t-butt.header-find-btn');
+    expect(findBtn.classList.contains('search-expanded')).toBe(true);
+  });
+
+  it('focused search adds search-expanded class to artists-header controls', async () => {
+    (element as any).currentFilter = 'artists';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+
+    // The "find new songs" button is tracks-only.
+    const findBtn = element.shadowRoot?.querySelector('t-butt.header-find-btn');
+    expect(findBtn).toBeNull();
+  });
+
+  it('focused search adds search-expanded class to genre-header controls', async () => {
+    (element as any).currentFilter = 'genre';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+
+    // The "find new songs" button is tracks-only.
+    const findBtn = element.shadowRoot?.querySelector('t-butt.header-find-btn');
+    expect(findBtn).toBeNull();
+  });
+
+  it('focused search adds search-expanded class to groups-header controls', async () => {
+    (element as any).currentFilter = 'groups';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+  });
+
+  it('blur removes search-expanded class from header controls', async () => {
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Focused: the class must be present on the controls.
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    // Blur: the class must disappear from the header controls.
+    tInput.blur();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(container.classList.contains('search-expanded')).toBe(false);
+    expect(addBtn.classList.contains('search-expanded')).toBe(false);
   });
 });
 
