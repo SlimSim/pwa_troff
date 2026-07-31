@@ -14,6 +14,7 @@ export class DropdownButton extends LitElement {
     }
 
     .dropdown {
+      display: none;
       position: fixed;
       background-color: var(--secondary-color);
       color: var(--on-secondary-color);
@@ -24,12 +25,11 @@ export class DropdownButton extends LitElement {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       visibility: hidden;
       opacity: 0;
-      transition:
-        opacity 0.2s ease,
-        visibility 0.2s ease;
+      transition: opacity 0.2s ease;
     }
 
     .dropdown[open] {
+      display: block;
       visibility: visible;
       opacity: 1;
     }
