@@ -320,9 +320,6 @@ export class GroupDialog extends LitElement {
         <div class="dialog">
           <div class="dialog-header">
             <h2 class="dialog-title">${this.group ? `Edit "${this.group.name}"` : 'New Group'}</h2>
-            <t-butt icon @click=${this._cancel} title="Close">
-              <t-icon name="delete"></t-icon>
-            </t-butt>
           </div>
 
           <div class="dialog-body">
