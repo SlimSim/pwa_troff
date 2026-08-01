@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MediaParent } from './t-media-parent.js';
+import { nDB } from '../../assets/internal/db.js';
 
 describe('t-media-parent search input', () => {
   let element: MediaParent;
@@ -1530,5 +1531,98 @@ describe('empty state (no songs, no groups)', () => {
     expect(element.hasAttribute('visible')).toBe(true);
     const visibleStyles = getComputedStyle(element);
     expect(visibleStyles.transform).toMatch(/translateY\(100%/);
+  });
+});
+
+describe('group header colour restored on load', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    // Isolate from any nav state a previous test may have persisted.
+    localStorage.clear();
+    // Same baseline as the sibling describe blocks: stub _loadSongs so
+    // connectedCallback doesn't touch the Cache API / real storage.
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('dispatches group-header-color with the group colour on load (no user click needed)', async () => {
+    // Seed the saved nav state BEFORE the element is created/connected so
+    // firstUpdated() reads it. The user selected group g1 last session.
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: 'groups',
+      selected_entity: 'g1',
+    });
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+    (element as any).groups = [{ id: 'g1', name: 'Group A', color: 'bg-red-3', songs: [] }];
+    (element as any).currentFilter = 'tracks';
+
+    const spy = vi.fn();
+    element.addEventListener('group-header-color', spy);
+
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // The bug: the saved nav state is only applied when `visible` becomes
+    // true (user expands the song list), so the colour is never dispatched
+    // on load. This must fire without any user gesture.
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail.color).toBe('#e01b24');
+
+    // The colour must be restored WITHOUT the song list being expanded.
+    expect((element as any).visible).toBe(false);
+  });
+
+  it('does not dispatch the colour when the saved state has no selected group', async () => {
+    // Saved state exists but points at a non-group tab with no entity.
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: 'tracks',
+      selected_entity: '',
+    });
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+    (element as any).groups = [{ id: 'g1', name: 'Group A', color: 'bg-red-3', songs: [] }];
+    (element as any).currentFilter = 'tracks';
+
+    const spy = vi.fn();
+    element.addEventListener('group-header-color', spy);
+
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('dispatches the colour for a firebaseGroupDocId-keyed group on load', async () => {
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: 'groups',
+      selected_entity: 'fb-doc-1',
+    });
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+    (element as any).groups = [
+      { firebaseGroupDocId: 'fb-doc-1', name: 'Group B', color: 'bg-blue-3', songs: [] },
+    ];
+    (element as any).currentFilter = 'tracks';
+
+    const spy = vi.fn();
+    element.addEventListener('group-header-color', spy);
+
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail.color).toBe('#3584e4');
+    expect((element as any).visible).toBe(false);
   });
 });

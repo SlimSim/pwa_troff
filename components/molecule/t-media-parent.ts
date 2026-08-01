@@ -437,6 +437,7 @@ export class MediaParent extends LitElement {
     super.connectedCallback();
     this.isDesktop = window.matchMedia('(pointer: fine)').matches;
     await this._loadSongs();
+    this._restoreHeaderColorFromSavedState();
     this.currentSongKey = getCurrentSongKey() || '';
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
@@ -765,6 +766,30 @@ export class MediaParent extends LitElement {
   /** Dispatch the group colour to the parent so it can tint the <t-header>. */
   private _dispatchHeaderColor() {
     const color = this._contextType === 'group' ? this._contextColor : '';
+    this.dispatchEvent(
+      new CustomEvent('group-header-color', {
+        detail: { color },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /**
+   * Restore the header colour for the group saved in nDB so a reload keeps
+   * the tinted header without the user re-expanding the song list. This only
+   * dispatches the colour — the group detail still opens only on user action
+   * (see updated()).
+   */
+  private _restoreHeaderColorFromSavedState() {
+    const saved = nDB.get('TROFF_SONG_LIST_NAVIGATION_STATE');
+    if (!saved || saved.tab !== 'groups' || !saved.selected_entity) return;
+    const group = this.groups.find((g) => {
+      const gKey = g.firebaseGroupDocId || String(g.id);
+      return gKey === saved.selected_entity;
+    });
+    if (!group?.color) return;
+    const color = getBgColor(group.color).color || group.color;
     this.dispatchEvent(
       new CustomEvent('group-header-color', {
         detail: { color },
