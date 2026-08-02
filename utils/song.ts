@@ -1,4 +1,5 @@
 import { nDB } from '../assets/internal/db.js';
+import { safeDecodeURIComponent } from './utils.js';
 
 /**
  * Returns the display name of a song based on its file data.
@@ -7,7 +8,9 @@ import { nDB } from '../assets/internal/db.js';
  * @returns The display name of the song.
  */
 export function getSongDisplayName(fileData: any, defaultValue: string): string {
-  return fileData.customName || fileData.choreography || fileData.title || defaultValue;
+  return safeDecodeURIComponent(
+    fileData.customName || fileData.choreography || fileData.title || defaultValue
+  );
 }
 
 /**
@@ -21,7 +24,7 @@ export function getSongMetadata(songKey: string) {
   const songData = nDB.get(songKey);
   if (!songData || !songData.fileData) {
     return {
-      title: songKey.split('/').pop() || 'Unknown Song',
+      title: safeDecodeURIComponent(songKey.split('/').pop() || 'Unknown Song'),
       artist: 'Unknown Artist',
       duration: 0,
     };
@@ -30,7 +33,7 @@ export function getSongMetadata(songKey: string) {
   const { fileData } = songData;
   return {
     title: getSongDisplayName(fileData, songKey),
-    artist: fileData.artist || 'Unknown Artist',
+    artist: safeDecodeURIComponent(fileData.artist || 'Unknown Artist'),
     duration: fileData.duration || 0,
   };
 }
