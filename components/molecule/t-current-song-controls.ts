@@ -295,6 +295,17 @@ export class CurrentSongControls extends LitElement {
         display: list-item;
       }
     }
+
+    /* Show where to find the wait control on narrow screens only (it's in the footer on mobile) */
+    .loop-help-item-phone-only {
+      display: list-item;
+    }
+
+    @media (min-width: 768px) {
+      .loop-help-item-phone-only {
+        display: none;
+      }
+    }
   `;
 
   @property({ type: String }) loopTimesValue = '1';
@@ -574,6 +585,11 @@ export class CurrentSongControls extends LitElement {
                   and it will increment every loop until it reaches that speed.
                 </li>
                 <li>The "1 - 9" buttons determine how many times the song will loop.</li>
+                <li class="loop-help-item-phone-only">
+                  On smaller screens the wait control ("Pause before" and "Wait between") is available
+                  from the <t-icon name="time" slim></t-icon> Wait control button in the control bar at
+                  the bottom of the screen.
+                </li>
               </ul>
             </t-help-tip>
           </div>
