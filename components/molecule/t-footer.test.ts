@@ -97,3 +97,92 @@ describe('t-footer marker dialog wiring', () => {
     expect(element.showMarkerDropdown).toBe(true);
   });
 });
+
+describe('t-footer dropdown mobile positioning', () => {
+  let element: BottomNav;
+
+  beforeEach(() => {
+    element = new BottomNav();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+  });
+
+  it('marker dropdown has mobilePosition="top"', async () => {
+    await element.updateComplete;
+
+    // Find the marker dropdown button (the one with t-marker-dialog as dropdown content)
+    const dropdownButtons = element.shadowRoot?.querySelectorAll('t-dropdown-button');
+    expect(dropdownButtons).toBeTruthy();
+    expect(dropdownButtons!.length).toBe(3); // speed, marker, time
+
+    // The marker dropdown is the second one (index 1) - has t-marker-dialog as slot="dropdown"
+    const markerDropdown = dropdownButtons![1] as HTMLElement & { mobilePosition?: string };
+
+    expect(markerDropdown).toBeTruthy();
+    expect(markerDropdown.mobilePosition).toBe('top');
+  });
+
+  it('speed dropdown does NOT have mobilePosition="top" (uses default "auto")', async () => {
+    await element.updateComplete;
+
+    const dropdownButtons = element.shadowRoot?.querySelectorAll('t-dropdown-button');
+    const speedDropdown = dropdownButtons![0] as HTMLElement & { mobilePosition?: string };
+
+    expect(speedDropdown).toBeTruthy();
+    expect(speedDropdown.mobilePosition).toBe('auto');
+  });
+
+  it('time dropdown does NOT have mobilePosition="top" (uses default "auto")', async () => {
+    await element.updateComplete;
+
+    const dropdownButtons = element.shadowRoot?.querySelectorAll('t-dropdown-button');
+    const timeDropdown = dropdownButtons![2] as HTMLElement & { mobilePosition?: string };
+
+    expect(timeDropdown).toBeTruthy();
+    expect(timeDropdown.mobilePosition).toBe('auto');
+  });
+
+  it('marker dropdown has position="up" and align="right"', async () => {
+    await element.updateComplete;
+
+    const dropdownButtons = element.shadowRoot?.querySelectorAll('t-dropdown-button');
+    const markerDropdown = dropdownButtons![1] as HTMLElement & {
+      position?: string;
+      align?: string;
+    };
+
+    expect(markerDropdown.position).toBe('up');
+    expect(markerDropdown.align).toBe('right');
+  });
+
+  it('speed dropdown has position="up" and align="left"', async () => {
+    await element.updateComplete;
+
+    const dropdownButtons = element.shadowRoot?.querySelectorAll('t-dropdown-button');
+    const speedDropdown = dropdownButtons![0] as HTMLElement & {
+      position?: string;
+      align?: string;
+    };
+
+    expect(speedDropdown.position).toBe('up');
+    expect(speedDropdown.align).toBe('left');
+  });
+
+  it('time dropdown has position="up" and align="right"', async () => {
+    await element.updateComplete;
+
+    const dropdownButtons = element.shadowRoot?.querySelectorAll('t-dropdown-button');
+    const timeDropdown = dropdownButtons![2] as HTMLElement & {
+      position?: string;
+      align?: string;
+    };
+
+    expect(timeDropdown.position).toBe('up');
+    expect(timeDropdown.align).toBe('right');
+  });
+});

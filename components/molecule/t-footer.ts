@@ -296,6 +296,7 @@ export class BottomNav extends LitElement {
           <t-dropdown-button
             position="up"
             align="right"
+            mobilePosition="top"
             .open=${this.showMarkerDropdown}
             @dropdown-toggled=${this._handleMarkerDropdownToggled}
           >

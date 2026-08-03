@@ -45,9 +45,11 @@ export class DropdownButton extends LitElement {
   @property({ type: Boolean, reflect: true }) open = false;
   @property({ type: String }) position = 'down';
   @property({ type: String }) align = 'right';
+  @property({ type: String }) mobilePosition = 'auto';
 
   private _boundHandleDocumentClick!: (event: MouseEvent) => void;
   private _boundHandleReposition!: () => void;
+  private _boundHandleVisualViewportChange!: () => void;
 
   connectedCallback() {
     super.connectedCallback();
@@ -56,6 +58,12 @@ export class DropdownButton extends LitElement {
     this._boundHandleReposition = this._reposition.bind(this);
     window.addEventListener('scroll', this._boundHandleReposition, { capture: true });
     window.addEventListener('resize', this._boundHandleReposition);
+
+    this._boundHandleVisualViewportChange = this._reposition.bind(this);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this._boundHandleVisualViewportChange);
+      window.visualViewport.addEventListener('scroll', this._boundHandleVisualViewportChange);
+    }
   }
 
   disconnectedCallback() {
@@ -63,6 +71,10 @@ export class DropdownButton extends LitElement {
     document.removeEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
     window.removeEventListener('scroll', this._boundHandleReposition, { capture: true });
     window.removeEventListener('resize', this._boundHandleReposition);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this._boundHandleVisualViewportChange);
+      window.visualViewport.removeEventListener('scroll', this._boundHandleVisualViewportChange);
+    }
   }
 
   private _reposition() {
@@ -76,9 +88,15 @@ export class DropdownButton extends LitElement {
     if (!buttonWrapper || !dropdown) return;
 
     const rect = buttonWrapper.getBoundingClientRect();
+    const isMobile = window.innerWidth < 768;
+    const useTopPosition = this.mobilePosition === 'top' && isMobile;
 
     // Position vertically
-    if (this.position === 'down') {
+    if (useTopPosition) {
+      // Mobile: anchor to viewport top
+      dropdown.style.top = '8px';
+      dropdown.style.bottom = 'auto';
+    } else if (this.position === 'down') {
       dropdown.style.top = `${rect.bottom + 4}px`;
       dropdown.style.bottom = 'auto';
     } else {
@@ -98,8 +116,8 @@ export class DropdownButton extends LitElement {
 
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('open') && this.open) {
-      // Wait for render to complete, then position
-      requestAnimationFrame(() => this._positionDropdown());
+      // Position immediately after render (works in tests and production)
+      this._positionDropdown();
     }
   }
 

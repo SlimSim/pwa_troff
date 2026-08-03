@@ -22,6 +22,7 @@ export class TInput extends LitElement {
       font-weight: 500;
       color: var(--on-secondary-color, rgb(50, 50, 50));
       margin-bottom: 2px;
+      text-align: left;
     }
 
     .input-container {
