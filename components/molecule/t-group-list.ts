@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '../atom/t-media.js';
 import '../atom/t-butt.js';
@@ -40,8 +40,29 @@ export class GroupList extends LitElement {
       filter: brightness(1.15);
     }
 
+    .group-item.highlighted {
+      border-left: 4px solid var(--accent-color-1, #431c5d);
+      background-color: color-mix(
+        in srgb,
+        var(--accent-color-1, #431c5d) 18%,
+        transparent
+      );
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
+    }
+
     .group-info {
       flex: 1;
+    }
+
+    .group-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-right: 12px;
     }
 
     .group-name {
@@ -107,10 +128,27 @@ export class GroupList extends LitElement {
       gap: 1px;
     }
 
+    .detail-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .detail-title {
       font-size: 1rem;
       font-weight: 600;
       margin: 0;
+    }
+
+    .detail-category-label {
+      font-size: 0.65rem;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
     }
 
     .detail-info-text {
@@ -136,6 +174,140 @@ export class GroupList extends LitElement {
     .detail-edit-btn {
       flex-shrink: 0;
       margin-left: auto;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+    }
+
+    .detail-edit-btn.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Controls section in the detail header (song count, search, add button) */
+    .detail-header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 1;
+      min-width: 0;
+      overflow: hidden;
+      transition: gap 0.2s ease;
+    }
+
+    .detail-header-controls.search-expanded {
+      gap: 0;
+    }
+
+    .group-song-count {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .group-song-count.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .detail-add-song-btn {
+      flex-shrink: 0;
+      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+    }
+
+    .detail-add-song-btn.search-expanded {
+      opacity: 0;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Compact search input that expands on focus */
+    .search-compact-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      transition: width 0.3s ease;
+      width: 32px;
+      flex-shrink: 0;
+    }
+
+    .search-compact-icon {
+      position: absolute;
+      /* z-index keeps the icon above the t-input's background (its inner
+         .input-wrapper is position: relative). */
+      z-index: 1;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--on-gray-out, #595959);
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .search-compact-wrap.search-expanded {
+      width: 160px;
+      flex-shrink: 1;
+    }
+
+    .search-compact-wrap.search-expanded .search-compact-icon {
+      opacity: 0;
+    }
+
+    /* On wider screens the search is always expanded (never collapses). */
+    @media (min-width: 576px) {
+      .detail-header-controls.search-expanded {
+        gap: 6px;
+      }
+
+      .group-song-count.search-expanded {
+        opacity: 0.8;
+        width: auto;
+        margin: initial;
+        overflow: visible;
+        pointer-events: auto;
+      }
+
+      .detail-add-song-btn.search-expanded {
+        opacity: 1;
+        width: auto;
+        margin: initial;
+        overflow: visible;
+        pointer-events: auto;
+      }
+
+      .detail-edit-btn.search-expanded {
+        opacity: 1;
+        width: auto;
+        margin-left: auto;
+        overflow: visible;
+        pointer-events: auto;
+      }
+
+      .search-compact-wrap {
+        width: 200px;
+      }
+
+      .search-compact-wrap.search-expanded {
+        width: 200px;
+      }
+
+      .search-compact-icon {
+        display: none;
+      }
     }
 
     /* Track row — relative container for absolute delete overlay */
@@ -251,7 +423,9 @@ export class GroupList extends LitElement {
   @property({ type: Array }) tracks: any[] = [];
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) currentSongKey = '';
-  @property({ type: String }) groupTrackSearch = '';
+
+  /** Index of the highlighted item in the list view (-1 = none). */
+  @property({ type: Number }) highlightedIndex = -1;
 
   /**
    * Key of the currently open group detail view.
@@ -268,6 +442,15 @@ export class GroupList extends LitElement {
 
   /** Whether song management (remove buttons + add songs section) is visible. */
   @state() private _songManagementOpen = false;
+
+  /** Local search query for filtering tracks inside the group detail. */
+  @state() private _groupTrackSearch = '';
+
+  /** Whether the inline search input is focused (expanded state). */
+  @state() private _isGroupSearchFocused = false;
+
+  /** Index of the highlighted track in filtered results (-1 = none). */
+  @state() private _highlightedIndex = -1;
 
   /** Resolve a legacy class-name colour (e.g. `bg-red-3`) to a CSS-safe value. */
   private _cssColor(c: string | undefined): string {
@@ -303,6 +486,7 @@ export class GroupList extends LitElement {
     this._addSongQuery = '';
     this._infoExpanded = false;
     this._songManagementOpen = false;
+    this._highlightedIndex = -1;
     this.dispatchEvent(
       new CustomEvent('group-detail-opened', {
         detail: { groupKey: key },
@@ -318,6 +502,7 @@ export class GroupList extends LitElement {
 
   private _handleBack() {
     this._selectedGroupKey = '';
+    this._highlightedIndex = -1;
     this.dispatchEvent(
       new CustomEvent('group-detail-closed', {
         bubbles: true,
@@ -328,6 +513,7 @@ export class GroupList extends LitElement {
 
   private _handleEditGroup(event: Event, group: Group) {
     event.stopPropagation();
+    console.log('Edit group:', group.name, '- icon:', group.icon);
     this.dispatchEvent(
       new CustomEvent('group-edit-requested', {
         detail: { group },
@@ -352,9 +538,7 @@ export class GroupList extends LitElement {
 
   private _handleAddSong(songKey: string, title: string) {
     // Don't dispatch if song is already in the group
-    const selectedGroup = this.groups.find(
-      (g) => this._groupKey(g) === this._selectedGroupKey
-    );
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
     if (!selectedGroup) return;
     if (selectedGroup.songs.some((s) => s.fullPath === songKey)) return;
 
@@ -371,11 +555,122 @@ export class GroupList extends LitElement {
     );
   }
 
+  /** Handle click on "Add song to group" button in the detail header. */
+  private _handleAddSongToGroup() {
+    this.dispatchEvent(
+      new CustomEvent('group-add-song-requested', {
+        detail: { groupKey: this._selectedGroupKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /** Handle search input within the group detail header. */
+  private _handleGroupSearchInput(e: CustomEvent) {
+    if (e.detail && typeof e.detail.value === 'string') {
+      this._groupTrackSearch = e.detail.value;
+    }
+    // Reset highlight to first result
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
+    if (!selectedGroup) return;
+    const query = this._groupTrackSearch.trim().toLowerCase();
+    const filtered = query
+      ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+      : selectedGroup.tracks;
+    this._highlightedIndex = filtered.length > 0 ? 0 : -1;
+  }
+
+  /** Handle arrow key navigation and Enter selection in the detail search. */
+  private _handleGroupSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
+      if (!selectedGroup) return;
+      const query = this._groupTrackSearch.trim().toLowerCase();
+      const filtered = query
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+        : selectedGroup.tracks;
+      if (filtered.length === 0) return;
+      const max = filtered.length - 1;
+      if (this._highlightedIndex === -1) {
+        this._highlightedIndex = e.key === 'ArrowDown' ? 0 : max;
+      } else {
+        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        this._highlightedIndex += delta;
+        if (this._highlightedIndex > max) this._highlightedIndex = 0;
+        if (this._highlightedIndex < 0) this._highlightedIndex = max;
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this._highlightedIndex < 0) return;
+      const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
+      if (!selectedGroup) return;
+      const query = this._groupTrackSearch.trim().toLowerCase();
+      const filtered = query
+        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(query))
+        : selectedGroup.tracks;
+      const track = filtered[this._highlightedIndex];
+      if (!track) return;
+      this.dispatchEvent(
+        new CustomEvent('media-selected', {
+          detail: {
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            genre: track.genre,
+            year: track.year,
+            comment: track.comment,
+            duration: track.duration,
+            rating: track.rating,
+            tempo: track.tempo,
+            playsMonth: track.playsMonth,
+            playsTotal: track.playsTotal,
+            albumArt: track.albumArt,
+            songKey: track.songKey,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
+  private _handleGroupSearchFocus() {
+    this._isGroupSearchFocused = true;
+  }
+
+  private _handleGroupSearchBlur() {
+    this._isGroupSearchFocused = false;
+    // The search only collapses (and thus clears) on small screens.
+    if (!this._isWideScreen()) {
+      this._groupTrackSearch = '';
+    }
+  }
+
+  /** True on screens where the search input stays expanded (>= 576px). */
+  private _isWideScreen(): boolean {
+    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
+  }
+
+  updated(changedProperties: PropertyValues) {
+    if (changedProperties.has('_highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('t-media[highlighted]');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
+    if (changedProperties.has('highlightedIndex')) {
+      const highlighted = this.renderRoot.querySelector<HTMLElement>('.group-item.highlighted');
+      if (highlighted) {
+        highlighted.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
   /** Songs from `tracks` that are NOT already in the selected group. */
   private _getAvailableSongs(): any[] {
-    const selectedGroup = this.groups.find(
-      (g) => this._groupKey(g) === this._selectedGroupKey
-    );
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
     if (!selectedGroup) return [];
 
     const inGroup = new Set(selectedGroup.songs.map((s) => s.fullPath));
@@ -390,16 +685,16 @@ export class GroupList extends LitElement {
 
   render() {
     const isDetailView = this._selectedGroupKey !== '';
-    const selectedGroup = this.groups.find(
-      (g) => this._groupKey(g) === this._selectedGroupKey
-    );
+    const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
 
     if (isDetailView && selectedGroup) {
       const availableSongs = this._getAvailableSongs();
       const infoText = selectedGroup.info || '';
-      const trackQuery = this.groupTrackSearch.trim().toLowerCase();
+      const trackQuery = this._groupTrackSearch.trim().toLowerCase();
       const filteredTracks = trackQuery
-        ? selectedGroup.tracks.filter((t: any) => (t.title || '').toLowerCase().includes(trackQuery))
+        ? selectedGroup.tracks.filter((t: any) =>
+            (t.title || '').toLowerCase().includes(trackQuery)
+          )
         : selectedGroup.tracks;
 
       return html`
@@ -413,30 +708,79 @@ export class GroupList extends LitElement {
             <span class="back-arrow" @click=${this._handleBack}>
               <t-icon name="chevron-up"></t-icon>
             </span>
+            ${selectedGroup.icon
+              ? html`<div class="detail-icon">
+                  <t-icon large name=${(selectedGroup.icon ?? '').replace(/^fa-/, '')}></t-icon>
+                </div>`
+              : ''}
             <div class="detail-title-group">
+              <span class="detail-category-label">Groups</span>
               <h2 class="detail-title">${selectedGroup.name}</h2>
               ${infoText
                 ? html`<span
                     class="detail-info-text ${this._infoExpanded ? 'expanded' : ''}"
-                    @click=${() => { this._infoExpanded = !this._infoExpanded; }}
+                    @click=${() => {
+                      this._infoExpanded = !this._infoExpanded;
+                    }}
                     title="${this._infoExpanded ? 'Collapse' : 'Expand info'}"
-                  >${infoText}</span>`
+                    >${infoText}</span
+                  >`
                 : ''}
               ${selectedGroup.owners && selectedGroup.owners.length > 0
-                ? html`<span class="shared-with">Shared with ${selectedGroup.owners.length} ${selectedGroup.owners.length === 1 ? 'person' : 'people'}</span>`
+                ? html`<span class="shared-with"
+                    >Shared with ${selectedGroup.owners.length}
+                    ${selectedGroup.owners.length === 1 ? 'person' : 'people'}</span
+                  >`
                 : ''}
             </div>
-            <t-butt class="detail-edit-btn" icon @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)} title="Edit group">
+
+            <!-- Controls: add song, song count, search (moved from song-list-header) -->
+            <div class="detail-header-controls ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+              <span class="group-song-count ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+                <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
+              </span>
+              <div class="search-compact-wrap ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+                <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
+                <t-input
+                  class="search-input-compact"
+                  slim
+                  clearable
+                  placeholder="Search songs…"
+                  aria-label="Search songs in group"
+                  .value=${this._groupTrackSearch}
+                  @input=${this._handleGroupSearchInput}
+                  @keydown=${this._handleGroupSearchKeydown}
+                  @focus=${this._handleGroupSearchFocus}
+                  @blur=${this._handleGroupSearchBlur}
+                ></t-input>
+              </div>
+              <t-butt
+                class="detail-add-song-btn ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
+                icon
+                @click=${this._handleAddSongToGroup}
+                title="Add song to group"
+              >
+                <t-icon name="note-plus"></t-icon>
+              </t-butt>
+            </div>
+
+            <t-butt
+              class="detail-edit-btn ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
+              icon
+              @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
+              title="Edit group"
+            >
               <t-icon name="edit"></t-icon>
             </t-butt>
           </div>
 
           <!-- Current songs: with delete overlay when management is open -->
           ${filteredTracks.map(
-            (track) => html`
+            (track, index) => html`
               <div class="track-row">
                 <t-media
                   .active=${track.songKey === this.currentSongKey}
+                  ?highlighted=${index === this._highlightedIndex}
                   title=${track.title}
                   artist=${track.artist}
                   album=${track.album}
@@ -468,66 +812,74 @@ export class GroupList extends LitElement {
               </div>
             `
           )}
-
           ${filteredTracks.length === 0 && !trackQuery && !this._songManagementOpen
             ? html`<div class="empty-text" style="padding: 16px;">No songs in this group.</div>`
             : ''}
-
           ${filteredTracks.length === 0 && !trackQuery && this._songManagementOpen
-            ? html`<div class="empty-text" style="padding: 16px;">No songs in this group yet. Add some below!</div>`
+            ? html`<div class="empty-text" style="padding: 16px;">
+                No songs in this group yet. Add some below!
+              </div>`
             : ''}
-
           ${filteredTracks.length === 0 && trackQuery
-            ? html`<div class="empty-text" style="padding: 16px;">No songs match "${this.groupTrackSearch}".</div>`
+            ? html`<div class="empty-text" style="padding: 16px;">
+                No songs match "${this._groupTrackSearch}".
+              </div>`
             : ''}
 
           <!-- Add songs section + toggle at the bottom -->
           ${this._songManagementOpen
             ? html`
-              <div class="add-songs-section">
-                <div class="add-songs-label">Add songs</div>
-                <t-input
-                  class="add-songs-search"
-                  .value=${this._addSongQuery}
-                  placeholder="Search songs..."
-                  slim
-                  clearable
-                  @input=${(e: CustomEvent) => {
-                    if (e.detail && typeof e.detail.value === 'string') {
-                      this._addSongQuery = e.detail.value;
-                    }
-                  }}
-                ></t-input>
+                <div class="add-songs-section">
+                  <div class="add-songs-label">Add songs</div>
+                  <t-input
+                    class="add-songs-search"
+                    .value=${this._addSongQuery}
+                    placeholder="Search songs..."
+                    slim
+                    clearable
+                    @input=${(e: CustomEvent) => {
+                      if (e.detail && typeof e.detail.value === 'string') {
+                        this._addSongQuery = e.detail.value;
+                      }
+                    }}
+                  ></t-input>
 
-                ${this.tracks.length === 0
-                  ? html`<div class="empty-text">No songs in library</div>`
-                  : ''}
-                ${availableSongs.length > 0
-                  ? html`
-                      <div class="add-songs-list">
-                        ${availableSongs.map(
-                          (s) => html`
-                            <div
-                              class="add-songs-item"
-                              @click=${() => this._handleAddSong(s.songKey, s.title)}
-                            >
-                              <span>${s.title}</span>
-                              <t-icon name="note-plus"></t-icon>
-                            </div>
-                          `
-                        )}
-                      </div>
-                    `
-                  : this._addSongQuery.trim()
-                    ? html`<div class="empty-text">No songs match "${this._addSongQuery}"</div>`
-                    : html`<div class="empty-text">All songs are already in this group</div>`}
-              </div>
-            `
+                  ${this.tracks.length === 0
+                    ? html`<div class="empty-text">No songs in library</div>`
+                    : ''}
+                  ${availableSongs.length > 0
+                    ? html`
+                        <div class="add-songs-list">
+                          ${availableSongs.map(
+                            (s) => html`
+                              <div
+                                class="add-songs-item"
+                                @click=${() => this._handleAddSong(s.songKey, s.title)}
+                              >
+                                <span>${s.title}</span>
+                                <t-icon name="note-plus"></t-icon>
+                              </div>
+                            `
+                          )}
+                        </div>
+                      `
+                    : this._addSongQuery.trim()
+                      ? html`<div class="empty-text">No songs match "${this._addSongQuery}"</div>`
+                      : html`<div class="empty-text">All songs are already in this group</div>`}
+                </div>
+              `
             : ''}
 
           <!-- Toggle button at the bottom -->
           <div class="manage-toggle-wrap">
-            <t-butt slim @click=${() => { this._songManagementOpen = !this._songManagementOpen; this._addSongQuery = ''; this._infoExpanded = false; }}>
+            <t-butt
+              slim
+              @click=${() => {
+                this._songManagementOpen = !this._songManagementOpen;
+                this._addSongQuery = '';
+                this._infoExpanded = false;
+              }}
+            >
               ${this._songManagementOpen ? 'Done' : 'Add / Remove songs'}
             </t-butt>
           </div>
@@ -546,14 +898,17 @@ export class GroupList extends LitElement {
     return html`
       <div class="group-list-container">
         ${this.groups.map(
-          (group) => html`
+          (group, index) => html`
             <div
-              class="group-item"
+              class="group-item ${index === this.highlightedIndex ? 'highlighted' : ''}"
               style=${group.color
                 ? `background-color: ${this._cssColor(group.color)}; color: ${this._contrastColor(group.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(group.color)} 15%, transparent);`
                 : ''}
               @click=${() => this._handleGroupClick(group)}
             >
+              <div class="group-icon">
+                <t-icon large name=${(group.icon || 'users').replace(/^fa-/, '')}></t-icon>
+              </div>
               <div class="group-info">
                 <div class="group-name">${group.name}</div>
                 <div class="group-track-count">

@@ -583,7 +583,7 @@ export class SettingsPanel extends LitElement {
                   Configure what happens when you press the Enter key, Space key, or Play button.
                 </p>
               </div>
-              <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
             </summary>
             <div class="advanced-content">
               <div class="settings-section">
@@ -701,7 +701,7 @@ export class SettingsPanel extends LitElement {
                   Control how markers extend their color across the timeline.
                 </p>
               </div>
-              <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
             </summary>
             <div class="advanced-content">
               <div class="settings-grid">
@@ -742,7 +742,7 @@ export class SettingsPanel extends LitElement {
                   When loading a new song, these values will be the ones that the song get.
                 </p>
               </div>
-              <t-icon name="chevron-up" class="advanced-chevron"></t-icon>
+              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
             </summary>
             <div class="advanced-content">
               <div class="song-stepper-grid">

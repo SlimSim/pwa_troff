@@ -21,3 +21,5 @@ Pipeline for a new feature:
 Only report back to the user once all three pass (or if loop cap is reached). If any step fails, fix it and repeat.
 
 Do not skip this pipeline, even for small changes.
+
+**End with a summary** - In a conversation, if the agent gives a long answer, it should finish the response with a quick summary of the user's last request, so the user doesn't have to scroll back up to see what they wrote.

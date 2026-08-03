@@ -6,6 +6,7 @@ export class THelpTip extends LitElement {
   static styles = css`
     :host {
       display: inline-block;
+      text-align: left;
     }
 
     .summary-button {

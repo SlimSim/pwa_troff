@@ -31,12 +31,17 @@ describe('play button "go to marker" behavior', () => {
   let header: HTMLElement & Record<string, any>;
   let songList: HTMLElement & Record<string, any>;
 
+  // Per-test overrides for nDB settings
+  const nDBOverrides: Record<string, boolean> = {};
+
   beforeEach(() => {
     vi.resetModules();
     document.body.innerHTML = '';
     nDBGetMock.mockReset();
     nDBSetMock.mockReset();
     nDBSetOnSongMock.mockReset();
+    // Clear per-test nDB overrides
+    Object.keys(nDBOverrides).forEach((k) => delete nDBOverrides[k]);
 
     // Guard against custom element re-registration
     const originalDefine = customElements.define.bind(customElements);
@@ -166,6 +171,8 @@ describe('play button "go to marker" behavior', () => {
     beforeEach(() => {
       // Set up nDB to return playGoToMarker = true
       nDBGetMock.mockImplementation((key: string) => {
+        // Check per-test overrides first
+        if (key in nDBOverrides) return nDBOverrides[key];
         // Always return true for any GO_TO_MARKER key to ensure the condition passes
         if (key.includes('GO_TO_MARKER')) {
           return true;
@@ -245,11 +252,17 @@ describe('play button "go to marker" behavior', () => {
           }
         }
       );
+      // Augment the nDB mock to also return song data for 'test-song-key'
+      // while preserving all the setting handlers from above
+      const prevNDBImpl = nDBGetMock.getMockImplementation();
       nDBGetMock.mockImplementation((key: string) => {
         if (key === 'test-song-key') {
           return songData;
         }
-        // Handle other keys via the implementation above
+        // Delegate to the previous implementation for all other keys
+        if (prevNDBImpl) {
+          return prevNDBImpl(key);
+        }
         return undefined;
       });
     });
@@ -351,7 +364,8 @@ describe('play button "go to marker" behavior', () => {
 
       await new Promise((r) => setTimeout(r, 0));
 
-      // playGoToMarker is disabled (default)
+      // playGoToMarker is disabled — override nDB to return false
+      nDBOverrides[constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR] = false;
       settingsPanel.playGoToMarker = false;
 
       // Now set the expected value for the play button click

@@ -163,3 +163,41 @@ describe('formatSongForUI', () => {
     expect(result.songKey).toBe(songKey);
   });
 });
+
+// ---- formatSongForUI decodes percent-encoded display names (issue #24) ----
+
+describe('formatSongForUI decodes percent-encoded display names', () => {
+  const encodedFileData = {
+    ...baseFileData,
+    customName: 'My%20Song.mp3',
+    artist: 'AC%2FDC',
+    album: 'Back%20In%20Black',
+    genre: 'Rock%2FRoll',
+    title: '',
+  };
+  const songDataEncoded = { ...songDataNoLocalInfo, fileData: encodedFileData };
+
+  it('decodes title, artist, album and genre', () => {
+    const result = formatSongForUI('some-key.mp3', songDataEncoded);
+    expect(result.title).toBe('My Song.mp3');
+    expect(result.artist).toBe('AC/DC');
+    expect(result.album).toBe('Back In Black');
+    expect(result.genre).toBe('Rock/Roll');
+  });
+
+  it('decodes plain display fields without percent-encoding unchanged', () => {
+    const result = formatSongForUI(songKey, songDataWithPlayCount);
+    expect(result.title).toBe('Test Song');
+    expect(result.artist).toBe('Test Artist');
+    expect(result.album).toBe('Test Album');
+    expect(result.genre).toBe('Test Genre');
+  });
+
+  it('decodes the title fallback derived from songKey but keeps songKey raw', () => {
+    const fallbackFileData = { ...baseFileData, customName: '', title: '' };
+    const songDataFallback = { ...songDataNoLocalInfo, fileData: fallbackFileData };
+    const result = formatSongForUI('some%20key.mp3', songDataFallback);
+    expect(result.title).toBe('some key.mp3');
+    expect(result.songKey).toBe('some%20key.mp3');
+  });
+});

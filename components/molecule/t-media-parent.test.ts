@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MediaParent } from './t-media-parent.js';
+import { nDB } from '../../assets/internal/db.js';
 
 describe('t-media-parent search input', () => {
   let element: MediaParent;
@@ -476,6 +477,126 @@ describe('Search-mode keyboard navigation', () => {
     expect((element as any).highlightedIndex).toBe(2);
   });
 
+  // ---- artists filter arrow key navigation ----
+
+  it('ArrowDown increments highlightedIndex by 1 for artists', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', artist: 'Alpha' },
+      { songKey: '2', title: 'Waltz', artist: 'Bravo' },
+      { songKey: '3', title: 'Foxtrot', artist: 'Charlie' },
+    ];
+    (element as any).currentFilter = 'artists';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 0;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowDown');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  it('ArrowUp decrements highlightedIndex by 1 for artists', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', artist: 'Alpha' },
+      { songKey: '2', title: 'Waltz', artist: 'Bravo' },
+      { songKey: '3', title: 'Foxtrot', artist: 'Charlie' },
+    ];
+    (element as any).currentFilter = 'artists';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 2;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowUp');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  // ---- genres filter arrow key navigation ----
+
+  it('ArrowDown increments highlightedIndex by 1 for genres', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', genre: 'Jazz' },
+      { songKey: '2', title: 'Waltz', genre: 'Blues' },
+      { songKey: '3', title: 'Foxtrot', genre: 'Rock' },
+    ];
+    (element as any).currentFilter = 'genre';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 0;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowDown');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  it('ArrowUp decrements highlightedIndex by 1 for genres', async () => {
+    await element.updateComplete;
+    (element as any).songs = [
+      { songKey: '1', title: 'Tango', genre: 'Jazz' },
+      { songKey: '2', title: 'Waltz', genre: 'Blues' },
+      { songKey: '3', title: 'Foxtrot', genre: 'Rock' },
+    ];
+    (element as any).currentFilter = 'genre';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 2;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowUp');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  // ---- groups filter arrow key navigation ----
+
+  it('ArrowDown increments highlightedIndex by 1 for groups', async () => {
+    await element.updateComplete;
+    (element as any).groups = [
+      { id: '1', name: 'Group A', songs: [] },
+      { id: '2', name: 'Group B', songs: [] },
+      { id: '3', name: 'Group C', songs: [] },
+    ];
+    (element as any).currentFilter = 'groups';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 0;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowDown');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
+  it('ArrowUp decrements highlightedIndex by 1 for groups', async () => {
+    await element.updateComplete;
+    (element as any).groups = [
+      { id: '1', name: 'Group A', songs: [] },
+      { id: '2', name: 'Group B', songs: [] },
+      { id: '3', name: 'Group C', songs: [] },
+    ];
+    (element as any).currentFilter = 'groups';
+    (element as any).searchQuery = '';
+    (element as any).highlightedIndex = 2;
+    await element.updateComplete;
+
+    dispatchKeydownOnTInput('ArrowUp');
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).highlightedIndex).toBe(1);
+  });
+
   it('Enter dispatches a media-selected event with the highlighted track songKey', async () => {
     await element.updateComplete;
     // Override the beforeEach fixture with titles already in alphabetical order
@@ -707,6 +828,14 @@ describe('Search focus state and visual indication', () => {
       | null;
   }
 
+  function getHeaderControl(selector: string): Element {
+    const el = element.shadowRoot?.querySelector(selector);
+    if (!el) {
+      throw new Error(`Expected ${selector} in shadow root`);
+    }
+    return el;
+  }
+
   // ---- tests ----
 
   it('isSearchFocused starts as false', async () => {
@@ -755,6 +884,53 @@ describe('Search focus state and visual indication', () => {
     // The @blur handler must reset the focus state. In the current code
     // there's no listener, so isSearchFocused remains undefined.
     expect((element as any).isSearchFocused).toBe(false);
+  });
+
+  it('renders a search icon inside the collapsed search wrap', async () => {
+    await element.updateComplete;
+
+    const icon = element.shadowRoot?.querySelector('.search-compact-icon');
+    expect(icon).not.toBeNull();
+    expect(icon?.getAttribute('name')).toBe('search');
+  });
+
+  it('blur clears the search query on small screens', async () => {
+    await element.updateComplete;
+    // Simulate a small screen (search stays collapsed): _isWideScreen() is
+    // false. Spying on the prototype method (like _loadSongs above) keeps
+    // the environment clean — restoreAllMocks in afterEach reverts it.
+    vi.spyOn(MediaParent.prototype as any, '_isWideScreen').mockReturnValue(false);
+
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) throw new Error('Expected t-input.search-input in shadow root');
+    tInput.focus();
+    tInput.blur();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).searchQuery).toBe('');
+  });
+
+  it('blur does not clear the search query on wide screens', async () => {
+    await element.updateComplete;
+    // Simulate a wide screen (search stays expanded): _isWideScreen() is
+    // true. Prototype spy — reverted by restoreAllMocks in afterEach.
+    vi.spyOn(MediaParent.prototype as any, '_isWideScreen').mockReturnValue(true);
+
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) throw new Error('Expected t-input.search-input in shadow root');
+    tInput.focus();
+    tInput.blur();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).searchQuery).toBe('foo');
   });
 
   it('t-track-list receives highlightedIndex = -1 when the search input is not focused', async () => {
@@ -924,6 +1100,152 @@ describe('Search focus state and visual indication', () => {
     expect((element as any).isSearchFocused).toBe(false);
     const tTrackList = getTrackList();
     expect(tTrackList?.highlightedIndex).toBe(-1);
+  });
+
+  // ---- header controls get the search-expanded class while focused ----
+  //
+  // Mirrors the detail-view pattern in t-artist-list.ts (lines 462-463):
+  // every header control next to the collapsed search input must receive
+  // `search-expanded` while the input is focused (the CSS hides them on
+  // small screens; a wide-screen media query restores them). In the
+  // current code none of the class bindings exist, so all of these tests
+  // fail (RED).
+
+  it('focused search adds search-expanded class to all tracks-header controls (add btn, count, sort, find btn)', async () => {
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+
+    const findBtn = getHeaderControl('t-butt.header-find-btn');
+    expect(findBtn.classList.contains('search-expanded')).toBe(true);
+  });
+
+  it('focused search adds search-expanded class to artists-header controls', async () => {
+    (element as any).currentFilter = 'artists';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+
+    // The "find new songs" button is tracks-only.
+    const findBtn = element.shadowRoot?.querySelector('t-butt.header-find-btn');
+    expect(findBtn).toBeNull();
+  });
+
+  it('focused search adds search-expanded class to genre-header controls', async () => {
+    (element as any).currentFilter = 'genre';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+
+    // The "find new songs" button is tracks-only.
+    const findBtn = element.shadowRoot?.querySelector('t-butt.header-find-btn');
+    expect(findBtn).toBeNull();
+  });
+
+  it('focused search adds search-expanded class to groups-header controls', async () => {
+    (element as any).currentFilter = 'groups';
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
+
+    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
+    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+  });
+
+  it('blur removes search-expanded class from header controls', async () => {
+    await element.updateComplete;
+
+    const tInput = getSearchInput();
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in shadow root');
+    }
+    tInput.focus();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Focused: the class must be present on the controls.
+    const container = getHeaderControl('.header-controls');
+    expect(container.classList.contains('search-expanded')).toBe(true);
+
+    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+
+    // Blur: the class must disappear from the header controls.
+    tInput.blur();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(container.classList.contains('search-expanded')).toBe(false);
+    expect(addBtn.classList.contains('search-expanded')).toBe(false);
   });
 });
 
@@ -1209,5 +1531,98 @@ describe('empty state (no songs, no groups)', () => {
     expect(element.hasAttribute('visible')).toBe(true);
     const visibleStyles = getComputedStyle(element);
     expect(visibleStyles.transform).toMatch(/translateY\(100%/);
+  });
+});
+
+describe('group header colour restored on load', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    // Isolate from any nav state a previous test may have persisted.
+    localStorage.clear();
+    // Same baseline as the sibling describe blocks: stub _loadSongs so
+    // connectedCallback doesn't touch the Cache API / real storage.
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('dispatches group-header-color with the group colour on load (no user click needed)', async () => {
+    // Seed the saved nav state BEFORE the element is created/connected so
+    // firstUpdated() reads it. The user selected group g1 last session.
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: 'groups',
+      selected_entity: 'g1',
+    });
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+    (element as any).groups = [{ id: 'g1', name: 'Group A', color: 'bg-red-3', songs: [] }];
+    (element as any).currentFilter = 'tracks';
+
+    const spy = vi.fn();
+    element.addEventListener('group-header-color', spy);
+
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // The bug: the saved nav state is only applied when `visible` becomes
+    // true (user expands the song list), so the colour is never dispatched
+    // on load. This must fire without any user gesture.
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail.color).toBe('#e01b24');
+
+    // The colour must be restored WITHOUT the song list being expanded.
+    expect((element as any).visible).toBe(false);
+  });
+
+  it('does not dispatch the colour when the saved state has no selected group', async () => {
+    // Saved state exists but points at a non-group tab with no entity.
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: 'tracks',
+      selected_entity: '',
+    });
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+    (element as any).groups = [{ id: 'g1', name: 'Group A', color: 'bg-red-3', songs: [] }];
+    (element as any).currentFilter = 'tracks';
+
+    const spy = vi.fn();
+    element.addEventListener('group-header-color', spy);
+
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('dispatches the colour for a firebaseGroupDocId-keyed group on load', async () => {
+    nDB.set('TROFF_SONG_LIST_NAVIGATION_STATE', {
+      tab: 'groups',
+      selected_entity: 'fb-doc-1',
+    });
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+    (element as any).groups = [
+      { firebaseGroupDocId: 'fb-doc-1', name: 'Group B', color: 'bg-blue-3', songs: [] },
+    ];
+    (element as any).currentFilter = 'tracks';
+
+    const spy = vi.fn();
+    element.addEventListener('group-header-color', spy);
+
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail.color).toBe('#3584e4');
+    expect((element as any).visible).toBe(false);
   });
 });

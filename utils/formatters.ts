@@ -1,5 +1,6 @@
 import { TroffObjectLocal } from 'types/troff';
 import { getSongDisplayName } from './song.js';
+import { safeDecodeURIComponent } from './utils.js';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -40,9 +41,9 @@ export function formatSongForUI(songKey: string, songData: TroffObjectLocal): an
   return {
     songKey: songKey,
     title: getSongDisplayName(fileData, songKey),
-    artist: fileData.artist || '',
-    album: fileData.album || '',
-    genre: fileData.genre || '',
+    artist: safeDecodeURIComponent(fileData.artist || ''),
+    album: safeDecodeURIComponent(fileData.album || ''),
+    genre: safeDecodeURIComponent(fileData.genre || ''),
     duration: formatDuration(fileData.duration),
     playsTotal: songData.localInformation?.nrTimesLoaded || 0,
     playsMonth: countLast30Days(songData.localInformation?.songStartsLastMonth),

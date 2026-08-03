@@ -39,6 +39,7 @@ export interface State {
   buttStartBefore: boolean;
   buttStopAfter: boolean;
   buttWaitBetweenLoops: boolean;
+  buttIncrementUntil: boolean;
   currentLoop: string;
   currentMarker: string;
   currentStopMarker: string;
@@ -51,6 +52,10 @@ export interface State {
   waitBetweenLoops: number | string;
 }
 
+// Note: `Omit<State, 'currentStopMarker', 'currentMarker'>` (3 args) is invalid TS and
+// resolves to `any` under skipLibCheck. It cannot be fixed to a real type while legacy
+// scriptTroffClass.ts (replaceMarkerIdWithMarkerTimeInState / importStates) reads and
+// writes currentMarker/currentStopMarker on State_WithTime. Revisit when legacy is retired.
 export type State_WithTime = Omit<State, 'currentStopMarker', 'currentMarker'> & {
   currentStopMarker?: never;
   currentMarker?: never;

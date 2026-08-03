@@ -160,7 +160,7 @@ export class GroupDialog extends LitElement {
     this._editName = g?.name ?? '';
     this._editInfo = g?.info ?? '';
     this._editColor = g?.color ?? '';
-    this._editIcon = g?.icon ?? '';
+    this._editIcon = (g?.icon ?? '').replace(/^fa-/, '');
     this._editOwners = g?.owners ? [...g.owners] : [];
   }
 
@@ -320,9 +320,6 @@ export class GroupDialog extends LitElement {
         <div class="dialog">
           <div class="dialog-header">
             <h2 class="dialog-title">${this.group ? `Edit "${this.group.name}"` : 'New Group'}</h2>
-            <t-butt icon @click=${this._cancel} title="Close">
-              <t-icon name="delete"></t-icon>
-            </t-butt>
           </div>
 
           <div class="dialog-body">

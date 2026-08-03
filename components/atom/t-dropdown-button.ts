@@ -14,46 +14,22 @@ export class DropdownButton extends LitElement {
     }
 
     .dropdown {
-      position: absolute;
+      display: none;
+      position: fixed;
       background-color: var(--secondary-color);
       color: var(--on-secondary-color);
       border: 2px solid var(--theme-color);
       border-radius: 4px;
-      z-index: 1000;
+      z-index: 20000;
       min-width: 180px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       visibility: hidden;
       opacity: 0;
-      transition:
-        opacity 0.2s ease,
-        visibility 0.2s ease;
-    }
-
-    .dropdown[position='down'][align='right'] {
-      top: 100%;
-      right: 0;
-      margin-top: 4px;
-    }
-
-    .dropdown[position='down'][align='left'] {
-      top: 100%;
-      left: 0;
-      margin-top: 4px;
-    }
-
-    .dropdown[position='up'][align='right'] {
-      bottom: 100%;
-      right: 0;
-      margin-bottom: 4px;
-    }
-
-    .dropdown[position='up'][align='left'] {
-      bottom: 100%;
-      left: 0;
-      margin-bottom: 4px;
+      transition: opacity 0.2s ease;
     }
 
     .dropdown[open] {
+      display: block;
       visibility: visible;
       opacity: 1;
     }
@@ -69,18 +45,80 @@ export class DropdownButton extends LitElement {
   @property({ type: Boolean, reflect: true }) open = false;
   @property({ type: String }) position = 'down';
   @property({ type: String }) align = 'right';
+  @property({ type: String }) mobilePosition = 'auto';
 
   private _boundHandleDocumentClick!: (event: MouseEvent) => void;
+  private _boundHandleReposition!: () => void;
+  private _boundHandleVisualViewportChange!: () => void;
 
   connectedCallback() {
     super.connectedCallback();
     this._boundHandleDocumentClick = this._handleDocumentClick.bind(this);
     document.addEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
+    this._boundHandleReposition = this._reposition.bind(this);
+    window.addEventListener('scroll', this._boundHandleReposition, { capture: true });
+    window.addEventListener('resize', this._boundHandleReposition);
+
+    this._boundHandleVisualViewportChange = this._reposition.bind(this);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this._boundHandleVisualViewportChange);
+      window.visualViewport.addEventListener('scroll', this._boundHandleVisualViewportChange);
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
+    window.removeEventListener('scroll', this._boundHandleReposition, { capture: true });
+    window.removeEventListener('resize', this._boundHandleReposition);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this._boundHandleVisualViewportChange);
+      window.visualViewport.removeEventListener('scroll', this._boundHandleVisualViewportChange);
+    }
+  }
+
+  private _reposition() {
+    if (!this.open) return;
+    this._positionDropdown();
+  }
+
+  private _positionDropdown() {
+    const buttonWrapper = this.shadowRoot?.querySelector('.button-wrapper') as HTMLElement | null;
+    const dropdown = this.shadowRoot?.querySelector('.dropdown') as HTMLElement | null;
+    if (!buttonWrapper || !dropdown) return;
+
+    const rect = buttonWrapper.getBoundingClientRect();
+    const isMobile = window.innerWidth < 768;
+    const useTopPosition = this.mobilePosition === 'top' && isMobile;
+
+    // Position vertically
+    if (useTopPosition) {
+      // Mobile: anchor to viewport top
+      dropdown.style.top = '8px';
+      dropdown.style.bottom = 'auto';
+    } else if (this.position === 'down') {
+      dropdown.style.top = `${rect.bottom + 4}px`;
+      dropdown.style.bottom = 'auto';
+    } else {
+      dropdown.style.top = 'auto';
+      dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+    }
+
+    // Position horizontally
+    if (this.align === 'right') {
+      dropdown.style.left = 'auto';
+      dropdown.style.right = `${window.innerWidth - rect.right}px`;
+    } else {
+      dropdown.style.left = `${rect.left}px`;
+      dropdown.style.right = 'auto';
+    }
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('open') && this.open) {
+      // Position immediately after render (works in tests and production)
+      this._positionDropdown();
+    }
   }
 
   private _handleDocumentClick(event: MouseEvent) {

@@ -139,7 +139,7 @@ export class Dial extends LitElement {
     }
 
     .floating-dial {
-      position: absolute;
+      position: fixed;
       left: var(--dial-x, 0px);
       top: var(--dial-y, 0px);
       transform: translate(-50%, -50%);
@@ -277,12 +277,11 @@ export class Dial extends LitElement {
       return null;
     }
 
-    const hostRect = this.getBoundingClientRect();
     const valueRect = valueDisplay.getBoundingClientRect();
 
     return {
-      x: valueRect.left - hostRect.left + valueRect.width / 2,
-      y: valueRect.bottom - hostRect.top,
+      x: valueRect.left + valueRect.width / 2,
+      y: valueRect.bottom,
     };
   }
 
@@ -291,9 +290,8 @@ export class Dial extends LitElement {
     let centerY = this.dialPositionY;
 
     if (this.dialVisible) {
-      const hostRect = this.getBoundingClientRect();
-      centerX = hostRect.left + this.dialPositionX;
-      centerY = hostRect.top + this.dialPositionY;
+      centerX = this.dialPositionX;
+      centerY = this.dialPositionY;
     } else {
       const knob = this._getKnobElement();
       if (!knob) return 0;

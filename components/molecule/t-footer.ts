@@ -82,6 +82,8 @@ export class BottomNav extends LitElement {
       flex-direction: column;
       align-items: start;
       gap: 16px;
+      /* Keep the popup from growing when a help-tip is opened */
+      width: min(280px, calc(100vw - 24px));
     }
 
     .play-button-content {
@@ -249,6 +251,12 @@ export class BottomNav extends LitElement {
               <t-icon name="speed" label="${Math.round(this.speed)}" unit="%"></t-icon>
             </t-butt>
             <div slot="dropdown" class="speed-dropdown-content">
+              <t-help-tip h3="Speed and volume control">
+                <ul>
+                  <li>"Volume" sets how loud the song plays.</li>
+                  <li>"Speed" sets how fast the song plays, as a percentage of normal speed.</li>
+                </ul>
+              </t-help-tip>
               <t-dial
                 key="v"
                 min="0"
@@ -296,6 +304,7 @@ export class BottomNav extends LitElement {
           <t-dropdown-button
             position="up"
             align="right"
+            mobilePosition="top"
             .open=${this.showMarkerDropdown}
             @dropdown-toggled=${this._handleMarkerDropdownToggled}
           >
@@ -333,7 +342,7 @@ export class BottomNav extends LitElement {
               ></t-icon>
             </t-butt>
             <div slot="dropdown" class="time-dropdown-content">
-              <t-help-tip>
+              <t-help-tip h3="Wait control">
                 <ul>
                   <li>
                     "Pause before" sets how long the player will wait before starting to play the

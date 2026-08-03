@@ -113,9 +113,39 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
   let header: any;
   let songList: any;
 
+  // Per-test overrides for nDB settings
+  const nDBOverrides: Record<string, boolean> = {};
+
+  // Handler reference for direct invocation (bypasses accumulated document listeners)
+  let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+
   beforeEach(() => {
     vi.resetModules();
     document.body.innerHTML = '';
+
+    // Intercept document.addEventListener for keydown capture listeners.
+    // v2Script registers a capture-phase keydown listener on document each
+    // time it initializes. Other test files (v2Script.test.ts, etc.) do the
+    // same, leaving stale listeners that accumulate across the suite.
+    // When we dispatch a keydown event, ALL stale listeners fire, each calling
+    // startPlayback with old module state — causing multiplied side-effects
+    // and eventually test timeouts.
+    // Our fix: capture the handler but do NOT register it on document.
+    // Instead, dispatchKeyDown calls the handler directly.
+    keydownHandler = null;
+    const origAE = document.addEventListener.bind(document);
+    vi.spyOn(document, 'addEventListener').mockImplementation(
+      (type: string, handler: any, options?: any) => {
+        if (
+          type === 'keydown' &&
+          (options === true || (typeof options === 'object' && options?.capture))
+        ) {
+          keydownHandler = handler as (e: KeyboardEvent) => void;
+          return; // Skip actual registration to prevent accumulation
+        }
+        return origAE(type, handler, options);
+      }
+    );
 
     // Make requestAnimationFrame fire synchronously
     const raf = (cb: Function) => {
@@ -144,9 +174,12 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
     nDBGetMock.mockReset();
     nDBSetOnSongMock.mockReset();
     nDBSetMock.mockReset();
+    // Clear per-test nDB overrides
+    Object.keys(nDBOverrides).forEach((k) => delete nDBOverrides[k]);
     audioMock.currentTime = 0;
     audioMock.paused = true;
     audioMock.play.mockClear();
+    audioMock.play.mockResolvedValue(undefined);
     audioMock.pause.mockClear();
 
     // Create DOM elements
@@ -173,6 +206,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
     footer.markerDialogInitialTime = 0;
     footer.markerDialogSuggestedName = '';
     footer.openMarkerDialogForEdit = vi.fn();
+    footer.updateComplete = Promise.resolve();
     document.body.appendChild(footer);
 
     settingsPanel = document.createElement('div');
@@ -192,6 +226,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
     settingsPanel.stopAfterDisabled = false;
     settingsPanel.incrementUntillValue = 0;
     settingsPanel.incrementUntillDisabled = false;
+    settingsPanel.updateComplete = Promise.resolve();
     document.body.appendChild(settingsPanel);
 
     markerSlider = document.createElement('div');
@@ -213,7 +248,8 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
           TROFF_CLASS_TO_TOGGLE_buttStartBefore: true,
         };
       }
-      // Global settings
+      // Global settings — check per-test overrides first
+      if (key in nDBOverrides) return nDBOverrides[key];
       if (key === constants.TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) return false;
       if (key === constants.TROFF_SETTING_ENTER_RESET_COUNTER) return false;
       if (key === constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) return false;
@@ -273,7 +309,13 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       composed: true,
       cancelable: true,
     });
-    window.dispatchEvent(event);
+
+    // Call the handler directly instead of dispatching through the DOM,
+    // to avoid triggering stale document-level listeners left by other test files.
+    if (keydownHandler) {
+      keydownHandler(event);
+    }
+
     return event;
   }
 
@@ -291,7 +333,9 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      // Enable enterGoToMarker
+      // Reset audio time that was set during init, then enable go-to-marker
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
 
@@ -317,6 +361,8 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
 
@@ -341,6 +387,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await setupTest();
 
       // enterGoToMarker is false (default)
+      audioMock.currentTime = 0;
       settingsPanel.enterGoToMarker = false;
       await settingsPanel.updateComplete;
 
@@ -364,6 +411,8 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
 
@@ -387,6 +436,8 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
 
@@ -410,6 +461,8 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
 
@@ -434,6 +487,8 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
 
@@ -455,8 +510,9 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
       settingsPanel.spaceGoToMarker = false;
-      await settingsPanel.updateComplete();
+      await settingsPanel.updateComplete;
 
       expect(audioMock.currentTime).toBe(0);
 
@@ -477,8 +533,10 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
-      await settingsPanel.updateComplete();
+      await settingsPanel.updateComplete;
 
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
@@ -498,8 +556,10 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
-      await settingsPanel.updateComplete();
+      await settingsPanel.updateComplete;
 
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
@@ -519,8 +579,10 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
-      await settingsPanel.updateComplete();
+      await settingsPanel.updateComplete;
 
       dispatchKeyDown('Spacebar');
       await new Promise((r) => setTimeout(r, 0));
@@ -542,9 +604,11 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       settingsPanel.spaceGoToMarker = false;
-      await settingsPanel.updateComplete();
+      await settingsPanel.updateComplete;
 
       // Press Enter - should seek
       dispatchKeyDown('Enter');
@@ -572,9 +636,11 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
+      audioMock.currentTime = 0;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = false;
       settingsPanel.spaceGoToMarker = true;
-      await settingsPanel.updateComplete();
+      await settingsPanel.updateComplete;
 
       // Press Space - should seek
       dispatchKeyDown(' ');

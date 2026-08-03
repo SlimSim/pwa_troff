@@ -17,32 +17,41 @@ import type { DropdownButton } from './t-dropdown-button.js';
 
 /** All available icon names (matching filenames in assets/icons/ without .svg). */
 export const AVAILABLE_ICONS: string[] = [
-  'group-plus',
+  'lindy-hop',
+  'balboa',
+  'blues',
+  'salsa',
+  'tango',
+  'swedish-folk-dance',
+  'hop',
+  'hip-hop',
+  'modern-dance',
+  'tap',
+  'ballet',
+  'party',
+  'disco-man',
+  'disco-woman',
+  'trombone',
+  'saxophone',
+  'trumpet',
+  'clarinet',
+  'oboe',
+  'piano',
+  'drums',
+  'guitar',
+  'violin',
+  'banjo',
+  'double-bass',
+  'electric-guitar',
+  'ukelele',
+  'harp',
+  'mic',
   'note',
-  'note-plus',
-  'note-search',
-  'notes-plus',
-  'notes-search',
-  'marker',
-  'marker-plus',
-  'edit',
-  'delete',
-  'share',
-  'sort',
-  'chevron-up',
-  'chevron-down',
-  'play',
-  'pause',
-  'pause-before',
-  'stop-here',
-  'speed',
-  'volume',
-  'time',
-  'wait-between',
-  'reset',
-  'disable',
-  'rotate',
-  'rotate-flat',
+  'note-beamed',
+  'chat',
+  'paw',
+  'linux',
+  'rebel',
 ];
 
 /** Human-readable label for each icon (capitalized, dashes → spaces). */
@@ -303,7 +312,10 @@ export class TIconPicker extends LitElement {
                 }
               }}"
             >
-              <span class="icon-preview no-icon" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;">
+              <span
+                class="icon-preview no-icon"
+                style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;"
+              >
                 <span style="font-size:16px; opacity:0.5;">?</span>
               </span>
               <span style="flex:1; text-align:left;">No icon</span>
@@ -328,7 +340,7 @@ export class TIconPicker extends LitElement {
                     }
                   }}"
                 >
-                  <t-icon name=${name}></t-icon>
+                  <t-icon large name=${name}></t-icon>
                 </div>
               `
             )}
