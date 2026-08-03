@@ -8,6 +8,8 @@ import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
 import './components/molecule/t-current-song-controls.js';
 import './components/molecule/t-group-dialog.js';
+import './components/molecule/t-import-export-dialog.js';
+import './components/molecule/t-marker-tools-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import {
   updateHeaderWithCurrentSong,
@@ -19,6 +21,14 @@ import {
 import { nDB } from './assets/internal/db.js';
 import { audio, loadSong } from './services/audio.js';
 import { formatDuration, countLast30Days } from './utils/formatters.js';
+import {
+  getSelectedMarkerRange,
+  copyMarkers,
+  moveMarkers,
+  stretchMarkers,
+  deleteMarkers,
+} from './utils/marker-actions.js';
+import { mergeImportedMarkers } from './utils/marker-import.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
 import {
   configureMarkerSlider,
@@ -27,7 +37,7 @@ import {
   getIncrementUntil,
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
-import type { TroffMarker, State } from './types/troff.d.js';
+import type { TroffMarker, State, State_WithTime, TroffManualImportExport } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
@@ -74,6 +84,39 @@ type FooterElement = HTMLElement & {
   markerDialogInitialTime?: number;
   markerDialogSuggestedName?: string;
   openMarkerDialogForEdit?: (markerData: Partial<TroffMarker>) => void;
+};
+
+type ImportExportDialogElement = HTMLElement & {
+  open: boolean;
+  exportData: TroffManualImportExport | null;
+  addEventListener(
+    type: 'import-requested' | 'dialog-cancelled',
+    listener: (ev: CustomEvent) => void,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  removeEventListener(
+    type: 'import-requested' | 'dialog-cancelled',
+    listener: (ev: CustomEvent) => void,
+    options?: boolean | EventListenerOptions
+  ): void;
+};
+
+type MarkerToolsDialogElement = HTMLElement & {
+  open: boolean;
+  mode: 'copy' | 'move' | 'delete' | 'stretch';
+  nrOfSelectedMarkers: number;
+  initialTime: number;
+  totalMarkers: number;
+  addEventListener(
+    type: 'marker-tools-action' | 'dialog-cancelled',
+    listener: (ev: CustomEvent) => void,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  removeEventListener(
+    type: 'marker-tools-action' | 'dialog-cancelled',
+    listener: (ev: CustomEvent) => void,
+    options?: boolean | EventListenerOptions
+  ): void;
 };
 
 // Function to update marker slider with current song markers
@@ -309,6 +352,318 @@ document.addEventListener('DOMContentLoaded', () => {
   const zoomOutTimeline = async () => {
     const duration = getTimelineDuration();
     await applyMarkerSliderZoom(0, duration, true);
+  };
+
+  const handleImportExport = async () => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+
+    const songData = nDB.get(songKey) || {};
+
+    // Ensure import/export dialog exists (create lazily like group dialog)
+    let importExportDialog = document.querySelector(
+      't-import-export-dialog'
+    ) as ImportExportDialogElement | null;
+    if (!importExportDialog) {
+      importExportDialog = document.createElement(
+        't-import-export-dialog'
+      ) as ImportExportDialogElement;
+      document.body.append(importExportDialog);
+    }
+
+    // Prepare export data
+    const markers: TroffMarker[] = Array.isArray(songData.markers) ? songData.markers : [];
+    const states: string[] = Array.isArray(songData.aStates) ? songData.aStates : [];
+    const songInfo: string = songData.info || '';
+
+    // Convert states from marker IDs to marker times (for portability)
+    const statesWithTimes: State_WithTime[] = states.map((stateStr) => {
+      try {
+        const state = JSON.parse(stateStr) as State;
+        const { currentMarker, currentStopMarker, ...rest } = state;
+        const newState: State_WithTime = { ...rest };
+
+        // Find marker by ID and get its time
+        const startMarker = markers.find((m) => m.id === currentMarker);
+        if (startMarker) {
+          newState.currentMarkerTime = startMarker.time;
+        }
+
+        const stopMarker = markers.find(
+          (m) => m.id === (currentStopMarker?.replace('S', '') || '')
+        );
+        if (stopMarker) {
+          newState.currentStopMarkerTime = stopMarker.time;
+        }
+
+        return newState;
+      } catch {
+        // If parsing fails, return a minimal state with times
+        return {
+          name: 'Imported State',
+          currentMarkerTime: 0,
+          currentStopMarkerTime: 0,
+          buttStartBefore: false,
+          buttStopAfter: false,
+          buttPauseBefStart: false,
+          buttWaitBetweenLoops: false,
+          buttIncrementUntil: false,
+          currentLoop: '1',
+          pauseBeforeStart: 0,
+          speedBar: 100,
+          startBefore: 0,
+          stopAfter: 0,
+          volumeBar: 75,
+          waitBetweenLoops: 0,
+        } as State_WithTime;
+      }
+    });
+
+    const exportData: TroffManualImportExport = {
+      strSongInfo: songInfo,
+      aoMarkers: markers,
+      aoStates: statesWithTimes,
+    };
+
+    // Set export data and open dialog
+    importExportDialog.exportData = exportData;
+    importExportDialog.open = true;
+
+    // Handle dialog events (one-time listeners)
+    const handleImportRequested = async (event: CustomEvent) => {
+      const { data, mode } = event.detail as {
+        data: TroffManualImportExport;
+        mode: 'replace' | 'merge';
+      };
+
+      try {
+        let finalMarkers: TroffMarker[];
+
+        if (mode === 'replace') {
+          finalMarkers = data.aoMarkers;
+        } else {
+          // Merge with existing: an imported marker within 0.001 s of an existing marker
+          // is merged into it (legacy threshold scriptTroffClass.ts:2310); the rest get
+          // new unique ids.
+          finalMarkers = mergeImportedMarkers(
+            Array.isArray(songData.markers) ? songData.markers : [],
+            data.aoMarkers
+          );
+        }
+
+        // Convert states back from times to marker IDs
+        const newStates: string[] = data.aoStates.map((stateWithTime) => {
+          // Find closest markers for the times
+          const startTime = stateWithTime.currentMarkerTime ?? 0;
+          const stopTime = stateWithTime.currentStopMarkerTime ?? 0;
+          
+          let startMarkerId = finalMarkers[0]?.id || 'markerNr0';
+          let stopMarkerId = finalMarkers[1]?.id || 'markerNr1';
+          
+          let minStartDiff = Infinity;
+          let minStopDiff = Infinity;
+          
+          for (const marker of finalMarkers) {
+            const markerTime = Number(marker.time);
+            const startDiff = Math.abs(markerTime - startTime);
+            const stopDiff = Math.abs(markerTime - stopTime);
+            
+            if (startDiff < minStartDiff) {
+              minStartDiff = startDiff;
+              startMarkerId = marker.id;
+            }
+            if (stopDiff < minStopDiff) {
+              minStopDiff = stopDiff;
+              stopMarkerId = marker.id;
+            }
+          }
+          
+          const state: State = {
+            name: stateWithTime.name || 'Imported State',
+            currentMarker: startMarkerId,
+            currentStopMarker: stopMarkerId + 'S',
+            buttStartBefore: stateWithTime.buttStartBefore ?? false,
+            buttStopAfter: stateWithTime.buttStopAfter ?? false,
+            buttPauseBefStart: stateWithTime.buttPauseBefStart ?? false,
+            buttWaitBetweenLoops: stateWithTime.buttWaitBetweenLoops ?? false,
+            buttIncrementUntil: stateWithTime.buttIncrementUntil ?? false,
+            currentLoop: stateWithTime.currentLoop || '1',
+            pauseBeforeStart: stateWithTime.pauseBeforeStart ?? 0,
+            speedBar: stateWithTime.speedBar ?? 100,
+            startBefore: stateWithTime.startBefore ?? 0,
+            stopAfter: stateWithTime.stopAfter ?? 0,
+            volumeBar: stateWithTime.volumeBar ?? 75,
+            waitBetweenLoops: stateWithTime.waitBetweenLoops ?? 0,
+          };
+          
+          return JSON.stringify(state);
+        });
+
+        // Save to nDB
+        nDB.setOnSong(songKey, 'markers', finalMarkers);
+        nDB.setOnSong(songKey, 'aStates', newStates);
+        nDB.setOnSong(songKey, 'info', data.strSongInfo || '');
+        
+        // Update marker slider
+        updateMarkerSlider(markerSlider!, false);
+
+        // Replace mode invalidated the previous selection — reselect first/last
+        if (mode === 'replace') {
+          selectFirstAndLastMarkers();
+        }
+
+        // Sync UI
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+
+        // Save to Firebase if applicable
+        await saveSongData(songKey);
+      } catch (error) {
+        log.e('Import failed:', error);
+        alert('Import failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      }
+    };
+
+    // Add one-time event listeners
+    importExportDialog.addEventListener('import-requested', handleImportRequested, { once: true });
+    importExportDialog.addEventListener(
+      'dialog-cancelled',
+      () => {
+        importExportDialog.removeEventListener('import-requested', handleImportRequested);
+      },
+      { once: true }
+    );
+  };
+
+  const openMarkerToolsDialog = (action: string) => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+
+    const songData = nDB.get(songKey) || {};
+    const markers: TroffMarker[] = Array.isArray(songData.markers) ? songData.markers : [];
+
+    // Ensure marker tools dialog exists (create lazily like the group dialog)
+    let markerToolsDialog = document.querySelector(
+      't-marker-tools-dialog'
+    ) as MarkerToolsDialogElement | null;
+    if (!markerToolsDialog) {
+      markerToolsDialog = document.createElement('t-marker-tools-dialog') as MarkerToolsDialogElement;
+      document.body.append(markerToolsDialog);
+    }
+
+    const modeByAction: Record<string, 'copy' | 'move' | 'delete' | 'stretch'> = {
+      copyMarkers: 'copy',
+      moveMarkers: 'move',
+      deleteMarkers: 'delete',
+      stretchMarkers: 'stretch',
+    };
+
+    const [startNr, endNr] = getSelectedMarkerRange(
+      markers,
+      markerSlider.startMarkerId,
+      markerSlider.stopMarkerId
+    );
+
+    markerToolsDialog.mode = modeByAction[action] ?? 'copy';
+    markerToolsDialog.nrOfSelectedMarkers = endNr - startNr;
+    markerToolsDialog.totalMarkers = markers.length;
+    markerToolsDialog.initialTime = audio.currentTime;
+    markerToolsDialog.open = true;
+
+    // Handle dialog events (one-time listeners)
+    const handleMarkerToolsAction = (event: CustomEvent) => {
+      markerToolsDialog.removeEventListener('dialog-cancelled', handleDialogCancelled);
+      const { action: dialogAction, value } = event.detail as {
+        action: string;
+        value?: number;
+      };
+      applyMarkerToolsAction(dialogAction, value);
+    };
+
+    const handleDialogCancelled = () => {
+      markerToolsDialog.removeEventListener('marker-tools-action', handleMarkerToolsAction);
+    };
+
+    markerToolsDialog.addEventListener('marker-tools-action', handleMarkerToolsAction, {
+      once: true,
+    });
+    markerToolsDialog.addEventListener('dialog-cancelled', handleDialogCancelled, { once: true });
+  };
+
+  const applyMarkerToolsAction = (dialogAction: string, value?: number) => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+
+    try {
+      const songData = nDB.get(songKey) || {};
+      const markers: TroffMarker[] = Array.isArray(songData.markers) ? songData.markers : [];
+      const maxTime = markerSlider?.max ?? audio.duration ?? 0;
+      const [startNr, endNr] = getSelectedMarkerRange(
+        markers,
+        markerSlider.startMarkerId,
+        markerSlider.stopMarkerId
+      );
+
+      let result: TroffMarker[];
+      switch (dialogAction) {
+        case 'copy':
+          result = copyMarkers(markers, value ?? 0, startNr, endNr);
+          break;
+        case 'moveUp':
+          result = moveMarkers(markers, -(value ?? 0), startNr, endNr, maxTime);
+          break;
+        case 'moveDown':
+          result = moveMarkers(markers, value ?? 0, startNr, endNr, maxTime);
+          break;
+        case 'moveAllUp':
+          result = moveMarkers(markers, -(value ?? 0), 0, markers.length, maxTime);
+          break;
+        case 'moveAllDown':
+          result = moveMarkers(markers, value ?? 0, 0, markers.length, maxTime);
+          break;
+        case 'deleteSelected':
+          result = deleteMarkers(markers, startNr, endNr);
+          break;
+        case 'deleteAll':
+          // v1 behavior: keeps the first and last marker
+          result = deleteMarkers(markers, 1, markers.length - 1);
+          break;
+        case 'stretchSelected':
+          result = stretchMarkers(
+            markers,
+            value ?? 100,
+            Number(markers[startNr]?.time ?? 0),
+            startNr,
+            endNr,
+            maxTime
+          );
+          break;
+        case 'stretchAll':
+          result = stretchMarkers(markers, value ?? 100, 0, 0, markers.length, maxTime);
+          break;
+        default:
+          return;
+      }
+
+      // Save result
+      nDB.setOnSong(songKey, 'markers', result);
+
+      // Update marker slider and UI
+      updateMarkerSlider(markerSlider, false);
+      syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
+
+      // Save to Firebase if applicable
+      void saveSongData(songKey);
+    } catch (error) {
+      log.e('Marker tools action failed:', error);
+    }
   };
 
   const applySavedZoomWindowForCurrentSong = async () => {
@@ -1139,6 +1494,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (action === 'zoomOut') {
         await zoomOutTimeline();
+      }
+
+      if (action === 'importExport') {
+        await handleImportExport();
+      }
+
+      if (
+        action === 'copyMarkers' ||
+        action === 'moveMarkers' ||
+        action === 'deleteMarkers' ||
+        action === 'stretchMarkers'
+      ) {
+        openMarkerToolsDialog(action);
       }
     });
 
