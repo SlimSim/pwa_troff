@@ -69,6 +69,8 @@ For multi-step tasks, state a brief plan:
 9. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
 10. **Never use the `any` type in TypeScript** - always find a more specific type.
 11. **Always put functions where they belong** - check the `utils/` folder for existing files and use them if possible, otherwise create a new file in `utils/` or wherever the file structure dictates.
+12. **GitHub issue context** - When asked to fix or implement an issue (e.g. "can you fix issue nr 3"), assume it is a GitHub issue unless otherwise specified. Name the conversation/task as a hashtag, the issue number, and a short description of the issue, e.g. `#3 background pink`.
+13. **End with a summary** - In a conversation, if the agent gives a long answer, it should finish the response with a quick summary of the user's last request, so the user doesn't have to scroll back up to see what they wrote.
 
 ## Test Creation Guidelines for Regression Testing
 
