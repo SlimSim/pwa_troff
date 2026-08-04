@@ -312,7 +312,7 @@ export class Dial extends LitElement {
     }
 
     this.dialPositionX = position.x;
-    this.dialPositionY = position.y;
+    this.dialPositionY = position.y + 16;
     this.dialVisible = true;
     this.requestUpdate();
   }

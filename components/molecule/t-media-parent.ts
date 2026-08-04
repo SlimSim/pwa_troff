@@ -14,6 +14,7 @@ import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
 import { nDB } from '../../assets/internal/db.js';
 import { getCurrentSongKey } from '../../utils/current-song.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
+import { toSongKey } from '../../utils/utils.js';
 import {
   filterTracks,
   filterArtists,
@@ -22,6 +23,11 @@ import {
 } from '../../utils/media-search.js';
 import type { TrackLike } from '../../utils/media-search.js';
 import log from '../../utils/log.js';
+
+/** Minimal surface of the detail-view list components for closing details. */
+interface DetailViewListElement extends HTMLElement {
+  closeDetail?: () => void;
+}
 
 // Module-level diagnostic listener: registers at module load time to verify
 // whether the Esc keydown reaches the window at all. This bypasses any
@@ -377,6 +383,18 @@ export class MediaParent extends LitElement {
       width: 100%;
       font-size: 1rem;
     }
+
+    /* ── No-results state (active search, empty list) ── */
+    .no-results {
+      padding: 24px 16px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    .no-results-text {
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
@@ -441,6 +459,7 @@ export class MediaParent extends LitElement {
     this.currentSongKey = getCurrentSongKey() || '';
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
+      this.visible = false; // close the song list when a song is selected
       this.requestUpdate(); // Force re-render to update active states
     });
 
@@ -682,9 +701,18 @@ export class MediaParent extends LitElement {
 
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
+    this.searchQuery = '';
+    this._closeOpenDetailViews();
     this._clearContext();
     this._saveNavigationState();
     this._dispatchHeaderColor();
+  }
+
+  /** Close any open detail view in the mounted list components. */
+  private _closeOpenDetailViews() {
+    this.shadowRoot?.querySelector<DetailViewListElement>('t-group-list')?.closeDetail?.();
+    this.shadowRoot?.querySelector<DetailViewListElement>('t-artist-list')?.closeDetail?.();
+    this.shadowRoot?.querySelector<DetailViewListElement>('t-genre-list')?.closeDetail?.();
   }
 
   private _handleToggleSortDropdown() {
@@ -804,6 +832,7 @@ export class MediaParent extends LitElement {
     const detail = (event as CustomEvent<{ groupKey?: string }>).detail;
     const key = detail?.groupKey || '';
     this._currentGroupKey = key;
+    this.searchQuery = '';
 
     if (key) {
       const group = this.groups.find((g) => {
@@ -832,6 +861,7 @@ export class MediaParent extends LitElement {
   private _handleArtistDetailOpened(event: Event) {
     const detail = (event as CustomEvent<{ artist?: string }>).detail;
     const artist = detail?.artist || '';
+    this.searchQuery = '';
     if (artist) {
       this._contextType = 'artist';
       this._contextKey = artist;
@@ -846,6 +876,7 @@ export class MediaParent extends LitElement {
   private _handleGenreDetailOpened(event: Event) {
     const detail = (event as CustomEvent<{ genre?: string }>).detail;
     const genre = detail?.genre || '';
+    this.searchQuery = '';
     if (genre) {
       this._contextType = 'genre';
       this._contextKey = genre;
@@ -908,13 +939,14 @@ export class MediaParent extends LitElement {
         console.warn(`Skipping unsupported file: ${file.name} (type: ${file.type})`);
         continue;
       }
-      try {
-        await this._saveFileToCache(file);
-        this._createSongEntry(file);
-        addedKeys.push(file.name);
-      } catch (err) {
-        console.error(`Failed to add file "${file.name}":`, err);
-      }
+       try {
+         const songKey = toSongKey(file.name);
+         await this._saveFileToCache(file, songKey);
+         this._createSongEntry(file, songKey);
+         addedKeys.push(songKey);
+       } catch (err) {
+         console.error(`Failed to add file "${file.name}":`, err);
+       }
     }
 
     // Reset the input so the same files can be picked again
@@ -974,30 +1006,30 @@ export class MediaParent extends LitElement {
   /**
    * Save the raw file to the Cache Storage API so it can be played offline.
    */
-  private async _saveFileToCache(file: File): Promise<void> {
+  private async _saveFileToCache(file: File, songKey: string): Promise<void> {
     const cache = await caches.open('songCache-v1.0');
     const response = new Response(file, {
       status: 200,
       statusText: 'OK',
     });
-    await cache.put(file.name, response);
+    await cache.put(songKey, response);
   }
 
   /**
    * Create or update the song metadata entry in nDB (localStorage).
    * When the song already exists we only mark it as added-from-device.
    */
-  private _createSongEntry(file: File): void {
-    const existing = nDB.get(file.name);
+  private _createSongEntry(file: File, songKey: string): void {
+    const existing = nDB.get(songKey);
 
     if (!existing) {
-      nDB.set(file.name, {
+      nDB.set(songKey, {
         fileData: {
           album: '',
           artist: '',
           choreographer: '',
           choreography: '',
-          customName: file.name,
+          customName: songKey,
           duration: 0,
           genre: '',
           tags: '',
@@ -1010,7 +1042,7 @@ export class MediaParent extends LitElement {
         },
       });
     } else {
-      nDB.setOnSong(file.name, ['localInformation', 'addedFromThisDevice'], true);
+      nDB.setOnSong(songKey, ['localInformation', 'addedFromThisDevice'], true);
     }
   }
 
@@ -1087,21 +1119,17 @@ export class MediaParent extends LitElement {
 
   private _handleSearchBlur = (): void => {
     this.isSearchFocused = false;
-    // The search only collapses (and thus clears) on small screens.
-    if (!this._isWideScreen()) {
-      this.searchQuery = '';
-    }
   };
-
-  /** True on screens where the search input stays expanded (>= 576px). */
-  private _isWideScreen(): boolean {
-    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
-  }
 
   private _blurSearchInput() {
     const tInput = this.shadowRoot?.querySelector<TInput>('t-input.search-input');
     const innerInput = tInput?.shadowRoot?.querySelector<HTMLInputElement>('input');
     innerInput?.blur();
+  }
+
+  /** Clear the search query (used by the no-results clear button). */
+  private _clearSearch() {
+    this.searchQuery = '';
   }
 
   private _selectTrackForEnter(track: any) {
@@ -1764,43 +1792,79 @@ export class MediaParent extends LitElement {
             `
           : html`
               ${this.currentFilter === 'tracks'
-                ? html`
-                    <t-track-list
-                      .tracks=${visibleTracks}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-track-list>
-                  `
+                ? query.trim() !== '' && visibleTracks.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No tracks match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-track-list
+                        .tracks=${visibleTracks}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-track-list>
+                    `
                 : ''}
               ${this.currentFilter === 'artists'
-                ? html`
-                    <t-artist-list
-                      .artists=${visibleArtists}
-                      .tracks=${songs}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-artist-list>
-                  `
+                ? query.trim() !== '' && visibleArtists.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No artists match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-artist-list
+                        .artists=${visibleArtists}
+                        .tracks=${songs}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-artist-list>
+                    `
                 : ''}
               ${this.currentFilter === 'genre'
-                ? html`
-                    <t-genre-list
-                      .genres=${visibleGenres}
-                      .tracks=${songs}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-genre-list>
-                  `
+                ? query.trim() !== '' && visibleGenres.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No genres match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-genre-list
+                        .genres=${visibleGenres}
+                        .tracks=${songs}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-genre-list>
+                    `
                 : ''}
               ${this.currentFilter === 'groups'
-                ? html`
-                    <t-group-list
-                      .groups=${visibleGroups}
-                      .tracks=${songs}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-group-list>
-                  `
+                ? query.trim() !== '' && visibleGroups.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No groups match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-group-list
+                        .groups=${visibleGroups}
+                        .tracks=${songs}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-group-list>
+                    `
                 : ''}
             `}
       </div>

@@ -894,12 +894,8 @@ describe('Search focus state and visual indication', () => {
     expect(icon?.getAttribute('name')).toBe('search');
   });
 
-  it('blur clears the search query on small screens', async () => {
+  it('blur keeps the search query (query is no longer cleared)', async () => {
     await element.updateComplete;
-    // Simulate a small screen (search stays collapsed): _isWideScreen() is
-    // false. Spying on the prototype method (like _loadSongs above) keeps
-    // the environment clean — restoreAllMocks in afterEach reverts it.
-    vi.spyOn(MediaParent.prototype as any, '_isWideScreen').mockReturnValue(false);
 
     (element as any).searchQuery = 'foo';
     await element.updateComplete;
@@ -911,25 +907,9 @@ describe('Search focus state and visual indication', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 0));
 
-    expect((element as any).searchQuery).toBe('');
-  });
-
-  it('blur does not clear the search query on wide screens', async () => {
-    await element.updateComplete;
-    // Simulate a wide screen (search stays expanded): _isWideScreen() is
-    // true. Prototype spy — reverted by restoreAllMocks in afterEach.
-    vi.spyOn(MediaParent.prototype as any, '_isWideScreen').mockReturnValue(true);
-
-    (element as any).searchQuery = 'foo';
-    await element.updateComplete;
-
-    const tInput = getSearchInput();
-    if (!tInput) throw new Error('Expected t-input.search-input in shadow root');
-    tInput.focus();
-    tInput.blur();
-    await element.updateComplete;
-    await new Promise((r) => setTimeout(r, 0));
-
+    // New behavior: blurring must NOT clear the query — it stays exactly
+    // as it was on every screen size. (The focus state / search-expanded
+    // collapse behavior is unchanged.)
     expect((element as any).searchQuery).toBe('foo');
   });
 
@@ -1624,5 +1604,365 @@ describe('group header colour restored on load', () => {
     expect(spy).toHaveBeenCalled();
     expect(spy.mock.calls[0][0].detail.color).toBe('#3584e4');
     expect((element as any).visible).toBe(false);
+  });
+});
+
+describe('search cleared on tab switch / detail entry', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    // Same baseline as the sibling describe blocks: stub _loadSongs so
+    // connectedCallback doesn't touch localStorage / the Cache API.
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    (element as any).songs = [
+      { title: 'Alpha', songKey: '1' },
+      { title: 'Bravo', songKey: '2' },
+    ];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('switching tab clears the search query', async () => {
+    await element.updateComplete;
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    // Invoke the handler directly — the real binding lives on
+    // <t-media-footer> via @filter-changed (line ~1801), which is not in
+    // the happy-dom event path of this element. This matches how the other
+    // private handlers are invoked in this file.
+    (element as any)._handleFilterChanged({ detail: { filter: 'groups' } });
+    await element.updateComplete;
+
+    // Switching tabs clears the search query so a query typed on one tab
+    // doesn't leak into the next tab's results.
+    expect((element as any).searchQuery).toBe('');
+  });
+
+  it('entering a group detail clears the search query', async () => {
+    await element.updateComplete;
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    // The real binding is registered in connectedCallback via
+    // this.addEventListener('group-detail-opened', ...), so dispatching
+    // the event ON the element hits the real handler.
+    element.dispatchEvent(
+      new CustomEvent('group-detail-opened', {
+        detail: { groupKey: '1' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    // Entering a group detail clears the search query so it doesn't carry
+    // over into the group detail view.
+    expect((element as any).searchQuery).toBe('');
+  });
+
+  it('entering an artist detail clears the search query', async () => {
+    await element.updateComplete;
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    element.dispatchEvent(
+      new CustomEvent('artist-detail-opened', {
+        detail: { artist: 'Alpha' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    // Entering an artist detail clears the search query so it doesn't
+    // carry over into the artist detail view.
+    expect((element as any).searchQuery).toBe('');
+  });
+
+  it('entering a genre detail clears the search query', async () => {
+    await element.updateComplete;
+    (element as any).searchQuery = 'foo';
+    await element.updateComplete;
+
+    element.dispatchEvent(
+      new CustomEvent('genre-detail-opened', {
+        detail: { genre: 'Jazz' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    // Entering a genre detail clears the search query so it doesn't carry
+    // over into the genre detail view.
+    expect((element as any).searchQuery).toBe('');
+  });
+});
+
+describe('no-results state', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    // Same baseline as the sibling describe blocks: stub _loadSongs so
+    // connectedCallback doesn't touch localStorage / the Cache API.
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    // Songs without artist/genre fields — the artist/genre tabs derive a
+    // single 'Unknown' entry each.
+    (element as any).songs = [
+      { songKey: 'a', title: 'Tango' },
+      { songKey: 'b', title: 'Waltz' },
+    ];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  // ---- helpers ----
+
+  function getNoResults(): HTMLElement | null {
+    return (element.shadowRoot?.querySelector('.no-results') as HTMLElement | null) ?? null;
+  }
+
+  // ---- tests ----
+
+  it('tracks tab shows a no-results message and clear button when the search matches nothing', async () => {
+    await element.updateComplete;
+    (element as any).searchQuery = 'zzz';
+    await element.updateComplete;
+
+    const noResults = getNoResults();
+    expect(noResults).toBeTruthy();
+    expect(noResults?.querySelector('.no-results-text')?.textContent).toContain(
+      'No tracks match "zzz"'
+    );
+    expect(noResults?.querySelector('.no-results-clear')).toBeTruthy();
+
+    // Click the clear button: the query must reset and the list render again.
+    (noResults?.querySelector('.no-results-clear') as HTMLElement | null)?.click();
+    await element.updateComplete;
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect((element as any).searchQuery).toBe('');
+    expect(getNoResults()).toBeNull();
+    expect(element.shadowRoot?.querySelector('t-track-list')).toBeTruthy();
+  });
+
+  it('artists tab shows a no-results message when the search matches nothing', async () => {
+    await element.updateComplete;
+    (element as any).currentFilter = 'artists';
+    (element as any).searchQuery = 'zzz';
+    await element.updateComplete;
+
+    const noResults = getNoResults();
+    expect(noResults).toBeTruthy();
+    expect(noResults?.querySelector('.no-results-text')?.textContent).toContain(
+      'No artists match "zzz"'
+    );
+  });
+
+  it('genre tab shows a no-results message when the search matches nothing', async () => {
+    await element.updateComplete;
+    (element as any).currentFilter = 'genre';
+    (element as any).searchQuery = 'zzz';
+    await element.updateComplete;
+
+    const noResults = getNoResults();
+    expect(noResults).toBeTruthy();
+    expect(noResults?.querySelector('.no-results-text')?.textContent).toContain(
+      'No genres match "zzz"'
+    );
+  });
+
+  it('groups tab shows a no-results message when the search matches nothing', async () => {
+    await element.updateComplete;
+    (element as any).groups = [{ id: 1, name: 'Dance Group', songs: [] }];
+    (element as any).currentFilter = 'groups';
+    (element as any).searchQuery = 'zzz';
+    await element.updateComplete;
+
+    const noResults = getNoResults();
+    expect(noResults).toBeTruthy();
+    expect(noResults?.querySelector('.no-results-text')?.textContent).toContain(
+      'No groups match "zzz"'
+    );
+  });
+
+  it('no no-results block when the search is empty', async () => {
+    await element.updateComplete;
+
+    // Regression guard: an empty query renders the plain list, never the
+    // no-results block.
+    expect(getNoResults()).toBeNull();
+  });
+});
+
+describe('tab switch closes open detail view', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    // Same baseline as the sibling describe blocks: stub _loadSongs so
+    // connectedCallback doesn't touch localStorage / the Cache API.
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    // Songs without artist/genre fields — the artist/genre tabs derive a
+    // single 'Unknown' entry each.
+    (element as any).songs = [
+      { songKey: 'a', title: 'Tango' },
+      { songKey: 'b', title: 'Waltz' },
+    ];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('re-pressing the groups tab closes an open group detail', async () => {
+    (element as any).currentFilter = 'groups';
+    (element as any).groups = [{ id: 1, name: 'Dance Group', songs: [] }];
+    await element.updateComplete;
+
+    const child = element.shadowRoot?.querySelector('t-group-list') as any;
+    if (!child) {
+      throw new Error('Expected t-group-list in shadow root');
+    }
+    // Simulate being inside the group detail view.
+    (child as any)._selectedGroupKey = '1';
+
+    // Re-press the already-active groups tab (the footer emits the same
+    // filter-changed event even when the tab is already selected).
+    (element as any)._handleFilterChanged({ detail: { filter: 'groups' } });
+    await element.updateComplete;
+
+    // The detail view must close: the child list's own detail state must
+    // be reset. Today _handleFilterChanged only clears the PARENT's context
+    // (_currentGroupKey etc.), so the child stays inside the detail (RED).
+    expect((child as any)._selectedGroupKey).toBe('');
+  });
+
+  it('re-pressing the artists tab closes an open artist detail', async () => {
+    (element as any).currentFilter = 'artists';
+    await element.updateComplete;
+
+    const child = element.shadowRoot?.querySelector('t-artist-list') as any;
+    if (!child) {
+      throw new Error('Expected t-artist-list in shadow root');
+    }
+    // The songs have no artist field, so 'Unknown' is the derived artist.
+    (child as any).selectedArtist = 'Unknown';
+
+    // Re-press the already-active artists tab.
+    (element as any)._handleFilterChanged({ detail: { filter: 'artists' } });
+    await element.updateComplete;
+
+    // Same bug as the group case: the child's selectedArtist is untouched,
+    // so the artist detail stays open (RED).
+    expect((child as any).selectedArtist).toBe('');
+  });
+
+  it('re-pressing the genre tab closes an open genre detail', async () => {
+    (element as any).currentFilter = 'genre';
+    await element.updateComplete;
+
+    const child = element.shadowRoot?.querySelector('t-genre-list') as any;
+    if (!child) {
+      throw new Error('Expected t-genre-list in shadow root');
+    }
+    // The songs have no genre field, so 'Unknown' is the derived genre.
+    (child as any).selectedGenre = 'Unknown';
+
+    // Re-press the already-active genre tab.
+    (element as any)._handleFilterChanged({ detail: { filter: 'genre' } });
+    await element.updateComplete;
+
+    // Same bug as the group case: the child's selectedGenre is untouched,
+    // so the genre detail stays open (RED).
+    expect((child as any).selectedGenre).toBe('');
+  });
+});
+
+describe('selecting a song closes the song list', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    (element as any).songs = [{ songKey: 'a', title: 'Tango' }];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('closes the song list (sets visible to false) when a media-selected event is dispatched', async () => {
+    (element as any).visible = true;
+    await element.updateComplete;
+
+    element.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: 'a' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    expect((element as any).visible).toBe(false);
+  });
+
+  it('dispatches a song-list-closed event when a song is selected while the list is open', async () => {
+    (element as any).visible = true;
+    await element.updateComplete;
+
+    const spy = vi.fn();
+    element.addEventListener('song-list-closed', spy);
+
+    element.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: 'a' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

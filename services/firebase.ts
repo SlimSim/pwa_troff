@@ -18,7 +18,7 @@ import { songDocUpdate } from '../script.js';
 import { nDB } from '../assets/internal/db.js';
 import log from '../utils/log.js';
 import { SongToGroup } from '../scriptASimple.js';
-import { fileUrlToStorageFileName, removeLocalInfo } from '../utils/utils.js';
+import { fileUrlToStorageFileName, removeLocalInfo, toSongKey } from '../utils/utils.js';
 import {
   TroffFirebaseGroupIdentifyer,
   TroffSongData,
@@ -81,59 +81,63 @@ const pushSongWithLocalChanges = (groupDocId: string, songDocId: string, songKey
 };
 
 const saveSongDataToFirebaseGroup = async function (
-  songKey: string,
-  groupDocId: string,
-  songDocId?: string
-) {
-  const publicData = removeLocalInfo(nDB.get(songKey));
+   songKey: string,
+   groupDocId: string,
+   songDocId?: string
+ ) {
+   // Sanitize songKey: strip any path prefix so polluted keys
+   // (e.g. "font/song.mp3") never enter Firestore.
+   const cleanSongKey = toSongKey(songKey);
 
-  publicData.latestUploadToFirebase = Date.now();
+   const publicData = removeLocalInfo(nDB.get(cleanSongKey));
 
-  const songData: TroffSongData = {
-    songKey: songKey,
-    jsonDataInfo: JSON.stringify(publicData),
-  };
+   publicData.latestUploadToFirebase = Date.now();
 
-  if (songDocId != undefined) {
-    songData.fileUrl = SongToGroup.songKeyToFileUrl(songKey, groupDocId, songDocId);
+   const songData: TroffSongData = {
+     songKey: cleanSongKey,
+     jsonDataInfo: JSON.stringify(publicData),
+   };
 
-    if (navigator.onLine) {
-      await setDoc(doc(db, 'Groups', groupDocId, 'Songs', songDocId), songData);
-    } else {
-      $.notify('You are offline, your changes will be synced online once you come online!', {
-        className: 'info',
-        autoHide: false,
-        clickToHide: true,
-      });
+   if (songDocId != undefined) {
+     songData.fileUrl = SongToGroup.songKeyToFileUrl(cleanSongKey, groupDocId, songDocId);
 
-      pushSongWithLocalChanges(groupDocId, songDocId, songKey);
-    }
-  } else {
-    songData.fileUrl = await uploadSongToFirebaseGroup(groupDocId, songKey);
+     if (navigator.onLine) {
+       await setDoc(doc(db, 'Groups', groupDocId, 'Songs', songDocId), songData);
+     } else {
+       $.notify('You are offline, your changes will be synced online once you come online!', {
+         className: 'info',
+         autoHide: false,
+         clickToHide: true,
+       });
 
-    // TODO! kolla att jag är online!
-    //songData.latestUploadToFirebase = Date.now();
+       pushSongWithLocalChanges(groupDocId, songDocId, cleanSongKey);
+     }
+   } else {
+     songData.fileUrl = await uploadSongToFirebaseGroup(groupDocId, cleanSongKey);
 
-    const docRef = await addDoc(collection(db, 'Groups', groupDocId, 'Songs'), songData);
+     // TODO! kolla att jag är online!
+     //songData.latestUploadToFirebase = Date.now();
 
-    SongToGroup.add(groupDocId, docRef.id, songKey, songData.fileUrl);
+     const docRef = await addDoc(collection(db, 'Groups', groupDocId, 'Songs'), songData);
 
-    onSnapshot(docRef, songDocUpdate);
-    const songList: TroffFirebaseGroupIdentifyer = $('#songListList')
-      .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
-      .data('songList');
+     SongToGroup.add(groupDocId, docRef.id, cleanSongKey, songData.fileUrl);
 
-    songList.songs.forEach((song) => {
-      if (song.fullPath == songKey) {
-        song.firebaseSongDocId = docRef.id;
-      }
-    });
+     onSnapshot(docRef, songDocUpdate);
+     const songList: TroffFirebaseGroupIdentifyer = $('#songListList')
+       .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
+       .data('songList');
 
-    $('#songListList')
-      .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
-      .data('songList', songList);
-  }
-};
+     songList.songs.forEach((song) => {
+       if (song.fullPath == cleanSongKey) {
+         song.firebaseSongDocId = docRef.id;
+       }
+     });
+
+     $('#songListList')
+       .find(`[data-firebase-group-doc-id="${groupDocId}"]`)
+       .data('songList', songList);
+   }
+ };
 
 const uploadSongToFirebaseGroup = async function (
   groupId: string,

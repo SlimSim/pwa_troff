@@ -109,6 +109,17 @@ export class GenreList extends LitElement {
       gap: 1px;
     }
 
+    .no-results {
+      padding: 24px 16px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    .no-results-text {
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
     /* Controls section in the detail header */
     .detail-header-controls {
       display: flex;
@@ -264,32 +275,27 @@ export class GenreList extends LitElement {
   @state() private _highlightedIndex = -1;
 
   private _getGenreGroups(): GenreGroup[] {
-    // Use pre-sorted genres if provided, otherwise generate from tracks
-    if (this.genres && this.genres.length > 0) {
-      return this.genres.map((genre: any) => ({ genre: genre.name, tracks: genre.tracks }));
-    }
-
-    const groups = new Map<string, any[]>();
-
-    this.tracks.forEach((track) => {
-      const genre = track.genre || 'Unknown';
-      if (!groups.has(genre)) {
-        groups.set(genre, []);
-      }
-      groups.get(genre)!.push(track);
-    });
-
-    return Array.from(groups.entries())
-      .map(([genre, tracks]) => ({ genre, tracks }))
-      .sort((a, b) => a.genre.localeCompare(b.genre));
+    // The parent (t-media-parent) always passes the already-filtered genre
+    // list; an empty array means the search matched nothing.
+    return (this.genres || []).map((genre: any) => ({
+      genre: genre.name,
+      tracks: genre.tracks,
+    }));
   }
 
   /** Public method so t-media-parent can programmatically open a genre. */
   public openGenre(genre: string) {
+    this._genreTrackSearch = '';
     if (this.selectedGenre === genre) return;
     this.selectedGenre = genre;
     this._highlightedIndex = -1;
     this._dispatchGenreOpened();
+  }
+
+  /** Public method so t-media-parent can leave the detail view (e.g. on tab switch). */
+  public closeDetail() {
+    if (this.selectedGenre === '') return;
+    this._handleBack();
   }
 
   private _dispatchGenreOpened() {
@@ -312,6 +318,7 @@ export class GenreList extends LitElement {
   }
 
   private _handleGenreClick(genre: string) {
+    this._genreTrackSearch = '';
     this.selectedGenre = genre;
     this._dispatchGenreOpened();
   }
@@ -408,15 +415,12 @@ export class GenreList extends LitElement {
 
   private _handleSearchBlur() {
     this._isSearchFocused = false;
-    // The search only collapses (and thus clears) on small screens.
-    if (!this._isWideScreen()) {
-      this._genreTrackSearch = '';
-    }
   }
 
-  /** True on screens where the search input stays expanded (>= 576px). */
-  private _isWideScreen(): boolean {
-    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
+  /** Clear the detail track search (used by the no-results clear button). */
+  private _clearDetailSearch() {
+    this._genreTrackSearch = '';
+    this._highlightedIndex = -1;
   }
 
   updated(changedProperties: PropertyValues) {
@@ -488,9 +492,16 @@ export class GenreList extends LitElement {
             </div>
           </div>
           ${filteredTracks.length === 0 && trackQuery
-            ? html`<div style="padding: 16px; opacity: 0.6; font-size: 0.85rem;">
-                No tracks match "${this._genreTrackSearch}".
-              </div>`
+            ? html`
+                <div class="no-results">
+                  <div class="no-results-text">
+                    No tracks match "${this._genreTrackSearch.trim()}".
+                  </div>
+                  <t-butt class="no-results-clear" slim @click=${this._clearDetailSearch}>
+                    Clear search
+                  </t-butt>
+                </div>
+              `
             : filteredTracks.map(
                 (track, index) => html`
                   <t-media

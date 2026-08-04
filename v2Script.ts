@@ -27,6 +27,8 @@ import {
   moveMarkers,
   stretchMarkers,
   deleteMarkers,
+  normalizeMarkerTime,
+  mergeNearbyMarkers,
 } from './utils/marker-actions.js';
 import { mergeImportedMarkers } from './utils/marker-import.js';
 import { MarkerSlider } from './components/organisms/t-marker-slider.js';
@@ -441,15 +443,23 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         let finalMarkers: TroffMarker[];
 
+        // Clamp imported marker times to the song duration so they never land
+        // outside the song (no song duration -> only clamp below 0)
+        const maxTime = getTimelineDuration() > 0 ? getTimelineDuration() : Infinity;
+
         if (mode === 'replace') {
-          finalMarkers = data.aoMarkers;
+          finalMarkers = data.aoMarkers.map((m) => ({
+            ...m,
+            time: normalizeMarkerTime(m.time, maxTime),
+          }));
         } else {
           // Merge with existing: an imported marker within 0.001 s of an existing marker
           // is merged into it (legacy threshold scriptTroffClass.ts:2310); the rest get
           // new unique ids.
           finalMarkers = mergeImportedMarkers(
             Array.isArray(songData.markers) ? songData.markers : [],
-            data.aoMarkers
+            data.aoMarkers,
+            maxTime
           );
         }
 
@@ -613,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let result: TroffMarker[];
       switch (dialogAction) {
         case 'copy':
-          result = copyMarkers(markers, value ?? 0, startNr, endNr);
+          result = copyMarkers(markers, value ?? 0, startNr, endNr, maxTime);
           break;
         case 'moveUp':
           result = moveMarkers(markers, -(value ?? 0), startNr, endNr, maxTime);
@@ -1657,14 +1667,19 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCurrentSongControlsValues();
     });
 
-    footer.addEventListener('marker-created', (event: any) => {
+     footer.addEventListener('marker-created', (event: any) => {
       // Save the marker to localStorage (following existing pattern)
       const songKey = getCurrentSongKey();
       if (songKey && event.detail.marker) {
         const currentSongData = nDB.get(songKey) || {};
         const existingMarkers = currentSongData.markers || [];
+        // Defensive guard: never store a marker outside the song length
+        const maxTime = getTimelineDuration() > 0 ? getTimelineDuration() : Infinity;
+        event.detail.marker.time = normalizeMarkerTime(event.detail.marker.time, maxTime);
         existingMarkers.push(event.detail.marker);
-        nDB.setOnSong(songKey, 'markers', existingMarkers);
+        // Merge any markers that are now within the time threshold of each other
+        const mergedMarkers = mergeNearbyMarkers(existingMarkers);
+        nDB.setOnSong(songKey, 'markers', mergedMarkers);
         void saveSongData(songKey);
       }
 
@@ -1696,8 +1711,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingMarkers = currentSongData.markers || [];
         const markerIndex = existingMarkers.findIndex((m: any) => m.id === event.detail.marker.id);
         if (markerIndex !== -1) {
+          // Defensive guard: never store a marker outside the song length
+          const maxTime = getTimelineDuration() > 0 ? getTimelineDuration() : Infinity;
+          event.detail.marker.time = normalizeMarkerTime(event.detail.marker.time, maxTime);
           existingMarkers[markerIndex] = event.detail.marker;
-          nDB.setOnSong(songKey, 'markers', existingMarkers);
+          // Merge any markers that are now within the time threshold of each other
+          const mergedMarkers = mergeNearbyMarkers(existingMarkers);
+          nDB.setOnSong(songKey, 'markers', mergedMarkers);
         }
         void saveSongData(songKey);
       }
@@ -2081,7 +2101,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!serverData) return;
 
     const songData = nDB.get(fileName) || {};
-    songData.markers = serverData.markers;
+    // Clamp imported marker times to the song duration (no duration -> only clamp below 0)
+    const maxTime = serverData.duration > 0 ? serverData.duration : Infinity;
+    songData.markers = serverData.markers.map((m) => ({
+      ...m,
+      time: normalizeMarkerTime(m.time, maxTime),
+    }));
     songData.aStates = serverData.states;
     songData.info = serverData.info;
     songData.serverId = hashServerId;
@@ -2100,54 +2125,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const existingMarkers: TroffMarker[] = songData.markers || [];
     const existingStates: string[] = songData.aStates || [];
 
+    // Clamp imported marker times to the song duration (no duration -> only clamp below 0)
+    const maxTime = serverData.duration > 0 ? serverData.duration : Infinity;
+
     // ----- Step 1: Build merged marker list (matching v1's addMarkers behavior) -----
-    // Shallow copy existing markers to avoid mutation
-    const mergedMarkers: TroffMarker[] = existingMarkers.map((m) => ({ ...m }));
-    const serverMarkerIdToLocalId: Record<string, string> = {};
-
-    // Helper matching v1's getNewMarkerIds — finds the next free markerNrN
-    const getNextMarkerId = (): string => {
-      let nr = 0;
-      while (mergedMarkers.some((m) => m.id === 'markerNr' + nr)) {
-        nr++;
-      }
-      return 'markerNr' + nr;
-    };
-
-    for (const serverMarker of serverData.markers) {
-      const time = Number(serverMarker.time);
-      const name = serverMarker.name;
-      const info = serverMarker.info || '';
-      const color = serverMarker.color || 'None';
-
-      // v1's addMarkers: check for existing marker at the same time (±0.001s)
-      const existing = mergedMarkers.find(
-        (m) => Math.abs(Number(m.time) - time) < 0.001
-      );
-
-      if (existing) {
-        // v1: merge name (comma-separated) and info (newline-separated)
-        if (existing.info !== info) {
-          existing.info = existing.info + '\n\n' + info;
-        }
-        if (existing.name !== name) {
-          existing.name = existing.name + ', ' + name;
-        }
-        serverMarkerIdToLocalId[serverMarker.id] = existing.id;
-      } else {
-        // New marker: assign a new ID in markerNrN format (matching v1)
-        const newId = getNextMarkerId();
-        serverMarkerIdToLocalId[serverMarker.id] = newId;
-        mergedMarkers.push({
-          id: newId,
-          name,
-          time,
-          info,
-          color,
-        });
-      }
-    }
-
+    // An imported marker within 0.001s of an existing one is merged into it;
+    // the rest get new unique markerNrN ids. mergeImportedMarkers handles
+    // name joining, info joining, color rules, and time normalization.
+    const mergedMarkers = mergeImportedMarkers(existingMarkers, serverData.markers, maxTime);
     songData.markers = mergedMarkers;
 
     // ----- Step 2: Merge states (matching v1's importStates behavior) -----

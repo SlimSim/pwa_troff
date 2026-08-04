@@ -2,7 +2,8 @@ import { nDB } from '../assets/internal/db.js';
 import { TROFF_TROFF_DATA_ID_AND_FILE_NAME } from '../constants/constants.js';
 import log from './log.js';
 import { getFirestore } from './firebase-getter.js';
-import { safeDecodeURIComponent } from './utils.js';
+import { normalizeMarkerTime } from './marker-actions.js';
+import { safeDecodeURIComponent, toSongKey } from './utils.js';
 import type { TroffData, TroffMarker, TroffHistoryList, TroffDataIdObject } from '../types/troff.d.js';
 
 const CACHE_NAME = 'songCache-v1.0';
@@ -68,7 +69,8 @@ export async function downloadSongFromHash(
     );
     return null;
   }
-  const { serverId, fileName } = parsed;
+   const { serverId, fileName: rawFileName } = parsed;
+   const fileName = toSongKey(rawFileName);
 
   // If the song already exists in local storage, no need to download
   const existingData = nDB.get(fileName);
@@ -115,6 +117,17 @@ export async function downloadSongFromHash(
   markers.serverId = serverId;
   markers.fileUrl = troffData.fileUrl;
 
+  // Clamp every marker time to [0, song duration] so imported markers never land
+  // outside the song. Without a parsed duration only the lower bound is clamped.
+  const parsedDuration = Number(markers.fileData?.duration);
+  const maxTime = Number.isFinite(parsedDuration) && parsedDuration > 0 ? parsedDuration : Infinity;
+  if (Array.isArray(markers.markers)) {
+    markers.markers = markers.markers.map((marker: TroffMarker) => ({
+      ...marker,
+      time: normalizeMarkerTime(marker.time, maxTime),
+    }));
+  }
+
   // Download the audio file and save marker data in parallel
   try {
     await Promise.all([
@@ -142,7 +155,14 @@ export async function downloadSongFromHash(
 export async function fetchServerTroffData(
   serverId: string | number,
   _fileName: string
-): Promise<{ markers: TroffMarker[]; states: string[]; info: string; serverId: number; fileUrl: string } | null> {
+): Promise<{
+  markers: TroffMarker[];
+  states: string[];
+  info: string;
+  serverId: number;
+  fileUrl: string;
+  duration: number;
+} | null> {
   try {
     const { db, doc, getDoc } = await getFirestore();
     const troffDocRef = doc(db, 'TroffData', String(serverId));
@@ -153,12 +173,14 @@ export async function fetchServerTroffData(
     }
     const troffData = snapshot.data() as TroffData;
     const markerObject = JSON.parse(troffData.markerJsonString || '{}');
+    const parsedDuration = Number(markerObject.fileData?.duration);
     return {
       markers: markerObject.markers || [],
       states: markerObject.aStates || [],
       info: markerObject.info || '',
       serverId: Number(serverId),
       fileUrl: troffData.fileUrl || '',
+      duration: Number.isFinite(parsedDuration) && parsedDuration > 0 ? parsedDuration : 0,
     };
   } catch (error) {
     log.e('Error fetching server troff data:', error);

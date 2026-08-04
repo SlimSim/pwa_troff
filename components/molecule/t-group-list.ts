@@ -128,6 +128,17 @@ export class GroupList extends LitElement {
       gap: 1px;
     }
 
+    .no-results {
+      padding: 24px 16px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    .no-results-text {
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
     .detail-icon {
       width: 40px;
       height: 40px;
@@ -484,6 +495,7 @@ export class GroupList extends LitElement {
   public openGroup(key: string) {
     this._selectedGroupKey = key;
     this._addSongQuery = '';
+    this._groupTrackSearch = '';
     this._infoExpanded = false;
     this._songManagementOpen = false;
     this._highlightedIndex = -1;
@@ -494,6 +506,12 @@ export class GroupList extends LitElement {
         composed: true,
       })
     );
+  }
+
+  /** Public method so t-media-parent can leave the detail view (e.g. on tab switch). */
+  public closeDetail() {
+    if (this._selectedGroupKey === '') return;
+    this._handleBack();
   }
 
   private _handleGroupClick(group: Group) {
@@ -642,15 +660,12 @@ export class GroupList extends LitElement {
 
   private _handleGroupSearchBlur() {
     this._isGroupSearchFocused = false;
-    // The search only collapses (and thus clears) on small screens.
-    if (!this._isWideScreen()) {
-      this._groupTrackSearch = '';
-    }
   }
 
-  /** True on screens where the search input stays expanded (>= 576px). */
-  private _isWideScreen(): boolean {
-    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
+  /** Clear the detail track search (used by the no-results clear button). */
+  private _clearDetailSearch() {
+    this._groupTrackSearch = '';
+    this._highlightedIndex = -1;
   }
 
   updated(changedProperties: PropertyValues) {
@@ -821,9 +836,16 @@ export class GroupList extends LitElement {
               </div>`
             : ''}
           ${filteredTracks.length === 0 && trackQuery
-            ? html`<div class="empty-text" style="padding: 16px;">
-                No songs match "${this._groupTrackSearch}".
-              </div>`
+            ? html`
+                <div class="no-results">
+                  <div class="no-results-text">
+                    No songs match "${this._groupTrackSearch.trim()}".
+                  </div>
+                  <t-butt class="no-results-clear" slim @click=${this._clearDetailSearch}>
+                    Clear search
+                  </t-butt>
+                </div>
+              `
             : ''}
 
           <!-- Add songs section + toggle at the bottom -->

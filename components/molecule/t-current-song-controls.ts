@@ -586,9 +586,10 @@ export class CurrentSongControls extends LitElement {
                 </li>
                 <li>The "1 - 9" buttons determine how many times the song will loop.</li>
                 <li class="loop-help-item-phone-only">
-                  On smaller screens the wait control ("Pause before" and "Wait between") is available
-                  from the <t-icon name="time" slim></t-icon> Wait control button in the control bar at
-                  the bottom of the screen.
+                  On smaller screens the wait control ("Pause before" and "Wait between") and speed
+                  and volume controls are available from the buttons with the
+                  <t-icon name="time" slim></t-icon> and <t-icon name="speed" slim></t-icon>-icons
+                  in the footer, respectively.
                 </li>
               </ul>
             </t-help-tip>
@@ -762,7 +763,7 @@ export class CurrentSongControls extends LitElement {
                 <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
               </summary>
               <div class="advanced-content">
-                <p class="advanced-summary-text">TO BE IMPLEMENTED: Advanced marker actions!</p>
+                <p class="advanced-summary-text">Advanced marker actions!</p>
                 <div class="song-action-buttons">
                   ${this._renderSongActionButton('importExport', 'Import / export')}
                   ${this._renderSongActionButton('copyMarkers', 'Copy markers')}

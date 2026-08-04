@@ -109,6 +109,17 @@ export class ArtistList extends LitElement {
       gap: 1px;
     }
 
+    .no-results {
+      padding: 24px 16px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    .no-results-text {
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
     /* Controls section in the detail header */
     .detail-header-controls {
       display: flex;
@@ -264,32 +275,27 @@ export class ArtistList extends LitElement {
   @state() private _highlightedIndex = -1;
 
   private _getArtistGroups(): ArtistGroup[] {
-    // Use pre-sorted artists if provided, otherwise generate from tracks
-    if (this.artists && this.artists.length > 0) {
-      return this.artists.map((artist: any) => ({ artist: artist.name, tracks: artist.tracks }));
-    }
-
-    const groups = new Map<string, any[]>();
-
-    this.tracks.forEach((track) => {
-      const artist = track.artist || 'Unknown';
-      if (!groups.has(artist)) {
-        groups.set(artist, []);
-      }
-      groups.get(artist)!.push(track);
-    });
-
-    return Array.from(groups.entries())
-      .map(([artist, tracks]) => ({ artist, tracks }))
-      .sort((a, b) => a.artist.localeCompare(b.artist));
+    // The parent (t-media-parent) always passes the already-filtered artist
+    // list; an empty array means the search matched nothing.
+    return (this.artists || []).map((artist: any) => ({
+      artist: artist.name,
+      tracks: artist.tracks,
+    }));
   }
 
   /** Public method so t-media-parent can programmatically open an artist. */
   public openArtist(artist: string) {
+    this._artistTrackSearch = '';
     if (this.selectedArtist === artist) return;
     this.selectedArtist = artist;
     this._highlightedIndex = -1;
     this._dispatchArtistOpened();
+  }
+
+  /** Public method so t-media-parent can leave the detail view (e.g. on tab switch). */
+  public closeDetail() {
+    if (this.selectedArtist === '') return;
+    this._handleBack();
   }
 
   private _dispatchArtistOpened() {
@@ -312,6 +318,7 @@ export class ArtistList extends LitElement {
   }
 
   private _handleArtistClick(artist: string) {
+    this._artistTrackSearch = '';
     this.selectedArtist = artist;
     this._dispatchArtistOpened();
   }
@@ -408,15 +415,12 @@ export class ArtistList extends LitElement {
 
   private _handleSearchBlur() {
     this._isSearchFocused = false;
-    // The search only collapses (and thus clears) on small screens.
-    if (!this._isWideScreen()) {
-      this._artistTrackSearch = '';
-    }
   }
 
-  /** True on screens where the search input stays expanded (>= 576px). */
-  private _isWideScreen(): boolean {
-    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
+  /** Clear the detail track search (used by the no-results clear button). */
+  private _clearDetailSearch() {
+    this._artistTrackSearch = '';
+    this._highlightedIndex = -1;
   }
 
   updated(changedProperties: PropertyValues) {
@@ -488,9 +492,16 @@ export class ArtistList extends LitElement {
             </div>
           </div>
           ${filteredTracks.length === 0 && trackQuery
-            ? html`<div style="padding: 16px; opacity: 0.6; font-size: 0.85rem;">
-                No tracks match "${this._artistTrackSearch}".
-              </div>`
+            ? html`
+                <div class="no-results">
+                  <div class="no-results-text">
+                    No tracks match "${this._artistTrackSearch.trim()}".
+                  </div>
+                  <t-butt class="no-results-clear" slim @click=${this._clearDetailSearch}>
+                    Clear search
+                  </t-butt>
+                </div>
+              `
             : filteredTracks.map(
                 (track, index) => html`
                   <t-media

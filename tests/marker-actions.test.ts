@@ -105,12 +105,13 @@ describe('copyMarkers', () => {
     expect(result[3]).toEqual(makeMarker('markerNr3', 22.5, 'M1', 'info1'));
   });
 
-  it('handles negative timeToAdd without clamping', () => {
+  it('clamps copied times to [0, maxTime]', () => {
+    // timeToAdd is -15: the first copy lands at -5 (clamped to 0), the second at 5 (clamped to 4)
     const input = makeMarkers([10, 20]);
-    const result = copyMarkers(input, 5, 0, 2);
+    const result = copyMarkers(input, -5, 0, 2, 4);
 
-    expect(result[2].time).toBe(5);
-    expect(result[3].time).toBe(15);
+    expect(result[2].time).toBe(0);
+    expect(result[3].time).toBe(4);
   });
 
   it('converts string times with Number() when shifting', () => {

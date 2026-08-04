@@ -27,7 +27,7 @@ describe('mergeImportedMarkers', () => {
       makeMarker('impC', 25.5, 'I2', 'j2'),
     ];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(6);
     expect(result.map((m) => m.id)).toEqual([
@@ -47,7 +47,8 @@ describe('mergeImportedMarkers', () => {
   it('keeps the existing name when existing and imported names are equal', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'Same')],
-      [makeMarker('impX', 10, 'Same')]
+      [makeMarker('impX', 10, 'Same')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -58,7 +59,8 @@ describe('mergeImportedMarkers', () => {
   it('appends an imported name as "existing, imported" when the names differ', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'Existing')],
-      [makeMarker('impX', 10, 'Imported')]
+      [makeMarker('impX', 10, 'Imported')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -68,7 +70,8 @@ describe('mergeImportedMarkers', () => {
   it('keeps the existing info when existing and imported info are equal', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'A', 'keepMe')],
-      [makeMarker('impX', 10, 'B', 'keepMe')]
+      [makeMarker('impX', 10, 'B', 'keepMe')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -78,7 +81,8 @@ describe('mergeImportedMarkers', () => {
   it('separates differing info with a blank line when merging', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'A', 'firstLine')],
-      [makeMarker('impX', 10, 'B', 'secondLine')]
+      [makeMarker('impX', 10, 'B', 'secondLine')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -88,7 +92,8 @@ describe('mergeImportedMarkers', () => {
   it('keeps the existing color when only the existing marker has a color', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'A', 'i', 'red')],
-      [makeMarker('impX', 10, 'B', 'i', 'None')]
+      [makeMarker('impX', 10, 'B', 'i', 'None')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -98,7 +103,8 @@ describe('mergeImportedMarkers', () => {
   it('uses the imported color when only the imported marker has a color', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'A', 'i', 'None')],
-      [makeMarker('impX', 10, 'B', 'i', 'blue')]
+      [makeMarker('impX', 10, 'B', 'i', 'blue')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -108,7 +114,8 @@ describe('mergeImportedMarkers', () => {
   it('resolves to "None" when neither marker has a color (including empty string)', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'A', 'i', 'None')],
-      [makeMarker('impX', 10, 'B', 'i', '')]
+      [makeMarker('impX', 10, 'B', 'i', '')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -118,7 +125,8 @@ describe('mergeImportedMarkers', () => {
   it('uses the imported color when both markers have a color', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', 10, 'A', 'i', 'red')],
-      [makeMarker('impX', 10, 'B', 'i', 'blue')]
+      [makeMarker('impX', 10, 'B', 'i', 'blue')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -129,7 +137,7 @@ describe('mergeImportedMarkers', () => {
     const existing = [makeMarker('markerNr0', 5, 'Anchor')];
     const imported = [makeMarker('impX', 5.001, 'Imported')];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual(makeMarker('markerNr0', 5, 'Anchor'));
@@ -140,7 +148,7 @@ describe('mergeImportedMarkers', () => {
     const existing = [makeMarker('markerNr0', 5, 'Anchor')];
     const imported = [makeMarker('impX', 5.0009999, 'Imported')];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(makeMarker('markerNr0', 5, 'Anchor, Imported'));
@@ -149,7 +157,8 @@ describe('mergeImportedMarkers', () => {
   it('keeps the existing marker id and time when merging', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr7', 12.5, 'Old', 'oldInfo', 'red')],
-      [makeMarker('impX', 12.5, 'New', 'newInfo', 'blue')]
+      [makeMarker('impX', 12.5, 'New', 'newInfo', 'blue')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -160,7 +169,8 @@ describe('mergeImportedMarkers', () => {
   it('compares string times numerically', () => {
     const result = mergeImportedMarkers(
       [makeMarker('markerNr0', '12.5', 'Existing')],
-      [makeMarker('impX', 12.5, 'New')]
+      [makeMarker('impX', 12.5, 'New')],
+      100
     );
 
     expect(result).toHaveLength(1);
@@ -169,15 +179,44 @@ describe('mergeImportedMarkers', () => {
     expect(result[0].name).toBe('Existing, New');
   });
 
-  it('does not treat a string time far from the existing marker as a collision', () => {
+  it('clamps an out-of-range imported time to maxTime without treating it as a collision', () => {
     const existing = [makeMarker('markerNr0', '12.5', 'Existing')];
     const imported = [makeMarker('impX', 99, 'New')];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 60);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual(makeMarker('markerNr0', '12.5', 'Existing'));
-    expect(result[1]).toEqual(makeMarker('markerNr1', 99, 'New'));
+    expect(result[1]).toEqual(makeMarker('markerNr1', 60, 'New'));
+  });
+
+  it('clamps imported times above the song duration to maxTime', () => {
+    const existing = [makeMarker('markerNr0', 0, 'Existing')];
+    const imported = [makeMarker('impA', 999, 'WayLong'), makeMarker('impB', 12.5, 'Fine')];
+
+    const result = mergeImportedMarkers(existing, imported, 60);
+
+    expect(result.map((m) => m.time)).toEqual([0, 60, 12.5]);
+  });
+
+  it('clamps imported negative times to 0', () => {
+    const existing = [makeMarker('markerNr0', 10, 'Existing')];
+    const imported = [makeMarker('impA', -5, 'Negative'), makeMarker('impB', 12.5, 'Fine')];
+
+    const result = mergeImportedMarkers(existing, imported, 60);
+
+    expect(result.map((m) => m.time)).toEqual([10, 0, 12.5]);
+  });
+
+  it('clamps the "max" sentinel to a plain number equal to maxTime', () => {
+    const existing = [makeMarker('markerNr0', 0, 'Existing')];
+    const imported = [makeMarker('impA', 'max', 'AtEnd')];
+
+    const result = mergeImportedMarkers(existing, imported, 60);
+
+    expect(result).toHaveLength(2);
+    expect(result[1].time).toBe(60);
+    expect(result[1].time).toBeTypeOf('number');
   });
 
   it('returns a new array with fresh marker copies and does not mutate either input array', () => {
@@ -186,7 +225,7 @@ describe('mergeImportedMarkers', () => {
     const existingSnapshot = cloneMarkers(existing);
     const importedSnapshot = cloneMarkers(imported);
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).not.toBe(existing);
     expect(result).not.toBe(imported);
@@ -207,7 +246,7 @@ describe('mergeImportedMarkers', () => {
       makeMarker('impB', 10, 'Bob', 'bInfo'),
     ];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(
@@ -219,7 +258,7 @@ describe('mergeImportedMarkers', () => {
     const existing = [makeMarker('custom1', 0, 'Custom')];
     const imported = [makeMarker('impX', 5, 'New')];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(2);
     expect(result[1].id).toBe('markerNr0');
@@ -229,7 +268,7 @@ describe('mergeImportedMarkers', () => {
     const existing = [makeMarker('markerNr2', 0, 'Existing')];
     const imported = [makeMarker('impX', 5, 'New')];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(2);
     expect(result[1].id).toBe('markerNr0');
@@ -242,7 +281,7 @@ describe('mergeImportedMarkers', () => {
       makeMarker('second', 5.0000001, 'Second'),
     ];
 
-    const result = mergeImportedMarkers(existing, imported);
+    const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(2);
     expect(result.map((m) => m.id)).toEqual(['markerNr0', 'markerNr1']);
