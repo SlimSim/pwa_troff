@@ -1,7 +1,64 @@
 // utils/marker-actions.ts
 // Pure marker operations (copy / move / delete / stretch), ported from the v1 app
 // (scriptTroffClass.ts). No DOM access — operate on plain TroffMarker arrays.
-import type { TroffMarker } from '../types/troff.d.js';
+import type { TroffMarker } from '../types/troff.d.ts';
+
+/**
+ * Markers whose numeric times are within this many seconds of each other are
+ * considered "at the same time" and are merged. Ported from v1's addMarker
+ * (scriptTroffClass.ts:2310 / marker-import.ts).
+ */
+export const MERGE_TIME_THRESHOLD = 0.001;
+
+/** Sentinel meaning "no colour set". */
+export const NO_COLOR = 'None';
+
+/** Returns true when `color` is a real colour (not undefined, '', or 'None'). */
+export const hasColor = (color: string | undefined): boolean =>
+  color !== undefined && color !== '' && color !== NO_COLOR;
+
+/**
+ * Merges `source` into `target` in place. `target` survives (keeps its id and
+ * time, absorbs source's name/info/color). Name joined with ', ' (only when
+ * different), info joined with '\n\n' (only when different).
+ */
+export function mergeMarkerInto(target: TroffMarker, source: TroffMarker): void {
+  if (target.name !== source.name) {
+    target.name = target.name + ', ' + source.name;
+  }
+  if (target.info !== source.info) {
+    target.info = target.info + '\n\n' + source.info;
+  }
+  // Color: only one coloured → that colour; both coloured → source; both none → 'None'
+  if (!hasColor(target.color)) {
+    target.color = hasColor(source.color) ? source.color : NO_COLOR;
+  } else if (hasColor(source.color)) {
+    target.color = source.color;
+  }
+}
+
+/**
+ * General-purpose merge: returns a new marker array where any markers whose
+ * numeric times are within MERGE_TIME_THRESHOLD of each other are merged. The
+ * first marker encountered at a given time survives; later nearby markers are
+ * merged into it via `mergeMarkerInto`. Does NOT normalize 'max' sentinels or
+ * clamp times — callers must normalise beforehand. Does not mutate the input.
+ */
+export function mergeNearbyMarkers(markers: TroffMarker[]): TroffMarker[] {
+  const result: TroffMarker[] = [];
+  for (const marker of markers) {
+    const markerTime = Number(marker.time);
+    const existing = result.find(
+      (m) => Math.abs(Number(m.time) - markerTime) < MERGE_TIME_THRESHOLD
+    );
+    if (existing) {
+      mergeMarkerInto(existing, { ...marker });
+    } else {
+      result.push({ ...marker });
+    }
+  }
+  return result;
+}
 
 /** Clamps a time in seconds to [0, maxTime]. */
 export const clampTime = (time: number, maxTime: number): number =>
@@ -64,8 +121,9 @@ export function getNewMarkerIds(count: number, existingIds: string[]): string[] 
 /**
  * Appends copies of [startNr, endNr) to the end of the array. Originals are
  * unchanged. Each copy gets time = original time + (timeForFirstMarker - first
- * selected original time), a new unique id, and keeps name/info/color.
- * No merge check (v1 quirk).
+ * selected original time), a new unique id, and keeps name/info/color. After
+ * copying, `mergeNearbyMarkers` is called so that copies landing on an existing
+ * marker's time (or on each other) are merged into the survivor.
  */
 export function copyMarkers(
   markers: TroffMarker[],
@@ -87,16 +145,16 @@ export function copyMarkers(
       time: clampTime(Number(original.time) + timeToAdd, maxTime),
     });
   }
-  return result;
+  return mergeNearbyMarkers(result);
 }
 
 /**
  * Shared implementation for moveMarkers/stretchMarkers: rebuilds the array,
  * recomputing the time of every marker in [startNr, endNr) with `getNewTime`
  * and clamping to [0, maxTime]. Moved markers absorb earlier markers that land
- * on the same time (v1 quirk): the earlier marker is removed and its name
- * (', ' prefixed) / info ('\n\n' prefixed) appended to the moved marker when
- * they differ. The moved marker keeps its own id.
+ * within MERGE_TIME_THRESHOLD (0.001 s) of them: the earlier marker is removed
+ * and its name/info/color merged into the moved marker via `mergeMarkerInto`.
+ * The moved marker keeps its own id.
  */
 const applyTimeChangeToRange = (
   markers: TroffMarker[],
@@ -114,17 +172,11 @@ const applyTimeChangeToRange = (
     };
 
     if (inRange) {
-      // Absorb earlier markers (with their updated times) that collide.
+      // Absorb earlier markers (with their updated times) that collide within threshold.
       let j = 0;
       while (j < result.length) {
-        if (Number(result[j].time) === Number(moved.time)) {
-          const earlier = result[j];
-          if (moved.name !== earlier.name) {
-            moved.name = moved.name + ', ' + earlier.name;
-          }
-          if (moved.info !== earlier.info) {
-            moved.info = moved.info + '\n\n' + earlier.info;
-          }
+        if (Math.abs(Number(result[j].time) - Number(moved.time)) < MERGE_TIME_THRESHOLD) {
+          mergeMarkerInto(moved, result[j]);
           result.splice(j, 1);
         } else {
           j += 1;

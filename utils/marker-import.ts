@@ -5,29 +5,13 @@
 // lands within 0.001 s of an already-present marker is merged into it instead of
 // being added as a new marker (name joined with ', ', info joined with '\n\n').
 // Color merge rules are an explicit v2 choice (see below).
-import type { TroffMarker } from '../types/troff.d.js';
-import { getNewMarkerIds, normalizeMarkerTime } from './marker-actions.js';
-
-const MERGE_TIME_THRESHOLD = 0.001;
-const NO_COLOR = 'None';
-
-const hasColor = (color: string | undefined): boolean =>
-  color !== undefined && color !== '' && color !== NO_COLOR;
-
-const mergeMarkerInto = (existing: TroffMarker, imported: TroffMarker): void => {
-  if (existing.name !== imported.name) {
-    existing.name = existing.name + ', ' + imported.name;
-  }
-  if (existing.info !== imported.info) {
-    existing.info = existing.info + '\n\n' + imported.info;
-  }
-  // Color: only one colored -> that color; both colored -> imported; both none -> 'None'
-  if (!hasColor(existing.color)) {
-    existing.color = hasColor(imported.color) ? imported.color : NO_COLOR;
-  } else if (hasColor(imported.color)) {
-    existing.color = imported.color;
-  }
-};
+import type { TroffMarker } from '../types/troff.d.ts';
+import {
+  getNewMarkerIds,
+  normalizeMarkerTime,
+  mergeMarkerInto,
+  MERGE_TIME_THRESHOLD,
+} from './marker-actions.js';
 
 /**
  * Returns a new marker list for a merge import: copies of `existingMarkers`
