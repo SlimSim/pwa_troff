@@ -40,7 +40,7 @@ You can edit icons in InkScape, But make sure that both the page and viewBox is 
 
 ## Read me tip:
 
-`ctrl + shift + v` shows a preview of hte README!
+`ctrl + shift + v` shows a preview of the README!
 
 ## Web Components and Lit:
 
