@@ -4,7 +4,6 @@ import {
   mergeNearbyMarkers,
   copyMarkers,
   moveMarkers,
-  stretchMarkers,
   mergeMarkerInto,
   hasColor,
   MERGE_TIME_THRESHOLD,
@@ -39,10 +38,7 @@ describe('mergeNearbyMarkers', () => {
   });
 
   it('merges two markers within 0.001s threshold', () => {
-    const markers = [
-      makeMarker('markerNr0', 5.0, 'A'),
-      makeMarker('markerNr1', 5.0005, 'B'),
-    ];
+    const markers = [makeMarker('markerNr0', 5.0, 'A'), makeMarker('markerNr1', 5.0005, 'B')];
 
     const result = mergeNearbyMarkers(markers);
 
@@ -52,10 +48,7 @@ describe('mergeNearbyMarkers', () => {
   });
 
   it('does NOT merge markers that are exactly 0.001s apart', () => {
-    const markers = [
-      makeMarker('markerNr0', 5.0, 'A'),
-      makeMarker('markerNr1', 5.001, 'B'),
-    ];
+    const markers = [makeMarker('markerNr0', 5.0, 'A'), makeMarker('markerNr1', 5.001, 'B')];
 
     const result = mergeNearbyMarkers(markers);
 
@@ -65,10 +58,7 @@ describe('mergeNearbyMarkers', () => {
   });
 
   it('does NOT merge markers that differ by more than 0.001s', () => {
-    const markers = [
-      makeMarker('markerNr0', 10, 'A'),
-      makeMarker('markerNr1', 10.5, 'B'),
-    ];
+    const markers = [makeMarker('markerNr0', 10, 'A'), makeMarker('markerNr1', 10.5, 'B')];
 
     const result = mergeNearbyMarkers(markers);
 
@@ -215,7 +205,9 @@ describe('copyMarkers with merge', () => {
 
     expect(result).toHaveLength(2);
     // markerNr0 survives (first in array), copy merged into it
-    expect(result[0]).toEqual(makeMarker('markerNr0', 10, 'First, Second', 'firstInfo\n\nsecondInfo'));
+    expect(result[0]).toEqual(
+      makeMarker('markerNr0', 10, 'First, Second', 'firstInfo\n\nsecondInfo')
+    );
     expect(result[1]).toEqual(makeMarker('markerNr1', 20, 'Second', 'secondInfo'));
   });
 
@@ -233,10 +225,7 @@ describe('copyMarkers with merge', () => {
   });
 
   it('merges copies that land on the same time as each other', () => {
-    const input = [
-      makeMarker('markerNr0', 10, 'A'),
-      makeMarker('markerNr1', 20, 'B'),
-    ];
+    const input = [makeMarker('markerNr0', 10, 'A'), makeMarker('markerNr1', 20, 'B')];
     // Copy both to time 40 — both copies land at 40
     const result = copyMarkers(input, 40, 0, 2, 100);
 
@@ -246,10 +235,7 @@ describe('copyMarkers with merge', () => {
   });
 
   it('does not merge when copies land at different times', () => {
-    const input = [
-      makeMarker('markerNr0', 10, 'A'),
-      makeMarker('markerNr1', 20, 'B'),
-    ];
+    const input = [makeMarker('markerNr0', 10, 'A'), makeMarker('markerNr1', 20, 'B')];
     const result = copyMarkers(input, 40, 0, 2, 100);
 
     expect(result).toHaveLength(4);
@@ -274,18 +260,12 @@ describe('moveMarkers threshold', () => {
   });
 
   it('does not merge when the time difference is exactly 0.001 after moving', () => {
-    const input = [
-      makeMarker('markerNr0', 5.0, 'A'),
-      makeMarker('markerNr1', 5.001, 'B'),
-    ];
+    const input = [makeMarker('markerNr0', 5.0, 'A'), makeMarker('markerNr1', 5.001, 'B')];
     // Move markerNr1 by -0.0001, landing at 5.0009 (diff = 0.0009 < 0.001, will merge)
     // Let's use a diff that lands exactly at 0.001:
     // Move markerNr1 by -0.0005, landing at 5.0005, diff = 0.0005 < 0.001 → merges
     // Actually, let's test: markerNr0 at 5.0, markerNr1 at 5.002, move by -0.001 → lands at 5.001, diff = 0.001 → does NOT merge
-    const input2 = [
-      makeMarker('markerNr0', 5.0, 'A'),
-      makeMarker('markerNr1', 5.002, 'B'),
-    ];
+    const input2 = [makeMarker('markerNr0', 5.0, 'A'), makeMarker('markerNr1', 5.002, 'B')];
     const result = moveMarkers(input2, -0.001, 1, 2, 100);
 
     expect(result).toHaveLength(2);
