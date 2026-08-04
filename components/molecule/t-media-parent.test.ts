@@ -1909,3 +1909,60 @@ describe('tab switch closes open detail view', () => {
     expect((child as any).selectedGenre).toBe('');
   });
 });
+
+describe('selecting a song closes the song list', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    (element as any).songs = [{ songKey: 'a', title: 'Tango' }];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('closes the song list (sets visible to false) when a media-selected event is dispatched', async () => {
+    (element as any).visible = true;
+    await element.updateComplete;
+
+    element.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: 'a' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    expect((element as any).visible).toBe(false);
+  });
+
+  it('dispatches a song-list-closed event when a song is selected while the list is open', async () => {
+    (element as any).visible = true;
+    await element.updateComplete;
+
+    const spy = vi.fn();
+    element.addEventListener('song-list-closed', spy);
+
+    element.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: 'a' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await element.updateComplete;
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+});

@@ -459,6 +459,7 @@ export class MediaParent extends LitElement {
     this.currentSongKey = getCurrentSongKey() || '';
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
+      this.visible = false; // close the song list when a song is selected
       this.requestUpdate(); // Force re-render to update active states
     });
 
