@@ -3,8 +3,19 @@
 // (scriptTroffClass.ts). No DOM access — operate on plain TroffMarker arrays.
 import type { TroffMarker } from '../types/troff.d.js';
 
-const clampTime = (time: number, maxTime: number): number =>
+/** Clamps a time in seconds to [0, maxTime]. */
+export const clampTime = (time: number, maxTime: number): number =>
   Math.max(0, Math.min(maxTime, time));
+
+/**
+ * Normalizes a marker time (`number`, a numeric string, or the 'max' end-of-song
+ * sentinel) to a finite number of seconds and clamps it to [0, maxTime].
+ * Non-finite values become 0.
+ */
+export function normalizeMarkerTime(time: number | string, maxTime: number): number {
+  const value = time === 'max' ? maxTime : Number(time);
+  return clampTime(Number.isFinite(value) ? value : 0, maxTime);
+}
 
 /**
  * Returns the half-open range [startNr, endNr) of the selected markers.
@@ -60,7 +71,8 @@ export function copyMarkers(
   markers: TroffMarker[],
   timeForFirstMarker: number,
   startNr: number,
-  endNr: number
+  endNr: number,
+  maxTime = Infinity
 ): TroffMarker[] {
   const result = markers.map((m) => ({ ...m }));
   const timeToAdd = timeForFirstMarker - Number(markers[startNr].time);
@@ -72,7 +84,7 @@ export function copyMarkers(
       id: newIds[i - startNr],
       info: original.info,
       name: original.name,
-      time: Number(original.time) + timeToAdd,
+      time: clampTime(Number(original.time) + timeToAdd, maxTime),
     });
   }
   return result;

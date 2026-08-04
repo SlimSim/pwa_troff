@@ -8,6 +8,7 @@ import '../atom/t-butt.js';
 import type { TInput } from '../atom/t-input.js';
 import type { TTextarea } from '../atom/t-textarea.js';
 import type { TroffMarker } from '../../types/troff.d.js';
+import { clampTime } from '../../utils/marker-actions.js';
 
 export type MarkerDialogMode = 'create' | 'edit';
 
@@ -282,11 +283,14 @@ export class MarkerDialog extends LitElement {
       return;
     }
 
+    // A maxTime of 0 means the song duration is unknown — only clamp below 0 then
+    const maxTime = this.maxTime > 0 ? this.maxTime : Infinity;
+
     const marker: TroffMarker = {
       id: this.markerData?.id || Date.now().toString(),
       name: currentName.trim(),
       info: currentInfo,
-      time: this.markerTime,
+      time: clampTime(this.markerTime, maxTime),
       color: this.markerColor || '',
     };
 

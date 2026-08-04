@@ -6,7 +6,7 @@
 // being added as a new marker (name joined with ', ', info joined with '\n\n').
 // Color merge rules are an explicit v2 choice (see below).
 import type { TroffMarker } from '../types/troff.d.js';
-import { getNewMarkerIds } from './marker-actions.js';
+import { getNewMarkerIds, normalizeMarkerTime } from './marker-actions.js';
 
 const MERGE_TIME_THRESHOLD = 0.001;
 const NO_COLOR = 'None';
@@ -32,26 +32,29 @@ const mergeMarkerInto = (existing: TroffMarker, imported: TroffMarker): void => 
 /**
  * Returns a new marker list for a merge import: copies of `existingMarkers`
  * followed by the `importedMarkers` that do not collide with an already-placed
- * marker. An imported marker whose numeric time is within MERGE_TIME_THRESHOLD
- * (strictly less than) of an already-placed marker is merged into it (keeping
- * that marker's id and time). Non-colliding imports get new `markerNrN` ids.
+ * marker. Imported marker times are normalized (clamped to [0, maxTime] before
+ * the collision check). An imported marker whose numeric time is within
+ * MERGE_TIME_THRESHOLD (strictly less than) of an already-placed marker is
+ * merged into it (keeping that marker's id and time). Non-colliding imports
+ * get new `markerNrN` ids.
  */
 export function mergeImportedMarkers(
   existingMarkers: TroffMarker[],
-  importedMarkers: TroffMarker[]
+  importedMarkers: TroffMarker[],
+  maxTime = Infinity
 ): TroffMarker[] {
   const result: TroffMarker[] = existingMarkers.map((m) => ({ ...m }));
   const added: TroffMarker[] = [];
 
   for (const imported of importedMarkers) {
-    const time = Number(imported.time);
+    const time = normalizeMarkerTime(imported.time, maxTime);
     const existing =
       result.find((m) => Math.abs(Number(m.time) - time) < MERGE_TIME_THRESHOLD) ??
       added.find((m) => Math.abs(Number(m.time) - time) < MERGE_TIME_THRESHOLD);
     if (existing) {
       mergeMarkerInto(existing, imported);
     } else {
-      added.push({ ...imported });
+      added.push({ ...imported, time });
     }
   }
 
