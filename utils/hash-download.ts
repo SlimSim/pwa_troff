@@ -3,7 +3,7 @@ import { TROFF_TROFF_DATA_ID_AND_FILE_NAME } from '../constants/constants.js';
 import log from './log.js';
 import { getFirestore } from './firebase-getter.js';
 import { normalizeMarkerTime } from './marker-actions.js';
-import { safeDecodeURIComponent } from './utils.js';
+import { safeDecodeURIComponent, toSongKey } from './utils.js';
 import type { TroffData, TroffMarker, TroffHistoryList, TroffDataIdObject } from '../types/troff.d.js';
 
 const CACHE_NAME = 'songCache-v1.0';
@@ -69,7 +69,8 @@ export async function downloadSongFromHash(
     );
     return null;
   }
-  const { serverId, fileName } = parsed;
+   const { serverId, fileName: rawFileName } = parsed;
+   const fileName = toSongKey(rawFileName);
 
   // If the song already exists in local storage, no need to download
   const existingData = nDB.get(fileName);

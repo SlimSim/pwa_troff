@@ -14,6 +14,7 @@ import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
 import { nDB } from '../../assets/internal/db.js';
 import { getCurrentSongKey } from '../../utils/current-song.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
+import { toSongKey } from '../../utils/utils.js';
 import {
   filterTracks,
   filterArtists,
@@ -937,13 +938,14 @@ export class MediaParent extends LitElement {
         console.warn(`Skipping unsupported file: ${file.name} (type: ${file.type})`);
         continue;
       }
-      try {
-        await this._saveFileToCache(file);
-        this._createSongEntry(file);
-        addedKeys.push(file.name);
-      } catch (err) {
-        console.error(`Failed to add file "${file.name}":`, err);
-      }
+       try {
+         const songKey = toSongKey(file.name);
+         await this._saveFileToCache(file, songKey);
+         this._createSongEntry(file, songKey);
+         addedKeys.push(songKey);
+       } catch (err) {
+         console.error(`Failed to add file "${file.name}":`, err);
+       }
     }
 
     // Reset the input so the same files can be picked again
@@ -1003,30 +1005,30 @@ export class MediaParent extends LitElement {
   /**
    * Save the raw file to the Cache Storage API so it can be played offline.
    */
-  private async _saveFileToCache(file: File): Promise<void> {
+  private async _saveFileToCache(file: File, songKey: string): Promise<void> {
     const cache = await caches.open('songCache-v1.0');
     const response = new Response(file, {
       status: 200,
       statusText: 'OK',
     });
-    await cache.put(file.name, response);
+    await cache.put(songKey, response);
   }
 
   /**
    * Create or update the song metadata entry in nDB (localStorage).
    * When the song already exists we only mark it as added-from-device.
    */
-  private _createSongEntry(file: File): void {
-    const existing = nDB.get(file.name);
+  private _createSongEntry(file: File, songKey: string): void {
+    const existing = nDB.get(songKey);
 
     if (!existing) {
-      nDB.set(file.name, {
+      nDB.set(songKey, {
         fileData: {
           album: '',
           artist: '',
           choreographer: '',
           choreography: '',
-          customName: file.name,
+          customName: songKey,
           duration: 0,
           genre: '',
           tags: '',
@@ -1039,7 +1041,7 @@ export class MediaParent extends LitElement {
         },
       });
     } else {
-      nDB.setOnSong(file.name, ['localInformation', 'addedFromThisDevice'], true);
+      nDB.setOnSong(songKey, ['localInformation', 'addedFromThisDevice'], true);
     }
   }
 

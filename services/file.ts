@@ -18,6 +18,7 @@ import {
 import { IO } from '../script.js';
 import log from '../utils/log.js';
 import { cacheImplementation } from './FileApiImplementation.js';
+import { toSongKey } from '../utils/utils.js';
 import { TroffFileHandler } from 'types/file.js';
 import { FirebaseWrapper } from 'types/firebase.js';
 import { BackendService, TroffData } from 'types/troff.js';
@@ -209,20 +210,21 @@ $(() => {
     return fileHandler.saveResponse(new Response(blob, v3Init), songKey);
   };
 
-  //private?
-  fileHandler.saveResponse = async (response, url) => {
-    return caches.open(nameOfCache).then((cache) => {
-      return cache.put(url, response);
-    });
-  };
+   //private?
+   fileHandler.saveResponse = async (response, url) => {
+     const songKey = toSongKey(url);
+     return caches.open(nameOfCache).then((cache) => {
+       return cache.put(songKey, response);
+     });
+   };
 
-  //private?
-  fileHandler.saveFile = async (file, callbackFunk) => {
-    const url = file.name;
-    return fileHandler.saveResponse(new Response(file, v3Init), url).then(() => {
-      callbackFunk(url, file);
-    });
-  };
+   //private?
+   fileHandler.saveFile = async (file, callbackFunk) => {
+     const url = toSongKey(file.name);
+     return fileHandler.saveResponse(new Response(file, v3Init), url).then(() => {
+       callbackFunk(url, file);
+     });
+   };
 
   //private?
   fileHandler.getObjectUrlFromResponse = async (response, songKey) => {

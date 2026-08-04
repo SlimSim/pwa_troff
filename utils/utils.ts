@@ -46,4 +46,14 @@ export function safeDecodeURIComponent(str: string): string {
   }
 }
 
+/**
+ * Normalizes a song key to its basename (last path segment).
+ * Strips any directory prefix (e.g. "font/song.mp3" → "song.mp3")
+ * so that path-qualified file names from file pickers never pollute
+ * cache/nDB/Firestore keys.
+ */
+export function toSongKey(name: string): string {
+  return safeDecodeURIComponent(name.split(/[\\/]/).pop() || name);
+}
+
 export { blurHack, escapeRegExp, getFileExtension, removeLocalInfo, fileUrlToStorageFileName };

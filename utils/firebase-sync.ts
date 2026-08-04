@@ -18,6 +18,7 @@
  */
 
 import { nDB } from '../assets/internal/db.js';
+import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../types/troff.d.js';
 import log from './log.js';
 
@@ -79,50 +80,55 @@ export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<voi
 
       const groupSongs: TroffFirebaseSongIdentifyer[] = [];
 
-      for (const songDoc of songsSnapshot.docs) {
-        const songData = songDoc.data();
-        const songKey = songData.songKey as string | undefined;
-        const fileUrl = songData.fileUrl as string | undefined;
+       for (const songDoc of songsSnapshot.docs) {
+         const songData = songDoc.data();
+         const rawSongKey = songData.songKey as string | undefined;
+         const fileUrl = songData.fileUrl as string | undefined;
 
-        if (!songKey || !fileUrl) {
-          continue;
-        }
+         if (!rawSongKey || !fileUrl) {
+           continue;
+         }
 
-        // Download the audio file if it's not already in cache
-        const cache = await caches.open(CACHE_NAME);
-        const cachedResponse = await cache.match(songKey);
+         // Sanitize songKey: strip any path prefix (e.g. "font/song.mp3" → "song.mp3")
+         // so that path-qualified keys from legacy or polluted Firestore data
+         // never enter the local cache or nDB.
+         const songKey = toSongKey(rawSongKey);
 
-        if (!cachedResponse) {
-          try {
-            await fetchAndCacheFile(fileUrl, songKey);
-          } catch (err) {
-            log.e(`Failed to download song "${songKey}":`, err);
-            // Skip this song but continue with others
-            continue;
-          }
-        }
+         // Download the audio file if it's not already in cache
+         const cache = await caches.open(CACHE_NAME);
+         const cachedResponse = await cache.match(songKey);
 
-        // Save / update song metadata in nDB
-        const jsonDataInfo = songData.jsonDataInfo as string | undefined;
-        if (jsonDataInfo) {
-          try {
-            const parsedData = JSON.parse(jsonDataInfo) as Record<string, unknown>;
-            const existingData = nDB.get(songKey) as Record<string, unknown> | null;
-            const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
-            const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
-            if (serverUploadTime >= localUploadTime) {
-              nDB.set(songKey, parsedData);
-            }
-          } catch (err) {
-            log.e(`Failed to parse song data for "${songKey}":`, err);
-          }
-        }
+         if (!cachedResponse) {
+           try {
+             await fetchAndCacheFile(fileUrl, songKey);
+           } catch (err) {
+             log.e(`Failed to download song "${songKey}":`, err);
+             // Skip this song but continue with others
+             continue;
+           }
+         }
 
-        groupSongs.push({
-          firebaseSongDocId: songDoc.id,
-          fullPath: songKey,
-          galleryId: 'pwa-galleryId',
-        });
+         // Save / update song metadata in nDB
+         const jsonDataInfo = songData.jsonDataInfo as string | undefined;
+         if (jsonDataInfo) {
+           try {
+             const parsedData = JSON.parse(jsonDataInfo) as Record<string, unknown>;
+             const existingData = nDB.get(songKey) as Record<string, unknown> | null;
+             const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
+             const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
+             if (serverUploadTime >= localUploadTime) {
+               nDB.set(songKey, parsedData);
+             }
+           } catch (err) {
+             log.e(`Failed to parse song data for "${songKey}":`, err);
+           }
+         }
+
+         groupSongs.push({
+           firebaseSongDocId: songDoc.id,
+           fullPath: songKey,
+           galleryId: 'pwa-galleryId',
+         });
       }
 
       firebaseSongLists.push({

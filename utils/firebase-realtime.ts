@@ -11,6 +11,7 @@
  */
 
 import { nDB } from '../assets/internal/db.js';
+import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
 import log from './log.js';
 
@@ -186,32 +187,36 @@ export async function setupListeners(): Promise<void> {
  * @param songKey  The local nDB key (filename).
  */
 export async function saveSongData(songKey: string): Promise<void> {
-  const existingData = nDB.get(songKey) as TroffObjectLocal | null;
-  if (!existingData) return;
+   // Sanitize songKey: strip any path prefix so polluted keys
+   // never enter Firestore.
+   const cleanSongKey = toSongKey(songKey);
 
-  try {
-    const firebaseClient = await import('../services/firebaseClient.js');
-    const { db, doc, setDoc } = firebaseClient;
+   const existingData = nDB.get(cleanSongKey) as TroffObjectLocal | null;
+   if (!existingData) return;
 
-    const songRefMap = buildSongRefMap();
-    const refs = songRefMap.get(songKey);
-    if (!refs || refs.length === 0) return;
+   try {
+     const firebaseClient = await import('../services/firebaseClient.js');
+     const { db, doc, setDoc } = firebaseClient;
 
-    // Strip local-only fields
-    const { localInformation, ...publicData } = existingData;
-    publicData.latestUploadToFirebase = Date.now();
+     const songRefMap = buildSongRefMap();
+     const refs = songRefMap.get(cleanSongKey);
+     if (!refs || refs.length === 0) return;
 
-    const payload = {
-      songKey,
-      jsonDataInfo: JSON.stringify(publicData),
-    };
+     // Strip local-only fields
+     const { localInformation, ...publicData } = existingData;
+     publicData.latestUploadToFirebase = Date.now();
 
-    for (const ref of refs) {
-      const songDocRef = doc(db, 'Groups', ref.groupDocId, 'Songs', ref.songDocId);
-      await setDoc(songDocRef, payload, { merge: true } as any);
-    }
-  } catch (err) {
-    // Firebase may not be available (offline, CDN blocked)
-    log.i('Firebase save not available:', err);
-  }
-}
+     const payload = {
+       songKey: cleanSongKey,
+       jsonDataInfo: JSON.stringify(publicData),
+     };
+
+     for (const ref of refs) {
+       const songDocRef = doc(db, 'Groups', ref.groupDocId, 'Songs', ref.songDocId);
+       await setDoc(songDocRef, payload, { merge: true } as any);
+     }
+   } catch (err) {
+     // Firebase may not be available (offline, CDN blocked)
+     log.i('Firebase save not available:', err);
+   }
+ }
