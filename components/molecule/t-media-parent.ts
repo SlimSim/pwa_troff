@@ -23,6 +23,11 @@ import {
 import type { TrackLike } from '../../utils/media-search.js';
 import log from '../../utils/log.js';
 
+/** Minimal surface of the detail-view list components for closing details. */
+interface DetailViewListElement extends HTMLElement {
+  closeDetail?: () => void;
+}
+
 // Module-level diagnostic listener: registers at module load time to verify
 // whether the Esc keydown reaches the window at all. This bypasses any
 // component lifecycle issues with connectedCallback registration.
@@ -377,6 +382,18 @@ export class MediaParent extends LitElement {
       width: 100%;
       font-size: 1rem;
     }
+
+    /* ── No-results state (active search, empty list) ── */
+    .no-results {
+      padding: 24px 16px;
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    .no-results-text {
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
@@ -682,9 +699,18 @@ export class MediaParent extends LitElement {
 
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
+    this.searchQuery = '';
+    this._closeOpenDetailViews();
     this._clearContext();
     this._saveNavigationState();
     this._dispatchHeaderColor();
+  }
+
+  /** Close any open detail view in the mounted list components. */
+  private _closeOpenDetailViews() {
+    this.shadowRoot?.querySelector<DetailViewListElement>('t-group-list')?.closeDetail?.();
+    this.shadowRoot?.querySelector<DetailViewListElement>('t-artist-list')?.closeDetail?.();
+    this.shadowRoot?.querySelector<DetailViewListElement>('t-genre-list')?.closeDetail?.();
   }
 
   private _handleToggleSortDropdown() {
@@ -804,6 +830,7 @@ export class MediaParent extends LitElement {
     const detail = (event as CustomEvent<{ groupKey?: string }>).detail;
     const key = detail?.groupKey || '';
     this._currentGroupKey = key;
+    this.searchQuery = '';
 
     if (key) {
       const group = this.groups.find((g) => {
@@ -832,6 +859,7 @@ export class MediaParent extends LitElement {
   private _handleArtistDetailOpened(event: Event) {
     const detail = (event as CustomEvent<{ artist?: string }>).detail;
     const artist = detail?.artist || '';
+    this.searchQuery = '';
     if (artist) {
       this._contextType = 'artist';
       this._contextKey = artist;
@@ -846,6 +874,7 @@ export class MediaParent extends LitElement {
   private _handleGenreDetailOpened(event: Event) {
     const detail = (event as CustomEvent<{ genre?: string }>).detail;
     const genre = detail?.genre || '';
+    this.searchQuery = '';
     if (genre) {
       this._contextType = 'genre';
       this._contextKey = genre;
@@ -1087,21 +1116,17 @@ export class MediaParent extends LitElement {
 
   private _handleSearchBlur = (): void => {
     this.isSearchFocused = false;
-    // The search only collapses (and thus clears) on small screens.
-    if (!this._isWideScreen()) {
-      this.searchQuery = '';
-    }
   };
-
-  /** True on screens where the search input stays expanded (>= 576px). */
-  private _isWideScreen(): boolean {
-    return window.matchMedia?.('(min-width: 576px)').matches ?? false;
-  }
 
   private _blurSearchInput() {
     const tInput = this.shadowRoot?.querySelector<TInput>('t-input.search-input');
     const innerInput = tInput?.shadowRoot?.querySelector<HTMLInputElement>('input');
     innerInput?.blur();
+  }
+
+  /** Clear the search query (used by the no-results clear button). */
+  private _clearSearch() {
+    this.searchQuery = '';
   }
 
   private _selectTrackForEnter(track: any) {
@@ -1764,43 +1789,79 @@ export class MediaParent extends LitElement {
             `
           : html`
               ${this.currentFilter === 'tracks'
-                ? html`
-                    <t-track-list
-                      .tracks=${visibleTracks}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-track-list>
-                  `
+                ? query.trim() !== '' && visibleTracks.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No tracks match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-track-list
+                        .tracks=${visibleTracks}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-track-list>
+                    `
                 : ''}
               ${this.currentFilter === 'artists'
-                ? html`
-                    <t-artist-list
-                      .artists=${visibleArtists}
-                      .tracks=${songs}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-artist-list>
-                  `
+                ? query.trim() !== '' && visibleArtists.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No artists match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-artist-list
+                        .artists=${visibleArtists}
+                        .tracks=${songs}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-artist-list>
+                    `
                 : ''}
               ${this.currentFilter === 'genre'
-                ? html`
-                    <t-genre-list
-                      .genres=${visibleGenres}
-                      .tracks=${songs}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-genre-list>
-                  `
+                ? query.trim() !== '' && visibleGenres.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No genres match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-genre-list
+                        .genres=${visibleGenres}
+                        .tracks=${songs}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-genre-list>
+                    `
                 : ''}
               ${this.currentFilter === 'groups'
-                ? html`
-                    <t-group-list
-                      .groups=${visibleGroups}
-                      .tracks=${songs}
-                      .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                      currentSongKey=${this.currentSongKey}
-                    ></t-group-list>
-                  `
+                ? query.trim() !== '' && visibleGroups.length === 0
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">No groups match "${query.trim()}".</div>
+                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                          Clear search
+                        </t-butt>
+                      </div>
+                    `
+                  : html`
+                      <t-group-list
+                        .groups=${visibleGroups}
+                        .tracks=${songs}
+                        .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
+                        currentSongKey=${this.currentSongKey}
+                      ></t-group-list>
+                    `
                 : ''}
             `}
       </div>
