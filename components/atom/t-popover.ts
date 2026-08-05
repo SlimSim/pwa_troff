@@ -141,12 +141,16 @@ export class Popover extends LitElement {
       html`
         <style>${popupStyles.cssText}</style>
         <div class="popup" ?open=${this.open} @click=${this._handlePopupClick}>
-          <div class="popup-header">
-            <span class="popup-header-text">${this.header}</span>
-            <t-butt slim ghost @click=${this._handleCloseClick} title="Close">
-              <t-icon slim name="window-close"></t-icon>
-            </t-butt>
-          </div>
+          ${this.header
+            ? html`
+                <div class="popup-header">
+                  <span class="popup-header-text">${this.header}</span>
+                  <t-butt slim ghost @click=${this._handleCloseClick} title="Close">
+                    <t-icon slim name="window-close"></t-icon>
+                  </t-butt>
+                </div>
+              `
+            : ''}
           <div class="popup-body">${this.body}</div>
         </div>
       `,

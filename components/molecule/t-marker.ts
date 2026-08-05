@@ -166,8 +166,7 @@ export class Marker extends LitElement {
           ? html`
               <!-- Info popover -->
               <t-popover
-                .header=${this.marker.label || this.marker.name || 'Marker Info'}
-                .body=${this.marker.info}
+                .body=${this.marker.info?.trim()}
                 .boundary=${this._boundary}
                 prefer-position="right"
                 @popover-opened=${this._handlePopoverOpened}
@@ -177,7 +176,7 @@ export class Marker extends LitElement {
                   slim
                   ghost
                   class="info-button"
-                  title=${this.marker.info || 'Marker info'}
+                  title=${this.marker.info?.trim() || 'Marker info'}
                 >
                   <t-icon slim name="info"></t-icon>
                 </t-butt>
