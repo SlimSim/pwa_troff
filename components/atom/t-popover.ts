@@ -19,6 +19,7 @@ export interface PopupPositionInput {
   boundaryRect?: { top: number; bottom: number } | null;
   margin?: number;
   gap?: number;
+  preferPosition?: 'center' | 'right';
 }
 
 export function computePopupPosition(input: PopupPositionInput): { top: number; left: number } {
@@ -52,8 +53,15 @@ export function computePopupPosition(input: PopupPositionInput): { top: number; 
     Math.min(top, boundsBottom - popupHeight - MARGIN)
   );
 
-  // Horizontal: center on trigger, clamp to the viewport.
-  let left = triggerRect.left + triggerRect.width / 2 - popupWidth / 2;
+  // Horizontal: 'right' prefers the popup to sit fully to the right of the
+  // trigger (so content to the left stays visible); otherwise center on the
+  // trigger. Either way, clamp to the viewport.
+  let left;
+  if (input.preferPosition === 'right') {
+    left = triggerRect.right + GAP;
+  } else {
+    left = triggerRect.left + triggerRect.width / 2 - popupWidth / 2;
+  }
   left = Math.max(MARGIN, Math.min(left, viewportWidth - popupWidth - MARGIN));
 
   return { top, left };
@@ -116,6 +124,8 @@ export class Popover extends LitElement {
   @property({ type: String }) header = '';
   @property({ type: String }) body = '';
   @property({ type: Object }) boundary: Element | null = null;
+  @property({ type: String, attribute: 'prefer-position' })
+  preferPosition: 'center' | 'right' = 'center';
 
   private _portalHost: HTMLDivElement | null = null;
   private _portalRoot: ShadowRoot | null = null;
@@ -240,6 +250,7 @@ export class Popover extends LitElement {
       viewportWidth,
       viewportHeight,
       boundaryRect,
+      preferPosition: this.preferPosition,
     });
     popup.style.top = `${top}px`;
     popup.style.left = `${left}px`;

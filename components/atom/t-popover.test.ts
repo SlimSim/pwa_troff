@@ -242,4 +242,15 @@ describe('t-popover', () => {
     expect(element.popupElement).toBeNull();
     expect(element.shadowRoot?.querySelector('.popup')).toBeNull();
   });
+
+  it("preferPosition defaults to 'center'", async () => {
+    await element.updateComplete;
+    expect(element.preferPosition).toBe('center');
+  });
+
+  it('prefer-position attribute maps to the preferPosition property', async () => {
+    element.setAttribute('prefer-position', 'right');
+    await element.updateComplete;
+    expect(element.preferPosition).toBe('right');
+  });
 });

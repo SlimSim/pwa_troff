@@ -179,4 +179,22 @@ describe('t-marker', () => {
     expect(popover).not.toBeNull();
     expect(popover.boundary).toBeNull();
   });
+
+  it('info popover prefers right positioning', async () => {
+    element.marker = {
+      id: 'm1',
+      name: 'Intro',
+      label: 'Intro',
+      value: 12.5,
+      info: 'First section',
+    };
+    await element.updateComplete;
+
+    const popover = element.shadowRoot?.querySelector(
+      't-popover'
+    ) as Popover;
+    expect(popover).not.toBeNull();
+    expect(popover.preferPosition).toBe('right');
+    expect(popover.hasAttribute('prefer-position')).toBe(true);
+  });
 });

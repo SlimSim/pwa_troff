@@ -166,6 +166,7 @@ export class Marker extends LitElement {
                 .header=${this.marker.label || this.marker.name || 'Marker Info'}
                 .body=${this.marker.info}
                 .boundary=${this._boundary}
+                prefer-position="right"
                 @popover-opened=${this._handlePopoverOpened}
               >
                 <t-butt
