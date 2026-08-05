@@ -197,4 +197,57 @@ describe('t-marker', () => {
     expect(popover.preferPosition).toBe('right');
     expect(popover.hasAttribute('prefer-position')).toBe(true);
   });
+
+  it('host is click-through so an overlapping marker cannot swallow clicks', async () => {
+    await element.updateComplete;
+
+    // NEW fix: `:host { pointer-events: none; }` makes the marker's full-width
+    // host row transparent to clicks, so a later overlapping marker can no
+    // longer block the earlier marker's buttons.
+    expect(getComputedStyle(element).pointerEvents).toBe('none');
+  });
+
+  it('keeps edit, name and stop buttons clickable (pointer-events: auto)', async () => {
+    await element.updateComplete;
+
+    // The first t-butt inside .marker-row is the edit button.
+    const editBtn = element.shadowRoot?.querySelector(
+      '.marker-row > t-butt'
+    ) as HTMLElement | null;
+    const nameBtn = element.shadowRoot?.querySelector(
+      '.marker-name-button'
+    ) as HTMLElement | null;
+    const stopBtn = element.shadowRoot?.querySelector(
+      '.stop-button'
+    ) as HTMLElement | null;
+
+    expect(editBtn).not.toBeNull();
+    expect(nameBtn).not.toBeNull();
+    expect(stopBtn).not.toBeNull();
+
+    // NEW fix: `t-butt { pointer-events: auto; }` keeps every button clickable
+    // even though the host row itself is click-through.
+    expect(getComputedStyle(editBtn as HTMLElement).pointerEvents).toBe('auto');
+    expect(getComputedStyle(nameBtn as HTMLElement).pointerEvents).toBe('auto');
+    expect(getComputedStyle(stopBtn as HTMLElement).pointerEvents).toBe('auto');
+  });
+
+  it('keeps the slotted info button clickable (pointer-events: auto)', async () => {
+    element.marker = {
+      id: 'm1',
+      name: 'Intro',
+      label: 'Intro',
+      value: 12.5,
+      info: 'some text',
+    };
+    await element.updateComplete;
+
+    const infoBtn = element.shadowRoot?.querySelector(
+      '.info-button'
+    ) as HTMLElement | null;
+    expect(infoBtn).not.toBeNull();
+
+    // The info button must stay clickable despite the click-through host.
+    expect(getComputedStyle(infoBtn as HTMLElement).pointerEvents).toBe('auto');
+  });
 });

@@ -24,6 +24,11 @@ export class Marker extends LitElement {
       display: block;
       transform: translateY(-50%);
       max-width: 100%;
+      pointer-events: none;
+    }
+
+    t-butt {
+      pointer-events: auto;
     }
 
     .info-button {
