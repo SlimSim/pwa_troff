@@ -22,6 +22,7 @@ export class TTextarea extends LitElement {
       font-weight: 500;
       color: var(--on-secondary-color, rgb(50, 50, 50));
       margin-bottom: 2px;
+      text-align: left;
     }
 
     textarea {
@@ -37,7 +38,9 @@ export class TTextarea extends LitElement {
       line-height: 1.5;
       resize: vertical;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
     }
 
     textarea:focus {
@@ -92,13 +95,13 @@ export class TTextarea extends LitElement {
       :host {
         font-size: 14px;
       }
-      
+
       textarea {
         min-height: 100px;
         padding: 10px;
         font-size: 14px;
       }
-      
+
       label {
         font-size: 13px;
       }
@@ -162,42 +165,50 @@ export class TTextarea extends LitElement {
   private _handleInput(event: Event) {
     const target = event.target as HTMLTextAreaElement;
     this.value = target.value;
-    
+
     if (this.autoResize) {
       this._autoResize();
     }
-    
-    this.dispatchEvent(new CustomEvent('input', {
-      detail: { value: this.value, event },
-      bubbles: true,
-      composed: true
-    }));
+
+    this.dispatchEvent(
+      new CustomEvent('input', {
+        detail: { value: this.value, event },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleChange(event: Event) {
     const target = event.target as HTMLTextAreaElement;
     this.value = target.value;
-    this.dispatchEvent(new CustomEvent('change', {
-      detail: { value: this.value, event },
-      bubbles: true,
-      composed: true
-    }));
+    this.dispatchEvent(
+      new CustomEvent('change', {
+        detail: { value: this.value, event },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleFocus(event: FocusEvent) {
-    this.dispatchEvent(new CustomEvent('focus', {
-      detail: { event },
-      bubbles: true,
-      composed: true
-    }));
+    this.dispatchEvent(
+      new CustomEvent('focus', {
+        detail: { event },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleBlur(event: FocusEvent) {
-    this.dispatchEvent(new CustomEvent('blur', {
-      detail: { event },
-      bubbles: true,
-      composed: true
-    }));
+    this.dispatchEvent(
+      new CustomEvent('blur', {
+        detail: { event },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _autoResize() {
@@ -218,7 +229,7 @@ export class TTextarea extends LitElement {
 
   private _getCharacterCountClass() {
     if (!this.showCharCount || this.maxlength === 0) return '';
-    
+
     const remaining = this.maxlength - this.value.length;
     if (remaining <= 0) return 'error';
     if (remaining <= this.maxlength * 0.1) return 'warning';
@@ -239,7 +250,7 @@ export class TTextarea extends LitElement {
 
   updated(changedProperties: Map<string, any>) {
     super.updated(changedProperties);
-    
+
     if (changedProperties.has('value') && this._textarea && this._textarea.value !== this.value) {
       this._textarea.value = this.value;
     }
@@ -252,18 +263,15 @@ export class TTextarea extends LitElement {
   render() {
     const textareaId = this.id || this._generateId();
     const hasError = this.errorMessage && !this.disabled;
-    const characterCount = this.showCharCount && this.maxlength > 0 
-      ? `${this.value.length}/${this.maxlength}` 
-      : '';
+    const characterCount =
+      this.showCharCount && this.maxlength > 0 ? `${this.value.length}/${this.maxlength}` : '';
 
     return html`
       <div class="${this._getWrapperClasses()}">
-        ${this.label ? html`
-          <label for="${textareaId}">
-            ${this.label}${this.required ? ' *' : ''}
-          </label>
-        ` : ''}
-        
+        ${this.label
+          ? html` <label for="${textareaId}"> ${this.label}${this.required ? ' *' : ''} </label> `
+          : ''}
+
         <textarea
           id="${textareaId}"
           .value=${this.value}
@@ -277,30 +285,35 @@ export class TTextarea extends LitElement {
           maxlength="${this.maxlength > 0 ? this.maxlength : ''}"
           minlength="${this.minlength > 0 ? this.minlength : ''}"
           aria-invalid="${hasError}"
-          aria-describedby="${hasError ? `${textareaId}-error` : ''} ${this.helperText ? `${textareaId}-helper` : ''} ${characterCount ? `${textareaId}-count` : ''}"
+          aria-describedby="${hasError ? `${textareaId}-error` : ''} ${this.helperText
+            ? `${textareaId}-helper`
+            : ''} ${characterCount ? `${textareaId}-count` : ''}"
           @input="${this._handleInput}"
           @change="${this._handleChange}"
           @focus="${this._handleFocus}"
           @blur="${this._handleBlur}"
         ></textarea>
 
-        ${hasError ? html`
-          <div id="${textareaId}-error" class="error-message" role="alert">
-            ${this.errorMessage}
-          </div>
-        ` : ''}
-
-        ${this.helperText && !hasError ? html`
-          <div id="${textareaId}-helper" class="helper-text">
-            ${this.helperText}
-          </div>
-        ` : ''}
-
-        ${characterCount ? html`
-          <div id="${textareaId}-count" class="character-count ${this._getCharacterCountClass()}">
-            ${characterCount}
-          </div>
-        ` : ''}
+        ${hasError
+          ? html`
+              <div id="${textareaId}-error" class="error-message" role="alert">
+                ${this.errorMessage}
+              </div>
+            `
+          : ''}
+        ${this.helperText && !hasError
+          ? html` <div id="${textareaId}-helper" class="helper-text">${this.helperText}</div> `
+          : ''}
+        ${characterCount
+          ? html`
+              <div
+                id="${textareaId}-count"
+                class="character-count ${this._getCharacterCountClass()}"
+              >
+                ${characterCount}
+              </div>
+            `
+          : ''}
       </div>
     `;
   }

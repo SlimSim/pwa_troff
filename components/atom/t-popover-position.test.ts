@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computePopupPosition } from './t-popover.js';
-import type { PopupPositionInput } from './t-popover.js';
+import { computePopupPosition } from '../../utils/popupPosition.js';
+import type { PopupPositionInput } from '../../utils/popupPosition.js';
 
 /**
  * Fixture helper — constructs the triggerRect shape required by
@@ -204,5 +204,188 @@ describe('computePopupPosition', () => {
     // NOT the right-side placement (trigger.right + gap = 364).
     expect(pos.left).toBe(300 + 30 - 100);
     expect(pos.left).not.toBe(360 + 4);
+  });
+
+  describe("preferSide: 'up'", () => {
+    it('places the popup ABOVE the trigger when the space above suffices', () => {
+      const pos = computePopupPosition({
+        triggerRect: makeRect(300, 335, 200, 260),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferSide: 'up',
+      });
+
+      // gap=4 → above placement: triggerRect.top - popupHeight - gap
+      expect(pos.top).toBe(300 - 100 - 4);
+      expect(pos.top).toBeLessThan(300);
+      // Still fully inside the viewport with margin=8
+      expect(pos.top).toBeGreaterThanOrEqual(8);
+      expect(pos.top + 100).toBeLessThanOrEqual(VIEWPORT_H - 8);
+    });
+
+    it('falls back BELOW the trigger when there is no room above but room below', () => {
+      const pos = computePopupPosition({
+        triggerRect: makeRect(5, 40, 200, 260),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferSide: 'up',
+      });
+
+      // Above placement impossible (top 5 → only 1px above with gap)
+      // → fall back below: triggerRect.bottom + gap(4)
+      expect(pos.top).toBe(40 + 4);
+      expect(pos.top).toBeGreaterThan(40);
+
+      // The 'up' preference is observable when BOTH sides fit: it must pick
+      // above, whereas the old down-first logic would pick below.
+      const bothFit = computePopupPosition({
+        triggerRect: makeRect(200, 235, 200, 260),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferSide: 'up',
+      });
+      expect(bothFit.top).toBe(200 - 100 - 4);
+    });
+
+    it('picks the side with more room when neither side fits and clamps inside the bounds', () => {
+      const pos = computePopupPosition({
+        triggerRect: makeRect(240, 275, 200, 260),
+        popupWidth: 200,
+        popupHeight: 300,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: 500,
+        preferSide: 'up',
+      });
+
+      // spaceAbove = 240-4 = 236, spaceBelow = 500-275-4 = 221 → picks above:
+      // top = 240-300-4 = -64 → clamped to the viewport top margin (8).
+      expect(pos.top).toBe(8);
+      expect(pos.top).toBeGreaterThanOrEqual(8);
+      expect(pos.top + 300).toBeLessThanOrEqual(500);
+    });
+  });
+
+  describe('horizontalAlign', () => {
+    it("'right' aligns the popup's right edge with the trigger's right edge", () => {
+      const pos = computePopupPosition({
+        triggerRect: makeRect(100, 135, 50, 90),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        horizontalAlign: 'right',
+      });
+
+      // right-edge alignment: left = triggerRect.right - popupWidth = -110
+      // → clamped to the left viewport margin (8).
+      expect(pos.left).toBe(8);
+      expect(pos.left).toBeGreaterThanOrEqual(8);
+      expect(pos.left + 200).toBeLessThanOrEqual(VIEWPORT_W);
+
+      // Distinguishing case: with the trigger further from the left edge the
+      // right-edge alignment (140-200 = -60 → clamped to 8) still differs
+      // from the old centered placement (100+20-100 = 20, no clamp).
+      const nearEdge = computePopupPosition({
+        triggerRect: makeRect(100, 135, 100, 140),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        horizontalAlign: 'right',
+      });
+      expect(nearEdge.left).toBe(8);
+    });
+
+    it("'left' aligns the popup's left edge with the trigger's left edge", () => {
+      const pos = computePopupPosition({
+        triggerRect: makeRect(100, 135, 50, 90),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        horizontalAlign: 'left',
+      });
+
+      // left-edge alignment: left = triggerRect.left (no clamping needed)
+      expect(pos.left).toBe(50);
+    });
+
+    it("'left' clamps so the popup never exceeds the right viewport edge", () => {
+      const pos = computePopupPosition({
+        triggerRect: makeRect(100, 135, 950, 990),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        horizontalAlign: 'left',
+      });
+
+      // Unclamped left = 950 → clamped to viewportWidth - popupWidth - margin(8)
+      expect(pos.left).toBe(VIEWPORT_W - 200 - 8);
+      expect(pos.left + 200).toBeLessThanOrEqual(VIEWPORT_W);
+
+      // Distinguishing case: left = 800 needs clamping to 792, whereas the
+      // old centered placement (800+20-100 = 720) would still fit unclamped.
+      const nearEdge = computePopupPosition({
+        triggerRect: makeRect(100, 135, 800, 840),
+        popupWidth: 200,
+        popupHeight: 100,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        horizontalAlign: 'left',
+      });
+      expect(nearEdge.left).toBe(VIEWPORT_W - 200 - 8);
+    });
+  });
+
+  it('combines preferSide "up" with horizontalAlign "right"', () => {
+    const pos = computePopupPosition({
+      triggerRect: makeRect(300, 335, 50, 90),
+      popupWidth: 200,
+      popupHeight: 100,
+      viewportWidth: VIEWPORT_W,
+      viewportHeight: VIEWPORT_H,
+      preferSide: 'up',
+      horizontalAlign: 'right',
+    });
+
+    // Vertical: above → 300 - 100 - 4 = 196.
+    // Horizontal: right-edge → 90 - 200 = -110 → clamped to 8.
+    expect(pos.top).toBe(300 - 100 - 4);
+    expect(pos.left).toBe(8);
+  });
+
+  it('defaults preferSide to down and keeps preferPosition behavior when horizontalAlign is unset', () => {
+    const base = {
+      triggerRect: makeRect(300, 330, 200, 260),
+      popupWidth: 200,
+      popupHeight: 150,
+      viewportWidth: VIEWPORT_W,
+      viewportHeight: VIEWPORT_H,
+    };
+
+    // Omitted preferSide must behave exactly like the explicit 'down' default.
+    expect(computePopupPosition({ ...base, preferSide: 'down' })).toEqual(
+      computePopupPosition(base)
+    );
+
+    // With horizontalAlign unset, preferPosition 'right' still applies:
+    // popup sits fully to the right of the trigger (trigger.right + gap).
+    expect(
+      computePopupPosition({ ...base, preferPosition: 'right' }).left
+    ).toBe(260 + 4);
+    expect(
+      computePopupPosition({
+        ...base,
+        preferPosition: 'right',
+        horizontalAlign: undefined,
+      }).left
+    ).toBe(260 + 4);
   });
 });

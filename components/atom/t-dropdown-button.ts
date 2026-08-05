@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { computePopupPosition } from '../../utils/popupPosition.js';
+import type { PopupPositionInput } from '../../utils/popupPosition.js';
 
 @customElement('t-dropdown-button')
 export class DropdownButton extends LitElement {
@@ -91,27 +93,42 @@ export class DropdownButton extends LitElement {
     const isMobile = window.innerWidth < 768;
     const useTopPosition = this.mobilePosition === 'top' && isMobile;
 
-    // Position vertically
-    if (useTopPosition) {
-      // Mobile: anchor to viewport top
-      dropdown.style.top = '8px';
-      dropdown.style.bottom = 'auto';
-    } else if (this.position === 'down') {
-      dropdown.style.top = `${rect.bottom + 4}px`;
-      dropdown.style.bottom = 'auto';
-    } else {
-      dropdown.style.top = 'auto';
-      dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
-    }
+    // Reset offsets so the fixed dropdown is measured at its natural size
+    // (left+right or top+bottom set together would stretch it), then let the
+    // shared popover positioning logic pick the best side and clamp on-screen.
+    dropdown.style.top = '0px';
+    dropdown.style.left = '0px';
+    dropdown.style.bottom = 'auto';
+    dropdown.style.right = 'auto';
 
-    // Position horizontally
-    if (this.align === 'right') {
-      dropdown.style.left = 'auto';
-      dropdown.style.right = `${window.innerWidth - rect.right}px`;
+    const { top, left } = computePopupPosition({
+      triggerRect: rect as PopupPositionInput['triggerRect'],
+      popupWidth: dropdown.offsetWidth,
+      popupHeight: dropdown.offsetHeight,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      preferSide: this.position === 'up' ? 'up' : 'down',
+      horizontalAlign: this.align === 'left' ? 'left' : 'right',
+    });
+
+    // At top:0/left:0, a transformed containing block makes the fixed dropdown's
+    // getBoundingClientRect() return that box's origin in viewport coordinates.
+    // Subtracting it converts the computed viewport coords into the containing
+    // block's coordinate space (no-op when there is no transformed ancestor).
+    const dropRect = dropdown.getBoundingClientRect();
+
+    if (useTopPosition) {
+      // Mobile: anchor the dropdown to the top of the viewport and center it
+      // horizontally on the screen.
+      const centeredLeft = (window.innerWidth - dropdown.offsetWidth) / 2;
+      dropdown.style.top = '8px';
+      dropdown.style.left = `${Math.max(8, Math.min(centeredLeft, window.innerWidth - dropdown.offsetWidth - 8)) - dropRect.left}px`;
     } else {
-      dropdown.style.left = `${rect.left}px`;
-      dropdown.style.right = 'auto';
+      dropdown.style.top = `${top - dropRect.top}px`;
+      dropdown.style.left = `${left - dropRect.left}px`;
     }
+    dropdown.style.bottom = 'auto';
+    dropdown.style.right = 'auto';
   }
 
   updated(changedProperties: Map<string, unknown>) {
