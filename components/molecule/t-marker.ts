@@ -40,12 +40,12 @@ export class Marker extends LitElement {
       box-sizing: border-box;
       border-radius: var(--button-border-radius);
       background-color: var(--marker-bg-color, transparent);
+      color: var(--marker-on-color, inherit);
     }
 
     .time-stamp {
       font-size: 0.9rem;
       font-family: monospace;
-      color: var(--marker-on-color, inherit);
     }
 
     .marker-name-button {
@@ -64,8 +64,6 @@ export class Marker extends LitElement {
     super.connectedCallback();
     this._boundary = this.parentElement?.closest('.presets-container') ?? null;
   }
-
-
 
   private _handleEdit() {
     this.dispatchEvent(
