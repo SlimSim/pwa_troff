@@ -1,6 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
+import '../atom/t-icon.js';
+import '../atom/t-popover.js';
 import { formatDuration } from '../../utils/formatters.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 
@@ -22,6 +24,11 @@ export class Marker extends LitElement {
       display: block;
       transform: translateY(-50%);
       max-width: 100%;
+    }
+
+    .info-button {
+      display: flex;
+      z-index: 99;
     }
 
     .marker-row {
@@ -50,6 +57,15 @@ export class Marker extends LitElement {
   @property({ type: Object }) marker: MarkerData = { label: '', value: 0 };
   @property({ type: Boolean }) startActive = false;
   @property({ type: Boolean }) stopActive = false;
+
+  private _boundary: Element | null = null;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._boundary = this.parentElement?.closest('.presets-container') ?? null;
+  }
+
+
 
   private _handleEdit() {
     this.dispatchEvent(
@@ -81,6 +97,16 @@ export class Marker extends LitElement {
     );
   }
 
+  private _handlePopoverOpened() {
+    this.dispatchEvent(
+      new CustomEvent('marker-info-click', {
+        detail: { marker: this.marker },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _getMarkerRowStyle(): string {
     const markerColor = getBgColor(this.marker.color);
 
@@ -96,10 +122,12 @@ export class Marker extends LitElement {
   }
 
   render() {
+    const hasInfo = Boolean(this.marker.info && this.marker.info.trim());
+
     return html`
       <div class="marker-row" style=${this._getMarkerRowStyle()}>
         <!-- Edit button -->
-        <t-butt slim @click=${this._handleEdit} title="Edit marker"
+        <t-butt ghost slim @click=${this._handleEdit} title="Edit marker"
           ><t-icon slim name="edit"></t-icon>
         </t-butt>
 
@@ -109,6 +137,7 @@ export class Marker extends LitElement {
         <!-- Marker name button -->
         <t-butt
           slim
+          ghost
           ellipsis
           class="marker-name-button"
           .active=${this.startActive}
@@ -121,6 +150,7 @@ export class Marker extends LitElement {
         <!-- Stop button -->
         <t-butt
           slim
+          ghost
           class="stop-button"
           .active=${this.stopActive}
           @click=${this._handleStop}
@@ -128,6 +158,28 @@ export class Marker extends LitElement {
         >
           <t-icon slim name="stop-here"></t-icon>
         </t-butt>
+
+        ${hasInfo
+          ? html`
+              <!-- Info popover -->
+              <t-popover
+                .header=${this.marker.label || this.marker.name || 'Marker Info'}
+                .body=${this.marker.info}
+                .boundary=${this._boundary}
+                @popover-opened=${this._handlePopoverOpened}
+              >
+                <t-butt
+                  slot="trigger"
+                  slim
+                  ghost
+                  class="info-button"
+                  title=${this.marker.info || 'Marker info'}
+                >
+                  <t-icon slim name="info"></t-icon>
+                </t-butt>
+              </t-popover>
+            `
+          : ''}
       </div>
     `;
   }

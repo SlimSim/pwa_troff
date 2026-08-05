@@ -108,6 +108,20 @@ export class TButt extends LitElement {
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
+    /* STYLE for GHOST button */
+    .base.ghost {
+      background-color: transparent;
+      color: inherit;
+    }
+
+    .base.ghost:hover {
+      box-shadow: none;
+    }
+
+    .base.ghost:active {
+      box-shadow: none;
+    }
+
     /* STYLE for the SPECIAL button */
     .base.special:hover {
       box-shadow: 0px 0px 0px 2px var(--important-button, #dd2c00);
@@ -119,9 +133,7 @@ export class TButt extends LitElement {
 
     /* Confirming state */
     .base.confirming {
-      background-color: var(--important-button, #dd2c00);
-      color: var(--on-important-button, #fff);
-    }
+
 
     .confirm-text {
       white-space: nowrap;
@@ -130,6 +142,7 @@ export class TButt extends LitElement {
 
   @property({ type: Boolean }) round = false;
   @property({ type: Boolean }) slim = false;
+  @property({ type: Boolean }) ghost = false;
   @property({ type: Boolean }) ellipsis = false;
   @property({ type: Boolean }) important = false;
   @property({ type: Boolean }) special = false;
@@ -286,6 +299,9 @@ export class TButt extends LitElement {
     if (this.slim) {
       classes.push('slim');
     }
+    if (this.ghost) {
+      classes.push('ghost');
+    }
     if (this._confirming) {
       classes.push('confirming');
     }
@@ -294,12 +310,21 @@ export class TButt extends LitElement {
 
   render() {
     if (this.href) {
-      return html`<a class="${this._getClasses()}" href=${this.href} target=${this.target || undefined} @click=${this._handleClick}>
-        ${this._confirming ? html`<span class="confirm-text">${this.confirmText}</span>` : html`<slot></slot>`}
+      return html`<a
+        class="${this._getClasses()}"
+        href=${this.href}
+        target=${this.target || undefined}
+        @click=${this._handleClick}
+      >
+        ${this._confirming
+          ? html`<span class="confirm-text">${this.confirmText}</span>`
+          : html`<slot></slot>`}
       </a>`;
     }
     return html`<button class="${this._getClasses()}" @click=${this._handleClick}>
-      ${this._confirming ? html`<span class="confirm-text">${this.confirmText}</span>` : html`<slot></slot>`}
+      ${this._confirming
+        ? html`<span class="confirm-text">${this.confirmText}</span>`
+        : html`<slot></slot>`}
     </button>`;
   }
 }
