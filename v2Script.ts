@@ -92,6 +92,7 @@ type FooterElement = HTMLElement & {
   markerDialogInitialTime?: number;
   markerDialogSuggestedName?: string;
   openMarkerDialogForEdit?: (markerData: Partial<TroffMarker>) => void;
+  openMarkerDialog?: () => void;
 };
 
 type ImportExportDialogElement = HTMLElement & {
@@ -1760,6 +1761,16 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.markerDialogInitialTime = getActiveMedia().currentTime || 0;
       footer.markerDialogSuggestedName = `marker nr ${existingMarkers.length + 1}`;
     });
+
+    // The video player's add-marker button opens the footer's marker dialog
+    // (create mode) — guarded so a footer without openMarkerDialog is ignored.
+    if (videoPlayer) {
+      videoPlayer.addEventListener('video-marker-add-requested', () => {
+        if (footer?.openMarkerDialog) {
+          footer.openMarkerDialog();
+        }
+      });
+    }
 
     footer.addEventListener('marker-updated', (event: any) => {
       // Update the marker in localStorage

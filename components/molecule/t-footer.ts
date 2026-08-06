@@ -174,6 +174,27 @@ export class BottomNav extends LitElement {
     this.showMarkerDropdown = true;
   }
 
+  openMarkerDialog() {
+    this.markerDialogMode = 'create';
+    this.markerDialogData = undefined;
+
+    if (this.showMarkerDropdown) {
+      this.showMarkerDropdown = false;
+      requestAnimationFrame(() => {
+        this.showMarkerDropdown = true;
+      });
+    } else {
+      this.showMarkerDropdown = true;
+    }
+
+    this.dispatchEvent(
+      new CustomEvent('marker-dialog-opened', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _handleMarkerDialogCompleted() {
     this.showMarkerDropdown = false;
   }

@@ -325,4 +325,42 @@ describe('v2Script video playback integration', () => {
 
     expect(videoPlayer.getAttribute('slot')).toBe('video-top');
   });
+
+  it('opens the footer marker dialog when the video player requests add-marker', async () => {
+    // A video is the current (cached) song, so the video player is active.
+    cacheMatchMock.mockResolvedValue(new Response(makeResponseBlob(VIDEO_MIME)));
+    footer.openMarkerDialog = vi.fn();
+
+    await bootApp();
+
+    // Precondition: the video player is active after boot.
+    expect(videoPlayer.hidden).toBe(false);
+
+    // t-video-player dispatches this from its .marker-btn host.
+    videoPlayer.dispatchEvent(
+      new CustomEvent('video-marker-add-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    expect(footer.openMarkerDialog).toHaveBeenCalled();
+  });
+
+  it('ignores video-marker-add-requested when the footer has no openMarkerDialog method', async () => {
+    cacheMatchMock.mockResolvedValue(new Response(makeResponseBlob(VIDEO_MIME)));
+
+    await bootApp();
+
+    // The footer stub has no openMarkerDialog method, so the listener must be
+    // guarded (typeof check) — dispatching must not throw.
+    expect(() => {
+      videoPlayer.dispatchEvent(
+        new CustomEvent('video-marker-add-requested', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }).not.toThrow();
+  });
 });
