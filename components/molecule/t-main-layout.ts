@@ -51,10 +51,12 @@ export class MainLayout extends LitElement {
   render() {
     return html`
       <slot name="header"></slot>
+      <slot name="video-top"></slot>
       <div class="main-content-parent">
         <slot name="song-list"></slot>
         <!-- Left sidebar for current song controls (visible on wide screens) -->
         <aside class="sidebar" aria-label="Current song controls">
+          <slot name="video-sidebar"></slot>
           <slot name="sidebar"></slot>
         </aside>
         <div class="main-content">
