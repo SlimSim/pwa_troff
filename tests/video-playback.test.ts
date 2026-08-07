@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { TroffMarker } from '../types/troff.d.js';
 
 /**
  * Feature spec #32 — v2Script video playback integration.
@@ -69,7 +70,7 @@ function makeResponseBlob(mime: string): Blob {
 
 describe('v2Script video playback integration', () => {
   let domContentLoadedHandler: (() => void) | null;
-  let videoPlayer: HTMLElement;
+  let videoPlayer: HTMLElement & { markers?: TroffMarker[]; startMarkerId?: string };
   let videoElement: HTMLVideoElement;
   let markerSlider: HTMLElement & Record<string, any>;
   let songList: HTMLElement & { visible: boolean; reloadSongs: () => void };
@@ -362,5 +363,27 @@ describe('v2Script video playback integration', () => {
         })
       );
     }).not.toThrow();
+  });
+
+  it('syncs the video player markers and startMarkerId from the marker slider after selecting a song', async () => {
+    cacheMatchMock.mockResolvedValue(new Response(makeResponseBlob(VIDEO_MIME)));
+
+    await bootApp();
+
+    // Precondition: nothing synced before a song is selected.
+    expect(videoPlayer.markers).toBeUndefined();
+
+    selectSong(TEST_SONG_KEY);
+    await new Promise((r) => setTimeout(r, 0));
+
+    // v2Script's updateMarkerSlider feeds the video player (a "dumb" frame)
+    // the SAME markers it configured on the marker slider, plus the slider's
+    // current startMarkerId. The marker-name labels in the fullscreen overlay
+    // are then derived from these two properties.
+    expect(videoPlayer.markers).toEqual([
+      { id: 'markerNr0', name: 'Start', time: 0, info: '', color: 'None' },
+      { id: 'markerNr1', name: 'End', time: 120, info: '', color: 'None' },
+    ]);
+    expect(videoPlayer.startMarkerId).toBe(markerSlider.startMarkerId);
   });
 });

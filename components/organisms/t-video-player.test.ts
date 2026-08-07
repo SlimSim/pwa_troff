@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TVideoPlayer } from './t-video-player.js';
+import type { TroffMarker } from '../../types/troff.js';
 
 /**
  * Feature spec #32 (round 3): `t-video-player` is a dumb frame that hosts a
@@ -894,5 +895,214 @@ describe('t-video-player', () => {
     // The pause branch is unchanged: controls stay visible so the user can
     // resume playback.
     expectButtonsClass(el, 'controls-hidden', false);
+  });
+
+  // ---- Round 7: marker-name labels above the marker-navigation buttons ------
+  //
+  // Feature: `t-video-player` is a "dumb" frame and receives the current
+  // song's markers + start marker via two NEW Lit properties (`markers:
+  // TroffMarker[]` and `startMarkerId: string`), synced from `t-marker-slider`
+  // by v2Script's `updateMarkerSlider`. It renders a small text label ABOVE
+  // each of the three marker-navigation buttons (`.replay-btn`,
+  // `.prev-marker-btn`, `.next-marker-btn`) showing the NAME of the marker that
+  // button will take the user to:
+  //   - Replay → the CURRENT start marker: markers[index].name
+  //   - Prev   → the marker BEFORE the start marker: markers[clampedIndex(i-1)]
+  //   - Next   → the marker AFTER the start marker: markers[clampedIndex(i+1)]
+  // where index = markers.findIndex(m => m.id === startMarkerId) and the
+  // clamping mirrors t-marker-slider's getPreviousMarker/getNextMarker (first
+  // clamps to itself, last clamps to itself).
+  //
+  // Rendering contract:
+  // - Labels are `<span class="marker-label ...">` inside `.video-frame`.
+  // - Class names: `.prev-marker-label`, `.replay-label`, `.next-marker-label`.
+  // - Each label carries the SAME visibility classes as its button:
+  //   `not-fullscreen` (when not fullscreen) + `controls-hidden` (when hidden).
+  // - Labels are informational: pointer-events: none (never intercept clicks).
+  // - If index === -1 (no markers / unknown startMarkerId) or the marker's
+  //   name is empty, NO label is rendered.
+  //
+  // The properties are set on the instance directly (as v2Script will do).
+
+  const mkMarker = (id: string, name: string, time: number): TroffMarker => ({
+    color: 'None',
+    id,
+    info: '',
+    name,
+    time,
+  });
+
+  /** The spec's [A@0, B@10, C@20] fixture — ids differ from names on purpose. */
+  const abcMarkers = (): TroffMarker[] => [
+    mkMarker('mA', 'A', 0),
+    mkMarker('mB', 'B', 10),
+    mkMarker('mC', 'C', 20),
+  ];
+
+  /**
+   * Sets the feature's input properties directly on the instance (the way
+   * v2Script's updateMarkerSlider will feed the dumb frame). The properties do
+   * not exist on the class yet, so the element is widened for the assignment.
+   */
+  const setMarkerProps = (el: TVideoPlayer, markers: TroffMarker[], startMarkerId: string) => {
+    const withProps = el as TVideoPlayer & { markers: TroffMarker[]; startMarkerId: string };
+    withProps.markers = markers;
+    withProps.startMarkerId = startMarkerId;
+  };
+
+  /** Returns a label element, throwing a descriptive error if it is not rendered. */
+  const getLabel = (el: TVideoPlayer, selector: string): HTMLElement => {
+    const label = el.shadowRoot?.querySelector(selector);
+    if (!label) {
+      throw new Error(`Expected shadow root to contain <${selector}>`);
+    }
+    return label as HTMLElement;
+  };
+
+  const labelSelectors = [
+    '.replay-label',
+    '.prev-marker-label',
+    '.next-marker-label',
+  ] as const;
+
+  it('renders the start marker name above replay and neighbour names above prev/next', async () => {
+    const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mB');
+    await el.updateComplete;
+
+    // Replay shows the CURRENT start marker's name (B).
+    expect(getLabel(el, '.replay-label').textContent).toBe('B');
+    // Prev/next show the names of the neighbouring markers.
+    expect(getLabel(el, '.prev-marker-label').textContent).toBe('A');
+    expect(getLabel(el, '.next-marker-label').textContent).toBe('C');
+  });
+
+  it('clamps the prev label to the first marker when the start marker is the first', async () => {
+    const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mA');
+    await el.updateComplete;
+
+    expect(getLabel(el, '.replay-label').textContent).toBe('A');
+    // index === 0 → prev clamps to index 0 (mirrors marker-slider
+    // getPreviousMarker): the prev label repeats the first marker's name.
+    expect(getLabel(el, '.prev-marker-label').textContent).toBe('A');
+    expect(getLabel(el, '.next-marker-label').textContent).toBe('B');
+  });
+
+  it('clamps the next label to the last marker when the start marker is the last', async () => {
+    const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mC');
+    await el.updateComplete;
+
+    expect(getLabel(el, '.replay-label').textContent).toBe('C');
+    expect(getLabel(el, '.prev-marker-label').textContent).toBe('B');
+    // index === length-1 → next clamps to the last marker (mirrors
+    // marker-slider getNextMarker): the next label repeats the last marker's name.
+    expect(getLabel(el, '.next-marker-label').textContent).toBe('C');
+  });
+
+  it('renders no marker labels when there are no markers or the startMarkerId is unknown', async () => {
+    const { el } = createPlayerWithVideo();
+
+    // Positive control: with valid props the labels DO render (this assertion
+    // is what fails RED today — the feature does not exist yet).
+    setMarkerProps(el, abcMarkers(), 'mB');
+    await el.updateComplete;
+    expect(getLabel(el, '.replay-label')).not.toBeNull();
+
+    // Empty markers → no labels at all.
+    setMarkerProps(el, [], 'mB');
+    await el.updateComplete;
+    expect(el.shadowRoot?.querySelector('.replay-label')).toBeNull();
+    expect(el.shadowRoot?.querySelector('.prev-marker-label')).toBeNull();
+    expect(el.shadowRoot?.querySelector('.next-marker-label')).toBeNull();
+
+    // Markers exist but the startMarkerId matches none → no labels either.
+    setMarkerProps(el, abcMarkers(), 'unknown-marker-id');
+    await el.updateComplete;
+    expect(el.shadowRoot?.querySelector('.replay-label')).toBeNull();
+    expect(el.shadowRoot?.querySelector('.prev-marker-label')).toBeNull();
+    expect(el.shadowRoot?.querySelector('.next-marker-label')).toBeNull();
+  });
+
+  it('omits the label for a marker whose name is empty', async () => {
+    const { el } = createPlayerWithVideo();
+
+    // Positive control: a named start marker renders its label (RED today).
+    setMarkerProps(el, abcMarkers(), 'mB');
+    await el.updateComplete;
+    expect(getLabel(el, '.replay-label')).not.toBeNull();
+
+    // mB has an empty name → no replay label, while the (named) neighbours
+    // still render.
+    setMarkerProps(
+      el,
+      [mkMarker('mA', 'A', 0), mkMarker('mB', '', 10), mkMarker('mC', 'C', 20)],
+      'mB'
+    );
+    await el.updateComplete;
+    expect(el.shadowRoot?.querySelector('.replay-label')).toBeNull();
+    expect(getLabel(el, '.prev-marker-label').textContent).toBe('A');
+    expect(getLabel(el, '.next-marker-label').textContent).toBe('C');
+  });
+
+  it('marker labels carry the same visibility classes as their buttons', async () => {
+    const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mB');
+    await el.updateComplete;
+
+    const assertLabelsClass = (className: string, present: boolean) => {
+      for (const selector of labelSelectors) {
+        expect(
+          getLabel(el, selector).classList.contains(className),
+          `label ${selector} should${present ? '' : ' not'} carry "${className}"`
+        ).toBe(present);
+      }
+    };
+
+    // Outside fullscreen every label carries not-fullscreen and never
+    // controls-hidden (mirrors the buttons).
+    assertLabelsClass('not-fullscreen', true);
+    assertLabelsClass('controls-hidden', false);
+
+    // Entering fullscreen strips not-fullscreen from the labels too.
+    enterFullscreen(el);
+    await el.updateComplete;
+    assertLabelsClass('not-fullscreen', false);
+
+    // A frame tap that hides the controls adds controls-hidden to the labels.
+    clickFrame(el);
+    await el.updateComplete;
+    assertLabelsClass('controls-hidden', true);
+
+    // A second tap restores them.
+    clickFrame(el);
+    await el.updateComplete;
+    assertLabelsClass('controls-hidden', false);
+  });
+
+  it('marker labels are plain informational spans (not t-butt) with pointer-events: none', async () => {
+    const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mB');
+    await el.updateComplete;
+
+    const replayLabel = getLabel(el, '.replay-label');
+    // A plain text span — NOT a t-butt control host.
+    expect(replayLabel.tagName.toLowerCase()).toBe('span');
+    expect(replayLabel.classList.contains('marker-label')).toBe(true);
+    expect(replayLabel.querySelector('t-butt')).toBeNull();
+
+    // The label lives inside .video-frame (with the buttons).
+    const frame = el.shadowRoot?.querySelector('.video-frame');
+    expect(frame?.contains(replayLabel)).toBe(true);
+
+    // pointer-events: none — happy-dom's getComputedStyle does not reliably
+    // resolve shadow-DOM adopted stylesheets, so only assert the strict value
+    // when the environment reports a non-empty one; the class + span contract
+    // above is the stable part.
+    const computedPointerEvents = window.getComputedStyle(replayLabel).pointerEvents;
+    if (computedPointerEvents) {
+      expect(computedPointerEvents).toBe('none');
+    }
   });
 });

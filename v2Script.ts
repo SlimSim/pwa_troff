@@ -138,6 +138,11 @@ type MarkerToolsDialogElement = HTMLElement & {
   ): void;
 };
 
+interface VideoPlayerWithMarkerProps {
+  markers: TroffMarker[];
+  startMarkerId: string;
+}
+
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
   console.log('updateMarkerSlider -> setAudioTime:', setAudioTime);
@@ -157,6 +162,16 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     }
 
     markerSlider.markers = markers;
+    const videoPlayerEl = document.getElementById('videoPlayer') as
+      | (HTMLElement & VideoPlayerWithMarkerProps)
+      | null;
+    // Only feed the video player when it is actually shown (a video song is
+    // loaded): it starts hidden and gains `hidden = false` once the video
+    // finishes loading.
+    if (videoPlayerEl && !videoPlayerEl.hidden) {
+      videoPlayerEl.markers = markers;
+      videoPlayerEl.startMarkerId = markerSlider.startMarkerId;
+    }
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
@@ -175,6 +190,13 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];
+    const videoPlayerEl = document.getElementById('videoPlayer') as
+      | (HTMLElement & VideoPlayerWithMarkerProps)
+      | null;
+    if (videoPlayerEl && !videoPlayerEl.hidden) {
+      videoPlayerEl.markers = [];
+      videoPlayerEl.startMarkerId = '';
+    }
     markerSlider.min = 0;
     markerSlider.max = 0;
     markerSlider.unit = '';

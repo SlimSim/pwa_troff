@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import type { TroffMarker } from '../../types/troff.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 
@@ -74,6 +75,34 @@ export class TVideoPlayer extends LitElement {
       right: calc(30% - 8px);
       transform: translateX(50%);
     }
+    .marker-label {
+      position: absolute;
+      bottom: 40px;
+      z-index: 1;
+      padding: 2px 8px;
+      border-radius: var(--button-border-radius);
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .marker-label.controls-hidden,
+    .marker-label.not-fullscreen {
+      opacity: 0;
+    }
+    .prev-marker-label {
+      left: 8px;
+    }
+    .replay-label {
+      left: calc(30% - 8px);
+      transform: translateX(-50%);
+    }
+    .next-marker-label {
+      right: calc(30% - 8px);
+      transform: translateX(50%);
+    }
   `;
 
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
@@ -82,6 +111,9 @@ export class TVideoPlayer extends LitElement {
   @state() private _isFullscreen = false;
   @state() private _isPlaying = false;
   @state() private _controlsVisible = true;
+
+  @property({ type: Array }) markers: TroffMarker[] = [];
+  @property({ type: String }) startMarkerId = '';
 
   private _controlsTimer?: ReturnType<typeof setTimeout>;
 
@@ -230,6 +262,28 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
+  private get _markerIndex(): number {
+    return this.markers.findIndex((m) => m.id === this.startMarkerId);
+  }
+
+  private get _replayMarkerName(): string {
+    const index = this._markerIndex;
+    return index === -1 ? '' : this.markers[index].name;
+  }
+
+  private get _prevMarkerName(): string {
+    const index = this._markerIndex;
+    if (index === -1) return '';
+    return this.markers[index === 0 ? 0 : index - 1].name;
+  }
+
+  private get _nextMarkerName(): string {
+    const index = this._markerIndex;
+    if (index === -1) return '';
+    return this.markers[index === this.markers.length - 1 ? this.markers.length - 1 : index + 1]
+      .name;
+  }
+
   render() {
     return html`
       <div class="video-frame" @click=${this._onFrameClick}>
@@ -283,6 +337,9 @@ export class TVideoPlayer extends LitElement {
         >
           <t-icon name="reload"></t-icon>
         </t-butt>
+        ${this._replayMarkerName
+          ? html`<span class="marker-label replay-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}">${this._replayMarkerName}</span>`
+          : ''}
         <t-butt
           class="video-btn prev-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
             ._controlsVisible
@@ -294,6 +351,9 @@ export class TVideoPlayer extends LitElement {
         >
           <t-icon name="previous-marker"></t-icon>
         </t-butt>
+        ${this._prevMarkerName
+          ? html`<span class="marker-label prev-marker-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}">${this._prevMarkerName}</span>`
+          : ''}
         <t-butt
           class="video-btn next-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
             ._controlsVisible
@@ -305,6 +365,9 @@ export class TVideoPlayer extends LitElement {
         >
           <t-icon name="next-marker"></t-icon>
         </t-butt>
+        ${this._nextMarkerName
+          ? html`<span class="marker-label next-marker-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}">${this._nextMarkerName}</span>`
+          : ''}
       </div>
     `;
   }
