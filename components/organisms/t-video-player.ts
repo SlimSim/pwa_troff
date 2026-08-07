@@ -124,6 +124,14 @@ export class TVideoPlayer extends LitElement {
       right: calc(30% - 8px);
       transform: translateX(50%);
     }
+
+    .video-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      touch-action: none;
+    }
   `;
 
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
@@ -131,6 +139,16 @@ export class TVideoPlayer extends LitElement {
   private static readonly SCRUB_SECONDS_PER_PX = 0.05;
   private static readonly SPEED_PX_PER_STEP = 50;
   private static readonly SPEED_STEP_PERCENT = 5;
+
+  private static readonly DRAG_THRESHOLD_PX = 5;
+
+  private _dragPointerId: number | null = null;
+  private _dragStartX = 0;
+  private _dragStartY = 0;
+  private _dragLastX = 0;
+  private _dragLastY = 0;
+  private _dragAxis: 'horizontal' | 'vertical' | null = null;
+  private _dragMoved = false;
 
   @state() private _mirrored = false;
   @state() private _isFullscreen = false;
@@ -295,6 +313,10 @@ export class TVideoPlayer extends LitElement {
   }
 
   private _onFrameClick(event: MouseEvent) {
+    if (this._dragMoved) {
+      this._dragMoved = false;
+      return;
+    }
     const path = event.composedPath();
     if (path.some((el) => el instanceof Element && el.tagName.toLowerCase() === 't-butt')) {
       // Interacting with a control button resets the idle timer.
@@ -307,6 +329,89 @@ export class TVideoPlayer extends LitElement {
     } else {
       this._clearControlsTimer();
     }
+  }
+
+  private _onFramePointerDown(event: PointerEvent) {
+    const path = event.composedPath();
+    if (path.some((el) => el instanceof Element && el.tagName.toLowerCase() === 't-butt')) {
+      return; // let button clicks behave normally
+    }
+    if (event.button !== 0) return; // primary button / touch only
+
+    this._dragPointerId = event.pointerId;
+    this._dragStartX = this._dragLastX = event.clientX;
+    this._dragStartY = this._dragLastY = event.clientY;
+    this._dragAxis = null;
+    this._dragMoved = false;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  private _onFramePointerMove(event: PointerEvent) {
+    if (this._dragPointerId === null || event.pointerId !== this._dragPointerId) return;
+
+    const deltaX = event.clientX - this._dragLastX;
+    const deltaY = event.clientY - this._dragLastY;
+
+    if (!this._dragAxis) {
+      const totalX = event.clientX - this._dragStartX;
+      const totalY = event.clientY - this._dragStartY;
+      if (
+        Math.abs(totalX) < TVideoPlayer.DRAG_THRESHOLD_PX &&
+        Math.abs(totalY) < TVideoPlayer.DRAG_THRESHOLD_PX
+      ) {
+        return; // not enough movement yet to decide the axis
+      }
+      this._dragAxis = Math.abs(totalX) > Math.abs(totalY) ? 'horizontal' : 'vertical';
+      this._dragMoved = true; // suppress the click-to-toggle-controls on pointerup
+    }
+
+    this._dragLastX = event.clientX;
+    this._dragLastY = event.clientY;
+
+    const video = this.querySelector('video');
+    if (!video) return;
+
+    if (this._dragAxis === 'horizontal') {
+      const duration =
+        Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Infinity;
+      const newTime = Math.min(
+        Math.max(0, video.currentTime + deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
+        duration
+      );
+      video.currentTime = newTime;
+      this.dispatchEvent(
+        new CustomEvent('video-scrub-requested', {
+          detail: { time: newTime },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      const scrubLabel =
+        Number.isFinite(duration) && duration > 0
+          ? `${formatDuration(newTime)} / ${formatDuration(duration)}`
+          : formatDuration(newTime);
+      this._showGestureFeedback('time', scrubLabel);
+    } else {
+      const steps = deltaY / TVideoPlayer.SPEED_PX_PER_STEP;
+      const newSpeed = Math.min(
+        Math.max(50, this.speed - steps * TVideoPlayer.SPEED_STEP_PERCENT),
+        200
+      );
+      this.dispatchEvent(
+        new CustomEvent('speed-changed', {
+          detail: { speed: newSpeed },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      this._showGestureFeedback('speed', `${newSpeed}%`);
+    }
+  }
+
+  private _onFramePointerUp(event: PointerEvent) {
+    if (this._dragPointerId !== event.pointerId) return;
+    this._dragPointerId = null;
+    this._dragAxis = null;
   }
 
   private _onFrameWheel(event: WheelEvent) {
@@ -386,7 +491,15 @@ export class TVideoPlayer extends LitElement {
 
   render() {
     return html`
-      <div class="video-frame" @click=${this._onFrameClick} @wheel=${this._onFrameWheel}>
+      <div
+        class="video-frame"
+        @click=${this._onFrameClick}
+        @wheel=${this._onFrameWheel}
+        @pointerdown=${this._onFramePointerDown}
+        @pointermove=${this._onFramePointerMove}
+        @pointerup=${this._onFramePointerUp}
+        @pointercancel=${this._onFramePointerUp}
+      >
         <slot></slot>
         ${this._gestureIcon && this._gestureText
           ? html`
@@ -446,7 +559,13 @@ export class TVideoPlayer extends LitElement {
           <t-icon name="reload"></t-icon>
         </t-butt>
         ${this._replayMarkerName
-          ? html`<span class="marker-label replay-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}">${this._replayMarkerName}</span>`
+          ? html`<span
+              class="marker-label replay-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+                ._controlsVisible
+                ? ''
+                : 'controls-hidden'}"
+              >${this._replayMarkerName}</span
+            >`
           : ''}
         <t-butt
           class="video-btn prev-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
@@ -460,7 +579,12 @@ export class TVideoPlayer extends LitElement {
           <t-icon name="previous-marker"></t-icon>
         </t-butt>
         ${this._prevMarkerName
-          ? html`<span class="marker-label prev-marker-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}">${this._prevMarkerName}</span>`
+          ? html`<span
+              class="marker-label prev-marker-label ${this._isFullscreen
+                ? ''
+                : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+              >${this._prevMarkerName}</span
+            >`
           : ''}
         <t-butt
           class="video-btn next-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
@@ -474,7 +598,12 @@ export class TVideoPlayer extends LitElement {
           <t-icon name="next-marker"></t-icon>
         </t-butt>
         ${this._nextMarkerName
-          ? html`<span class="marker-label next-marker-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}">${this._nextMarkerName}</span>`
+          ? html`<span
+              class="marker-label next-marker-label ${this._isFullscreen
+                ? ''
+                : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+              >${this._nextMarkerName}</span
+            >`
           : ''}
       </div>
     `;
