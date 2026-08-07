@@ -296,6 +296,138 @@ export class MarkerSlider extends LitElement {
     return Math.min(this.max, maxValue);
   }
 
+  /**
+   * Returns the marker index and marker object for a given marker ID
+   * @param markerId - The ID of the marker to find
+   * @returns Object containing the index and marker, or null if not found
+   */
+  getMarkerIndexAndObject(
+    markerId: string,
+    stopMarker: boolean = false
+  ): { index: number; marker: TroffMarker } | null {
+    const index = this.markers.findIndex((marker) =>
+      stopMarker ? marker.id + 'S' === markerId : marker.id === markerId
+    );
+    if (index === -1) {
+      return null;
+    }
+    return {
+      index: index,
+      marker: this.markers[index],
+    };
+  }
+
+  /**
+   * Returns the next marker object for a given marker ID
+   * @param markerId - The ID of the marker to find
+   * @returns The marker, or null if not found
+   */
+  getNextMarker(currentIndex: number) {
+    const nextIndex =
+      currentIndex === this.markers.length - 1 ? this.markers.length - 1 : currentIndex + 1;
+    return this.markers[nextIndex];
+  }
+
+  /**
+   * Returns the previous marker object for a given marker ID
+   * @param markerId - The ID of the marker to find
+   * @returns The marker, or null if not found
+   */
+  getPreviousMarker(currentIndex: number) {
+    const prevIndex = currentIndex === 0 ? 0 : currentIndex - 1;
+    return this.markers[prevIndex];
+  }
+
+  /**
+   * Selects the next marker in the timeline
+   */
+  selectNextMarker() {
+    if (this.markers.length === 0) return;
+
+    const { index: currentIndex, marker: currentMarker } = this.getMarkerIndexAndObject(
+      this.startMarkerId,
+      false
+    ) || { index: 0, marker: null };
+
+    // If no current marker found or at last marker, select first
+    const nextMarker = this.getNextMarker(currentIndex);
+
+    this.startMarkerId = nextMarker.id;
+
+    this._dispatchValueChanged();
+    this.dispatchEvent(
+      new CustomEvent('set-start-marker', {
+        detail: { markerId: nextMarker.id },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    console.log('playback start:', this.getPlaybackStart());
+
+    // Find corresponding stop marker if it exists
+    const currentStopMarkerId = this.stopMarkerId;
+    const { index: currentStopMarkerIndex, marker: currentStopMarker } =
+      this.getMarkerIndexAndObject(currentStopMarkerId, true) || { index: -1, marker: null };
+
+    if (currentStopMarker) {
+      const nextStopMarker = this.getNextMarker(currentStopMarkerIndex);
+      this.stopMarkerId = nextStopMarker.id + 'S';
+
+      this.dispatchEvent(
+        new CustomEvent('set-stop-marker', {
+          detail: { markerId: nextStopMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
+  /**
+   * Selects the previous marker in the timeline
+   */
+  selectPreviousMarker() {
+    if (this.markers.length === 0) return;
+
+    const { index: currentIndex, marker: currentMarker } = this.getMarkerIndexAndObject(
+      this.startMarkerId,
+      false
+    ) || { index: 0, marker: null };
+
+    const prevMarker = this.getPreviousMarker(currentIndex);
+
+    this.startMarkerId = prevMarker.id;
+
+    this.value = this.getPlaybackStart();
+    this._dispatchValueChanged();
+    this.dispatchEvent(
+      new CustomEvent('set-start-marker', {
+        detail: { markerId: prevMarker.id },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    // Find corresponding stop marker if it exists
+    const currentStopMarkerId = this.stopMarkerId;
+    const { index: currentStopMarkerIndex, marker: currentStopMarker } =
+      this.getMarkerIndexAndObject(currentStopMarkerId, true) || { index: -1, marker: null };
+
+    if (currentStopMarker) {
+      // const prevStopIndex = prevIndex === 0 ? 0 : prevIndex - 1;
+      const prevStopMarker = this.getPreviousMarker(currentStopMarkerIndex);
+      this.stopMarkerId = prevStopMarker.id + 'S';
+
+      this.dispatchEvent(
+        new CustomEvent('set-stop-marker', {
+          detail: { markerId: prevStopMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
   private _getFillColorMode(): FillColorMode {
     const mode = this.fillColor?.trim().toLowerCase();
     if (mode === 'through' || mode === 'marker') {

@@ -57,6 +57,23 @@ export class TVideoPlayer extends LitElement {
       bottom: 8px;
       right: 8px;
     }
+    .replay-btn {
+      top: auto;
+      bottom: 8px;
+      left: calc(30% - 8px);
+      transform: translateX(-50%);
+    }
+    .prev-marker-btn {
+      top: auto;
+      bottom: 8px;
+      left: 8px;
+    }
+    .next-marker-btn {
+      top: auto;
+      bottom: 8px;
+      right: calc(30% - 8px);
+      transform: translateX(50%);
+    }
   `;
 
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
@@ -140,7 +157,9 @@ export class TVideoPlayer extends LitElement {
     } else {
       // iOS Safari fallback (webkitEnterFullscreen is a legacy video-only API)
       const video = this.querySelector('video');
-      (video as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null)?.webkitEnterFullscreen?.();
+      (
+        video as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null
+      )?.webkitEnterFullscreen?.();
     }
   }
 
@@ -163,6 +182,33 @@ export class TVideoPlayer extends LitElement {
   private _onMarkerClick() {
     this.dispatchEvent(
       new CustomEvent('video-marker-add-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _onReplayClick() {
+    this.dispatchEvent(
+      new CustomEvent('video-replay-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _onPrevMarkerClick() {
+    this.dispatchEvent(
+      new CustomEvent('video-prev-marker-requested', {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _onNextMarkerClick() {
+    this.dispatchEvent(
+      new CustomEvent('video-next-marker-requested', {
         bubbles: true,
         composed: true,
       })
@@ -205,7 +251,10 @@ export class TVideoPlayer extends LitElement {
           <t-icon name="${this._isFullscreen ? 'resize-small' : 'resize-full'}"></t-icon>
         </t-butt>
         <t-butt
-          class="video-btn play-pause-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+          class="video-btn play-pause-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+            ._controlsVisible
+            ? ''
+            : 'controls-hidden'}"
           slim
           title="Play/Pause"
           @click=${this._onPlayPauseClick}
@@ -213,12 +262,48 @@ export class TVideoPlayer extends LitElement {
           <t-icon name="${this._isPlaying ? 'pause' : 'play'}"></t-icon>
         </t-butt>
         <t-butt
-          class="video-btn marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+          class="video-btn marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+            ._controlsVisible
+            ? ''
+            : 'controls-hidden'}"
           slim
           title="Add marker"
           @click=${this._onMarkerClick}
         >
           <t-icon name="marker-plus"></t-icon>
+        </t-butt>
+        <t-butt
+          class="video-btn replay-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+            ._controlsVisible
+            ? ''
+            : 'controls-hidden'}"
+          slim
+          title="Replay"
+          @click=${this._onReplayClick}
+        >
+          <t-icon name="reload"></t-icon>
+        </t-butt>
+        <t-butt
+          class="video-btn prev-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+            ._controlsVisible
+            ? ''
+            : 'controls-hidden'}"
+          slim
+          title="Previous marker"
+          @click=${this._onPrevMarkerClick}
+        >
+          <t-icon name="previous-marker"></t-icon>
+        </t-butt>
+        <t-butt
+          class="video-btn next-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+            ._controlsVisible
+            ? ''
+            : 'controls-hidden'}"
+          slim
+          title="Next marker"
+          @click=${this._onNextMarkerClick}
+        >
+          <t-icon name="next-marker"></t-icon>
         </t-butt>
       </div>
     `;

@@ -228,6 +228,9 @@ describe('t-video-player', () => {
       { selector: '.mirror-btn', positionClass: 'mirror-btn' },
       { selector: '.play-pause-btn', positionClass: 'play-pause-btn' },
       { selector: '.marker-btn', positionClass: 'marker-btn' },
+      { selector: '.replay-btn', positionClass: 'replay-btn' },
+      { selector: '.prev-marker-btn', positionClass: 'prev-marker-btn' },
+      { selector: '.next-marker-btn', positionClass: 'next-marker-btn' },
     ];
     for (const { selector, positionClass } of buttonSpecs) {
       const button = frame?.querySelector(selector);
@@ -372,7 +375,7 @@ describe('t-video-player', () => {
     const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
     expect(frame).not.toBeNull();
 
-    const buttonSelectors = ['.mirror-btn', '.fullscreen-btn', '.play-pause-btn', '.marker-btn'];
+    const buttonSelectors = ['.mirror-btn', '.fullscreen-btn', '.play-pause-btn', '.marker-btn', '.replay-btn', '.prev-marker-btn', '.next-marker-btn'];
 
     // Clicking the frame (not a button) hides the controls.
     frame?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
@@ -395,7 +398,7 @@ describe('t-video-player', () => {
 
     const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
     expect(frame).not.toBeNull();
-    const buttonSelectors = ['.mirror-btn', '.fullscreen-btn', '.play-pause-btn', '.marker-btn'];
+    const buttonSelectors = ['.mirror-btn', '.fullscreen-btn', '.play-pause-btn', '.marker-btn', '.replay-btn', '.prev-marker-btn', '.next-marker-btn'];
 
     // Hide the controls first, so we can prove a button click does NOT restore
     // them (i.e. the frame handler ignores clicks whose composedPath includes a
@@ -481,7 +484,7 @@ describe('t-video-player', () => {
   };
 
   /** Dispatches the video's pause event. */
-  const pauseVideo = (video: HTMLVideoElement) => {
+    const pauseVideo = (video: HTMLVideoElement) => {
     video.dispatchEvent(new Event('pause'));
   };
 
@@ -501,24 +504,72 @@ describe('t-video-player', () => {
     }
   };
 
-  it('play-pause and marker buttons carry not-fullscreen outside fullscreen; mirror and fullscreen buttons do not', async () => {
+  // ---- Round 6: marker navigation buttons (replay, previous, next) ----
+
+  it('replay button dispatches a video-replay-requested event from the host', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
-    expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(true);
-    // These two are useful in normal (windowed) mode too, so they never fade out.
-    expect(getButton(el, '.mirror-btn').classList.contains('not-fullscreen')).toBe(false);
-    expect(getButton(el, '.fullscreen-btn').classList.contains('not-fullscreen')).toBe(false);
+    const replaySpy = vi.fn();
+    el.addEventListener('video-replay-requested', replaySpy);
+
+    getButton(el, '.replay-btn').click();
+    await el.updateComplete;
+
+    expect(replaySpy).toHaveBeenCalledTimes(1);
+    const event = replaySpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-replay-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(event.target).toBe(el);
   });
 
-  it('entering fullscreen removes not-fullscreen from play-pause and marker buttons', async () => {
+  it('prev-marker button dispatches a video-prev-marker-requested event from the host', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
-    // Precondition: outside fullscreen both buttons carry the class...
+    const prevSpy = vi.fn();
+    el.addEventListener('video-prev-marker-requested', prevSpy);
+
+    getButton(el, '.prev-marker-btn').click();
+    await el.updateComplete;
+
+    expect(prevSpy).toHaveBeenCalledTimes(1);
+    const event = prevSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-prev-marker-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(event.target).toBe(el);
+  });
+
+  it('next-marker button dispatches a video-next-marker-requested event from the host', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const nextSpy = vi.fn();
+    el.addEventListener('video-next-marker-requested', nextSpy);
+
+    getButton(el, '.next-marker-btn').click();
+    await el.updateComplete;
+
+    expect(nextSpy).toHaveBeenCalledTimes(1);
+    const event = nextSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-next-marker-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(event.target).toBe(el);
+  });
+
+  it('entering fullscreen removes not-fullscreen from play-pause, marker, replay, prev-marker and next-marker buttons', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    // Precondition: outside fullscreen all five buttons carry the class...
     expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(true);
     expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(true);
+    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(true);
+    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(true);
+    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(true);
 
     // ...and entering fullscreen strips it.
     enterFullscreen(el);
@@ -526,12 +577,15 @@ describe('t-video-player', () => {
 
     expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(false);
     // Mirror and fullscreen never carry it, in either state.
     expect(getButton(el, '.mirror-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.fullscreen-btn').classList.contains('not-fullscreen')).toBe(false);
   });
 
-  it('leaving fullscreen restores not-fullscreen on play-pause and marker buttons', async () => {
+  it('leaving fullscreen restores not-fullscreen on play-pause, marker, replay, prev-marker and next-marker buttons', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
@@ -539,12 +593,18 @@ describe('t-video-player', () => {
     await el.updateComplete;
     expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(false);
 
     leaveFullscreen(setter);
     await el.updateComplete;
 
     expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(true);
     expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(true);
+    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(true);
+    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(true);
+    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(true);
   });
 
   it('auto-hides the control buttons after idle while fullscreen and playing', async () => {

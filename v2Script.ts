@@ -40,7 +40,12 @@ import {
   getIncrementUntil,
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
-import type { TroffMarker, State, State_WithTime, TroffManualImportExport } from './types/troff.d.js';
+import type {
+  TroffMarker,
+  State,
+  State_WithTime,
+  TroffManualImportExport,
+} from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
@@ -69,7 +74,12 @@ import {
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
-import { setupListeners, teardownListeners, saveSongData, setLiveUpdateCallback } from './utils/firebase-realtime.js';
+import {
+  setupListeners,
+  teardownListeners,
+  saveSongData,
+  setLiveUpdateCallback,
+} from './utils/firebase-realtime.js';
 
 // The media element currently playing (audio singleton, or the #videoElement when
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.
@@ -130,11 +140,10 @@ type MarkerToolsDialogElement = HTMLElement & {
 
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
+  console.log('updateMarkerSlider -> setAudioTime:', setAudioTime);
   const currentSongMetadata = getCurrentSongMetadata();
   const songDuration =
-    getActiveMedia().duration > 0
-      ? getActiveMedia().duration
-      : currentSongMetadata?.duration || 0;
+    getActiveMedia().duration > 0 ? getActiveMedia().duration : currentSongMetadata?.duration || 0;
   if (currentSongMetadata && markerSlider) {
     // Load real markers from current song
     const songKey = getCurrentSongKey();
@@ -152,6 +161,13 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
     if (setAudioTime) {
+      console.log('markerSlider.getPlaybackStart()', markerSlider.getPlaybackStart());
+      console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
+      setTimeout(() => {
+        console.log('markerSlider.getPlaybackStart()', markerSlider.getPlaybackStart());
+        console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
+      }, 30);
+
       getActiveMedia().currentTime = markerSlider.getPlaybackStart();
     }
 
@@ -515,18 +531,18 @@ document.addEventListener('DOMContentLoaded', () => {
           // Find closest markers for the times
           const startTime = stateWithTime.currentMarkerTime ?? 0;
           const stopTime = stateWithTime.currentStopMarkerTime ?? 0;
-          
+
           let startMarkerId = finalMarkers[0]?.id || 'markerNr0';
           let stopMarkerId = finalMarkers[1]?.id || 'markerNr1';
-          
+
           let minStartDiff = Infinity;
           let minStopDiff = Infinity;
-          
+
           for (const marker of finalMarkers) {
             const markerTime = Number(marker.time);
             const startDiff = Math.abs(markerTime - startTime);
             const stopDiff = Math.abs(markerTime - stopTime);
-            
+
             if (startDiff < minStartDiff) {
               minStartDiff = startDiff;
               startMarkerId = marker.id;
@@ -536,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
               stopMarkerId = marker.id;
             }
           }
-          
+
           const state: State = {
             name: stateWithTime.name || 'Imported State',
             currentMarker: startMarkerId,
@@ -554,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
             volumeBar: stateWithTime.volumeBar ?? 75,
             waitBetweenLoops: stateWithTime.waitBetweenLoops ?? 0,
           };
-          
+
           return JSON.stringify(state);
         });
 
@@ -562,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'markers', finalMarkers);
         nDB.setOnSong(songKey, 'aStates', newStates);
         nDB.setOnSong(songKey, 'info', data.strSongInfo || '');
-        
+
         // Update marker slider
         updateMarkerSlider(markerSlider!, false);
 
@@ -608,7 +624,9 @@ document.addEventListener('DOMContentLoaded', () => {
       't-marker-tools-dialog'
     ) as MarkerToolsDialogElement | null;
     if (!markerToolsDialog) {
-      markerToolsDialog = document.createElement('t-marker-tools-dialog') as MarkerToolsDialogElement;
+      markerToolsDialog = document.createElement(
+        't-marker-tools-dialog'
+      ) as MarkerToolsDialogElement;
       document.body.append(markerToolsDialog);
     }
 
@@ -769,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markers.sort((a, b) => markerToNumericTime(a.time) - markerToNumericTime(b.time));
 
-    const knownMarkerIds = new Set(markers.map(m => String(m.id)));
+    const knownMarkerIds = new Set(markers.map((m) => String(m.id)));
 
     // Preserve existing start marker if it still exists (unless forced)
     if (!force && songData.currentStartMarker && knownMarkerIds.has(songData.currentStartMarker)) {
@@ -782,7 +800,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Preserve existing stop marker if it still exists (unless forced)
     const stopIdWithoutS = songData.currentStopMarker?.replace(/S$/, '');
-    if (!force && songData.currentStopMarker && stopIdWithoutS && knownMarkerIds.has(stopIdWithoutS)) {
+    if (
+      !force &&
+      songData.currentStopMarker &&
+      stopIdWithoutS &&
+      knownMarkerIds.has(stopIdWithoutS)
+    ) {
       markerSlider.stopMarkerId = songData.currentStopMarker;
     } else {
       const lastMarkerId = String(markers[markers.length - 1].id);
@@ -926,7 +949,8 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
-    settingsPanel.playGoToMarker = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
+    settingsPanel.playGoToMarker =
+      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -995,7 +1019,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
         currentSongControls.stopAfterDisabled = !globalStopAfterOn;
       } else {
-        currentSongControls.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+        currentSongControls.stopAfterDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
       }
       currentSongControls.stopAfterValue = getStopAfter(songData);
       if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
@@ -1039,7 +1064,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalWaitBetweenOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON') ?? true;
         currentSongControls.disableWaitBetween = !globalWaitBetweenOn;
       } else {
-        currentSongControls.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+        currentSongControls.disableWaitBetween =
+          !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
       }
     } else {
       currentSongControls.startBeforeValue = 0;
@@ -1228,10 +1254,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pendingPlaybackStart = window.setTimeout(() => {
       pendingPlaybackStart = undefined;
-      getActiveMedia().play().catch((error) => {
-        clearPendingPlaybackStart();
-        console.error(error);
-      });
+      getActiveMedia()
+        .play()
+        .catch((error) => {
+          clearPendingPlaybackStart();
+          console.error(error);
+        });
     }, delay);
   };
 
@@ -1361,15 +1389,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (setting === 'startBefore') {
           currentSongData.TROFF_VALUE_startBefore = value;
           // If startBefore is disabled, set the slider to 0 so the region doesn't extend
-          markerSlider.startBefore = settingsPanel.startBeforeDisabled
-            ? 0
-            : Number(value) || 0;
+          markerSlider.startBefore = settingsPanel.startBeforeDisabled ? 0 : Number(value) || 0;
         }
         if (setting === 'stopAfter') {
           currentSongData.TROFF_VALUE_stopAfter = value;
-          markerSlider.stopAfter = settingsPanel.stopAfterDisabled
-            ? 0
-            : Number(value) || 0;
+          markerSlider.stopAfter = settingsPanel.stopAfterDisabled ? 0 : Number(value) || 0;
         }
         if (setting === 'incrementUntill') {
           currentSongData.TROFF_VALUE_incrementUntilValue = value;
@@ -1396,15 +1420,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (setting === 'startBeforeDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStartBefore = !value;
           // Update the marker slider immediately: 0 when disabled, restore when enabled
-          markerSlider.startBefore = value
-            ? 0
-            : Number(settingsPanel.startBeforeValue) || 0;
+          markerSlider.startBefore = value ? 0 : Number(settingsPanel.startBeforeValue) || 0;
         }
         if (setting === 'stopAfterDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !value;
-          markerSlider.stopAfter = value
-            ? 0
-            : Number(settingsPanel.stopAfterValue) || 0;
+          markerSlider.stopAfter = value ? 0 : Number(settingsPanel.stopAfterValue) || 0;
         }
         if (setting === 'incrementUntillDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = !value;
@@ -1578,11 +1598,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSongControls) {
       currentSongControls.addEventListener('setting-changed', (event: Event) => {
         const detail = (event as CustomEvent).detail;
-        settingsPanel.dispatchEvent(new CustomEvent('setting-changed', { detail, bubbles: true, composed: true }));
+        settingsPanel.dispatchEvent(
+          new CustomEvent('setting-changed', { detail, bubbles: true, composed: true })
+        );
       });
       currentSongControls.addEventListener('song-action-requested', (event: Event) => {
         const detail = (event as CustomEvent).detail;
-        settingsPanel.dispatchEvent(new CustomEvent('song-action-requested', { detail, bubbles: true, composed: true }));
+        settingsPanel.dispatchEvent(
+          new CustomEvent('song-action-requested', { detail, bubbles: true, composed: true })
+        );
       });
     }
 
@@ -1594,8 +1618,9 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         // Ensure notify.js is loaded so cookie_consent doesn't enter an infinite retry loop
         await import('./assets/internal/notify-js/notify.config.js');
-        const { auth, GoogleAuthProvider, signInWithPopup, signOut } =
-          await import('./services/firebaseClient.js');
+        const { auth, GoogleAuthProvider, signInWithPopup, signOut } = await import(
+          './services/firebaseClient.js'
+        );
 
         if (action === 'sign-in') {
           const provider = new GoogleAuthProvider();
@@ -1726,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCurrentSongControlsValues();
     });
 
-     footer.addEventListener('marker-created', (event: any) => {
+    footer.addEventListener('marker-created', (event: any) => {
       // Save the marker to localStorage (following existing pattern)
       const songKey = getCurrentSongKey();
       if (songKey && event.detail.marker) {
@@ -1768,6 +1793,26 @@ document.addEventListener('DOMContentLoaded', () => {
       videoPlayer.addEventListener('video-marker-add-requested', () => {
         if (footer?.openMarkerDialog) {
           footer.openMarkerDialog();
+        }
+      });
+
+      videoPlayer.addEventListener('video-prev-marker-requested', () => {
+        if (markerSlider) {
+          markerSlider.selectPreviousMarker();
+        }
+      });
+
+      videoPlayer.addEventListener('video-next-marker-requested', () => {
+        if (markerSlider) {
+          markerSlider.selectNextMarker();
+        }
+      });
+
+      videoPlayer.addEventListener('video-replay-requested', () => {
+        // Check if we have a playback start time defined in markerSlider
+        const media = getActiveMedia();
+        if (media) {
+          media.currentTime = markerSlider.getPlaybackStart();
         }
       });
     }
@@ -2248,9 +2293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // v1 fallback: log error and use the first marker
           log.e(
-            'Could not find a marker at the time ' +
-              markerTime +
-              '; returning the first marker'
+            'Could not find a marker at the time ' + markerTime + '; returning the first marker'
           );
           newState.currentMarker = mergedMarkers[0]?.id || '';
         }
@@ -2263,9 +2306,7 @@ document.addEventListener('DOMContentLoaded', () => {
           newState.currentStopMarker = markerByTime.id + 'S';
         } else {
           log.e(
-            'Could not find a marker at the time ' +
-              stopMarkerTime +
-              '; returning the first marker'
+            'Could not find a marker at the time ' + stopMarkerTime + '; returning the first marker'
           );
           newState.currentStopMarker = (mergedMarkers[0]?.id || '') + 'S';
         }
@@ -2306,13 +2347,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!existingSongData) {
       // New song — download it with progress notification
-      const { showDownloadProgress, showToast } = await import(
-        './utils/notification.js'
-      );
+      const { showDownloadProgress, showToast } = await import('./utils/notification.js');
       const progress = showDownloadProgress(fileName);
       const downloadedFileName = await downloadSongFromHash(hash, {
-        onProgress: (loaded, total) =>
-          progress.update(Math.round((loaded / total) * 100)),
+        onProgress: (loaded, total) => progress.update(Math.round((loaded / total) * 100)),
       });
       progress.done();
       if (!downloadedFileName) return;
