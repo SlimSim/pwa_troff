@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TroffMarker } from '../../types/troff.js';
+import { formatDuration } from '../../utils/formatters.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 
@@ -95,6 +96,23 @@ export class TVideoPlayer extends LitElement {
     .marker-label.not-fullscreen {
       opacity: 0;
     }
+    .gesture-indicator {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--button-border-radius);
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      pointer-events: none;
+    }
     .prev-marker-label {
       left: 8px;
     }
@@ -109,16 +127,24 @@ export class TVideoPlayer extends LitElement {
   `;
 
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
+  private static readonly GESTURE_FEEDBACK_MS = 1500;
+  private static readonly SCRUB_SECONDS_PER_PX = 0.05;
+  private static readonly SPEED_PX_PER_STEP = 50;
+  private static readonly SPEED_STEP_PERCENT = 5;
 
   @state() private _mirrored = false;
   @state() private _isFullscreen = false;
   @state() private _isPlaying = false;
   @state() private _controlsVisible = true;
+  @state() private _gestureIcon = '';
+  @state() private _gestureText = '';
 
   @property({ type: Array }) markers: TroffMarker[] = [];
   @property({ type: String }) startMarkerId = '';
+  @property({ type: Number }) speed = 100;
 
   private _controlsTimer?: ReturnType<typeof setTimeout>;
+  private _gestureTimer?: ReturnType<typeof setTimeout>;
 
   connectedCallback() {
     super.connectedCallback();
@@ -129,6 +155,7 @@ export class TVideoPlayer extends LitElement {
     super.disconnectedCallback();
     document.removeEventListener('fullscreenchange', this._onFullscreenChange);
     this._clearControlsTimer();
+    this._clearGestureTimer();
   }
 
   private _clearControlsTimer() {
@@ -144,6 +171,23 @@ export class TVideoPlayer extends LitElement {
       this._controlsTimer = setTimeout(() => {
         this._controlsVisible = false;
       }, TVideoPlayer.CONTROLS_IDLE_TIMEOUT_MS);
+    }
+  }
+
+  private _showGestureFeedback(icon: string, text: string) {
+    this._gestureIcon = icon;
+    this._gestureText = text;
+    this._clearGestureTimer();
+    this._gestureTimer = setTimeout(() => {
+      this._gestureText = '';
+      this._gestureIcon = '';
+    }, TVideoPlayer.GESTURE_FEEDBACK_MS);
+  }
+
+  private _clearGestureTimer() {
+    if (this._gestureTimer !== undefined) {
+      clearTimeout(this._gestureTimer);
+      this._gestureTimer = undefined;
     }
   }
 
@@ -265,6 +309,59 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
+  private _onFrameWheel(event: WheelEvent) {
+    const video = this.querySelector('video');
+    if (!video) {
+      return;
+    }
+    if (event.ctrlKey || event.metaKey) {
+      // Trackpad pinch-zoom arrives as a ctrl/meta wheel event: let the
+      // browser handle it instead of scrubbing or changing the speed.
+      return;
+    }
+    const absX = Math.abs(event.deltaX);
+    const absY = Math.abs(event.deltaY);
+    if (absX > absY) {
+      // Horizontal scroll: scrub (seek) the video.
+      const duration =
+        Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Infinity;
+      const newTime = Math.min(
+        Math.max(0, video.currentTime + event.deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
+        duration
+      );
+      video.currentTime = newTime;
+      this.dispatchEvent(
+        new CustomEvent('video-scrub-requested', {
+          detail: { time: newTime },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      const scrubLabel =
+        Number.isFinite(duration) && duration > 0
+          ? `${formatDuration(newTime)} / ${formatDuration(duration)}`
+          : formatDuration(newTime);
+      this._showGestureFeedback('time', scrubLabel);
+      event.preventDefault();
+    } else {
+      // Vertical scroll: adjust the playback speed (v2Script applies it to the media).
+      const steps = Math.round(event.deltaY / TVideoPlayer.SPEED_PX_PER_STEP);
+      const newSpeed = Math.min(
+        Math.max(50, this.speed - steps * TVideoPlayer.SPEED_STEP_PERCENT),
+        200
+      );
+      this.dispatchEvent(
+        new CustomEvent('speed-changed', {
+          detail: { speed: newSpeed },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      this._showGestureFeedback('speed', `${newSpeed}%`);
+      event.preventDefault();
+    }
+  }
+
   private get _markerIndex(): number {
     return this.markers.findIndex((m) => m.id === this.startMarkerId);
   }
@@ -289,8 +386,16 @@ export class TVideoPlayer extends LitElement {
 
   render() {
     return html`
-      <div class="video-frame" @click=${this._onFrameClick}>
+      <div class="video-frame" @click=${this._onFrameClick} @wheel=${this._onFrameWheel}>
         <slot></slot>
+        ${this._gestureIcon && this._gestureText
+          ? html`
+              <div class="gesture-indicator">
+                <t-icon name="${this._gestureIcon}"></t-icon>
+                <span>${this._gestureText}</span>
+              </div>
+            `
+          : ''}
         <t-butt
           class="video-btn mirror-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
           slim

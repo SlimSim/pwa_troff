@@ -141,6 +141,7 @@ type MarkerToolsDialogElement = HTMLElement & {
 interface VideoPlayerWithMarkerProps {
   markers: TroffMarker[];
   startMarkerId: string;
+  speed?: number;
 }
 
 // Function to update marker slider with current song markers
@@ -171,6 +172,11 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     if (videoPlayerEl && !videoPlayerEl.hidden) {
       videoPlayerEl.markers = markers;
       videoPlayerEl.startMarkerId = markerSlider.startMarkerId;
+      const defaultSpeed =
+        Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
+      const storedSpeed = Number(currentSongData?.TROFF_VALUE_speedBar);
+      videoPlayerEl.speed =
+        Number.isFinite(storedSpeed) && storedSpeed > 0 ? storedSpeed : defaultSpeed;
     }
     markerSlider.min = 0;
     markerSlider.max = songDuration;
@@ -196,6 +202,7 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     if (videoPlayerEl && !videoPlayerEl.hidden) {
       videoPlayerEl.markers = [];
       videoPlayerEl.startMarkerId = '';
+      videoPlayerEl.speed = 100;
     }
     markerSlider.min = 0;
     markerSlider.max = 0;
@@ -257,7 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
-  const videoPlayer = document.getElementById('videoPlayer');
+  const videoPlayer = document.getElementById('videoPlayer') as
+    | (HTMLElement & VideoPlayerWithMarkerProps)
+    | null;
   const videoElement = document.getElementById('videoElement') as HTMLVideoElement | null;
   let pendingPlaybackStart: number | undefined;
   let playbackCountdownInterval: number | undefined;
@@ -1507,6 +1516,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (videoElement) {
             videoElement.playbackRate = Number(value) / 100;
           }
+          if (videoPlayer) {
+            videoPlayer.speed = Number(value);
+          }
         }
         if (setting === 'pauseBeforeDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = !value;
@@ -1720,19 +1732,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Listen for speed and volume changes
-    footer.addEventListener('speed-changed', (event: any) => {
-      audio.playbackRate = event.detail.speed / 100;
+    // Listen for speed and volume changes. Speed changes come from both the
+    // footer dial and the video player's vertical-scroll gesture, so they share
+    // one handler that applies the rate to every media element.
+    const applySpeedChange = (event: Event) => {
+      const speed = (event as CustomEvent<{ speed: number }>).detail?.speed;
+      if (!Number.isFinite(speed)) {
+        return;
+      }
+      audio.playbackRate = speed / 100;
       if (videoElement) {
-        videoElement.playbackRate = event.detail.speed / 100;
+        videoElement.playbackRate = speed / 100;
+      }
+      if (videoPlayer) {
+        videoPlayer.speed = speed;
+      }
+      if (footer) {
+        footer.speed = speed;
       }
       const songKey = getCurrentSongKey();
       if (songKey) {
-        nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
+        nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', speed);
         void saveSongData(songKey);
       }
       syncCurrentSongControlsValues();
-    });
+    };
+    footer.addEventListener('speed-changed', applySpeedChange);
 
     footer.addEventListener('volume-changed', (event: any) => {
       audio.volume = event.detail.volume / 100;
@@ -1835,6 +1860,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const media = getActiveMedia();
         if (media) {
           media.currentTime = markerSlider.getPlaybackStart();
+        }
+      });
+
+      videoPlayer.addEventListener('speed-changed', applySpeedChange);
+
+      videoPlayer.addEventListener('video-scrub-requested', (event: Event) => {
+        const detail = (event as CustomEvent<{ time?: number }>).detail;
+        const time = Number(detail?.time);
+        const media = getActiveMedia();
+        if (!media || !Number.isFinite(time)) {
+          return;
+        }
+        media.currentTime = time;
+        if (markerSlider) {
+          markerSlider.value = time;
+        }
+        if (header) {
+          header.currentTime = formatDuration(time);
         }
       });
     }

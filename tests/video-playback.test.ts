@@ -386,4 +386,136 @@ describe('v2Script video playback integration', () => {
     ]);
     expect(videoPlayer.startMarkerId).toBe(markerSlider.startMarkerId);
   });
+
+  // ---- Round 9: video player scroll gestures — v2Script wiring --------------
+  //
+  // t-video-player dispatches two new events from the video frame:
+  //   - `video-scrub-requested` { time } — a horizontal wheel scrub gesture
+  //   - `speed-changed` { speed } — a vertical wheel speed gesture (the SAME
+  //     event contract the footer speed control already uses)
+  // v2Script must:
+  //   - sync the videoPlayer `speed` property (percent, default 100) from the
+  //     song data (`TROFF_VALUE_speedBar`) inside updateMarkerSlider — 100 in
+  //     the "no song" branch, the stored value in the song branch,
+  //   - listen on #videoPlayer for `speed-changed`, apply it to BOTH media
+  //     elements (audio + video), persist it to nDB and reflect it back onto
+  //     videoPlayer.speed — the footer listener will be refactored into this
+  //     shared handler (regression-guarded below),
+  //   - listen on #videoPlayer for `video-scrub-requested` and seek the active
+  //     video plus the marker slider.
+
+  it('sets videoPlayer.speed to 100 when no song is selected at boot', async () => {
+    // Force the "no song" branch of updateMarkerSlider: no current song key AND
+    // no current-song metadata. The default harness mocks the metadata to a
+    // fixed object, so override it here and restore it afterwards (Vitest does
+    // not reset mock implementations between tests).
+    const { getCurrentSongMetadata } = await import('../utils/current-song.js');
+    getCurrentSongKeyMock.mockReturnValue(null);
+    vi.mocked(getCurrentSongMetadata).mockReturnValue(null);
+    // The no-song branch only feeds the video player when it is visible (the
+    // same `!hidden` guard that gates markers/startMarkerId), so mirror the
+    // "a video is loaded" state.
+    videoPlayer.hidden = false;
+    try {
+      await bootApp();
+
+      // Precondition: the guard is genuinely active.
+      expect(videoPlayer.hidden).toBe(false);
+      expect((videoPlayer as HTMLElement & { speed?: number }).speed).toBe(100);
+    } finally {
+      // Restore the default metadata mock (the mock factory types this as a
+      // bare `() => ({ duration: 120 })`, so widen it back to a vi.fn).
+      (getCurrentSongMetadata as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+        duration: 120,
+      }));
+    }
+  });
+
+  it('syncs videoPlayer.speed from the song speed bar value after selecting a song', async () => {
+    cacheMatchMock.mockResolvedValue(new Response(makeResponseBlob(VIDEO_MIME)));
+    // Override the default nDB mock: same shape as the defaults (markers +
+    // localInformation) plus a stored speed value.
+    nDBGetMock.mockImplementation((key: string) => {
+      if (key === TEST_SONG_KEY) {
+        return {
+          markers: [
+            { id: 'markerNr0', name: 'Start', time: 0, info: '', color: 'None' },
+            { id: 'markerNr1', name: 'End', time: 120, info: '', color: 'None' },
+          ],
+          localInformation: {},
+          TROFF_VALUE_speedBar: 125,
+        };
+      }
+      return null;
+    });
+
+    await bootApp();
+    selectSong(TEST_SONG_KEY);
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Precondition: the video is loaded, so the video player is visible and
+    // updateMarkerSlider feeds it.
+    expect(videoPlayer.hidden).toBe(false);
+    expect((videoPlayer as HTMLElement & { speed?: number }).speed).toBe(125);
+  });
+
+  it('applies videoPlayer speed-changed events to both media elements, nDB and the speed property', async () => {
+    const { audio } = await import('../services/audio.js');
+    await bootApp();
+
+    videoPlayer.dispatchEvent(
+      new CustomEvent('speed-changed', {
+        detail: { speed: 120 },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    expect(videoElement.playbackRate).toBe(1.2);
+    expect(audio.playbackRate).toBe(1.2);
+    expect(nDBSetOnSongMock).toHaveBeenCalledWith(
+      TEST_SONG_KEY,
+      'TROFF_VALUE_speedBar',
+      120
+    );
+    expect((videoPlayer as HTMLElement & { speed?: number }).speed).toBe(120);
+  });
+
+  it('seeks the video and the marker slider from videoPlayer video-scrub-requested events', async () => {
+    cacheMatchMock.mockResolvedValue(new Response(makeResponseBlob(VIDEO_MIME)));
+
+    await bootApp();
+
+    // Precondition: the video is the active media after boot.
+    expect(videoPlayer.hidden).toBe(false);
+
+    videoPlayer.dispatchEvent(
+      new CustomEvent('video-scrub-requested', {
+        detail: { time: 42 },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    expect(videoElement.currentTime).toBe(42);
+    expect(markerSlider.value).toBe(42);
+  });
+
+  it('keeps applying footer speed-changed events to both media elements (footer refactor guard)', async () => {
+    const { audio } = await import('../services/audio.js');
+    await bootApp();
+
+    footer.dispatchEvent(
+      new CustomEvent('speed-changed', {
+        detail: { speed: 90 },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
+    // The footer listener will be refactored into the shared speed handler that
+    // also serves the video player — this regression test pins the contract.
+    expect(videoElement.playbackRate).toBe(0.9);
+    expect(audio.playbackRate).toBe(0.9);
+  });
 });

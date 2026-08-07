@@ -1178,4 +1178,454 @@ describe('t-video-player', () => {
     // the app must NOT switch to JS-side string truncation.
     expect(getLabel(el, '.replay-label').textContent).toBe(longName);
   });
+
+  // ---- Round 9: video player scroll gestures (scrub + speed) ----------------
+  //
+  // Feature: scroll gestures on the video frame.
+  //   - Horizontal scroll (|deltaX| > |deltaY|) → SCRUB: seek the video to
+  //     `currentTime + deltaX * SCRUB_SECONDS_PER_PX`, clamped to [0, duration]
+  //     (an unknown/NaN duration counts as unbounded), and dispatch
+  //     `video-scrub-requested` (bubbles + composed) with `detail: { time }`
+  //     from the HOST.
+  //   - Vertical scroll (|deltaY| >= |deltaX|) → SPEED: step the `speed` percent
+  //     property by SPEED_STEP_PERCENT per SPEED_PX_PER_STEP pixels, clamped to
+  //     [50, 200], and dispatch `speed-changed` (bubbles + composed) with
+  //     `detail: { speed }` from the HOST — the same event contract as the
+  //     footer speed control.
+  //
+  // Constants: SCRUB_SECONDS_PER_PX = 0.05, SPEED_PX_PER_STEP = 50,
+  // SPEED_STEP_PERCENT = 5. Direction conventions: scroll RIGHT (deltaX > 0)
+  // seeks forward; scroll UP (deltaY < 0) speeds up.
+  //
+  // New Lit property: `@property({ type: Number }) speed = 100` (percent),
+  // synced from v2Script.
+
+  type VideoPlayerWithSpeed = TVideoPlayer & { speed: number };
+
+  /** The future `speed` property is not on the class yet — widen for access. */
+  const speedOf = (el: TVideoPlayer): number => (el as VideoPlayerWithSpeed).speed;
+
+  /** Reads the `detail` payload of the nth event captured by the given spy. */
+  const detailOf = <T>(spy: ReturnType<typeof vi.fn>, index = 0): T =>
+    (spy.mock.calls[index][0] as CustomEvent).detail as T;
+
+  /**
+   * happy-dom 20.x implements WheelEvent and honors deltaX/deltaY from the
+   * constructor (verified against the installed version: the constructor reads
+   * `eventInit?.deltaX ?? 0`). Defensive fallback for a future happy-dom that
+   * stops honoring the init values: stamp the deltas with defineProperty before
+   * the event is dispatched.
+   */
+  const makeWheelEvent = (init: { deltaX: number; deltaY: number }): WheelEvent => {
+    const event = new WheelEvent('wheel', {
+      deltaX: init.deltaX,
+      deltaY: init.deltaY,
+      bubbles: true,
+      cancelable: true,
+    });
+    if (event.deltaX !== init.deltaX || event.deltaY !== init.deltaY) {
+      Object.defineProperty(event, 'deltaX', { configurable: true, value: init.deltaX });
+      Object.defineProperty(event, 'deltaY', { configurable: true, value: init.deltaY });
+    }
+    return event;
+  };
+
+  /**
+   * Dispatches a wheel event on the component's .video-frame and returns it
+   * together with a preventDefault spy installed BEFORE dispatch (so tests can
+   * assert the handler called it).
+   */
+  const dispatchWheel = (
+    el: TVideoPlayer,
+    deltaX: number,
+    deltaY: number
+  ): { event: WheelEvent; preventSpy: ReturnType<typeof vi.spyOn> } => {
+    const frame = el.shadowRoot?.querySelector('.video-frame');
+    if (!frame) {
+      throw new Error('Expected shadow root to contain <.video-frame>');
+    }
+    const event = makeWheelEvent({ deltaX, deltaY });
+    const preventSpy = vi.spyOn(event, 'preventDefault');
+    frame.dispatchEvent(event);
+    return { event, preventSpy };
+  };
+
+  /**
+   * happy-dom does not load real media, so an unloaded video's duration is NaN
+   * and `video.duration` is not reliably settable — define it per test.
+   */
+  const defineDuration = (video: HTMLVideoElement, duration: number) => {
+    Object.defineProperty(video, 'duration', { configurable: true, value: duration });
+  };
+
+  it('defaults the speed property to 100 percent', async () => {
+    await element.updateComplete;
+    expect(speedOf(element)).toBe(100);
+  });
+
+  it('horizontal wheel scrolls the video forward and dispatches video-scrub-requested', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    defineDuration(video, 120);
+    video.currentTime = 0;
+
+    const scrubSpy = vi.fn();
+    el.addEventListener('video-scrub-requested', scrubSpy);
+    const { preventSpy } = dispatchWheel(el, 100, 0);
+
+    // 100px * 0.05 s/px = 5s forward.
+    expect(video.currentTime).toBe(5);
+    expect(scrubSpy).toHaveBeenCalledTimes(1);
+    const event = scrubSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-scrub-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    // The event must be dispatched from the component host itself.
+    expect(event.target).toBe(el);
+    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(5);
+    expect(preventSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('horizontal wheel scroll left scrubs backwards from the current time', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    defineDuration(video, 120);
+    video.currentTime = 10;
+
+    const scrubSpy = vi.fn();
+    el.addEventListener('video-scrub-requested', scrubSpy);
+    dispatchWheel(el, -100, 0);
+
+    // 10s - (100px * 0.05 s/px) = 5s.
+    expect(scrubSpy).toHaveBeenCalledTimes(1);
+    expect(video.currentTime).toBe(5);
+    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(5);
+  });
+
+  it('clamps scrubbing at the start of the video (time 0)', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    defineDuration(video, 120);
+    video.currentTime = 0;
+
+    const scrubSpy = vi.fn();
+    el.addEventListener('video-scrub-requested', scrubSpy);
+    dispatchWheel(el, -1000, 0);
+
+    expect(scrubSpy).toHaveBeenCalledTimes(1);
+    expect(video.currentTime).toBe(0);
+    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(0);
+  });
+
+  it('clamps scrubbing at the end of the video (duration)', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    defineDuration(video, 120);
+    video.currentTime = 0;
+
+    dispatchWheel(el, 10000, 0);
+
+    expect(video.currentTime).toBe(120);
+  });
+
+  it('scrubs without a known duration (happy-dom default NaN falls back to Infinity)', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    // Deliberately NO defineDuration: an unloaded video reports NaN, and the
+    // handler must treat it as unbounded rather than blow up with NaN/Infinity.
+    expect(Number.isFinite(video.duration)).toBe(false);
+
+    dispatchWheel(el, 100, 0);
+
+    expect(video.currentTime).toBe(5);
+  });
+
+  it('vertical wheel up increases the speed and dispatches speed-changed', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    video.currentTime = 5;
+
+    const speedSpy = vi.fn();
+    el.addEventListener('speed-changed', speedSpy);
+    const { preventSpy } = dispatchWheel(el, 0, -100);
+
+    // -100px / 50px-per-step = -2 steps → 100 + 2 * 5% = 110%.
+    expect(speedSpy).toHaveBeenCalledTimes(1);
+    const event = speedSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('speed-changed');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(event.target).toBe(el);
+    expect(detailOf<{ speed: number }>(speedSpy).speed).toBe(110);
+    // The speed gesture must NOT touch the timeline.
+    expect(video.currentTime).toBe(5);
+    expect(preventSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('vertical wheel down decreases the speed', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const speedSpy = vi.fn();
+    el.addEventListener('speed-changed', speedSpy);
+    dispatchWheel(el, 0, 100);
+
+    // +100px / 50px-per-step = +2 steps → 100 - 2 * 5% = 90%.
+    expect(speedSpy).toHaveBeenCalledTimes(1);
+    expect(detailOf<{ speed: number }>(speedSpy).speed).toBe(90);
+  });
+
+  it('clamps the speed between 50 and 200 percent', async () => {
+    // Lower clamp: speed 55, huge downward scroll → 50.
+    const { el: lowerEl } = createPlayerWithVideo();
+    await lowerEl.updateComplete;
+    (lowerEl as VideoPlayerWithSpeed).speed = 55;
+    const lowerSpy = vi.fn();
+    lowerEl.addEventListener('speed-changed', lowerSpy);
+    dispatchWheel(lowerEl, 0, 10000);
+    expect(lowerSpy).toHaveBeenCalledTimes(1);
+    expect(detailOf<{ speed: number }>(lowerSpy).speed).toBe(50);
+
+    // Upper clamp: speed 195, huge upward scroll → 200.
+    const { el: upperEl } = createPlayerWithVideo();
+    await upperEl.updateComplete;
+    (upperEl as VideoPlayerWithSpeed).speed = 195;
+    const upperSpy = vi.fn();
+    upperEl.addEventListener('speed-changed', upperSpy);
+    dispatchWheel(upperEl, 0, -10000);
+    expect(upperSpy).toHaveBeenCalledTimes(1);
+    expect(detailOf<{ speed: number }>(upperSpy).speed).toBe(200);
+  });
+
+  it('uses the dominant wheel axis to choose scrub vs speed', async () => {
+    // Horizontal dominance (|deltaX| > |deltaY|) → scrub only.
+    const { el: scrubEl } = createPlayerWithVideo();
+    await scrubEl.updateComplete;
+    const scrubSpy = vi.fn();
+    const scrubSpeedSpy = vi.fn();
+    scrubEl.addEventListener('video-scrub-requested', scrubSpy);
+    scrubEl.addEventListener('speed-changed', scrubSpeedSpy);
+    dispatchWheel(scrubEl, 200, 50);
+    expect(scrubSpy).toHaveBeenCalledTimes(1);
+    expect(scrubSpeedSpy).not.toHaveBeenCalled();
+
+    // Vertical dominance (|deltaY| >= |deltaX|) → speed only.
+    const { el: speedEl } = createPlayerWithVideo();
+    await speedEl.updateComplete;
+    const speedSpy = vi.fn();
+    const speedScrubSpy = vi.fn();
+    speedEl.addEventListener('speed-changed', speedSpy);
+    speedEl.addEventListener('video-scrub-requested', speedScrubSpy);
+    dispatchWheel(speedEl, 50, 200);
+    expect(speedSpy).toHaveBeenCalledTimes(1);
+    expect(speedScrubSpy).not.toHaveBeenCalled();
+  });
+
+  it('calls preventDefault for both scrub and speed wheels', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const scrub = dispatchWheel(el, 100, 0);
+    expect(scrub.preventSpy).toHaveBeenCalledTimes(1);
+
+    const speed = dispatchWheel(el, 0, 100);
+    expect(speed.preventSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when no video is slotted: no events, no preventDefault, no error', async () => {
+    await element.updateComplete;
+
+    const scrubSpy = vi.fn();
+    const speedSpy = vi.fn();
+    element.addEventListener('video-scrub-requested', scrubSpy);
+    element.addEventListener('speed-changed', speedSpy);
+
+    const { preventSpy } = dispatchWheel(element, 100, 0);
+
+    expect(scrubSpy).not.toHaveBeenCalled();
+    expect(speedSpy).not.toHaveBeenCalled();
+    expect(preventSpy).not.toHaveBeenCalled();
+  });
+
+  // ---- Round 10: gesture feedback popup (badge while wheel-scrolling) -------
+  //
+  // Feature: while a wheel gesture happens, a small feedback badge pops up at
+  // the CENTER-TOP of the video frame and auto-hides after
+  // GESTURE_FEEDBACK_MS (1500ms) of no further wheel activity.
+  //   - Speed wheel (vertical) → badge shows the `speed` icon + the new speed
+  //     + `%` sign, e.g. "110%".
+  //   - Scrub wheel (horizontal) → badge shows the `time` icon +
+  //     `formatDuration(currentTime) / formatDuration(duration)`, e.g.
+  //     "0:05 / 2:00" for 5s in a 120s video. Unknown duration (NaN / not a
+  //     positive finite number) → ONLY the current time, e.g. "0:05".
+  //   - Each new wheel gesture RE-RESETS the hide timer (the badge stays
+  //     visible while the user keeps scrolling); after 1500ms of silence the
+  //     badge disappears.
+  //   - No badge is rendered before any gesture.
+  //
+  // Expected implementation: `.gesture-indicator` is a plain informational div
+  // (t-icon + span, NOT a t-butt) rendered inside `.video-frame`; driven by a
+  // `_gestureIcon`/`_gestureText` state pair and a GESTURE_FEEDBACK_MS
+  // setTimeout that is re-armed on every gesture. Timers are driven with
+  // `vi.useFakeTimers()` + try/finally like the round-4 idle tests.
+
+  /** Reads the gesture indicator's text span, or null if it is not rendered. */
+  const getGestureText = (el: TVideoPlayer): string | null => {
+    const span = el.shadowRoot?.querySelector('.gesture-indicator span');
+    return span?.textContent ?? null;
+  };
+
+  it('renders no gesture indicator before any wheel gesture', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    expect(el.shadowRoot?.querySelector('.gesture-indicator')).toBeNull();
+  });
+
+  it('speed wheel shows a badge with the speed icon and percent value', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    dispatchWheel(el, 0, -100);
+    await el.updateComplete;
+
+    const indicator = el.shadowRoot?.querySelector('.gesture-indicator');
+    expect(indicator).not.toBeNull();
+    expect(getIconName(el, '.gesture-indicator')).toBe('speed');
+    expect(getGestureText(el)).toBe('110%');
+  });
+
+  it('scrub wheel shows a badge with the current time over the duration', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    defineDuration(video, 120);
+    video.currentTime = 0;
+
+    dispatchWheel(el, 100, 0);
+    await el.updateComplete;
+
+    const indicator = el.shadowRoot?.querySelector('.gesture-indicator');
+    expect(indicator).not.toBeNull();
+    // 100px * 0.05 s/px = 5s → formatDuration(5) = "0:05", formatDuration(120)
+    // = "2:00".
+    expect(getGestureText(el)).toBe('0:05 / 2:00');
+    expect(getIconName(el, '.gesture-indicator')).toBe('time');
+  });
+
+  it('scrub badge updates with each additional scrub', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    defineDuration(video, 120);
+    video.currentTime = 0;
+
+    dispatchWheel(el, 100, 0);
+    await el.updateComplete;
+    expect(getGestureText(el)).toBe('0:05 / 2:00');
+
+    dispatchWheel(el, 100, 0);
+    await el.updateComplete;
+    expect(getGestureText(el)).toBe('0:10 / 2:00');
+  });
+
+  it('badge auto-hides after the feedback timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      dispatchWheel(el, 0, -100);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+
+      // 1500ms of silence → the badge disappears on its own.
+      vi.advanceTimersByTime(1500);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('new wheel gestures reset the hide timer', async () => {
+    vi.useFakeTimers();
+    try {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      dispatchWheel(el, 0, -100);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+
+      // 1000ms into the 1500ms window the badge is still visible...
+      vi.advanceTimersByTime(1000);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+
+      // ...a new gesture re-arms the timer: 1000ms later (2000ms since the
+      // first gesture but only 1000ms since the second) it is STILL visible.
+      dispatchWheel(el, 0, -100);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+
+      vi.advanceTimersByTime(1000);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+
+      // 1600ms since the second gesture → the re-armed timer has fired.
+      vi.advanceTimersByTime(600);
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.gesture-indicator')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('scrub badge without a known duration shows only the current time', async () => {
+    const { el, video } = createPlayerWithVideo();
+    await el.updateComplete;
+    // Deliberately NO defineDuration: an unloaded video's duration stays NaN,
+    // so the badge must fall back to showing ONLY the current time.
+    expect(Number.isFinite(video.duration)).toBe(false);
+
+    dispatchWheel(el, 100, 0);
+    await el.updateComplete;
+
+    const text = getGestureText(el);
+    expect(text).toBe('0:05');
+    expect(text).not.toContain(' / ');
+  });
+
+  it('speed badge shows the clamped bound value', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+    (el as VideoPlayerWithSpeed).speed = 200;
+    await el.updateComplete;
+
+    dispatchWheel(el, 0, -10000);
+    await el.updateComplete;
+
+    // -10000px / 50px-per-step = -200 steps → 200 + 1000%, clamped to 200.
+    expect(getGestureText(el)).toBe('200%');
+  });
+
+  it('gesture indicator is a plain informational div (t-icon + span, no t-butt)', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    dispatchWheel(el, 0, -100);
+    await el.updateComplete;
+
+    const indicator = el.shadowRoot?.querySelector(
+      '.gesture-indicator'
+    ) as HTMLElement | null;
+    expect(indicator).not.toBeNull();
+    // A plain div, NOT a t-butt control host.
+    expect(indicator?.tagName.toLowerCase()).toBe('div');
+    expect(indicator?.querySelector('span')).not.toBeNull();
+    expect(indicator?.querySelector('t-icon')).not.toBeNull();
+    expect(indicator?.querySelector('t-butt')).toBeNull();
+    // The badge lives inside .video-frame (with the overlay buttons).
+    const frame = el.shadowRoot?.querySelector('.video-frame');
+    expect(frame?.contains(indicator)).toBe(true);
+  });
 });
