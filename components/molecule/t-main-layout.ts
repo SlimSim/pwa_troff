@@ -14,6 +14,15 @@ export class MainLayout extends LitElement {
       font-family: Arial, 'Open Sans', sans-serif;
     }
 
+    .app-body {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
     .main-content-parent {
       position: relative;
       display: flex;
@@ -51,18 +60,20 @@ export class MainLayout extends LitElement {
   render() {
     return html`
       <slot name="header"></slot>
-      <slot name="video-top"></slot>
-      <div class="main-content-parent">
-        <slot name="song-list"></slot>
-        <!-- Left sidebar for current song controls (visible on wide screens) -->
-        <aside class="sidebar" aria-label="Current song controls">
-          <slot name="video-sidebar"></slot>
-          <slot name="sidebar"></slot>
-        </aside>
-        <div class="main-content">
-          <slot name="main-content"></slot>
+      <div class="app-body">
+        <slot name="video-top"></slot>
+        <div class="main-content-parent">
+          <!-- Left sidebar for current song controls (visible on wide screens) -->
+          <aside class="sidebar" aria-label="Current song controls">
+            <slot name="video-sidebar"></slot>
+            <slot name="sidebar"></slot>
+          </aside>
+          <div class="main-content">
+            <slot name="main-content"></slot>
+          </div>
+          <slot name="settings-panel"></slot>
         </div>
-        <slot name="settings-panel"></slot>
+        <slot name="song-list"></slot>
       </div>
       <slot name="footer"></slot>
     `;
