@@ -1105,4 +1105,77 @@ describe('t-video-player', () => {
       expect(computedPointerEvents).toBe('none');
     }
   });
+
+  // ---- Round 8: ellipsis truncation of marker-name labels ------------------
+  //
+  // Feature: when a marker name is too long to fit the available space, the
+  // label must be CUT (no overflow beyond the label's max width) and show a
+  // trailing ellipsis "…". This is pure CSS — the DOM content must stay the
+  // FULL untruncated name. Expected implementation adds to `.marker-label`:
+  //   max-width: 30%; overflow: hidden; text-overflow: ellipsis;
+  // (`white-space: nowrap` already exists and is required for text-overflow to
+  // work, and absolutely-positioned elements are blockified so the trio works
+  // directly).
+  //
+  // Strategy: happy-dom's getComputedStyle does NOT reliably resolve
+  // shadow-DOM stylesheet rules, so these CSS-contract tests inspect the actual
+  // component stylesheet instead. Lit injects component CSS into the shadow
+  // root via adoptedStyleSheets (there is no <style> element), which happy-dom
+  // exposes as a parseable cssRules list; each rule has a selectorText and a
+  // style.cssText, so the `.marker-label` rule can be extracted verbatim.
+
+  /**
+   * Returns the cssText of the component's `.marker-label` stylesheet rule,
+   * throwing if the adopted stylesheet is unavailable or the rule is missing.
+   */
+  const markerLabelRuleCssText = (el: TVideoPlayer): string => {
+    const sheet = el.shadowRoot?.adoptedStyleSheets?.[0];
+    const rules = sheet?.cssRules;
+    if (!rules) {
+      throw new Error(
+        'Expected shadow root to expose adoptedStyleSheets[0].cssRules'
+      );
+    }
+    for (let i = 0; i < rules.length; i += 1) {
+      const rule = rules[i] as CSSStyleRule;
+      if (rule.selectorText === '.marker-label') {
+        return rule.style.cssText;
+      }
+    }
+    throw new Error(
+      'Expected component stylesheet to contain a .marker-label rule'
+    );
+  };
+
+  it('truncates long marker names with a trailing ellipsis via CSS only', async () => {
+    const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mB');
+    await el.updateComplete;
+
+    const markerLabelCss = markerLabelRuleCssText(el);
+
+    // The cut + ellipsis contract lives inside the `.marker-label` rule. None
+    // of the three declarations exist today → RED.
+    expect(markerLabelCss).toContain('text-overflow: ellipsis');
+    expect(markerLabelCss).toContain('overflow: hidden');
+    expect(markerLabelCss).toContain('max-width: 30%');
+    // white-space: nowrap (pre-existing) must stay — text-overflow only works
+    // when the text does not wrap.
+    expect(markerLabelCss).toContain('white-space: nowrap');
+  });
+
+  it('keeps the full untruncated marker name in the DOM even for very long names', async () => {
+    const { el } = createPlayerWithVideo();
+    const longName = 'A'.repeat(200);
+    setMarkerProps(
+      el,
+      [mkMarker('mA', 'A', 0), mkMarker('mB', longName, 10), mkMarker('mC', 'C', 20)],
+      'mB'
+    );
+    await el.updateComplete;
+
+    // The cutting is pure CSS: the DOM must still carry the complete name —
+    // the app must NOT switch to JS-side string truncation.
+    expect(getLabel(el, '.replay-label').textContent).toBe(longName);
+  });
 });

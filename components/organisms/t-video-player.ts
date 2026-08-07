@@ -85,6 +85,9 @@ export class TVideoPlayer extends LitElement {
       color: #fff;
       font-size: 0.75rem;
       white-space: nowrap;
+      max-width: 30%;
+      overflow: hidden;
+      text-overflow: ellipsis;
       pointer-events: none;
       transition: opacity 0.2s ease;
     }
