@@ -96,6 +96,61 @@ describe('t-footer marker dialog wiring', () => {
     expect(element.markerDialogData).toEqual(marker);
     expect(element.showMarkerDropdown).toBe(true);
   });
+
+  // `openMarkerDialog()` (create mode) is the round-3 feature that lets the
+  // video player's add-marker button open the marker dialog from fullscreen.
+  // It does not exist on BottomNav yet — the cast keeps tsc green until the
+  // production method lands (this is what makes these tests RED).
+  type BottomNavWithOpenMarkerDialog = BottomNav & { openMarkerDialog: () => void };
+  const openMarkerDialog = (el: BottomNav): void => {
+    (el as BottomNavWithOpenMarkerDialog).openMarkerDialog();
+  };
+
+  it('openMarkerDialog opens the marker dropdown in create mode', async () => {
+    // Pre-set stale data to prove openMarkerDialog clears it.
+    element.markerDialogData = { id: 'stale', name: 'stale' };
+    await element.updateComplete;
+
+    openMarkerDialog(element);
+    await element.updateComplete;
+
+    expect(element.showMarkerDropdown).toBe(true);
+    expect(element.markerDialogMode).toBe('create');
+    expect(element.markerDialogData).toBeUndefined();
+  });
+
+  it('openMarkerDialog dispatches marker-dialog-opened (bubbles + composed)', async () => {
+    const openedSpy = vi.fn();
+    element.addEventListener('marker-dialog-opened', openedSpy);
+
+    openMarkerDialog(element);
+    await element.updateComplete;
+
+    expect(openedSpy).toHaveBeenCalledTimes(1);
+    const event = openedSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('marker-dialog-opened');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+  });
+
+  it('openMarkerDialog re-opens the dropdown via requestAnimationFrame when already open', async () => {
+    const rafSpy = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback: FrameRequestCallback): number => {
+        callback(0);
+        return 1;
+      });
+
+    element.showMarkerDropdown = true;
+    await element.updateComplete;
+
+    openMarkerDialog(element);
+    await element.updateComplete;
+
+    expect(rafSpy).toHaveBeenCalled();
+    expect(element.showMarkerDropdown).toBe(true);
+    expect(element.markerDialogMode).toBe('create');
+  });
 });
 
 describe('t-footer dropdown mobile positioning', () => {

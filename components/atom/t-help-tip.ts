@@ -10,18 +10,9 @@ export class THelpTip extends LitElement {
     }
 
     .summary-button {
-      display: inline-flex;
-      align-items: flex-start;
-      gap: var(--spacing-xs, 4px);
-      cursor: pointer;
-      list-style: none;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      background: none;
-      border: none;
-      padding: 0;
-      font: inherit;
-      color: inherit;
+      margin-left: -5px;
+      margin-top: -4px;
+      margin-bottom: -4px;
     }
 
     .summary-button:focus-visible {
@@ -33,6 +24,7 @@ export class THelpTip extends LitElement {
     .help-icon {
       flex-shrink: 0;
       margin-top: 2px;
+      padding-right: 4px;
     }
 
     .chevron-icon {
@@ -51,6 +43,7 @@ export class THelpTip extends LitElement {
     }
 
     .summary-content {
+      padding-right: 4px;
       display: flex;
       flex-direction: column;
       gap: var(--spacing-xxs, 2px);
@@ -142,7 +135,9 @@ export class THelpTip extends LitElement {
 
   render() {
     return html`
-      <button
+      <t-butt
+        ghost
+        slim
         class="summary-button"
         id=${this._summaryId}
         aria-expanded=${this.open}
@@ -157,7 +152,7 @@ export class THelpTip extends LitElement {
         <t-icon class="help-icon" name="help" slim></t-icon>
         <t-icon class="chevron-icon" name="chevron-down" slim></t-icon>
         <slot name="summary"></slot>
-      </button>
+      </t-butt>
       <div
         id="${this._summaryId}-content"
         class="detail-content"

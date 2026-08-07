@@ -11,6 +11,7 @@ import './components/molecule/t-group-dialog.js';
 import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/organisms/t-marker-slider.js';
+import './components/organisms/t-video-player.js';
 import {
   updateHeaderWithCurrentSong,
   setCurrentSong,
@@ -39,7 +40,12 @@ import {
   getIncrementUntil,
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
-import type { TroffMarker, State, State_WithTime, TroffManualImportExport } from './types/troff.d.js';
+import type {
+  TroffMarker,
+  State,
+  State_WithTime,
+  TroffManualImportExport,
+} from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
   TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
@@ -68,7 +74,17 @@ import {
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
-import { setupListeners, teardownListeners, saveSongData, setLiveUpdateCallback } from './utils/firebase-realtime.js';
+import {
+  setupListeners,
+  teardownListeners,
+  saveSongData,
+  setLiveUpdateCallback,
+} from './utils/firebase-realtime.js';
+
+// The media element currently playing (audio singleton, or the #videoElement when
+// a video song is loaded). Defaults to audio so audio-only playback is unchanged.
+let activeMedia: HTMLMediaElement = audio;
+const getActiveMedia = () => activeMedia;
 
 type FooterElement = HTMLElement & {
   settingsPanelVisible?: boolean;
@@ -86,6 +102,7 @@ type FooterElement = HTMLElement & {
   markerDialogInitialTime?: number;
   markerDialogSuggestedName?: string;
   openMarkerDialogForEdit?: (markerData: Partial<TroffMarker>) => void;
+  openMarkerDialog?: () => void;
 };
 
 type ImportExportDialogElement = HTMLElement & {
@@ -121,10 +138,18 @@ type MarkerToolsDialogElement = HTMLElement & {
   ): void;
 };
 
+interface VideoPlayerWithMarkerProps {
+  markers: TroffMarker[];
+  startMarkerId: string;
+  speed?: number;
+}
+
 // Function to update marker slider with current song markers
 const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = true) => {
+  console.log('updateMarkerSlider -> setAudioTime:', setAudioTime);
   const currentSongMetadata = getCurrentSongMetadata();
-  const songDuration = audio.duration > 0 ? audio.duration : currentSongMetadata?.duration || 0;
+  const songDuration =
+    getActiveMedia().duration > 0 ? getActiveMedia().duration : currentSongMetadata?.duration || 0;
   if (currentSongMetadata && markerSlider) {
     // Load real markers from current song
     const songKey = getCurrentSongKey();
@@ -138,23 +163,53 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     }
 
     markerSlider.markers = markers;
+    const videoPlayerEl = document.getElementById('videoPlayer') as
+      | (HTMLElement & VideoPlayerWithMarkerProps)
+      | null;
+    // Only feed the video player when it is actually shown (a video song is
+    // loaded): it starts hidden and gains `hidden = false` once the video
+    // finishes loading.
+    if (videoPlayerEl && !videoPlayerEl.hidden) {
+      videoPlayerEl.markers = markers;
+      videoPlayerEl.startMarkerId = markerSlider.startMarkerId;
+      const defaultSpeed =
+        Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
+      const storedSpeed = Number(currentSongData?.TROFF_VALUE_speedBar);
+      videoPlayerEl.speed =
+        Number.isFinite(storedSpeed) && storedSpeed > 0 ? storedSpeed : defaultSpeed;
+    }
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
     if (setAudioTime) {
-      audio.currentTime = markerSlider.getPlaybackStart();
+      console.log('markerSlider.getPlaybackStart()', markerSlider.getPlaybackStart());
+      console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
+      setTimeout(() => {
+        console.log('markerSlider.getPlaybackStart()', markerSlider.getPlaybackStart());
+        console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
+      }, 30);
+
+      getActiveMedia().currentTime = markerSlider.getPlaybackStart();
     }
 
     configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];
+    const videoPlayerEl = document.getElementById('videoPlayer') as
+      | (HTMLElement & VideoPlayerWithMarkerProps)
+      | null;
+    if (videoPlayerEl && !videoPlayerEl.hidden) {
+      videoPlayerEl.markers = [];
+      videoPlayerEl.startMarkerId = '';
+      videoPlayerEl.speed = 100;
+    }
     markerSlider.min = 0;
     markerSlider.max = 0;
     markerSlider.unit = '';
     markerSlider.value = 0;
     if (setAudioTime) {
-      audio.currentTime = 0;
+      getActiveMedia().currentTime = 0;
     }
   }
 };
@@ -209,11 +264,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const header = document.getElementById('header') as any;
   const songList = document.getElementById('songList') as any;
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider;
+  const videoPlayer = document.getElementById('videoPlayer') as
+    | (HTMLElement & VideoPlayerWithMarkerProps)
+    | null;
+  const videoElement = document.getElementById('videoElement') as HTMLVideoElement | null;
   let pendingPlaybackStart: number | undefined;
   let playbackCountdownInterval: number | undefined;
   let isLoopTransitionPause = false;
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
+
+  // Load a song from the cache and route it to the audio element or the video
+  // element depending on whether the cached file is a video.
+  const loadSongIntoPlayer = async (songKey: string) => {
+    const result = await loadSong(songKey);
+    if (!result) return;
+    if (result.isVideo) {
+      activeMedia = videoElement ?? audio;
+      if (videoElement) {
+        videoElement.src = result.url;
+        videoElement.load();
+        // keep volume/rate in sync with what the user has set on audio
+        videoElement.volume = audio.volume;
+        videoElement.playbackRate = audio.playbackRate;
+      }
+      if (videoPlayer) videoPlayer.hidden = false;
+    } else {
+      activeMedia = audio;
+      audio.src = result.url;
+      audio.load();
+      if (videoPlayer) videoPlayer.hidden = true;
+      if (videoElement) videoElement.pause();
+    }
+  };
+
+  // Responsive placement: video player sits at the top on narrow screens and
+  // moves into the sidebar on wide screens.
+  const mq = window.matchMedia('(min-width: 768px)');
+  const applyVideoPlacement = () => {
+    if (videoPlayer) {
+      videoPlayer.slot = mq.matches ? 'video-sidebar' : 'video-top';
+    }
+  };
+  mq.addEventListener('change', applyVideoPlacement);
+  applyVideoPlacement();
 
   const withSafeNumber = (value: unknown, fallback: number) => {
     const parsed = Number(value);
@@ -226,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return durationFromSlider;
     }
 
-    const durationFromAudio = withSafeNumber(audio.duration, 0);
+    const durationFromAudio = withSafeNumber(getActiveMedia().duration, 0);
     if (durationFromAudio > 0) {
       return durationFromAudio;
     }
@@ -468,18 +562,18 @@ document.addEventListener('DOMContentLoaded', () => {
           // Find closest markers for the times
           const startTime = stateWithTime.currentMarkerTime ?? 0;
           const stopTime = stateWithTime.currentStopMarkerTime ?? 0;
-          
+
           let startMarkerId = finalMarkers[0]?.id || 'markerNr0';
           let stopMarkerId = finalMarkers[1]?.id || 'markerNr1';
-          
+
           let minStartDiff = Infinity;
           let minStopDiff = Infinity;
-          
+
           for (const marker of finalMarkers) {
             const markerTime = Number(marker.time);
             const startDiff = Math.abs(markerTime - startTime);
             const stopDiff = Math.abs(markerTime - stopTime);
-            
+
             if (startDiff < minStartDiff) {
               minStartDiff = startDiff;
               startMarkerId = marker.id;
@@ -489,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
               stopMarkerId = marker.id;
             }
           }
-          
+
           const state: State = {
             name: stateWithTime.name || 'Imported State',
             currentMarker: startMarkerId,
@@ -507,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
             volumeBar: stateWithTime.volumeBar ?? 75,
             waitBetweenLoops: stateWithTime.waitBetweenLoops ?? 0,
           };
-          
+
           return JSON.stringify(state);
         });
 
@@ -515,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'markers', finalMarkers);
         nDB.setOnSong(songKey, 'aStates', newStates);
         nDB.setOnSong(songKey, 'info', data.strSongInfo || '');
-        
+
         // Update marker slider
         updateMarkerSlider(markerSlider!, false);
 
@@ -561,7 +655,9 @@ document.addEventListener('DOMContentLoaded', () => {
       't-marker-tools-dialog'
     ) as MarkerToolsDialogElement | null;
     if (!markerToolsDialog) {
-      markerToolsDialog = document.createElement('t-marker-tools-dialog') as MarkerToolsDialogElement;
+      markerToolsDialog = document.createElement(
+        't-marker-tools-dialog'
+      ) as MarkerToolsDialogElement;
       document.body.append(markerToolsDialog);
     }
 
@@ -581,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
     markerToolsDialog.mode = modeByAction[action] ?? 'copy';
     markerToolsDialog.nrOfSelectedMarkers = endNr - startNr;
     markerToolsDialog.totalMarkers = markers.length;
-    markerToolsDialog.initialTime = audio.currentTime;
+    markerToolsDialog.initialTime = getActiveMedia().currentTime;
     markerToolsDialog.open = true;
 
     // Handle dialog events (one-time listeners)
@@ -613,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const songData = nDB.get(songKey) || {};
       const markers: TroffMarker[] = Array.isArray(songData.markers) ? songData.markers : [];
-      const maxTime = markerSlider?.max ?? audio.duration ?? 0;
+      const maxTime = markerSlider?.max ?? getActiveMedia().duration ?? 0;
       const [startNr, endNr] = getSelectedMarkerRange(
         markers,
         markerSlider.startMarkerId,
@@ -700,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const songData = nDB.get(songKey) || {};
-    const songDuration = audio.duration > 0 ? audio.duration : 0;
+    const songDuration = getActiveMedia().duration > 0 ? getActiveMedia().duration : 0;
     const hadMarkers = Array.isArray(songData.markers) && songData.markers.length > 0;
     const markers = ensureDefaultMarkers(songData, songDuration);
     if (!hadMarkers && markers.length > 0) {
@@ -722,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markers.sort((a, b) => markerToNumericTime(a.time) - markerToNumericTime(b.time));
 
-    const knownMarkerIds = new Set(markers.map(m => String(m.id)));
+    const knownMarkerIds = new Set(markers.map((m) => String(m.id)));
 
     // Preserve existing start marker if it still exists (unless forced)
     if (!force && songData.currentStartMarker && knownMarkerIds.has(songData.currentStartMarker)) {
@@ -735,7 +831,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Preserve existing stop marker if it still exists (unless forced)
     const stopIdWithoutS = songData.currentStopMarker?.replace(/S$/, '');
-    if (!force && songData.currentStopMarker && stopIdWithoutS && knownMarkerIds.has(stopIdWithoutS)) {
+    if (
+      !force &&
+      songData.currentStopMarker &&
+      stopIdWithoutS &&
+      knownMarkerIds.has(stopIdWithoutS)
+    ) {
       markerSlider.stopMarkerId = songData.currentStopMarker;
     } else {
       const lastMarkerId = String(markers[markers.length - 1].id);
@@ -809,7 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!audio.paused) {
+    if (!getActiveMedia().paused) {
       header.statusCountdown = '0s';
       return;
     }
@@ -879,7 +980,8 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
-    settingsPanel.playGoToMarker = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
+    settingsPanel.playGoToMarker =
+      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -948,7 +1050,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalStopAfterOn = nDB.get(TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_ON) ?? false;
         currentSongControls.stopAfterDisabled = !globalStopAfterOn;
       } else {
-        currentSongControls.stopAfterDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
+        currentSongControls.stopAfterDisabled =
+          songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
       }
       currentSongControls.stopAfterValue = getStopAfter(songData);
       if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
@@ -992,7 +1095,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalWaitBetweenOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_ON') ?? true;
         currentSongControls.disableWaitBetween = !globalWaitBetweenOn;
       } else {
-        currentSongControls.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
+        currentSongControls.disableWaitBetween =
+          !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
       }
     } else {
       currentSongControls.startBeforeValue = 0;
@@ -1164,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (delay <= 0) {
       clearPlaybackCountdown();
-      audio.play().catch(console.error);
+      getActiveMedia().play().catch(console.error);
       return;
     }
 
@@ -1181,10 +1285,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pendingPlaybackStart = window.setTimeout(() => {
       pendingPlaybackStart = undefined;
-      audio.play().catch((error) => {
-        clearPendingPlaybackStart();
-        console.error(error);
-      });
+      getActiveMedia()
+        .play()
+        .catch((error) => {
+          clearPendingPlaybackStart();
+          console.error(error);
+        });
     }, delay);
   };
 
@@ -1204,11 +1310,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!audio.paused) {
+    if (!getActiveMedia().paused) {
       if (shouldResetLoopCounter(resetCounterSettingKey)) {
         resetLoopTimesCounter();
       }
-      audio.pause();
+      getActiveMedia().pause();
       updateHeaderCountdownDisplay();
       return;
     }
@@ -1217,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (goToMarkerSettingKey && nDB.get(goToMarkerSettingKey) === true) {
       const startTime = markerSlider.getPlaybackStart();
       if (Number.isFinite(startTime)) {
-        audio.currentTime = startTime;
+        getActiveMedia().currentTime = startTime;
       }
     }
 
@@ -1314,15 +1420,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (setting === 'startBefore') {
           currentSongData.TROFF_VALUE_startBefore = value;
           // If startBefore is disabled, set the slider to 0 so the region doesn't extend
-          markerSlider.startBefore = settingsPanel.startBeforeDisabled
-            ? 0
-            : Number(value) || 0;
+          markerSlider.startBefore = settingsPanel.startBeforeDisabled ? 0 : Number(value) || 0;
         }
         if (setting === 'stopAfter') {
           currentSongData.TROFF_VALUE_stopAfter = value;
-          markerSlider.stopAfter = settingsPanel.stopAfterDisabled
-            ? 0
-            : Number(value) || 0;
+          markerSlider.stopAfter = settingsPanel.stopAfterDisabled ? 0 : Number(value) || 0;
         }
         if (setting === 'incrementUntill') {
           currentSongData.TROFF_VALUE_incrementUntilValue = value;
@@ -1349,15 +1451,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (setting === 'startBeforeDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStartBefore = !value;
           // Update the marker slider immediately: 0 when disabled, restore when enabled
-          markerSlider.startBefore = value
-            ? 0
-            : Number(settingsPanel.startBeforeValue) || 0;
+          markerSlider.startBefore = value ? 0 : Number(settingsPanel.startBeforeValue) || 0;
         }
         if (setting === 'stopAfterDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !value;
-          markerSlider.stopAfter = value
-            ? 0
-            : Number(settingsPanel.stopAfterValue) || 0;
+          markerSlider.stopAfter = value ? 0 : Number(settingsPanel.stopAfterValue) || 0;
         }
         if (setting === 'incrementUntillDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = !value;
@@ -1408,10 +1506,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (setting === 'volume') {
           currentSongData.TROFF_VALUE_volumeBar = value;
           audio.volume = Number(value) / 100;
+          if (videoElement) {
+            videoElement.volume = Number(value) / 100;
+          }
         }
         if (setting === 'speed') {
           currentSongData.TROFF_VALUE_speedBar = value;
           audio.playbackRate = Number(value) / 100;
+          if (videoElement) {
+            videoElement.playbackRate = Number(value) / 100;
+          }
+          if (videoPlayer) {
+            videoPlayer.speed = Number(value);
+          }
         }
         if (setting === 'pauseBeforeDisabled') {
           currentSongData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = !value;
@@ -1525,11 +1632,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSongControls) {
       currentSongControls.addEventListener('setting-changed', (event: Event) => {
         const detail = (event as CustomEvent).detail;
-        settingsPanel.dispatchEvent(new CustomEvent('setting-changed', { detail, bubbles: true, composed: true }));
+        settingsPanel.dispatchEvent(
+          new CustomEvent('setting-changed', { detail, bubbles: true, composed: true })
+        );
       });
       currentSongControls.addEventListener('song-action-requested', (event: Event) => {
         const detail = (event as CustomEvent).detail;
-        settingsPanel.dispatchEvent(new CustomEvent('song-action-requested', { detail, bubbles: true, composed: true }));
+        settingsPanel.dispatchEvent(
+          new CustomEvent('song-action-requested', { detail, bubbles: true, composed: true })
+        );
       });
     }
 
@@ -1541,8 +1652,9 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         // Ensure notify.js is loaded so cookie_consent doesn't enter an infinite retry loop
         await import('./assets/internal/notify-js/notify.config.js');
-        const { auth, GoogleAuthProvider, signInWithPopup, signOut } =
-          await import('./services/firebaseClient.js');
+        const { auth, GoogleAuthProvider, signInWithPopup, signOut } = await import(
+          './services/firebaseClient.js'
+        );
 
         if (action === 'sign-in') {
           const provider = new GoogleAuthProvider();
@@ -1620,19 +1732,38 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Listen for speed and volume changes
-    footer.addEventListener('speed-changed', (event: any) => {
-      audio.playbackRate = event.detail.speed / 100;
+    // Listen for speed and volume changes. Speed changes come from both the
+    // footer dial and the video player's vertical-scroll gesture, so they share
+    // one handler that applies the rate to every media element.
+    const applySpeedChange = (event: Event) => {
+      const speed = (event as CustomEvent<{ speed: number }>).detail?.speed;
+      if (!Number.isFinite(speed)) {
+        return;
+      }
+      audio.playbackRate = speed / 100;
+      if (videoElement) {
+        videoElement.playbackRate = speed / 100;
+      }
+      if (videoPlayer) {
+        videoPlayer.speed = speed;
+      }
+      if (footer) {
+        footer.speed = speed;
+      }
       const songKey = getCurrentSongKey();
       if (songKey) {
-        nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', event.detail.speed);
+        nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', speed);
         void saveSongData(songKey);
       }
       syncCurrentSongControlsValues();
-    });
+    };
+    footer.addEventListener('speed-changed', applySpeedChange);
 
     footer.addEventListener('volume-changed', (event: any) => {
       audio.volume = event.detail.volume / 100;
+      if (videoElement) {
+        videoElement.volume = event.detail.volume / 100;
+      }
       const songKey = getCurrentSongKey();
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_volumeBar', event.detail.volume);
@@ -1667,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCurrentSongControlsValues();
     });
 
-     footer.addEventListener('marker-created', (event: any) => {
+    footer.addEventListener('marker-created', (event: any) => {
       // Save the marker to localStorage (following existing pattern)
       const songKey = getCurrentSongKey();
       if (songKey && event.detail.marker) {
@@ -1699,9 +1830,57 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentSongData = songKey ? nDB.get(songKey) : null;
       const existingMarkers = (currentSongData?.markers || []) as TroffMarker[];
 
-      footer.markerDialogInitialTime = audio.currentTime || 0;
+      footer.markerDialogInitialTime = getActiveMedia().currentTime || 0;
       footer.markerDialogSuggestedName = `marker nr ${existingMarkers.length + 1}`;
     });
+
+    // The video player's add-marker button opens the footer's marker dialog
+    // (create mode) — guarded so a footer without openMarkerDialog is ignored.
+    if (videoPlayer) {
+      videoPlayer.addEventListener('video-marker-add-requested', () => {
+        if (footer?.openMarkerDialog) {
+          footer.openMarkerDialog();
+        }
+      });
+
+      videoPlayer.addEventListener('video-prev-marker-requested', () => {
+        if (markerSlider) {
+          markerSlider.selectPreviousMarker();
+        }
+      });
+
+      videoPlayer.addEventListener('video-next-marker-requested', () => {
+        if (markerSlider) {
+          markerSlider.selectNextMarker();
+        }
+      });
+
+      videoPlayer.addEventListener('video-replay-requested', () => {
+        // Check if we have a playback start time defined in markerSlider
+        const media = getActiveMedia();
+        if (media) {
+          media.currentTime = markerSlider.getPlaybackStart();
+        }
+      });
+
+      videoPlayer.addEventListener('speed-changed', applySpeedChange);
+
+      videoPlayer.addEventListener('video-scrub-requested', (event: Event) => {
+        const detail = (event as CustomEvent<{ time?: number }>).detail;
+        const time = Number(detail?.time);
+        const media = getActiveMedia();
+        if (!media || !Number.isFinite(time)) {
+          return;
+        }
+        media.currentTime = time;
+        if (markerSlider) {
+          markerSlider.value = time;
+        }
+        if (header) {
+          header.currentTime = formatDuration(time);
+        }
+      });
+    }
 
     footer.addEventListener('marker-updated', (event: any) => {
       // Update the marker in localStorage
@@ -1807,7 +1986,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (songKey) {
           clearPendingPlaybackStart();
           setCurrentSong(songKey);
-          loadSong(songKey);
+          void loadSongIntoPlayer(songKey);
           recordSongStart(songKey);
 
           // Set URL hash for shareability if the song has a serverId
@@ -1842,7 +2021,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentSongKey = getCurrentSongKey();
     if (currentSongKey) {
       clearPendingPlaybackStart();
-      loadSong(currentSongKey);
+      void loadSongIntoPlayer(currentSongKey);
       recordSongStart(currentSongKey);
 
       // Set URL hash for shareability ONLY if there's no navigation hash.
@@ -1883,24 +2062,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Add audio event listeners for timing
-    audio.addEventListener('loadedmetadata', () => {
-      header.totalTime = formatDuration(audio.duration);
+    // Add audio/video event listeners for timing (attached to both the audio
+    // singleton and the video element so they operate on whichever is active)
+    const onLoadedMetadata = () => {
+      header.totalTime = formatDuration(getActiveMedia().duration);
       updateMarkerSlider(markerSlider);
       selectFirstAndLastMarkers();
       void applySavedZoomWindowForCurrentSong();
-    });
-    audio.addEventListener('timeupdate', () => {
-      header.currentTime = formatDuration(audio.currentTime);
-      markerSlider.value = audio.currentTime;
+    };
+    const onTimeUpdate = () => {
+      header.currentTime = formatDuration(getActiveMedia().currentTime);
+      markerSlider.value = getActiveMedia().currentTime;
 
       // Check if playback reached the stop point
-      if (audio.currentTime >= markerSlider.getPlaybackStop()) {
+      if (getActiveMedia().currentTime >= markerSlider.getPlaybackStop()) {
         const playbackStart = markerSlider.getPlaybackStart();
         if (Number.isFinite(loopTimesLeft)) {
           if (loopTimesLeft <= 1) {
-            audio.pause();
-            audio.currentTime = playbackStart;
+            getActiveMedia().pause();
+            getActiveMedia().currentTime = playbackStart;
             resetLoopTimesCounter();
             return;
           }
@@ -1911,19 +2091,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const waitBetweenDelay = getWaitBetweenDelay();
         isLoopTransitionPause = true;
-        audio.pause();
-        audio.currentTime = playbackStart;
+        getActiveMedia().pause();
+        getActiveMedia().currentTime = playbackStart;
         schedulePlaybackAfterDelay(waitBetweenDelay);
       }
-    });
-    audio.addEventListener('play', () => {
+    };
+    const onPlay = () => {
       clearPlaybackCountdown();
       if (footer) {
         footer.isPlaying = true;
       }
       updateHeaderCountdownDisplay();
-    });
-    audio.addEventListener('pause', () => {
+    };
+    const onPause = () => {
       if (isLoopTransitionPause) {
         isLoopTransitionPause = false;
       } else {
@@ -1933,14 +2113,27 @@ document.addEventListener('DOMContentLoaded', () => {
         footer.isPlaying = false;
       }
       updateHeaderCountdownDisplay();
-    });
-    audio.addEventListener('ended', () => {
+    };
+    const onEnded = () => {
       clearPendingPlaybackStart();
       if (footer) {
         footer.isPlaying = false;
       }
       updateHeaderCountdownDisplay();
-    });
+    };
+
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
+    audio.addEventListener('ended', onEnded);
+    if (videoElement) {
+      videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
+      videoElement.addEventListener('timeupdate', onTimeUpdate);
+      videoElement.addEventListener('play', onPlay);
+      videoElement.addEventListener('pause', onPause);
+      videoElement.addEventListener('ended', onEnded);
+    }
   }
 
   // Set up marker slider with real markers from current song
@@ -1950,7 +2143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for slider value changes
     markerSlider.addEventListener('value-changed', (event: any) => {
-      audio.currentTime = event.detail.value;
+      getActiveMedia().currentTime = event.detail.value;
     });
 
     // Listen for start marker selection
@@ -1991,7 +2184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     clearPendingPlaybackStart();
     setCurrentSong(fileName);
-    loadSong(fileName);
+    void loadSongIntoPlayer(fileName);
     recordSongStart(fileName);
 
     updateFooterWithCurrentSong();
@@ -2165,9 +2358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // v1 fallback: log error and use the first marker
           log.e(
-            'Could not find a marker at the time ' +
-              markerTime +
-              '; returning the first marker'
+            'Could not find a marker at the time ' + markerTime + '; returning the first marker'
           );
           newState.currentMarker = mergedMarkers[0]?.id || '';
         }
@@ -2180,9 +2371,7 @@ document.addEventListener('DOMContentLoaded', () => {
           newState.currentStopMarker = markerByTime.id + 'S';
         } else {
           log.e(
-            'Could not find a marker at the time ' +
-              stopMarkerTime +
-              '; returning the first marker'
+            'Could not find a marker at the time ' + stopMarkerTime + '; returning the first marker'
           );
           newState.currentStopMarker = (mergedMarkers[0]?.id || '') + 'S';
         }
@@ -2223,13 +2412,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!existingSongData) {
       // New song — download it with progress notification
-      const { showDownloadProgress, showToast } = await import(
-        './utils/notification.js'
-      );
+      const { showDownloadProgress, showToast } = await import('./utils/notification.js');
       const progress = showDownloadProgress(fileName);
       const downloadedFileName = await downloadSongFromHash(hash, {
-        onProgress: (loaded, total) =>
-          progress.update(Math.round((loaded / total) * 100)),
+        onProgress: (loaded, total) => progress.update(Math.round((loaded / total) * 100)),
       });
       progress.done();
       if (!downloadedFileName) return;

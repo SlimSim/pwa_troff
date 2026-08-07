@@ -180,4 +180,12 @@ describe('t-butt confirm behavior', () => {
 
     vi.useRealTimers();
   });
+
+  it('applies ghost class when ghost property is set', async () => {
+    element.ghost = true;
+    await element.updateComplete;
+
+    const button = element.shadowRoot?.querySelector('button') as HTMLElement;
+    expect(button.classList.contains('ghost')).toBe(true);
+  });
 });
