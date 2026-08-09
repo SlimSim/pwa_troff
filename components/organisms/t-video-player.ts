@@ -147,7 +147,11 @@ export class TVideoPlayer extends LitElement {
   private static readonly SCRUB_SECONDS_PER_PX = 0.05;
   private static readonly SPEED_PX_PER_STEP = 10;
   private static readonly SPEED_STEP_PERCENT = 1;
-  private static readonly SCRUB_SEEK_INTERVAL_MS = 50;
+  // Safety net for the seek-completion gate below: if the video element
+  // never fires 'seeked' for some reason (rare, but seen on a handful of
+  // Android media-engine versions), this makes sure scrubbing un-wedges
+  // itself instead of freezing for the rest of the drag.
+  private static readonly SEEK_WATCHDOG_MS = 400;
 
   private static readonly DRAG_THRESHOLD_PX = 5;
 
@@ -160,7 +164,13 @@ export class TVideoPlayer extends LitElement {
   private _dragMoved = false;
   private _dragSpeedAccum = 0;
   private _scrubTarget: number | null = null;
-  private _lastScrubSeekAt = 0;
+
+  // Seek-completion gate (see _requestSeek below): tracks whether the video
+  // element is currently mid-seek, and the latest scrub target we still owe
+  // it once that seek finishes.
+  private _seekInFlight = false;
+  private _pendingSeekTime: number | null = null;
+  private _seekWatchdogTimer?: ReturnType<typeof setTimeout>;
 
   @state() private _mirrored = false;
   @state() private _isFullscreen = false;
@@ -186,6 +196,7 @@ export class TVideoPlayer extends LitElement {
     document.removeEventListener('fullscreenchange', this._onFullscreenChange);
     this._clearControlsTimer();
     this._clearGestureTimer();
+    this._clearSeekWatchdog();
   }
 
   private _clearControlsTimer() {
@@ -241,12 +252,78 @@ export class TVideoPlayer extends LitElement {
     this._clearControlsTimer();
   };
 
+  /**
+   * Fires once the video element has actually finished (decoded + painted)
+   * the seek we last issued. This is the completion signal the scrub gate
+   * waits on — see _requestSeek for why time-based throttling isn't enough
+   * on slower Android devices.
+   */
+  private _onVideoSeeked = () => {
+    this._clearSeekWatchdog();
+    this._seekInFlight = false;
+    if (this._pendingSeekTime !== null) {
+      const next = this._pendingSeekTime;
+      this._pendingSeekTime = null;
+      this._commitSeek(next);
+    }
+  };
+
+  private _clearSeekWatchdog() {
+    if (this._seekWatchdogTimer !== undefined) {
+      clearTimeout(this._seekWatchdogTimer);
+      this._seekWatchdogTimer = undefined;
+    }
+  }
+
+  /** Actually assigns video.currentTime. Only call via _requestSeek. */
+  private _commitSeek(time: number) {
+    const video = this.querySelector('video');
+    if (!video) {
+      this._seekInFlight = false;
+      return;
+    }
+    this._seekInFlight = true;
+    video.currentTime = time;
+    this.dispatchEvent(
+      new CustomEvent('video-scrub-requested', {
+        detail: { time },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    this._clearSeekWatchdog();
+    this._seekWatchdogTimer = setTimeout(() => {
+      this._onVideoSeeked();
+    }, TVideoPlayer.SEEK_WATCHDOG_MS);
+  }
+
+  /**
+   * Requests a seek to `time`, gated on the previous seek having actually
+   * finished (video 'seeked' event) rather than on a fixed timer.
+   *
+   * On many Android devices, issuing a new `currentTime` write while the
+   * browser is still decoding/painting the previous seek just cancels that
+   * in-flight seek — so under a steady stream of pointermove events, nothing
+   * ever finishes rendering until the drag stops. Waiting for confirmation
+   * before sending the next seek lets each one actually complete, so the
+   * image advances continuously at whatever rate the device can manage
+   * instead of appearing frozen mid-drag.
+   */
+  private _requestSeek(time: number) {
+    if (this._seekInFlight) {
+      this._pendingSeekTime = time; // only the latest target survives
+      return;
+    }
+    this._commitSeek(time);
+  }
+
   firstUpdated() {
     const video = this.querySelector('video');
     if (video) {
       video.controls = false; // we provide our own controls
       video.addEventListener('play', this._onVideoPlay);
       video.addEventListener('pause', this._onVideoPause);
+      video.addEventListener('seeked', this._onVideoSeeked);
     }
   }
 
@@ -394,26 +471,17 @@ export class TVideoPlayer extends LitElement {
         Math.max(0, this._scrubTarget + deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
         duration
       );
-      // Throttle the seek so the browser has time to complete and paint each
-      // frame while scrubbing (rapid seeks cancel each other before painting).
-      const now = Date.now();
-      if (now - this._lastScrubSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS) {
-        return; // keep accumulating; the next seek lands on the exact target
-      }
-      this._lastScrubSeekAt = now;
-      video.currentTime = this._scrubTarget;
-      this.dispatchEvent(
-        new CustomEvent('video-scrub-requested', {
-          detail: { time: this._scrubTarget },
-          bubbles: true,
-          composed: true,
-        })
-      );
+
+      // Update the on-screen time label on every move — text is cheap. The
+      // actual video frame is gated by _requestSeek, since decoding/painting
+      // is the part that can't always keep up with the pointer on mobile.
       const scrubLabel =
         Number.isFinite(duration) && duration > 0
           ? `${formatDuration(this._scrubTarget)} / ${formatDuration(duration)}`
           : formatDuration(this._scrubTarget);
       this._showGestureFeedback('time', scrubLabel);
+
+      this._requestSeek(this._scrubTarget);
     } else {
       this._dragSpeedAccum += deltaY;
       // Round half away from zero: upward drags (negative deltas) at a .5px-step
@@ -445,26 +513,12 @@ export class TVideoPlayer extends LitElement {
   private _onFramePointerUp(event: PointerEvent) {
     if (this._dragPointerId !== event.pointerId) return;
     if (this._scrubTarget !== null) {
-      const video = this.querySelector('video');
-      if (video) {
-        const duration =
-          Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Infinity;
-        video.currentTime = this._scrubTarget;
-        this.dispatchEvent(
-          new CustomEvent('video-scrub-requested', {
-            detail: { time: this._scrubTarget },
-            bubbles: true,
-            composed: true,
-          })
-        );
-        const scrubLabel =
-          Number.isFinite(duration) && duration > 0
-            ? `${formatDuration(this._scrubTarget)} / ${formatDuration(duration)}`
-            : formatDuration(this._scrubTarget);
-        this._showGestureFeedback('time', scrubLabel);
-      }
+      // Route the release-point seek through the same gate: if a seek is
+      // still in flight it becomes the pending target and lands the instant
+      // that seek completes, guaranteeing we always end up exactly where the
+      // user released their finger.
+      this._requestSeek(this._scrubTarget);
       this._scrubTarget = null;
-      this._lastScrubSeekAt = 0;
     }
     this._dragPointerId = null;
     this._dragAxis = null;
