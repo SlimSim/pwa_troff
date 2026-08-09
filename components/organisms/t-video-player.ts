@@ -58,35 +58,35 @@ export class TVideoPlayer extends LitElement {
     }
     .play-pause-btn {
       top: auto;
-      bottom: 8px;
+      bottom: var(--bottom-safe-offset, 8px);
       left: 50%;
       transform: translateX(-50%);
     }
     .marker-btn {
       top: auto;
-      bottom: 8px;
+      bottom: var(--bottom-safe-offset, 8px);
       right: 8px;
     }
     .replay-btn {
       top: auto;
-      bottom: 8px;
+      bottom: var(--bottom-safe-offset, 8px);
       left: calc(30% - 8px);
       transform: translateX(-50%);
     }
     .prev-marker-btn {
       top: auto;
-      bottom: 8px;
+      bottom: var(--bottom-safe-offset, 8px);
       left: 8px;
     }
     .next-marker-btn {
       top: auto;
-      bottom: 8px;
+      bottom: var(--bottom-safe-offset, 8px);
       right: calc(30% - 8px);
       transform: translateX(50%);
     }
     .marker-label {
       position: absolute;
-      bottom: 40px;
+      bottom: calc(var(--bottom-safe-offset, 8px) + 32px);
       z-index: 1;
       padding: 2px 8px;
       border-radius: var(--button-border-radius);
@@ -139,6 +139,15 @@ export class TVideoPlayer extends LitElement {
       height: 100%;
       background: #000;
       touch-action: none;
+      --bottom-safe-offset: 8px;
+    }
+    /* Temporarily pushes the bottom-row buttons/labels up on entering
+       fullscreen so Android's "swipe from top / press back to exit
+       fullscreen" system hint — a native overlay we can't detect or
+       suppress from the page — doesn't sit on top of them. See
+       FULLSCREEN_HINT_BUFFER_MS. */
+    .video-frame.fullscreen-hint-buffer {
+      --bottom-safe-offset: 64px;
     }
   `;
 
@@ -152,6 +161,13 @@ export class TVideoPlayer extends LitElement {
   // Android media-engine versions), this makes sure scrubbing un-wedges
   // itself instead of freezing for the rest of the drag.
   private static readonly SEEK_WATCHDOG_MS = 400;
+  // How long to keep the bottom-row buttons pushed up after entering
+  // fullscreen. Android doesn't expose the hint's actual visibility or
+  // duration to the page — there's no event or API for it — so this is a
+  // best-effort timed buffer, not something we can react to precisely. 5s is
+  // a reasonable starting point; test on your actual devices and adjust if
+  // the hint lingers longer (or clears sooner) than that.
+  private static readonly FULLSCREEN_HINT_BUFFER_MS = 5000;
 
   private static readonly DRAG_THRESHOLD_PX = 5;
 
@@ -178,6 +194,7 @@ export class TVideoPlayer extends LitElement {
   @state() private _controlsVisible = true;
   @state() private _gestureIcon = '';
   @state() private _gestureText = '';
+  @state() private _fullscreenHintBuffer = false;
 
   @property({ type: Array }) markers: TroffMarker[] = [];
   @property({ type: String }) startMarkerId = '';
@@ -185,6 +202,7 @@ export class TVideoPlayer extends LitElement {
 
   private _controlsTimer?: ReturnType<typeof setTimeout>;
   private _gestureTimer?: ReturnType<typeof setTimeout>;
+  private _fullscreenHintBufferTimer?: ReturnType<typeof setTimeout>;
 
   connectedCallback() {
     super.connectedCallback();
@@ -197,6 +215,7 @@ export class TVideoPlayer extends LitElement {
     this._clearControlsTimer();
     this._clearGestureTimer();
     this._clearSeekWatchdog();
+    this._clearFullscreenHintBufferTimer();
   }
 
   private _clearControlsTimer() {
@@ -232,13 +251,29 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
+  private _clearFullscreenHintBufferTimer() {
+    if (this._fullscreenHintBufferTimer !== undefined) {
+      clearTimeout(this._fullscreenHintBufferTimer);
+      this._fullscreenHintBufferTimer = undefined;
+    }
+  }
+
   private _onFullscreenChange = () => {
     this._isFullscreen = document.fullscreenElement === this;
     if (!this._isFullscreen) {
       this._clearControlsTimer();
       this._controlsVisible = true;
+      this._clearFullscreenHintBufferTimer();
+      this._fullscreenHintBuffer = false;
     } else {
       this._scheduleControlsHide();
+      // Give Android's exit-fullscreen system hint room to appear without
+      // covering the bottom-row buttons, then relax back to normal spacing.
+      this._fullscreenHintBuffer = true;
+      this._clearFullscreenHintBufferTimer();
+      this._fullscreenHintBufferTimer = setTimeout(() => {
+        this._fullscreenHintBuffer = false;
+      }, TVideoPlayer.FULLSCREEN_HINT_BUFFER_MS);
     }
   };
 
@@ -418,6 +453,17 @@ export class TVideoPlayer extends LitElement {
     } else {
       this._clearControlsTimer();
     }
+  }
+
+  private _onFrameDoubleClick(event: MouseEvent) {
+    const path = event.composedPath();
+    // Same guard as _onFrameClick: double-tapping a control button must not
+    // toggle fullscreen via the frame.
+    if (path.some((el) => el instanceof Element && el.tagName.toLowerCase() === 't-butt')) {
+      return;
+    }
+    // Double-tap toggles fullscreen exactly like the fullscreen button.
+    this._onFullScreenClick();
   }
 
   private _onFramePointerDown(event: PointerEvent) {
@@ -602,9 +648,10 @@ export class TVideoPlayer extends LitElement {
   render() {
     return html`
       <div
-        class="video-frame"
+        class="video-frame ${this._fullscreenHintBuffer ? 'fullscreen-hint-buffer' : ''}"
         @click=${this._onFrameClick}
         @wheel=${this._onFrameWheel}
+        @dblclick=${this._onFrameDoubleClick}
         @pointerdown=${this._onFramePointerDown}
         @pointermove=${this._onFramePointerMove}
         @pointerup=${this._onFramePointerUp}
