@@ -353,6 +353,109 @@ describe('t-video-player', () => {
     expect(exitFullscreenSpy).toHaveBeenCalled();
   });
 
+  // ---- Double-tap toggles fullscreen ----------------------------------------
+  //
+  // Feature: a double-tap / double-click (native `dblclick` event) on the
+  // `.video-frame` must toggle fullscreen EXACTLY like the fullscreen button
+  // (`_onFullScreenClick`): request fullscreen on the HOST when not fullscreen,
+  // exit fullscreen when the host is already fullscreen. The `.video-frame`
+  // has `touch-action: none` so mobile double-tap zoom is disabled and native
+  // double-click events can fire. Like `_onFrameClick`, dblclicks whose
+  // composedPath includes a `t-butt` element (a control button) are ignored.
+  // Single clicks keep their existing controls-visibility toggle and must NOT
+  // request fullscreen — fullscreen is exclusive to the double-tap gesture.
+
+  it('single click on the frame does NOT request fullscreen (guard)', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const requestFullscreenSpy = mockRequestFullscreen(el);
+    const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+    expect(frame).not.toBeNull();
+
+    frame?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    await el.updateComplete;
+
+    // Fullscreen is exclusive to double-tap: a single click only toggles the
+    // controls visibility and must never request fullscreen.
+    expect(requestFullscreenSpy).not.toHaveBeenCalled();
+  });
+
+  it('double-tap on the frame requests fullscreen on the host when not fullscreen', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const requestFullscreenSpy = mockRequestFullscreen(el);
+    const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+    expect(frame).not.toBeNull();
+
+    frame?.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, composed: true, detail: 2 })
+    );
+    await el.updateComplete;
+
+    expect(requestFullscreenSpy).toHaveBeenCalled();
+  });
+
+  it('double-tap on the frame exits fullscreen when the host is already fullscreen', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    // document.fullscreenElement must report the HOST (not the video) for the
+    // double-tap to exit fullscreen instead of requesting it again — same
+    // protocol as the fullscreen button test above.
+    stubFullscreenElement(el);
+    const exitFullscreenSpy = mockExitFullscreen();
+    const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+    expect(frame).not.toBeNull();
+
+    frame?.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, composed: true, detail: 2 })
+    );
+    await el.updateComplete;
+
+    expect(exitFullscreenSpy).toHaveBeenCalled();
+  });
+
+  it('double-tap on a control button does NOT toggle fullscreen', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const requestFullscreenSpy = mockRequestFullscreen(el);
+    const fullscreenBtn = getButton(el, '.fullscreen-btn');
+
+    // The composedPath includes a t-butt element, so the dblclick handler must
+    // ignore it (same guard as _onFrameClick): double-clicking a control
+    // button must not toggle fullscreen, and the button's own click action
+    // must not fire from a dblclick dispatch either.
+    fullscreenBtn.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, composed: true, detail: 2 })
+    );
+    await el.updateComplete;
+
+    expect(requestFullscreenSpy).not.toHaveBeenCalled();
+  });
+
+  it('double-tap on the frame does not itself toggle the controls-hidden class', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+    expect(frame).not.toBeNull();
+
+    const buttonSelectors = ['.mirror-btn', '.fullscreen-btn', '.play-pause-btn', '.marker-btn', '.replay-btn', '.prev-marker-btn', '.next-marker-btn'];
+
+    // The dblclick handler ONLY handles fullscreen — it must not ALSO toggle
+    // the controls visibility (that stays exclusive to single clicks).
+    frame?.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, composed: true, detail: 2 })
+    );
+    await el.updateComplete;
+    for (const selector of buttonSelectors) {
+      expect(getButton(el, selector).classList.contains('controls-hidden')).toBe(false);
+    }
+  });
+
   it('renders a play/pause button with a play icon', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
