@@ -42,12 +42,12 @@
      cx="12"
      cy="12"
      r="10.92147"
-     stroke="#222222"
+     stroke="currentColor"
      id="circle1"
      style="fill:none;stroke-width:2.15706;stroke-dasharray:none" />
   <path
      d="M 15.614218,15.235696 12.025096,12.079459 12.000004,5.6651297"
-     stroke="#222222"
+     stroke="currentColor"
      stroke-linecap="round"
      id="path1"
      style="fill:none;stroke-width:2.15706;stroke-dasharray:none"
