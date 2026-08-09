@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TroffMarker } from '../../types/troff.js';
 import { formatDuration } from '../../utils/formatters.js';
+import { isAndroid } from '../../utils/browserEnv.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 
@@ -269,11 +270,14 @@ export class TVideoPlayer extends LitElement {
       this._scheduleControlsHide();
       // Give Android's exit-fullscreen system hint room to appear without
       // covering the bottom-row buttons, then relax back to normal spacing.
-      this._fullscreenHintBuffer = true;
-      this._clearFullscreenHintBufferTimer();
-      this._fullscreenHintBufferTimer = setTimeout(() => {
-        this._fullscreenHintBuffer = false;
-      }, TVideoPlayer.FULLSCREEN_HINT_BUFFER_MS);
+      // iOS doesn't show this hint, so only buffer on Android.
+      if (isAndroid) {
+        this._fullscreenHintBuffer = true;
+        this._clearFullscreenHintBufferTimer();
+        this._fullscreenHintBufferTimer = setTimeout(() => {
+          this._fullscreenHintBuffer = false;
+        }, TVideoPlayer.FULLSCREEN_HINT_BUFFER_MS);
+      }
     }
   };
 
