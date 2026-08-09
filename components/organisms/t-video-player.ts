@@ -147,7 +147,7 @@ export class TVideoPlayer extends LitElement {
        suppress from the page — doesn't sit on top of them. See
        FULLSCREEN_HINT_BUFFER_MS. */
     .video-frame.fullscreen-hint-buffer {
-      --bottom-safe-offset: 64px;
+      --bottom-safe-offset: 84px;
     }
   `;
 
@@ -167,7 +167,7 @@ export class TVideoPlayer extends LitElement {
   // best-effort timed buffer, not something we can react to precisely. 5s is
   // a reasonable starting point; test on your actual devices and adjust if
   // the hint lingers longer (or clears sooner) than that.
-  private static readonly FULLSCREEN_HINT_BUFFER_MS = 5000;
+  private static readonly FULLSCREEN_HINT_BUFFER_MS = 4000;
 
   private static readonly DRAG_THRESHOLD_PX = 5;
 
