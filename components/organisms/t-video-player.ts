@@ -45,6 +45,14 @@ export class TVideoPlayer extends LitElement {
     .mirror-btn {
       left: 8px;
     }
+    .mirror-btn[active] {
+      --toggle-button-active-color: color-mix(
+        in srgb,
+        var(--accent-color-1, #431c5d) 60%,
+        transparent
+      );
+      --on-toggle-button-active-color: #fff;
+    }
     .fullscreen-btn {
       right: 8px;
     }
@@ -137,8 +145,9 @@ export class TVideoPlayer extends LitElement {
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
   private static readonly GESTURE_FEEDBACK_MS = 1500;
   private static readonly SCRUB_SECONDS_PER_PX = 0.05;
-  private static readonly SPEED_PX_PER_STEP = 50;
-  private static readonly SPEED_STEP_PERCENT = 5;
+  private static readonly SPEED_PX_PER_STEP = 10;
+  private static readonly SPEED_STEP_PERCENT = 1;
+  private static readonly SCRUB_SEEK_INTERVAL_MS = 50;
 
   private static readonly DRAG_THRESHOLD_PX = 5;
 
@@ -149,6 +158,9 @@ export class TVideoPlayer extends LitElement {
   private _dragLastY = 0;
   private _dragAxis: 'horizontal' | 'vertical' | null = null;
   private _dragMoved = false;
+  private _dragSpeedAccum = 0;
+  private _scrubTarget: number | null = null;
+  private _lastScrubSeekAt = 0;
 
   @state() private _mirrored = false;
   @state() private _isFullscreen = false;
@@ -343,6 +355,7 @@ export class TVideoPlayer extends LitElement {
     this._dragStartY = this._dragLastY = event.clientY;
     this._dragAxis = null;
     this._dragMoved = false;
+    this._dragSpeedAccum = 0;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
 
@@ -374,29 +387,50 @@ export class TVideoPlayer extends LitElement {
     if (this._dragAxis === 'horizontal') {
       const duration =
         Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Infinity;
-      const newTime = Math.min(
-        Math.max(0, video.currentTime + deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
+      if (this._scrubTarget === null) {
+        this._scrubTarget = video.currentTime; // base the accumulation on the real position
+      }
+      this._scrubTarget = Math.min(
+        Math.max(0, this._scrubTarget + deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
         duration
       );
-      video.currentTime = newTime;
+      // Throttle the seek so the browser has time to complete and paint each
+      // frame while scrubbing (rapid seeks cancel each other before painting).
+      const now = Date.now();
+      if (now - this._lastScrubSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS) {
+        return; // keep accumulating; the next seek lands on the exact target
+      }
+      this._lastScrubSeekAt = now;
+      video.currentTime = this._scrubTarget;
       this.dispatchEvent(
         new CustomEvent('video-scrub-requested', {
-          detail: { time: newTime },
+          detail: { time: this._scrubTarget },
           bubbles: true,
           composed: true,
         })
       );
       const scrubLabel =
         Number.isFinite(duration) && duration > 0
-          ? `${formatDuration(newTime)} / ${formatDuration(duration)}`
-          : formatDuration(newTime);
+          ? `${formatDuration(this._scrubTarget)} / ${formatDuration(duration)}`
+          : formatDuration(this._scrubTarget);
       this._showGestureFeedback('time', scrubLabel);
     } else {
-      const steps = deltaY / TVideoPlayer.SPEED_PX_PER_STEP;
+      this._dragSpeedAccum += deltaY;
+      // Round half away from zero: upward drags (negative deltas) at a .5px-step
+      // boundary must round to a full step just like downward drags (Math.round
+      // rounds -0.5 → -0 and -1.5 → -1, which would lose those steps).
+      const steps =
+        Math.sign(this._dragSpeedAccum) *
+        Math.round(Math.abs(this._dragSpeedAccum) / TVideoPlayer.SPEED_PX_PER_STEP);
+      if (steps === 0) {
+        return; // accumulate more pixels before emitting a whole-number step
+      }
+      this._dragSpeedAccum -= steps * TVideoPlayer.SPEED_PX_PER_STEP;
       const newSpeed = Math.min(
-        Math.max(50, this.speed - steps * TVideoPlayer.SPEED_STEP_PERCENT),
+        Math.max(50, Math.round(this.speed) - steps * TVideoPlayer.SPEED_STEP_PERCENT),
         200
       );
+      this.speed = newSpeed; // keep the drag's running base in sync (v2Script also sets it via the event)
       this.dispatchEvent(
         new CustomEvent('speed-changed', {
           detail: { speed: newSpeed },
@@ -410,6 +444,28 @@ export class TVideoPlayer extends LitElement {
 
   private _onFramePointerUp(event: PointerEvent) {
     if (this._dragPointerId !== event.pointerId) return;
+    if (this._scrubTarget !== null) {
+      const video = this.querySelector('video');
+      if (video) {
+        const duration =
+          Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Infinity;
+        video.currentTime = this._scrubTarget;
+        this.dispatchEvent(
+          new CustomEvent('video-scrub-requested', {
+            detail: { time: this._scrubTarget },
+            bubbles: true,
+            composed: true,
+          })
+        );
+        const scrubLabel =
+          Number.isFinite(duration) && duration > 0
+            ? `${formatDuration(this._scrubTarget)} / ${formatDuration(duration)}`
+            : formatDuration(this._scrubTarget);
+        this._showGestureFeedback('time', scrubLabel);
+      }
+      this._scrubTarget = null;
+      this._lastScrubSeekAt = 0;
+    }
     this._dragPointerId = null;
     this._dragAxis = null;
   }
@@ -452,7 +508,7 @@ export class TVideoPlayer extends LitElement {
       // Vertical scroll: adjust the playback speed (v2Script applies it to the media).
       const steps = Math.round(event.deltaY / TVideoPlayer.SPEED_PX_PER_STEP);
       const newSpeed = Math.min(
-        Math.max(50, this.speed - steps * TVideoPlayer.SPEED_STEP_PERCENT),
+        Math.max(50, Math.round(this.speed) - steps * TVideoPlayer.SPEED_STEP_PERCENT),
         200
       );
       this.dispatchEvent(
@@ -513,6 +569,7 @@ export class TVideoPlayer extends LitElement {
           class="video-btn mirror-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
           slim
           title="Mirror video"
+          .active=${this._mirrored}
           @click=${this._onMirrorClick}
         >
           <t-icon name="mirror"></t-icon>
