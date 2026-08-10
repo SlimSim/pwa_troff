@@ -15,6 +15,7 @@ import { nDB } from '../../assets/internal/db.js';
 import { getCurrentSongKey } from '../../utils/current-song.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import { toSongKey } from '../../utils/utils.js';
+import { createNewSongEntry } from '../../utils/troff-settings.js';
 import {
   filterTracks,
   filterArtists,
@@ -1023,24 +1024,7 @@ export class MediaParent extends LitElement {
     const existing = nDB.get(songKey);
 
     if (!existing) {
-      nDB.set(songKey, {
-        fileData: {
-          album: '',
-          artist: '',
-          choreographer: '',
-          choreography: '',
-          customName: songKey,
-          duration: 0,
-          genre: '',
-          tags: '',
-          title: '',
-          lastModified: file.lastModified,
-          size: file.size,
-        },
-        localInformation: {
-          addedFromThisDevice: true,
-        },
-      });
+      nDB.set(songKey, createNewSongEntry(file, songKey));
     } else {
       nDB.setOnSong(songKey, ['localInformation', 'addedFromThisDevice'], true);
     }

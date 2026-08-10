@@ -15,6 +15,8 @@ import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
 import log from './log.js';
 
+const CACHE_NAME = 'songCache-v1.0';
+
 // ---------------------------------------------------------------------------
 // Internal state
 // ---------------------------------------------------------------------------
@@ -22,12 +24,21 @@ import log from './log.js';
 /** Holds the unsubscribe callbacks returned by onSnapshot(). */
 let unsubscribers: Array<() => void> = [];
 
+/** Holds the group-song collection `onSnapshot` unsubscribe callbacks. */
+let groupUnsubscribers: Array<() => void> = [];
+
 /**
  * Optional callback invoked when the *currently-playing* song receives a
  * remote update. Receives the songKey and the parsed jsonDataInfo from
  * Firestore.
  */
 let liveUpdateCallback: ((songKey: string, remoteData: Record<string, unknown>) => void) | null = null;
+
+/**
+ * Optional callback invoked when a group's Songs collection changes remotely.
+ * Receives the groupId of the group that changed.
+ */
+let groupUpdateCallback: ((groupId: string) => void) | null = null;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -127,6 +138,8 @@ export function setLiveUpdateCallback(cb: (songKey: string, remoteData: Record<s
 export function teardownListeners(): void {
   unsubscribers.forEach((unsub) => unsub());
   unsubscribers = [];
+  groupUnsubscribers.forEach((unsub) => unsub());
+  groupUnsubscribers = [];
 }
 
 /**
@@ -220,3 +233,186 @@ export async function saveSongData(songKey: string): Promise<void> {
      log.i('Firebase save not available:', err);
    }
  }
+
+// ---------------------------------------------------------------------------
+// Group song listeners
+// ---------------------------------------------------------------------------
+
+/** Shape of a server-side song document inside a group's Songs collection. */
+type ServerSongDoc = {
+  firebaseSongDocId: string;
+  fullPath: string;
+  galleryId: string;
+  fileUrl: string;
+  jsonDataInfo?: string;
+};
+
+type GroupSongsSnapshot = {
+  docs: Array<{ id: string; data: () => Record<string, unknown> }>;
+  metadata: { hasPendingWrites: boolean };
+};
+
+/**
+ * Handle a snapshot of a group's Songs collection.
+ *
+ * Adds new remote songs (downloading missing audio files and saving metadata)
+ * and removes local entries whose Firestore doc no longer exists. Only persists
+ * `aoSongLists` when something changed, then invokes the group update callback.
+ */
+async function handleGroupSongsSnapshot(groupId: string, snapshot: GroupSongsSnapshot): Promise<void> {
+  // Ignore our own writes (local echo)
+  if (snapshot.metadata?.hasPendingWrites) return;
+
+  // Build the server-side song doc list (skip malformed docs)
+  const serverDocs: ServerSongDoc[] = [];
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    const rawSongKey = data.songKey as string | undefined;
+    const fileUrl = data.fileUrl as string | undefined;
+    if (!rawSongKey || !fileUrl) continue;
+    serverDocs.push({
+      firebaseSongDocId: doc.id,
+      fullPath: toSongKey(rawSongKey),
+      galleryId: 'pwa-galleryId',
+      fileUrl,
+      jsonDataInfo: data.jsonDataInfo as string | undefined,
+    });
+  }
+
+  const songLists: TroffFirebaseGroupIdentifyer[] =
+    (nDB.get('aoSongLists') as TroffFirebaseGroupIdentifyer[] | undefined) || [];
+  const group = songLists.find((g) => g.firebaseGroupDocId === groupId);
+  if (!group) return;
+
+  const localSongs = group.songs || [];
+  const serverIds = new Set(serverDocs.map((d) => d.firebaseSongDocId));
+  let changed = false;
+
+  // Removed songs: keep only entries that still exist on the server.
+  // Entries without a firebaseSongDocId are local-only (e.g. added offline)
+  // and are kept until they get synced.
+  const kept = localSongs.filter((s) => {
+    if (!s.firebaseSongDocId) return true;
+    return serverIds.has(s.firebaseSongDocId);
+  });
+  if (kept.length !== localSongs.length) changed = true;
+
+  // New songs: download the file first (mirroring firebase-sync.ts), then save
+  // metadata and append locally. Songs whose file cannot be fetched are skipped.
+  for (const serverDoc of serverDocs) {
+    if (kept.some((s) => s.firebaseSongDocId === serverDoc.firebaseSongDocId)) continue;
+
+    const downloaded = await downloadAndCacheFile(serverDoc);
+    if (!downloaded) continue;
+
+    // Save/update song metadata in nDB (timestamp guarded)
+    if (serverDoc.jsonDataInfo) {
+      try {
+        const parsedData = JSON.parse(serverDoc.jsonDataInfo) as Record<string, unknown>;
+        const existingData = nDB.get(serverDoc.fullPath) as Record<string, unknown> | null;
+        const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
+        const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
+        if (serverUploadTime >= localUploadTime) {
+          nDB.set(serverDoc.fullPath, parsedData);
+        }
+      } catch (err) {
+        log.e(`Failed to parse song data for "${serverDoc.fullPath}":`, err);
+      }
+    }
+
+    kept.push({
+      firebaseSongDocId: serverDoc.firebaseSongDocId,
+      fullPath: serverDoc.fullPath,
+      galleryId: serverDoc.galleryId,
+      fileUrl: serverDoc.fileUrl,
+    });
+    changed = true;
+  }
+
+  if (changed) {
+    group.songs = kept;
+    nDB.set('aoSongLists', songLists);
+    if (groupUpdateCallback) {
+      groupUpdateCallback(groupId);
+    }
+  }
+}
+
+/**
+ * Download a song file from Firestore Storage if it is not already cached,
+ * and put it into the local song cache.
+ *
+ * @returns true when the file is available in the cache (already present or
+ * downloaded), false when the download failed.
+ */
+async function downloadAndCacheFile(serverDoc: ServerSongDoc): Promise<boolean> {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const cachedResponse = await cache.match(serverDoc.fullPath);
+    if (cachedResponse) return true;
+
+    const response = await fetch(serverDoc.fileUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${serverDoc.fullPath}: ${response.statusText}`);
+    }
+    await cache.put(serverDoc.fullPath, response.clone());
+    return true;
+  } catch (err) {
+    log.e(`Failed to download song "${serverDoc.fullPath}":`, err);
+    return false;
+  }
+}
+
+/**
+ * Register a callback invoked when a group's Songs collection changes
+ * remotely. The callback receives the groupId of the changed group.
+ */
+export function setGroupUpdateCallback(cb: (groupId: string) => void): void {
+  groupUpdateCallback = cb;
+}
+
+/**
+ * Set up `onSnapshot` listeners for every Firebase group's Songs collection
+ * in the current `aoSongLists`. Remote changes add/remove group songs locally.
+ *
+ * Tear down any previous group listeners first. No-op when Firebase is
+ * unavailable or no group has a `firebaseGroupDocId`.
+ */
+export async function setupGroupSongListeners(): Promise<void> {
+  // Tear down any existing group listeners first (e.g. on re-sign-in)
+  groupUnsubscribers.forEach((unsub) => unsub());
+  groupUnsubscribers = [];
+
+  try {
+    const firebaseClient = await import('../services/firebaseClient.js');
+    const { db, collection, onSnapshot } = firebaseClient;
+
+    const songLists: TroffFirebaseGroupIdentifyer[] =
+      (nDB.get('aoSongLists') as TroffFirebaseGroupIdentifyer[] | undefined) || [];
+    const firebaseGroups = songLists.filter((g) => g.firebaseGroupDocId);
+    if (firebaseGroups.length === 0) {
+      log.i('No Firebase groups to listen to');
+      return;
+    }
+
+    for (const group of firebaseGroups) {
+      const groupId = group.firebaseGroupDocId!;
+      const songsCollectionRef = collection(db, 'Groups', groupId, 'Songs');
+      const unsub = onSnapshot(
+        songsCollectionRef,
+        (snapshot: GroupSongsSnapshot) => {
+          handleGroupSongsSnapshot(groupId, snapshot);
+        },
+        (err: unknown) => {
+          log.e(`onSnapshot error for group "${groupId}":`, err);
+        }
+      );
+      groupUnsubscribers.push(unsub);
+    }
+
+    log.i(`Firebase group song listeners active for ${firebaseGroups.length} group(s)`);
+  } catch (err) {
+    // Firebase may not be available (tests, offline, CDN blocked)
+    log.i('Firebase group song sync not available:', err);
+  }
+}

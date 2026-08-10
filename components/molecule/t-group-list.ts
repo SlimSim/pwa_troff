@@ -42,11 +42,7 @@ export class GroupList extends LitElement {
 
     .group-item.highlighted {
       border-left: 4px solid var(--accent-color-1, #431c5d);
-      background-color: color-mix(
-        in srgb,
-        var(--accent-color-1, #431c5d) 18%,
-        transparent
-      );
+      background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 18%, transparent);
       box-shadow: inset 0 0 0 1px
         color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
     }
@@ -185,7 +181,10 @@ export class GroupList extends LitElement {
     .detail-edit-btn {
       flex-shrink: 0;
       margin-left: auto;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        width 0.2s ease,
+        margin 0.2s ease;
     }
 
     .detail-edit-btn.search-expanded {
@@ -218,7 +217,10 @@ export class GroupList extends LitElement {
       display: flex;
       align-items: center;
       gap: 3px;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        width 0.2s ease,
+        margin 0.2s ease;
       flex-shrink: 0;
     }
 
@@ -232,7 +234,10 @@ export class GroupList extends LitElement {
 
     .detail-add-song-btn {
       flex-shrink: 0;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        width 0.2s ease,
+        margin 0.2s ease;
     }
 
     .detail-add-song-btn.search-expanded {
@@ -750,11 +755,15 @@ export class GroupList extends LitElement {
             </div>
 
             <!-- Controls: add song, song count, search (moved from song-list-header) -->
-            <div class="detail-header-controls ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+            <div
+              class="detail-header-controls ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
+            >
               <span class="group-song-count ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
                 <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
               </span>
-              <div class="search-compact-wrap ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
+              <div
+                class="search-compact-wrap ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
+              >
                 <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
                 <t-input
                   class="search-input-compact"
@@ -895,7 +904,6 @@ export class GroupList extends LitElement {
           <!-- Toggle button at the bottom -->
           <div class="manage-toggle-wrap">
             <t-butt
-              slim
               @click=${() => {
                 this._songManagementOpen = !this._songManagementOpen;
                 this._addSongQuery = '';

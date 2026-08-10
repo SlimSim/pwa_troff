@@ -76,9 +76,11 @@ import log from './utils/log.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import {
   setupListeners,
+  setupGroupSongListeners,
   teardownListeners,
   saveSongData,
   setLiveUpdateCallback,
+  setGroupUpdateCallback,
 } from './utils/firebase-realtime.js';
 
 // The media element currently playing (audio singleton, or the #videoElement when
@@ -1696,6 +1698,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Set up real-time listeners for Firebase song changes
           await setupListeners();
+          await setupGroupSongListeners();
           setLiveUpdateCallback((songKey: string) => {
             // If the updated song is currently selected, refresh UI without interrupting playback
             const currentKey = getCurrentSongKey();
@@ -1704,6 +1707,12 @@ document.addEventListener('DOMContentLoaded', () => {
               syncSettingsPanelValues();
               syncCurrentSongControlsValues();
               syncLoopTimesFromSong();
+            }
+          });
+          setGroupUpdateCallback(() => {
+            // Refresh the group song list when a group's songs change remotely
+            if (songList && typeof (songList as any).reloadSongs === 'function') {
+              (songList as any).reloadSongs();
             }
           });
         }
@@ -2611,9 +2620,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!groupKey || !songKey) return;
 
     try {
+      // Capture the removed song entry (with its Firebase identity) BEFORE the local update
+      const songListsBefore: any[] = nDB.get('aoSongLists') || [];
+      const groupBefore = songListsBefore.find((sl: any) => {
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        return slKey != null && String(slKey) === String(groupKey);
+      });
+      const removedEntry = groupBefore?.songs?.find((s: any) => s.fullPath === songKey);
+
       await _updateGroupSongs(groupKey, (songs) =>
         songs.filter((s: any) => s.fullPath !== songKey)
       );
+
+      // Delete the song doc (and storage file) from Firebase if it was synced
+      if (groupBefore?.firebaseGroupDocId && removedEntry?.firebaseSongDocId) {
+        try {
+          const { removeSongFromFirebaseGroup } = await import('./utils/firebase-group-sync.js');
+          await removeSongFromFirebaseGroup(groupBefore.firebaseGroupDocId, removedEntry);
+        } catch (err) {
+          log.e('Error removing song from Firebase group:', err);
+        }
+      }
     } catch (error) {
       log.e('Error removing song from group:', error);
     }
@@ -2631,6 +2658,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (songs.some((s: any) => s.fullPath === songKey)) return songs;
         return [...songs, { fullPath: songKey, galleryId: title || songKey }];
       });
+
+      // Share the song with the Firebase group: upload the file and create the
+      // Songs subcollection doc so other devices in the group receive it.
+      const songListsAfter: any[] = nDB.get('aoSongLists') || [];
+      const updatedGroup = songListsAfter.find((sl: any) => {
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        return slKey != null && String(slKey) === String(groupKey);
+      });
+      if (updatedGroup?.firebaseGroupDocId) {
+        try {
+          const { shareSongToFirebaseGroup } = await import('./utils/firebase-group-sync.js');
+          await shareSongToFirebaseGroup(updatedGroup, songKey);
+        } catch (err) {
+          log.e('Error sharing song to Firebase group:', err);
+        }
+      }
     } catch (error) {
       log.e('Error adding song to group:', error);
     }

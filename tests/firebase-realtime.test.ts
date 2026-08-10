@@ -45,17 +45,40 @@ const mockDoc = vi.fn((_db: unknown, ...pathSegments: string[]) => ({
   path: pathSegments.join('/'),
 }));
 const mockSetDoc = vi.fn();
+const mockCollection = vi.fn((_db: unknown, ...pathSegments: string[]) => ({
+  path: pathSegments.join('/'),
+}));
 
 vi.mock('../services/firebaseClient.js', () => ({
   db: {},
   doc: mockDoc,
   onSnapshot: mockOnSnapshot,
   setDoc: mockSetDoc,
-  collection: vi.fn(),
+  collection: mockCollection,
   getDocs: vi.fn(),
   query: vi.fn(),
   where: vi.fn(),
 }));
+
+// ---------------------------------------------------------------------------
+// Global caches + fetch stubs (needed by setupGroupSongListeners to download
+// audio files for newly-added remote songs).
+// ---------------------------------------------------------------------------
+
+const mockCache: Record<string, Response> = {};
+const mockCacheInstance = {
+  match: vi.fn(async (key: string) => mockCache[key] ?? null),
+  put: vi.fn(async (key: string, response: Response) => {
+    mockCache[key] = response;
+  }),
+};
+const cachesMock = {
+  open: vi.fn(async (_name: string) => mockCacheInstance),
+};
+vi.stubGlobal('caches', cachesMock);
+
+const fetchMock = vi.fn();
+vi.stubGlobal('fetch', fetchMock);
 
 // ---------------------------------------------------------------------------
 // Test suite
@@ -496,5 +519,340 @@ describe('firebase-realtime', () => {
 
     expect(unsub1).toHaveBeenCalledTimes(1); // old listener torn down
     expect(mockOnSnapshot).toHaveBeenCalledTimes(1); // new listener set up
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setupGroupSongListeners + setGroupUpdateCallback
+// ---------------------------------------------------------------------------
+
+describe('setupGroupSongListeners', () => {
+  let setupGroupSongListeners: () => Promise<void>;
+  let setGroupUpdateCallback: (cb: (groupId: string) => void) => void;
+  let teardownListeners: () => void;
+
+  /** Helper: register a collection snapshot callback that was passed to onSnapshot. */
+  function triggerGroupSnapshot(
+    groupId: string,
+    docs: Array<{ id: string; data: () => Record<string, unknown> }>,
+    hasPendingWrites = false
+  ): void {
+    const call = mockOnSnapshot.mock.calls.find(
+      (c: unknown[]) => (c[0] as { path: string })?.path === `Groups/${groupId}/Songs`
+    );
+    if (!call) throw new Error(`No onSnapshot call found for collection "Groups/${groupId}/Songs"`);
+    const cb = call[1] as (snapshot: {
+      docs: Array<{ id: string; data: () => Record<string, unknown> }>;
+      metadata: { hasPendingWrites: boolean };
+    }) => void;
+    cb({ docs, metadata: { hasPendingWrites } });
+  }
+
+  const songDoc = (id: string, data: Record<string, unknown>) => ({ id, data: () => data });
+
+  beforeEach(async () => {
+    vi.resetModules();
+    // Clear all stores
+    Object.keys(nDBStore).forEach((k) => delete nDBStore[k]);
+    Object.keys(mockCache).forEach((k) => delete mockCache[k]);
+    mockOnSnapshot.mockClear();
+    mockDoc.mockClear();
+    mockSetDoc.mockClear();
+    mockCollection.mockClear();
+    fetchMock.mockReset();
+    mockCacheInstance.match.mockClear();
+    mockCacheInstance.put.mockClear();
+    cachesMock.open.mockClear();
+
+    const mod = await import('../utils/firebase-realtime.js');
+    setupGroupSongListeners = mod.setupGroupSongListeners;
+    setGroupUpdateCallback = mod.setGroupUpdateCallback;
+    teardownListeners = mod.teardownListeners;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // -----------------------------------------------------------------------
+  // No-op scenarios
+  // -----------------------------------------------------------------------
+
+  it('is a no-op when no group has firebaseGroupDocId', async () => {
+    nDBStore['aoSongLists'] = [{ id: 1, name: 'Local', songs: [] }];
+
+    await setupGroupSongListeners();
+
+    expect(mockOnSnapshot).not.toHaveBeenCalled();
+  });
+
+  // -----------------------------------------------------------------------
+  // Listener setup
+  // -----------------------------------------------------------------------
+
+  it('attaches one collection listener per Firebase group', async () => {
+    nDBStore['aoSongLists'] = [
+      { firebaseGroupDocId: 'g1', songs: [] },
+      { firebaseGroupDocId: 'g2', songs: [] },
+      { id: 1, name: 'Local', songs: [] },
+    ];
+
+    await setupGroupSongListeners();
+
+    expect(mockOnSnapshot).toHaveBeenCalledTimes(2);
+    expect(mockCollection).toHaveBeenCalledWith(expect.anything(), 'Groups', 'g1', 'Songs');
+    expect(mockCollection).toHaveBeenCalledWith(expect.anything(), 'Groups', 'g2', 'Songs');
+  });
+
+  it('re-calling setupGroupSongListeners tears down previous listeners', async () => {
+    const unsub1 = vi.fn();
+    const unsub2 = vi.fn();
+    mockOnSnapshot.mockReturnValueOnce(unsub1).mockReturnValueOnce(unsub2);
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+
+    await setupGroupSongListeners();
+    await setupGroupSongListeners();
+
+    expect(unsub1).toHaveBeenCalledTimes(1);
+    expect(unsub2).not.toHaveBeenCalled();
+    expect(mockOnSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it('teardownListeners tears down the group song listeners', async () => {
+    const unsub = vi.fn();
+    mockOnSnapshot.mockReturnValue(unsub);
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+
+    await setupGroupSongListeners();
+
+    teardownListeners();
+
+    expect(unsub).toHaveBeenCalledTimes(1);
+  });
+
+  // -----------------------------------------------------------------------
+  // Snapshot handling
+  // -----------------------------------------------------------------------
+
+  it('adds a new remote song to the group and invokes the update callback', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+    fetchMock.mockResolvedValue(new Response('audio data', { status: 200 }));
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'new-track.mp3',
+        fileUrl: 'https://example.com/new-track.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [{ id: 'm1' }], latestUploadToFirebase: 100 }),
+      }),
+    ]);
+
+    // The audio file download is fire-and-forget — flush pending microtasks
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // File downloaded and cached
+    expect(fetchMock).toHaveBeenCalledWith('https://example.com/new-track.mp3');
+    expect(mockCacheInstance.put).toHaveBeenCalledWith('new-track.mp3', expect.any(Response));
+
+    // Metadata saved to nDB
+    const saved = nDBStore['new-track.mp3'] as Record<string, unknown>;
+    expect(saved).toBeDefined();
+    expect(saved.markers).toEqual([{ id: 'm1' }]);
+
+    // Entry appended to the group
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: Array<Record<string, unknown>> }>)[0];
+    expect(group.songs).toHaveLength(1);
+    expect(group.songs[0]).toMatchObject({
+      firebaseSongDocId: 's1',
+      fullPath: 'new-track.mp3',
+      galleryId: 'pwa-galleryId',
+      fileUrl: 'https://example.com/new-track.mp3',
+    });
+
+    // Callback invoked with the groupId
+    expect(cb).toHaveBeenCalledWith('g1');
+  });
+
+  it('does not re-download files that are already in the cache', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+    mockCache['new-track.mp3'] = new Response('already cached');
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'new-track.mp3',
+        fileUrl: 'https://example.com/new-track.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 100 }),
+      }),
+    ]);
+
+    // The append happens after the (instant) cache check — flush pending microtasks
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: unknown[] }>)[0];
+    expect(group.songs).toHaveLength(1);
+    expect(cb).toHaveBeenCalledWith('g1');
+  });
+
+  it('skips songs whose file download fails', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+    fetchMock.mockRejectedValue(new Error('Network error'));
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'broken.mp3',
+        fileUrl: 'https://example.com/broken.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 100 }),
+      }),
+    ]);
+
+    // The download is awaited inline — flush pending microtasks
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Song must NOT be appended and no callback invoked
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: unknown[] }>)[0];
+    expect(group.songs).toHaveLength(0);
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite local nDB data when the server data is older', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+    nDBStore['new-track.mp3'] = {
+      markers: [{ id: 'local-marker' }],
+      latestUploadToFirebase: 2000,
+    };
+    mockCache['new-track.mp3'] = new Response('content');
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'new-track.mp3',
+        fileUrl: 'https://example.com/new-track.mp3',
+        jsonDataInfo: JSON.stringify({
+          markers: [{ id: 'server-marker' }],
+          latestUploadToFirebase: 1000,
+        }),
+      }),
+    ]);
+
+    const saved = nDBStore['new-track.mp3'] as Record<string, unknown>;
+    expect(saved.markers).toEqual([{ id: 'local-marker' }]);
+  });
+
+  it('ignores snapshots with hasPendingWrites', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot(
+      'g1',
+      [
+        songDoc('s1', {
+          songKey: 'new-track.mp3',
+          fileUrl: 'https://example.com/new-track.mp3',
+          jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 100 }),
+        }),
+      ],
+      true
+    );
+
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: unknown[] }>)[0];
+    expect(group.songs).toHaveLength(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('does not duplicate songs that are already in the group', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'g1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'track.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'track.mp3',
+        fileUrl: 'https://example.com/track.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 1 }),
+      }),
+    ]);
+
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: unknown[] }>)[0];
+    expect(group.songs).toHaveLength(1);
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('removes local entries for docs that disappeared from the snapshot', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'g1',
+        songs: [
+          { firebaseSongDocId: 's1', fullPath: 'a.mp3', galleryId: 'pwa-galleryId' },
+          { firebaseSongDocId: 's2', fullPath: 'b.mp3', galleryId: 'pwa-galleryId' },
+        ],
+      },
+    ];
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    // Snapshot only contains s1 → s2 should be removed locally
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'a.mp3',
+        fileUrl: 'https://example.com/a.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 1 }),
+      }),
+    ]);
+
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: Array<{ firebaseSongDocId: string }> }>)[0];
+    expect(group.songs).toHaveLength(1);
+    expect(group.songs[0].firebaseSongDocId).toBe('s1');
+    expect(cb).toHaveBeenCalledWith('g1');
+  });
+
+  it('skips malformed docs (missing songKey or fileUrl)', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('bad1', {
+        fileUrl: 'https://example.com/no-key.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 1 }),
+      }),
+      songDoc('bad2', {
+        songKey: 'no-url.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 1 }),
+      }),
+    ]);
+
+    const group = (nDBStore['aoSongLists'] as Array<{ songs: unknown[] }>)[0];
+    expect(group.songs).toHaveLength(0);
+    expect(cb).not.toHaveBeenCalled();
   });
 });

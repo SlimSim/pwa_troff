@@ -289,3 +289,55 @@ describe('ensureDefaultMarkers', () => {
     expect(markers[1].time).toBe(124.5);
   });
 });
+
+describe('createNewSongEntry', () => {
+  let createNewSongEntry: (
+    file: { name: string; lastModified: number; size: number },
+    songKey: string
+  ) => Record<string, unknown>;
+
+  beforeAll(async () => {
+    const mod = await import('../utils/troff-settings.js');
+    createNewSongEntry = mod.createNewSongEntry;
+  });
+
+  const file = { name: 'song.mp3', lastModified: 1234, size: 5678 };
+
+  it('creates an entry WITH default Start/End markers', () => {
+    const entry = createNewSongEntry(file, 'song.mp3');
+
+    const markers = entry.markers as TroffMarker[];
+    expect(markers).toHaveLength(2);
+    expect(markers[0]).toMatchObject({ name: 'Start', time: 0, id: 'markerNr0' });
+    expect(markers[1]).toMatchObject({ name: 'End', id: 'markerNr1' });
+  });
+
+  it('uses the "max" sentinel (not a concrete number) as the default End marker time', () => {
+    const entry = createNewSongEntry(file, 'song.mp3');
+
+    const endMarker = (entry.markers as TroffMarker[])[1];
+    // The End marker must be the 'max' sentinel — never a number copied from
+    // the previously loaded song's timeline (that was the reported bug).
+    expect(endMarker.time).toBe('max');
+    expect(typeof endMarker.time).toBe('string');
+  });
+
+  it('defaults the current start/stop markers to the Start/End marker ids', () => {
+    const entry = createNewSongEntry(file, 'song.mp3');
+
+    expect(entry.currentStartMarker).toBe('markerNr0');
+    expect(entry.currentStopMarker).toBe('markerNr1S');
+  });
+
+  it('stores the song key as customName and file info in fileData', () => {
+    const entry = createNewSongEntry(file, 'song.mp3');
+
+    expect(entry.fileData).toMatchObject({
+      customName: 'song.mp3',
+      duration: 0,
+      lastModified: 1234,
+      size: 5678,
+    });
+    expect(entry.localInformation).toEqual({ addedFromThisDevice: true });
+  });
+});
