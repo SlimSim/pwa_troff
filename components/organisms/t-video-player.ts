@@ -150,6 +150,23 @@ export class TVideoPlayer extends LitElement {
     .video-frame.fullscreen-hint-buffer {
       --bottom-safe-offset: 84px;
     }
+    /* Fallback "fullscreen" for elements where the real Fullscreen API
+       isn't available — on iPhone Safari this is always the case for a
+       non-<video> element (only <video> can go fullscreen there, via the
+       legacy webkitEnterFullscreen, which hands off to iOS's own
+       uncustomizable native player). Instead of using that, we stretch this
+       component itself over the viewport with plain CSS, so the video stays
+       in our own DOM and every one of our controls/gestures keeps working.
+       See _enterCssFullscreenFallback. */
+    :host(.css-fullscreen-fallback) {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: #000;
+    }
   `;
 
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
@@ -196,6 +213,7 @@ export class TVideoPlayer extends LitElement {
   @state() private _gestureIcon = '';
   @state() private _gestureText = '';
   @state() private _fullscreenHintBuffer = false;
+  @state() private _cssFullscreenFallback = false;
 
   @property({ type: Array }) markers: TroffMarker[] = [];
   @property({ type: String }) startMarkerId = '';
@@ -217,6 +235,9 @@ export class TVideoPlayer extends LitElement {
     this._clearGestureTimer();
     this._clearSeekWatchdog();
     this._clearFullscreenHintBufferTimer();
+    if (this._cssFullscreenFallback) {
+      document.body.style.overflow = '';
+    }
   }
 
   private _clearControlsTimer() {
@@ -377,15 +398,49 @@ export class TVideoPlayer extends LitElement {
   private _onFullScreenClick() {
     if (document.fullscreenElement === this) {
       void document.exitFullscreen?.();
+    } else if (this._cssFullscreenFallback) {
+      this._exitCssFullscreenFallback();
     } else if (this.requestFullscreen) {
-      void this.requestFullscreen();
+      try {
+        this.requestFullscreen().catch(() => this._enterCssFullscreenFallback());
+      } catch {
+        // Some browsers advertise requestFullscreen but throw/reject when
+        // it's actually called on this element — fall back the same way as
+        // when the method isn't present at all.
+        this._enterCssFullscreenFallback();
+      }
     } else {
-      // iOS Safari fallback (webkitEnterFullscreen is a legacy video-only API)
-      const video = this.querySelector('video');
-      (
-        video as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null
-      )?.webkitEnterFullscreen?.();
+      this._enterCssFullscreenFallback();
     }
+  }
+
+  /**
+   * Fallback used whenever the real Fullscreen API isn't available for this
+   * element. On iPhone Safari that's unconditional: only <video> elements
+   * can enter real fullscreen there, and only via the legacy
+   * webkitEnterFullscreen(), which hands control to iOS's own native video
+   * player — a system UI layer we can't draw over or query, so our controls
+   * and drag gestures would simply stop existing as far as the user can
+   * tell. Simulating fullscreen with CSS instead keeps the video as a
+   * normal element in our own DOM, so everything keeps working. The
+   * trade-off is this isn't true OS fullscreen — Safari's own chrome can
+   * still show — but on iPhone it's the only way to keep custom controls.
+   */
+  private _enterCssFullscreenFallback() {
+    this._cssFullscreenFallback = true;
+    this._isFullscreen = true;
+    this.classList.add('css-fullscreen-fallback');
+    document.body.style.overflow = 'hidden'; // keep the page from scrolling behind the overlay
+    this._scheduleControlsHide();
+  }
+
+  private _exitCssFullscreenFallback() {
+    this._cssFullscreenFallback = false;
+    this._isFullscreen = false;
+    this.classList.remove('css-fullscreen-fallback');
+    document.body.style.overflow = '';
+    this._clearControlsTimer();
+    this._controlsVisible = true;
   }
 
   private _onPlayPauseClick() {
