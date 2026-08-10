@@ -108,3 +108,83 @@ describe('t-main-layout video player slots', () => {
     );
   });
 });
+
+/**
+ * Feature spec (settings-panel overlay): t-main-layout must render the
+ * settings-panel slot as a DIRECT child of .app-body, AFTER
+ * .main-content-parent — exactly like the song-list slot. This makes
+ * .app-body (position: relative; spans video-top slot AND main content)
+ * the settings dialog's containing block, so its height: 100% + z-index: 999
+ * overlay reaches from the header down over the video instead of being
+ * confined below the video inside .main-content-parent.
+ */
+describe('t-main-layout settings-panel overlay placement', () => {
+  let element: MainLayout;
+
+  beforeEach(() => {
+    element = new MainLayout();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+  });
+
+  // a) + b) The settings-panel slot exists in the shadow root and is a
+  // DIRECT child of .app-body (not merely a descendant via
+  // .main-content-parent), so .app-body is its containing block.
+  it('renders the settings-panel slot as a direct child of .app-body', async () => {
+    await element.updateComplete;
+    const root = element.shadowRoot;
+    expect(root).not.toBeNull();
+
+    const settingsPanelSlot = root?.querySelector('slot[name="settings-panel"]');
+    expect(settingsPanelSlot).not.toBeNull();
+
+    const appBody = root?.querySelector('.app-body');
+    expect(appBody).not.toBeNull();
+
+    const appBodyChildren = Array.from(appBody?.children ?? []);
+    expect(appBodyChildren).toContain(settingsPanelSlot as Element);
+  });
+
+  // c) .main-content-parent must NOT contain the settings-panel slot,
+  // because that would confine the overlay below the video area.
+  it('does not contain the settings-panel slot inside .main-content-parent', async () => {
+    await element.updateComplete;
+    const root = element.shadowRoot;
+    expect(root).not.toBeNull();
+
+    const settingsPanelSlot = root?.querySelector('slot[name="settings-panel"]');
+    expect(settingsPanelSlot).not.toBeNull();
+
+    const appBody = root?.querySelector('.app-body');
+    const mainContentParent = appBody?.querySelector('.main-content-parent');
+    expect(mainContentParent).not.toBeNull();
+
+    expect(mainContentParent?.contains(settingsPanelSlot as Element)).toBe(false);
+  });
+
+  // d) Inside .app-body the settings-panel slot must come AFTER
+  // .main-content-parent in child order so the absolutely-positioned
+  // dialog is painted in front of the video.
+  it('places the settings-panel slot after .main-content-parent inside .app-body', async () => {
+    await element.updateComplete;
+    const root = element.shadowRoot;
+    expect(root).not.toBeNull();
+
+    const settingsPanelSlot = root?.querySelector('slot[name="settings-panel"]');
+    expect(settingsPanelSlot).not.toBeNull();
+
+    const appBody = root?.querySelector('.app-body');
+    const mainContentParent = appBody?.querySelector('.main-content-parent');
+    expect(mainContentParent).not.toBeNull();
+
+    const appBodyChildren = Array.from(appBody?.children ?? []);
+    expect(appBodyChildren.indexOf(settingsPanelSlot as Element)).toBeGreaterThan(
+      appBodyChildren.indexOf(mainContentParent as Element)
+    );
+  });
+});

@@ -71,8 +71,8 @@ export class MainLayout extends LitElement {
           <div class="main-content">
             <slot name="main-content"></slot>
           </div>
-          <slot name="settings-panel"></slot>
         </div>
+        <slot name="settings-panel"></slot>
         <slot name="song-list"></slot>
       </div>
       <slot name="footer"></slot>
