@@ -395,6 +395,52 @@ describe('firebase-realtime', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Remote update — refreshes UI on equal timestamp (boot-time sync pull)
+  // -----------------------------------------------------------------------
+
+  it('remote update refreshes the UI even when the timestamp is equal (initial fire after sync pull)', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'track.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    // syncFirebaseGroups already applied this data to nDB before the listeners attach
+    nDBStore['track.mp3'] = {
+      markers: [{ id: 'synced-marker' }],
+      latestUploadToFirebase: 200,
+    };
+
+    await setupListeners();
+    const cb = vi.fn();
+    setLiveUpdateCallback(cb);
+
+    // Initial snapshot fire with the SAME timestamp as the local data
+    triggerSnapshot(
+      's1',
+      {
+        jsonDataInfo: JSON.stringify({
+          markers: [{ id: 'synced-marker' }],
+          latestUploadToFirebase: 200,
+        }),
+      },
+      false
+    );
+
+    // The UI callback must fire so an already-loaded song picks up the synced markers
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith(
+      'track.mp3',
+      expect.objectContaining({ markers: [{ id: 'synced-marker' }] })
+    );
+
+    // Local nDB data is untouched (equal timestamp does not overwrite)
+    const stored = nDBStore['track.mp3'] as Record<string, unknown>;
+    expect(stored.latestUploadToFirebase).toBe(200);
+    expect((stored.markers as Array<{ id: string }>)[0].id).toBe('synced-marker');
+  });
+
+  // -----------------------------------------------------------------------
   // Remote update — does not overwrite when local is newer
   // -----------------------------------------------------------------------
 

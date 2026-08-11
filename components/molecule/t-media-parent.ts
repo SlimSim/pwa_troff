@@ -615,6 +615,18 @@ export class MediaParent extends LitElement {
       const songLists = nDB.get('aoSongLists') || [];
       this.groups = songLists;
 
+      // If the currently open group no longer exists (e.g. it was deleted),
+      // leave its detail view so the groups list header reappears.
+      if (this._currentGroupKey) {
+        const stillExists = songLists.some((g: any) => {
+          const gKey = (g as any).firebaseGroupDocId || String((g as any).id);
+          return gKey === this._currentGroupKey;
+        });
+        if (!stillExists) {
+          this._closeOpenDetailViews();
+        }
+      }
+
       this.requestUpdate();
     } catch (error) {
       console.error('Failed to load songs and groups:', error);

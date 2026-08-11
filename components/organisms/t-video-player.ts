@@ -460,6 +460,14 @@ export class TVideoPlayer extends LitElement {
   }
 
   private _onMarkerClick() {
+    if (this._isFullscreen) {
+      // The marker dialog lives in the footer, OUTSIDE the fullscreen element.
+      // Real fullscreen renders the host in the browser's top layer above the
+      // whole page, and the CSS fallback covers the viewport at z-index 999999 —
+      // either way the dialog would be painted behind the video. Leave fullscreen
+      // first so the dialog can appear above it.
+      this._onFullScreenClick();
+    }
     this.dispatchEvent(
       new CustomEvent('video-marker-add-requested', {
         bubbles: true,

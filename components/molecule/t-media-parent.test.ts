@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MediaParent } from './t-media-parent.js';
 import { nDB } from '../../assets/internal/db.js';
+import { LocalSongDataService } from '../../utils/local-song-data.js';
 
 describe('t-media-parent search input', () => {
   let element: MediaParent;
@@ -1964,5 +1965,53 @@ describe('selecting a song closes the song list', () => {
     await element.updateComplete;
 
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('deleting the currently open group restores the song-list-header', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    localStorage.clear();
+    nDB.set('aoSongLists', [
+      { id: 'g1', name: 'Dance Group', songs: [] },
+      { id: 'g2', name: 'Other Group', songs: [] },
+    ]);
+    // getAllSongs uses the Cache API (unavailable in happy-dom); the real
+    // _loadSongs is needed here because the fix lives inside it.
+    vi.spyOn(LocalSongDataService, 'getAllSongs').mockResolvedValue([]);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  it('shows the groups song-list-header again after the open group is deleted and songs are reloaded', async () => {
+    await element.updateComplete;
+    (element as any).currentFilter = 'groups';
+    await element.updateComplete;
+
+    element.openGroupDetail('g1');
+    await element.updateComplete;
+
+    // Inside the detail view the header must be hidden.
+    expect(element.shadowRoot?.querySelector('.song-list-header')).toBeNull();
+
+    // Simulate the v2Script group-deleted flow: remove the group from nDB,
+    // then reload the song list.
+    nDB.set('aoSongLists', [{ id: 'g2', name: 'Other Group', songs: [] }]);
+    await element.reloadSongs();
+    await element.updateComplete;
+
+    // The stale detail context must be cleared so the header comes back.
+    expect((element as any)._currentGroupKey).toBe('');
+    expect(element.shadowRoot?.querySelector('.song-list-header')).toBeTruthy();
   });
 });

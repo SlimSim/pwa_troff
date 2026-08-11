@@ -94,8 +94,8 @@ function handleRemoteUpdate(songKey: string, snapshot: { data: () => Record<stri
     const existingTime = Number(existingData?.latestUploadToFirebase) || 0;
     const newTime = Number(newData.latestUploadToFirebase) || 0;
 
-    // Local data is at least as recent — nothing to do
-    if (newTime <= existingTime) {
+    // Remote data is strictly older — nothing to do
+    if (newTime < existingTime) {
       return;
     }
 
@@ -105,8 +105,14 @@ function handleRemoteUpdate(songKey: string, snapshot: { data: () => Record<stri
       newData.localInformation = localInfo;
     }
 
-    // Write remote data to local storage
-    nDB.set(songKey, newData);
+    // Only overwrite local storage when the remote data is strictly newer.
+    // On an equal timestamp (e.g. the initial onSnapshot fire right after
+    // syncFirebaseGroups already applied the data to nDB) the UI is still
+    // refreshed so a song that was already loaded at boot picks up the
+    // synced markers without requiring a manual re-select.
+    if (newTime > existingTime) {
+      nDB.set(songKey, newData);
+    }
 
     // If this is the currently-playing song, refresh the UI
     if (liveUpdateCallback) {

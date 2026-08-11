@@ -276,9 +276,7 @@ export class GroupDialog extends LitElement {
     return html`
       <div>
         <div class="section-label">Owners (email addresses)</div>
-        ${this._editOwners.length === 0
-          ? html`<div class="empty-text">No owners yet</div>`
-          : ''}
+        ${this._editOwners.length === 0 ? html`<div class="empty-text">No owners yet</div>` : ''}
         ${this._editOwners.map(
           (owner, i) => html`
             <div class="owner-row">
@@ -359,11 +357,7 @@ export class GroupDialog extends LitElement {
           <div class="dialog-footer">
             ${this.group
               ? html`
-                  <t-butt
-                    class="btn-danger"
-                    @click=${this._delete}
-                    title="Delete group"
-                  >
+                  <t-butt confirm class="btn-danger" @click=${this._delete} title="Delete group">
                     Delete group
                   </t-butt>
                 `

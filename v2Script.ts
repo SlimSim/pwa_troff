@@ -74,6 +74,7 @@ import {
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
+import { toSongKey } from './utils/utils.js';
 import {
   setupListeners,
   setupGroupSongListeners,
@@ -1701,13 +1702,7 @@ document.addEventListener('DOMContentLoaded', () => {
           await setupGroupSongListeners();
           setLiveUpdateCallback((songKey: string) => {
             // If the updated song is currently selected, refresh UI without interrupting playback
-            const currentKey = getCurrentSongKey();
-            if (currentKey === songKey && markerSlider) {
-              updateMarkerSlider(markerSlider, false);
-              syncSettingsPanelValues();
-              syncCurrentSongControlsValues();
-              syncLoopTimesFromSong();
-            }
+            refreshCurrentSongUI(songKey);
           });
           setGroupUpdateCallback(() => {
             // Refresh the group song list when a group's songs change remotely
@@ -1715,6 +1710,11 @@ document.addEventListener('DOMContentLoaded', () => {
               (songList as any).reloadSongs();
             }
           });
+
+          // A song that was already open (auto-restored) at boot may have had
+          // its markers drawn from stale nDB before this sync completed. Re-render
+          // it deterministically so synced markers/settings appear immediately.
+          refreshCurrentSongUI();
         }
       });
     } catch (error) {
@@ -2078,6 +2078,22 @@ document.addEventListener('DOMContentLoaded', () => {
       updateMarkerSlider(markerSlider);
       selectFirstAndLastMarkers();
       void applySavedZoomWindowForCurrentSong();
+
+      // Save the media duration on the song if it isn't saved yet (issue #31)
+      const duration = getActiveMedia().duration;
+      const songKey = getCurrentSongKey();
+      const savedDuration = songKey ? nDB.get(songKey)?.fileData?.duration : undefined;
+      if (
+        Number.isFinite(duration) &&
+        duration > 0 &&
+        songKey &&
+        !(Number.isFinite(savedDuration) && savedDuration > 0)
+      ) {
+        nDB.setOnSong(songKey, ['fileData', 'duration'], duration);
+        if (songList && typeof songList.reloadSongs === 'function') {
+          void songList.reloadSongs();
+        }
+      }
     };
     const onTimeUpdate = () => {
       header.currentTime = formatDuration(getActiveMedia().currentTime);
@@ -2571,6 +2587,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // -------- Group song management (add/remove from detail view) --------
 
+  // Re-render the currently-loaded song's markers and settings straight from
+  // nDB. Used right after a Firebase sync pull (so a song that was already
+  // open when v2 booted picks up synced markers immediately) and by the
+  // real-time listener callback. Compared by normalized basename so a
+  // path-prefixed "current song" still matches the cached/Firestore songKey.
+  const refreshCurrentSongUI = (songKey?: string) => {
+    const currentKey = getCurrentSongKey();
+    if (!currentKey || !markerSlider) return;
+    if (songKey && toSongKey(currentKey) !== toSongKey(songKey)) return;
+    updateMarkerSlider(markerSlider, false);
+    syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
+    syncLoopTimesFromSong();
+  };
+
   /** Helper: update a group's songs array in nDB and optionally save to Firebase. */
   async function _updateGroupSongs(
     groupKey: string,
@@ -2693,3 +2724,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+

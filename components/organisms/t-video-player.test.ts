@@ -726,6 +726,142 @@ describe('t-video-player', () => {
     expect(event.target).toBe(el);
   });
 
+  // ---- Round 13: marker button exits fullscreen before dispatching ----------
+  // the add-marker event (marker dialog behind the fullscreen video) ---------
+  //
+  // Bug: the marker dialog lives in t-footer's dropdown
+  // (t-dropdown-button, position: fixed, z-index: 20000), a SIBLING of
+  // t-video-player inside t-main-layout. In REAL fullscreen the player's HOST
+  // element goes into the browser's top layer via the Fullscreen API, so
+  // everything outside it is painted behind it — the dialog is unreachable no
+  // matter its z-index. On iOS the CSS fallback
+  // (:host(.css-fullscreen-fallback), position: fixed, inset: 0,
+  // z-index: 999999) similarly covers the footer (z-index 1000) and its
+  // dropdown.
+  //
+  // Fix contract: _onMarkerClick must FIRST leave fullscreen when _isFullscreen
+  // is true — via the SAME logic as _onFullScreenClick (document.exitFullscreen
+  // when document.fullscreenElement === this, _exitCssFullscreenFallback when
+  // _cssFullscreenFallback is true) — THEN dispatch the unchanged
+  // video-marker-add-requested event (bubbles + composed, from the host).
+  // Outside fullscreen the marker button must NOT exit anything.
+
+  it('marker button exits real fullscreen before dispatching the add-marker event', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    // Real fullscreen: document.fullscreenElement reports the host and the
+    // browser fires fullscreenchange (same protocol as the round-3
+    // fullscreen-button exit test).
+    enterFullscreen(el);
+    await el.updateComplete;
+
+    const exitFullscreenSpy = mockExitFullscreen();
+    const addMarkerSpy = vi.fn();
+    el.addEventListener('video-marker-add-requested', addMarkerSpy);
+
+    getButton(el, '.marker-btn').click();
+    await el.updateComplete;
+
+    // The marker dialog sits OUTSIDE the fullscreen host (in the footer), so
+    // the player must exit fullscreen first or the top-layer video keeps the
+    // dialog behind it. Current code never exits → RED.
+    expect(
+      exitFullscreenSpy,
+      'marker button must call document.exitFullscreen when the host is fullscreen (the dialog is unreachable behind the top-layer video)'
+    ).toHaveBeenCalled();
+
+    expect(addMarkerSpy).toHaveBeenCalledTimes(1);
+    const event = addMarkerSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-marker-add-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    // The event must still be dispatched from the component host itself.
+    expect(event.target).toBe(el);
+  });
+
+  it('marker button does NOT exit fullscreen when not fullscreen (regression guard)', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    // NOT fullscreen: document.fullscreenElement is not stubbed and
+    // _cssFullscreenFallback is false — pressing the marker button must not
+    // touch fullscreen at all, only dispatch the add-marker request.
+    const exitFullscreenSpy = mockExitFullscreen();
+    const addMarkerSpy = vi.fn();
+    el.addEventListener('video-marker-add-requested', addMarkerSpy);
+
+    getButton(el, '.marker-btn').click();
+    await el.updateComplete;
+
+    expect(
+      exitFullscreenSpy,
+      'marker button outside fullscreen must never exit fullscreen (exiting is reserved for the fullscreen case)'
+    ).not.toHaveBeenCalled();
+
+    expect(addMarkerSpy).toHaveBeenCalledTimes(1);
+    const event = addMarkerSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-marker-add-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(event.target).toBe(el);
+  });
+
+  it('marker button exits the CSS fullscreen fallback before dispatching the add-marker event', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    // Make requestFullscreen REJECT (happy-dom has no real implementation —
+    // same defineProperty strategy as mockRequestFullscreen, but rejecting) so
+    // clicking the fullscreen button routes _onFullScreenClick into
+    // _enterCssFullscreenFallback() instead of real fullscreen.
+    if (typeof el.requestFullscreen === 'function') {
+      vi.spyOn(el, 'requestFullscreen').mockRejectedValue(undefined);
+    } else {
+      Object.defineProperty(el, 'requestFullscreen', {
+        configurable: true,
+        writable: true,
+        value: vi.fn().mockRejectedValue(undefined),
+      });
+      cleanups.push(() => {
+        delete (el as { requestFullscreen?: unknown }).requestFullscreen;
+      });
+    }
+
+    // document.fullscreenElement stays UNSTUBBED (never set): the fallback is
+    // purely CSS-driven, not Fullscreen API driven.
+    getButton(el, '.fullscreen-btn').click();
+    await el.updateComplete;
+
+    // Precondition: the fallback is active — the host carries the class.
+    expect(
+      el.classList.contains('css-fullscreen-fallback'),
+      'precondition: the rejected requestFullscreen must have entered the CSS fullscreen fallback'
+    ).toBe(true);
+
+    const addMarkerSpy = vi.fn();
+    el.addEventListener('video-marker-add-requested', addMarkerSpy);
+
+    getButton(el, '.marker-btn').click();
+    await el.updateComplete;
+
+    // The CSS fallback (:host(.css-fullscreen-fallback), z-index 999999)
+    // covers the footer's marker dropdown (z-index 1000) — the player must
+    // remove the class before dispatching or the dialog stays hidden. Current
+    // code never exits → RED.
+    expect(
+      el.classList.contains('css-fullscreen-fallback'),
+      'marker button must remove the css-fullscreen-fallback class when active (the fixed overlay covers the footer dropdown)'
+    ).toBe(false);
+
+    expect(addMarkerSpy).toHaveBeenCalledTimes(1);
+    const event = addMarkerSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('video-marker-add-requested');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(event.target).toBe(el);
+  });
+
   it('entering fullscreen removes not-fullscreen from play-pause, marker, replay, prev-marker and next-marker buttons', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;

@@ -56,4 +56,15 @@ export function toSongKey(name: string): string {
   return safeDecodeURIComponent(name.split(/[\\/]/).pop() || name);
 }
 
+/**
+ * v2 stores group icons without the Fontello `fa-` prefix (e.g. `lindy-hop`),
+ * while v1 applies them as `fa-` prefixed classes. Ensure the prefix exists.
+ */
+export function toFontelloIcon(icon: string | undefined, fallback: string): string {
+  if (icon && !icon.startsWith('fa-')) {
+    return `fa-${icon}`;
+  }
+  return icon || fallback;
+}
+
 export { blurHack, escapeRegExp, getFileExtension, removeLocalInfo, fileUrlToStorageFileName };
