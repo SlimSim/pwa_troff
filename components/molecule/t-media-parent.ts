@@ -15,6 +15,7 @@ import { nDB } from '../../assets/internal/db.js';
 import { getCurrentSongKey } from '../../utils/current-song.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import { toSongKey } from '../../utils/utils.js';
+import { createNewSongEntry } from '../../utils/troff-settings.js';
 import {
   filterTracks,
   filterArtists,
@@ -614,6 +615,18 @@ export class MediaParent extends LitElement {
       const songLists = nDB.get('aoSongLists') || [];
       this.groups = songLists;
 
+      // If the currently open group no longer exists (e.g. it was deleted),
+      // leave its detail view so the groups list header reappears.
+      if (this._currentGroupKey) {
+        const stillExists = songLists.some((g: any) => {
+          const gKey = (g as any).firebaseGroupDocId || String((g as any).id);
+          return gKey === this._currentGroupKey;
+        });
+        if (!stillExists) {
+          this._closeOpenDetailViews();
+        }
+      }
+
       this.requestUpdate();
     } catch (error) {
       console.error('Failed to load songs and groups:', error);
@@ -1023,24 +1036,7 @@ export class MediaParent extends LitElement {
     const existing = nDB.get(songKey);
 
     if (!existing) {
-      nDB.set(songKey, {
-        fileData: {
-          album: '',
-          artist: '',
-          choreographer: '',
-          choreography: '',
-          customName: songKey,
-          duration: 0,
-          genre: '',
-          tags: '',
-          title: '',
-          lastModified: file.lastModified,
-          size: file.size,
-        },
-        localInformation: {
-          addedFromThisDevice: true,
-        },
-      });
+      nDB.set(songKey, createNewSongEntry(file, songKey));
     } else {
       nDB.setOnSong(songKey, ['localInformation', 'addedFromThisDevice'], true);
     }

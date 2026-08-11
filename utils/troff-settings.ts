@@ -107,3 +107,42 @@ export function ensureDefaultMarkers(
   songData.markers = defaultMarkers;
   return defaultMarkers;
 }
+
+/**
+ * Build the nDB song entry for a brand-new locally added file.
+ *
+ * The entry is created WITH default markers so the legacy DB cleanup can never
+ * inject a stale number as the End marker time. The End marker uses the 'max'
+ * sentinel (resolved to the actual timeline end once the song loads) instead
+ * of a concrete value, because at creation time the real duration is unknown
+ * and the current timeline length belongs to the previously loaded song.
+ */
+export function createNewSongEntry(
+  file: { name: string; lastModified: number; size: number },
+  songKey: string
+): Record<string, unknown> {
+  return {
+    fileData: {
+      album: '',
+      artist: '',
+      choreographer: '',
+      choreography: '',
+      customName: songKey,
+      duration: 0,
+      genre: '',
+      tags: '',
+      title: '',
+      lastModified: file.lastModified,
+      size: file.size,
+    },
+    localInformation: {
+      addedFromThisDevice: true,
+    },
+    markers: [
+      { name: 'Start', time: 0, info: '', color: 'None', id: 'markerNr0' },
+      { name: 'End', time: 'max', info: '', color: 'None', id: 'markerNr1' },
+    ],
+    currentStartMarker: 'markerNr0',
+    currentStopMarker: 'markerNr1S',
+  };
+}

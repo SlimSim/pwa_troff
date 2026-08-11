@@ -136,6 +136,7 @@ export type TroffFirebaseGroupIdentifyer = {
 
 export type TroffFirebaseSongIdentifyer = {
   firebaseSongDocId?: string;
+  fileUrl?: string;
   fullPath: string;
   galleryId: string;
 };

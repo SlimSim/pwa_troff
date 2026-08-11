@@ -43,7 +43,7 @@ import { gtag } from './services/analytics.js';
 import { isSafari } from './utils/browserEnv.js';
 import { errorHandler } from './scriptErrorHandler.js';
 import log from './utils/log.js';
-import { blurHack, removeLocalInfo, safeDecodeURIComponent } from './utils/utils.js';
+import { blurHack, removeLocalInfo, safeDecodeURIComponent, toFontelloIcon } from './utils/utils.js';
 import {
   TROFF_SETTING_SET_THEME,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
@@ -111,7 +111,7 @@ function clickSongList_NEW(event: JQuery.ClickEvent) {
     if (data && data.firebaseGroupDocId) {
       const color = getBgColor(data.color);
       setBgCustom($('#headArea')[0], color);
-      $('#songlistIcon').addClass(data.icon || 'fa-users');
+      $('#songlistIcon').addClass(toFontelloIcon(data.icon, 'fa-users'));
       $('#songlistName').text(data.name);
       $('#songlistInfo').removeClass('hidden').text(data.info);
     }
@@ -1815,7 +1815,7 @@ class TroffClass {
     $editButton
       .find('i')
       .removeClassStartingWith('fa-')
-      .addClass(songListObject.icon || 'fa-users');
+      .addClass(toFontelloIcon(songListObject.icon, 'fa-users'));
 
     if ($target.hasClass('selected')) {
       $target.click();
@@ -1833,7 +1833,7 @@ class TroffClass {
 
     const groupDocId = oSongList.firebaseGroupDocId;
     const groupClass = groupDocId ? 'groupIndication' : '';
-    const groupLogo = oSongList.icon || 'fa-pencil';
+    const groupLogo = toFontelloIcon(oSongList.icon, 'fa-pencil');
 
     const butt = $('<button>')
       .addClass('small')
@@ -1922,7 +1922,7 @@ class TroffClass {
         if (songListData != undefined) {
           const color = getBgColor(songListData.color);
           setBgCustom($('#headArea')[0], color);
-          $('#songlistIcon').addClass(songListData.icon);
+          $('#songlistIcon').addClass(toFontelloIcon(songListData.icon, 'fa-users'));
           $('#songlistName').text(songListData.name);
           $('#songlistInfo').removeClass('hidden').text(songListData.info);
         }

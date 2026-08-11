@@ -38,6 +38,7 @@ import { DATA_TABLE_COLUMNS } from '../constants/constants.js';
 import { appendColorButtonsTo } from '../ui/troffUi.js';
 import { MarkerColorConfig } from '../types/markers.js';
 import { getBgColor, setBgCustom } from '../utils/colorHelpers.js';
+import { toFontelloIcon } from '../utils/utils.js';
 
 const generateColorBut = (col: MarkerColorConfig) => {
   const clas = 'colorPicker markerBackgroundColor m-1';
@@ -276,9 +277,7 @@ const openGroupDialog = async (songListObject: TroffFirebaseGroupIdentifyer) => 
   if (isGroup) {
     $('#leaveGroup').removeClass('hidden');
     $('.showOnSharedSonglist').removeClass('hidden');
-    if (!songListObject.icon) {
-      songListObject.icon = 'fa-users';
-    }
+    songListObject.icon = toFontelloIcon(songListObject.icon, 'fa-users');
 
     const color = getBgColor(songListObject.color);
 

@@ -2,6 +2,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { formatDuration } from '../utils/formatters.js';
 import * as constants from '../constants/constants.js';
 
+// Shared holder so the hoisted firebaseClient mock can capture the
+// onAuthStateChanged callback for tests that trigger the sign-in flow.
+const authState = vi.hoisted(() => ({
+  onAuthCb: null as ((user: unknown) => void) | null,
+  authSpy: null as ReturnType<typeof vi.fn> | null,
+}));
+
+vi.mock('../services/firebaseClient.js', () => ({
+  auth: {},
+  onAuthStateChanged: (auth: unknown, cb: (user: unknown) => void) => {
+    authState.onAuthCb = cb;
+    if (authState.authSpy) authState.authSpy(cb);
+    return () => {};
+  },
+}));
+
 describe('v2Script utilities and related functions', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -214,26 +230,118 @@ describe('v2Script utilities and related functions', () => {
     }, 30000);
   });
 
-  describe('go to marker settings nDB persistence', () => {
-    it('should load go to marker settings from nDB on app initialization', () => {
-      const nDBGetMock = vi.fn((key: string) => {
-        if (key === constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) return true;
-        if (key === constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) return false;
-        if (key === constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) return true;
-        return null;
-      });
+  describe('boot-time sync refreshes the already-loaded song', () => {
+    it('re-renders synced markers after Firebase sync completes (no re-select needed)', async () => {
+      const header = document.createElement('div');
+      header.id = 'header';
+      document.body.appendChild(header);
 
-      // Simulate the loading logic from v2Script.ts
-      const enterGoToMarker = nDBGetMock(constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) === true;
-      const spaceGoToMarker = nDBGetMock(constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
-      const playGoToMarker = nDBGetMock(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
+      const footer = document.createElement('div');
+      footer.id = 'footer';
+      document.body.appendChild(footer);
 
-      expect(enterGoToMarker).toBe(true);
-      expect(spaceGoToMarker).toBe(false);
-      expect(playGoToMarker).toBe(true);
-      expect(nDBGetMock).toHaveBeenCalledWith(constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR);
-      expect(nDBGetMock).toHaveBeenCalledWith(constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR);
-      expect(nDBGetMock).toHaveBeenCalledWith(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR);
-    });
+      const settingsPanel = document.createElement('div');
+      settingsPanel.id = 'settingsPanel';
+      document.body.appendChild(settingsPanel);
+
+      // markerSlider with the property the live-update path writes to
+      const markerSlider = document.createElement('div');
+      markerSlider.id = 'markerSlider';
+      (markerSlider as any).markers = [];
+      (markerSlider as any).getPlaybackStart = vi.fn(() => 0);
+      (markerSlider as any).getPlaybackStop = vi.fn(() => 10);
+      (markerSlider as any).addEventListener = vi.fn();
+      document.body.appendChild(markerSlider);
+
+      const audioEl = {
+        currentTime: 0,
+        duration: 120,
+        playbackRate: 1,
+        volume: 1,
+        paused: true,
+        load: vi.fn(),
+        addEventListener: vi.fn(),
+      };
+      vi.doMock('../services/audio.js', () => ({
+        audio: audioEl,
+        loadSong: vi.fn(() => Promise.resolve({ url: 'track.mp3', isVideo: false })),
+      }));
+
+      // A current song is already restored from localStorage at boot
+      vi.doMock('../utils/current-song.js', () => ({
+        updateHeaderWithCurrentSong: vi.fn(),
+        updateFooterWithCurrentSong: vi.fn(),
+        getCurrentSongMetadata: vi.fn(() => ({ duration: 120 })),
+        getCurrentSongKey: vi.fn(() => 'track.mp3'),
+        setCurrentSong: vi.fn(),
+      }));
+
+      // nDB starts with a STALE song (no markers yet). The Firebase sync pulls
+      // the server's markers into nDB only when the auth flow runs — exactly
+      // the race that left the open song stale before the fix.
+      const nDBData: Record<string, unknown> = {
+        'track.mp3': {
+          // stale: markers absent; a local timestamp older than the server's
+          latestUploadToFirebase: 1,
+          fileData: { duration: 120 },
+        },
+      };
+      const nDBMock = {
+        get: vi.fn((key: string) =>
+          key === 'stroCurrentSongPathAndGalleryId'
+            ? { strPath: 'track.mp3' }
+            : nDBData[key]
+        ),
+        set: vi.fn((key: string, val: unknown) => {
+          if (key) nDBData[key] = val;
+        }),
+        setOnSong: vi.fn(),
+      };
+      vi.doMock('../assets/internal/db.js', () => ({ nDB: nDBMock }));
+
+      // syncFirebaseGroups pulls the server markers into nDB on sign-in
+      vi.doMock('../utils/firebase-sync.js', () => ({
+        syncFirebaseGroups: vi.fn(async () => {
+          nDBData['track.mp3'] = {
+            markers: [{ id: 'synced-marker', time: 5 }],
+            latestUploadToFirebase: 100,
+            fileData: { duration: 120 },
+          };
+        }),
+      }));
+
+      // Trigger sign-in via the hoisted firebaseClient mock; the boot flow's
+      // post-sync refresh must re-render the already-open song.
+      authState.onAuthCb = null;
+      // The boot auth-flow side-effect-imports a legacy notify module that calls
+      // jQuery (`$.notify.defaults`) at module load, which is undefined here.
+      vi.doMock('../assets/internal/notify-js/notify.config.js', () => ({}));
+
+      vi.doMock('../utils/firebase-realtime.js', () => ({
+        setupListeners: vi.fn(() => Promise.resolve()),
+        setupGroupSongListeners: vi.fn(() => Promise.resolve()),
+        teardownListeners: vi.fn(),
+        saveSongData: vi.fn(() => Promise.resolve()),
+        setLiveUpdateCallback: vi.fn(() => Promise.resolve()),
+        setGroupUpdateCallback: vi.fn(),
+      }));
+
+      window.location.hash = '';
+      await import('../v2Script.js');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      // Let the boot auth-flow's dynamic import resolve so onAuthStateChanged
+      // is registered before we trigger sign-in.
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Trigger sign-in; the post-sync refresh must re-render the open song.
+      const cb = authState.onAuthCb;
+      if (cb) (cb as (user: unknown) => void)({ email: 'test@example.com' });
+      await new Promise((resolve) => setTimeout(resolve, 30));
+
+      // The marker slider must show the synced markers even though the song was
+      // already loaded at boot (without requiring a manual re-selection).
+      expect((markerSlider as any).markers).toEqual([{ id: 'synced-marker', time: 5 }]);
+    }, 30000);
   });
 });

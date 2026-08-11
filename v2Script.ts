@@ -74,11 +74,14 @@ import {
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
+import { toSongKey } from './utils/utils.js';
 import {
   setupListeners,
+  setupGroupSongListeners,
   teardownListeners,
   saveSongData,
   setLiveUpdateCallback,
+  setGroupUpdateCallback,
 } from './utils/firebase-realtime.js';
 
 // The media element currently playing (audio singleton, or the #videoElement when
@@ -1085,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
         songData.TROFF_VALUE_speedBar,
         Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100
       );
+      currentSongControls.tempo = parseStoredNumber(songData.TROFF_VALUE_tapTempo, 0);
       if (songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart === undefined) {
         const globalPauseBeforeOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON') ?? true;
         currentSongControls.disablePauseBefore = !globalPauseBeforeOn;
@@ -1109,6 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentSongControls.waitBetween = 1;
       currentSongControls.volume = 75;
       currentSongControls.speed = 100;
+      currentSongControls.tempo = 0;
       currentSongControls.disablePauseBefore = false;
       currentSongControls.disableWaitBetween = false;
     }
@@ -1127,6 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsControls.waitBetween = currentSongControls.waitBetween;
       settingsControls.volume = currentSongControls.volume;
       settingsControls.speed = currentSongControls.speed;
+      settingsControls.tempo = currentSongControls.tempo;
       settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
       settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
     }
@@ -1483,6 +1489,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      if (setting === 'tempo') {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        currentSongData.TROFF_VALUE_tapTempo = value;
+        nDB.set(songKey, currentSongData);
+        void saveSongData(songKey);
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+        return;
+      }
+
       // Handle playback controls (pause before, wait between, volume, speed)
       if (
         setting === 'pauseBefore' ||
@@ -1696,16 +1716,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Set up real-time listeners for Firebase song changes
           await setupListeners();
+          await setupGroupSongListeners();
           setLiveUpdateCallback((songKey: string) => {
             // If the updated song is currently selected, refresh UI without interrupting playback
-            const currentKey = getCurrentSongKey();
-            if (currentKey === songKey && markerSlider) {
-              updateMarkerSlider(markerSlider, false);
-              syncSettingsPanelValues();
-              syncCurrentSongControlsValues();
-              syncLoopTimesFromSong();
+            refreshCurrentSongUI(songKey);
+          });
+          setGroupUpdateCallback(() => {
+            // Refresh the group song list when a group's songs change remotely
+            if (songList && typeof (songList as any).reloadSongs === 'function') {
+              (songList as any).reloadSongs();
             }
           });
+
+          // A song that was already open (auto-restored) at boot may have had
+          // its markers drawn from stale nDB before this sync completed. Re-render
+          // it deterministically so synced markers/settings appear immediately.
+          refreshCurrentSongUI();
         }
       });
     } catch (error) {
@@ -2069,6 +2095,22 @@ document.addEventListener('DOMContentLoaded', () => {
       updateMarkerSlider(markerSlider);
       selectFirstAndLastMarkers();
       void applySavedZoomWindowForCurrentSong();
+
+      // Save the media duration on the song if it isn't saved yet (issue #31)
+      const duration = getActiveMedia().duration;
+      const songKey = getCurrentSongKey();
+      const savedDuration = songKey ? nDB.get(songKey)?.fileData?.duration : undefined;
+      if (
+        Number.isFinite(duration) &&
+        duration > 0 &&
+        songKey &&
+        !(Number.isFinite(savedDuration) && savedDuration > 0)
+      ) {
+        nDB.setOnSong(songKey, ['fileData', 'duration'], duration);
+        if (songList && typeof songList.reloadSongs === 'function') {
+          void songList.reloadSongs();
+        }
+      }
     };
     const onTimeUpdate = () => {
       header.currentTime = formatDuration(getActiveMedia().currentTime);
@@ -2562,6 +2604,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // -------- Group song management (add/remove from detail view) --------
 
+  // Re-render the currently-loaded song's markers and settings straight from
+  // nDB. Used right after a Firebase sync pull (so a song that was already
+  // open when v2 booted picks up synced markers immediately) and by the
+  // real-time listener callback. Compared by normalized basename so a
+  // path-prefixed "current song" still matches the cached/Firestore songKey.
+  const refreshCurrentSongUI = (songKey?: string) => {
+    const currentKey = getCurrentSongKey();
+    if (!currentKey || !markerSlider) return;
+    if (songKey && toSongKey(currentKey) !== toSongKey(songKey)) return;
+    updateMarkerSlider(markerSlider, false);
+    syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
+    syncLoopTimesFromSong();
+  };
+
   /** Helper: update a group's songs array in nDB and optionally save to Firebase. */
   async function _updateGroupSongs(
     groupKey: string,
@@ -2611,9 +2668,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!groupKey || !songKey) return;
 
     try {
+      // Capture the removed song entry (with its Firebase identity) BEFORE the local update
+      const songListsBefore: any[] = nDB.get('aoSongLists') || [];
+      const groupBefore = songListsBefore.find((sl: any) => {
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        return slKey != null && String(slKey) === String(groupKey);
+      });
+      const removedEntry = groupBefore?.songs?.find((s: any) => s.fullPath === songKey);
+
       await _updateGroupSongs(groupKey, (songs) =>
         songs.filter((s: any) => s.fullPath !== songKey)
       );
+
+      // Delete the song doc (and storage file) from Firebase if it was synced
+      if (groupBefore?.firebaseGroupDocId && removedEntry?.firebaseSongDocId) {
+        try {
+          const { removeSongFromFirebaseGroup } = await import('./utils/firebase-group-sync.js');
+          await removeSongFromFirebaseGroup(groupBefore.firebaseGroupDocId, removedEntry);
+        } catch (err) {
+          log.e('Error removing song from Firebase group:', err);
+        }
+      }
     } catch (error) {
       log.e('Error removing song from group:', error);
     }
@@ -2631,6 +2706,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (songs.some((s: any) => s.fullPath === songKey)) return songs;
         return [...songs, { fullPath: songKey, galleryId: title || songKey }];
       });
+
+      // Share the song with the Firebase group: upload the file and create the
+      // Songs subcollection doc so other devices in the group receive it.
+      const songListsAfter: any[] = nDB.get('aoSongLists') || [];
+      const updatedGroup = songListsAfter.find((sl: any) => {
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        return slKey != null && String(slKey) === String(groupKey);
+      });
+      if (updatedGroup?.firebaseGroupDocId) {
+        try {
+          const { shareSongToFirebaseGroup } = await import('./utils/firebase-group-sync.js');
+          await shareSongToFirebaseGroup(updatedGroup, songKey);
+        } catch (err) {
+          log.e('Error sharing song to Firebase group:', err);
+        }
+      }
     } catch (error) {
       log.e('Error adding song to group:', error);
     }
@@ -2650,3 +2741,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
