@@ -1087,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
         songData.TROFF_VALUE_speedBar,
         Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100
       );
+      currentSongControls.tempo = parseStoredNumber(songData.TROFF_VALUE_tapTempo, 0);
       if (songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart === undefined) {
         const globalPauseBeforeOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_ON') ?? true;
         currentSongControls.disablePauseBefore = !globalPauseBeforeOn;
@@ -1111,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentSongControls.waitBetween = 1;
       currentSongControls.volume = 75;
       currentSongControls.speed = 100;
+      currentSongControls.tempo = 0;
       currentSongControls.disablePauseBefore = false;
       currentSongControls.disableWaitBetween = false;
     }
@@ -1129,6 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsControls.waitBetween = currentSongControls.waitBetween;
       settingsControls.volume = currentSongControls.volume;
       settingsControls.speed = currentSongControls.speed;
+      settingsControls.tempo = currentSongControls.tempo;
       settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
       settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
     }
@@ -1480,6 +1483,20 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.setOnSong(songKey, 'loopTimes', normalizedLoopTimes);
         void saveSongData(songKey);
         syncLoopTimesFromSong();
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+        return;
+      }
+
+      if (setting === 'tempo') {
+        if (!songKey) {
+          return;
+        }
+
+        const currentSongData = nDB.get(songKey) || {};
+        currentSongData.TROFF_VALUE_tapTempo = value;
+        nDB.set(songKey, currentSongData);
+        void saveSongData(songKey);
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
         return;
