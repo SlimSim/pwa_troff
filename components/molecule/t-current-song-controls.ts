@@ -4,6 +4,8 @@ import '../atom/t-butt.js';
 import '../atom/t-dial.js';
 import '../atom/t-help-tip.js';
 import '../atom/t-icon.js';
+import { createTapTempoState, calculateTapTempo } from '../../utils/tap-tempo.js';
+import type { TapTempoState } from '../../utils/tap-tempo.js';
 
 type ToggleSetting =
   | 'playFullSong'
@@ -322,6 +324,7 @@ export class CurrentSongControls extends LitElement {
   @property({ type: Boolean }) disableWaitBetween = false;
   @property({ type: Number }) volume = 75;
   @property({ type: Number }) speed = 100;
+  @property({ type: Number }) tempo = 0;
   @property({ type: Boolean }) enterUseTimer = false;
   @property({ type: Boolean }) enterResetCounter = false;
   @property({ type: Boolean }) enterGoToMarker = false;
@@ -454,6 +457,16 @@ export class CurrentSongControls extends LitElement {
     this._handleSettingChange('loopTimes', loopTimes);
   }
 
+  private _tapTempoState: TapTempoState = createTapTempoState();
+
+  private _handleTapTempo() {
+    const bpm = calculateTapTempo(this._tapTempoState, Date.now());
+    if (bpm !== null) {
+      this.tempo = bpm;
+      this._handleSettingChange('tempo', bpm);
+    }
+  }
+
   private _isLoopButtonActive(loopTimes: string) {
     const current = this.loopTimesValue.trim().toLowerCase();
     if (loopTimes === 'Inf') {
@@ -489,16 +502,27 @@ export class CurrentSongControls extends LitElement {
             </div>
           </div>
 
-          <!-- 2. Play full song -->
+          <!-- 2. Play full song / Tap tempo -->
           <div class="settings-section">
-            <t-butt
-              ellipsis
-              .active=${this.playFullSong}
-              @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
-              style="width:100%"
-            >
-              Play full song
-            </t-butt>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <div class="song-action-buttons">
+                  <t-butt
+                    key="t"
+                    ellipsis
+                    .active=${this.playFullSong}
+                    @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
+                  >
+                    Play full song
+                  </t-butt>
+                  <t-butt ellipsis @click=${this._handleTapTempo}>
+                    <t-icon name="tap" slim></t-icon>
+                    ${this.tempo || '--'} <br />
+                    Tap tempo:
+                  </t-butt>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 3. Zoom out / Zoom -->

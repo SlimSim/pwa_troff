@@ -538,7 +538,7 @@ export class SettingsPanel extends LitElement {
     return html`
       <div class="panel-content">
         <div class="panel-header">
-          <h2 class="panel-title">Settings</h2>
+          <h2 class="panel-title">More</h2>
           <div style="display:flex; gap:8px; align-items:center;">
             ${this.signedIn
               ? html`<span

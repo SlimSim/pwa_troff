@@ -7,6 +7,8 @@ who needs to practice dance-steps or instruments to music.
 
 `npm install`
 
+`npm build` (maby???)
+
 `npm run copy`
 This coppies the content from the ai-rules.md to all relevant ai-files
 (such as agents.md and so on)

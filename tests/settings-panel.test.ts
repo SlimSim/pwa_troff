@@ -510,3 +510,29 @@ describe('SettingsPanel numeric settings integration', () => {
     });
   });
 });
+
+describe('SettingsPanel panel title', () => {
+  let settingsPanel: SettingsPanelType;
+
+  beforeEach(async () => {
+    // Dynamic import - the child element registrations happen once due to ESM caching
+    const { SettingsPanel } = await import('../components/molecule/t-settings-panel.js');
+
+    settingsPanel = new SettingsPanel();
+    document.body.appendChild(settingsPanel);
+    await settingsPanel.updateComplete;
+  });
+
+  afterEach(() => {
+    if (settingsPanel && document.body.contains(settingsPanel)) {
+      document.body.removeChild(settingsPanel);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('renders the panel title as "More"', () => {
+    const title = settingsPanel.shadowRoot?.querySelector('.panel-title');
+    expect(title).toBeTruthy();
+    expect(title?.textContent?.trim()).toBe('More');
+  });
+});
