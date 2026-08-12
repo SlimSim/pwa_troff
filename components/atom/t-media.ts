@@ -19,7 +19,10 @@ export class MediaItem extends LitElement {
       border-left: 4px solid transparent;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       cursor: pointer;
-      transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
     }
 
     .media-container:hover {
@@ -33,21 +36,13 @@ export class MediaItem extends LitElement {
 
     .media-container.highlighted {
       border-left-color: var(--accent-color-1, #431c5d);
-      background-color: color-mix(
-        in srgb,
-        var(--accent-color-1, #431c5d) 18%,
-        transparent
-      );
+      background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 18%, transparent);
       box-shadow: inset 0 0 0 1px
         color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
     }
 
     .media-container.highlighted:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--accent-color-1, #431c5d) 26%,
-        transparent
-      );
+      background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 26%, transparent);
     }
 
     .media-container.active.highlighted {
@@ -157,22 +152,7 @@ export class MediaItem extends LitElement {
       flex-shrink: 0;
       align-self: center;
       background: none;
-      border: none;
-      color: rgba(255, 255, 255, 0.5);
-      cursor: pointer;
-      padding: 6px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      font-size: 1rem;
-      line-height: 1;
-      transition: color 0.2s ease, background-color 0.2s ease;
-    }
-
-    .edit-btn:hover {
-      color: #ffffff;
-      background-color: rgba(255, 255, 255, 0.15);
     }
 
     /* Mobile responsive adjustments */
@@ -387,14 +367,15 @@ export class MediaItem extends LitElement {
         </div>
 
         ${this.songKey
-          ? html`<button
+          ? html`<t-butt
               class="edit-btn"
+              ghost
               title="Edit song"
               aria-label="Edit song"
               @click=${this._handleEditClick}
             >
               <t-icon name="edit"></t-icon>
-            </button>`
+            </t-butt>`
           : ''}
       </div>
     `;

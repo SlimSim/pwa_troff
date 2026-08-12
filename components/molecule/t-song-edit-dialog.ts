@@ -82,7 +82,7 @@ export class SongEditDialog extends LitElement {
       padding: 16px 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 8px;
       flex: 1;
       overflow-y: auto;
     }
@@ -94,6 +94,24 @@ export class SongEditDialog extends LitElement {
       border-top: 1px solid rgba(0, 0, 0, 0.1);
       justify-content: flex-end;
       flex-wrap: wrap;
+    }
+
+    .readonly-field {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .readonly-field label {
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 2px;
+      color: var(--text-color, #333);
+    }
+
+    .readonly-field span {
+      padding: 8px 12px;
+      font-size: 0.9rem;
     }
   `;
 
@@ -216,8 +234,14 @@ export class SongEditDialog extends LitElement {
           </div>
 
           <div class="dialog-body">
-            <t-input name="file" .value=${this.songKey} label="File" readonly></t-input>
-            <t-input name="displayName" .value=${displayName} label="Display name" readonly></t-input>
+            <div class="readonly-field">
+              <label for="file">File</label>
+              <span id="file">${this.songKey}</span>
+            </div>
+            <div class="readonly-field">
+              <label for="displayName">Display name</label>
+              <span id="displayName">${displayName}</span>
+            </div>
             <t-input
               name="customName"
               .value=${this._editFields.customName}
