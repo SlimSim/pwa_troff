@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-number-label.js';
+import './t-icon.js';
 
 @customElement('t-media')
 export class MediaItem extends LitElement {
@@ -151,6 +152,29 @@ export class MediaItem extends LitElement {
       opacity: 0.7;
     }
 
+    /* Edit Button */
+    .edit-btn {
+      flex-shrink: 0;
+      align-self: center;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 1rem;
+      line-height: 1;
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .edit-btn:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .media-container {
@@ -203,6 +227,17 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) active = false;
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
+
+  private _handleEditClick(event: Event) {
+    event.stopPropagation();
+    this.dispatchEvent(
+      new CustomEvent('song-edit-requested', {
+        detail: { songKey: this.songKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
 
   private _handleClick() {
     this.dispatchEvent(
@@ -350,6 +385,17 @@ export class MediaItem extends LitElement {
               : ''}
           </div>
         </div>
+
+        ${this.songKey
+          ? html`<button
+              class="edit-btn"
+              title="Edit song"
+              aria-label="Edit song"
+              @click=${this._handleEditClick}
+            >
+              <t-icon name="edit"></t-icon>
+            </button>`
+          : ''}
       </div>
     `;
   }

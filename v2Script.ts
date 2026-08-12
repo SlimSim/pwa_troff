@@ -8,6 +8,8 @@ import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
 import './components/molecule/t-current-song-controls.js';
 import './components/molecule/t-group-dialog.js';
+import './components/molecule/t-song-edit-dialog.js';
+import type { SongEditDialog } from './components/molecule/t-song-edit-dialog.js';
 import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/organisms/t-marker-slider.js';
@@ -45,6 +47,7 @@ import type {
   State,
   State_WithTime,
   TroffManualImportExport,
+  TroffFileData,
 } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -2600,6 +2603,67 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       log.e('Error deleting group:', error);
     }
+  });
+
+  // -------- Song edit dialog (V2) --------
+  let songEditDialog: SongEditDialog | null = null;
+
+  const ensureSongEditDialog = () => {
+    if (!songEditDialog) {
+      songEditDialog = document.createElement('t-song-edit-dialog');
+      document.body.append(songEditDialog);
+    }
+    return songEditDialog;
+  };
+
+  if (songList) {
+    if (typeof songList.addEventListener === 'function') {
+      songList.addEventListener('song-edit-requested', (event: Event) => {
+        const customEvent = event as CustomEvent<{ songKey?: string }>;
+        const songKey = customEvent.detail?.songKey;
+        if (!songKey) return;
+        const dlg = ensureSongEditDialog();
+        dlg.songKey = songKey;
+        dlg.songData = nDB.get(songKey);
+        dlg.open = true;
+      });
+    }
+  }
+
+  // Listen for song-saved events from the dialog
+  document.addEventListener('song-saved', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ songKey?: string; fileData?: Partial<TroffFileData> }>;
+    const { songKey, fileData } = customEvent.detail ?? {};
+    if (!songKey || !fileData) return;
+
+    const songObject = nDB.get(songKey);
+    if (!songObject) return;
+
+    songObject.fileData = songObject.fileData || {};
+    songObject.fileData.customName = fileData.customName ?? '';
+    songObject.fileData.choreography = fileData.choreography ?? '';
+    songObject.fileData.choreographer = fileData.choreographer ?? '';
+    songObject.fileData.title = fileData.title ?? '';
+    songObject.fileData.artist = fileData.artist ?? '';
+    songObject.fileData.album = fileData.album ?? '';
+    songObject.fileData.genre = fileData.genre ?? '';
+    songObject.fileData.tags = fileData.tags ?? '';
+
+    nDB.set(songKey, songObject);
+
+    // Reload the song list to reflect the new metadata
+    if (songList && typeof songList.reloadSongs === 'function') {
+      await songList.reloadSongs();
+    }
+
+    // Refresh header/footer if this is the currently playing song
+    if (getCurrentSongKey() === songKey) {
+      updateHeaderWithCurrentSong();
+      updateFooterWithCurrentSong();
+    }
+
+    // Sync edited metadata to Firebase groups (v2 equivalent of ifGroupSongUpdateFirestore)
+    void saveSongData(songKey);
   });
 
   // -------- Group song management (add/remove from detail view) --------
