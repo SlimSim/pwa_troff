@@ -83,11 +83,11 @@ export class SettingsPanel extends LitElement {
 
     .settings-section {
       margin-bottom: 20px;
+      width: var(--settings-column-width);
     }
 
     .settings-shell {
       display: grid;
-      gap: 16px;
     }
 
     .settings-group {
@@ -159,14 +159,10 @@ export class SettingsPanel extends LitElement {
     }
 
     .loop-buttons {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 8px;
-      width: 100%;
-    }
-
-    .loop-buttons t-butt {
-      width: 100%;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: space-between;
     }
 
     .setting-group-title {
@@ -225,6 +221,22 @@ export class SettingsPanel extends LitElement {
     .setting-item.song-stepper-item {
       align-items: stretch;
       justify-content: stretch;
+    }
+
+    .state-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .state-item {
+      display: flex;
+      gap: 4px;
+    }
+
+    .state-item t-butt:first-child {
+      flex: 1;
     }
 
     details.advanced-panel {
@@ -302,10 +314,6 @@ export class SettingsPanel extends LitElement {
       .song-action-buttons {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-
-      .loop-buttons {
-        grid-template-columns: repeat(10, minmax(0, 1fr));
-      }
     }
 
     /* Hide Current Song controls in settings panel on wide screens — sidebar takes over */
@@ -359,6 +367,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) playGoToMarker = false;
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
+  @property({ type: Array }) songStates: string[] = [];
 
   connectedCallback() {
     super.connectedCallback();
@@ -534,6 +543,36 @@ export class SettingsPanel extends LitElement {
     this._handleSongAction(action);
   }
 
+  private _handleRememberState() {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action: 'rememberState' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleSetState(index: number) {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action: 'setState', index },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleRemoveState(index: number) {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action: 'removeState', index },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   render() {
     return html`
       <div class="panel-content">
@@ -549,7 +588,9 @@ export class SettingsPanel extends LitElement {
             <t-butt @click=${this._handleSignInClick}>
               ${this.signedIn ? 'Sign out' : 'Sign in'}
             </t-butt>
-            <button class="close-button" @click=${this._handleClose}>×</button>
+            <t-butt ghost class="close-button" @click=${this._handleClose}>
+              <t-icon name="chevron-down"></t-icon>
+            </t-butt>
           </div>
         </div>
 
@@ -569,6 +610,46 @@ export class SettingsPanel extends LitElement {
             @setting-changed=${this._handleCurrentSongSettingChange}
             @song-action-requested=${this._handleCurrentSongAction}
           ></t-current-song-controls>
+
+          <details class="advanced-panel">
+            <summary class="advanced-summary">
+              <div class="advanced-summary-copy">
+                <p class="advanced-summary-title">States</p>
+                <p class="advanced-summary-text">
+                  Remember selected markers, tempo, loops and more to quickly restore your song
+                  settings.
+                </p>
+              </div>
+              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
+            </summary>
+            <div class="advanced-content">
+              <div class="settings-section">
+                <h3>Enter Key</h3>
+                <div class="settings-grid">
+                  <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
+                  <div id="stateList" class="state-list">
+                    ${(this.songStates || []).map((stateStr: string, i: number) => {
+                      let displayName = `State ${i + 1}`;
+                      try {
+                        const st = JSON.parse(stateStr) as { name?: string };
+                        if (st && typeof st.name === 'string' && st.name) displayName = st.name;
+                      } catch {
+                        /* ignore parse error for display name */
+                      }
+                      return html`
+                        <div class="state-item">
+                          <t-butt @click=${() => this._handleSetState(i)}>${displayName}</t-butt>
+                          <t-butt @click=${() => this._handleRemoveState(i)}
+                            ><t-icon name="delete"></t-icon
+                          ></t-butt>
+                        </div>
+                      `;
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
 
           <div class="settings-section" style="margin-top: 16px;">
             <t-help-tip h3="Global Controls">

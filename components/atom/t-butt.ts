@@ -14,7 +14,7 @@ export class TButt extends LitElement {
       min-width: 42px;
       min-height: 35px;
       font-size: inherit;
-      margin: 2px;
+      margin: 0;
       border-width: 0;
       border-radius: var(--button-border-radius);
       padding: 1px 6px;

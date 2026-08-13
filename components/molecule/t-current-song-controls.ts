@@ -49,9 +49,7 @@ export class CurrentSongControls extends LitElement {
     }
 
     .settings-group {
-      padding: 14px;
-
-      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
+      overflow: hidden;
     }
 
     .settings-group-header {
@@ -92,6 +90,7 @@ export class CurrentSongControls extends LitElement {
 
     .settings-section {
       margin-bottom: 6px;
+      width: var(--settings-column-width);
     }
 
     .settings-section h3 {
@@ -128,20 +127,10 @@ export class CurrentSongControls extends LitElement {
     }
 
     .loop-buttons {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      width: 100%;
-      container-type: inline-size;
-    }
-
-    .loop-buttons t-butt {
-      width: 100%;
-    }
-
-    @container (min-width: 450px) {
-      .loop-buttons {
-        grid-template-columns: repeat(10, minmax(0, 1fr));
-      }
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: space-between;
     }
 
     .setting-group-title {
@@ -211,6 +200,10 @@ export class CurrentSongControls extends LitElement {
     @media (min-width: 768px) {
       .playback-control-section {
         display: block;
+      }
+
+      .settings-group {
+        padding: 14px;
       }
     }
 
