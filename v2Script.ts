@@ -1118,7 +1118,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Also sync the settings panel's instance (visible on mobile when sidebar is hidden)
-    const settingsControls = document.querySelector('#settingsCurrentSongControls') as any;
+    const settingsControls =
+      (settingsPanel?.shadowRoot?.querySelector('#settingsCurrentSongControls') as any) ?? null;
     if (settingsControls) {
       settingsControls.loopTimesValue = currentSongControls.loopTimesValue;
       settingsControls.startBeforeDisabled = currentSongControls.startBeforeDisabled;
@@ -1134,6 +1135,12 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsControls.tempo = currentSongControls.tempo;
       settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
       settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
+    }
+
+    // Also push tempo onto the settings panel host so the template binding
+    // carries it to the internal instance even when that instance renders later.
+    if (settingsPanel) {
+      settingsPanel.tempo = currentSongControls.tempo;
     }
   };
 

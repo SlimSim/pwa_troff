@@ -508,14 +508,14 @@ export class CurrentSongControls extends LitElement {
               <div class="setting-item">
                 <div class="song-action-buttons">
                   <t-butt
-                    key="t"
+                    key="u"
                     ellipsis
                     .active=${this.playFullSong}
                     @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
                   >
                     Play full song
                   </t-butt>
-                  <t-butt ellipsis @click=${this._handleTapTempo}>
+                  <t-butt key="t" ellipsis @click=${this._handleTapTempo}>
                     <t-icon name="tap" slim></t-icon>
                     ${this.tempo || '--'} <br />
                     Tap tempo:
