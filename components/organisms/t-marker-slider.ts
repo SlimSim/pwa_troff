@@ -112,6 +112,7 @@ export class MarkerSlider extends LitElement {
   private isPinching = false;
   private initialPinchDistance = 0;
   private initialZoom = 1;
+  private lastMidpointY = 0;
 
   private _getTrackElement(): HTMLElement | null {
     return this.shadowRoot?.querySelector('.slider-track-wrapper') ?? null;
@@ -237,7 +238,7 @@ export class MarkerSlider extends LitElement {
       event.preventDefault();
 
       const delta = event.deltaY > 0 ? 0.9 : 1.1;
-      this._setZoom(this.zoomLevel * delta, this._getAnchorFraction(event.clientY));
+      this._setZoom(this.zoomLevel * delta, event.clientY);
     }
   }
 
@@ -246,6 +247,7 @@ export class MarkerSlider extends LitElement {
       this.isPinching = true;
       this.initialPinchDistance = this._getDistance(event.touches[0], event.touches[1]);
       this.initialZoom = this.zoomLevel;
+      this.lastMidpointY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
     }
   }
 
@@ -256,7 +258,9 @@ export class MarkerSlider extends LitElement {
       const currentDistance = this._getDistance(event.touches[0], event.touches[1]);
       const scale = currentDistance / this.initialPinchDistance;
       const midpointY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-      this._setZoom(this.initialZoom * scale, this._getAnchorFraction(midpointY));
+      const panDelta = -(midpointY - this.lastMidpointY);
+      this.lastMidpointY = midpointY;
+      this._setZoom(this.initialZoom * scale, midpointY, panDelta);
     }
   }
 
@@ -299,19 +303,28 @@ export class MarkerSlider extends LitElement {
     return null;
   }
 
-  private _setZoom(newZoom: number, anchorFraction: number) {
+  private _setZoom(newZoom: number, anchorClientY: number, panDelta = 0) {
     const clampedZoom = Math.max(this.minZoom, newZoom);
-    if (clampedZoom === this.zoomLevel) return;
+    if (clampedZoom === this.zoomLevel && panDelta === 0) return;
 
     const scrollContainer = this._getScrollContainer();
+
+    // Apply the pan FIRST (synchronously; the browser clamps to the valid
+    // range) so the anchor fraction below is computed against the actual
+    // post-pan scroll position.
+    if (scrollContainer && panDelta !== 0) {
+      scrollContainer.scrollTop += panDelta;
+    }
+
+    const anchorFraction = this._getAnchorFraction(anchorClientY);
     const delta = computeZoomScrollDelta({
       previousZoom: this.zoomLevel,
       newZoom: clampedZoom,
       anchorFraction,
       layoutHeight: this.getBoundingClientRect().height,
     });
-    const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
 
+    const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
     this.zoomLevel = clampedZoom;
 
     // Apply the scroll AFTER the zoom re-renders so the browser clamps against
