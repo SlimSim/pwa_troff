@@ -1674,8 +1674,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Handle sign-in / sign-out requests from the settings panel
-    settingsPanel.addEventListener('sign-in-requested', async (event: Event) => {
+    // Handle sign-in / sign-out requests from the settings panel and the song list
+    const handleSignInRequest = async (event: Event) => {
       const customEvent = event as CustomEvent<{ action: string }>;
       const action = customEvent.detail?.action;
 
@@ -1695,7 +1695,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (error) {
         log.e('Auth error:', error);
       }
-    });
+    };
+
+    settingsPanel.addEventListener('sign-in-requested', handleSignInRequest);
+    songList?.addEventListener('sign-in-requested', handleSignInRequest);
   }
 
   // Keep the settings panel auth state in sync with Firebase on every page load

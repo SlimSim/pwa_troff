@@ -385,6 +385,14 @@ export class MediaParent extends LitElement {
       font-size: 1rem;
     }
 
+    .empty-state-sign-in-note {
+      font-size: 0.85rem;
+      opacity: 0.65;
+      color: var(--on-primary-color);
+      line-height: 1.5;
+      margin: 0 0 8px 0;
+    }
+
     /* ── No-results state (active search, empty list) ── */
     .no-results {
       padding: 24px 16px;
@@ -773,6 +781,16 @@ export class MediaParent extends LitElement {
     if (input) {
       input.click();
     }
+  }
+
+  private _handleSignIn() {
+    this.dispatchEvent(
+      new CustomEvent('sign-in-requested', {
+        detail: { action: 'sign-in' },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private _handleAddGroup() {
@@ -1781,6 +1799,13 @@ export class MediaParent extends LitElement {
                     <t-butt class="empty-action-btn" href="/find.html" target="_blank">
                       <t-icon name="note-search"></t-icon>
                       <span>Find songs online</span>
+                    </t-butt>
+                    <p class="empty-state-sign-in-note">
+                      Sign in to get the songs shared in your groups
+                    </p>
+                    <t-butt class="empty-action-btn" @click=${this._handleSignIn}>
+                      <t-icon name="user-plus"></t-icon>
+                      <span>Sign in</span>
                     </t-butt>
                   </div>
                 </div>
