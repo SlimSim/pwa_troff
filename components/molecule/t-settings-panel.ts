@@ -341,6 +341,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) stopAfterDisabled = false;
   @property({ type: Number }) incrementUntillValue = 0;
   @property({ type: Boolean }) incrementUntillDisabled = false;
+  @property({ type: Number }) tempo = 0;
 
   // Global default song values (for advanced panel)
   @property({ type: Number }) defaultStartBeforeValue = 4;
@@ -610,6 +611,7 @@ export class SettingsPanel extends LitElement {
             .stopAfterDisabled=${this.stopAfterDisabled}
             .incrementUntillValue=${this.incrementUntillValue}
             .incrementUntillDisabled=${this.incrementUntillDisabled}
+            .tempo=${this.tempo}
             @setting-changed=${this._handleCurrentSongSettingChange}
             @song-action-requested=${this._handleCurrentSongAction}
           ></t-current-song-controls>
