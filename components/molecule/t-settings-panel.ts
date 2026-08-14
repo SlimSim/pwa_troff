@@ -88,6 +88,11 @@ export class SettingsPanel extends LitElement {
 
     .settings-shell {
       display: grid;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      justify-content: space-around;
     }
 
     .settings-group {
@@ -240,14 +245,11 @@ export class SettingsPanel extends LitElement {
     }
 
     details.advanced-panel {
-      border: 1px solid var(--border-color, #333);
-      border-radius: 8px;
-      background-color: var(--item-background, rgba(255, 255, 255, 0.06));
       overflow: hidden;
+      width: var(--settings-column-width);
     }
 
     details.advanced-panel[open] {
-      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
     }
 
     .advanced-summary {
@@ -257,7 +259,8 @@ export class SettingsPanel extends LitElement {
       justify-content: space-between;
       gap: 12px;
       cursor: pointer;
-      padding: 12px 14px;
+      padding: 12px 0;
+      padding-right: 1px;
     }
 
     .advanced-summary::-webkit-details-marker {
@@ -294,7 +297,7 @@ export class SettingsPanel extends LitElement {
     }
 
     .advanced-content {
-      padding: 0 14px 14px;
+      // padding: 0 14px 14px;
     }
 
     /* Responsive design */
@@ -624,7 +627,6 @@ export class SettingsPanel extends LitElement {
             </summary>
             <div class="advanced-content">
               <div class="settings-section">
-                <h3>Enter Key</h3>
                 <div class="settings-grid">
                   <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
                   <div id="stateList" class="state-list">
@@ -650,12 +652,16 @@ export class SettingsPanel extends LitElement {
               </div>
             </div>
           </details>
-
-          <div class="settings-section" style="margin-top: 16px;">
+        </div>
+        <div class="settings-shell">
+          <div class="settings-section" style="margin-top: 16px; margin-bottom: 0;">
             <t-help-tip h3="Global Controls">
               These key and button behaviors apply across Troff, not just this song.
             </t-help-tip>
           </div>
+          <div class="settings-section" style="margin: 0;"></div>
+        </div>
+        <div class="settings-shell">
           <details class="advanced-panel">
             <summary class="advanced-summary">
               <div class="advanced-summary-copy">

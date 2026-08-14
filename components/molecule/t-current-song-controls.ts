@@ -208,14 +208,11 @@ export class CurrentSongControls extends LitElement {
     }
 
     details.advanced-panel {
-      border: 1px solid var(--border-color, #333);
-      border-radius: 8px;
-      background-color: var(--item-background, rgba(255, 255, 255, 0.06));
       overflow: hidden;
+      width: var(--settings-column-width);
     }
 
     details.advanced-panel[open] {
-      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
     }
 
     .advanced-summary {
@@ -225,7 +222,8 @@ export class CurrentSongControls extends LitElement {
       justify-content: space-between;
       gap: 12px;
       cursor: pointer;
-      padding: 12px 14px;
+      padding: 12px 0;
+      padding-right: 1px;
     }
 
     .advanced-summary::-webkit-details-marker {
@@ -258,11 +256,11 @@ export class CurrentSongControls extends LitElement {
     }
 
     details.advanced-panel[open] .advanced-chevron {
-      transform: rotateX(180deg) translateY(-1px);
+      transform: rotateX(180deg) translateY(0);
     }
 
     .advanced-content {
-      padding: 0 14px 14px;
+      // padding: 0 14px 14px;
     }
 
     /* Responsive design for wider screens within the sidebar */
