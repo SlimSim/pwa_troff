@@ -19,4 +19,7 @@
   --slider-top-padding: 0px;
   --slider-horizontal-padding: 8px;
   --marker-gap: 4px;
+
+  /* settings panel */
+  --settings-column-width: 240.591px; /* this is exactly this because thats how wide the t-dial is! */
 }

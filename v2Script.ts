@@ -8,6 +8,8 @@ import './components/molecule/t-media-parent.js';
 import './components/molecule/t-main-layout.js';
 import './components/molecule/t-current-song-controls.js';
 import './components/molecule/t-group-dialog.js';
+import './components/molecule/t-song-edit-dialog.js';
+import type { SongEditDialog } from './components/molecule/t-song-edit-dialog.js';
 import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/organisms/t-marker-slider.js';
@@ -45,6 +47,7 @@ import type {
   State,
   State_WithTime,
   TroffManualImportExport,
+  TroffFileData,
 } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -930,6 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
+    settingsPanel.songStates = songKey && songData && Array.isArray(songData.aStates) ? songData.aStates : [];
     const rawLoopTimes =
       songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
     const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
@@ -1119,7 +1123,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Also sync the settings panel's instance (visible on mobile when sidebar is hidden)
-    const settingsControls = document.querySelector('#settingsCurrentSongControls') as any;
+    const settingsControls =
+      (settingsPanel?.shadowRoot?.querySelector('#settingsCurrentSongControls') as any) ?? null;
     if (settingsControls) {
       settingsControls.loopTimesValue = currentSongControls.loopTimesValue;
       settingsControls.startBeforeDisabled = currentSongControls.startBeforeDisabled;
@@ -1135,6 +1140,12 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsControls.tempo = currentSongControls.tempo;
       settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
       settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
+    }
+
+    // Also push tempo onto the settings panel host so the template binding
+    // carries it to the internal instance even when that instance renders later.
+    if (settingsPanel) {
+      settingsPanel.tempo = currentSongControls.tempo;
     }
   };
 
@@ -1386,6 +1397,131 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set heights after components are rendered
   setTimeout(setComponentHeights, 200);
 
+  const rememberCurrentState = () => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+    const songData = nDB.get(songKey) || {};
+    const existingStates: string[] = Array.isArray(songData.aStates) ? songData.aStates : [];
+    const suggested = 'State ' + (existingStates.length + 1);
+    const name = window.prompt('Remember state of settings to be recalled later', suggested);
+    if (!name || name.trim() === '') {
+      return;
+    }
+    const parseNum = (v: unknown, fb: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fb;
+    };
+    const state: State = {
+      name: name.trim(),
+      currentMarker: markerSlider ? markerSlider.startMarkerId : (songData.currentStartMarker || ''),
+      currentStopMarker: markerSlider ? markerSlider.stopMarkerId : (songData.currentStopMarker || ''),
+      currentLoop: songData.loopTimes !== undefined ? songData.loopTimes : '1',
+      buttPauseBefStart: songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart !== false,
+      buttStartBefore: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore !== false,
+      buttStopAfter: songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter !== false,
+      buttWaitBetweenLoops: songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops !== false,
+      buttIncrementUntil: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === true,
+      pauseBeforeStart: parseNum(songData.TROFF_VALUE_pauseBeforeStart, parseNum(footer?.pauseBefore, 3)),
+      speedBar: parseNum(songData.TROFF_VALUE_speedBar, parseNum(footer?.speed, 100)),
+      startBefore: parseNum(songData.TROFF_VALUE_startBefore, 0),
+      stopAfter: parseNum(songData.TROFF_VALUE_stopAfter, 0),
+      volumeBar: parseNum(songData.TROFF_VALUE_volumeBar, parseNum(footer?.volume, 75)),
+      waitBetweenLoops: parseNum(songData.TROFF_VALUE_waitBetweenLoops, parseNum(footer?.waitBetween, 1)),
+    };
+    const aStates: string[] = existingStates.slice();
+    aStates.push(JSON.stringify(state));
+    nDB.setOnSong(songKey, 'aStates', aStates);
+    void saveSongData(songKey);
+    syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
+    if (markerSlider) {
+      updateMarkerSlider(markerSlider);
+    }
+  };
+
+  const setState = (index: number) => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+    const songData: Record<string, unknown> = nDB.get(songKey) || {};
+    const aStates: string[] = Array.isArray(songData.aStates) ? (songData.aStates as string[]).slice() : [];
+    if (index < 0 || index >= aStates.length) {
+      return;
+    }
+    let state: State;
+    try {
+      state = JSON.parse(aStates[index]) as State;
+    } catch {
+      return;
+    }
+    songData.currentStartMarker = state.currentMarker || (songData.currentStartMarker as string) || '';
+    songData.currentStopMarker = state.currentStopMarker || (songData.currentStopMarker as string) || '';
+    if (state.currentLoop !== undefined) {
+      songData.loopTimes = state.currentLoop;
+    }
+    songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart = !!state.buttPauseBefStart;
+    songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore = !!state.buttStartBefore;
+    songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter = !!state.buttStopAfter;
+    songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops = !!state.buttWaitBetweenLoops;
+    songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil = !!state.buttIncrementUntil;
+    songData.TROFF_VALUE_pauseBeforeStart = state.pauseBeforeStart;
+    songData.TROFF_VALUE_speedBar = state.speedBar;
+    songData.TROFF_VALUE_startBefore = state.startBefore;
+    songData.TROFF_VALUE_stopAfter = state.stopAfter;
+    songData.TROFF_VALUE_volumeBar = state.volumeBar;
+    songData.TROFF_VALUE_waitBetweenLoops = state.waitBetweenLoops;
+    nDB.set(songKey, songData);
+    const vol = Number(state.volumeBar);
+    if (Number.isFinite(vol)) {
+      audio.volume = Math.max(0, Math.min(1, vol / 100));
+      if (videoElement) {
+        videoElement.volume = audio.volume;
+      }
+    }
+    const spd = Number(state.speedBar);
+    if (Number.isFinite(spd) && spd > 0) {
+      audio.playbackRate = spd / 100;
+      if (videoElement) {
+        videoElement.playbackRate = audio.playbackRate;
+      }
+      if (videoPlayer) {
+        (videoPlayer as { speed?: number }).speed = spd;
+      }
+    }
+    void saveSongData(songKey);
+    syncLoopTimesFromSong();
+    syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
+    updateFooterWithCurrentSong();
+    updateHeaderCountdownDisplay();
+    if (markerSlider) {
+      updateMarkerSlider(markerSlider, false);
+    }
+  };
+
+  const removeState = (index: number) => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      return;
+    }
+    const songData = nDB.get(songKey) || {};
+    const aStates: string[] = Array.isArray(songData.aStates) ? (songData.aStates as string[]).slice() : [];
+    if (index < 0 || index >= aStates.length) {
+      return;
+    }
+    aStates.splice(index, 1);
+    nDB.setOnSong(songKey, 'aStates', aStates);
+    void saveSongData(songKey);
+    syncSettingsPanelValues();
+    syncCurrentSongControlsValues();
+    if (markerSlider) {
+      updateMarkerSlider(markerSlider);
+    }
+  };
+
   if (footer && settingsPanel) {
     // Listen for settings toggle events from footer
     footer.addEventListener('settings-toggle', (event: any) => {
@@ -1621,8 +1757,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     settingsPanel.addEventListener('song-action-requested', async (event: Event) => {
-      const customEvent = event as CustomEvent<{ action?: string }>;
+      const customEvent = event as CustomEvent<{ action?: string; index?: number }>;
       const action = String(customEvent.detail?.action ?? '');
+      const stateIndex = customEvent.detail?.index;
+
+      if (action === 'rememberState') {
+        rememberCurrentState();
+        return;
+      }
+
+      if (action === 'setState' && typeof stateIndex === 'number') {
+        setState(stateIndex);
+        return;
+      }
+
+      if (action === 'removeState' && typeof stateIndex === 'number') {
+        removeState(stateIndex);
+        return;
+      }
 
       if (action === 'zoom') {
         await zoomToPlayableRegion();
@@ -2600,6 +2752,67 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       log.e('Error deleting group:', error);
     }
+  });
+
+  // -------- Song edit dialog (V2) --------
+  let songEditDialog: SongEditDialog | null = null;
+
+  const ensureSongEditDialog = () => {
+    if (!songEditDialog) {
+      songEditDialog = document.createElement('t-song-edit-dialog');
+      document.body.append(songEditDialog);
+    }
+    return songEditDialog;
+  };
+
+  if (songList) {
+    if (typeof songList.addEventListener === 'function') {
+      songList.addEventListener('song-edit-requested', (event: Event) => {
+        const customEvent = event as CustomEvent<{ songKey?: string }>;
+        const songKey = customEvent.detail?.songKey;
+        if (!songKey) return;
+        const dlg = ensureSongEditDialog();
+        dlg.songKey = songKey;
+        dlg.songData = nDB.get(songKey);
+        dlg.open = true;
+      });
+    }
+  }
+
+  // Listen for song-saved events from the dialog
+  document.addEventListener('song-saved', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ songKey?: string; fileData?: Partial<TroffFileData> }>;
+    const { songKey, fileData } = customEvent.detail ?? {};
+    if (!songKey || !fileData) return;
+
+    const songObject = nDB.get(songKey);
+    if (!songObject) return;
+
+    songObject.fileData = songObject.fileData || {};
+    songObject.fileData.customName = fileData.customName ?? '';
+    songObject.fileData.choreography = fileData.choreography ?? '';
+    songObject.fileData.choreographer = fileData.choreographer ?? '';
+    songObject.fileData.title = fileData.title ?? '';
+    songObject.fileData.artist = fileData.artist ?? '';
+    songObject.fileData.album = fileData.album ?? '';
+    songObject.fileData.genre = fileData.genre ?? '';
+    songObject.fileData.tags = fileData.tags ?? '';
+
+    nDB.set(songKey, songObject);
+
+    // Reload the song list to reflect the new metadata
+    if (songList && typeof songList.reloadSongs === 'function') {
+      await songList.reloadSongs();
+    }
+
+    // Refresh header/footer if this is the currently playing song
+    if (getCurrentSongKey() === songKey) {
+      updateHeaderWithCurrentSong();
+      updateFooterWithCurrentSong();
+    }
+
+    // Sync edited metadata to Firebase groups (v2 equivalent of ifGroupSongUpdateFirestore)
+    void saveSongData(songKey);
   });
 
   // -------- Group song management (add/remove from detail view) --------

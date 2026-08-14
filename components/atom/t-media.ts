@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-number-label.js';
+import './t-icon.js';
 
 @customElement('t-media')
 export class MediaItem extends LitElement {
@@ -18,7 +19,10 @@ export class MediaItem extends LitElement {
       border-left: 4px solid transparent;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       cursor: pointer;
-      transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
     }
 
     .media-container:hover {
@@ -32,21 +36,13 @@ export class MediaItem extends LitElement {
 
     .media-container.highlighted {
       border-left-color: var(--accent-color-1, #431c5d);
-      background-color: color-mix(
-        in srgb,
-        var(--accent-color-1, #431c5d) 18%,
-        transparent
-      );
+      background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 18%, transparent);
       box-shadow: inset 0 0 0 1px
         color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
     }
 
     .media-container.highlighted:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--accent-color-1, #431c5d) 26%,
-        transparent
-      );
+      background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 26%, transparent);
     }
 
     .media-container.active.highlighted {
@@ -151,6 +147,14 @@ export class MediaItem extends LitElement {
       opacity: 0.7;
     }
 
+    /* Edit Button */
+    .edit-btn {
+      flex-shrink: 0;
+      align-self: center;
+      background: none;
+      display: flex;
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .media-container {
@@ -203,6 +207,17 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) active = false;
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
+
+  private _handleEditClick(event: Event) {
+    event.stopPropagation();
+    this.dispatchEvent(
+      new CustomEvent('song-edit-requested', {
+        detail: { songKey: this.songKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
 
   private _handleClick() {
     this.dispatchEvent(
@@ -350,6 +365,18 @@ export class MediaItem extends LitElement {
               : ''}
           </div>
         </div>
+
+        ${this.songKey
+          ? html`<t-butt
+              class="edit-btn"
+              ghost
+              title="Edit song"
+              aria-label="Edit song"
+              @click=${this._handleEditClick}
+            >
+              <t-icon name="edit"></t-icon>
+            </t-butt>`
+          : ''}
       </div>
     `;
   }

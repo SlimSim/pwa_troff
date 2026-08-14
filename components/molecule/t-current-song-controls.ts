@@ -49,9 +49,7 @@ export class CurrentSongControls extends LitElement {
     }
 
     .settings-group {
-      padding: 14px;
-
-      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
+      overflow: hidden;
     }
 
     .settings-group-header {
@@ -92,6 +90,7 @@ export class CurrentSongControls extends LitElement {
 
     .settings-section {
       margin-bottom: 6px;
+      width: var(--settings-column-width);
     }
 
     .settings-section h3 {
@@ -128,20 +127,10 @@ export class CurrentSongControls extends LitElement {
     }
 
     .loop-buttons {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      width: 100%;
-      container-type: inline-size;
-    }
-
-    .loop-buttons t-butt {
-      width: 100%;
-    }
-
-    @container (min-width: 450px) {
-      .loop-buttons {
-        grid-template-columns: repeat(10, minmax(0, 1fr));
-      }
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: space-between;
     }
 
     .setting-group-title {
@@ -212,17 +201,18 @@ export class CurrentSongControls extends LitElement {
       .playback-control-section {
         display: block;
       }
+
+      .settings-group {
+        padding: 14px;
+      }
     }
 
     details.advanced-panel {
-      border: 1px solid var(--border-color, #333);
-      border-radius: 8px;
-      background-color: var(--item-background, rgba(255, 255, 255, 0.06));
       overflow: hidden;
+      width: var(--settings-column-width);
     }
 
     details.advanced-panel[open] {
-      background-color: var(--item-background, rgba(255, 255, 255, 0.1));
     }
 
     .advanced-summary {
@@ -232,7 +222,8 @@ export class CurrentSongControls extends LitElement {
       justify-content: space-between;
       gap: 12px;
       cursor: pointer;
-      padding: 12px 14px;
+      padding: 12px 0;
+      padding-right: 1px;
     }
 
     .advanced-summary::-webkit-details-marker {
@@ -265,11 +256,11 @@ export class CurrentSongControls extends LitElement {
     }
 
     details.advanced-panel[open] .advanced-chevron {
-      transform: rotateX(180deg) translateY(-1px);
+      transform: rotateX(180deg) translateY(0);
     }
 
     .advanced-content {
-      padding: 0 14px 14px;
+      // padding: 0 14px 14px;
     }
 
     /* Responsive design for wider screens within the sidebar */
@@ -508,14 +499,14 @@ export class CurrentSongControls extends LitElement {
               <div class="setting-item">
                 <div class="song-action-buttons">
                   <t-butt
-                    key="t"
+                    key="u"
                     ellipsis
                     .active=${this.playFullSong}
                     @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
                   >
                     Play full song
                   </t-butt>
-                  <t-butt ellipsis @click=${this._handleTapTempo}>
+                  <t-butt key="t" ellipsis @click=${this._handleTapTempo}>
                     <t-icon name="tap" slim></t-icon>
                     ${this.tempo || '--'} <br />
                     Tap tempo:
