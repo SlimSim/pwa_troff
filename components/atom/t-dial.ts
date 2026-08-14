@@ -109,10 +109,6 @@ export class Dial extends LitElement {
       align-items: flex-start;
     }
 
-    .value-controls t-butt {
-      margin: -2px;
-    }
-
     .reset-content {
       position: relative;
       display: inline-flex;

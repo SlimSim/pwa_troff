@@ -536,3 +536,74 @@ describe('SettingsPanel panel title', () => {
     expect(title?.textContent?.trim()).toBe('More');
   });
 });
+
+describe('SettingsPanel states management UI (issue #29)', () => {
+  let settingsPanel: SettingsPanelType;
+
+  beforeEach(async () => {
+    // Silence network fetches for manifest and icons in happy-dom (no dev server)
+    const fetchMock = vi.fn(() => Promise.reject(new Error('network disabled in test')));
+    vi.stubGlobal('fetch', fetchMock);
+    // Make requestAnimationFrame fire synchronously
+    const raf = (cb: Function) => { cb(); return 0; };
+    vi.stubGlobal('requestAnimationFrame', raf);
+
+    // Dynamic import - the child element registrations happen once due to ESM caching
+    const { SettingsPanel } = await import('../components/molecule/t-settings-panel.js');
+
+    settingsPanel = new SettingsPanel();
+    document.body.appendChild(settingsPanel);
+    await settingsPanel.updateComplete;
+  });
+
+  afterEach(() => {
+    if (settingsPanel && document.body.contains(settingsPanel)) {
+      document.body.removeChild(settingsPanel);
+    }
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('should render a section for song states / presets', () => {
+    // Once implemented, states UI goes in settings slide-up per issue #29
+    const panelHtml = settingsPanel.shadowRoot?.innerHTML || '';
+    const hasStatesSection =
+      panelHtml.includes('States') ||
+      panelHtml.includes('state') ||
+      panelHtml.includes('Remember state') ||
+      !!settingsPanel.shadowRoot?.querySelector('.states-section, #states, [data-testid="states"]');
+    expect(hasStatesSection).toBe(true);
+  });
+
+  it('should include a t-butt to remember/save the current state', () => {
+    const butts = Array.from(settingsPanel.shadowRoot?.querySelectorAll('t-butt') || []);
+    const hasRemember = butts.some((b) => {
+      const text = (b.textContent || '').toLowerCase().trim();
+      return text.includes('remember') || text.includes('save state') || text.includes('remember state');
+    });
+    expect(hasRemember).toBe(true);
+  });
+
+  it('should render a list of states as clickable t-butt elements (for set/recall)', () => {
+    // In v1 it was #stateList with buttons; in v2 use t-butt inside settings panel
+    const stateListContainer = settingsPanel.shadowRoot?.querySelector(
+      '#stateList, .state-list, .states-list, [slot="states"]'
+    );
+    const butts = Array.from(settingsPanel.shadowRoot?.querySelectorAll('t-butt') || []);
+    const hasStateButtons = butts.some((b) => {
+      const text = (b.textContent || '').toLowerCase();
+      return /state/.test(text) && !text.includes('remember');
+    });
+    expect(stateListContainer || hasStateButtons).toBeTruthy();
+  });
+
+  it('should support removing a state (e.g. via R action or remove butt on list item)', () => {
+    // Placeholder for remove UI; will be implemented with t-butt
+    const hasRemove = (settingsPanel.shadowRoot?.innerHTML || '').includes('remove') ||
+      Array.from(settingsPanel.shadowRoot?.querySelectorAll('t-butt') || []).some(
+        (b) => (b.textContent || '').toLowerCase().includes('remove')
+      );
+    // For RED until implemented: we expect the remove capability to be wired, but currently not in states context
+    expect(hasRemove).toBe(true);  // will fail now, as no states remove
+  });
+});
