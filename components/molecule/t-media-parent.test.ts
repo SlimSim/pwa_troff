@@ -1427,11 +1427,11 @@ describe('empty state (no songs, no groups)', () => {
     expect(getEmptyState()).toBeFalsy();
   });
 
-  it('renders three action buttons in the empty state', async () => {
+  it('renders four action buttons in the empty state', async () => {
     await element.updateComplete;
 
     const buttons = getActionButtons();
-    expect(buttons.length).toBe(3);
+    expect(buttons.length).toBe(4);
   });
 
   it('first action button links to the demo song hash URL', async () => {
@@ -1468,6 +1468,48 @@ describe('empty state (no songs, no groups)', () => {
     const findBtn = buttons[2] as any;
     expect(findBtn.href).toBe('/find.html');
     expect(findBtn.target).toBe('_blank');
+  });
+
+  it('renders a 4th action button with "Sign in" and the sign-in note', async () => {
+    await element.updateComplete;
+
+    const buttons = getActionButtons();
+    expect(buttons.length).toBe(4);
+
+    const signInBtn = buttons[3];
+    expect(signInBtn.textContent?.trim()).toContain('Sign in');
+
+    const signInIcon = signInBtn.querySelector('t-icon');
+    expect(signInIcon?.getAttribute('name')).toBe('user-plus');
+
+    const note = element.shadowRoot?.querySelector('.empty-state-sign-in-note');
+    expect(note).toBeTruthy();
+    expect(note?.textContent?.trim()).toContain(
+      'Sign in to get the songs shared in your groups'
+    );
+  });
+
+  it('dispatches sign-in-requested when the sign-in handler is invoked', async () => {
+    await element.updateComplete;
+
+    const captured: { event: CustomEvent | null } = { event: null };
+    element.addEventListener('sign-in-requested', (event: Event) => {
+      captured.event = event as CustomEvent;
+    });
+
+    // Invoke the handler directly (clicking the t-butt host doesn't cross
+    // the shadow boundary, so we verify the bound method works — same
+    // convention as the _handleAddSong test). We capture the event via an
+    // addEventListener instead of spying on dispatchEvent: happy-dom's
+    // EventTarget re-invokes dispatchEvent during propagation, which would
+    // inflate a spy's call count.
+    (element as unknown as { _handleSignIn(): void })._handleSignIn();
+
+    expect(captured.event).toBeTruthy();
+    expect(captured.event?.type).toBe('sign-in-requested');
+    expect(captured.event?.detail).toEqual({ action: 'sign-in' });
+    expect(captured.event?.bubbles).toBe(true);
+    expect(captured.event?.composed).toBe(true);
   });
 
   it('keeps the header and footer visible when empty', async () => {
