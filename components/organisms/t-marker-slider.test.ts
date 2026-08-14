@@ -212,4 +212,152 @@ describe('t-marker-slider anchor zoom via scroll', () => {
     // clamp to 0).
     expect(wrapper.scrollTop).toBeCloseTo(-4, 6);
   });
+
+  // -------------------------------------------------------------------------
+  // Feature: two-finger pinch PAN (map-style "content follows the fingers").
+  //
+  // On each pinch touchmove the content follows the fingers' midpoint
+  // movement in the vertical direction IN ADDITION to the zoom:
+  //
+  //   panDelta = -(midpointY - lastMidpointY)   // fingers down → content
+  //                                             // follows down → scrollTop--
+  //
+  // The pan is applied to the scroll container FIRST (synchronously), the
+  // zoom anchor fraction is then computed from the post-pan track rect, and
+  // the zoom scroll delta (anchorFraction * (Z2 - Z1) * layoutHeight) is
+  // applied after updateComplete. Zoom-only pinches (fixed midpoint) and
+  // wheel zoom must behave exactly as before.
+  //
+  // happy-dom 20.9.0's TouchEvent (like WheelEvent) drops its init fields, so
+  // touch gestures are built with a plain `new Event(type)` and the
+  // `touches`/`changedTouches`/`targetTouches` collections are re-attached
+  // before dispatching (the component reads `event.touches`, never a
+  // constructor-initialized TouchList).
+  // -------------------------------------------------------------------------
+
+  function makeTouch(clientY: number, clientX = 0) {
+    return { clientX, clientY } as Touch;
+  }
+
+  function dispatchTouchGesture(
+    type: 'touchstart' | 'touchmove' | 'touchend',
+    touchYs: number[]
+  ): void {
+    const touches = touchYs.map((y) => makeTouch(y));
+    const event = new Event(type) as TouchEvent;
+    Object.assign(event, { touches, changedTouches: touches, targetTouches: touches });
+    element.dispatchEvent(event);
+  }
+
+  it('a pinch zoom with a fixed midpoint scrolls by f * (Z2 - Z1) * H0 (no pan)', async () => {
+    await element.updateComplete;
+    mockGeometry();
+
+    // touchstart [300, 500]: midpoint 400, initial distance 200.
+    dispatchTouchGesture('touchstart', [300, 500]);
+    // touchmove [100, 700]: midpoint still 400 (panDelta 0), distance 600 →
+    // scale 3 → zoom 1 -> 3. Anchor fraction at 400 on the mocked 0..800
+    // track is 0.5, so delta = 0.5 * (3 - 1) * 800 = 800.
+    dispatchTouchGesture('touchmove', [100, 700]);
+
+    // zoomLevel is set synchronously by _setZoom, but the zoom scroll delta
+    // is only applied after updateComplete (so the browser clamps against the
+    // NEW scroll extent) — the pan-less pinch must not scroll synchronously.
+    expect(element.zoomLevel).toBe(3);
+    expect(wrapper.scrollTop).toBe(0);
+    await element.updateComplete;
+
+    expect(wrapper.scrollTop).toBe(800);
+  });
+
+  it('a pinch pan alone (constant distance) scrolls the container', async () => {
+    await element.updateComplete;
+    mockGeometry();
+
+    // touchstart [300, 500]: midpoint 400, distance 200.
+    dispatchTouchGesture('touchstart', [300, 500]);
+    // touchmove [400, 600]: midpoint 500, distance 200 → scale 1 (zoom
+    // unchanged), panDelta = -(500 - 400) = -100. Fingers moved down, so the
+    // content follows down and scrollTop decreases.
+    dispatchTouchGesture('touchmove', [400, 600]);
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(1);
+    // happy-dom does NOT clamp scrollTop: a real browser would clamp this pan
+    // to 0 (zoom 1 has no scrollable overflow), but happy-dom stores -100
+    // verbatim — exactly what the pan math produces.
+    expect(wrapper.scrollTop).toBe(-100);
+  });
+
+  it('a pinch zoom + pan combined keeps the content tracking the fingers', async () => {
+    await element.updateComplete;
+    mockGeometry();
+
+    // touchstart [300, 500]: midpoint 400, distance 200.
+    dispatchTouchGesture('touchstart', [300, 500]);
+    // touchmove [150, 550]: midpoint 350, distance 400 → scale 2 (zoom 2),
+    // panDelta = -(350 - 400) = +50 (fingers moved up → content follows up).
+    dispatchTouchGesture('touchmove', [150, 550]);
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(2);
+    // Pan is applied FIRST: scrollTop 0 + 50 = 50. The anchor fraction is then
+    // read from the track rect. NOTE: mockGeometry() returns a STATIC
+    // (0, 0, 800, 800) rect, so it cannot reflect the post-pan scroll — the
+    // fraction is (350 - 0) / 800 = 0.4375 (not (350 + 50) / 800 = 0.5 as it
+    // would be with a real layout). delta = round(0.4375 * (2 - 1) * 800)
+    // = 350, so the final scrollTop is 50 + 350 = 400.
+    expect(wrapper.scrollTop).toBe(400);
+  });
+
+  it('consecutive pinch moves accumulate zoom and pan (map-follow)', async () => {
+    await element.updateComplete;
+    mockGeometry();
+
+    dispatchTouchGesture('touchstart', [300, 500]); // midpoint 400, distance 200
+    // Move 1: [250, 550] → midpoint 400, distance 300, scale 1.5, panDelta 0.
+    dispatchTouchGesture('touchmove', [250, 550]);
+    await element.updateComplete;
+    expect(element.zoomLevel).toBe(1.5);
+    // 0.5 * (1.5 - 1) * 800 = 200
+    expect(wrapper.scrollTop).toBe(200);
+
+    // Move 2: [200, 600] → midpoint 400, distance 400, scale 2, panDelta 0.
+    dispatchTouchGesture('touchmove', [200, 600]);
+    await element.updateComplete;
+    expect(element.zoomLevel).toBe(2);
+    // 200 + 0.5 * (2 - 1.5) * 800 = 400
+    expect(wrapper.scrollTop).toBe(400);
+
+    // Move 3: [150, 450] → midpoint 300, distance 300, scale 1.5 → zoom OUT
+    // 2 -> 1.5 while the fingers move UP: panDelta = -(300 - 400) = +100.
+    dispatchTouchGesture('touchmove', [150, 450]);
+    await element.updateComplete;
+    expect(element.zoomLevel).toBe(1.5);
+    // Pan first: 400 + 100 = 500; fraction (300 - 0) / 800 = 0.375;
+    // delta = round(0.375 * (1.5 - 2) * 800) = -150 → 500 - 150 = 350.
+    expect(wrapper.scrollTop).toBe(350);
+  });
+
+  it('a pinch inward below minZoom still pans (zoom clamped, pan proceeds)', async () => {
+    await element.updateComplete;
+    mockGeometry();
+
+    // minZoom defaults to 1, so a pinch below zoom 1 is clamped to 1 — but the
+    // pan must still be applied (the early-return only fires when BOTH the
+    // zoom is unchanged AND panDelta is 0).
+    expect(element.minZoom).toBe(1);
+
+    dispatchTouchGesture('touchstart', [300, 500]); // midpoint 400, distance 200
+    // touchmove [425, 475]: midpoint 450, distance 50 → scale 0.25 → zoom
+    // 0.25 clamped to 1; panDelta = -(450 - 400) = -50 (fingers moved down →
+    // content follows down → scrollTop decreases).
+    dispatchTouchGesture('touchmove', [425, 475]);
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(1);
+    // happy-dom does NOT clamp scrollTop (a real browser would clamp the pan
+    // to 0 at zoom 1); -50 is stored verbatim.
+    expect(wrapper.scrollTop).toBe(-50);
+  });
 });
