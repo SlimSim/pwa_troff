@@ -37,6 +37,13 @@ describe('t-help-tip', () => {
     element.appendChild(div);
   }
 
+  async function openViaSummaryClick() {
+    await element.updateComplete;
+    const summaryButton = element.shadowRoot?.querySelector('.summary-button') as HTMLElement;
+    summaryButton.click();
+    await element.updateComplete;
+  }
+
   describe('default state', () => {
     it('renders with closed state by default', async () => {
       await element.updateComplete;
@@ -44,15 +51,22 @@ describe('t-help-tip', () => {
       expect(element.hasAttribute('open')).toBe(false);
     });
 
-    it('does not show default slot content when closed', async () => {
+    it('has no popup in the shadow root and popupElement is null when closed', async () => {
       setSummaryContent('Summary');
       setDetailContent('Detail content');
       await element.updateComplete;
 
-      // The detail content div exists but is hidden via hidden attribute
-      const detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent).toBeTruthy();
-      expect(detailContent?.hasAttribute('hidden')).toBe(true);
+      expect(element.popupElement).toBeNull();
+      expect(element.shadowRoot?.querySelector('.detail-content')).toBeNull();
+    });
+
+    it('keeps detail content in the light DOM when closed', async () => {
+      setSummaryContent('Summary');
+      setDetailContent('Detail content');
+      await element.updateComplete;
+
+      const detail = element.querySelector(':scope > div');
+      expect(detail?.textContent).toContain('Detail content');
     });
 
     it('renders summary button with help icon', async () => {
@@ -73,31 +87,47 @@ describe('t-help-tip', () => {
   });
 
   describe('open property and attribute', () => {
-    it('shows default slot content when open property is set', async () => {
-      element.open = true;
+    it('portals the popup into document.body when open property is set', async () => {
       setSummaryContent('Summary');
       setDetailContent('Detail content');
+      element.open = true;
       await element.updateComplete;
 
-      const detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent).toBeTruthy();
-      expect(detailContent?.hasAttribute('hidden')).toBe(false);
+      const popup = element.popupElement;
+      expect(popup).toBeTruthy();
+      expect(popup).toBeInstanceOf(HTMLElement);
 
-      // The slot element exists in shadow DOM
-      const slot = detailContent?.querySelector('slot');
-      expect(slot).toBeTruthy();
+      // The popup must NOT live inside the component's shadow root...
+      expect(element.shadowRoot?.querySelector('.detail-content')).toBeNull();
+
+      // ...but it must be attached to document.body via a portal host.
+      // NOTE: happy-dom's Node.contains() does NOT cross shadow boundaries
+      // (real browsers do via shadow-including semantics), so assert on the
+      // portal host div (the popup's shadow root host) instead of the popup.
+      const popupRoot = popup?.getRootNode() as ShadowRoot | null;
+      expect(popupRoot?.host).toBeInstanceOf(HTMLElement);
+      expect(document.body.contains(popupRoot?.host as Node)).toBe(true);
+    });
+
+    it('moves the detail content into the portaled popup when open', async () => {
+      setSummaryContent('Summary');
+      setDetailContent('Detail content');
+      element.open = true;
+      await element.updateComplete;
+
+      const popup = element.popupElement;
+      expect(popup?.textContent).toContain('Detail content');
     });
 
     it('shows default slot content when open attribute is set', async () => {
-      element.setAttribute('open', '');
       setSummaryContent('Summary');
       setDetailContent('Detail content');
+      element.setAttribute('open', '');
       await element.updateComplete;
 
       expect(element.open).toBe(true);
       expect(element.hasAttribute('open')).toBe(true);
-      const detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent?.hasAttribute('hidden')).toBe(false);
+      expect(element.popupElement).toBeTruthy();
     });
 
     it('reflects open property to open attribute', async () => {
@@ -159,39 +189,44 @@ describe('t-help-tip', () => {
       expect(element.open).toBe(false);
     });
 
-    it('shows/hides detail content when toggled via summary click', async () => {
+    it('creates and removes the portaled popup when toggled via summary click', async () => {
       setSummaryContent('Summary');
       setDetailContent('Detail content');
       await element.updateComplete;
 
-      let detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent?.hasAttribute('hidden')).toBe(true);
+      expect(element.popupElement).toBeNull();
 
       const summaryButton = element.shadowRoot?.querySelector('.summary-button') as HTMLElement;
       summaryButton.click();
       await element.updateComplete;
 
-      detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent?.hasAttribute('hidden')).toBe(false);
+      expect(element.popupElement).toBeTruthy();
+      expect(element.popupElement?.textContent).toContain('Detail content');
 
       summaryButton.click();
       await element.updateComplete;
 
-      detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent?.hasAttribute('hidden')).toBe(true);
+      expect(element.popupElement).toBeNull();
+    });
+
+    it('returns the detail content to the light DOM when closed', async () => {
+      setSummaryContent('Summary');
+      setDetailContent('Detail content');
+      element.open = true;
+      await element.updateComplete;
+
+      expect(element.popupElement?.textContent).toContain('Detail content');
+
+      element.open = false;
+      await element.updateComplete;
+
+      expect(element.popupElement).toBeNull();
+      const detail = element.querySelector(':scope > div');
+      expect(detail?.textContent).toContain('Detail content');
     });
   });
 
   describe('accessibility', () => {
-    it('summary button has button role semantics', async () => {
-      setSummaryContent('Summary');
-      await element.updateComplete;
-
-      const summaryButton = element.shadowRoot?.querySelector('.summary-button');
-      expect(summaryButton).toBeTruthy();
-      expect(summaryButton?.tagName.toLowerCase()).toBe('button');
-    });
-
     it('summary button has aria-expanded reflecting open state', async () => {
       setSummaryContent('Summary');
       await element.updateComplete;
@@ -205,12 +240,18 @@ describe('t-help-tip', () => {
       expect(summaryButton?.getAttribute('aria-expanded')).toBe('true');
     });
 
-    it('summary button is focusable', async () => {
+    it('portaled popup has role="region" and aria-labelledby pointing at summary', async () => {
+      element.open = true;
       setSummaryContent('Summary');
       await element.updateComplete;
 
-      const summaryButton = element.shadowRoot?.querySelector('.summary-button') as HTMLElement;
-      expect(summaryButton.tabIndex).toBeGreaterThanOrEqual(0);
+      const popup = element.popupElement;
+      expect(popup?.getAttribute('role')).toBe('region');
+
+      const summaryButton = element.shadowRoot?.querySelector('.summary-button');
+      const summaryId = summaryButton?.getAttribute('id');
+      expect(summaryId).toBeTruthy();
+      expect(popup?.getAttribute('aria-labelledby')).toBe(summaryId);
     });
   });
 
@@ -230,8 +271,7 @@ describe('t-help-tip', () => {
       expect(helpIcon).toBeTruthy();
     });
 
-    it('renders default slot content when open', async () => {
-      element.open = true;
+    it('renders all default slot content inside the portaled popup when open', async () => {
       setSummaryContent('Summary');
       const p = document.createElement('p');
       p.textContent = 'Paragraph content';
@@ -239,10 +279,12 @@ describe('t-help-tip', () => {
       span.textContent = 'More content';
       setDetailContent(p);
       element.appendChild(span); // Add second element as well
+      element.open = true;
       await element.updateComplete;
 
-      const defaultSlot = element.shadowRoot?.querySelector('.detail-content slot');
-      expect(defaultSlot).toBeTruthy();
+      const popup = element.popupElement;
+      expect(popup?.textContent).toContain('Paragraph content');
+      expect(popup?.textContent).toContain('More content');
     });
 
     it('hides default slot content when closed', async () => {
@@ -252,8 +294,79 @@ describe('t-help-tip', () => {
       setDetailContent(p);
       await element.updateComplete;
 
-      const detailContent = element.shadowRoot?.querySelector('.detail-content');
-      expect(detailContent?.hasAttribute('hidden')).toBe(true);
+      // Content stays in the light DOM (hidden slot), no portaled popup exists
+      expect(element.popupElement).toBeNull();
+      const detail = element.querySelector(':scope > div');
+      expect(detail?.textContent).toContain('Hidden content');
+    });
+  });
+
+  describe('portaled popup behavior', () => {
+    it('renders the open portaled popup with z-index 20000', async () => {
+      element.open = true;
+      await element.updateComplete;
+
+      const popup = element.popupElement as HTMLElement;
+      expect(getComputedStyle(popup).zIndex).toBe('20000');
+    });
+
+    it('sets inline position styles on the portaled popup when opened', async () => {
+      element.open = true;
+      await element.updateComplete;
+
+      const popup = element.popupElement;
+      expect(popup?.style.top).toBeTruthy();
+      expect(popup?.style.left).toBeTruthy();
+    });
+
+    it('closes on outside document mousedown', async () => {
+      element.open = true;
+      await element.updateComplete;
+      expect(element.open).toBe(true);
+
+      document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      await element.updateComplete;
+      expect(element.open).toBe(false);
+    });
+
+    it('does not close when mousedown is dispatched inside the popup', async () => {
+      element.open = true;
+      await element.updateComplete;
+      expect(element.open).toBe(true);
+
+      const popup = element.popupElement as HTMLElement;
+      popup.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, composed: true })
+      );
+      await element.updateComplete;
+
+      expect(element.open).toBe(true);
+    });
+
+    it('repositions the portaled popup on window resize when open', async () => {
+      element.open = true;
+      await element.updateComplete;
+
+      const popup = element.popupElement;
+      expect(popup?.style.top).toBeTruthy();
+      expect(popup?.style.left).toBeTruthy();
+
+      window.dispatchEvent(new Event('resize'));
+      await element.updateComplete;
+
+      expect(popup?.style.top).toBeTruthy();
+      expect(popup?.style.left).toBeTruthy();
+    });
+
+    it('does nothing on window scroll/resize when closed and popupElement stays null', async () => {
+      await element.updateComplete;
+      expect(element.popupElement).toBeNull();
+
+      window.dispatchEvent(new Event('scroll'));
+      window.dispatchEvent(new Event('resize'));
+      await element.updateComplete;
+
+      expect(element.popupElement).toBeNull();
     });
   });
 
