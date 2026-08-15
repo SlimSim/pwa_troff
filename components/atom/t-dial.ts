@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-butt.js';
 import './t-icon.js';
@@ -130,46 +130,8 @@ export class Dial extends LitElement {
       position: relative;
       z-index: 1;
       margin-top: 1em;
-      font-size: 0.69em;
+      font-size: 0.5em;
       line-height: 1;
-    }
-
-    .floating-dial {
-      position: fixed;
-      left: var(--dial-x, 0px);
-      top: var(--dial-y, 0px);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 1000;
-    }
-
-    .floating-dial-badge {
-      position: absolute;
-      left: 50%;
-      bottom: calc(100% + 12px);
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: var(--secondary-color, rgba(0, 0, 0, 0.08));
-      color: var(--on-secondary-color, #000);
-      white-space: nowrap;
-      z-index: 11;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .floating-dial-value {
-      font-size: 1rem;
-      font-weight: 600;
-      white-space: nowrap;
-      line-height: 1.2;
-    }
-
-    .floating-dial-value.disabled {
-      color: var(--on-gray-out);
     }
 
     .disabled {
@@ -252,8 +214,9 @@ export class Dial extends LitElement {
   private currentRotation = 0;
   private accumulatedAngle = 0;
   private dialVisible = false;
-  private dialPositionX = 0;
-  private dialPositionY = 0;
+  private _dialCenterX = 0;
+  private _dialCenterY = 0;
+  private _portalContainer: HTMLDivElement | null = null;
 
   private readonly _boundMouseMove = (event: MouseEvent) => this._handleMouseMove(event);
   private readonly _boundMouseUp = (event: MouseEvent) => this._handleMouseUp(event);
@@ -266,28 +229,134 @@ export class Dial extends LitElement {
     return this.shadowRoot?.querySelector('.dial-knob') ?? null;
   }
 
-  private _getFixedDialPosition(): { x: number; y: number } | null {
+  private _showDial() {
     const valueDisplay = this.shadowRoot?.querySelector('.value-display');
-
     if (!(valueDisplay instanceof HTMLElement)) {
-      return null;
+      return;
     }
 
     const valueRect = valueDisplay.getBoundingClientRect();
 
-    return {
-      x: valueRect.left + valueRect.width / 2,
-      y: valueRect.bottom,
-    };
+    this._dialCenterX = valueRect.left + valueRect.width / 2;
+    this._dialCenterY = valueRect.bottom + 16;
+    this.dialVisible = true;
+
+    this._renderPortal();
+    this.requestUpdate();
+  }
+
+  private _renderPortal() {
+    if (!this.dialVisible) {
+      this._removePortal();
+      return;
+    }
+
+    if (!this._portalContainer) {
+      this._portalContainer = document.createElement('div');
+      document.body.appendChild(this._portalContainer);
+    }
+
+    render(
+      html`
+        <style>
+          .t-dial-portal {
+            position: fixed;
+            left: ${this._dialCenterX}px;
+            top: ${this._dialCenterY}px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+          }
+          .t-dial-portal-badge {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 12px);
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: var(--secondary-color, rgba(0, 0, 0, 0.08));
+            color: var(--on-secondary-color, #000);
+            white-space: nowrap;
+            z-index: 11;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+          .t-dial-portal-value {
+            font-size: 1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            line-height: 1.2;
+          }
+          .t-dial-portal-value.disabled {
+            color: var(--on-gray-out);
+          }
+          .t-dial-portal-knob {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--theme-color);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--on-theme-color);
+          }
+          .t-dial-portal-knob:active {
+            cursor: grabbing;
+          }
+          .t-dial-portal-knob.disabled {
+            background-color: var(--on-gray-out);
+          }
+          .t-dial-portal-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        </style>
+        <div class="t-dial-portal">
+          <div class="t-dial-portal-badge">
+            <div class="t-dial-portal-value ${this.disabled ? 'disabled' : ''}">
+              ${this._value}${this.unit}
+            </div>
+            <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
+          </div>
+          <div class="t-dial-portal-container">
+            <div
+              class="t-dial-portal-knob ${this.disabled ? 'disabled' : ''}"
+              style="transform: rotate(${this.currentRotation}deg);"
+              @mousedown=${this._handleMouseDown}
+              @touchstart=${this._handleTouchStart}
+            >
+              <t-icon class="dial-icon" name="rotate" large></t-icon>
+            </div>
+          </div>
+        </div>
+      `,
+      this._portalContainer
+    );
+  }
+
+  private _removePortal() {
+    if (this._portalContainer) {
+      render(html``, this._portalContainer);
+      this._portalContainer.remove();
+      this._portalContainer = null;
+    }
   }
 
   private _getAngleFromEvent(event: MouseEvent | Touch): number {
-    let centerX = this.dialPositionX;
-    let centerY = this.dialPositionY;
+    let centerX: number;
+    let centerY: number;
 
     if (this.dialVisible) {
-      centerX = this.dialPositionX;
-      centerY = this.dialPositionY;
+      centerX = this._dialCenterX;
+      centerY = this._dialCenterY;
     } else {
       const knob = this._getKnobElement();
       if (!knob) return 0;
@@ -299,18 +368,6 @@ export class Dial extends LitElement {
     const deltaX = event.clientX - centerX;
     const deltaY = event.clientY - centerY;
     return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-  }
-
-  private _showDial() {
-    const position = this._getFixedDialPosition();
-    if (!position) {
-      return;
-    }
-
-    this.dialPositionX = position.x;
-    this.dialPositionY = position.y + 16;
-    this.dialVisible = true;
-    this.requestUpdate();
   }
 
   connectedCallback() {
@@ -325,12 +382,19 @@ export class Dial extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this._removePortal();
     document.removeEventListener('mousemove', this._boundMouseMove);
     document.removeEventListener('mouseup', this._boundMouseUp);
     document.removeEventListener('touchmove', this._boundTouchMove);
     document.removeEventListener('touchend', this._boundTouchEnd);
     document.removeEventListener('touchcancel', this._boundTouchCancel);
     document.removeEventListener('click', this._boundDocumentClick, true);
+  }
+
+  updated() {
+    if (this.dialVisible) {
+      this._renderPortal();
+    }
   }
 
   private _handleStart(event: MouseEvent | TouchEvent) {
@@ -402,6 +466,7 @@ export class Dial extends LitElement {
   private _handleEnd() {
     this.isDragging = false;
     this.dialVisible = false;
+    this._removePortal();
     this.requestUpdate();
   }
 
@@ -584,29 +649,6 @@ export class Dial extends LitElement {
           </t-butt>
         </div>
       </div>
-      ${this.dialVisible
-        ? html`<div
-            class="floating-dial"
-            style="--dial-x: ${this.dialPositionX}px; --dial-y: ${this.dialPositionY}px;"
-          >
-            <div class="floating-dial-badge">
-              <div class="floating-dial-value ${this.disabled ? 'disabled' : ''}">
-                ${this._value}${this.unit}
-              </div>
-              <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
-            </div>
-            <div class="dial-container">
-              <div
-                class="dial-knob ${this.disabled ? 'disabled' : ''}"
-                style="transform: rotate(${this.currentRotation}deg);"
-                @mousedown=${this._handleMouseDown}
-                @touchstart=${this._handleTouchStart}
-              >
-                <t-icon class="dial-icon" name="rotate" large></t-icon>
-              </div>
-            </div>
-          </div>`
-        : ''}
     `;
   }
 }
