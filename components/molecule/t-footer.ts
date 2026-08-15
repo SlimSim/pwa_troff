@@ -272,7 +272,7 @@ export class BottomNav extends LitElement {
               <t-icon name="speed" label="${Math.round(this.speed)}" unit="%"></t-icon>
             </t-butt>
             <div slot="dropdown" class="speed-dropdown-content">
-              <t-help-tip h3="Speed and volume control">
+              <t-help-tip h3="Speed and volume control" position="up">
                 <ul>
                   <li>"Volume" sets how loud the song plays.</li>
                   <li>"Speed" sets how fast the song plays, as a percentage of normal speed.</li>
@@ -363,7 +363,7 @@ export class BottomNav extends LitElement {
               ></t-icon>
             </t-butt>
             <div slot="dropdown" class="time-dropdown-content">
-              <t-help-tip h3="Wait control">
+              <t-help-tip h3="Wait control" position="up">
                 <ul>
                   <li>
                     "Pause before" sets how long the player will wait before starting to play the
