@@ -280,6 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
 
+  // Current auth state, kept in sync by the onAuthStateChanged callback below
+  let currentUserSignedIn = false;
+  let currentUserEmail = '';
+
   // Load a song from the cache and route it to the audio element or the video
   // element depending on whether the cached file is a video.
   const loadSongIntoPlayer = async (songKey: string) => {
@@ -1850,9 +1854,15 @@ document.addEventListener('DOMContentLoaded', () => {
       await import('./assets/internal/notify-js/notify.config.js');
       const { auth, onAuthStateChanged } = await import('./services/firebaseClient.js');
       onAuthStateChanged(auth, async (user) => {
+        currentUserSignedIn = user !== null;
+        currentUserEmail = user?.email ?? '';
         if (settingsPanel) {
           settingsPanel.signedIn = user !== null;
           settingsPanel.userName = user?.displayName ?? '';
+        }
+        if (groupDialog) {
+          groupDialog.signedIn = user !== null;
+          groupDialog.userEmail = user?.email ?? '';
         }
 
         if (!user) {
@@ -2643,6 +2653,8 @@ document.addEventListener('DOMContentLoaded', () => {
       groupDialog = document.createElement('t-group-dialog') as any;
       document.body.append(groupDialog);
     }
+    groupDialog.signedIn = currentUserSignedIn;
+    groupDialog.userEmail = currentUserEmail;
     return groupDialog;
   };
 
