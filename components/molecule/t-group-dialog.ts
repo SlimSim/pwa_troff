@@ -115,6 +115,10 @@ export class GroupDialog extends LitElement {
     .add-owner-btn {
       margin-top: 4px;
     }
+    .add-owner-btn t-icon {
+      padding-right: 14px;
+      padding-left: 8px;
+    }
 
     /* Empty state */
     .empty-text {
@@ -294,7 +298,8 @@ export class GroupDialog extends LitElement {
           `
         )}
         <t-butt class="add-owner-btn" @click=${this._addOwner} title="Add owner">
-          + Add owner
+          <t-icon name="user-plus"></t-icon>
+          Add owner
         </t-butt>
       </div>
     `;
@@ -330,7 +335,14 @@ export class GroupDialog extends LitElement {
             ></t-input>
 
             <!-- Info -->
-            <div>
+            <t-textarea
+              value=${this._editInfo}
+              label="Info"
+              placeholder="Optional description..."
+              @input=${this._handleInfoInput}
+            >
+            </t-textarea>
+            <!--div>
               <div class="section-label">Info</div>
               <textarea
                 style="width: 100%; min-height: 60px; padding: 8px; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; font-family: sans-serif; font-size: 0.9rem; box-sizing: border-box; background: var(--text-area, lightblue); color: var(--on-text-area, inherit);"
@@ -338,7 +350,7 @@ export class GroupDialog extends LitElement {
                 placeholder="Optional description..."
                 @input=${this._handleInfoInput}
               ></textarea>
-            </div>
+            </div>-->
 
             <!-- Icon -->
             <t-icon-picker
@@ -347,11 +359,11 @@ export class GroupDialog extends LitElement {
               @change=${this._handleIconChange}
             ></t-icon-picker>
 
-            <!-- Owners -->
-            ${this._isFirebaseGroup ? this._renderOwners() : ''}
-
             <!-- Color -->
             ${this._renderColorPicker()}
+
+            <!-- Owners -->
+            ${this._isFirebaseGroup ? this._renderOwners() : ''}
           </div>
 
           <div class="dialog-footer">
