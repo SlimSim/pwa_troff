@@ -479,7 +479,7 @@ export class CurrentSongControls extends LitElement {
         <section class="settings-group">
           <div class="settings-group-header">
             <div class="settings-group-title-block">
-              <t-help-tip h3="Marker">
+              <t-help-tip h3="Marker" position="up">
                 These options control how the song is played back.
                 <ul>
                   <li>Play full song will select the first and last markers.</li>
@@ -586,7 +586,7 @@ export class CurrentSongControls extends LitElement {
 
           <!-- 6. Loop headline -->
           <div class="settings-section">
-            <t-help-tip h3="Loop">
+            <t-help-tip h3="Loop" position="up">
               <ul>
                 <li class="loop-help-item-footer-only">
                   "Pause before" sets how long the player will wait before starting to play the song

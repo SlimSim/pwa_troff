@@ -115,12 +115,58 @@ export class GroupDialog extends LitElement {
     .add-owner-btn {
       margin-top: 4px;
     }
+    .add-owner-btn t-icon {
+      padding-right: 14px;
+      padding-left: 8px;
+    }
 
     /* Empty state */
     .empty-text {
       font-size: 0.85rem;
       opacity: 0.6;
       font-style: italic;
+    }
+
+    /* Share popup */
+    .share-popup-overlay {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .share-popup {
+      background: var(--on-theme-color, #fff);
+      color: var(--theme-color, #000);
+      border-radius: 8px;
+      max-width: 360px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .share-popup-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .share-popup-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .share-popup-ok {
+      align-self: flex-end;
     }
 
     /* Buttons */
@@ -134,6 +180,12 @@ export class GroupDialog extends LitElement {
   /** The group being edited. When `null`, a new group is being created. */
   @property({ type: Object }) group: TroffFirebaseGroupIdentifyer | null = null;
 
+  /** Whether the current user is signed in. */
+  @property({ type: Boolean }) signedIn = false;
+
+  /** The signed-in user's email address. */
+  @property({ type: String }) userEmail = '';
+
   // ── Internal editing state (cloned from `group` when opened) ───────────────
 
   @state() private _editName = '';
@@ -141,6 +193,9 @@ export class GroupDialog extends LitElement {
   @state() private _editColor = '';
   @state() private _editIcon = '';
   @state() private _editOwners: string[] = [];
+
+  /** Whether the "sign in to share" popup is visible. */
+  @state() private _showSharePopup = false;
 
   /** Whether this group has a Firebase backing. */
   private get _isFirebaseGroup(): boolean {
@@ -161,7 +216,14 @@ export class GroupDialog extends LitElement {
     this._editInfo = g?.info ?? '';
     this._editColor = g?.color ?? '';
     this._editIcon = (g?.icon ?? '').replace(/^fa-/, '');
-    this._editOwners = g?.owners ? [...g.owners] : [];
+    // When creating a new group while signed in, prefill the user's own email as an owner.
+    if (g?.owners) {
+      this._editOwners = [...g.owners];
+    } else if (!g && this.signedIn && this.userEmail) {
+      this._editOwners = [this.userEmail];
+    } else {
+      this._editOwners = [];
+    }
   }
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -264,6 +326,16 @@ export class GroupDialog extends LitElement {
     this._editOwners = this._editOwners.filter((_, i) => i !== index);
   }
 
+  // ── Share popup handlers ───────────────────────────────────────────────────
+
+  private _openSharePopup() {
+    this._showSharePopup = true;
+  }
+
+  private _closeSharePopup() {
+    this._showSharePopup = false;
+  }
+
   // ── Color handler ──────────────────────────────────────────────────────────
 
   private _handleColorChange(event: CustomEvent) {
@@ -271,6 +343,49 @@ export class GroupDialog extends LitElement {
   }
 
   // ── Template helpers ───────────────────────────────────────────────────────
+
+  private _renderOwnersSection() {
+    if (this.group) {
+      // Editing an existing group — only show owners for Firebase-backed groups
+      return this._isFirebaseGroup ? this._renderOwners() : '';
+    }
+    // Creating a new group
+    if (this.signedIn) {
+      return this._renderOwners();
+    }
+    return html`
+      <div>
+        <div class="section-label">Share this group with others</div>
+        <t-butt class="add-owner-btn" @click=${this._openSharePopup} title="Add owners">
+          <t-icon name="user-plus"></t-icon>
+          Add owners
+        </t-butt>
+      </div>
+    `;
+  }
+
+  private _renderSharePopup() {
+    if (!this._showSharePopup) return '';
+    return html`
+      <div class="share-popup-overlay" @click=${this._handleShareOverlayClick}>
+        <div class="share-popup">
+          <div class="share-popup-title">You have to sign in to share a group!</div>
+          <div class="share-popup-text">
+            When you add people to a group, any changes you make to a song will be
+            uploaded and shared to all the members of the group. Therefore, you have
+            to sign in to share the group.
+          </div>
+          <t-butt class="share-popup-ok" @click=${this._closeSharePopup}>OK</t-butt>
+        </div>
+      </div>
+    `;
+  }
+
+  private _handleShareOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      this._closeSharePopup();
+    }
+  }
 
   private _renderOwners() {
     return html`
@@ -294,7 +409,8 @@ export class GroupDialog extends LitElement {
           `
         )}
         <t-butt class="add-owner-btn" @click=${this._addOwner} title="Add owner">
-          + Add owner
+          <t-icon name="user-plus"></t-icon>
+          Add owner
         </t-butt>
       </div>
     `;
@@ -330,7 +446,14 @@ export class GroupDialog extends LitElement {
             ></t-input>
 
             <!-- Info -->
-            <div>
+            <t-textarea
+              value=${this._editInfo}
+              label="Info"
+              placeholder="Optional description..."
+              @input=${this._handleInfoInput}
+            >
+            </t-textarea>
+            <!--div>
               <div class="section-label">Info</div>
               <textarea
                 style="width: 100%; min-height: 60px; padding: 8px; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; font-family: sans-serif; font-size: 0.9rem; box-sizing: border-box; background: var(--text-area, lightblue); color: var(--on-text-area, inherit);"
@@ -338,7 +461,7 @@ export class GroupDialog extends LitElement {
                 placeholder="Optional description..."
                 @input=${this._handleInfoInput}
               ></textarea>
-            </div>
+            </div>-->
 
             <!-- Icon -->
             <t-icon-picker
@@ -347,11 +470,11 @@ export class GroupDialog extends LitElement {
               @change=${this._handleIconChange}
             ></t-icon-picker>
 
-            <!-- Owners -->
-            ${this._isFirebaseGroup ? this._renderOwners() : ''}
-
             <!-- Color -->
             ${this._renderColorPicker()}
+
+            <!-- Owners -->
+            ${this._renderOwnersSection()}
           </div>
 
           <div class="dialog-footer">
@@ -367,6 +490,7 @@ export class GroupDialog extends LitElement {
           </div>
         </div>
       </div>
+      ${this._renderSharePopup()}
     `;
   }
 }

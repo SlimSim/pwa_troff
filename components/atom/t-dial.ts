@@ -265,7 +265,7 @@ export class Dial extends LitElement {
             top: ${this._dialCenterY}px;
             transform: translate(-50%, -50%);
             pointer-events: none;
-            z-index: 1000;
+            z-index: 20000;
           }
           .t-dial-portal-badge {
             position: absolute;

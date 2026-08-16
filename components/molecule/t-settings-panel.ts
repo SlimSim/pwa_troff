@@ -657,7 +657,7 @@ export class SettingsPanel extends LitElement {
         </div>
         <div class="settings-shell">
           <div class="settings-section" style="margin-top: 16px; margin-bottom: 0;">
-            <t-help-tip h3="Global Controls">
+            <t-help-tip h3="Global Controls" position="up">
               These key and button behaviors apply across Troff, not just this song.
             </t-help-tip>
           </div>
