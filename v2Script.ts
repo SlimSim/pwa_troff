@@ -2830,6 +2830,17 @@ document.addEventListener('DOMContentLoaded', () => {
     void saveSongData(songKey);
   });
 
+  // Listen for song info saves from the header dropdown
+  document.addEventListener('song-info-saved', (event: Event) => {
+    const customEvent = event as CustomEvent<{ info?: string }>;
+    const { info } = customEvent.detail ?? {};
+    if (info === undefined) return;
+    const songKey = getCurrentSongKey();
+    if (!songKey) return;
+    nDB.setOnSong(songKey, 'info', info);
+    void saveSongData(songKey);
+  });
+
   // -------- Group song management (add/remove from detail view) --------
 
   // Re-render the currently-loaded song's markers and settings straight from

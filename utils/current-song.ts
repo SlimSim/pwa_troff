@@ -14,17 +14,20 @@ export function updateHeaderWithCurrentSong() {
 
   if (songPath) {
     const metadata = getSongMetadata(songPath);
+    const songData = nDB.get(songPath);
     if (metadata) {
       header.songTitle = metadata.title;
       header.artistName = metadata.artist;
       header.currentTime = '0:00';
     }
+    header.songInfo = songData?.info || '';
   } else {
     // No song selected, show default values
     header.songTitle = 'No song selected';
     header.artistName = 'Select a song to play';
     header.currentTime = '0:00';
     header.totalTime = '0:00';
+    header.songInfo = '';
   }
 }
 

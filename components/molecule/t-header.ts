@@ -1,5 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import '../atom/t-dropdown-button.js';
+import '../atom/t-butt.js';
+import '../atom/t-icon.js';
+import '../atom/t-textarea.js';
 
 @customElement('t-header')
 export class Header extends LitElement {
@@ -80,8 +84,6 @@ export class Header extends LitElement {
       flex-direction: column;
       align-items: flex-end;
       justify-content: center;
-      min-width: 2.5rem;
-      margin-left: 8px;
       gap: 2px;
       font-size: 0.75rem;
       font-weight: 600;
@@ -96,6 +98,15 @@ export class Header extends LitElement {
     .status-loops {
       min-height: 0.9rem;
       opacity: 0.9;
+    }
+
+    .info-dropdown-content {
+      padding: 16px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      width: min(280px, calc(100vw - 24px));
     }
 
     .expand-section {
@@ -126,12 +137,30 @@ export class Header extends LitElement {
   @property({ type: String }) statusCountdown = '';
   @property({ type: String }) statusLoopsLeft = '';
   @property({ type: Boolean, reflect: true }) expanded = false;
+  @property({ type: String }) songInfo = '';
 
   private _handleExpand() {
     this.expanded = !this.expanded;
     this.dispatchEvent(
       new CustomEvent('header-expand', {
         detail: { expanded: this.expanded },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleInfoInput(event: CustomEvent) {
+    if (typeof event.detail?.value === 'string') {
+      this.songInfo = event.detail.value;
+      this._handleInfoSave();
+    }
+  }
+
+  private _handleInfoSave() {
+    this.dispatchEvent(
+      new CustomEvent('song-info-saved', {
+        detail: { info: this.songInfo },
         bubbles: true,
         composed: true,
       })
@@ -154,6 +183,20 @@ export class Header extends LitElement {
           <div class="time-info">${this.currentTime} / ${this.totalTime}</div>
         </div>
 
+        <t-dropdown-button position="down" align="right" class="info-dropdown">
+          <t-butt ghost slot="button" title="Song info">
+            <t-icon name="info"></t-icon>
+          </t-butt>
+          <div slot="dropdown" class="info-dropdown-content">
+            <t-textarea
+              label="Song info"
+              placeholder="Song specific info here!"
+              rows="12"
+              .value=${this.songInfo}
+              @input=${this._handleInfoInput}
+            ></t-textarea>
+          </div>
+        </t-dropdown-button>
         <div class="status-stack">
           <div class="status-countdown">${this.statusCountdown}</div>
           <div class="status-loops">${this.statusLoopsLeft}</div>
