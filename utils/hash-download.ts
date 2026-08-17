@@ -257,7 +257,7 @@ async function fetchAndCacheFile(
  * Save the download link history to nDB for tracking.
  * Mirrors the v1 `saveDownloadLinkHistory` method in `scriptTroffClass.ts`.
  */
-function saveDownloadLinkHistory(
+export function saveDownloadLinkHistory(
   serverTroffDataId: number,
   fileName: string,
   troffData: { markerJsonString: string }

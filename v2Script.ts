@@ -10,8 +10,10 @@ import './components/molecule/t-current-song-controls.js';
 import './components/molecule/t-group-dialog.js';
 import './components/molecule/t-song-edit-dialog.js';
 import type { SongEditDialog } from './components/molecule/t-song-edit-dialog.js';
+import type { ShareSongDialog } from './components/molecule/t-share-song-dialog.js';
 import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
+import './components/molecule/t-share-song-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import './components/organisms/t-video-player.js';
 import {
@@ -76,6 +78,7 @@ import {
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
 } from './constants/constants.js';
 import log from './utils/log.js';
+import { showToast } from './utils/notification.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import { toSongKey } from './utils/utils.js';
 import {
@@ -649,6 +652,66 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       { once: true }
     );
+  };
+
+  const openShareSongDialog = () => {
+    const songKey = getCurrentSongKey();
+    if (!songKey) {
+      showToast(
+        'You do not have a song to upload yet. Add a song to Troff and then try again!',
+        'error'
+      );
+      return;
+    }
+    if (!navigator.onLine) {
+      showToast(
+        'You appear to be offline, please wait until you have an internet connection and try again then.',
+        'error'
+      );
+      return;
+    }
+
+    let shareDialog = document.querySelector('t-share-song-dialog') as ShareSongDialog | null;
+    if (!shareDialog) {
+      shareDialog = document.createElement('t-share-song-dialog');
+      document.body.append(shareDialog);
+    }
+    shareDialog.songName = songKey;
+
+    if (window.location.hash) {
+      shareDialog.alreadyUploaded = true;
+      shareDialog.shareUrl = window.location.href;
+      shareDialog.state = 'done';
+      shareDialog.open = true;
+      return;
+    }
+
+    shareDialog.alreadyUploaded = false;
+    shareDialog.state = 'confirm';
+    shareDialog.open = true;
+
+    const handleShareConfirmed = async () => {
+      shareDialog.removeEventListener('dialog-cancelled', handleShareDialogCancelled);
+      shareDialog.state = 'uploading';
+      const { uploadSongToServer, buildShareUrl } = await import('./utils/upload-song.js');
+      const result = await uploadSongToServer(songKey);
+      if (!result) {
+        shareDialog.removeEventListener('share-confirmed', handleShareConfirmed);
+        shareDialog.open = false;
+        showToast('Upload failed. Please try again.', 'error');
+        return;
+      }
+      setUrlToSong(result.id, result.fileName); // existing local function in v2Script
+      shareDialog.shareUrl = buildShareUrl(result.id, result.fileName);
+      shareDialog.state = 'done';
+    };
+
+    const handleShareDialogCancelled = () => {
+      shareDialog.removeEventListener('share-confirmed', handleShareConfirmed);
+    };
+
+    shareDialog.addEventListener('share-confirmed', handleShareConfirmed, { once: true });
+    shareDialog.addEventListener('dialog-cancelled', handleShareDialogCancelled, { once: true });
   };
 
   const openMarkerToolsDialog = (action: string) => {
@@ -1791,6 +1854,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (action === 'importExport') {
         await handleImportExport();
+      }
+
+      if (action === 'shareSong') {
+        openShareSongDialog();
+        return;
       }
 
       if (

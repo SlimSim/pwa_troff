@@ -28,7 +28,8 @@ type SongAction =
   | 'copyMarkers'
   | 'moveMarkers'
   | 'deleteMarkers'
-  | 'stretchMarkers';
+  | 'stretchMarkers'
+  | 'shareSong';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -50,6 +51,7 @@ export class CurrentSongControls extends LitElement {
 
     .settings-group {
       overflow: hidden;
+      padding: 4px;
     }
 
     .settings-group-header {
@@ -58,6 +60,14 @@ export class CurrentSongControls extends LitElement {
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 4px;
+    }
+
+    .share-song-button {
+      width: var(--settings-column-width);
+    }
+
+    .share-song-button-text {
+      flex-grow: 1;
     }
 
     .settings-group-title-block {
@@ -207,12 +217,20 @@ export class CurrentSongControls extends LitElement {
       }
     }
 
+    .tap-tempo-butt {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     details.advanced-panel {
       overflow: hidden;
       width: var(--settings-column-width);
+      padding: 4px;
     }
 
     details.advanced-panel[open] {
+      background-color: var(--secondary-color, rgba(0, 0, 0, 0.08));
     }
 
     .advanced-summary {
@@ -479,6 +497,15 @@ export class CurrentSongControls extends LitElement {
         <section class="settings-group">
           <div class="settings-group-header">
             <div class="settings-group-title-block">
+              <t-butt
+                class="share-song-button"
+                special
+                title="Share this song to friends via link"
+                @click=${() => this._handleSongAction('shareSong')}
+              >
+                <t-icon style="padding-right: 4px;" name="share"></t-icon>
+                <span class="share-song-button-text">Share the song with a link!</span>
+              </t-butt>
               <t-help-tip h3="Marker" position="up">
                 These options control how the song is played back.
                 <ul>
@@ -507,9 +534,10 @@ export class CurrentSongControls extends LitElement {
                     Play full song
                   </t-butt>
                   <t-butt key="t" ellipsis @click=${this._handleTapTempo}>
-                    <t-icon name="tap" slim></t-icon>
-                    ${this.tempo || '--'} <br />
-                    Tap tempo:
+                    <div class="tap-tempo-butt">
+                      <t-icon name="metronome"></t-icon>
+                      <span>Tap tempo: ${this.tempo || '--'} <br /> </span>
+                    </div>
                   </t-butt>
                 </div>
               </div>
