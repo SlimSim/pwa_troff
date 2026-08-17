@@ -93,6 +93,7 @@ export class SettingsPanel extends LitElement {
       gap: 16px;
 
       justify-content: space-around;
+      margin: -4px;
     }
 
     .settings-group {
@@ -247,6 +248,7 @@ export class SettingsPanel extends LitElement {
     details.advanced-panel {
       overflow: hidden;
       width: var(--settings-column-width);
+      padding: 4px;
     }
 
     details.advanced-panel[open] {

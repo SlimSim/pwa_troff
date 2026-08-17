@@ -147,3 +147,60 @@ describe('t-current-song-controls song controls layout', () => {
     expect(tapButton!.parentElement).toBe(playFullSongButton!.parentElement);
   });
 });
+
+describe('t-current-song-controls share song feature', () => {
+  let element: CurrentSongControls;
+
+  beforeEach(() => {
+    element = new CurrentSongControls();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  function findShareButton(el: CurrentSongControls): HTMLElement | null {
+    return el.shadowRoot?.querySelector(
+      '.settings-group-header t-butt[special]'
+    ) as HTMLElement | null;
+  }
+
+  it('renders a share button with a share icon above the Marker help-tip', async () => {
+    await element.updateComplete;
+
+    const shareButton = findShareButton(element);
+    expect(shareButton).toBeTruthy();
+
+    // The button contains a share icon and has the documented tooltip
+    expect(shareButton!.querySelector('t-icon[name="share"]')).toBeTruthy();
+    expect(shareButton!.title).toBe('Share this song to friends via link');
+
+    // It is positioned BEFORE the first help-tip (the Marker help-tip)
+    const markerTip = element.shadowRoot?.querySelector('t-help-tip[h3="Marker"]');
+    expect(markerTip).toBeTruthy();
+
+    const position = shareButton!.compareDocumentPosition(markerTip!);
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('dispatches song-action-requested with action shareSong when clicked', async () => {
+    await element.updateComplete;
+
+    const actionSpy = vi.fn();
+    element.addEventListener('song-action-requested', actionSpy);
+
+    const shareButton = findShareButton(element);
+    expect(shareButton).toBeTruthy();
+    shareButton!.click();
+    await element.updateComplete;
+
+    const events = actionSpy.mock.calls.map((call) => call[0] as CustomEvent);
+    expect(events.length).toBeGreaterThan(0);
+    expect(events[events.length - 1].detail).toEqual({ action: 'shareSong' });
+  });
+});

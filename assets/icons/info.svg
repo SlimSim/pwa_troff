@@ -27,9 +27,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="37.125"
-     inkscape:cx="11.986532"
-     inkscape:cy="12"
+     inkscape:zoom="18.5625"
+     inkscape:cx="6.3569024"
+     inkscape:cy="8.2693603"
      inkscape:window-width="1920"
      inkscape:window-height="1129"
      inkscape:window-x="1912"
@@ -38,20 +38,23 @@
      inkscape:current-layer="svg1" />
   <line
      x1="12"
-     y1="16.944441"
+     y1="17.393938"
      x2="12"
-     y2="12.186872"
+     y2="12.203862"
      id="line1-7"
-     style="fill:#d35f5f;stroke-width:2.18119" />
-  <circle
+     style="fill:#d35f5f;stroke-width:2.37948" />
+  <ellipse
      cx="12"
-     cy="12"
-     r="10"
-     id="circle1" />
+     cy="12.000002"
+     id="circle1"
+     rx="10.909091"
+     ry="10.909093"
+     style="stroke-width:2.18181" />
   <line
      x1="12"
-     y1="7.030302"
-     x2="12.01"
-     y2="7.030302"
-     id="line2" />
+     y1="6.5785122"
+     x2="12.010909"
+     y2="6.5785122"
+     id="line2"
+     style="stroke-width:2.18181" />
 </svg>

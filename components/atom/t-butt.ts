@@ -108,6 +108,10 @@ export class TButt extends LitElement {
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
+    .base.full-width {
+      width: 100%;
+    }
+
     /* STYLE for GHOST button */
     .base.ghost {
       background-color: transparent;
@@ -146,6 +150,7 @@ export class TButt extends LitElement {
   @property({ type: Boolean }) ellipsis = false;
   @property({ type: Boolean }) important = false;
   @property({ type: Boolean }) special = false;
+  @property({ type: Boolean }) fullWidth = false;
   @property({ type: Boolean }) toggle = false;
   @property({ type: Boolean, reflect: true }) active = false;
   @property({ type: String, reflect: true }) key = '';
@@ -295,6 +300,9 @@ export class TButt extends LitElement {
     }
     if (this.special) {
       classes.push('special');
+    }
+    if (this.fullWidth) {
+      classes.push('full-width');
     }
     if (this.slim) {
       classes.push('slim');
