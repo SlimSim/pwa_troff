@@ -66,8 +66,8 @@ export class CurrentSongControls extends LitElement {
       width: var(--settings-column-width);
     }
 
-    .share-song-button-text {
-      flex-grow: 1;
+    .share-song-button t-icon {
+      padding-right: 8px;
     }
 
     .settings-group-title-block {
@@ -500,11 +500,12 @@ export class CurrentSongControls extends LitElement {
               <t-butt
                 class="share-song-button"
                 special
+                fullWidth
                 title="Share this song to friends via link"
                 @click=${() => this._handleSongAction('shareSong')}
               >
-                <t-icon style="padding-right: 4px;" name="share"></t-icon>
-                <span class="share-song-button-text">Share the song with a link!</span>
+                <t-icon name="share"></t-icon>
+                Share the song with a link!
               </t-butt>
               <t-help-tip h3="Marker" position="up">
                 These options control how the song is played back.
