@@ -693,8 +693,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleShareConfirmed = async () => {
       shareDialog.removeEventListener('dialog-cancelled', handleShareDialogCancelled);
       shareDialog.state = 'uploading';
+      shareDialog.progress = 0;
       const { uploadSongToServer, buildShareUrl } = await import('./utils/upload-song.js');
-      const result = await uploadSongToServer(songKey);
+      const result = await uploadSongToServer(songKey, (percent) => {
+        shareDialog.progress = percent;
+      });
       if (!result) {
         shareDialog.removeEventListener('share-confirmed', handleShareConfirmed);
         shareDialog.open = false;

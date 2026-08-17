@@ -144,4 +144,45 @@ describe('t-share-song-dialog', () => {
     expect(cancelled).toHaveBeenCalledTimes(1);
     expect(dialog.open).toBe(false);
   });
+
+  it('defaults the progress property to 0', () => {
+    expect(dialog.progress).toBe(0);
+  });
+
+  it('renders a progress bar and percentage reflecting the progress property in uploading state', async () => {
+    dialog.state = 'uploading';
+    dialog.progress = 42;
+    dialog.open = true;
+    await dialog.updateComplete;
+
+    const progressBarOuter = dialog.shadowRoot?.querySelector(
+      '.progress-bar-outer'
+    ) as HTMLElement | null;
+    const progressBarInner = dialog.shadowRoot?.querySelector(
+      '.progress-bar-inner'
+    ) as HTMLElement | null;
+    expect(progressBarOuter).toBeTruthy();
+    expect(progressBarInner).toBeTruthy();
+    expect(progressBarInner!.style.width).toBe('42%');
+
+    const progressPct = dialog.shadowRoot?.querySelector('.progress-pct');
+    expect(progressPct?.textContent).toContain('42%');
+
+    // The existing copy is kept alongside the progress UI
+    expect(dialog.shadowRoot?.textContent).toContain('Uploading your song and markers…');
+  });
+
+  it('updates the percentage when progress changes', async () => {
+    dialog.state = 'uploading';
+    dialog.progress = 10;
+    dialog.open = true;
+    await dialog.updateComplete;
+
+    const progressPct = () => dialog.shadowRoot?.querySelector('.progress-pct')?.textContent ?? '';
+    expect(progressPct()).toContain('10%');
+
+    dialog.progress = 75;
+    await dialog.updateComplete;
+    expect(progressPct()).toContain('75%');
+  });
 });

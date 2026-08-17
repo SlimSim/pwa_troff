@@ -118,6 +118,27 @@ export class ShareSongDialog extends LitElement {
       --butt-bg-color: var(--theme-color, #003366);
     }
 
+    .progress-bar-outer {
+      width: 100%;
+      height: 8px;
+      background: var(--gray-out, #e0e0e0);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: var(--accent-color-1, #431c5d);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-pct {
+      text-align: right;
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
     @media (min-width: 576px) {
       .dialog {
         max-width: 600px;
@@ -130,6 +151,7 @@ export class ShareSongDialog extends LitElement {
   @property({ type: String }) shareUrl = '';
   @property({ type: Boolean }) alreadyUploaded = false;
   @property({ type: String }) state: 'confirm' | 'uploading' | 'done' = 'confirm';
+  @property({ type: Number }) progress = 0;
 
   private _handleOverlayClick(event: MouseEvent) {
     if (event.target === event.currentTarget && this.state !== 'uploading') {
@@ -183,7 +205,13 @@ export class ShareSongDialog extends LitElement {
   }
 
   private _renderUploading() {
-    return html` <p class="info-text">Uploading your song and markers…</p> `;
+    return html`
+      <p class="info-text">Uploading your song and markers…</p>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" style="width: ${Math.round(this.progress)}%"></div>
+      </div>
+      <div class="progress-pct">${Math.round(this.progress)}%</div>
+    `;
   }
 
   private _renderDone() {

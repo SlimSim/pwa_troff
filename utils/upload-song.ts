@@ -49,8 +49,14 @@ async function hashFile(file: File): Promise<string> {
   });
 }
 
+interface UploadSnapshot {
+  bytesTransferred: number;
+  totalBytes: number;
+}
+
 export async function uploadSongToServer(
-  songKey: string
+  songKey: string,
+  onProgress?: (percent: number) => void
 ): Promise<{ id: number; fileUrl: string; fileName: string } | null> {
   try {
     const markerObject = nDB.get(songKey);
@@ -72,8 +78,14 @@ export async function uploadSongToServer(
     try {
       fileUrl = await getDownloadURL(fileRef);
     } catch {
-      const task = await uploadBytesResumable(fileRef, file);
-      fileUrl = await getDownloadURL(task.ref);
+      const task = uploadBytesResumable(fileRef, file);
+      if (onProgress) {
+        task.on('state_changed', (snapshot: UploadSnapshot) => {
+          onProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+        });
+      }
+      const taskSnapshot = await task;
+      fileUrl = await getDownloadURL(taskSnapshot.ref);
     }
 
     const publicData = removeLocalInfo(markerObject);

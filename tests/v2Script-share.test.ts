@@ -17,6 +17,8 @@ interface ShareSongDialogElement extends HTMLElement {
   shareUrl: string;
   alreadyUploaded: boolean;
   state: 'confirm' | 'uploading' | 'done';
+  progress: number;
+  updateComplete: Promise<unknown>;
 }
 
 interface MarkerSliderElement extends HTMLElement {
@@ -236,10 +238,48 @@ describe('v2Script share song flow', () => {
     dialog!.dispatchEvent(new CustomEvent('share-confirmed', { bubbles: true, composed: true }));
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(uploadSongToServerMock).toHaveBeenCalledWith('track.mp3');
+    expect(uploadSongToServerMock).toHaveBeenCalledWith('track.mp3', expect.any(Function));
     expect(window.location.hash.startsWith('#42&')).toBe(true);
     expect(dialog!.shareUrl).toBe('https://origin/#42&track.mp3');
     expect(dialog!.state).toBe('done');
     expect(dialog!.open).toBe(true);
+  });
+
+  it('passes an onProgress callback that updates the dialog progress during upload', async () => {
+    appendRequiredDom();
+    mockCurrentSong('track.mp3');
+    let capturedOnProgress: ((percent: number) => void) | undefined;
+    vi.doMock('../utils/upload-song.js', () => ({
+      crc32Hash: vi.fn(),
+      uploadSongToServer: vi.fn(
+        async (_songKey: string, onProgress?: (percent: number) => void) => {
+          capturedOnProgress = onProgress;
+          return { id: 42, fileUrl: 'https://x/file', fileName: 'track.mp3' };
+        }
+      ),
+      buildShareUrl: vi.fn(() => 'https://origin/#42&track.mp3'),
+    }));
+
+    await bootV2Script();
+    triggerShareSongAction();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const dialog = document.body.querySelector(
+      't-share-song-dialog'
+    ) as ShareSongDialogElement | null;
+    expect(dialog).toBeTruthy();
+
+    // User confirms: the upload should receive a progress callback as the
+    // 2nd argument (currently v2Script calls uploadSongToServer(songKey) with
+    // only one argument, so this assertion is RED today).
+    dialog!.dispatchEvent(new CustomEvent('share-confirmed', { bubbles: true, composed: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(capturedOnProgress).toBeTypeOf('function');
+
+    // A progress report from the upload task must update the dialog's progress
+    capturedOnProgress!(55);
+    await dialog!.updateComplete;
+    expect(dialog!.progress).toBe(55);
   });
 });

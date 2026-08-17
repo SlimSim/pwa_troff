@@ -48,7 +48,10 @@ type UploadResult = { id: number; fileUrl: string; fileName: string } | null;
 describe('utils/upload-song.js', () => {
   let crc32Hash: (r: string) => number;
   let buildShareUrl: (serverId: string | number, fileName: string) => string;
-  let uploadSongToServer: (songKey: string) => Promise<UploadResult>;
+  let uploadSongToServer: (
+    songKey: string,
+    onProgress?: (percent: number) => void
+  ) => Promise<UploadResult>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -63,7 +66,15 @@ describe('utils/upload-song.js', () => {
     cachesMock.match.mockClear();
 
     firebaseMocks.ref.mockImplementation((_storage: unknown, path: string) => ({ path }));
-    firebaseMocks.uploadBytesResumable.mockResolvedValue({ ref: {} });
+    // Fake resumable-upload task shaped for the NEW upload code:
+    //   const task = uploadBytesResumable(fileRef, file);
+    //   task.on('state_changed', handler);
+    //   await task;
+    // The task must be returned synchronously (mockReturnValue): the NEW code
+    // calls uploadBytesResumable(...) WITHOUT awaiting it, so a mockResolvedValue
+    // promise wrapper would lack .on. A plain object works for the OLD code shape
+    // too, because `await` on a non-thenable resolves to the object itself.
+    firebaseMocks.uploadBytesResumable.mockReturnValue({ ref: {}, on: vi.fn() });
     firebaseMocks.doc.mockImplementation(
       (_db: unknown, collection: string, id: string) => ({ path: collection + '/' + id })
     );
@@ -194,6 +205,68 @@ describe('utils/upload-song.js', () => {
         fileUrl: FILE_URL,
         fileName: 'track.mp3',
       });
+    });
+
+    it('calls onProgress with upload percentages during upload', async () => {
+      nDBStore['track.mp3'] = {
+        markers: [{ id: 'm1', time: 1.5 }],
+        localInformation: { playCount: 7 },
+      };
+      mockCache['track.mp3'] = new Response('fake-audio-bytes');
+
+      // First getDownloadURL is the "does it already exist?" check (throws),
+      // the second is the download URL of the freshly uploaded file.
+      firebaseMocks.getDownloadURL
+        .mockRejectedValueOnce(new Error('storage/object-not-found'))
+        .mockResolvedValueOnce(FILE_URL);
+
+      const fakeTask = { ref: {}, on: vi.fn() };
+      firebaseMocks.uploadBytesResumable.mockReturnValue(fakeTask);
+
+      const onProgress = vi.fn();
+      const uploadPromise = uploadSongToServer('track.mp3', onProgress);
+
+      // Wait until the upload branch registered its state_changed listener.
+      // On the current implementation no listener is ever registered, so the
+      // poll simply expires and the onProgress assertions below produce the
+      // RED failure.
+      type UploadSnapshot = { bytesTransferred: number; totalBytes: number };
+      let stateChangedHandler: ((snapshot: UploadSnapshot) => void) | undefined;
+      const deadline = Date.now() + 500;
+      while (!stateChangedHandler && Date.now() < deadline) {
+        const call = fakeTask.on.mock.calls.find((args) => args[0] === 'state_changed');
+        if (call) stateChangedHandler = call[1] as (snapshot: UploadSnapshot) => void;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      // Fire state_changed snapshots mirroring the v1 pattern in
+      // services/file.ts (progress = bytesTransferred / totalBytes * 100).
+      stateChangedHandler?.({ bytesTransferred: 25, totalBytes: 100 });
+      stateChangedHandler?.({ bytesTransferred: 100, totalBytes: 100 });
+
+      const result = await uploadPromise;
+
+      expect(onProgress).toHaveBeenCalledTimes(2);
+      expect(onProgress).toHaveBeenNthCalledWith(1, 25);
+      expect(onProgress).toHaveBeenNthCalledWith(2, 100);
+      expect(result?.fileUrl).toBe(FILE_URL);
+    });
+
+    it('does not call onProgress when the file already exists on the server', async () => {
+      nDBStore['track.mp3'] = { markers: [{ id: 'm1' }] };
+      mockCache['track.mp3'] = new Response('fake-audio-bytes');
+      firebaseMocks.getDownloadURL.mockResolvedValue(FILE_URL);
+
+      const fakeTask = { ref: {}, on: vi.fn() };
+      firebaseMocks.uploadBytesResumable.mockReturnValue(fakeTask);
+
+      const onProgress = vi.fn();
+      const result = await uploadSongToServer('track.mp3', onProgress);
+
+      expect(onProgress).not.toHaveBeenCalled();
+      expect(firebaseMocks.uploadBytesResumable).not.toHaveBeenCalled();
+      expect(fakeTask.on).not.toHaveBeenCalled();
+      expect(result?.fileUrl).toBe(FILE_URL);
     });
   });
 });
