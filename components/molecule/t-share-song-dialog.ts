@@ -10,6 +10,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
+import { showToast } from '../../utils/notification.js';
 
 @customElement('t-share-song-dialog')
 export class ShareSongDialog extends LitElement {
@@ -180,6 +181,7 @@ export class ShareSongDialog extends LitElement {
 
   private _copyShareUrl() {
     void navigator.clipboard.writeText(this.shareUrl);
+    showToast('Link copied to clipboard', 'success');
   }
 
   private _renderConfirm() {
@@ -194,8 +196,8 @@ export class ShareSongDialog extends LitElement {
         </li>
       </ul>
       <p class="info-text">
-        Note: Your song will be visible for others to find. If you do not want to have your song
-        and your markers public, please contact slimsimapps@gmail.com before you upload.
+        Note: Your song will be visible for others to find. If you do not want to have your song and
+        your markers public, please contact slimsimapps@gmail.com before you upload.
       </p>
       <div class="button-group">
         <t-butt @click=${this._cancel}>Cancel</t-butt>
@@ -219,7 +221,13 @@ export class ShareSongDialog extends LitElement {
       <p class="info-text">
         Your song <span class="song-name">${this.songName}</span> is ready to share:
       </p>
-      <input class="share-url-input" readonly .value=${this.shareUrl} aria-label="Share URL" />
+      <input
+        class="share-url-input"
+        @click=${this._copyShareUrl}
+        readonly
+        .value=${this.shareUrl}
+        aria-label="Share URL"
+      />
       <div class="button-group">
         <t-butt class="copy-url-button" @click=${this._copyShareUrl}>Copy URL</t-butt>
         <t-butt @click=${this._cancel}>Close</t-butt>
