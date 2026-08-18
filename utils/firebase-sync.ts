@@ -21,6 +21,7 @@ import { nDB } from '../assets/internal/db.js';
 import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../types/troff.d.js';
 import log from './log.js';
+import { mergeSyncedSongData } from './merge-synced-song-data.js';
 
 const CACHE_NAME = 'songCache-v1.0';
 
@@ -114,11 +115,12 @@ export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<voi
            try {
              const parsedData = JSON.parse(jsonDataInfo) as Record<string, unknown>;
              const existingData = nDB.get(songKey) as Record<string, unknown> | null;
-             const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
-             const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
-             if (serverUploadTime >= localUploadTime) {
-               nDB.set(songKey, parsedData);
-             }
+              const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
+              const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
+              if (serverUploadTime >= localUploadTime) {
+                const merged = mergeSyncedSongData(existingData, parsedData);
+                nDB.set(songKey, merged);
+              }
            } catch (err) {
              log.e(`Failed to parse song data for "${songKey}":`, err);
            }

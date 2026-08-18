@@ -352,6 +352,65 @@ describe('syncFirebaseGroups', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Selective Firebase sync on incoming: only merge synced fields
+  // (markers, aStates, TROFF_VALUE_tapTempo); preserve local non-sync
+  // settings (speed/volume/loop etc) + always localInformation.
+  // Timestamp decides whether to merge.
+  // -----------------------------------------------------------------------
+  it('merges only synced fields from remote when remote upload time >= local; preserves local non-synced fields and localInformation', async () => {
+    const songKey = 'selective-sync-track.mp3';
+
+    // local non-sync + old synced + localInfo
+    nDBStore[songKey] = {
+      TROFF_VALUE_speedBar: 80,
+      TROFF_VALUE_volumeBar: 90,
+      loopTimes: 3,
+      markers: [{ id: 'local-m', time: 5 }],
+      aStates: ['{"name":"localState"}'],
+      TROFF_VALUE_tapTempo: 100,
+      latestUploadToFirebase: 100,
+      localInformation: { nrTimesLoaded: 7 },
+    };
+
+    mockFirebaseGroupSnapshot.docs = [
+      groupDoc('group1', { name: 'Test', owners: ['user@example.com'] }),
+    ];
+
+    mockFirebaseSongsSnapshot.docs = [
+      songDoc('s1', {
+        songKey,
+        fileUrl: 'https://example.com/selective.mp3',
+        jsonDataInfo: JSON.stringify({
+          TROFF_VALUE_speedBar: 120, // different, must be ignored on merge
+          markers: [{ id: 'remote-m', time: 10 }],
+          aStates: ['{"name":"remoteState"}'],
+          TROFF_VALUE_tapTempo: 150,
+          latestUploadToFirebase: 200,
+          info: 'from remote',
+        }),
+      }),
+    ];
+
+    mockCache[songKey] = new Response('content');
+
+    await expect(syncFirebaseGroups('user@example.com')).resolves.toBeUndefined();
+
+    const stored = nDBStore[songKey] as any;
+    // non-synced local settings preserved (not clobbered by remote)
+    expect(stored.TROFF_VALUE_speedBar).toBe(80);
+    expect(stored.TROFF_VALUE_volumeBar).toBe(90);
+    expect(stored.loopTimes).toBe(3);
+    // synced fields updated from remote
+    expect(stored.markers).toEqual([{ id: 'remote-m', time: 10 }]);
+    expect(stored.aStates).toEqual(['{"name":"remoteState"}']);
+    expect(stored.TROFF_VALUE_tapTempo).toBe(150);
+    // localInformation always kept
+    expect(stored.localInformation.nrTimesLoaded).toBe(7);
+    // time updated
+    expect(stored.latestUploadToFirebase).toBe(200);
+  });
+
+  // -----------------------------------------------------------------------
   // Handles song with missing songKey or fileUrl
   // -----------------------------------------------------------------------
   it('skips song documents with missing songKey or fileUrl', async () => {
