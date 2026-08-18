@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="currentColor"
+   stroke="currentColor"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   stroke-width="2"
+   version="1.1"
+   viewBox="0 0 24 24"
+   id="svg1"
+   sodipodi:docname="increment.svg"
+   width="24"
+   height="24"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs1">
+    <marker
+       markerWidth="0.001"
+       markerHeight="0.00190476"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       id="CapTriangle"
+       viewBox="0 0 0.525 1"
+       inkscape:stockid="Triangle cap"
+       style="overflow:visible"
+       preserveAspectRatio="none"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         style="fill:context-stroke;stroke-linecap:butt"
+         d="M 0,-1 1,0 0,1 -0.05,0 Z"
+         sodipodi:nodetypes="sssssscsss"
+         transform="scale(0.5)"
+         id="path61" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="11.313709"
+     inkscape:cx="7.1594561"
+     inkscape:cy="12.683728"
+     inkscape:window-width="1920"
+     inkscape:window-height="1129"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g3" />
+  <title
+     id="title1">Speed Icon</title>
+  <path
+     d="m 9.700599,22.269999 c 0.801881,1.450459 2.099448,1.583879 3.260264,0.943488 1.161224,-0.638744 1.744128,-1.807751 0.943487,-3.260265 C 13.104524,18.504004 4.8497282,7.4067294 4.3896084,7.6601001 3.9294887,7.9134708 8.9003664,20.819134 9.700599,22.269999"
+     style="fill:currentColor;stroke-width:0;stroke-dasharray:none"
+     id="path1"
+     inkscape:transform-center-x="2.5147691"
+     inkscape:transform-center-y="-5.7246289" />
+  <path
+     style="fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#CapTriangle)"
+     id="path5-7"
+     sodipodi:type="arc"
+     sodipodi:cx="-2.3986499"
+     sodipodi:cy="-23.702461"
+     sodipodi:rx="10.811985"
+     sodipodi:ry="10.811985"
+     sodipodi:start="1.9120355"
+     sodipodi:end="2.7217434"
+     sodipodi:open="true"
+     sodipodi:arc-type="arc"
+     d="M -6.0169356,-13.513888 A 10.811985,10.811985 0 0 1 -12.271618,-19.29525"
+     transform="matrix(0.80858493,-0.58837948,-0.58837948,-0.80858493,0,0)"
+     inkscape:transform-center-x="7.4256253"
+     inkscape:transform-center-y="2.2212284" />
+  <path
+     style="fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+     id="path5-7-2"
+     sodipodi:type="arc"
+     sodipodi:cx="-2.4007106"
+     sodipodi:cy="-23.720741"
+     sodipodi:rx="10.811985"
+     sodipodi:ry="10.811985"
+     sodipodi:start="5.4454262"
+     sodipodi:end="1.0781685"
+     sodipodi:open="true"
+     sodipodi:arc-type="arc"
+     d="m 4.8339109,-31.75562 a 10.811985,10.811985 0 0 1 3.4993454,9.331403 10.811985,10.811985 0 0 1 -5.6205156,8.229841"
+     transform="matrix(0.80858493,-0.58837948,-0.58837948,-0.80858493,0,0)"
+     inkscape:transform-center-x="7.4256253"
+     inkscape:transform-center-y="2.2212284" />
+  <g
+     id="g3"
+     transform="translate(-0.22395331,-2.3141842)">
+    <path
+       d="M 17.149822,7.7674143 20.666787,6.8218791 19.572763,3.3482369"
+       id="path2-8-9"
+       style="fill:none;stroke-width:1;stroke-dasharray:none"
+       sodipodi:nodetypes="ccc"
+       inkscape:transform-center-x="1.4399956"
+       inkscape:transform-center-y="-1.1051382" />
+    <path
+       style="fill:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       id="path5"
+       sodipodi:type="arc"
+       sodipodi:cx="-0.74769169"
+       sodipodi:cy="-22.553782"
+       sodipodi:rx="14.33438"
+       sodipodi:ry="14.33438"
+       sodipodi:start="0.40669026"
+       sodipodi:end="1.5745968"
+       sodipodi:open="true"
+       sodipodi:arc-type="arc"
+       d="M 12.417506,-16.883506 A 14.33438,14.33438 0 0 1 -0.80216899,-8.2195049"
+       transform="matrix(0.80858493,-0.58837948,-0.58837948,-0.80858493,0,0)"
+       inkscape:transform-center-x="7.4256253"
+       inkscape:transform-center-y="2.2212284" />
+  </g>
+  <metadata
+     id="metadata3">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Speed Icon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>

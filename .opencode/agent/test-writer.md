@@ -15,6 +15,7 @@ You write Vitest tests for the Troff project.
 - Never import from legacy files
 - Mock Firebase and nDB — never call real services
 - Always use .js extensions in imports
+- **Never try to access files outside of the directory** Run the test from the root, not the parent directory!
 
 ### 1. Always import — never duplicate
 

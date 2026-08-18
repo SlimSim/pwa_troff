@@ -20,6 +20,7 @@ You may receive: test failure output, reviewer violations, or build errors from 
 - Follow all Troff project rules (no `any`, no legacy files, `t-*` prefix on components, etc.)
 - Do NOT modify the test file
 - Do NOT run tests (that is @test-runner's job)
+  -- Never try to access files outside of the directory
 
 ## Steps
 

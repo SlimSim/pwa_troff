@@ -95,6 +95,8 @@ import {
 let activeMedia: HTMLMediaElement = audio;
 const getActiveMedia = () => activeMedia;
 
+const tempoSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
 type FooterElement = HTMLElement & {
   settingsPanelVisible?: boolean;
   speed?: number;
@@ -1561,7 +1563,6 @@ document.addEventListener('DOMContentLoaded', () => {
         (videoPlayer as { speed?: number }).speed = spd;
       }
     }
-    void saveSongData(songKey);
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
@@ -1584,7 +1585,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     aStates.splice(index, 1);
     nDB.setOnSong(songKey, 'aStates', aStates);
-    void saveSongData(songKey);
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
     if (markerSlider) {
@@ -1643,7 +1643,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         nDB.set(songKey, currentSongData);
-        void saveSongData(songKey);
         markerSlider.requestUpdate();
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
@@ -1674,7 +1673,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         nDB.set(songKey, currentSongData);
-        void saveSongData(songKey);
         markerSlider.requestUpdate();
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
@@ -1688,7 +1686,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const normalizedLoopTimes = normalizeLoopTimesInput(value);
         nDB.setOnSong(songKey, 'loopTimes', normalizedLoopTimes);
-        void saveSongData(songKey);
         syncLoopTimesFromSong();
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
@@ -1703,7 +1700,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentSongData = nDB.get(songKey) || {};
         currentSongData.TROFF_VALUE_tapTempo = value;
         nDB.set(songKey, currentSongData);
-        void saveSongData(songKey);
+
+        const existing = tempoSaveTimers.get(songKey);
+        if (existing) {
+          clearTimeout(existing);
+        }
+        const timer = setTimeout(() => {
+          void saveSongData(songKey);
+          tempoSaveTimers.delete(songKey);
+        }, 900);
+        tempoSaveTimers.set(songKey, timer);
+
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
         return;
@@ -1754,7 +1761,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         nDB.set(songKey, currentSongData);
-        void saveSongData(songKey);
         updateFooterWithCurrentSong();
         updateHeaderCountdownDisplay();
         syncSettingsPanelValues();
@@ -1843,6 +1849,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (action === 'removeState' && typeof stateIndex === 'number') {
         removeState(stateIndex);
+        const songKey = getCurrentSongKey();
+        if (songKey) {
+          void saveSongData(songKey);
+        }
         return;
       }
 
@@ -2015,7 +2025,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const songKey = getCurrentSongKey();
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', speed);
-        void saveSongData(songKey);
       }
       syncCurrentSongControlsValues();
     };
@@ -2029,7 +2038,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const songKey = getCurrentSongKey();
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_volumeBar', event.detail.volume);
-        void saveSongData(songKey);
       }
       syncCurrentSongControlsValues();
     });
@@ -2040,7 +2048,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_pauseBeforeStart', event.detail.pauseBefore);
         nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttPauseBefStart', !event.detail.disabled);
-        void saveSongData(songKey);
       }
       updateHeaderCountdownDisplay();
       syncCurrentSongControlsValues();
@@ -2055,7 +2062,6 @@ document.addEventListener('DOMContentLoaded', () => {
           'TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops',
           !event.detail.disabled
         );
-        void saveSongData(songKey);
       }
       syncCurrentSongControlsValues();
     });
@@ -2433,7 +2439,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSongData) {
           currentSongData.currentStartMarker = markerId;
           nDB.set(songKey, currentSongData);
-          void saveSongData(songKey);
           updateMarkerSlider(markerSlider);
         }
       }
@@ -2448,7 +2453,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSongData) {
           currentSongData.currentStopMarker = markerId + 'S';
           nDB.set(songKey, currentSongData);
-          void saveSongData(songKey);
           updateMarkerSlider(markerSlider, false);
         }
       }
@@ -2898,7 +2902,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Sync edited metadata to Firebase groups (v2 equivalent of ifGroupSongUpdateFirestore)
-    void saveSongData(songKey);
   });
 
   // Listen for song info saves from the header dropdown
@@ -2909,7 +2912,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const songKey = getCurrentSongKey();
     if (!songKey) return;
     nDB.setOnSong(songKey, 'info', info);
-    void saveSongData(songKey);
   });
 
   // -------- Group song management (add/remove from detail view) --------

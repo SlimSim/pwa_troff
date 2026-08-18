@@ -22,4 +22,6 @@ Only report back to the user once all three pass (or if loop cap is reached). If
 
 Do not skip this pipeline, even for small changes.
 
+Note: **Never try to access files outside of the directory** Run the test from the root, not the parent directory!
+
 **End with a summary** - In a conversation, if the agent gives a long answer, it should finish the response with a quick summary of the user's last request, so the user doesn't have to scroll back up to see what they wrote.
