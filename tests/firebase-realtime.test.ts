@@ -502,6 +502,66 @@ describe('firebase-realtime', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Remote update — selective merge of only synced fields
+  // (markers / aStates / TROFF_VALUE_tapTempo). Non-synced local settings
+  // (speed etc) and localInformation must be preserved. Uses timestamp.
+  // -----------------------------------------------------------------------
+  it('remote update selectively merges synced fields only when remote newer; preserves local non-sync settings and localInformation', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'selective.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['selective.mp3'] = {
+      TROFF_VALUE_speedBar: 75,
+      TROFF_VALUE_volumeBar: 85,
+      loopTimes: 4,
+      markers: [{ id: 'local-marker' }],
+      aStates: ['{"name":"local"}'],
+      TROFF_VALUE_tapTempo: 90,
+      latestUploadToFirebase: 100,
+      localInformation: { nrTimesLoaded: 5 },
+    };
+
+    await setupListeners();
+
+    const cb = vi.fn();
+    setLiveUpdateCallback(cb);
+
+    triggerSnapshot(
+      's1',
+      {
+        jsonDataInfo: JSON.stringify({
+          TROFF_VALUE_speedBar: 999, // should not clobber
+          markers: [{ id: 'remote-marker', time: 42 }],
+          aStates: ['{"name":"remote"}'],
+          TROFF_VALUE_tapTempo: 123,
+          latestUploadToFirebase: 200,
+        }),
+      },
+      false
+    );
+
+    const stored = nDBStore['selective.mp3'] as Record<string, unknown>;
+    // local-only settings preserved
+    expect(stored.TROFF_VALUE_speedBar).toBe(75);
+    expect(stored.TROFF_VALUE_volumeBar).toBe(85);
+    expect(stored.loopTimes).toBe(4);
+    // synced fields from remote
+    expect((stored.markers as Array<{ id: string }>)[0].id).toBe('remote-marker');
+    expect(stored.aStates).toEqual(['{"name":"remote"}']);
+    expect(stored.TROFF_VALUE_tapTempo).toBe(123);
+    // localInfo always preserved
+    expect((stored.localInformation as Record<string, unknown>).nrTimesLoaded).toBe(5);
+    // UI callback fired with (merged-ish) data
+    expect(cb).toHaveBeenCalledWith(
+      'selective.mp3',
+      expect.objectContaining({ markers: [{ id: 'remote-marker', time: 42 }] })
+    );
+  });
+
+  // -----------------------------------------------------------------------
   // Remote update — handles missing jsonDataInfo gracefully
   // -----------------------------------------------------------------------
 
@@ -797,6 +857,49 @@ describe('setupGroupSongListeners', () => {
 
     const saved = nDBStore['new-track.mp3'] as Record<string, unknown>;
     expect(saved.markers).toEqual([{ id: 'local-marker' }]);
+  });
+
+  it('group song snapshot selectively merges only synced fields (markers,aStates,tapTempo) from remote when newer; preserves local non-sync + localInformation', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+    nDBStore['selective-group.mp3'] = {
+      TROFF_VALUE_speedBar: 60,
+      markers: [{ id: 'local-g' }],
+      aStates: [],
+      TROFF_VALUE_tapTempo: 70,
+      latestUploadToFirebase: 100,
+      localInformation: { nrTimesLoaded: 9 },
+      loopTimes: 1,
+    };
+    mockCache['selective-group.mp3'] = new Response('content');
+
+    const cb = vi.fn();
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(cb);
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'selective-group.mp3',
+        fileUrl: 'https://example.com/sg.mp3',
+        jsonDataInfo: JSON.stringify({
+          TROFF_VALUE_speedBar: 300,
+          markers: [{ id: 'remote-g' }],
+          aStates: ['{"name":"gstate"}'],
+          TROFF_VALUE_tapTempo: 180,
+          latestUploadToFirebase: 300,
+        }),
+      }),
+    ]);
+
+    // flush async handleGroupSongsSnapshot (download + set guarded)
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const saved = nDBStore['selective-group.mp3'] as Record<string, unknown>;
+    expect(saved.TROFF_VALUE_speedBar).toBe(60);
+    expect((saved.markers as Array<{ id: string }>)[0].id).toBe('remote-g');
+    expect(saved.aStates).toEqual(['{"name":"gstate"}']);
+    expect(saved.TROFF_VALUE_tapTempo).toBe(180);
+    expect((saved.localInformation as Record<string, unknown>).nrTimesLoaded).toBe(9);
+    expect(saved.loopTimes).toBe(1);
   });
 
   it('ignores snapshots with hasPendingWrites', async () => {

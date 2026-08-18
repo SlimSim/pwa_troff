@@ -69,7 +69,7 @@ For multi-step tasks, state a brief plan:
 9. **Check existing components and patterns first** - Before creating new components or using native HTML elements (like `<button>`, `<input>`), search for and use existing project components (e.g., use `<t-butt>` instead of `<button>`, check `components/` for reusable patterns).
 10. **Never use the `any` type in TypeScript** - always find a more specific type.
 11. **Always put functions where they belong** - check the `utils/` folder for existing files and use them if possible, otherwise create a new file in `utils/` or wherever the file structure dictates.
-12. **Never try to access files outside of the directory** Run the test from the root, not the parent directory!
+12. **Never access or write files outside the repo, including temp folders** ($env:TEMP, %TEMP%, C:\Users\simon\AppData\Local\Temp\opencode). Never stage backup/scratch copies outside the working directory. If you need to verify something, use git diff/git stash instead, or just don't — prefer reading over moving files.
 13. **GitHub issue context** - When asked to fix or implement an issue (e.g. "can you fix issue nr 3"), assume it is a GitHub issue unless otherwise specified. Name the conversation/task as a hashtag, the issue number, and a short description of the issue, e.g. `#3 background pink`.
     use webfetch with the GitHub issue URL to see the issue, for example: https://github.com/SlimSim/pwa_troff/issues/23
 14. **End with a summary** - In a conversation, if the agent gives a long answer, it should finish the response with a quick summary of the user's last request, so the user doesn't have to scroll back up to see what they wrote.

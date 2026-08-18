@@ -20,7 +20,7 @@ You may receive: test failure output, reviewer violations, or build errors from 
 - Follow all Troff project rules (no `any`, no legacy files, `t-*` prefix on components, etc.)
 - Do NOT modify the test file
 - Do NOT run tests (that is @test-runner's job)
-  -- Never try to access files outside of the directory
+- **Never access or write files outside the repo, including temp folders** ($env:TEMP, %TEMP%, C:\Users\simon\AppData\Local\Temp\opencode). Never stage backup/scratch copies outside the working directory. If you need to verify something, use git diff/git stash instead, or just don't — prefer reading over moving files.
 
 ## Steps
 

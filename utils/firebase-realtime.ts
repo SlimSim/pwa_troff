@@ -14,6 +14,7 @@ import { nDB } from '../assets/internal/db.js';
 import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
 import log from './log.js';
+import { mergeSyncedSongData } from './merge-synced-song-data.js';
 
 const CACHE_NAME = 'songCache-v1.0';
 
@@ -111,7 +112,8 @@ function handleRemoteUpdate(songKey: string, snapshot: { data: () => Record<stri
     // refreshed so a song that was already loaded at boot picks up the
     // synced markers without requiring a manual re-select.
     if (newTime > existingTime) {
-      nDB.set(songKey, newData);
+      const merged = mergeSyncedSongData(existingData, newData);
+      nDB.set(songKey, merged);
     }
 
     // If this is the currently-playing song, refresh the UI
@@ -319,7 +321,8 @@ async function handleGroupSongsSnapshot(groupId: string, snapshot: GroupSongsSna
         const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
         const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
         if (serverUploadTime >= localUploadTime) {
-          nDB.set(serverDoc.fullPath, parsedData);
+          const merged = mergeSyncedSongData(existingData, parsedData);
+          nDB.set(serverDoc.fullPath, merged);
         }
       } catch (err) {
         log.e(`Failed to parse song data for "${serverDoc.fullPath}":`, err);

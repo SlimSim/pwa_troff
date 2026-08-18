@@ -22,6 +22,6 @@ Only report back to the user once all three pass (or if loop cap is reached). If
 
 Do not skip this pipeline, even for small changes.
 
-Note: **Never try to access files outside of the directory** Run the test from the root, not the parent directory!
+Note: **Never access or write files outside the repo, including temp folders** ($env:TEMP, %TEMP%, C:\Users\simon\AppData\Local\Temp\opencode). Never stage backup/scratch copies outside the working directory. If you need to verify something, use git diff/git stash instead, or just don't — prefer reading over moving files.
 
 **End with a summary** - In a conversation, if the agent gives a long answer, it should finish the response with a quick summary of the user's last request, so the user doesn't have to scroll back up to see what they wrote.

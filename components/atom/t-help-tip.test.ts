@@ -226,6 +226,95 @@ describe('t-help-tip', () => {
     });
   });
 
+  describe('summary icon toggling', () => {
+    it('shows a help icon and no chevron icon when closed (default)', async () => {
+      setSummaryContent('Summary');
+      await element.updateComplete;
+
+      const summaryButton = element.shadowRoot?.querySelector('.summary-button');
+      expect(summaryButton).toBeTruthy();
+
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+    });
+
+    it('swaps the help icon to a close icon when open property becomes true', async () => {
+      setSummaryContent('Summary');
+      await element.updateComplete;
+
+      element.open = true;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeNull();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+    });
+
+    it('swaps the close icon back to the help icon when open returns to false', async () => {
+      setSummaryContent('Summary');
+      element.open = true;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeNull();
+
+      element.open = false;
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeNull();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+    });
+
+    it('toggles the icon name via summary button click', async () => {
+      setSummaryContent('Summary');
+      setDetailContent('Detail');
+      await element.updateComplete;
+
+      const summaryButton = element.shadowRoot?.querySelector('.summary-button') as HTMLElement;
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeTruthy();
+
+      summaryButton.click();
+      await element.updateComplete;
+
+      expect(element.open).toBe(true);
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeNull();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+
+      summaryButton.click();
+      await element.updateComplete;
+
+      expect(element.open).toBe(false);
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeNull();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+    });
+
+    it('swaps the icon when open is set via the open attribute', async () => {
+      setSummaryContent('Summary');
+      await element.updateComplete;
+
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeTruthy();
+
+      element.setAttribute('open', '');
+      await element.updateComplete;
+
+      expect(element.open).toBe(true);
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeNull();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+
+      element.removeAttribute('open');
+      await element.updateComplete;
+
+      expect(element.open).toBe(false);
+      expect(element.shadowRoot?.querySelector('t-icon[name="help"]')).toBeTruthy();
+      expect(element.shadowRoot?.querySelector('t-icon[name="close"]')).toBeNull();
+      expect(element.shadowRoot?.querySelector('t-icon[name="chevron-down"]')).toBeNull();
+    });
+  });
+
   describe('accessibility', () => {
     it('summary button has aria-expanded reflecting open state', async () => {
       setSummaryContent('Summary');

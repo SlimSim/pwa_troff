@@ -75,21 +75,6 @@ export class THelpTip extends LitElement {
       padding-right: 4px;
     }
 
-    .chevron-icon {
-      flex-shrink: 0;
-      margin-top: 2px;
-      transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
-      opacity: 0;
-      transform: rotateX(0deg);
-    }
-
-    :host([open]) .chevron-icon {
-      opacity: 1;
-      transform: rotateX(180deg);
-    }
-
     .summary-content {
       padding-right: 4px;
       display: flex;
@@ -328,8 +313,7 @@ export class THelpTip extends LitElement {
           ${this.h3 ? html`<h3 class="summary-h3">${this.h3}</h3>` : ''}
           ${this.p ? html`<p class="summary-p">${this.p}</p>` : ''}
         </span>
-        <t-icon class="help-icon" name="help" slim></t-icon>
-        <t-icon class="chevron-icon" name="chevron-down" slim></t-icon>
+        <t-icon class="help-icon" name=${this.open ? 'close' : 'help'} slim></t-icon>
         <slot name="summary"></slot>
       </t-butt>
       <div class="detail-slot" aria-hidden="true">
