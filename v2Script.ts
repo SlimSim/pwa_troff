@@ -79,6 +79,7 @@ import {
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { showToast } from './utils/notification.js';
+import { initPwa } from './utils/pwa.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import { toSongKey } from './utils/utils.js';
 import {
@@ -89,6 +90,23 @@ import {
   setLiveUpdateCallback,
   setGroupUpdateCallback,
 } from './utils/firebase-realtime.js';
+
+// Bootstrap PWA install/update handling (registers the service worker on load,
+// surfaces the install prompt and notifies the user of new versions).
+initPwa({
+  onFirstInstall: () =>
+    showToast('Troff is now cached and will work offline. Have fun!', 'success'),
+  onNewVersionAvailable: () =>
+    showToast(
+      'A new version of Troff is available. Please reload to start using it!',
+      'info',
+      8000,
+      {
+        label: 'Reload',
+        onClick: () => window.location.reload(),
+      }
+    ),
+});
 
 // The media element currently playing (audio singleton, or the #videoElement when
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.

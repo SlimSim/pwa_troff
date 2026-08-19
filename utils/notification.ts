@@ -49,11 +49,14 @@ if (!document.getElementById('troff-notification-style')) {
  * @param message  Text to display.
  * @param type     'success' (green), 'error' (red), or 'info' (blue). Default 'info'.
  * @param duration Time in ms before auto-dismiss. Default 3000.
+ * @param action   Optional action button rendered next to the message. Clicking
+ *                 it calls `onClick` and removes the toast immediately.
  */
 export function showToast(
   message: string,
   type: 'success' | 'error' | 'info' = 'info',
-  duration = 3000
+  duration = 3000,
+  action?: { label: string; onClick: () => void }
 ): void {
   const container = getToastContainer();
   const toast = document.createElement('div');
@@ -67,10 +70,30 @@ export function showToast(
   toast.textContent = message;
   container.append(toast);
 
-  setTimeout(() => {
+  const autoDismissTimer = setTimeout(() => {
     toast.style.animation = 'troff-toast-out 0.3s ease-out forwards';
     setTimeout(() => toast.remove(), 300);
   }, duration);
+
+  if (action) {
+    toast.style.display = 'flex';
+    toast.style.alignItems = 'center';
+    toast.style.gap = '8px';
+    toast.style.justifyContent = 'space-between';
+
+    const actionButton = document.createElement('button');
+    actionButton.textContent = action.label;
+    actionButton.style.cssText =
+      'background:rgba(255,255,255,0.25);color:#fff;' +
+      'border:1px solid rgba(255,255,255,0.6);border-radius:4px;' +
+      'padding:2px 10px;cursor:pointer;font-size:0.9em;flex-shrink:0;';
+    actionButton.addEventListener('click', () => {
+      clearTimeout(autoDismissTimer);
+      toast.remove();
+      action.onClick();
+    });
+    toast.append(actionButton);
+  }
 }
 
 // ---------------------------------------------------------------------------

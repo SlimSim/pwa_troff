@@ -1,6 +1,12 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
+import {
+  getInstallState,
+  subscribeToInstallState,
+  promptInstall,
+} from '../../utils/pwa.js';
+import type { PwaInstallState } from '../../utils/pwa.js';
 import '../atom/t-butt.js';
 import '../atom/t-slide-stepper.js';
 import '../atom/t-icon.js';
@@ -335,6 +341,9 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) signedIn = false;
   @property({ type: String }) userName = '';
 
+  @state() private installState: PwaInstallState = 'unavailable';
+  private _unsubscribeInstallState?: () => void;
+
   // Current Song Controls - forwarded to t-current-song-controls (for mobile settings panel)
   @property({ type: String }) loopTimesValue = '1';
   @property({ type: Boolean }) playFullSong = false;
@@ -378,10 +387,16 @@ export class SettingsPanel extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.installState = getInstallState();
+    this._unsubscribeInstallState = subscribeToInstallState((state) => {
+      this.installState = state;
+    });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this._unsubscribeInstallState?.();
+    this._unsubscribeInstallState = undefined;
   }
 
   async firstUpdated() {
@@ -409,6 +424,10 @@ export class SettingsPanel extends LitElement {
         composed: true,
       })
     );
+  }
+
+  private _handleInstallClick() {
+    promptInstall();
   }
 
   private _handleClose() {
@@ -586,6 +605,9 @@ export class SettingsPanel extends LitElement {
         <div class="panel-header">
           <h2 class="panel-title">More</h2>
           <div style="display:flex; gap:8px; align-items:center;">
+            ${this.installState === 'available'
+              ? html`<t-butt special @click=${this._handleInstallClick}>Install Troff</t-butt>`
+              : ''}
             ${this.signedIn
               ? html`<span
                   style="font-size:0.9rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
