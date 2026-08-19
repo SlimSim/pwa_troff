@@ -173,6 +173,9 @@ export class GroupDialog extends LitElement {
     .btn-danger {
       --butt-bg-color: var(--accent-color-2, #dd2c00);
     }
+    .delete-btn {
+      margin-right: auto;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) open = false;
@@ -371,9 +374,9 @@ export class GroupDialog extends LitElement {
         <div class="share-popup">
           <div class="share-popup-title">You have to sign in to share a group!</div>
           <div class="share-popup-text">
-            When you add people to a group, any changes you make to a song will be
-            uploaded and shared to all the members of the group. Therefore, you have
-            to sign in to share the group.
+            When you add people to a group, any changes you make to a song will be uploaded and
+            shared to all the members of the group. Therefore, you have to sign in to share the
+            group.
           </div>
           <t-butt class="share-popup-ok" @click=${this._closeSharePopup}>OK</t-butt>
         </div>
@@ -480,8 +483,14 @@ export class GroupDialog extends LitElement {
           <div class="dialog-footer">
             ${this.group
               ? html`
-                  <t-butt confirm class="btn-danger" @click=${this._delete} title="Delete group">
-                    Delete group
+                  <t-butt
+                    confirm
+                    confirmText="Delete group?"
+                    class="btn-danger delete-btn"
+                    @click=${this._delete}
+                    title="Delete group"
+                  >
+                    <t-icon name="delete"></t-icon>
                   </t-butt>
                 `
               : ''}

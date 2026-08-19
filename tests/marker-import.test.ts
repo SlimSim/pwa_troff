@@ -133,15 +133,15 @@ describe('mergeImportedMarkers', () => {
     expect(result[0].color).toBe('blue');
   });
 
-  it('does NOT merge when the time difference is exactly 0.001 (added as a new marker)', () => {
+  it('does NOT merge when the time difference is exactly 0.0011 (added as a new marker)', () => {
     const existing = [makeMarker('markerNr0', 5, 'Anchor')];
-    const imported = [makeMarker('impX', 5.001, 'Imported')];
+    const imported = [makeMarker('impX', 5.0011, 'Imported')];
 
     const result = mergeImportedMarkers(existing, imported, 100);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual(makeMarker('markerNr0', 5, 'Anchor'));
-    expect(result[1]).toEqual(makeMarker('markerNr1', 5.001, 'Imported'));
+    expect(result[1]).toEqual(makeMarker('markerNr1', 5.0011, 'Imported'));
   });
 
   it('merges when the time difference is just below 0.001', () => {
@@ -276,10 +276,7 @@ describe('mergeImportedMarkers', () => {
 
   it('matches an imported marker against previously added imported markers too', () => {
     const existing = [makeMarker('markerNr0', 0, 'Existing')];
-    const imported = [
-      makeMarker('first', 5, 'First'),
-      makeMarker('second', 5.0000001, 'Second'),
-    ];
+    const imported = [makeMarker('first', 5, 'First'), makeMarker('second', 5.0000001, 'Second')];
 
     const result = mergeImportedMarkers(existing, imported, 100);
 

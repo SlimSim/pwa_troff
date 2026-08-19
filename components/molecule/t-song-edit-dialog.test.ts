@@ -12,8 +12,8 @@ import { SongEditDialog } from './t-song-edit-dialog.js';
  * Contract assumed for the implementation (documented for the implementer):
  *  - editable fields are <t-input> elements with a `name` attribute:
  *    customName, choreography, choreographer, title, artist, album, genre, tags
- *  - the song key is shown in a readonly <t-input name="file">
- *  - the computed display name is shown in a readonly <t-input name="displayName">
+ *  - the song key is shown read-only in a <span id="file">
+ *  - the computed display name is shown read-only in a <span id="displayName">
  *    and equals `customName || choreography || title || songKey`
  *  - footer buttons carry the classes .save-btn and .cancel-btn
  *  - clicking the .overlay backdrop (target === currentTarget) cancels
@@ -106,8 +106,8 @@ describe('t-song-edit-dialog', () => {
       expect(getInputValue(field), `field "${field}"`).toBe(expected[field as keyof typeof expected]);
     }
 
-    // The song key is shown readonly.
-    expect(getInputValue('file')).toBe('my-song.mp3');
+    // The song key is shown read-only.
+    expect(element.shadowRoot?.querySelector('span#file')?.textContent).toBe('my-song.mp3');
   });
 
   it('computes the readonly display name as customName || choreography || title || songKey', async () => {
@@ -127,7 +127,7 @@ describe('t-song-edit-dialog', () => {
     };
     element.open = true;
     await element.updateComplete;
-    expect(getInputValue('displayName')).toBe('Preferred Name');
+    expect(element.shadowRoot?.querySelector('span#displayName')?.textContent).toBe('Preferred Name');
 
     // falls back to choreography when customName is empty
     element.open = false;
@@ -145,7 +145,7 @@ describe('t-song-edit-dialog', () => {
     };
     element.open = true;
     await element.updateComplete;
-    expect(getInputValue('displayName')).toBe('Choreo Name');
+    expect(element.shadowRoot?.querySelector('span#displayName')?.textContent).toBe('Choreo Name');
 
     // falls back to songKey when all display fields are empty
     element.open = false;
@@ -163,7 +163,7 @@ describe('t-song-edit-dialog', () => {
     };
     element.open = true;
     await element.updateComplete;
-    expect(getInputValue('displayName')).toBe('my-song.mp3');
+    expect(element.shadowRoot?.querySelector('span#displayName')?.textContent).toBe('my-song.mp3');
   });
 
   it('dispatches song-saved with songKey + edited fileData and closes on Save', async () => {

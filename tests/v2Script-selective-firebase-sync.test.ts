@@ -198,6 +198,7 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     document.body.innerHTML = '';

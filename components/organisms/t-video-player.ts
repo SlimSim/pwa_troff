@@ -172,6 +172,10 @@ export class TVideoPlayer extends LitElement {
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
   private static readonly GESTURE_FEEDBACK_MS = 1500;
   private static readonly SCRUB_SECONDS_PER_PX = 0.05;
+  // Minimum time between committed seeks (~20fps): even when the video's
+  // 'seeked' completes instantly, back-to-back seeks leave no time for the
+  // browser to paint the intermediate frame. See _requestSeek below.
+  private static readonly SCRUB_SEEK_INTERVAL_MS = 50;
   private static readonly SPEED_PX_PER_STEP = 10;
   private static readonly SPEED_STEP_PERCENT = 1;
   // Safety net for the seek-completion gate below: if the video element
@@ -204,6 +208,13 @@ export class TVideoPlayer extends LitElement {
   // it once that seek finishes.
   private _seekInFlight = false;
   private _pendingSeekTime: number | null = null;
+  // True when _pendingSeekTime is the end-of-gesture pointerup flush, which
+  // must land even inside the cadence window (the gesture is over — waiting
+  // would drop the final position).
+  private _flushStash = false;
+  // Cadence gate (see _requestSeek below): timestamp of the last committed
+  // seek — requests inside SCRUB_SEEK_INTERVAL_MS are stashed, not applied.
+  private _lastSeekAt = 0;
   private _seekWatchdogTimer?: ReturnType<typeof setTimeout>;
 
   @state() private _mirrored = false;
@@ -323,7 +334,25 @@ export class TVideoPlayer extends LitElement {
     this._seekInFlight = false;
     if (this._pendingSeekTime !== null) {
       const next = this._pendingSeekTime;
+      const isFlush = this._flushStash;
+      // Respect the SCRUB_SEEK_INTERVAL_MS cadence here too: on fast devices
+      // 'seeked' fires inside the window, and committing unconditionally would
+      // chain seeks at the seeked rate instead of the ~20fps cap. When the
+      // window isn't open yet, leave the target stashed — the next pointermove
+      // re-requests the accumulated target and the pointerup force-flush
+      // guarantees the final landing. On slow devices the window has always
+      // elapsed by the time 'seeked' fires, so this stays a no-op there and
+      // the self-tuning flush is unchanged. An end-of-gesture flush must
+      // always land — the gesture is over, so waiting would drop the final
+      // position.
+      if (
+        !isFlush &&
+        Date.now() - this._lastSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS
+      ) {
+        return; // cadence window not open yet — stay stashed; a move/pointerup lands it
+      }
       this._pendingSeekTime = null;
+      this._flushStash = false;
       this._commitSeek(next);
     }
   };
@@ -343,6 +372,11 @@ export class TVideoPlayer extends LitElement {
       return;
     }
     this._seekInFlight = true;
+    this._lastSeekAt = Date.now();
+    // A commit always represents the latest target, so any stashed target is
+    // superseded — clearing it prevents a stale stash from re-landing (and
+    // re-dispatching video-scrub-requested) after a later commit completes.
+    this._pendingSeekTime = null;
     video.currentTime = time;
     this.dispatchEvent(
       new CustomEvent('video-scrub-requested', {
@@ -358,22 +392,45 @@ export class TVideoPlayer extends LitElement {
   }
 
   /**
-   * Requests a seek to `time`, gated on the previous seek having actually
-   * finished (video 'seeked' event) rather than on a fixed timer.
+   * Requests a seek to `time`, gated on BOTH the previous seek having
+   * actually finished (the video 'seeked' event) AND a minimum cadence since
+   * the last committed seek.
    *
-   * On many Android devices, issuing a new `currentTime` write while the
-   * browser is still decoding/painting the previous seek just cancels that
-   * in-flight seek — so under a steady stream of pointermove events, nothing
-   * ever finishes rendering until the drag stops. Waiting for confirmation
-   * before sending the next seek lets each one actually complete, so the
-   * image advances continuously at whatever rate the device can manage
-   * instead of appearing frozen mid-drag.
+   * - The 'seeked' event-gate self-tunes to slow Android devices: on many of
+   *   them, issuing a new `currentTime` write while the browser is still
+   *   decoding/painting the previous seek cancels that in-flight seek, so
+   *   under a steady stream of pointermove events nothing would ever finish
+   *   rendering until the drag stops. Waiting for confirmation lets each
+   *   frame paint before the next seek starts, at whatever rate the device
+   *   can manage.
+   * - The SCRUB_SEEK_INTERVAL_MS cadence caps the seek rate at ~20fps even
+   *   when seeks complete instantly, so fast devices also give intermediate
+   *   frames time to paint instead of overwriting them back-to-back.
+   *
+   * A request that fails either gate is stashed in _pendingSeekTime (only the
+   * latest target survives) and lands when the gate reopens — via the next
+   * 'seeked', the next pointermove, or the pointerup flush. _scrubTarget keeps
+   * accumulating meanwhile, so no scrub distance is lost.
+   *
+   * `bypassCadence` is used by the pointerup/pointercancel flush, which must
+   * land the exact final position even inside the cadence window — it still
+   * defers to a genuinely in-flight seek.
    */
-  private _requestSeek(time: number) {
+  private _requestSeek(time: number, bypassCadence = false) {
     if (this._seekInFlight) {
       this._pendingSeekTime = time; // only the latest target survives
+      this._flushStash = bypassCadence; // an end-of-gesture flush must survive the cadence too
       return;
     }
+    if (
+      !bypassCadence &&
+      Date.now() - this._lastSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS
+    ) {
+      this._pendingSeekTime = time; // cadence window not open yet — keep the latest target
+      this._flushStash = false;
+      return;
+    }
+    this._flushStash = false;
     this._commitSeek(time);
   }
 
@@ -626,11 +683,12 @@ export class TVideoPlayer extends LitElement {
   private _onFramePointerUp(event: PointerEvent) {
     if (this._dragPointerId !== event.pointerId) return;
     if (this._scrubTarget !== null) {
-      // Route the release-point seek through the same gate: if a seek is
-      // still in flight it becomes the pending target and lands the instant
-      // that seek completes, guaranteeing we always end up exactly where the
-      // user released their finger.
-      this._requestSeek(this._scrubTarget);
+      // The gesture is over, so flush the exact accumulated target even
+      // inside the cadence window — waiting would drop the final position.
+      // A seek genuinely in flight is still deferred to (see _requestSeek):
+      // the target becomes pending and lands the instant that seek completes,
+      // guaranteeing we always end up exactly where the user released.
+      this._requestSeek(this._scrubTarget, true);
       this._scrubTarget = null;
     }
     this._dragPointerId = null;

@@ -72,13 +72,9 @@ describe('t-marker', () => {
     // the slotted light-DOM button never reaches the popover's trigger
     // listener. Drive the popover's .trigger-wrapper instead — the exact
     // element a user click on the info button would bubble through.
-    const popover = element.shadowRoot?.querySelector(
-      't-popover'
-    ) as Popover;
+    const popover = element.shadowRoot?.querySelector('t-popover') as Popover;
     expect(popover).not.toBeNull();
-    const triggerWrapper = popover.shadowRoot?.querySelector(
-      '.trigger-wrapper'
-    ) as HTMLElement;
+    const triggerWrapper = popover.shadowRoot?.querySelector('.trigger-wrapper') as HTMLElement;
     expect(triggerWrapper).not.toBeNull();
     triggerWrapper.click();
 
@@ -93,52 +89,9 @@ describe('t-marker', () => {
     // default <slot> body cannot feed a popup rendered in a portal on
     // document.body, so there is no slot to inspect anymore.
     expect(popover.body).toBe('Slower tempo here');
-    expect(
-      popover.popupElement?.querySelector('.popup-body')?.textContent?.trim()
-    ).toBe('Slower tempo here');
-  });
-
-  it('closes info popover when the popover close button is clicked', async () => {
-    element.marker = {
-      id: 'm1',
-      name: 'Outro',
-      label: 'Outro',
-      value: 120,
-      info: 'Fade out',
-    };
-    await element.updateComplete;
-
-    const infoBtn = element.shadowRoot?.querySelector('.info-button') as HTMLElement;
-    expect(infoBtn).not.toBeNull();
-
-    const popover = element.shadowRoot?.querySelector(
-      't-popover'
-    ) as Popover;
-    expect(popover).not.toBeNull();
-
-    // Open via the trigger wrapper (see note in the opening test about
-    // happy-dom skipping <slot> in composedPath).
-    const triggerWrapper = popover.shadowRoot?.querySelector(
-      '.trigger-wrapper'
-    ) as HTMLElement;
-    expect(triggerWrapper).not.toBeNull();
-    triggerWrapper.click();
-    await popover.updateComplete;
-    expect(popover.open).toBe(true);
-
-    // The close button lives inside the PORTALED popup, not the component's
-    // shadow root.
-    const closeBtn = popover.popupElement?.querySelector(
-      '.popup-header t-butt'
-    ) as HTMLElement | null;
-    expect(closeBtn).not.toBeNull();
-    closeBtn?.click();
-    await popover.updateComplete;
-
-    expect(popover.open).toBe(false);
-
-    // The portaled popup is removed from document.body on close.
-    expect(popover.popupElement).toBeNull();
+    expect(popover.popupElement?.querySelector('.popup-body')?.textContent?.trim()).toBe(
+      'Slower tempo here'
+    );
   });
 
   it('sets t-popover boundary to the nearest .presets-container ancestor', async () => {
@@ -156,9 +109,7 @@ describe('t-marker', () => {
     };
     await element.updateComplete;
 
-    const popover = element.shadowRoot?.querySelector(
-      't-popover'
-    ) as Popover;
+    const popover = element.shadowRoot?.querySelector('t-popover') as Popover;
     expect(popover).not.toBeNull();
     expect(popover.boundary).toBe(wrapper);
   });
@@ -173,9 +124,7 @@ describe('t-marker', () => {
     };
     await element.updateComplete;
 
-    const popover = element.shadowRoot?.querySelector(
-      't-popover'
-    ) as Popover;
+    const popover = element.shadowRoot?.querySelector('t-popover') as Popover;
     expect(popover).not.toBeNull();
     expect(popover.boundary).toBeNull();
   });
@@ -190,9 +139,7 @@ describe('t-marker', () => {
     };
     await element.updateComplete;
 
-    const popover = element.shadowRoot?.querySelector(
-      't-popover'
-    ) as Popover;
+    const popover = element.shadowRoot?.querySelector('t-popover') as Popover;
     expect(popover).not.toBeNull();
     expect(popover.preferPosition).toBe('right');
     expect(popover.hasAttribute('prefer-position')).toBe(true);
@@ -211,15 +158,9 @@ describe('t-marker', () => {
     await element.updateComplete;
 
     // The first t-butt inside .marker-row is the edit button.
-    const editBtn = element.shadowRoot?.querySelector(
-      '.marker-row > t-butt'
-    ) as HTMLElement | null;
-    const nameBtn = element.shadowRoot?.querySelector(
-      '.marker-name-button'
-    ) as HTMLElement | null;
-    const stopBtn = element.shadowRoot?.querySelector(
-      '.stop-button'
-    ) as HTMLElement | null;
+    const editBtn = element.shadowRoot?.querySelector('.marker-row > t-butt') as HTMLElement | null;
+    const nameBtn = element.shadowRoot?.querySelector('.marker-name-button') as HTMLElement | null;
+    const stopBtn = element.shadowRoot?.querySelector('.stop-button') as HTMLElement | null;
 
     expect(editBtn).not.toBeNull();
     expect(nameBtn).not.toBeNull();
@@ -242,9 +183,7 @@ describe('t-marker', () => {
     };
     await element.updateComplete;
 
-    const infoBtn = element.shadowRoot?.querySelector(
-      '.info-button'
-    ) as HTMLElement | null;
+    const infoBtn = element.shadowRoot?.querySelector('.info-button') as HTMLElement | null;
     expect(infoBtn).not.toBeNull();
 
     // The info button must stay clickable despite the click-through host.

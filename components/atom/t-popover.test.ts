@@ -147,13 +147,13 @@ describe('t-popover', () => {
     expect(headerText?.textContent?.trim()).toBe('My Header');
   });
 
-  it('renders empty header text when header prop is not set', async () => {
+  it('omits the header block when header prop is not set', async () => {
     await openViaTrigger();
 
     const headerText = element.popupElement?.querySelector(
       '.popup-header-text'
     );
-    expect(headerText?.textContent?.trim()).toBe('');
+    expect(headerText).toBeNull();
   });
 
   it('sets inline position styles on the portaled popup when opened', async () => {
