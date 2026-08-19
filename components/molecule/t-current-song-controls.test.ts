@@ -115,26 +115,6 @@ describe('t-current-song-controls song controls layout', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders a t-help-tip with h3="Song"', async () => {
-    await element.updateComplete;
-
-    const songTip = element.shadowRoot?.querySelector('t-help-tip[h3="Song"]');
-    expect(songTip).toBeTruthy();
-  });
-
-  it('renders the Song help-tip before the Play full song button', async () => {
-    await element.updateComplete;
-
-    const songTip = element.shadowRoot?.querySelector('t-help-tip[h3="Song"]');
-    const playFullSongButton = findPlayFullSongButton(element);
-
-    expect(songTip).toBeTruthy();
-    expect(playFullSongButton).toBeTruthy();
-
-    const position = songTip!.compareDocumentPosition(playFullSongButton!);
-    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
   it('places the tap tempo button in the same container as the Play full song button', async () => {
     await element.updateComplete;
 

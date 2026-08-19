@@ -6,6 +6,7 @@ export default defineConfig({
     pool: 'forks',
 
     include: ['tests/**/*.test.ts', 'components/**/*.test.ts'],
+    setupFiles: ['tests/setup.ts'],
     coverage: {
       reporter: ['text', 'html'],
       include: ['utils/**/*.ts', 'constants/**/*.ts', 'components/**/*.ts'],

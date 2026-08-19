@@ -10,6 +10,13 @@ import type { TroffMarker } from '../types/troff.d.ts';
  */
 export const MERGE_TIME_THRESHOLD = 0.001;
 
+/** Epsilon to absorb floating-point error at the 0.001 s merge boundary. */
+const MERGE_TIME_EPSILON = 1e-9;
+
+/** True when two numeric times are within MERGE_TIME_THRESHOLD of each other. */
+const isWithinMergeThreshold = (a: number, b: number): boolean =>
+  Math.abs(a - b) < MERGE_TIME_THRESHOLD - MERGE_TIME_EPSILON;
+
 /** Sentinel meaning "no colour set". */
 export const NO_COLOR = 'None';
 
@@ -49,7 +56,7 @@ export function mergeNearbyMarkers(markers: TroffMarker[]): TroffMarker[] {
   for (const marker of markers) {
     const markerTime = Number(marker.time);
     const existing = result.find(
-      (m) => Math.abs(Number(m.time) - markerTime) < MERGE_TIME_THRESHOLD
+      (m) => isWithinMergeThreshold(Number(m.time), markerTime)
     );
     if (existing) {
       mergeMarkerInto(existing, { ...marker });
@@ -175,7 +182,7 @@ const applyTimeChangeToRange = (
       // Absorb earlier markers (with their updated times) that collide within threshold.
       let j = 0;
       while (j < result.length) {
-        if (Math.abs(Number(result[j].time) - Number(moved.time)) < MERGE_TIME_THRESHOLD) {
+        if (isWithinMergeThreshold(Number(result[j].time), Number(moved.time))) {
           mergeMarkerInto(moved, result[j]);
           result.splice(j, 1);
         } else {

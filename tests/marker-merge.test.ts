@@ -225,12 +225,19 @@ describe('copyMarkers with merge', () => {
   });
 
   it('merges copies that land on the same time as each other', () => {
-    const input = [makeMarker('markerNr0', 10, 'A'), makeMarker('markerNr1', 20, 'B')];
-    // Copy both to time 40 — both copies land at 40
+    // The two selected markers share a time, so both copies land at 40 and merge
+    const input = [
+      makeMarker('markerNr0', 10, 'A'),
+      makeMarker('markerNr1', 10, 'B'),
+      makeMarker('markerNr2', 50, 'C'),
+    ];
     const result = copyMarkers(input, 40, 0, 2, 100);
 
     expect(result).toHaveLength(3);
-    // First copy survives
+    // Original pair at time 10 merges too
+    expect(result[0].name).toBe('A, B');
+    // Both copies land at 40 and merge into one
+    expect(result[2].time).toBe(40);
     expect(result[2].name).toBe('A, B');
   });
 

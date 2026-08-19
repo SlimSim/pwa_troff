@@ -597,13 +597,26 @@ describe('SettingsPanel states management UI (issue #29)', () => {
     expect(stateListContainer || hasStateButtons).toBeTruthy();
   });
 
-  it('should support removing a state (e.g. via R action or remove butt on list item)', () => {
-    // Placeholder for remove UI; will be implemented with t-butt
-    const hasRemove = (settingsPanel.shadowRoot?.innerHTML || '').includes('remove') ||
-      Array.from(settingsPanel.shadowRoot?.querySelectorAll('t-butt') || []).some(
-        (b) => (b.textContent || '').toLowerCase().includes('remove')
-      );
-    // For RED until implemented: we expect the remove capability to be wired, but currently not in states context
-    expect(hasRemove).toBe(true);  // will fail now, as no states remove
+  it('should support removing a state via the remove butt on each state item', async () => {
+    settingsPanel.songStates = [
+      JSON.stringify({ name: 'State A' }),
+      JSON.stringify({ name: 'State B' }),
+    ];
+    await settingsPanel.updateComplete;
+
+    const handler = vi.fn();
+    settingsPanel.addEventListener('song-action-requested', handler);
+
+    const stateItems = settingsPanel.shadowRoot?.querySelectorAll('.state-item') || [];
+    expect(stateItems.length).toBe(2);
+
+    // Second t-butt in each row is the remove (delete icon) button
+    const removeButt = stateItems[0]?.querySelectorAll('t-butt')[1];
+    expect(removeButt).toBeTruthy();
+
+    removeButt?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({ detail: { action: 'removeState', index: 0 } })
+    );
   });
 });

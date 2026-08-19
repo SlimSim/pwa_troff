@@ -1976,6 +1976,17 @@ describe('t-video-player', () => {
     return event;
   };
 
+  /**
+   * happy-dom never fires `seeked` natively (it does not load real media), so
+   * a committed seek would leave the component's `_seekInFlight` event-gate
+   * stuck at `true` forever and block every later seek. Tests that expect a
+   * seek to have APPLIED therefore simulate the video completing it by
+   * dispatching a `seeked` event on the <video> element.
+   */
+  const markSeekComplete = (video: HTMLVideoElement) => {
+    video.dispatchEvent(new Event('seeked'));
+  };
+
   it('vertical drag up 75px dispatches one whole-number speed step', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
@@ -2241,33 +2252,54 @@ describe('t-video-player', () => {
     ).toBe('108%');
   });
 
-  // ---- Round 12: live frame updates while drag-scrubbing (throttled seeks) ----
+  // ---- Round 12: live frame updates while drag-scrubbing (hybrid seek gate) ----
   //
   // Feature: a horizontal pointer-drag seeks `video.currentTime` on EVERY
   // pointermove today, and each assignment is an async seek — when seeks arrive
   // faster than they complete, the browser cancels each pending seek before it
   // can paint, so the (paused) frame does not update until the final seek of
-  // the gesture. The fix THROTTLES the seeks to SCRUB_SEEK_INTERVAL_MS (50ms ≈
-  // 20fps) so each seek has time to complete and paint, while accumulating the
-  // drag position in state (`_scrubTarget`) so the pixel→seconds math stays
-  // exact and NO distance is lost:
+  // the gesture. The fix (hybrid, Option B) gates every seek on BOTH the
+  // video's `seeked` completion event AND a SCRUB_SEEK_INTERVAL_MS (50ms ≈
+  // 20fps) minimum cadence, while accumulating the drag position in state
+  // (`_scrubTarget`) so the pixel→seconds math stays exact and NO distance is
+  // lost:
+  //   - The `seeked` event-gate (`_seekInFlight`) guarantees each frame paints
+  //     before the next seek is issued — it self-tunes to slow Android devices
+  //     that need longer to decode/paint each frame.
+  //   - The 50ms cadence caps the seek rate at ~20fps even on a FAST device,
+  //     so intermediate frames still get time to paint instead of being
+  //     overwritten back-to-back. When the previous seek HAS completed but the
+  //     window hasn't elapsed, the new target is stashed (not applied) until
+  //     the cadence window opens — `_scrubTarget` keeps accumulating, so no
+  //     distance is lost.
   //   - The first horizontal move of a drag always applies immediately
   //     (`_scrubTarget` is initialized from `video.currentTime`).
   //   - Subsequent moves accumulate `target = clamp(target + deltaX *
-  //     SCRUB_SECONDS_PER_PX, 0, duration)` but only seek + dispatch
-  //     `video-scrub-requested` + update the badge when at least
-  //     SCRUB_SEEK_INTERVAL_MS elapsed since the previous seek (Date.now()).
+  //     SCRUB_SECONDS_PER_PX, 0, duration)`; the seek is issued only when the
+  //     previous seek has COMPLETED (seeked) AND at least
+  //     SCRUB_SEEK_INTERVAL_MS elapsed since the last committed seek. The on-
+  //     screen label (`_showGestureFeedback`) still updates on every move,
+  //     since text is cheap.
   //   - pointerup/pointercancel (both `_onFramePointerUp`) flush the EXACT
   //     accumulated target (final `video.currentTime` assignment + one final
-  //     event + badge), then reset the accumulator.
+  //     event + badge), bypassing the cadence but still deferring to a
+  //     genuinely in-flight seek, then reset the accumulator.
   //   - The wheel path (`_onFrameWheel`) is UNCHANGED: discrete wheel events
   //     already paint between notches, so every wheel event still seeks
   //     immediately (regression-guarded by the wheel test below).
   //
+  // happy-dom never fires `seeked` natively (no real media loads), so the
+  // event-gate would leave `_seekInFlight` stuck at `true` and every later
+  // seek in these tests would be blocked forever. Tests therefore SIMULATE the
+  // seek completing by dispatching a `seeked` event on the <video> element
+  // after each seek they expect to have applied (see `markSeekComplete`, next
+  // to `dispatchPointer`).
+  //
   // These tests need FAKE TIMERS so `Date.now()` is controllable (verified:
   // `vi.advanceTimersByTime(50)` advances `Date.now()` by exactly 50 — the
-  // throttle design depends on it). None of them advances past
-  // GESTURE_FEEDBACK_MS (1500ms), so the badge never auto-hides mid-gesture.
+  // cadence design depends on it). None of them advances past
+  // GESTURE_FEEDBACK_MS (1500ms) or SEEK_WATCHDOG_MS (400ms), so the badge
+  // never auto-hides mid-gesture and the watchdog never fakes a completion.
 
   it('a horizontal drag applies the first seek immediately (guard: pins the base behavior)', async () => {
     const { el, video } = createPlayerWithVideo();
@@ -2295,6 +2327,9 @@ describe('t-video-player', () => {
       'badge must show the scrubbed time over the duration (3s in a 120s video)'
     ).toBe('0:03 / 2:00');
     expect(getIconName(el, '.gesture-indicator')).toBe('time');
+    // Simulate the video completing the seek (happy-dom never fires `seeked`
+    // on its own) so a later move in a real gesture would not be blocked.
+    markSeekComplete(video);
   });
 
   it('rapid drag moves are throttled so intermediate seeks get time to paint', async () => {
@@ -2315,6 +2350,10 @@ describe('t-video-player', () => {
         'the first move of a drag must always apply immediately'
       ).toHaveBeenCalledTimes(1);
       expect(video.currentTime).toBe(3);
+
+      // The video completes that seek (happy-dom never fires `seeked` on its
+      // own) — otherwise the event-gate would block every later move.
+      markSeekComplete(video);
 
       // A second +60px move arrives BEFORE SCRUB_SEEK_INTERVAL_MS elapsed: the
       // seek must be throttled — currentTime unchanged, no new event.
@@ -2355,6 +2394,9 @@ describe('t-video-player', () => {
 
       dispatchPointer(el, 'pointerdown', 100, 100);
       dispatchPointer(el, 'pointermove', 160, 100); // +60px → applies 3s
+      // The video completes that seek (happy-dom never fires `seeked` on its
+      // own), so the following moves are gated by the 50ms cadence only.
+      markSeekComplete(video);
       dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 6s, throttled
       dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 9s, throttled
       dispatchPointer(el, 'pointerup', 280, 100); // flushes the accumulated 9s
@@ -2392,6 +2434,9 @@ describe('t-video-player', () => {
       for (const x of moves) {
         vi.advanceTimersByTime(50);
         dispatchPointer(el, 'pointermove', x, 100);
+        // The video completes each applied seek (happy-dom never fires
+        // `seeked` on its own), so the next move is not blocked by the gate.
+        markSeekComplete(video);
       }
       dispatchPointer(el, 'pointerup', 200, 100);
       await el.updateComplete;
@@ -2426,6 +2471,9 @@ describe('t-video-player', () => {
         120
       );
       expect(detailOf<{ time: number }>(scrubSpy).time).toBe(15);
+      // The video completes that seek (happy-dom never fires `seeked` on its
+      // own), so the reversing move below is not blocked by the event-gate.
+      markSeekComplete(video);
 
       vi.advanceTimersByTime(50);
       dispatchPointer(el, 'pointermove', 100, 100); // −300px → back to 0s
@@ -2436,6 +2484,143 @@ describe('t-video-player', () => {
         video.currentTime,
         'reversing the drag by the same distance must clamp back to exactly 0s'
       ).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a seek is NOT issued while the previous seek is still in flight, even after the 50ms window', async () => {
+    vi.useFakeTimers();
+    try {
+      const { el, video } = createPlayerWithVideo();
+      await el.updateComplete;
+      defineDuration(video, 120);
+      video.currentTime = 0;
+
+      const scrubSpy = vi.fn();
+      el.addEventListener('video-scrub-requested', scrubSpy);
+
+      dispatchPointer(el, 'pointerdown', 100, 100);
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s applied, seek in flight
+      expect(video.currentTime).toBe(3);
+      expect(scrubSpy).toHaveBeenCalledTimes(1);
+
+      // 50ms elapse (cadence window open) but the video NEVER fired seeked:
+      // the event-gate must still block the new target.
+      vi.advanceTimersByTime(50);
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 6s
+      expect(
+        video.currentTime,
+        'the event-gate must block a seek that has not completed'
+      ).toBe(3);
+      expect(scrubSpy).toHaveBeenCalledTimes(1);
+
+      // The moment the seek completes, the stashed target lands immediately.
+      markSeekComplete(video);
+      expect(video.currentTime, 'the stashed target must land once the seek completes').toBe(6);
+      expect(scrubSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a cadence-stashed target is NOT re-landed after a later commit completes', async () => {
+    vi.useFakeTimers();
+    try {
+      const { el, video } = createPlayerWithVideo();
+      await el.updateComplete;
+      defineDuration(video, 120);
+      video.currentTime = 0;
+
+      const scrubSpy = vi.fn();
+      el.addEventListener('video-scrub-requested', scrubSpy);
+
+      dispatchPointer(el, 'pointerdown', 100, 100);
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s applied
+      markSeekComplete(video); // 3s seek completes
+
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 6s, cadence-stashed
+      vi.advanceTimersByTime(50);
+      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 9s, cadence open → committed
+      expect(video.currentTime).toBe(9);
+
+      // Open the cadence window BEFORE the 9s seek completes, deliberately:
+      // 'seeked' now fires with the cadence open, so if a stale 6s stash
+      // still existed it WOULD be committed — proving _pendingSeekTime was
+      // cleared at the 9s commit.
+      vi.advanceTimersByTime(50);
+      markSeekComplete(video);
+      expect(
+        video.currentTime,
+        'the stale cadence stash must not jump the video backward after the later seek completes'
+      ).toBe(9);
+      expect(
+        scrubSpy,
+        'the completed 9s seek must not re-dispatch a video-scrub-requested for the stale target'
+      ).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a seeked-driven flush does not bypass the 50ms cadence on a fast device', async () => {
+    vi.useFakeTimers();
+    try {
+      const { el, video } = createPlayerWithVideo();
+      await el.updateComplete;
+      defineDuration(video, 120);
+      video.currentTime = 0;
+
+      const scrubSpy = vi.fn();
+      el.addEventListener('video-scrub-requested', scrubSpy);
+
+      dispatchPointer(el, 'pointerdown', 100, 100);
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s committed, seek in flight
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 6s, stashed while in flight
+      markSeekComplete(video); // fast device: seek completes immediately — must NOT flush the stash yet
+      expect(
+        video.currentTime,
+        'the seeked-driven flush must wait out the cadence window instead of committing early'
+      ).toBe(3);
+      expect(scrubSpy, 'the seeked-driven flush must not commit while inside the 50ms window').toHaveBeenCalledTimes(
+        1
+      );
+
+      vi.advanceTimersByTime(50);
+      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 9s, cadence open → committed
+      expect(video.currentTime, 'the accumulated 9s must apply once the window has elapsed').toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a pointerup flush deferred to an in-flight seek still lands when seeked fires inside the cadence window', async () => {
+    vi.useFakeTimers();
+    try {
+      const { el, video } = createPlayerWithVideo();
+      await el.updateComplete;
+      defineDuration(video, 120);
+      video.currentTime = 0;
+
+      const scrubSpy = vi.fn();
+      el.addEventListener('video-scrub-requested', scrubSpy);
+
+      dispatchPointer(el, 'pointerdown', 100, 100);
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s committed, seek in flight
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 6s, stashed while in flight
+      dispatchPointer(el, 'pointerup', 220, 100); // release: flush target 6s, deferred while in flight
+      expect(
+        video.currentTime,
+        'the flush must wait for the in-flight seek to complete'
+      ).toBe(3);
+
+      // Fast device: seeked fires inside the 50ms window — the flush must STILL land.
+      markSeekComplete(video);
+      expect(
+        video.currentTime,
+        'the deferred pointerup flush must land even inside the cadence window'
+      ).toBe(6);
+      expect(scrubSpy, 'exactly the first-move seek + the flush commit').toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
     }

@@ -300,6 +300,7 @@ export class SettingsPanel extends LitElement {
 
     .advanced-content {
       // padding: 0 14px 14px;
+      padding-right: 4px;
     }
 
     /* Responsive design */
