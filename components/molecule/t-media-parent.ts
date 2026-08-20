@@ -970,14 +970,14 @@ export class MediaParent extends LitElement {
         console.warn(`Skipping unsupported file: ${file.name} (type: ${file.type})`);
         continue;
       }
-       try {
-         const songKey = toSongKey(file.name);
-         await this._saveFileToCache(file, songKey);
-         this._createSongEntry(file, songKey);
-         addedKeys.push(songKey);
-       } catch (err) {
-         console.error(`Failed to add file "${file.name}":`, err);
-       }
+      try {
+        const songKey = toSongKey(file.name);
+        await this._saveFileToCache(file, songKey);
+        await this._createSongEntry(file, songKey);
+        addedKeys.push(songKey);
+      } catch (err) {
+        console.error(`Failed to add file "${file.name}":`, err);
+      }
     }
 
     // Reset the input so the same files can be picked again
@@ -1050,11 +1050,11 @@ export class MediaParent extends LitElement {
    * Create or update the song metadata entry in nDB (localStorage).
    * When the song already exists we only mark it as added-from-device.
    */
-  private _createSongEntry(file: File, songKey: string): void {
+  private async _createSongEntry(file: File, songKey: string): Promise<void> {
     const existing = nDB.get(songKey);
 
     if (!existing) {
-      nDB.set(songKey, createNewSongEntry(file, songKey));
+      nDB.set(songKey, await createNewSongEntry(file, songKey));
     } else {
       nDB.setOnSong(songKey, ['localInformation', 'addedFromThisDevice'], true);
     }
