@@ -1221,6 +1221,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Apply the stored per-song volume/speed to the actual media elements so a
+  // song does not play at 100 % until the user touches a slider (issue #38).
+  const applyStoredVolumeAndSpeedToMedia = () => {
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    if (!songData) {
+      return;
+    }
+    const storedVolume = withSafeNumber(
+      songData.TROFF_VALUE_volumeBar,
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE)) || 75
+    );
+    const storedSpeed = withSafeNumber(
+      songData.TROFF_VALUE_speedBar,
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100
+    );
+    audio.volume = Math.max(0, Math.min(1, storedVolume / 100));
+    if (videoElement) {
+      videoElement.volume = audio.volume;
+    }
+    if (storedSpeed > 0) {
+      audio.playbackRate = storedSpeed / 100;
+      if (videoElement) {
+        videoElement.playbackRate = audio.playbackRate;
+      }
+      if (videoPlayer) {
+        (videoPlayer as { speed?: number }).speed = storedSpeed;
+      }
+    }
+  };
+
   const syncLoopTimesFromSong = () => {
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
@@ -2274,6 +2305,7 @@ document.addEventListener('DOMContentLoaded', () => {
           syncLoopTimesFromSong();
           syncSettingsPanelValues();
           syncCurrentSongControlsValues();
+          applyStoredVolumeAndSpeedToMedia();
           updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
@@ -2304,6 +2336,7 @@ document.addEventListener('DOMContentLoaded', () => {
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
+      applyStoredVolumeAndSpeedToMedia();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
     }
@@ -2473,6 +2506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
+    applyStoredVolumeAndSpeedToMedia();
     updateHeaderCountdownDisplay();
 
     updateMarkerSlider(markerSlider);
