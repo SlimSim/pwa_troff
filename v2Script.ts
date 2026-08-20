@@ -90,6 +90,30 @@ import {
   setLiveUpdateCallback,
   setGroupUpdateCallback,
 } from './utils/firebase-realtime.js';
+import {
+  setSentryEnvironment,
+  setSentryVersion,
+  setSentryApp,
+  addAndStartSentry,
+} from './utils/sentry.js';
+import { getManifest } from './utils/manifestHelper.js';
+
+// Hostname→Sentry environment mapping — mirrors utils/firebase-getter.ts
+// (which itself mirrors the legacy assets/internal/environment.ts selection).
+function getSentryEnvironment(): 'dev' | 'test' | 'prod' {
+  switch (window.location.hostname) {
+    case 'slimsim.github.io':
+    case 'beta.troff.app':
+      return 'test';
+    case 'troff.app':
+    case 'ios.troff.app':
+    case 'troff.slimsim.heliohost.org':
+    case 'troff.ternsjo-it.heliohost.us':
+      return 'prod';
+    default:
+      return 'dev';
+  }
+}
 
 // Bootstrap PWA install/update handling (registers the service worker on load,
 // surfaces the install prompt and notifies the user of new versions).
@@ -287,6 +311,23 @@ const setUrlToSong = (serverId: string | number | undefined, songKey: string | n
 // Initialize components and set up event listeners
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Sentry observability — mirrors script.ts initEnvironment without legacy
+  // imports. Tag every event with app: 'v2' unconditionally, then set env,
+  // version, and init once consent has been given.
+  setSentryApp('v2');
+  setSentryEnvironment(getSentryEnvironment());
+  void getManifest()
+    .then((manifest) => {
+      setSentryVersion(manifest.version);
+      // Consent key is defined in assets/internal/cookie_consent.ts (legacy);
+      // checked directly so v2 doesn't import that file.
+      if (localStorage.getItem('TROFF_COOKIE_CONSENT_ACCEPTED') === 'true') {
+        addAndStartSentry();
+      }
+    })
+    .catch((error) => {
+      log.w('Sentry init skipped (manifest fetch failed):', error);
+    });
   const footer = document.getElementById('footer') as FooterElement | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const currentSongControls = document.getElementById('currentSongControls') as any;

@@ -10,6 +10,7 @@ declare global {
 
 let version = '0';
 let environment = 'dev';
+let generation: 'v1' | 'v2' = 'v1';
 
 document.addEventListener('cookieConsentGiven', () => {
   // After user accepts, load and enable Sentry
@@ -28,6 +29,10 @@ export function setSentryVersion(v: string) {
 
 export function setSentryEnvironment(env: string) {
   environment = env;
+}
+
+export function setSentryApp(app: 'v1' | 'v2') {
+  generation = app;
 }
 
 export function addAndStartSentry() {
@@ -53,6 +58,7 @@ function checkSentry() {
       environment: environment,
       release: 'pwa_troff@' + version,
       sendDefaultPii: false,
+      tags: { app: generation },
       beforeSend(event: any) {
         return event;
       },
