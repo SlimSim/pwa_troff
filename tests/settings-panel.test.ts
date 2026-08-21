@@ -504,10 +504,10 @@ describe('SettingsPanel numeric settings integration', () => {
       );
     });
 
-    it('should have default go to marker values as false', () => {
-      expect(settingsPanel.enterGoToMarker).toBe(false);
+    it('should have default go to marker values matching new defaults', () => {
+      expect(settingsPanel.enterGoToMarker).toBe(true);
       expect(settingsPanel.spaceGoToMarker).toBe(false);
-      expect(settingsPanel.playGoToMarker).toBe(false);
+      expect(settingsPanel.playGoToMarker).toBe(true);
     });
   });
 });
