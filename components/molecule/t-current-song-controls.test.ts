@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CurrentSongControls } from './t-current-song-controls.js';
+import type { DetailsElement } from '../atom/t-details.js';
 
 function findTempoTapButton(el: CurrentSongControls): HTMLElement | null {
   const buttons = el.shadowRoot?.querySelectorAll('t-butt');
@@ -182,5 +183,62 @@ describe('t-current-song-controls share song feature', () => {
     const events = actionSpy.mock.calls.map((call) => call[0] as CustomEvent);
     expect(events.length).toBeGreaterThan(0);
     expect(events[events.length - 1].detail).toEqual({ action: 'shareSong' });
+  });
+});
+
+describe('t-current-song-controls advanced panels use t-details', () => {
+  let element: CurrentSongControls;
+
+  beforeEach(() => {
+    element = new CurrentSongControls();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+  });
+
+  function getDetailsPanels(): DetailsElement[] {
+    return Array.from(element.shadowRoot?.querySelectorAll('t-details') ?? []) as DetailsElement[];
+  }
+
+  function findDetailsByTitle(title: string): DetailsElement | undefined {
+    return getDetailsPanels().find((panel) => panel.title === title);
+  }
+
+  it('renders an "Advanced" panel as t-details with the descriptive text in the summary', async () => {
+    await element.updateComplete;
+
+    const advanced = findDetailsByTitle('Advanced');
+    expect(advanced).toBeTruthy();
+    expect(advanced?.text).toBe('Advanced marker actions!');
+
+    const titleEl = advanced?.shadowRoot?.querySelector('p.advanced-summary-title');
+    expect(titleEl?.textContent).toBe('Advanced');
+  });
+
+  it('no longer renders raw native <details> elements in its own shadow root', async () => {
+    await element.updateComplete;
+
+    expect(element.shadowRoot?.querySelector('details')).toBeNull();
+  });
+
+  it('still toggles the "Advanced" panel open when its summary is clicked', async () => {
+    await element.updateComplete;
+
+    const advanced = findDetailsByTitle('Advanced');
+    expect(advanced).toBeTruthy();
+
+    const summary = advanced?.shadowRoot?.querySelector('summary') as HTMLElement | null;
+    expect(summary).toBeTruthy();
+
+    summary?.click();
+    await element.updateComplete;
+
+    expect(advanced?.open).toBe(true);
+    // Slotted content stays present after the re-render
+    expect(advanced?.querySelector('.song-action-buttons')).toBeTruthy();
   });
 });

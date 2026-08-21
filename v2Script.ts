@@ -79,6 +79,7 @@ import {
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { showToast } from './utils/notification.js';
+import { initPwa } from './utils/pwa.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import { toSongKey } from './utils/utils.js';
 import {
@@ -89,6 +90,47 @@ import {
   setLiveUpdateCallback,
   setGroupUpdateCallback,
 } from './utils/firebase-realtime.js';
+import {
+  setSentryEnvironment,
+  setSentryVersion,
+  setSentryApp,
+  addAndStartSentry,
+} from './utils/sentry.js';
+import { getManifest } from './utils/manifestHelper.js';
+
+// Hostname→Sentry environment mapping — mirrors utils/firebase-getter.ts
+// (which itself mirrors the legacy assets/internal/environment.ts selection).
+function getSentryEnvironment(): 'dev' | 'test' | 'prod' {
+  switch (window.location.hostname) {
+    case 'slimsim.github.io':
+    case 'beta.troff.app':
+      return 'test';
+    case 'troff.app':
+    case 'ios.troff.app':
+    case 'troff.slimsim.heliohost.org':
+    case 'troff.ternsjo-it.heliohost.us':
+      return 'prod';
+    default:
+      return 'dev';
+  }
+}
+
+// Bootstrap PWA install/update handling (registers the service worker on load,
+// surfaces the install prompt and notifies the user of new versions).
+initPwa({
+  onFirstInstall: () =>
+    showToast('Troff is now cached and will work offline. Have fun!', 'success'),
+  onNewVersionAvailable: () =>
+    showToast(
+      'A new version of Troff is available. Please reload to start using it!',
+      'info',
+      8000,
+      {
+        label: 'Reload',
+        onClick: () => window.location.reload(),
+      }
+    ),
+});
 
 // The media element currently playing (audio singleton, or the #videoElement when
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.
@@ -269,6 +311,23 @@ const setUrlToSong = (serverId: string | number | undefined, songKey: string | n
 // Initialize components and set up event listeners
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Sentry observability — mirrors script.ts initEnvironment without legacy
+  // imports. Tag every event with app: 'v2' unconditionally, then set env,
+  // version, and init once consent has been given.
+  setSentryApp('v2');
+  setSentryEnvironment(getSentryEnvironment());
+  void getManifest()
+    .then((manifest) => {
+      setSentryVersion(manifest.version);
+      // Consent key is defined in assets/internal/cookie_consent.ts (legacy);
+      // checked directly so v2 doesn't import that file.
+      if (localStorage.getItem('TROFF_COOKIE_CONSENT_ACCEPTED') === 'true') {
+        addAndStartSentry();
+      }
+    })
+    .catch((error) => {
+      log.w('Sentry init skipped (manifest fetch failed):', error);
+    });
   const footer = document.getElementById('footer') as FooterElement | null;
   const settingsPanel = document.getElementById('settingsPanel') as any;
   const currentSongControls = document.getElementById('currentSongControls') as any;
@@ -1051,16 +1110,16 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsPanel.incrementUntillDisabled = false;
     }
 
-    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
-    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
-    settingsPanel.enterGoToMarker = nDB.get(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) === true;
-    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
-    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
-    settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
-    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
-    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
+    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) ?? true;
+    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) ?? true;
+    settingsPanel.enterGoToMarker = nDB.get(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) ?? true;
+    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) ?? false;
+    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) ?? false;
+    settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) ?? false;
+    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) ?? true;
+    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) ?? true;
     settingsPanel.playGoToMarker =
-      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
+      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -1218,6 +1277,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // carries it to the internal instance even when that instance renders later.
     if (settingsPanel) {
       settingsPanel.tempo = currentSongControls.tempo;
+    }
+  };
+
+  // Apply the stored per-song volume/speed to the actual media elements so a
+  // song does not play at 100 % until the user touches a slider (issue #38).
+  const applyStoredVolumeAndSpeedToMedia = () => {
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) : null;
+    if (!songData) {
+      return;
+    }
+    const storedVolume = withSafeNumber(
+      songData.TROFF_VALUE_volumeBar,
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE)) || 75
+    );
+    const storedSpeed = withSafeNumber(
+      songData.TROFF_VALUE_speedBar,
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100
+    );
+    audio.volume = Math.max(0, Math.min(1, storedVolume / 100));
+    if (videoElement) {
+      videoElement.volume = audio.volume;
+    }
+    if (storedSpeed > 0) {
+      audio.playbackRate = storedSpeed / 100;
+      if (videoElement) {
+        videoElement.playbackRate = audio.playbackRate;
+      }
+      if (videoPlayer) {
+        (videoPlayer as { speed?: number }).speed = storedSpeed;
+      }
     }
   };
 
@@ -1383,6 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, delay);
   };
 
+  // Default to true (reset counter) when the setting has never been stored
   const shouldResetLoopCounter = (settingKey: string) => nDB.get(settingKey) === true;
 
   const startPlayback = (
@@ -1987,6 +2078,25 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   if (footer) {
+    // Set defaults for global control settings if they have never been stored.
+    // This ensures both the UI and the behaviour start with the correct values.
+    const defaultsIfUnset: [string, boolean][] = [
+      [TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR, true],
+      [TROFF_SETTING_ENTER_RESET_COUNTER, true],
+      [TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR, true],
+      [TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR, true],
+      [TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER, true],
+      [TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR, true],
+      [TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, false],
+      [TROFF_SETTING_SPACE_RESET_COUNTER, false],
+      [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
+    ];
+    for (const [key, defaultValue] of defaultsIfUnset) {
+      if (nDB.get(key) == null) {
+        nDB.set(key, defaultValue);
+      }
+    }
+
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
@@ -2274,6 +2384,7 @@ document.addEventListener('DOMContentLoaded', () => {
           syncLoopTimesFromSong();
           syncSettingsPanelValues();
           syncCurrentSongControlsValues();
+          applyStoredVolumeAndSpeedToMedia();
           updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
@@ -2304,6 +2415,7 @@ document.addEventListener('DOMContentLoaded', () => {
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
+      applyStoredVolumeAndSpeedToMedia();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
     }
@@ -2473,6 +2585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
+    applyStoredVolumeAndSpeedToMedia();
     updateHeaderCountdownDisplay();
 
     updateMarkerSlider(markerSlider);
