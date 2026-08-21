@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { DetailsElement } from '../components/atom/t-details.js';
 
 type SettingsPanelType = import('../components/molecule/t-settings-panel.js').SettingsPanel;
 
@@ -618,5 +619,102 @@ describe('SettingsPanel states management UI (issue #29)', () => {
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ detail: { action: 'removeState', index: 0 } })
     );
+  });
+});
+
+describe('SettingsPanel advanced panels use t-details', () => {
+  let settingsPanel: SettingsPanelType;
+
+  beforeEach(async () => {
+    // Silence network fetches for manifest and icons in happy-dom (no dev server)
+    const fetchMock = vi.fn(() => Promise.reject(new Error('network disabled in test')));
+    vi.stubGlobal('fetch', fetchMock);
+    // Make requestAnimationFrame fire synchronously
+    const raf = (cb: Function) => { cb(); return 0; };
+    vi.stubGlobal('requestAnimationFrame', raf);
+
+    // Dynamic import - the child element registrations happen once due to ESM caching
+    const { SettingsPanel } = await import('../components/molecule/t-settings-panel.js');
+
+    settingsPanel = new SettingsPanel();
+    document.body.appendChild(settingsPanel);
+    await settingsPanel.updateComplete;
+  });
+
+  afterEach(() => {
+    if (settingsPanel && document.body.contains(settingsPanel)) {
+      document.body.removeChild(settingsPanel);
+    }
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  function getDetailsPanels(): DetailsElement[] {
+    return Array.from(
+      settingsPanel.shadowRoot?.querySelectorAll('t-details') ?? []
+    ) as DetailsElement[];
+  }
+
+  function findDetailsByTitle(title: string): DetailsElement | undefined {
+    return getDetailsPanels().find((panel) => panel.title === title);
+  }
+
+  it('renders t-details panels for States, Behaviour of keys and buttons, Marker color and Default Song Values', async () => {
+    const titles = getDetailsPanels().map((panel) => panel.title);
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        'States',
+        'Behaviour of keys and buttons',
+        'Marker color',
+        'Default Song Values',
+      ])
+    );
+  });
+
+  it('renders the "States" t-details with its descriptive text', async () => {
+    const states = findDetailsByTitle('States');
+    expect(states).toBeTruthy();
+    expect(states?.text).toContain('Remember selected markers, tempo, loops and more');
+
+    const titleEl = states?.shadowRoot?.querySelector('p.advanced-summary-title');
+    expect(titleEl?.textContent).toBe('States');
+  });
+
+  it('renders the correct descriptive text on the other t-details panels', async () => {
+    const keys = findDetailsByTitle('Behaviour of keys and buttons');
+    const color = findDetailsByTitle('Marker color');
+    const defaults = findDetailsByTitle('Default Song Values');
+    expect(keys).toBeTruthy();
+    expect(color).toBeTruthy();
+    expect(defaults).toBeTruthy();
+
+    expect(keys?.text).toContain(
+      'Configure what happens when you press the Enter key'
+    );
+    expect(color?.text).toContain(
+      'Control how markers extend their color across the timeline'
+    );
+    expect(defaults?.text).toContain(
+      'When loading a new song, these values will be the ones that the song get'
+    );
+  });
+
+  it('no longer renders raw native <details> elements in its own shadow root', async () => {
+    expect(settingsPanel.shadowRoot?.querySelector('details')).toBeNull();
+  });
+
+  it('still renders state-item buttons inside the "States" t-details when songStates is set', async () => {
+    settingsPanel.songStates = [
+      JSON.stringify({ name: 'State A' }),
+      JSON.stringify({ name: 'State B' }),
+    ];
+    await settingsPanel.updateComplete;
+
+    const states = findDetailsByTitle('States');
+    expect(states).toBeTruthy();
+
+    // Slotted into the t-details content and still queryable from the panel shadow root
+    expect(states?.querySelectorAll('.state-item').length).toBe(2);
+    expect(settingsPanel.shadowRoot?.querySelectorAll('.state-item').length).toBe(2);
   });
 });

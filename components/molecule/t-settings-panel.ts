@@ -8,6 +8,7 @@ import {
 } from '../../utils/pwa.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import '../atom/t-butt.js';
+import '../atom/t-details.js';
 import '../atom/t-slide-stepper.js';
 import '../atom/t-icon.js';
 
@@ -249,64 +250,6 @@ export class SettingsPanel extends LitElement {
 
     .state-item t-butt:first-child {
       flex: 1;
-    }
-
-    details.advanced-panel {
-      overflow: hidden;
-      width: var(--settings-column-width);
-      padding: 4px;
-    }
-
-    details.advanced-panel[open] {
-    }
-
-    .advanced-summary {
-      list-style: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      cursor: pointer;
-      padding: 12px 0;
-      padding-right: 1px;
-    }
-
-    .advanced-summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .advanced-summary-copy {
-      display: grid;
-      gap: 2px;
-    }
-
-    .advanced-summary-title {
-      margin: 0;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-color, #000);
-    }
-
-    .advanced-summary-text {
-      margin: 0;
-      font-size: 0.82rem;
-      color: var(--text-color, #000);
-      opacity: 0.8;
-    }
-
-    .advanced-chevron {
-      font-size: 1rem;
-      transition: transform 0.3s ease-in-out;
-      transform-style: preserve-3d;
-    }
-
-    details.advanced-panel[open] .advanced-chevron {
-      transform: rotateX(180deg) translateY(-1px);
-    }
-
-    .advanced-content {
-      // padding: 0 14px 14px;
-      padding-right: 4px;
     }
 
     /* Responsive design */
@@ -641,18 +584,10 @@ export class SettingsPanel extends LitElement {
             @song-action-requested=${this._handleCurrentSongAction}
           ></t-current-song-controls>
 
-          <details class="advanced-panel">
-            <summary class="advanced-summary">
-              <div class="advanced-summary-copy">
-                <p class="advanced-summary-title">States</p>
-                <p class="advanced-summary-text">
-                  Remember selected markers, tempo, loops and more to quickly restore your song
-                  settings.
-                </p>
-              </div>
-              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-            </summary>
-            <div class="advanced-content">
+          <t-details
+            title="States"
+            text="Remember selected markers, tempo, loops and more to quickly restore your song settings."
+          >
               <div class="settings-section">
                 <div class="settings-grid">
                   <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
@@ -677,8 +612,7 @@ export class SettingsPanel extends LitElement {
                   </div>
                 </div>
               </div>
-            </div>
-          </details>
+          </t-details>
         </div>
         <div class="settings-shell">
           <div class="settings-section" style="margin-top: 16px; margin-bottom: 0;">
@@ -689,17 +623,10 @@ export class SettingsPanel extends LitElement {
           <div class="settings-section" style="margin: 0;"></div>
         </div>
         <div class="settings-shell">
-          <details class="advanced-panel">
-            <summary class="advanced-summary">
-              <div class="advanced-summary-copy">
-                <p class="advanced-summary-title">Behaviour of keys and buttons</p>
-                <p class="advanced-summary-text">
-                  Configure what happens when you press the Enter key, Space key, or Play button.
-                </p>
-              </div>
-              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-            </summary>
-            <div class="advanced-content">
+          <t-details
+            title="Behaviour of keys and buttons"
+            text="Configure what happens when you press the Enter key, Space key, or Play button."
+          >
               <div class="settings-section">
                 <h3>Enter Key</h3>
                 <div class="settings-grid">
@@ -804,20 +731,13 @@ export class SettingsPanel extends LitElement {
                   </div>
                 </div>
               </div>
-            </div>
-          </details>
+          </t-details>
 
-          <details class="advanced-panel" style="margin-top: 16px;">
-            <summary class="advanced-summary">
-              <div class="advanced-summary-copy">
-                <p class="advanced-summary-title">Marker color</p>
-                <p class="advanced-summary-text">
-                  Control how markers extend their color across the timeline.
-                </p>
-              </div>
-              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-            </summary>
-            <div class="advanced-content">
+          <t-details
+            title="Marker color"
+            text="Control how markers extend their color across the timeline."
+            style="margin-top: 16px;"
+          >
               <div class="settings-grid">
                 <div class="setting-item">
                   <div class="action-buttons">
@@ -845,20 +765,13 @@ export class SettingsPanel extends LitElement {
                   </div>
                 </div>
               </div>
-            </div>
-          </details>
+          </t-details>
 
-          <details class="advanced-panel" style="margin-top: 16px;">
-            <summary class="advanced-summary">
-              <div class="advanced-summary-copy">
-                <p class="advanced-summary-title">Default Song Values</p>
-                <p class="advanced-summary-text">
-                  When loading a new song, these values will be the ones that the song get.
-                </p>
-              </div>
-              <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-            </summary>
-            <div class="advanced-content">
+          <t-details
+            title="Default Song Values"
+            text="When loading a new song, these values will be the ones that the song get."
+            style="margin-top: 16px;"
+          >
               <div class="song-stepper-grid">
                 <t-dial
                   label="Start before"
@@ -1014,8 +927,7 @@ export class SettingsPanel extends LitElement {
                   Infinite loops default
                 </t-butt>
               </div>
-            </div>
-          </details>
+          </t-details>
         </div>
 
         <div style="margin-top: 16px;">

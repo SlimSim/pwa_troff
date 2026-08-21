@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
+import '../atom/t-details.js';
 import '../atom/t-dial.js';
 import '../atom/t-help-tip.js';
 import '../atom/t-icon.js';
@@ -221,65 +222,6 @@ export class CurrentSongControls extends LitElement {
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-
-    details.advanced-panel {
-      overflow: hidden;
-      width: var(--settings-column-width);
-      padding: 4px;
-    }
-
-    details.advanced-panel[open] {
-      background-color: var(--secondary-color, rgba(0, 0, 0, 0.08));
-    }
-
-    .advanced-summary {
-      list-style: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      cursor: pointer;
-      padding: 12px 0;
-      padding-right: 1px;
-    }
-
-    .advanced-summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .advanced-summary-copy {
-      display: grid;
-      gap: 2px;
-    }
-
-    .advanced-summary-title {
-      margin: 0;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-color, #000);
-    }
-
-    .advanced-summary-text {
-      margin: 0;
-      font-size: 0.82rem;
-      color: var(--text-color, #000);
-      opacity: 0.8;
-    }
-
-    .advanced-chevron {
-      font-size: 1rem;
-      transition: transform 0.3s ease-in-out;
-      transform-style: preserve-3d;
-    }
-
-    details.advanced-panel[open] .advanced-chevron {
-      transform: rotateX(180deg) translateY(0);
-    }
-
-    .advanced-content {
-      // padding: 0 14px 14px;
-      padding-right: 4px;
     }
 
     /* Responsive design for wider screens within the sidebar */
@@ -800,419 +742,346 @@ export class CurrentSongControls extends LitElement {
 
           <!-- 1. Advanced -->
           <div class="settings-section">
-            <details class="advanced-panel">
-              <summary class="advanced-summary">
-                <div class="advanced-summary-copy">
-                  <p class="advanced-summary-title">Advanced</p>
-                </div>
-                <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-              </summary>
-              <div class="advanced-content">
-                <p class="advanced-summary-text">Advanced marker actions!</p>
-                <div class="song-action-buttons">
-                  ${this._renderSongActionButton('importExport', 'Import / export')}
-                  ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
-                  ${this._renderSongActionButton('moveMarkers', 'Move markers')}
-                  ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
-                  ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
-                </div>
+            <t-details title="Advanced" text="Advanced marker actions!">
+              <div class="song-action-buttons">
+                ${this._renderSongActionButton('importExport', 'Import / export')}
+                ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
+                ${this._renderSongActionButton('moveMarkers', 'Move markers')}
+                ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
+                ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
               </div>
-            </details>
+            </t-details>
           </div>
         </section>
 
         ${!this.hideGlobalControls
           ? html`
-              <details class="advanced-panel" style="margin-top: 16px;">
-                <summary class="advanced-summary">
-                  <div class="advanced-summary-copy">
-                    <p class="advanced-summary-title">Global Controls</p>
-                    <p class="advanced-summary-text">
-                      These key and button behaviors apply across Troff, not just this song.
-                    </p>
-                  </div>
-                  <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                    <span class="scope-badge">App-wide</span>
-                    <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-                  </div>
-                </summary>
-                <div class="advanced-content">
-                  <details class="advanced-panel">
-                    <summary class="advanced-summary">
-                      <div class="advanced-summary-copy">
-                        <p class="advanced-summary-title">Behaviour of keys and buttons</p>
-                        <p class="advanced-summary-text">
-                          Configure what happens when you press the Enter key, Space key, or Play
-                          button.
-                        </p>
-                      </div>
-                      <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-                    </summary>
-                    <div class="advanced-content">
-                      <div class="settings-section">
-                        <h3>Enter Key</h3>
-                        <div class="settings-grid">
-                          <div class="setting-item">
-                            <div class="action-buttons">
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.enterGoToMarker}
-                                @click=${() =>
-                                  this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
-                              >
-                                Go to marker
-                              </t-butt>
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.enterUseTimer}
-                                @click=${() =>
-                                  this._toggleSetting('enterUseTimer', this.enterUseTimer)}
-                              >
-                                Use timer
-                              </t-butt>
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.enterResetCounter}
-                                @click=${() =>
-                                  this._toggleSetting('enterResetCounter', this.enterResetCounter)}
-                              >
-                                Reset counter
-                              </t-butt>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="settings-section">
-                        <h3>Space Key</h3>
-                        <div class="settings-grid">
-                          <div class="setting-item">
-                            <div class="action-buttons">
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.spaceGoToMarker}
-                                @click=${() =>
-                                  this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
-                              >
-                                Go to marker
-                              </t-butt>
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.spaceUseTimer}
-                                @click=${() =>
-                                  this._toggleSetting('spaceUseTimer', this.spaceUseTimer)}
-                              >
-                                Use timer
-                              </t-butt>
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.spaceResetCounter}
-                                @click=${() =>
-                                  this._toggleSetting('spaceResetCounter', this.spaceResetCounter)}
-                              >
-                                Reset counter
-                              </t-butt>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="settings-section">
-                        <h3>Play Button</h3>
-                        <div class="settings-grid">
-                          <div class="setting-item">
-                            <div class="action-buttons">
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.playGoToMarker}
-                                @click=${() =>
-                                  this._toggleSetting('playGoToMarker', this.playGoToMarker)}
-                              >
-                                Go to marker
-                              </t-butt>
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.playUseTimer}
-                                @click=${() =>
-                                  this._toggleSetting('playUseTimer', this.playUseTimer)}
-                              >
-                                Use timer
-                              </t-butt>
-                              <t-butt
-                                toggle
-                                ellipsis
-                                .active=${this.playResetCounter}
-                                @click=${() =>
-                                  this._toggleSetting('playResetCounter', this.playResetCounter)}
-                              >
-                                Reset counter
-                              </t-butt>
-                            </div>
-                          </div>
+              <t-details
+                title="Global Controls"
+                text="These key and button behaviors apply across Troff, not just this song."
+                style="margin-top: 16px;"
+              >
+                <span slot="badge" class="scope-badge">App-wide</span>
+                <t-details
+                  title="Behaviour of keys and buttons"
+                  text="Configure what happens when you press the Enter key, Space key, or Play button."
+                >
+                  <div class="settings-section">
+                    <h3>Enter Key</h3>
+                    <div class="settings-grid">
+                      <div class="setting-item">
+                        <div class="action-buttons">
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.enterGoToMarker}
+                            @click=${() =>
+                              this._toggleSetting('enterGoToMarker', this.enterGoToMarker)}
+                          >
+                            Go to marker
+                          </t-butt>
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.enterUseTimer}
+                            @click=${() => this._toggleSetting('enterUseTimer', this.enterUseTimer)}
+                          >
+                            Use timer
+                          </t-butt>
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.enterResetCounter}
+                            @click=${() =>
+                              this._toggleSetting('enterResetCounter', this.enterResetCounter)}
+                          >
+                            Reset counter
+                          </t-butt>
                         </div>
                       </div>
                     </div>
-                  </details>
+                  </div>
 
-                  <details class="advanced-panel" style="margin-top: 16px;">
-                    <summary class="advanced-summary">
-                      <div class="advanced-summary-copy">
-                        <p class="advanced-summary-title">Marker color</p>
-                        <p class="advanced-summary-text">
-                          Control how markers extend their color across the timeline.
-                        </p>
-                      </div>
-                      <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-                    </summary>
-                    <div class="advanced-content">
-                      <div class="settings-grid">
-                        <div class="setting-item">
-                          <div class="action-buttons">
-                            <t-butt
-                              toggle
-                              ellipsis
-                              .active=${this.extendedMarkerColor}
-                              @click=${() =>
-                                this._toggleSetting(
-                                  'extendedMarkerColor',
-                                  this.extendedMarkerColor
-                                )}
-                            >
-                              Fill to next marker
-                            </t-butt>
-                            <t-butt
-                              toggle
-                              ellipsis
-                              .active=${this.extraExtendedMarkerColor}
-                              @click=${() =>
-                                this._toggleSetting(
-                                  'extraExtendedMarkerColor',
-                                  this.extraExtendedMarkerColor
-                                )}
-                            >
-                              Fill to next colored marker
-                            </t-butt>
-                          </div>
+                  <div class="settings-section">
+                    <h3>Space Key</h3>
+                    <div class="settings-grid">
+                      <div class="setting-item">
+                        <div class="action-buttons">
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.spaceGoToMarker}
+                            @click=${() =>
+                              this._toggleSetting('spaceGoToMarker', this.spaceGoToMarker)}
+                          >
+                            Go to marker
+                          </t-butt>
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.spaceUseTimer}
+                            @click=${() => this._toggleSetting('spaceUseTimer', this.spaceUseTimer)}
+                          >
+                            Use timer
+                          </t-butt>
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.spaceResetCounter}
+                            @click=${() =>
+                              this._toggleSetting('spaceResetCounter', this.spaceResetCounter)}
+                          >
+                            Reset counter
+                          </t-butt>
                         </div>
                       </div>
                     </div>
-                  </details>
+                  </div>
 
-                  <details class="advanced-panel" style="margin-top: 16px;">
-                    <summary class="advanced-summary">
-                      <div class="advanced-summary-copy">
-                        <p class="advanced-summary-title">Default Song Values</p>
-                        <p class="advanced-summary-text">
-                          When loading a new song, these values will be the ones that the song get.
-                        </p>
+                  <div class="settings-section">
+                    <h3>Play Button</h3>
+                    <div class="settings-grid">
+                      <div class="setting-item">
+                        <div class="action-buttons">
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.playGoToMarker}
+                            @click=${() =>
+                              this._toggleSetting('playGoToMarker', this.playGoToMarker)}
+                          >
+                            Go to marker
+                          </t-butt>
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.playUseTimer}
+                            @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
+                          >
+                            Use timer
+                          </t-butt>
+                          <t-butt
+                            toggle
+                            ellipsis
+                            .active=${this.playResetCounter}
+                            @click=${() =>
+                              this._toggleSetting('playResetCounter', this.playResetCounter)}
+                          >
+                            Reset counter
+                          </t-butt>
+                        </div>
                       </div>
-                      <t-icon name="chevron-down" class="advanced-chevron"></t-icon>
-                    </summary>
-                    <div class="advanced-content">
-                      <div class="song-stepper-grid">
-                        <t-dial
-                          label="Start before"
-                          unit="s"
-                          show-disable-button
-                          defaultValue="4"
-                          .value=${this.defaultStartBeforeValue}
-                          .disabled=${!this.defaultStartBeforeOn}
-                          .min=${0}
-                          .max=${999}
-                          .step=${1}
-                          @value-changed=${(
-                            event: CustomEvent<{ value: number; disabled?: boolean }>
-                          ) => {
-                            this.defaultStartBeforeValue = event.detail.value;
-                            this._handleSettingChange(
-                              'defaultStartBeforeValue',
-                              event.detail.value
-                            );
-                            if (event.detail.disabled !== undefined) {
-                              this.defaultStartBeforeOn = !event.detail.disabled;
-                              this._handleSettingChange(
-                                'defaultStartBeforeOn',
-                                !event.detail.disabled
-                              );
-                            }
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Stop after"
-                          unit="s"
-                          show-disable-button
-                          defaultValue="2"
-                          .value=${this.defaultStopAfterValue}
-                          .disabled=${!this.defaultStopAfterOn}
-                          .min=${0}
-                          .max=${999}
-                          .step=${1}
-                          @value-changed=${(
-                            event: CustomEvent<{ value: number; disabled?: boolean }>
-                          ) => {
-                            this.defaultStopAfterValue = event.detail.value;
-                            this._handleSettingChange('defaultStopAfterValue', event.detail.value);
-                            if (event.detail.disabled !== undefined) {
-                              this.defaultStopAfterOn = !event.detail.disabled;
-                              this._handleSettingChange(
-                                'defaultStopAfterOn',
-                                !event.detail.disabled
-                              );
-                            }
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Pause before"
-                          unit="s"
-                          show-disable-button
-                          defaultValue="3"
-                          .value=${this.defaultPauseBeforeValue}
-                          .disabled=${!this.defaultPauseBeforeOn}
-                          .min=${0}
-                          .max=${999}
-                          .step=${1}
-                          @value-changed=${(
-                            event: CustomEvent<{ value: number; disabled?: boolean }>
-                          ) => {
-                            this.defaultPauseBeforeValue = event.detail.value;
-                            this._handleSettingChange(
-                              'defaultPauseBeforeValue',
-                              event.detail.value
-                            );
-                            if (event.detail.disabled !== undefined) {
-                              this.defaultPauseBeforeOn = !event.detail.disabled;
-                              this._handleSettingChange(
-                                'defaultPauseBeforeOn',
-                                !event.detail.disabled
-                              );
-                            }
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Wait between"
-                          unit="s"
-                          show-disable-button
-                          defaultValue="1"
-                          .value=${this.defaultWaitBetweenValue}
-                          .disabled=${!this.defaultWaitBetweenOn}
-                          .min=${0}
-                          .max=${999}
-                          .step=${1}
-                          @value-changed=${(
-                            event: CustomEvent<{ value: number; disabled?: boolean }>
-                          ) => {
-                            this.defaultWaitBetweenValue = event.detail.value;
-                            this._handleSettingChange(
-                              'defaultWaitBetweenValue',
-                              event.detail.value
-                            );
-                            if (event.detail.disabled !== undefined) {
-                              this.defaultWaitBetweenOn = !event.detail.disabled;
-                              this._handleSettingChange(
-                                'defaultWaitBetweenOn',
-                                !event.detail.disabled
-                              );
-                            }
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Increment until"
-                          unit="%"
-                          show-disable-button
-                          defaultValue="100"
-                          .value=${this.defaultIncrementUntilValue}
-                          .disabled=${!this.defaultIncrementUntilOn}
-                          .min=${50}
-                          .max=${200}
-                          .step=${1}
-                          @value-changed=${(
-                            event: CustomEvent<{ value: number; disabled?: boolean }>
-                          ) => {
-                            this.defaultIncrementUntilValue = event.detail.value;
-                            this._handleSettingChange(
-                              'defaultIncrementUntilValue',
-                              event.detail.value
-                            );
-                            if (event.detail.disabled !== undefined) {
-                              this.defaultIncrementUntilOn = !event.detail.disabled;
-                              this._handleSettingChange(
-                                'defaultIncrementUntilOn',
-                                !event.detail.disabled
-                              );
-                            }
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Nr loops"
-                          unit=""
-                          defaultValue="1"
-                          .value=${this.defaultNrLoopsValue}
-                          .disabled=${false}
-                          .min=${1}
-                          .max=${999}
-                          .step=${1}
-                          @value-changed=${(event: CustomEvent<{ value: number }>) => {
-                            this.defaultNrLoopsValue = event.detail.value;
-                            this._handleSettingChange('defaultNrLoopsValue', event.detail.value);
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Volume"
-                          unit="%"
-                          defaultValue="75"
-                          .value=${this.defaultVolumeValue}
-                          .disabled=${false}
-                          .min=${0}
-                          .max=${100}
-                          .step=${1}
-                          @value-changed=${(event: CustomEvent<{ value: number }>) => {
-                            this.defaultVolumeValue = event.detail.value;
-                            this._handleSettingChange('defaultVolumeValue', event.detail.value);
-                          }}
-                        ></t-dial>
-                        <t-dial
-                          label="Speed"
-                          unit="%"
-                          defaultValue="100"
-                          .value=${this.defaultSpeedValue}
-                          .disabled=${false}
-                          .min=${25}
-                          .max=${400}
-                          .step=${5}
-                          @value-changed=${(event: CustomEvent<{ value: number }>) => {
-                            this.defaultSpeedValue = event.detail.value;
-                            this._handleSettingChange('defaultSpeedValue', event.detail.value);
-                          }}
-                        ></t-dial>
-                      </div>
-                      <div class="setting-item" style="margin-top: 12px;">
+                    </div>
+                  </div>
+                </t-details>
+
+                <t-details
+                  title="Marker color"
+                  text="Control how markers extend their color across the timeline."
+                >
+                  <div class="settings-grid">
+                    <div class="setting-item">
+                      <div class="action-buttons">
                         <t-butt
                           toggle
                           ellipsis
-                          .active=${this.defaultNrLoopsInfiniteOn}
-                          @click=${() => {
-                            this.defaultNrLoopsInfiniteOn = !this.defaultNrLoopsInfiniteOn;
-                            this._handleSettingChange(
-                              'defaultNrLoopsInfiniteOn',
-                              this.defaultNrLoopsInfiniteOn
-                            );
-                          }}
+                          .active=${this.extendedMarkerColor}
+                          @click=${() =>
+                            this._toggleSetting('extendedMarkerColor', this.extendedMarkerColor)}
                         >
-                          Infinite loops default
+                          Fill to next marker
+                        </t-butt>
+                        <t-butt
+                          toggle
+                          ellipsis
+                          .active=${this.extraExtendedMarkerColor}
+                          @click=${() =>
+                            this._toggleSetting(
+                              'extraExtendedMarkerColor',
+                              this.extraExtendedMarkerColor
+                            )}
+                        >
+                          Fill to next colored marker
                         </t-butt>
                       </div>
                     </div>
-                  </details>
-                </div>
-              </details>
+                  </div>
+                </t-details>
+
+                <t-details
+                  title="Default Song Values 2"
+                  text="When loading a new song, these values will be the ones that the song get."
+                >
+                  <div class="song-stepper-grid">
+                    <t-dial
+                      label="Start before"
+                      unit="s"
+                      show-disable-button
+                      defaultValue="4"
+                      .value=${this.defaultStartBeforeValue}
+                      .disabled=${!this.defaultStartBeforeOn}
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
+                        this.defaultStartBeforeValue = event.detail.value;
+                        this._handleSettingChange('defaultStartBeforeValue', event.detail.value);
+                        if (event.detail.disabled !== undefined) {
+                          this.defaultStartBeforeOn = !event.detail.disabled;
+                          this._handleSettingChange('defaultStartBeforeOn', !event.detail.disabled);
+                        }
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Stop after"
+                      unit="s"
+                      show-disable-button
+                      defaultValue="2"
+                      .value=${this.defaultStopAfterValue}
+                      .disabled=${!this.defaultStopAfterOn}
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
+                        this.defaultStopAfterValue = event.detail.value;
+                        this._handleSettingChange('defaultStopAfterValue', event.detail.value);
+                        if (event.detail.disabled !== undefined) {
+                          this.defaultStopAfterOn = !event.detail.disabled;
+                          this._handleSettingChange('defaultStopAfterOn', !event.detail.disabled);
+                        }
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Pause before"
+                      unit="s"
+                      show-disable-button
+                      defaultValue="3"
+                      .value=${this.defaultPauseBeforeValue}
+                      .disabled=${!this.defaultPauseBeforeOn}
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
+                        this.defaultPauseBeforeValue = event.detail.value;
+                        this._handleSettingChange('defaultPauseBeforeValue', event.detail.value);
+                        if (event.detail.disabled !== undefined) {
+                          this.defaultPauseBeforeOn = !event.detail.disabled;
+                          this._handleSettingChange('defaultPauseBeforeOn', !event.detail.disabled);
+                        }
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Wait between"
+                      unit="s"
+                      show-disable-button
+                      defaultValue="1"
+                      .value=${this.defaultWaitBetweenValue}
+                      .disabled=${!this.defaultWaitBetweenOn}
+                      .min=${0}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
+                        this.defaultWaitBetweenValue = event.detail.value;
+                        this._handleSettingChange('defaultWaitBetweenValue', event.detail.value);
+                        if (event.detail.disabled !== undefined) {
+                          this.defaultWaitBetweenOn = !event.detail.disabled;
+                          this._handleSettingChange('defaultWaitBetweenOn', !event.detail.disabled);
+                        }
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Increment until"
+                      unit="%"
+                      show-disable-button
+                      defaultValue="100"
+                      .value=${this.defaultIncrementUntilValue}
+                      .disabled=${!this.defaultIncrementUntilOn}
+                      .min=${50}
+                      .max=${200}
+                      .step=${1}
+                      @value-changed=${(
+                        event: CustomEvent<{ value: number; disabled?: boolean }>
+                      ) => {
+                        this.defaultIncrementUntilValue = event.detail.value;
+                        this._handleSettingChange('defaultIncrementUntilValue', event.detail.value);
+                        if (event.detail.disabled !== undefined) {
+                          this.defaultIncrementUntilOn = !event.detail.disabled;
+                          this._handleSettingChange(
+                            'defaultIncrementUntilOn',
+                            !event.detail.disabled
+                          );
+                        }
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Nr loops"
+                      unit=""
+                      defaultValue="1"
+                      .value=${this.defaultNrLoopsValue}
+                      .disabled=${false}
+                      .min=${1}
+                      .max=${999}
+                      .step=${1}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                        this.defaultNrLoopsValue = event.detail.value;
+                        this._handleSettingChange('defaultNrLoopsValue', event.detail.value);
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Volume"
+                      unit="%"
+                      defaultValue="75"
+                      .value=${this.defaultVolumeValue}
+                      .disabled=${false}
+                      .min=${0}
+                      .max=${100}
+                      .step=${1}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                        this.defaultVolumeValue = event.detail.value;
+                        this._handleSettingChange('defaultVolumeValue', event.detail.value);
+                      }}
+                    ></t-dial>
+                    <t-dial
+                      label="Speed"
+                      unit="%"
+                      defaultValue="100"
+                      .value=${this.defaultSpeedValue}
+                      .disabled=${false}
+                      .min=${25}
+                      .max=${400}
+                      .step=${5}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                        this.defaultSpeedValue = event.detail.value;
+                        this._handleSettingChange('defaultSpeedValue', event.detail.value);
+                      }}
+                    ></t-dial>
+                  </div>
+                  <div class="setting-item" style="margin-top: 12px;">
+                    <t-butt
+                      toggle
+                      ellipsis
+                      .active=${this.defaultNrLoopsInfiniteOn}
+                      @click=${() => {
+                        this.defaultNrLoopsInfiniteOn = !this.defaultNrLoopsInfiniteOn;
+                        this._handleSettingChange(
+                          'defaultNrLoopsInfiniteOn',
+                          this.defaultNrLoopsInfiniteOn
+                        );
+                      }}
+                    >
+                      Infinite loops default
+                    </t-butt>
+                  </div>
+                </t-details>
+              </t-details>
             `
           : ''}
       </div>
