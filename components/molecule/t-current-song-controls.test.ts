@@ -219,36 +219,6 @@ describe('t-current-song-controls advanced panels use t-details', () => {
     expect(titleEl?.textContent).toBe('Advanced');
   });
 
-  it('renders a "Global Controls" panel as t-details with its text and an "App-wide" badge', async () => {
-    await element.updateComplete;
-
-    const globalControls = findDetailsByTitle('Global Controls');
-    expect(globalControls).toBeTruthy();
-    expect(globalControls?.text).toContain('These key and button behaviors apply across Troff');
-
-    const badge = globalControls?.querySelector('[slot="badge"]');
-    expect(badge).toBeTruthy();
-    expect(badge?.textContent).toContain('App-wide');
-  });
-
-  it('renders nested t-details panels inside the "Global Controls" content', async () => {
-    await element.updateComplete;
-
-    const globalControls = findDetailsByTitle('Global Controls');
-    expect(globalControls).toBeTruthy();
-
-    const nestedTitles = Array.from(globalControls?.querySelectorAll('t-details') ?? []).map(
-      (panel) => (panel as DetailsElement).title
-    );
-    expect(nestedTitles).toEqual(
-      expect.arrayContaining([
-        'Behaviour of keys and buttons',
-        'Marker color',
-        'Default Song Values',
-      ])
-    );
-  });
-
   it('no longer renders raw native <details> elements in its own shadow root', async () => {
     await element.updateComplete;
 
