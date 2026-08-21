@@ -1110,16 +1110,16 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsPanel.incrementUntillDisabled = false;
     }
 
-    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) === true;
-    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) === true;
-    settingsPanel.enterGoToMarker = nDB.get(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) === true;
-    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) === true;
-    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) === true;
-    settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) === true;
-    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) === true;
-    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) === true;
+    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) ?? true;
+    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) ?? true;
+    settingsPanel.enterGoToMarker = nDB.get(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) ?? true;
+    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) ?? false;
+    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) ?? false;
+    settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) ?? false;
+    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) ?? true;
+    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) ?? true;
     settingsPanel.playGoToMarker =
-      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) === true;
+      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -1473,6 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, delay);
   };
 
+  // Default to true (reset counter) when the setting has never been stored
   const shouldResetLoopCounter = (settingKey: string) => nDB.get(settingKey) === true;
 
   const startPlayback = (
@@ -2077,6 +2078,25 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   if (footer) {
+    // Set defaults for global control settings if they have never been stored.
+    // This ensures both the UI and the behaviour start with the correct values.
+    const defaultsIfUnset: [string, boolean][] = [
+      [TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR, true],
+      [TROFF_SETTING_ENTER_RESET_COUNTER, true],
+      [TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR, true],
+      [TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR, true],
+      [TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER, true],
+      [TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR, true],
+      [TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, false],
+      [TROFF_SETTING_SPACE_RESET_COUNTER, false],
+      [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
+    ];
+    for (const [key, defaultValue] of defaultsIfUnset) {
+      if (nDB.get(key) == null) {
+        nDB.set(key, defaultValue);
+      }
+    }
+
     updateFooterWithCurrentSong();
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
