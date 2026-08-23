@@ -19,12 +19,10 @@ describe('t-group-dialog', () => {
   it('renders a delete button with confirm state when editing an existing group', async () => {
     // Set a mock group so it's in "edit" mode and the delete button shows up
     element.group = {
-      id: 'group1',
+      id: 1,
       name: 'Test Group',
-      color: 0,
-      open: true,
-      user_id: 'user1',
-      tracks: {}
+      color: '#000000',
+      songs: []
     };
     await element.updateComplete;
 
