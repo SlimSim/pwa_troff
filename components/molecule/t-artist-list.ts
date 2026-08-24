@@ -532,6 +532,9 @@ export class ArtistList extends LitElement {
           (group, index) => html`
             <div
               class="artist-item ${index === this.highlightedIndex ? 'highlighted' : ''}"
+              ?data-current-song=${group.tracks.some(
+                (t: { songKey?: string }) => t.songKey === this.currentSongKey
+              )}
               @click=${() => this._handleArtistClick(group.artist)}
             >
               <div class="artist-info">

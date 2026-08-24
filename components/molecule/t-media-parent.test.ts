@@ -2057,3 +2057,11 @@ describe('deleting the currently open group restores the song-list-header', () =
     expect(element.shadowRoot?.querySelector('.song-list-header')).toBeTruthy();
   });
 });
+
+// Test hygiene: clear the saved nav state so it does not leak between tests.
+// MediaParent now applies the saved nav state on construction (for the
+// app-start scroll-to-active-song), so a stale state left by one test would
+// otherwise change `currentFilter` for later tests.
+afterEach(() => {
+  nDB.delete('TROFF_SONG_LIST_NAVIGATION_STATE');
+});

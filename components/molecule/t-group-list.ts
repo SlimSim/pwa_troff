@@ -931,6 +931,9 @@ export class GroupList extends LitElement {
           (group, index) => html`
             <div
               class="group-item ${index === this.highlightedIndex ? 'highlighted' : ''}"
+              ?data-current-song=${group.tracks.some(
+                (t: { songKey?: string }) => t.songKey === this.currentSongKey
+              )}
               style=${group.color
                 ? `background-color: ${this._cssColor(group.color)}; color: ${this._contrastColor(group.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(group.color)} 15%, transparent);`
                 : ''}
