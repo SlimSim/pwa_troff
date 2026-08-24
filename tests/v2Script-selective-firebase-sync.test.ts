@@ -369,17 +369,17 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
       expect(saveSongDataMock).toHaveBeenCalledWith('test-song.mp3');
     });
 
-    it('calls saveSongData after create state (rememberCurrentState / prompt)', async () => {
+    it('calls saveSongData after create state (rememberCurrentState / dialog)', async () => {
       createRequiredDom();
       nDBStore['test-song.mp3'] = { markers: [], aStates: [] };
       mockModules();
       await bootV2Script();
       saveSongDataMock.mockClear();
 
-      const promptSpy = vi.fn(() => 'Test Prompt State');
-      vi.stubGlobal('prompt', promptSpy);
-
       const settingsPanel = document.getElementById('settingsPanel')!;
+      // Current (pre-feature) implementation still calls window.prompt (not a function in
+      // happy-dom), which surfaces as an unhandled rejection; once the dialog replaces it,
+      // this dispatch opens the dialog instead. The assertion below is the intended RED.
       settingsPanel.dispatchEvent(
         new CustomEvent('song-action-requested', {
           detail: { action: 'rememberState' },
@@ -388,11 +388,22 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
         })
       );
 
-      expect(promptSpy).toHaveBeenCalled();
+      // The handler must open the new in-app text-input dialog instead of window.prompt().
+      const dialog = document.querySelector('t-text-input-dialog') as any;
+      expect(dialog).toBeTruthy();
+      expect(dialog.open).toBe(true);
+
+      // Simulate the user confirming the dialog with a state name.
+      dialog.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'Test Prompt State' },
+          bubbles: true,
+          composed: true,
+        })
+      );
+
       expect(saveSongDataMock).toHaveBeenCalledTimes(1);
       expect(saveSongDataMock).toHaveBeenCalledWith('test-song.mp3');
-
-      vi.unstubAllGlobals();
     });
 
     it('calls saveSongData after removeState', async () => {
@@ -436,10 +447,10 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
       saveSongDataMock.mockClear();
 
       const settingsPanel = document.getElementById('settingsPanel')!;
-      const promptSpy = vi.fn(() => 'MultiState1');
-      vi.stubGlobal('prompt', promptSpy);
 
       // first add (remember) -> 1 save
+      // Pre-feature code still calls window.prompt (not a function in happy-dom), surfacing
+      // an unhandled rejection; the intended RED is the dialog assertion below.
       settingsPanel.dispatchEvent(
         new CustomEvent('song-action-requested', {
           detail: { action: 'rememberState' },
@@ -447,13 +458,31 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
           composed: true,
         })
       );
+      const dialog1 = document.querySelector('t-text-input-dialog') as any;
+      expect(dialog1).toBeTruthy();
+      expect(dialog1.open).toBe(true);
+      dialog1.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'MultiState1' },
+          bubbles: true,
+          composed: true,
+        })
+      );
       expect(saveSongDataMock).toHaveBeenCalledTimes(1);
 
       // second add -> 2 saves
-      promptSpy.mockReturnValueOnce('MultiState2');
       settingsPanel.dispatchEvent(
         new CustomEvent('song-action-requested', {
           detail: { action: 'rememberState' },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      const dialog2 = document.querySelector('t-text-input-dialog') as any;
+      expect(dialog2).toBeTruthy();
+      dialog2.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'MultiState2' },
           bubbles: true,
           composed: true,
         })

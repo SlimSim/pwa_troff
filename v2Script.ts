@@ -11,9 +11,11 @@ import './components/molecule/t-group-dialog.js';
 import './components/molecule/t-song-edit-dialog.js';
 import type { SongEditDialog } from './components/molecule/t-song-edit-dialog.js';
 import type { ShareSongDialog } from './components/molecule/t-share-song-dialog.js';
+import type { TextInputDialog } from './components/molecule/t-text-input-dialog.js';
 import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/molecule/t-share-song-dialog.js';
+import './components/molecule/t-text-input-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import './components/organisms/t-video-player.js';
 import {
@@ -1572,40 +1574,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const songData = nDB.get(songKey) || {};
     const existingStates: string[] = Array.isArray(songData.aStates) ? songData.aStates : [];
     const suggested = 'State ' + (existingStates.length + 1);
-    const name = window.prompt('Remember state of settings to be recalled later', suggested);
-    if (!name || name.trim() === '') {
-      return;
+
+    // Lazily create/get the dialog (same lazy pattern as the share/marker-tools dialogs)
+    let textDialog = document.querySelector('t-text-input-dialog') as TextInputDialog | null;
+    if (!textDialog) {
+      textDialog = document.createElement('t-text-input-dialog');
+      document.body.append(textDialog);
     }
-    const parseNum = (v: unknown, fb: number) => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : fb;
+
+    const onDialogEvent = (event: Event) => {
+      textDialog.removeEventListener('text-input-confirmed', onDialogEvent);
+      textDialog.removeEventListener('dialog-cancelled', onDialogEvent);
+      if (event.type === 'text-input-confirmed') {
+        const name = (event as CustomEvent<{ value: string }>).detail.value.trim();
+        if (!name) {
+          return;
+        }
+        // ---- existing state-building logic (unchanged) ----
+        const parseNum = (v: unknown, fb: number) => {
+          const n = Number(v);
+          return Number.isFinite(n) ? n : fb;
+        };
+        const state: State = {
+          name,
+          currentMarker: markerSlider ? markerSlider.startMarkerId : (songData.currentStartMarker || ''),
+          currentStopMarker: markerSlider ? markerSlider.stopMarkerId : (songData.currentStopMarker || ''),
+          currentLoop: songData.loopTimes !== undefined ? songData.loopTimes : '1',
+          buttPauseBefStart: songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart !== false,
+          buttStartBefore: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore !== false,
+          buttStopAfter: songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter !== false,
+          buttWaitBetweenLoops: songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops !== false,
+          buttIncrementUntil: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === true,
+          pauseBeforeStart: parseNum(songData.TROFF_VALUE_pauseBeforeStart, parseNum(footer?.pauseBefore, 3)),
+          speedBar: parseNum(songData.TROFF_VALUE_speedBar, parseNum(footer?.speed, 100)),
+          startBefore: parseNum(songData.TROFF_VALUE_startBefore, 0),
+          stopAfter: parseNum(songData.TROFF_VALUE_stopAfter, 0),
+          volumeBar: parseNum(songData.TROFF_VALUE_volumeBar, parseNum(footer?.volume, 75)),
+          waitBetweenLoops: parseNum(songData.TROFF_VALUE_waitBetweenLoops, parseNum(footer?.waitBetween, 1)),
+        };
+        const aStates: string[] = existingStates.slice();
+        aStates.push(JSON.stringify(state));
+        nDB.setOnSong(songKey, 'aStates', aStates);
+        void saveSongData(songKey);
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+        if (markerSlider) {
+          updateMarkerSlider(markerSlider);
+        }
+      }
+      // 'dialog-cancelled' or empty name → nothing to do
     };
-    const state: State = {
-      name: name.trim(),
-      currentMarker: markerSlider ? markerSlider.startMarkerId : (songData.currentStartMarker || ''),
-      currentStopMarker: markerSlider ? markerSlider.stopMarkerId : (songData.currentStopMarker || ''),
-      currentLoop: songData.loopTimes !== undefined ? songData.loopTimes : '1',
-      buttPauseBefStart: songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart !== false,
-      buttStartBefore: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore !== false,
-      buttStopAfter: songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter !== false,
-      buttWaitBetweenLoops: songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops !== false,
-      buttIncrementUntil: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === true,
-      pauseBeforeStart: parseNum(songData.TROFF_VALUE_pauseBeforeStart, parseNum(footer?.pauseBefore, 3)),
-      speedBar: parseNum(songData.TROFF_VALUE_speedBar, parseNum(footer?.speed, 100)),
-      startBefore: parseNum(songData.TROFF_VALUE_startBefore, 0),
-      stopAfter: parseNum(songData.TROFF_VALUE_stopAfter, 0),
-      volumeBar: parseNum(songData.TROFF_VALUE_volumeBar, parseNum(footer?.volume, 75)),
-      waitBetweenLoops: parseNum(songData.TROFF_VALUE_waitBetweenLoops, parseNum(footer?.waitBetween, 1)),
-    };
-    const aStates: string[] = existingStates.slice();
-    aStates.push(JSON.stringify(state));
-    nDB.setOnSong(songKey, 'aStates', aStates);
-    void saveSongData(songKey);
-    syncSettingsPanelValues();
-    syncCurrentSongControlsValues();
-    if (markerSlider) {
-      updateMarkerSlider(markerSlider);
-    }
+
+    textDialog.title = 'Remember state';
+    textDialog.label = 'State name';
+    textDialog.placeholder = 'Name this state';
+    textDialog.initialValue = suggested;
+    textDialog.required = true;
+    textDialog.addEventListener('text-input-confirmed', onDialogEvent);
+    textDialog.addEventListener('dialog-cancelled', onDialogEvent);
+    textDialog.open = true;
   };
 
   const setState = (index: number) => {
