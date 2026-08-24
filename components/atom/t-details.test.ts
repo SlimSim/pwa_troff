@@ -140,12 +140,12 @@ describe('t-details', () => {
   it('renders the text property inside p.advanced-summary-text', async () => {
     await element.updateComplete;
 
-    element.text = 'Advanced marker actions!';
+    element.text = 'Marker actions and states!';
     await element.updateComplete;
 
     const text = element.shadowRoot?.querySelector('p.advanced-summary-text');
     expect(text).toBeTruthy();
-    expect(text?.textContent).toBe('Advanced marker actions!');
+    expect(text?.textContent).toBe('Marker actions and states!');
   });
 
   it('does not render p.advanced-summary-text when text is empty (the default)', async () => {

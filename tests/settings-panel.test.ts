@@ -538,89 +538,11 @@ describe('SettingsPanel panel title', () => {
   });
 });
 
-describe('SettingsPanel states management UI (issue #29)', () => {
-  let settingsPanel: SettingsPanelType;
-
-  beforeEach(async () => {
-    // Silence network fetches for manifest and icons in happy-dom (no dev server)
-    const fetchMock = vi.fn(() => Promise.reject(new Error('network disabled in test')));
-    vi.stubGlobal('fetch', fetchMock);
-    // Make requestAnimationFrame fire synchronously
-    const raf = (cb: Function) => { cb(); return 0; };
-    vi.stubGlobal('requestAnimationFrame', raf);
-
-    // Dynamic import - the child element registrations happen once due to ESM caching
-    const { SettingsPanel } = await import('../components/molecule/t-settings-panel.js');
-
-    settingsPanel = new SettingsPanel();
-    document.body.appendChild(settingsPanel);
-    await settingsPanel.updateComplete;
-  });
-
-  afterEach(() => {
-    if (settingsPanel && document.body.contains(settingsPanel)) {
-      document.body.removeChild(settingsPanel);
-    }
-    vi.restoreAllMocks();
-    vi.unstubAllGlobals();
-  });
-
-  it('should render a section for song states / presets', () => {
-    // Once implemented, states UI goes in settings slide-up per issue #29
-    const panelHtml = settingsPanel.shadowRoot?.innerHTML || '';
-    const hasStatesSection =
-      panelHtml.includes('States') ||
-      panelHtml.includes('state') ||
-      panelHtml.includes('Remember state') ||
-      !!settingsPanel.shadowRoot?.querySelector('.states-section, #states, [data-testid="states"]');
-    expect(hasStatesSection).toBe(true);
-  });
-
-  it('should include a t-butt to remember/save the current state', () => {
-    const butts = Array.from(settingsPanel.shadowRoot?.querySelectorAll('t-butt') || []);
-    const hasRemember = butts.some((b) => {
-      const text = (b.textContent || '').toLowerCase().trim();
-      return text.includes('remember') || text.includes('save state') || text.includes('remember state');
-    });
-    expect(hasRemember).toBe(true);
-  });
-
-  it('should render a list of states as clickable t-butt elements (for set/recall)', () => {
-    // In v1 it was #stateList with buttons; in v2 use t-butt inside settings panel
-    const stateListContainer = settingsPanel.shadowRoot?.querySelector(
-      '#stateList, .state-list, .states-list, [slot="states"]'
-    );
-    const butts = Array.from(settingsPanel.shadowRoot?.querySelectorAll('t-butt') || []);
-    const hasStateButtons = butts.some((b) => {
-      const text = (b.textContent || '').toLowerCase();
-      return /state/.test(text) && !text.includes('remember');
-    });
-    expect(stateListContainer || hasStateButtons).toBeTruthy();
-  });
-
-  it('should support removing a state via the remove butt on each state item', async () => {
-    settingsPanel.songStates = [
-      JSON.stringify({ name: 'State A' }),
-      JSON.stringify({ name: 'State B' }),
-    ];
-    await settingsPanel.updateComplete;
-
-    const handler = vi.fn();
-    settingsPanel.addEventListener('song-action-requested', handler);
-
-    const stateItems = settingsPanel.shadowRoot?.querySelectorAll('.state-item') || [];
-    expect(stateItems.length).toBe(2);
-
-    // Second t-butt in each row is the remove (delete icon) button
-    const removeButt = stateItems[0]?.querySelectorAll('t-butt')[1];
-    expect(removeButt).toBeTruthy();
-
-    removeButt?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    expect(handler).toHaveBeenCalledWith(
-      expect.objectContaining({ detail: { action: 'removeState', index: 0 } })
-    );
-  });
-});
+// NOTE: The song "States" UI (Remember state button, state list, set/remove
+// actions) has moved OUT of t-settings-panel and INTO the <t-details
+// title="Advanced"> panel inside t-current-song-controls. Those behaviors are
+// now covered by tests/states-in-advanced.test.ts. The tests that previously
+// asserted states lived in the settings panel have been intentionally removed.
 
 describe('SettingsPanel advanced panels use t-details', () => {
   let settingsPanel: SettingsPanelType;
@@ -659,25 +581,13 @@ describe('SettingsPanel advanced panels use t-details', () => {
     return getDetailsPanels().find((panel) => panel.title === title);
   }
 
-  it('renders t-details panels for States, Behaviour of keys and buttons, Marker color and Default Song Values', async () => {
+  it('renders t-details panels for Behaviour of keys and buttons, Marker color and Default Song Values (States moved to Advanced panel)', async () => {
     const titles = getDetailsPanels().map((panel) => panel.title);
-    expect(titles).toEqual(
-      expect.arrayContaining([
-        'States',
-        'Behaviour of keys and buttons',
-        'Marker color',
-        'Default Song Values',
-      ])
-    );
-  });
-
-  it('renders the "States" t-details with its descriptive text', async () => {
-    const states = findDetailsByTitle('States');
-    expect(states).toBeTruthy();
-    expect(states?.text).toContain('Remember selected markers, tempo, loops and more');
-
-    const titleEl = states?.shadowRoot?.querySelector('p.advanced-summary-title');
-    expect(titleEl?.textContent).toBe('States');
+    expect(titles).toEqual([
+      'Behaviour of keys and buttons',
+      'Marker color',
+      'Default Song Values',
+    ]);
   });
 
   it('renders the correct descriptive text on the other t-details panels', async () => {
@@ -701,20 +611,5 @@ describe('SettingsPanel advanced panels use t-details', () => {
 
   it('no longer renders raw native <details> elements in its own shadow root', async () => {
     expect(settingsPanel.shadowRoot?.querySelector('details')).toBeNull();
-  });
-
-  it('still renders state-item buttons inside the "States" t-details when songStates is set', async () => {
-    settingsPanel.songStates = [
-      JSON.stringify({ name: 'State A' }),
-      JSON.stringify({ name: 'State B' }),
-    ];
-    await settingsPanel.updateComplete;
-
-    const states = findDetailsByTitle('States');
-    expect(states).toBeTruthy();
-
-    // Slotted into the t-details content and still queryable from the panel shadow root
-    expect(states?.querySelectorAll('.state-item').length).toBe(2);
-    expect(settingsPanel.shadowRoot?.querySelectorAll('.state-item').length).toBe(2);
   });
 });

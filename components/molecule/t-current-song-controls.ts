@@ -157,6 +157,33 @@ export class CurrentSongControls extends LitElement {
       width: 100%;
     }
 
+    .states-section {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .states-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .state-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .state-item {
+      display: flex;
+      gap: 4px;
+    }
+
+    .state-item t-butt:first-child {
+      flex: 1;
+    }
+
     .song-stepper-grid {
       display: flex;
       flex-direction: column;
@@ -248,6 +275,7 @@ export class CurrentSongControls extends LitElement {
   @property({ type: Number }) volume = 75;
   @property({ type: Number }) speed = 100;
   @property({ type: Number }) tempo = 0;
+  @property({ type: Array }) songStates: string[] = [];
 
   private _handleSettingChange(setting: string, value: unknown) {
     this.dispatchEvent(
@@ -263,6 +291,36 @@ export class CurrentSongControls extends LitElement {
     this.dispatchEvent(
       new CustomEvent('song-action-requested', {
         detail: { action },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleRememberState() {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action: 'rememberState' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleSetState(index: number) {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action: 'setState', index },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleRemoveState(index: number) {
+    this.dispatchEvent(
+      new CustomEvent('song-action-requested', {
+        detail: { action: 'removeState', index },
         bubbles: true,
         composed: true,
       })
@@ -651,13 +709,43 @@ export class CurrentSongControls extends LitElement {
 
           <!-- 1. Advanced -->
           <div class="settings-section">
-            <t-details title="Advanced" text="Advanced marker actions!">
+            <t-details title="Advanced" text="Marker actions and states!">
               <div class="song-action-buttons">
                 ${this._renderSongActionButton('importExport', 'Import / export')}
                 ${this._renderSongActionButton('copyMarkers', 'Copy markers')}
                 ${this._renderSongActionButton('moveMarkers', 'Move markers')}
                 ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
                 ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
+              </div>
+              <div class="states-section">
+                <div class="states-header">
+                  <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
+                  <t-help-tip h3="State" position="up">
+                    <p>
+                      Remember selected markers, tempo, loops and more to quickly restore your song
+                      settings.
+                    </p>
+                  </t-help-tip>
+                </div>
+                <div id="stateList" class="state-list">
+                  ${(this.songStates || []).map((stateStr: string, i: number) => {
+                    let displayName = `State ${i + 1}`;
+                    try {
+                      const st = JSON.parse(stateStr) as { name?: string };
+                      if (st && typeof st.name === 'string' && st.name) displayName = st.name;
+                    } catch {
+                      /* ignore parse error for display name */
+                    }
+                    return html`
+                      <div class="state-item">
+                        <t-butt @click=${() => this._handleSetState(i)}>${displayName}</t-butt>
+                        <t-butt @click=${() => this._handleRemoveState(i)}>
+                          <t-icon name="delete"></t-icon>
+                        </t-butt>
+                      </div>
+                    `;
+                  })}
+                </div>
               </div>
             </t-details>
           </div>

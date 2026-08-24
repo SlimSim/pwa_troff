@@ -1064,7 +1064,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
-    settingsPanel.songStates = songKey && songData && Array.isArray(songData.aStates) ? songData.aStates : [];
+    const states = songKey && songData && Array.isArray(songData.aStates) ? songData.aStates : [];
+    type SongStatesHost = HTMLElement & { songStates?: string[] };
+    if (currentSongControls) (currentSongControls as SongStatesHost).songStates = states;
+    const settingsCtl = settingsPanel?.shadowRoot?.querySelector('#settingsCurrentSongControls') as SongStatesHost | null;
+    if (settingsCtl) settingsCtl.songStates = states;
     const rawLoopTimes =
       songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
     const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
