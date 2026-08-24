@@ -719,13 +719,13 @@ export class CurrentSongControls extends LitElement {
               </div>
               <div class="states-section">
                 <div class="states-header">
-                  <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
-                  <t-help-tip h3="State" position="up">
+                  <t-help-tip h3="State" position="up" style="flex-grow: 1;">
                     <p>
                       Remember selected markers, tempo, loops and more to quickly restore your song
                       settings.
                     </p>
                   </t-help-tip>
+                  <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
                 </div>
                 <div id="stateList" class="state-list">
                   ${(this.songStates || []).map((stateStr: string, i: number) => {
@@ -739,7 +739,11 @@ export class CurrentSongControls extends LitElement {
                     return html`
                       <div class="state-item">
                         <t-butt @click=${() => this._handleSetState(i)}>${displayName}</t-butt>
-                        <t-butt @click=${() => this._handleRemoveState(i)}>
+                        <t-butt
+                          confirm
+                          confirmText="Delete state?"
+                          @click=${() => this._handleRemoveState(i)}
+                        >
                           <t-icon name="delete"></t-icon>
                         </t-butt>
                       </div>

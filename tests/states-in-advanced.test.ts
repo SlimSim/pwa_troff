@@ -65,8 +65,10 @@ describe('CurrentSongControls — song States live inside the Advanced panel', (
     expect(tip, 'Expected a t-help-tip inside the Advanced panel').toBeTruthy();
     // The h3 attribute/property must be exactly "State"
     expect((tip as unknown as { h3: string }).h3).toBe('State');
-    // Its (slotted / pop-up) content must explain the feature
-    expect(tip!.textContent || '').toContain(
+    // Its (slotted / pop-up) content must explain the feature.
+    // Normalize whitespace because the slotted <p> may wrap across source lines.
+    const tipText = (tip!.textContent || '').replace(/\s+/g, ' ').trim();
+    expect(tipText).toContain(
       'Remember selected markers, tempo, loops and more to quickly restore your song settings.'
     );
   });
