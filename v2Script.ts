@@ -1618,9 +1618,10 @@ document.addEventListener('DOMContentLoaded', () => {
         void saveSongData(songKey);
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
-        if (markerSlider) {
-          updateMarkerSlider(markerSlider);
-        }
+        // Deliberately do NOT touch the marker slider here.
+        // Remembering a state only snapshots the *current settings* (loop times,
+        // dials, start/stop markers, etc.) into aStates. It must never alter
+        // the timeline, markers, zoom, or playback position.
       }
       // 'dialog-cancelled' or empty name → nothing to do
     };
@@ -1709,9 +1710,9 @@ document.addEventListener('DOMContentLoaded', () => {
     nDB.setOnSong(songKey, 'aStates', aStates);
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
-    if (markerSlider) {
-      updateMarkerSlider(markerSlider);
-    }
+    // Deliberately do NOT touch the marker slider here.
+    // Removing a state only affects the list of saved states.
+    // It must never alter the timeline, markers, or playback position.
   };
 
   if (footer && settingsPanel) {
