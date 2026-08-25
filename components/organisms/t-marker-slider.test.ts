@@ -361,3 +361,146 @@ describe('t-marker-slider anchor zoom via scroll', () => {
     expect(wrapper.scrollTop).toBe(-50);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Marker cross-over guards
+//
+// When the user selects an end marker whose time is before the current start
+// marker, the start marker should snap to the first (earliest) marker.
+// Conversely, selecting a start marker whose time is after the current end
+// marker should snap the end marker to the last (latest) marker.
+// ---------------------------------------------------------------------------
+describe('t-marker-slider marker cross-over guards', () => {
+  let element: MarkerSlider;
+
+  const markers: TroffMarker[] = [
+    { color: 'green', id: 'm1', info: '', name: 'Start', time: 10 },
+    { color: 'blue', id: 'm2', info: '', name: 'Mid', time: 50 },
+    { color: 'red', id: 'm3', info: '', name: 'End', time: 90 },
+  ];
+
+  beforeEach(() => {
+    element = new MarkerSlider();
+    element.markers = markers;
+    element.min = 0;
+    element.max = 100;
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('clicking an end marker before the current start resets start to the first marker', async () => {
+    // Set start=m3 (90), stop=m3 (90) — start is at or after stop
+    element.startMarkerId = 'm3';
+    element.stopMarkerId = 'm3S';
+    await element.updateComplete;
+
+    // Now click the stop button on m1 (time=10) — stop would be 10, start is 90
+    const markerEl = element.shadowRoot?.querySelectorAll('t-marker')[0] as HTMLElement;
+    const stopBtn = markerEl.shadowRoot?.querySelector('.stop-button') as HTMLElement;
+    stopBtn.click();
+    await element.updateComplete;
+
+    // Start should snap to the first marker (m1)
+    expect(element.startMarkerId).toBe('m1');
+    // Stop should be m1 (the new stop marker)
+    expect(element.stopMarkerId).toBe('m1S');
+  });
+
+  it('clicking a start marker after the current end resets end to the last marker', async () => {
+    // Set start=m1 (10), stop=m1 (10) — end is at or before start
+    element.startMarkerId = 'm1';
+    element.stopMarkerId = 'm1S';
+    await element.updateComplete;
+
+    // Now click the start button on m3 (time=90) — start would be 90, stop is 10
+    const markerEl = element.shadowRoot?.querySelectorAll('t-marker')[2] as HTMLElement;
+    const startBtn = markerEl.shadowRoot?.querySelector('.marker-name-button') as HTMLElement;
+    startBtn.click();
+    await element.updateComplete;
+
+    // Stop should snap to the last marker (m3)
+    expect(element.stopMarkerId).toBe('m3S');
+    // Start should be m3 (the new start marker)
+    expect(element.startMarkerId).toBe('m3');
+  });
+
+  it('clicking end marker after start does NOT reset start', async () => {
+    // start=m1 (10), stop=m3 (90) — valid region
+    element.startMarkerId = 'm1';
+    element.stopMarkerId = 'm3S';
+    await element.updateComplete;
+
+    // Click stop button on m2 (time=50) — stop=50 > start=10, no cross-over
+    const markerEl = element.shadowRoot?.querySelectorAll('t-marker')[1] as HTMLElement;
+    const stopBtn = markerEl.shadowRoot?.querySelector('.stop-button') as HTMLElement;
+    stopBtn.click();
+    await element.updateComplete;
+
+    // Start should remain m1
+    expect(element.startMarkerId).toBe('m1');
+    expect(element.stopMarkerId).toBe('m2S');
+  });
+
+  it('clicking start marker before end does NOT reset end', async () => {
+    // start=m1 (10), stop=m3 (90) — valid region
+    element.startMarkerId = 'm1';
+    element.stopMarkerId = 'm3S';
+    await element.updateComplete;
+
+    // Click start button on m2 (time=50) — start=50 < stop=90, no cross-over
+    const markerEl = element.shadowRoot?.querySelectorAll('t-marker')[1] as HTMLElement;
+    const startBtn = markerEl.shadowRoot?.querySelector('.marker-name-button') as HTMLElement;
+    startBtn.click();
+    await element.updateComplete;
+
+    // Stop should remain m3
+    expect(element.startMarkerId).toBe('m2');
+    expect(element.stopMarkerId).toBe('m3S');
+  });
+
+  it('dispatches set-stop-marker when start crosses stop', async () => {
+    element.startMarkerId = 'm3';
+    element.stopMarkerId = 'm3S';
+    await element.updateComplete;
+
+    const stopEvents: string[] = [];
+    element.addEventListener('set-stop-marker', ((e: CustomEvent) => {
+      stopEvents.push(e.detail.markerId);
+    }) as EventListener);
+
+    // Click stop button on m1
+    const markerEl = element.shadowRoot?.querySelectorAll('t-marker')[0] as HTMLElement;
+    const stopBtn = markerEl.shadowRoot?.querySelector('.stop-button') as HTMLElement;
+    stopBtn.click();
+    await element.updateComplete;
+
+    // Should dispatch set-stop-marker for the reset (m1) AND the original click (m1)
+    expect(stopEvents).toContain('m1');
+  });
+
+  it('dispatches set-start-marker when stop crosses start', async () => {
+    element.startMarkerId = 'm1';
+    element.stopMarkerId = 'm1S';
+    await element.updateComplete;
+
+    const startEvents: string[] = [];
+    element.addEventListener('set-start-marker', ((e: CustomEvent) => {
+      startEvents.push(e.detail.markerId);
+    }) as EventListener);
+
+    // Click start button on m3
+    const markerEl = element.shadowRoot?.querySelectorAll('t-marker')[2] as HTMLElement;
+    const startBtn = markerEl.shadowRoot?.querySelector('.marker-name-button') as HTMLElement;
+    startBtn.click();
+    await element.updateComplete;
+
+    // Should dispatch set-start-marker for the reset (m3) AND the original click (m3)
+    expect(startEvents).toContain('m3');
+  });
+});

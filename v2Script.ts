@@ -238,6 +238,8 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
+    configureMarkerSlider(markerSlider, currentSongData);
+
     if (setAudioTime) {
       console.log('markerSlider.getPlaybackStart()', markerSlider.getPlaybackStart());
       console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
@@ -248,8 +250,6 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
 
       getActiveMedia().currentTime = markerSlider.getPlaybackStart();
     }
-
-    configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];
