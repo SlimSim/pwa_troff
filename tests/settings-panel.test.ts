@@ -510,6 +510,55 @@ describe('SettingsPanel numeric settings integration', () => {
       expect(settingsPanel.playGoToMarker).toBe(true);
     });
   });
+
+  describe('keep screen on setting (syncs like extendedMarkerColor)', () => {
+    describe('default property values', () => {
+      it('should have default keepScreenOn of true', () => {
+        expect(settingsPanel.keepScreenOn).toBe(true);
+      });
+    });
+
+    describe('setting values from parent', () => {
+      it('should update keepScreenOn when property is set', async () => {
+        settingsPanel.keepScreenOn = false;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.keepScreenOn).toBe(false);
+      });
+    });
+
+    describe('setting-changed event dispatch', () => {
+      it('should dispatch setting-changed when keepScreenOn is toggled', () => {
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing; keepScreenOn toggle added by feature
+        settingsPanel._toggleSetting('keepScreenOn', false);
+
+        expect(settingsPanel.keepScreenOn).toBe(true);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'keepScreenOn', value: true },
+          })
+        );
+      });
+
+      it('should toggle keepScreenOn off when already on', () => {
+        settingsPanel.keepScreenOn = true;
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing; keepScreenOn toggle added by feature
+        settingsPanel._toggleSetting('keepScreenOn', true);
+
+        expect(settingsPanel.keepScreenOn).toBe(false);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'keepScreenOn', value: false },
+          })
+        );
+      });
+    });
+  });
 });
 
 describe('SettingsPanel panel title', () => {
