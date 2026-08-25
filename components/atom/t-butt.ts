@@ -142,6 +142,19 @@ export class TButt extends LitElement {
     .confirm-text {
       white-space: nowrap;
     }
+
+    /* disabled support: look disabled, no interaction */
+    :host([disabled]) .base,
+    .base:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    :host([disabled]) .base:hover,
+    :host([disabled]) .base:active,
+    .base:disabled:hover,
+    .base:disabled:active {
+      box-shadow: none;
+    }
   `;
 
   @property({ type: Boolean }) round = false;
@@ -156,6 +169,7 @@ export class TButt extends LitElement {
   @property({ type: String, reflect: true }) key = '';
   @property({ type: Boolean, reflect: true }) alt = false;
   @property({ type: Boolean, reflect: true }) shift = false;
+  @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: Boolean }) confirm = false;
   @property({ type: String }) confirmText = 'Are you sure?';
   @property({ type: String }) href = '';
@@ -181,7 +195,7 @@ export class TButt extends LitElement {
   }
 
   private _handleKeyDown(event: KeyboardEvent) {
-    if (this._isEditableKeyEvent(event)) return;
+    if (this.disabled || this._isEditableKeyEvent(event)) return;
 
     if (this._confirming && event.key === 'Escape') {
       event.preventDefault();
@@ -250,6 +264,11 @@ export class TButt extends LitElement {
   }
 
   private _handleClick(event: Event) {
+    if (this.disabled) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
     if (!this.confirm) return;
 
     if (this._confirming) {
@@ -329,7 +348,7 @@ export class TButt extends LitElement {
           : html`<slot></slot>`}
       </a>`;
     }
-    return html`<button class="${this._getClasses()}" @click=${this._handleClick}>
+    return html`<button class="${this._getClasses()}" ?disabled=${this.disabled} @click=${this._handleClick}>
       ${this._confirming
         ? html`<span class="confirm-text">${this.confirmText}</span>`
         : html`<slot></slot>`}

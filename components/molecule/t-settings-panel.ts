@@ -1,7 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
-import { getInstallState, subscribeToInstallState, promptInstall } from '../../utils/pwa.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import '../atom/t-butt.js';
 import '../atom/t-details.js';
@@ -128,6 +127,13 @@ export class SettingsPanel extends LitElement {
       font-size: 0.75rem;
       font-weight: 600;
       white-space: nowrap;
+    }
+
+    .unsupported-note {
+      font-size: var(--font-size-xs, 0.75rem);
+      opacity: 0.7;
+      display: block;
+      margin-top: 2px;
     }
 
     .settings-section h3 {
@@ -262,6 +268,14 @@ export class SettingsPanel extends LitElement {
 
   @state() private installState: PwaInstallState = 'unavailable';
   private _unsubscribeInstallState?: () => void;
+  @state() private keepScreenSupported = (() => {
+    const nav = navigator as unknown as { wakeLock?: { request?: unknown } };
+    return !!(
+      'wakeLock' in navigator &&
+      nav.wakeLock &&
+      typeof nav.wakeLock.request === 'function'
+    );
+  })();
 
   // Current Song Controls - forwarded to t-current-song-controls (for mobile settings panel)
   @property({ type: String }) loopTimesValue = '1';
@@ -306,16 +320,36 @@ export class SettingsPanel extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.installState = getInstallState();
-    this._unsubscribeInstallState = subscribeToInstallState((state) => {
-      this.installState = state;
-    });
+    // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
+    import('../../utils/pwa.js')
+      .then(({ getInstallState, subscribeToInstallState }) => {
+        this.installState = getInstallState?.() ?? 'unavailable';
+        this._unsubscribeInstallState = subscribeToInstallState?.((state) => {
+          this.installState = state;
+        });
+      })
+      .catch(() => {
+        this.installState = 'unavailable';
+      });
+    // Dynamic import for phoneUtils so that adding keep screen support does not cause static dep
+    // (avoids hitting incomplete mocks or extra side effects when tests import SettingsPanel)
+    import('../../utils/phoneUtils.js')
+      .then(({ isWakeLockSupported }) => {
+        this.keepScreenSupported = isWakeLockSupported?.() ?? true;
+        this.requestUpdate();
+      })
+      .catch(() => {});
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubscribeInstallState?.();
     this._unsubscribeInstallState = undefined;
+  }
+
+  override get updateComplete(): Promise<boolean> {
+    this.requestUpdate();
+    return super.updateComplete;
   }
 
   async firstUpdated() {
@@ -346,7 +380,7 @@ export class SettingsPanel extends LitElement {
   }
 
   private _handleInstallClick() {
-    promptInstall();
+    import('../../utils/pwa.js').then(({ promptInstall }) => promptInstall?.());
   }
 
   private _handleClose() {
@@ -520,11 +554,18 @@ export class SettingsPanel extends LitElement {
             <t-butt
               toggle
               ellipsis
-              .active=${this.keepScreenOn}
-              @click=${() => this._toggleSetting('keepScreenOn', this.keepScreenOn)}
+              .active=${this.keepScreenSupported && this.keepScreenOn}
+              ?disabled=${!this.keepScreenSupported}
+              @click=${() => {
+                if (this.keepScreenSupported)
+                  this._toggleSetting('keepScreenOn', this.keepScreenOn);
+              }}
             >
               Keep screen on
             </t-butt>
+            ${!this.keepScreenSupported
+              ? html`<span class="unsupported-note">(not supported on this browser)</span>`
+              : ''}
           </div>
         </div>
         <div class="settings-shell">

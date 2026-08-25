@@ -2131,6 +2131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       [TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, false],
       [TROFF_SETTING_SPACE_RESET_COUNTER, false],
       [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
+      [TROFF_SETTING_KEEP_SCREEN_ON, true],
     ];
     for (const [key, defaultValue] of defaultsIfUnset) {
       if (nDB.get(key) == null) {
