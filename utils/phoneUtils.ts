@@ -15,6 +15,13 @@ export function optimizeMobile() {
   }
 }
 
+export function isWakeLockSupported(): boolean {
+  const nav = navigator as unknown as {
+    wakeLock?: { request?: unknown };
+  };
+  return !!('wakeLock' in navigator && nav.wakeLock && typeof nav.wakeLock.request === 'function');
+}
+
 interface WakeLockSentinelLike {
   release(): Promise<void>;
   addEventListener?(type: 'release', listener: () => void): void;
@@ -56,7 +63,9 @@ export async function releaseWakeLock(): Promise<void> {
   if (wakeLockSentinel) {
     try {
       await wakeLockSentinel.release();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     wakeLockSentinel = null;
   }
 }
@@ -78,8 +87,7 @@ export async function updateWakeLockForPlayback(
 if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      const shouldKeep =
-        (lastIsPlaying || lastIsStartingPlayback) && getKeepScreenOn();
+      const shouldKeep = (lastIsPlaying || lastIsStartingPlayback) && getKeepScreenOn();
       if (shouldKeep) {
         void requestWakeLock();
       }

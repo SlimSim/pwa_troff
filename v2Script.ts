@@ -238,6 +238,8 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
     markerSlider.min = 0;
     markerSlider.max = songDuration;
     markerSlider.unit = 's';
+    configureMarkerSlider(markerSlider, currentSongData);
+
     if (setAudioTime) {
       console.log('markerSlider.getPlaybackStart()', markerSlider.getPlaybackStart());
       console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
@@ -248,8 +250,6 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
 
       getActiveMedia().currentTime = markerSlider.getPlaybackStart();
     }
-
-    configureMarkerSlider(markerSlider, currentSongData);
   } else if (markerSlider) {
     // No song selected, use default state
     markerSlider.markers = [];
@@ -2131,6 +2131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       [TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, false],
       [TROFF_SETTING_SPACE_RESET_COUNTER, false],
       [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
+      [TROFF_SETTING_KEEP_SCREEN_ON, true],
     ];
     for (const [key, defaultValue] of defaultsIfUnset) {
       if (nDB.get(key) == null) {

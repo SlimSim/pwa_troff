@@ -189,6 +189,21 @@ export class MarkerSlider extends LitElement {
     event.stopPropagation();
     this.startMarkerId = marker.id;
     this.value = this.getPlaybackStart();
+
+    // If the new start is at or after the current stop, reset stop to the
+    // last marker so the playback region always has positive duration.
+    if (this.markers.length > 0 && this.getPlaybackStart() >= this.getPlaybackStop()) {
+      const lastMarker = this.markers[this.markers.length - 1];
+      this.stopMarkerId = lastMarker.id + 'S';
+      this.dispatchEvent(
+        new CustomEvent('set-stop-marker', {
+          detail: { markerId: lastMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+
     this._dispatchValueChanged();
     this.dispatchEvent(
       new CustomEvent('set-start-marker', {
@@ -201,6 +216,22 @@ export class MarkerSlider extends LitElement {
 
   private _handleMarkerStop(event: CustomEvent, marker: TroffMarker) {
     event.stopPropagation();
+    this.stopMarkerId = marker.id + 'S';
+
+    // If the new stop is at or before the current start, reset start to the
+    // first marker so the playback region always has positive duration.
+    if (this.markers.length > 0 && this.getPlaybackStart() >= this.getPlaybackStop()) {
+      const firstMarker = this.markers[0];
+      this.startMarkerId = firstMarker.id;
+      this.dispatchEvent(
+        new CustomEvent('set-start-marker', {
+          detail: { markerId: firstMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+
     this.dispatchEvent(
       new CustomEvent('set-stop-marker', {
         detail: { markerId: marker.id },
