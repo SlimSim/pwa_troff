@@ -177,7 +177,10 @@ export class MediaParent extends LitElement {
       font-size: 0.9rem;
       opacity: 0.8;
       flex-shrink: 0;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        width 0.2s ease,
+        margin 0.2s ease;
     }
 
     .song-count.search-expanded {
@@ -192,7 +195,10 @@ export class MediaParent extends LitElement {
     .header-sort-btn,
     .header-find-btn {
       flex-shrink: 0;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        width 0.2s ease,
+        margin 0.2s ease;
     }
 
     .header-add-btn.search-expanded,
@@ -466,6 +472,19 @@ export class MediaParent extends LitElement {
     await this._loadSongs();
     this._restoreHeaderColorFromSavedState();
     this.currentSongKey = getCurrentSongKey() || '';
+
+    // Apply the saved navigation state on first load (not just on first open)
+    // so the song list is pre-positioned in the user's last view. This makes
+    // the app-start scroll land in that view instead of the default tracks
+    // view.
+    if (this._pendingNavState) {
+      this._applyNavigationState(this._pendingNavState);
+      this._pendingNavState = null;
+    }
+
+    // Pre-position the active song on first load so it is already in view the
+    // first time the song list is opened.
+    this._scrollActiveSongIntoView();
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
       this.visible = false; // close the song list when a song is selected
@@ -557,16 +576,126 @@ export class MediaParent extends LitElement {
           composed: true,
         })
       );
+      // Scroll the active song into view as the panel closes (it is already
+      // off-screen by then, so there is no visible jump) so it is pre-positioned
+      // for the next time the list opens.
+      this._scrollActiveSongIntoView();
     }
-    if (changedProperties.has('visible') && this.visible && this._pendingNavState) {
-      // First song-list expansion after load — restore saved nav state
-      this._applyNavigationState(this._pendingNavState);
-      this._pendingNavState = null;
+    if (changedProperties.has('visible') && this.visible) {
+      if (this._pendingNavState) {
+        // First song-list expansion after load — restore saved nav state
+        this._applyNavigationState(this._pendingNavState);
+        this._pendingNavState = null;
+      }
     }
     if (changedProperties.has('searchQuery')) {
       const items = this._getVisibleItems();
       this.highlightedIndex = items.length > 0 ? 0 : -1;
     }
+  }
+
+  /**
+   * Scroll the currently active song into view. This is triggered when the song
+   * list closes (and once on app start), not when it opens — by then the panel
+   * is off-screen so the scroll is invisible and the list is pre-positioned for
+   * the next open. We scroll ONLY the real scroll container (never the
+   * document/window) so the slide-down position and any sibling panels stay
+   * intact, and the song is simply brought into view rather than forced to the
+   * centre.
+   */
+  private _scrollActiveSongIntoView() {
+    void this.updateComplete.then(() => {
+      // Wait for the slide-in transition to finish and the sub-list to render.
+      setTimeout(() => {
+        const activeMedia = this._findActiveMediaElement();
+        if (!activeMedia) return;
+
+        // Find the actual scroll container for the song (it may be
+        // .songs-container, an inner list scroller, or the host itself).
+        const scroller = this._findScrollContainer(activeMedia);
+        if (!scroller) return;
+
+        const containerRect = scroller.getBoundingClientRect();
+        const elementRect = activeMedia.getBoundingClientRect();
+
+        // Already fully visible → leave it (avoids needless motion).
+        if (elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom) {
+          return;
+        }
+
+        // When the scroller is the host itself, the sticky song-list-header
+        // overlaps the scroll area, so keep the active song clear of it.
+        const headerOffset =
+          scroller === this
+            ? (this.shadowRoot?.querySelector<HTMLElement>('.song-list-header')?.offsetHeight ?? 0)
+            : 0;
+
+        let target: number;
+        if (elementRect.top < containerRect.top) {
+          // Above the viewport → align just below the sticky header.
+          target = scroller.scrollTop + (elementRect.top - containerRect.top) - headerOffset;
+        } else {
+          // Below the viewport → align to the bottom edge.
+          target = scroller.scrollTop + (elementRect.bottom - containerRect.bottom);
+        }
+        target = Math.max(0, target);
+        scroller.scrollTo({ top: target, behavior: 'instant' });
+      }, 350);
+    });
+  }
+
+  /**
+   * Walk up from `start` to the nearest scrollable ancestor that lives inside
+   * this panel. We deliberately stop at `this` so we never return the
+   * document/window as a scroll target. Shadow boundaries are crossed via the
+   * host element (a node's `parentElement` is null at the top of a shadow root).
+   */
+  private _findScrollContainer(start: HTMLElement): HTMLElement | null {
+    let node: HTMLElement | null = start;
+    while (node) {
+      if (this._isScrollable(node)) return node;
+      if (node === this) return null;
+      const parent: HTMLElement | null = node.parentElement;
+      if (parent) {
+        node = parent;
+      } else {
+        const root = node.getRootNode();
+        node = root instanceof ShadowRoot ? (root.host as HTMLElement) : null;
+      }
+    }
+    return null;
+  }
+
+  private _isScrollable(el: HTMLElement): boolean {
+    const overflowY = getComputedStyle(el).overflowY;
+    return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
+  }
+
+  /**
+   * Traverse shadow DOM boundaries to find the active `t-media` element
+   * inside whichever sub-list is currently rendered.
+   */
+  private _findActiveMediaElement(): HTMLElement | null {
+    const selectorMap: Record<string, string> = {
+      tracks: 't-track-list',
+      artists: 't-artist-list',
+      genre: 't-genre-list',
+      groups: 't-group-list',
+    };
+    const listSelector = selectorMap[this.currentFilter];
+    if (!listSelector) return null;
+
+    const listEl = this.shadowRoot?.querySelector<HTMLElement>(listSelector);
+    if (!listEl?.shadowRoot) return null;
+
+    // In a detail view the active song is a `t-media[active]` row. In a list
+    // view (tracks/artists/genres/groups collapsed) the related item is marked
+    // with `data-current-song` (e.g. the artist/genre/group that contains the
+    // currently selected song).
+    return (
+      listEl.shadowRoot.querySelector<HTMLElement>('t-media[active]') ??
+      listEl.shadowRoot.querySelector<HTMLElement>('[data-current-song]')
+    );
   }
 
   // Ctrl/Cmd+F opens the song view and focuses the search input.
@@ -1556,207 +1685,68 @@ export class MediaParent extends LitElement {
     const headerTitle = filterTitles[this.currentFilter] || 'Song List';
 
     return html`
-      ${hideSongListHeader ? '' : html`
-      <div class="song-list-header">
-        <h3 class="song-list-title">${headerTitle}</h3>
+      ${hideSongListHeader
+        ? ''
+        : html`
+            <div class="song-list-header">
+              <h3 class="song-list-title">${headerTitle}</h3>
 
-        ${this.currentFilter === 'tracks'
-          ? html`
-              <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
-                <!-- Add Songs Button -->
-                <t-butt
-                  icon
-                  class="header-add-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  @click=${this._handleAddSong}
-                  title="Add songs"
-                >
-                  <t-icon name="note-plus"></t-icon>
-                </t-butt>
-
-                <!-- Song Count -->
-                <div class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}">
-                  <t-icon name="note"></t-icon> ${songs.length}
-                </div>
-
-                <!-- Sort/Filter Button with Dropdown -->
-                <t-dropdown-button
-                  class="header-sort-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  .open=${this.showSortDropdown}
-                  @dropdown-toggled=${this._handleSortDropdownToggled}
-                >
-                  <t-butt icon slot="button" title="Sort options">
-                    <t-icon name="sort"></t-icon>
-                  </t-butt>
-                  <div slot="dropdown">${this._renderSortDropdown()}</div>
-                </t-dropdown-button>
-
-                <t-butt
-                  href="/find.html"
-                  target="_blank"
-                  icon
-                  class="header-find-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  @click=${this._handleSearchSongs}
-                  title="Find new songs!"
-                >
-                  <t-icon name="note-search"></t-icon>
-                </t-butt>
-
-                <!-- Search Tracks Input -->
-                <div class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}">
-                  <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
-                  <t-input
-                    class="search-input"
-                    slim
-                    clearable
-                    placeholder="Search tracks…"
-                    aria-label="Search tracks…"
-                    .value=${this.searchQuery}
-                    @input=${this._handleSearchInput}
-                    @keydown=${this._handleSearchKeydown}
-                    @focus=${this._handleSearchFocus}
-                    @blur=${this._handleSearchBlur}
-                  ></t-input>
-                </div>
-              </div>
-            `
-          : ''}
-        ${this.currentFilter === 'artists'
-          ? html`
-              <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
-                <!-- Add Artist Button -->
-                <t-butt
-                  icon
-                  class="header-add-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  @click=${this._handleAddSong}
-                  title="Add artist"
-                >
-                  <t-icon name="note-plus"></t-icon>
-                </t-butt>
-
-                <!-- Artist Count -->
-                <div class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}">
-                  <t-icon name="note"></t-icon> ${this._getUniqueArtists(songs).length}
-                </div>
-
-                <!-- Sort/Filter Button with Dropdown -->
-                <t-dropdown-button
-                  class="header-sort-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  .open=${this.showArtistSortDropdown}
-                  @dropdown-toggled=${this._handleArtistSortDropdownToggled}
-                >
-                  <t-butt icon slot="button" title="Sort options">
-                    <t-icon name="sort"></t-icon>
-                  </t-butt>
-                  <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
-                </t-dropdown-button>
-
-                <!-- Search Artists Input -->
-                <div class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}">
-                  <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
-                  <t-input
-                    class="search-input"
-                    slim
-                    clearable
-                    placeholder="Search artists…"
-                    aria-label="Search artists…"
-                    .value=${this.searchQuery}
-                    @input=${this._handleSearchInput}
-                    @keydown=${this._handleSearchKeydown}
-                    @focus=${this._handleSearchFocus}
-                    @blur=${this._handleSearchBlur}
-                  ></t-input>
-                </div>
-              </div>
-            `
-          : ''}
-        ${this.currentFilter === 'genre'
-          ? html`
-              <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
-                <!-- Add Genre Button -->
-                <t-butt
-                  icon
-                  class="header-add-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  @click=${this._handleAddSong}
-                  title="Add genre"
-                >
-                  <t-icon name="note-plus"></t-icon>
-                </t-butt>
-
-                <!-- Genre Count -->
-                <div class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}">
-                  <t-icon name="note"></t-icon> ${this._getUniqueGenres(songs).length}
-                </div>
-
-                <!-- Sort/Filter Button with Dropdown -->
-                <t-dropdown-button
-                  class="header-sort-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                  .open=${this.showGenreSortDropdown}
-                  @dropdown-toggled=${this._handleGenreSortDropdownToggled}
-                >
-                  <t-butt icon slot="button" title="Sort options">
-                    <t-icon name="sort"></t-icon>
-                  </t-butt>
-                  <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
-                </t-dropdown-button>
-
-                <!-- Search Genres Input -->
-                <div class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}">
-                  <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
-                  <t-input
-                    class="search-input"
-                    slim
-                    clearable
-                    placeholder="Search genres…"
-                    aria-label="Search genres…"
-                    .value=${this.searchQuery}
-                    @input=${this._handleSearchInput}
-                    @keydown=${this._handleSearchKeydown}
-                    @focus=${this._handleSearchFocus}
-                    @blur=${this._handleSearchBlur}
-                  ></t-input>
-                </div>
-              </div>
-            `
-          : ''}
-        ${this.currentFilter === 'groups'
-          ? html`
-              <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
-                ${this._currentGroupKey
-                  ? '' /* Controls moved to t-group-list detail-header */
-                  : html`
-                      <!-- Not in a group: Add group, group count, search groups -->
+              ${this.currentFilter === 'tracks'
+                ? html`
+                    <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
+                      <!-- Add Songs Button -->
                       <t-butt
                         icon
                         class="header-add-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                        @click=${this._handleAddGroup}
-                        title="Add group"
+                        @click=${this._handleAddSong}
+                        title="Add songs"
                       >
-                        <t-icon name="group-plus"></t-icon>
+                        <t-icon name="note-plus"></t-icon>
                       </t-butt>
+
+                      <!-- Song Count -->
                       <div class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}">
-                        <t-icon name="note"></t-icon> ${this.groups.length}
+                        <t-icon name="note"></t-icon> ${songs.length}
                       </div>
 
                       <!-- Sort/Filter Button with Dropdown -->
                       <t-dropdown-button
                         class="header-sort-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
-                        .open=${this.showGroupSortDropdown}
-                        @dropdown-toggled=${this._handleGroupSortDropdownToggled}
+                        .open=${this.showSortDropdown}
+                        @dropdown-toggled=${this._handleSortDropdownToggled}
                       >
                         <t-butt icon slot="button" title="Sort options">
                           <t-icon name="sort"></t-icon>
                         </t-butt>
-                        <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
+                        <div slot="dropdown">${this._renderSortDropdown()}</div>
                       </t-dropdown-button>
 
-                      <div class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}">
-                        <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
+                      <t-butt
+                        href="/find.html"
+                        target="_blank"
+                        icon
+                        class="header-find-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
+                        @click=${this._handleSearchSongs}
+                        title="Find new songs!"
+                      >
+                        <t-icon name="note-search"></t-icon>
+                      </t-butt>
+
+                      <!-- Search Tracks Input -->
+                      <div
+                        class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}"
+                      >
+                        <t-icon
+                          class="search-compact-icon"
+                          name="search"
+                          aria-hidden="true"
+                        ></t-icon>
                         <t-input
                           class="search-input"
                           slim
                           clearable
-                          placeholder="Search groups…"
-                          aria-label="Search groups…"
+                          placeholder="Search tracks…"
+                          aria-label="Search tracks…"
                           .value=${this.searchQuery}
                           @input=${this._handleSearchInput}
                           @keydown=${this._handleSearchKeydown}
@@ -1764,12 +1754,185 @@ export class MediaParent extends LitElement {
                           @blur=${this._handleSearchBlur}
                         ></t-input>
                       </div>
-                    `}
-              </div>
-            `
-          : ''}
-      </div>
-      `}
+                    </div>
+                  `
+                : ''}
+              ${this.currentFilter === 'artists'
+                ? html`
+                    <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
+                      <!-- Add Artist Button -->
+                      <t-butt
+                        icon
+                        class="header-add-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
+                        @click=${this._handleAddSong}
+                        title="Add artist"
+                      >
+                        <t-icon name="note-plus"></t-icon>
+                      </t-butt>
+
+                      <!-- Artist Count -->
+                      <div class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}">
+                        <t-icon name="note"></t-icon> ${this._getUniqueArtists(songs).length}
+                      </div>
+
+                      <!-- Sort/Filter Button with Dropdown -->
+                      <t-dropdown-button
+                        class="header-sort-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
+                        .open=${this.showArtistSortDropdown}
+                        @dropdown-toggled=${this._handleArtistSortDropdownToggled}
+                      >
+                        <t-butt icon slot="button" title="Sort options">
+                          <t-icon name="sort"></t-icon>
+                        </t-butt>
+                        <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
+                      </t-dropdown-button>
+
+                      <!-- Search Artists Input -->
+                      <div
+                        class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}"
+                      >
+                        <t-icon
+                          class="search-compact-icon"
+                          name="search"
+                          aria-hidden="true"
+                        ></t-icon>
+                        <t-input
+                          class="search-input"
+                          slim
+                          clearable
+                          placeholder="Search artists…"
+                          aria-label="Search artists…"
+                          .value=${this.searchQuery}
+                          @input=${this._handleSearchInput}
+                          @keydown=${this._handleSearchKeydown}
+                          @focus=${this._handleSearchFocus}
+                          @blur=${this._handleSearchBlur}
+                        ></t-input>
+                      </div>
+                    </div>
+                  `
+                : ''}
+              ${this.currentFilter === 'genre'
+                ? html`
+                    <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
+                      <!-- Add Genre Button -->
+                      <t-butt
+                        icon
+                        class="header-add-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
+                        @click=${this._handleAddSong}
+                        title="Add genre"
+                      >
+                        <t-icon name="note-plus"></t-icon>
+                      </t-butt>
+
+                      <!-- Genre Count -->
+                      <div class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}">
+                        <t-icon name="note"></t-icon> ${this._getUniqueGenres(songs).length}
+                      </div>
+
+                      <!-- Sort/Filter Button with Dropdown -->
+                      <t-dropdown-button
+                        class="header-sort-btn ${this.isSearchFocused ? 'search-expanded' : ''}"
+                        .open=${this.showGenreSortDropdown}
+                        @dropdown-toggled=${this._handleGenreSortDropdownToggled}
+                      >
+                        <t-butt icon slot="button" title="Sort options">
+                          <t-icon name="sort"></t-icon>
+                        </t-butt>
+                        <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
+                      </t-dropdown-button>
+
+                      <!-- Search Genres Input -->
+                      <div
+                        class="search-compact-wrap ${this.isSearchFocused ? 'search-expanded' : ''}"
+                      >
+                        <t-icon
+                          class="search-compact-icon"
+                          name="search"
+                          aria-hidden="true"
+                        ></t-icon>
+                        <t-input
+                          class="search-input"
+                          slim
+                          clearable
+                          placeholder="Search genres…"
+                          aria-label="Search genres…"
+                          .value=${this.searchQuery}
+                          @input=${this._handleSearchInput}
+                          @keydown=${this._handleSearchKeydown}
+                          @focus=${this._handleSearchFocus}
+                          @blur=${this._handleSearchBlur}
+                        ></t-input>
+                      </div>
+                    </div>
+                  `
+                : ''}
+              ${this.currentFilter === 'groups'
+                ? html`
+                    <div class="header-controls ${this.isSearchFocused ? 'search-expanded' : ''}">
+                      ${this._currentGroupKey
+                        ? '' /* Controls moved to t-group-list detail-header */
+                        : html`
+                            <!-- Not in a group: Add group, group count, search groups -->
+                            <t-butt
+                              icon
+                              class="header-add-btn ${this.isSearchFocused
+                                ? 'search-expanded'
+                                : ''}"
+                              @click=${this._handleAddGroup}
+                              title="Add group"
+                            >
+                              <t-icon name="group-plus"></t-icon>
+                            </t-butt>
+                            <div
+                              class="song-count ${this.isSearchFocused ? 'search-expanded' : ''}"
+                            >
+                              <t-icon name="note"></t-icon> ${this.groups.length}
+                            </div>
+
+                            <!-- Sort/Filter Button with Dropdown -->
+                            <t-dropdown-button
+                              class="header-sort-btn ${this.isSearchFocused
+                                ? 'search-expanded'
+                                : ''}"
+                              .open=${this.showGroupSortDropdown}
+                              @dropdown-toggled=${this._handleGroupSortDropdownToggled}
+                            >
+                              <t-butt icon slot="button" title="Sort options">
+                                <t-icon name="sort"></t-icon>
+                              </t-butt>
+                              <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
+                            </t-dropdown-button>
+
+                            <div
+                              class="search-compact-wrap ${this.isSearchFocused
+                                ? 'search-expanded'
+                                : ''}"
+                            >
+                              <t-icon
+                                class="search-compact-icon"
+                                name="search"
+                                aria-hidden="true"
+                              ></t-icon>
+                              <t-input
+                                class="search-input"
+                                slim
+                                clearable
+                                placeholder="Search groups…"
+                                aria-label="Search groups…"
+                                .value=${this.searchQuery}
+                                @input=${this._handleSearchInput}
+                                @keydown=${this._handleSearchKeydown}
+                                @focus=${this._handleSearchFocus}
+                                @blur=${this._handleSearchBlur}
+                              ></t-input>
+                            </div>
+                          `}
+                    </div>
+                  `
+                : ''}
+            </div>
+          `}
       <!-- Hidden file input for adding songs -->
       <input
         type="file"
@@ -1826,7 +1989,7 @@ export class MediaParent extends LitElement {
                       <t-track-list
                         .tracks=${visibleTracks}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                        currentSongKey=${this.currentSongKey}
+                        .currentSongKey=${this.currentSongKey}
                       ></t-track-list>
                     `
                 : ''}
@@ -1845,7 +2008,7 @@ export class MediaParent extends LitElement {
                         .artists=${visibleArtists}
                         .tracks=${songs}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                        currentSongKey=${this.currentSongKey}
+                        .currentSongKey=${this.currentSongKey}
                       ></t-artist-list>
                     `
                 : ''}
@@ -1864,7 +2027,7 @@ export class MediaParent extends LitElement {
                         .genres=${visibleGenres}
                         .tracks=${songs}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                        currentSongKey=${this.currentSongKey}
+                        .currentSongKey=${this.currentSongKey}
                       ></t-genre-list>
                     `
                 : ''}
@@ -1883,7 +2046,7 @@ export class MediaParent extends LitElement {
                         .groups=${visibleGroups}
                         .tracks=${songs}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
-                        currentSongKey=${this.currentSongKey}
+                        .currentSongKey=${this.currentSongKey}
                       ></t-group-list>
                     `
                 : ''}

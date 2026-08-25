@@ -20,16 +20,8 @@ type ToggleSetting =
   | 'playResetCounter'
   | 'playGoToMarker'
   | 'extendedMarkerColor'
-  | 'extraExtendedMarkerColor';
-
-type SongAction =
-  | 'zoomOut'
-  | 'zoom'
-  | 'importExport'
-  | 'copyMarkers'
-  | 'moveMarkers'
-  | 'deleteMarkers'
-  | 'stretchMarkers';
+  | 'extraExtendedMarkerColor'
+  | 'keepScreenOn';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -97,6 +89,10 @@ export class SettingsPanel extends LitElement {
 
       justify-content: space-around;
       margin: -4px;
+    }
+
+    .settings-width {
+      width: var(--settings-column-width);
     }
 
     .settings-group {
@@ -232,22 +228,6 @@ export class SettingsPanel extends LitElement {
       justify-content: stretch;
     }
 
-    .state-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 8px;
-    }
-
-    .state-item {
-      display: flex;
-      gap: 4px;
-    }
-
-    .state-item t-butt:first-child {
-      flex: 1;
-    }
-
     /* Responsive design */
     @media (min-width: 576px) {
       .panel-content {
@@ -322,7 +302,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) playGoToMarker = true;
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
-  @property({ type: Array }) songStates: string[] = [];
+  @property({ type: Boolean }) keepScreenOn = true;
 
   connectedCallback() {
     super.connectedCallback();
@@ -383,16 +363,6 @@ export class SettingsPanel extends LitElement {
     this.dispatchEvent(
       new CustomEvent('setting-changed', {
         detail: { setting, value },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  private _handleSongAction(action: SongAction) {
-    this.dispatchEvent(
-      new CustomEvent('song-action-requested', {
-        detail: { action },
         bubbles: true,
         composed: true,
       })
@@ -470,6 +440,9 @@ export class SettingsPanel extends LitElement {
       case 'extraExtendedMarkerColor':
         this.extraExtendedMarkerColor = nextValue;
         break;
+      case 'keepScreenOn':
+        this.keepScreenOn = nextValue;
+        break;
       default:
         return;
     }
@@ -491,51 +464,10 @@ export class SettingsPanel extends LitElement {
     return current === loopTimes;
   }
 
-  private _renderSongActionButton(action: SongAction, label: string) {
-    return html`
-      <t-butt ellipsis @click=${() => this._handleSongAction(action)}>${label}</t-butt>
-    `;
-  }
-
   private _handleCurrentSongSettingChange(event: CustomEvent) {
     const { setting, value } = event.detail;
     // Forward the event from t-current-song-controls
     this._handleSettingChange(setting, value);
-  }
-
-  private _handleCurrentSongAction(event: CustomEvent) {
-    const { action } = event.detail;
-    this._handleSongAction(action);
-  }
-
-  private _handleRememberState() {
-    this.dispatchEvent(
-      new CustomEvent('song-action-requested', {
-        detail: { action: 'rememberState' },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  private _handleSetState(index: number) {
-    this.dispatchEvent(
-      new CustomEvent('song-action-requested', {
-        detail: { action: 'setState', index },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  private _handleRemoveState(index: number) {
-    this.dispatchEvent(
-      new CustomEvent('song-action-requested', {
-        detail: { action: 'removeState', index },
-        bubbles: true,
-        composed: true,
-      })
-    );
   }
 
   render() {
@@ -576,38 +508,7 @@ export class SettingsPanel extends LitElement {
             .incrementUntillDisabled=${this.incrementUntillDisabled}
             .tempo=${this.tempo}
             @setting-changed=${this._handleCurrentSongSettingChange}
-            @song-action-requested=${this._handleCurrentSongAction}
           ></t-current-song-controls>
-
-          <t-details
-            title="States"
-            text="Remember selected markers, tempo, loops and more to quickly restore your song settings."
-          >
-            <div class="settings-section">
-              <div class="settings-grid">
-                <t-butt @click=${() => this._handleRememberState()}>Remember state</t-butt>
-                <div id="stateList" class="state-list">
-                  ${(this.songStates || []).map((stateStr: string, i: number) => {
-                    let displayName = `State ${i + 1}`;
-                    try {
-                      const st = JSON.parse(stateStr) as { name?: string };
-                      if (st && typeof st.name === 'string' && st.name) displayName = st.name;
-                    } catch {
-                      /* ignore parse error for display name */
-                    }
-                    return html`
-                      <div class="state-item">
-                        <t-butt @click=${() => this._handleSetState(i)}>${displayName}</t-butt>
-                        <t-butt @click=${() => this._handleRemoveState(i)}
-                          ><t-icon name="delete"></t-icon
-                        ></t-butt>
-                      </div>
-                    `;
-                  })}
-                </div>
-              </div>
-            </div>
-          </t-details>
         </div>
         <div class="settings-shell">
           <div class="settings-section" style="margin-top: 16px; margin-bottom: 0;">
@@ -615,11 +516,21 @@ export class SettingsPanel extends LitElement {
               These key and button behaviors apply across Troff, not just this song.
             </t-help-tip>
           </div>
-          <div class="settings-section" style="margin: 0;"></div>
+          <div class="settings-section" style="margin: 0;">
+            <t-butt
+              toggle
+              ellipsis
+              .active=${this.keepScreenOn}
+              @click=${() => this._toggleSetting('keepScreenOn', this.keepScreenOn)}
+            >
+              Keep screen on
+            </t-butt>
+          </div>
         </div>
         <div class="settings-shell">
           <t-details
             title="Behaviour of keys and buttons"
+            class="settings-width"
             text="Configure what happens when you press the Enter key, Space key, or Play button."
           >
             <div class="settings-section">
@@ -729,8 +640,8 @@ export class SettingsPanel extends LitElement {
 
           <t-details
             title="Marker color"
+            class="settings-width"
             text="Control how markers extend their color across the timeline."
-            style="margin-top: 16px;"
           >
             <div class="settings-grid">
               <div class="setting-item">
@@ -763,8 +674,8 @@ export class SettingsPanel extends LitElement {
 
           <t-details
             title="Default Song Values"
+            class="settings-width"
             text="When loading a new song, these values will be the ones that the song get."
-            style="margin-top: 16px;"
           >
             <div class="song-stepper-grid">
               <t-dial
@@ -924,7 +835,7 @@ export class SettingsPanel extends LitElement {
           </t-details>
         </div>
 
-        <div style="margin-top: 16px;">
+        <div>
           <span class="scope-badge">Version: ${this.versionNumber}</span>
         </div>
       </div>

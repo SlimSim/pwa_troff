@@ -11,9 +11,11 @@ import './components/molecule/t-group-dialog.js';
 import './components/molecule/t-song-edit-dialog.js';
 import type { SongEditDialog } from './components/molecule/t-song-edit-dialog.js';
 import type { ShareSongDialog } from './components/molecule/t-share-song-dialog.js';
+import type { TextInputDialog } from './components/molecule/t-text-input-dialog.js';
 import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/molecule/t-share-song-dialog.js';
+import './components/molecule/t-text-input-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import './components/organisms/t-video-player.js';
 import {
@@ -76,6 +78,7 @@ import {
   TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_KEEP_SCREEN_ON,
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { showToast } from './utils/notification.js';
@@ -97,6 +100,7 @@ import {
   addAndStartSentry,
 } from './utils/sentry.js';
 import { getManifest } from './utils/manifestHelper.js';
+import { updateWakeLockForPlayback } from './utils/phoneUtils.js';
 
 // Hostname→Sentry environment mapping — mirrors utils/firebase-getter.ts
 // (which itself mirrors the legacy assets/internal/environment.ts selection).
@@ -1064,7 +1068,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const songKey = getCurrentSongKey();
     const songData = songKey ? nDB.get(songKey) : null;
-    settingsPanel.songStates = songKey && songData && Array.isArray(songData.aStates) ? songData.aStates : [];
+    const states = songKey && songData && Array.isArray(songData.aStates) ? songData.aStates : [];
+    type SongStatesHost = HTMLElement & { songStates?: string[] };
+    if (currentSongControls) (currentSongControls as SongStatesHost).songStates = states;
+    const settingsCtl = settingsPanel?.shadowRoot?.querySelector('#settingsCurrentSongControls') as SongStatesHost | null;
+    if (settingsCtl) settingsCtl.songStates = states;
     const rawLoopTimes =
       songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
     const configuredLoops = parseConfiguredLoopTimes(rawLoopTimes);
@@ -1120,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) ?? true;
     settingsPanel.playGoToMarker =
       nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
+    settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -1333,6 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = true;
       footer.playbackCountdown = countdownSeconds;
     }
+    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
 
     if (header) {
       header.statusCountdown = `${countdownSeconds}s`;
@@ -1349,6 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = false;
       footer.playbackCountdown = 0;
     }
+    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
 
     updateHeaderCountdownDisplay();
   };
@@ -1568,40 +1579,66 @@ document.addEventListener('DOMContentLoaded', () => {
     const songData = nDB.get(songKey) || {};
     const existingStates: string[] = Array.isArray(songData.aStates) ? songData.aStates : [];
     const suggested = 'State ' + (existingStates.length + 1);
-    const name = window.prompt('Remember state of settings to be recalled later', suggested);
-    if (!name || name.trim() === '') {
-      return;
+
+    // Lazily create/get the dialog (same lazy pattern as the share/marker-tools dialogs)
+    let textDialog = document.querySelector('t-text-input-dialog') as TextInputDialog | null;
+    if (!textDialog) {
+      textDialog = document.createElement('t-text-input-dialog');
+      document.body.append(textDialog);
     }
-    const parseNum = (v: unknown, fb: number) => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : fb;
+
+    const onDialogEvent = (event: Event) => {
+      textDialog.removeEventListener('text-input-confirmed', onDialogEvent);
+      textDialog.removeEventListener('dialog-cancelled', onDialogEvent);
+      if (event.type === 'text-input-confirmed') {
+        const name = (event as CustomEvent<{ value: string }>).detail.value.trim();
+        if (!name) {
+          return;
+        }
+        // ---- existing state-building logic (unchanged) ----
+        const parseNum = (v: unknown, fb: number) => {
+          const n = Number(v);
+          return Number.isFinite(n) ? n : fb;
+        };
+        const state: State = {
+          name,
+          currentMarker: markerSlider ? markerSlider.startMarkerId : (songData.currentStartMarker || ''),
+          currentStopMarker: markerSlider ? markerSlider.stopMarkerId : (songData.currentStopMarker || ''),
+          currentLoop: songData.loopTimes !== undefined ? songData.loopTimes : '1',
+          buttPauseBefStart: songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart !== false,
+          buttStartBefore: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore !== false,
+          buttStopAfter: songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter !== false,
+          buttWaitBetweenLoops: songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops !== false,
+          buttIncrementUntil: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === true,
+          pauseBeforeStart: parseNum(songData.TROFF_VALUE_pauseBeforeStart, parseNum(footer?.pauseBefore, 3)),
+          speedBar: parseNum(songData.TROFF_VALUE_speedBar, parseNum(footer?.speed, 100)),
+          startBefore: parseNum(songData.TROFF_VALUE_startBefore, 0),
+          stopAfter: parseNum(songData.TROFF_VALUE_stopAfter, 0),
+          volumeBar: parseNum(songData.TROFF_VALUE_volumeBar, parseNum(footer?.volume, 75)),
+          waitBetweenLoops: parseNum(songData.TROFF_VALUE_waitBetweenLoops, parseNum(footer?.waitBetween, 1)),
+        };
+        const aStates: string[] = existingStates.slice();
+        aStates.push(JSON.stringify(state));
+        nDB.setOnSong(songKey, 'aStates', aStates);
+        void saveSongData(songKey);
+        syncSettingsPanelValues();
+        syncCurrentSongControlsValues();
+        // Deliberately do NOT touch the marker slider here.
+        // Remembering a state only snapshots the *current settings* (loop times,
+        // dials, start/stop markers, etc.) into aStates. It must never alter
+        // the timeline, markers, zoom, or playback position.
+      }
+      // 'dialog-cancelled' or empty name → nothing to do
     };
-    const state: State = {
-      name: name.trim(),
-      currentMarker: markerSlider ? markerSlider.startMarkerId : (songData.currentStartMarker || ''),
-      currentStopMarker: markerSlider ? markerSlider.stopMarkerId : (songData.currentStopMarker || ''),
-      currentLoop: songData.loopTimes !== undefined ? songData.loopTimes : '1',
-      buttPauseBefStart: songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart !== false,
-      buttStartBefore: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore !== false,
-      buttStopAfter: songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter !== false,
-      buttWaitBetweenLoops: songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops !== false,
-      buttIncrementUntil: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === true,
-      pauseBeforeStart: parseNum(songData.TROFF_VALUE_pauseBeforeStart, parseNum(footer?.pauseBefore, 3)),
-      speedBar: parseNum(songData.TROFF_VALUE_speedBar, parseNum(footer?.speed, 100)),
-      startBefore: parseNum(songData.TROFF_VALUE_startBefore, 0),
-      stopAfter: parseNum(songData.TROFF_VALUE_stopAfter, 0),
-      volumeBar: parseNum(songData.TROFF_VALUE_volumeBar, parseNum(footer?.volume, 75)),
-      waitBetweenLoops: parseNum(songData.TROFF_VALUE_waitBetweenLoops, parseNum(footer?.waitBetween, 1)),
-    };
-    const aStates: string[] = existingStates.slice();
-    aStates.push(JSON.stringify(state));
-    nDB.setOnSong(songKey, 'aStates', aStates);
-    void saveSongData(songKey);
-    syncSettingsPanelValues();
-    syncCurrentSongControlsValues();
-    if (markerSlider) {
-      updateMarkerSlider(markerSlider);
-    }
+
+    textDialog.title = 'Remember state';
+    textDialog.label = 'State name';
+    textDialog.placeholder = 'Name this state';
+    textDialog.initialValue = suggested;
+    textDialog.required = true;
+    textDialog.addEventListener('text-input-confirmed', onDialogEvent);
+    textDialog.addEventListener('dialog-cancelled', onDialogEvent);
+    textDialog.open = true;
   };
 
   const setState = (index: number) => {
@@ -1678,9 +1715,9 @@ document.addEventListener('DOMContentLoaded', () => {
     nDB.setOnSong(songKey, 'aStates', aStates);
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
-    if (markerSlider) {
-      updateMarkerSlider(markerSlider);
-    }
+    // Deliberately do NOT touch the marker slider here.
+    // Removing a state only affects the list of saved states.
+    // It must never alter the timeline, markers, or playback position.
   };
 
   if (footer && settingsPanel) {
@@ -1904,6 +1941,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playGoToMarker: TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
         extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+        keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -1912,6 +1950,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       nDB.set(storageKey, value === true);
+      if (setting === 'keepScreenOn') {
+        void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+      }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
 
@@ -2487,9 +2528,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const waitBetweenDelay = getWaitBetweenDelay();
         isLoopTransitionPause = true;
-        getActiveMedia().pause();
         getActiveMedia().currentTime = playbackStart;
         schedulePlaybackAfterDelay(waitBetweenDelay);
+        if (waitBetweenDelay > 0) {
+          getActiveMedia().pause();
+        }
       }
     };
     const onPlay = () => {
@@ -2497,9 +2540,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (footer) {
         footer.isPlaying = true;
       }
+      void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
       updateHeaderCountdownDisplay();
     };
     const onPause = () => {
+      const wasLoopTransition = isLoopTransitionPause;
       if (isLoopTransitionPause) {
         isLoopTransitionPause = false;
       } else {
@@ -2507,6 +2552,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (footer) {
         footer.isPlaying = false;
+      }
+      if (!wasLoopTransition) {
+        void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
       }
       updateHeaderCountdownDisplay();
     };

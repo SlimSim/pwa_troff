@@ -18,6 +18,16 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
   // Will be assigned the spied saveSongData from the firebase-realtime mock.
   let saveSongDataMock: ReturnType<typeof vi.fn>;
 
+  // Captured audio mock so tests can inspect/set playback position.
+  let audioMock: {
+    currentTime: number;
+    duration: number;
+    playbackRate: number;
+    volume: number;
+    paused: boolean;
+    addEventListener: ReturnType<typeof vi.fn>;
+  };
+
   function createRequiredDom() {
     document.body.innerHTML = '';
 
@@ -89,17 +99,15 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
       },
     }));
 
-    vi.doMock('../services/audio.js', () => ({
-      audio: {
-        currentTime: 0,
-        duration: 180,
-        playbackRate: 1,
-        volume: 1,
-        paused: true,
-        addEventListener: vi.fn(),
-      },
-      loadSong: vi.fn(),
-    }));
+    audioMock = {
+      currentTime: 0,
+      duration: 180,
+      playbackRate: 1,
+      volume: 1,
+      paused: true,
+      addEventListener: vi.fn(),
+    };
+    vi.doMock('../services/audio.js', () => ({ audio: audioMock, loadSong: vi.fn() }));
 
     vi.doMock('../utils/firebase-sync.js', () => ({
       syncFirebaseGroups: vi.fn().mockResolvedValue(undefined),
@@ -369,15 +377,55 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
       expect(saveSongDataMock).toHaveBeenCalledWith('test-song.mp3');
     });
 
-    it('calls saveSongData after create state (rememberCurrentState / prompt)', async () => {
+    it('calls saveSongData after create state (rememberCurrentState / dialog)', async () => {
       createRequiredDom();
       nDBStore['test-song.mp3'] = { markers: [], aStates: [] };
       mockModules();
       await bootV2Script();
       saveSongDataMock.mockClear();
 
-      const promptSpy = vi.fn(() => 'Test Prompt State');
-      vi.stubGlobal('prompt', promptSpy);
+      const settingsPanel = document.getElementById('settingsPanel')!;
+      // Current (pre-feature) implementation still calls window.prompt (not a function in
+      // happy-dom), which surfaces as an unhandled rejection; once the dialog replaces it,
+      // this dispatch opens the dialog instead. The assertion below is the intended RED.
+      settingsPanel.dispatchEvent(
+        new CustomEvent('song-action-requested', {
+          detail: { action: 'rememberState' },
+          bubbles: true,
+          composed: true,
+        })
+      );
+
+      // The handler must open the new in-app text-input dialog instead of window.prompt().
+      const dialog = document.querySelector('t-text-input-dialog') as (HTMLElement & { open: boolean }) | null;
+      expect(dialog).toBeTruthy();
+      expect(dialog!.open).toBe(true);
+
+      // Simulate the user confirming the dialog with a state name.
+      dialog!.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'Test Prompt State' },
+          bubbles: true,
+          composed: true,
+        })
+      );
+
+      expect(saveSongDataMock).toHaveBeenCalledTimes(1);
+      expect(saveSongDataMock).toHaveBeenCalledWith('test-song.mp3');
+    });
+
+    it('does NOT reset playback position when a state is remembered', async () => {
+      createRequiredDom();
+      nDBStore['test-song.mp3'] = { markers: [], aStates: [] };
+      mockModules();
+      await bootV2Script();
+      // Re-acquire the mocked save fn (consistent with the multi-state test for mock timing).
+      const { saveSongData: boundSave } = await import('../utils/firebase-realtime.js');
+      saveSongDataMock = boundSave as ReturnType<typeof vi.fn>;
+      saveSongDataMock.mockClear();
+
+      // Simulate mid-playback.
+      audioMock.currentTime = 42;
 
       const settingsPanel = document.getElementById('settingsPanel')!;
       settingsPanel.dispatchEvent(
@@ -388,11 +436,24 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
         })
       );
 
-      expect(promptSpy).toHaveBeenCalled();
-      expect(saveSongDataMock).toHaveBeenCalledTimes(1);
-      expect(saveSongDataMock).toHaveBeenCalledWith('test-song.mp3');
+      const dialog = document.querySelector('t-text-input-dialog') as (HTMLElement & { open: boolean }) | null;
+      expect(dialog).toBeTruthy();
+      expect(dialog!.open).toBe(true);
 
-      vi.unstubAllGlobals();
+      dialog!.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'My State' },
+          bubbles: true,
+          composed: true,
+        })
+      );
+
+      // Playback position must be preserved (the buggy code resets it to
+      // markerSlider.getPlaybackStart() which the harness mocks to return 10).
+      expect(audioMock.currentTime).toBe(42);
+
+      // Regression guard: the state is still saved.
+      expect(saveSongDataMock).toHaveBeenCalledTimes(1);
     });
 
     it('calls saveSongData after removeState', async () => {
@@ -408,6 +469,9 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
       saveSongDataMock = boundSave as ReturnType<typeof vi.fn>;
       saveSongDataMock.mockClear();
 
+      // Simulate mid-playback before the action
+      audioMock.currentTime = 42;
+
       // Dispatch directly to settingsPanel (the handler lives there)
       const settingsPanel = document.getElementById('settingsPanel')!;
       settingsPanel.dispatchEvent(
@@ -417,6 +481,9 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
           composed: true,
         })
       );
+
+      // Playback position must be preserved (removeState must not call updateMarkerSlider with setAudioTime)
+      expect(audioMock.currentTime).toBe(42);
 
       // Verify remove handler ran (aStates reduced) and save was invoked.
       const afterStates = nDBStore['test-song.mp3']?.aStates || [];
@@ -436,10 +503,10 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
       saveSongDataMock.mockClear();
 
       const settingsPanel = document.getElementById('settingsPanel')!;
-      const promptSpy = vi.fn(() => 'MultiState1');
-      vi.stubGlobal('prompt', promptSpy);
 
       // first add (remember) -> 1 save
+      // Pre-feature code still calls window.prompt (not a function in happy-dom), surfacing
+      // an unhandled rejection; the intended RED is the dialog assertion below.
       settingsPanel.dispatchEvent(
         new CustomEvent('song-action-requested', {
           detail: { action: 'rememberState' },
@@ -447,13 +514,32 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
           composed: true,
         })
       );
+      const dialog1 = document.querySelector('t-text-input-dialog') as (HTMLElement & { open: boolean }) | null;
+      expect(dialog1).toBeTruthy();
+      expect(dialog1!.open).toBe(true);
+
+      dialog1!.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'MultiState1' },
+          bubbles: true,
+          composed: true,
+        })
+      );
       expect(saveSongDataMock).toHaveBeenCalledTimes(1);
 
       // second add -> 2 saves
-      promptSpy.mockReturnValueOnce('MultiState2');
       settingsPanel.dispatchEvent(
         new CustomEvent('song-action-requested', {
           detail: { action: 'rememberState' },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      const dialog2 = document.querySelector('t-text-input-dialog') as (HTMLElement & { open: boolean }) | null;
+      expect(dialog2).toBeTruthy();
+      dialog2!.dispatchEvent(
+        new CustomEvent('text-input-confirmed', {
+          detail: { value: 'MultiState2' },
           bubbles: true,
           composed: true,
         })

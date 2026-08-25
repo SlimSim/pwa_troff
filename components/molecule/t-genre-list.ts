@@ -532,6 +532,9 @@ export class GenreList extends LitElement {
           (group, index) => html`
             <div
               class="genre-item ${index === this.highlightedIndex ? 'highlighted' : ''}"
+              ?data-current-song=${group.tracks.some(
+                (t: { songKey?: string }) => t.songKey === this.currentSongKey
+              )}
               @click=${() => this._handleGenreClick(group.genre)}
             >
               <div class="genre-info">

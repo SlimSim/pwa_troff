@@ -11,12 +11,11 @@ export class DetailsElement extends LitElement {
 
     details.advanced-panel {
       overflow: hidden;
-      width: var(--settings-column-width);
-      padding: 4px;
     }
 
     details.advanced-panel[open] {
       background-color: var(--secondary-color, rgba(0, 0, 0, 0.08));
+      box-shadow: 0px 0px 0px 2px var(--secondary-color, rgba(0, 0, 0, 0.08));
     }
 
     .advanced-summary {
@@ -71,7 +70,6 @@ export class DetailsElement extends LitElement {
     }
 
     .advanced-content {
-      padding-right: 4px;
     }
   `;
 

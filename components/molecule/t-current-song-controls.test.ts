@@ -213,7 +213,7 @@ describe('t-current-song-controls advanced panels use t-details', () => {
 
     const advanced = findDetailsByTitle('Advanced');
     expect(advanced).toBeTruthy();
-    expect(advanced?.text).toBe('Advanced marker actions!');
+    expect(advanced?.text).toBe('Marker actions and states!');
 
     const titleEl = advanced?.shadowRoot?.querySelector('p.advanced-summary-title');
     expect(titleEl?.textContent).toBe('Advanced');
