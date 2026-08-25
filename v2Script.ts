@@ -78,6 +78,7 @@ import {
   TROFF_SETTING_SONG_DEFAULT_NR_LOOPS_INFINIT_IS_ON,
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+  TROFF_SETTING_KEEP_SCREEN_ON,
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { showToast } from './utils/notification.js';
@@ -99,6 +100,7 @@ import {
   addAndStartSentry,
 } from './utils/sentry.js';
 import { getManifest } from './utils/manifestHelper.js';
+import { updateWakeLockForPlayback } from './utils/phoneUtils.js';
 
 // Hostname→Sentry environment mapping — mirrors utils/firebase-getter.ts
 // (which itself mirrors the legacy assets/internal/environment.ts selection).
@@ -1126,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) ?? true;
     settingsPanel.playGoToMarker =
       nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
+    settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -1339,6 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = true;
       footer.playbackCountdown = countdownSeconds;
     }
+    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
 
     if (header) {
       header.statusCountdown = `${countdownSeconds}s`;
@@ -1355,6 +1359,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = false;
       footer.playbackCountdown = 0;
     }
+    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
 
     updateHeaderCountdownDisplay();
   };
@@ -1936,6 +1941,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playGoToMarker: TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
         extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
+        keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -1944,6 +1950,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       nDB.set(storageKey, value === true);
+      if (setting === 'keepScreenOn') {
+        void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+      }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
 
@@ -2519,9 +2528,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const waitBetweenDelay = getWaitBetweenDelay();
         isLoopTransitionPause = true;
-        getActiveMedia().pause();
         getActiveMedia().currentTime = playbackStart;
         schedulePlaybackAfterDelay(waitBetweenDelay);
+        if (waitBetweenDelay > 0) {
+          getActiveMedia().pause();
+        }
       }
     };
     const onPlay = () => {
@@ -2529,9 +2540,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (footer) {
         footer.isPlaying = true;
       }
+      void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
       updateHeaderCountdownDisplay();
     };
     const onPause = () => {
+      const wasLoopTransition = isLoopTransitionPause;
       if (isLoopTransitionPause) {
         isLoopTransitionPause = false;
       } else {
@@ -2539,6 +2552,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (footer) {
         footer.isPlaying = false;
+      }
+      if (!wasLoopTransition) {
+        void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
       }
       updateHeaderCountdownDisplay();
     };

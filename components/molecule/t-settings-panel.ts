@@ -20,7 +20,8 @@ type ToggleSetting =
   | 'playResetCounter'
   | 'playGoToMarker'
   | 'extendedMarkerColor'
-  | 'extraExtendedMarkerColor';
+  | 'extraExtendedMarkerColor'
+  | 'keepScreenOn';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -301,6 +302,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) playGoToMarker = true;
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
+  @property({ type: Boolean }) keepScreenOn = true;
 
   connectedCallback() {
     super.connectedCallback();
@@ -438,6 +440,9 @@ export class SettingsPanel extends LitElement {
       case 'extraExtendedMarkerColor':
         this.extraExtendedMarkerColor = nextValue;
         break;
+      case 'keepScreenOn':
+        this.keepScreenOn = nextValue;
+        break;
       default:
         return;
     }
@@ -511,7 +516,16 @@ export class SettingsPanel extends LitElement {
               These key and button behaviors apply across Troff, not just this song.
             </t-help-tip>
           </div>
-          <div class="settings-section" style="margin: 0;"></div>
+          <div class="settings-section" style="margin: 0;">
+            <t-butt
+              toggle
+              ellipsis
+              .active=${this.keepScreenOn}
+              @click=${() => this._toggleSetting('keepScreenOn', this.keepScreenOn)}
+            >
+              Keep screen on
+            </t-butt>
+          </div>
         </div>
         <div class="settings-shell">
           <t-details

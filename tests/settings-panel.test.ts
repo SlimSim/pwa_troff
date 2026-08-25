@@ -558,6 +558,27 @@ describe('SettingsPanel numeric settings integration', () => {
         );
       });
     });
+
+    describe('rendered keep screen on toggle in global controls area', () => {
+      it('should render a <t-butt toggle> for "Keep screen on" inside the global controls area (under help-tip before "Behaviour of keys and buttons" details)', () => {
+        // Identify the global controls area by the help-tip that precedes the Behaviour details
+        const shells = Array.from(
+          settingsPanel.shadowRoot?.querySelectorAll('.settings-shell') ?? []
+        );
+        const globalShell = shells.find((shell) =>
+          shell.querySelector('t-help-tip[h3="Global Controls"]')
+        );
+        expect(globalShell, 'expected to find .settings-shell containing Global Controls help-tip').toBeTruthy();
+
+        const butts = Array.from(globalShell!.querySelectorAll('t-butt') ?? []);
+        const keepButt = butts.find((b) =>
+          (b.textContent || '').trim().toLowerCase().includes('keep screen')
+        );
+
+        expect(keepButt).toBeTruthy();
+        expect(keepButt!.hasAttribute('toggle')).toBe(true);
+      });
+    });
   });
 });
 
