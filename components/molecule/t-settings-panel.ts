@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import '../atom/t-butt.js';
+import '../atom/t-dropdown-button.js';
 import '../atom/t-details.js';
 import '../atom/t-slide-stepper.js';
 import '../atom/t-icon.js';
@@ -73,6 +74,44 @@ export class SettingsPanel extends LitElement {
       cursor: pointer;
       color: var(--text-color, #000);
       padding: 5px;
+    }
+
+    .user-avatar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--border-color, #333);
+    }
+
+    .user-avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .user-avatar-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-color, #000);
+    }
+
+    .user-dropdown {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .user-dropdown-name {
+      font-size: 0.9rem;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .settings-section {
@@ -274,6 +313,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: String }) versionNumber = '';
   @property({ type: Boolean }) signedIn = false;
   @property({ type: String }) userName = '';
+  @property({ type: String }) userPhotoUrl = '';
 
   @state() private installState: PwaInstallState = 'unavailable';
   private _unsubscribeInstallState?: () => void;
@@ -523,14 +563,30 @@ export class SettingsPanel extends LitElement {
               ? html`<t-butt special @click=${this._handleInstallClick}>Install Troff</t-butt>`
               : ''}
             ${this.signedIn
-              ? html`<span
-                  style="font-size:0.9rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
-                  >${this.userName || 'Signed in'}</span
-                >`
+              ? html`
+                  <t-dropdown-button position="down" align="right">
+                    <div slot="button" class="user-avatar-btn">
+                      ${this.userPhotoUrl
+                        ? html`<img
+                            class="user-avatar"
+                            src=${this.userPhotoUrl}
+                            alt="User avatar"
+                          />`
+                        : html`<t-icon name="user" class="user-avatar-icon"></t-icon>`}
+                    </div>
+                    <div slot="dropdown" class="user-dropdown">
+                      <span class="user-dropdown-name"
+                        >Welcome to Troff, ${this.userName || 'Signed in'}</span
+                      >
+                      <span class="user-dropdown-name2">Happy training!</span>
+                      <t-butt @click=${this._handleSignInClick}>Sign out</t-butt>
+                    </div>
+                  </t-dropdown-button>
+                `
               : ''}
-            <t-butt @click=${this._handleSignInClick}>
-              ${this.signedIn ? 'Sign out' : 'Sign in'}
-            </t-butt>
+            ${!this.signedIn
+              ? html`<t-butt @click=${this._handleSignInClick}>Sign in</t-butt>`
+              : ''}
             <t-butt ghost class="close-button" @click=${this._handleClose}>
               <t-icon name="chevron-down"></t-icon>
             </t-butt>

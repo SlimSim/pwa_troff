@@ -2072,6 +2072,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsPanel) {
           settingsPanel.signedIn = user !== null;
           settingsPanel.userName = user?.displayName ?? '';
+          settingsPanel.userPhotoUrl = user?.photoURL ?? '';
         }
         if (groupDialog) {
           groupDialog.signedIn = user !== null;
