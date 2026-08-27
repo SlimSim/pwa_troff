@@ -2072,6 +2072,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsPanel) {
           settingsPanel.signedIn = user !== null;
           settingsPanel.userName = user?.displayName ?? '';
+          settingsPanel.userPhotoUrl = user?.photoURL ?? '';
         }
         if (groupDialog) {
           groupDialog.signedIn = user !== null;
@@ -2295,6 +2296,25 @@ document.addEventListener('DOMContentLoaded', () => {
         media.currentTime = time;
         if (markerSlider) {
           markerSlider.value = time;
+
+          if (
+            markerSlider.markers.length > 0 &&
+            time > markerSlider.getPlaybackStop()
+          ) {
+            const lastMarker =
+              markerSlider.markers[markerSlider.markers.length - 1];
+            markerSlider.stopMarkerId = lastMarker.id + 'S';
+
+            const songKey = getCurrentSongKey();
+            if (songKey) {
+              const currentSongData = nDB.get(songKey);
+              if (currentSongData) {
+                currentSongData.currentStopMarker = lastMarker.id + 'S';
+                nDB.set(songKey, currentSongData);
+                updateMarkerSlider(markerSlider, false);
+              }
+            }
+          }
         }
         if (header) {
           header.currentTime = formatDuration(time);

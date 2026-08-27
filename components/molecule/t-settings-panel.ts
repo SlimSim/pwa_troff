@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import '../atom/t-butt.js';
+import '../atom/t-dropdown-button.js';
 import '../atom/t-details.js';
 import '../atom/t-slide-stepper.js';
 import '../atom/t-icon.js';
@@ -75,6 +76,44 @@ export class SettingsPanel extends LitElement {
       padding: 5px;
     }
 
+    .user-avatar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--border-color, #333);
+    }
+
+    .user-avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .user-avatar-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-color, #000);
+    }
+
+    .user-dropdown {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .user-dropdown-name {
+      font-size: 0.9rem;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
     .settings-section {
       margin-bottom: 20px;
       width: var(--settings-column-width);
@@ -87,7 +126,6 @@ export class SettingsPanel extends LitElement {
       gap: 16px;
 
       justify-content: space-between;
-      margin: -4px;
     }
 
     .settings-shell t-current-song-controls {
@@ -126,6 +164,9 @@ export class SettingsPanel extends LitElement {
       font-size: 0.85rem;
       color: var(--text-color, #000);
       opacity: 0.8;
+    }
+    .scope-badge-container {
+      padding-top: 16px;
     }
 
     .scope-badge {
@@ -274,6 +315,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: String }) versionNumber = '';
   @property({ type: Boolean }) signedIn = false;
   @property({ type: String }) userName = '';
+  @property({ type: String }) userPhotoUrl = '';
 
   @state() private installState: PwaInstallState = 'unavailable';
   private _unsubscribeInstallState?: () => void;
@@ -523,14 +565,30 @@ export class SettingsPanel extends LitElement {
               ? html`<t-butt special @click=${this._handleInstallClick}>Install Troff</t-butt>`
               : ''}
             ${this.signedIn
-              ? html`<span
-                  style="font-size:0.9rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
-                  >${this.userName || 'Signed in'}</span
-                >`
+              ? html`
+                  <t-dropdown-button position="down" align="right">
+                    <div slot="button" class="user-avatar-btn">
+                      ${this.userPhotoUrl
+                        ? html`<img
+                            class="user-avatar"
+                            src=${this.userPhotoUrl}
+                            alt="User avatar"
+                          />`
+                        : html`<t-icon name="user" class="user-avatar-icon"></t-icon>`}
+                    </div>
+                    <div slot="dropdown" class="user-dropdown">
+                      <span class="user-dropdown-name"
+                        >Welcome to Troff, ${this.userName || 'Signed in'}</span
+                      >
+                      <span class="user-dropdown-name2">Happy training!</span>
+                      <t-butt @click=${this._handleSignInClick}>Sign out</t-butt>
+                    </div>
+                  </t-dropdown-button>
+                `
               : ''}
-            <t-butt @click=${this._handleSignInClick}>
-              ${this.signedIn ? 'Sign out' : 'Sign in'}
-            </t-butt>
+            ${!this.signedIn
+              ? html`<t-butt @click=${this._handleSignInClick}>Sign in</t-butt>`
+              : ''}
             <t-butt ghost class="close-button" @click=${this._handleClose}>
               <t-icon name="chevron-down"></t-icon>
             </t-butt>
@@ -554,27 +612,10 @@ export class SettingsPanel extends LitElement {
           ></t-current-song-controls>
 
           <div class="global-settings">
-            <div class="settings-section" style="margin-top: 16px; margin-bottom: 0;">
+            <div class="settings-section" style="margin-bottom: 8px;">
               <t-help-tip h3="Global Controls" position="up">
                 These key and button behaviors apply across Troff, not just this song.
               </t-help-tip>
-            </div>
-            <div class="settings-section" style="margin: 0;">
-              <t-butt
-                toggle
-                ellipsis
-                .active=${this.keepScreenSupported && this.keepScreenOn}
-                ?disabled=${!this.keepScreenSupported}
-                @click=${() => {
-                  if (this.keepScreenSupported)
-                    this._toggleSetting('keepScreenOn', this.keepScreenOn);
-                }}
-              >
-                Keep screen on
-              </t-butt>
-              ${!this.keepScreenSupported
-                ? html`<span class="unsupported-note">(not supported on this browser)</span>`
-                : ''}
             </div>
 
             <t-details
@@ -883,10 +924,27 @@ export class SettingsPanel extends LitElement {
                 </t-butt>
               </div>
             </t-details>
+            <div class="settings-section" style="margin: 0; margin-top: 8px;">
+              <t-butt
+                toggle
+                ellipsis
+                .active=${this.keepScreenSupported && this.keepScreenOn}
+                ?disabled=${!this.keepScreenSupported}
+                @click=${() => {
+                  if (this.keepScreenSupported)
+                    this._toggleSetting('keepScreenOn', this.keepScreenOn);
+                }}
+              >
+                Keep screen on
+              </t-butt>
+              ${!this.keepScreenSupported
+                ? html`<span class="unsupported-note">(not supported on this browser)</span>`
+                : ''}
+            </div>
           </div>
         </div>
 
-        <div>
+        <div class="scope-badge-container">
           <span class="scope-badge">Version: ${this.versionNumber}</span>
         </div>
       </div>

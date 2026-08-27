@@ -322,7 +322,7 @@ export class Dial extends LitElement {
         <div class="t-dial-portal">
           <div class="t-dial-portal-badge">
             <div class="t-dial-portal-value ${this.disabled ? 'disabled' : ''}">
-              ${this._value}${this.unit}
+              ${this._formatDisplayValue()}${this.unit}
             </div>
             <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
           </div>
@@ -432,7 +432,7 @@ export class Dial extends LitElement {
 
     const effectiveMin = this.min ?? 0;
     const effectiveMax = this.max ?? Infinity;
-    let newValue = this.initialValue + direction * Math.round(totalValueChange);
+    let newValue = this.initialValue + direction * this._roundToStep(totalValueChange);
 
     // Clamp during drag calculation (like t-time-input does for min)
     newValue = Math.max(effectiveMin, Math.min(effectiveMax, newValue));
@@ -542,15 +542,29 @@ export class Dial extends LitElement {
     this._dispatchValueChanged();
   }
 
+  private _roundToStep(value: number): number {
+    const stepStr = String(this.step);
+    const decimals = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
+    const factor = Math.pow(10, decimals);
+    return Math.round(value * factor) / factor;
+  }
+
+  private _formatDisplayValue(): string {
+    const stepStr = String(this.step);
+    const stepDecimals = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
+    const maxDecimals = stepDecimals + 1;
+    return String(parseFloat(this._value.toFixed(maxDecimals)));
+  }
+
   private _handleIncrement() {
     const effectiveMax = this.max ?? Infinity;
-    this._value = Math.min(effectiveMax, this._value + this.step);
+    this._value = Math.min(effectiveMax, this._roundToStep(this._value + this.step));
     this._dispatchValueChanged();
   }
 
   private _handleDecrement() {
     const effectiveMin = this.min ?? 0;
-    this._value = Math.max(effectiveMin, this._value - this.step);
+    this._value = Math.max(effectiveMin, this._roundToStep(this._value - this.step));
     this._dispatchValueChanged();
   }
 
@@ -636,7 +650,7 @@ export class Dial extends LitElement {
             @touchstart=${this._handleValueTouchStart}
             title="Press and hold to use dial"
           >
-            <span class="value-content">${this._value}${this.unit}</span>
+            <span class="value-content">${this._formatDisplayValue()}${this.unit}</span>
           </t-butt>
           <t-butt
             class="icon"

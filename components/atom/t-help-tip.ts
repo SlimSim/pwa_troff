@@ -7,7 +7,7 @@ import type { PopupPositionInput } from '../../utils/popupPosition.js';
 // so it escapes any stacking context from an ancestor container (e.g. the
 // settings panel, z-index 999, below the header/footer at 1000). These styles
 // live with the portal-rendered popup, not the component.
-const popupStyles = css`
+export const popupStyles = css`
   .detail-content {
     position: fixed;
     padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
@@ -46,6 +46,26 @@ const popupStyles = css`
 
   .detail-content li {
     margin: var(--spacing-xxs, 2px) 0;
+  }
+
+  .hide-on-wide {
+    display: list-item;
+  }
+
+  .hide-on-narrow {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .hide-on-wide {
+      display: none;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hide-on-narrow {
+      display: list-item;
+    }
   }
 `;
 

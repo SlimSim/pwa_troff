@@ -171,7 +171,7 @@ export class TVideoPlayer extends LitElement {
 
   private static readonly CONTROLS_IDLE_TIMEOUT_MS = 3000;
   private static readonly GESTURE_FEEDBACK_MS = 1500;
-  private static readonly SCRUB_SECONDS_PER_PX = 0.05;
+  private static readonly SCRUB_SECONDS_PER_PX = 0.01;
   // Minimum time between committed seeks (~20fps): even when the video's
   // 'seeked' completes instantly, back-to-back seeks leave no time for the
   // browser to paint the intermediate frame. See _requestSeek below.
@@ -201,6 +201,11 @@ export class TVideoPlayer extends LitElement {
   private _dragAxis: 'horizontal' | 'vertical' | null = null;
   private _dragMoved = false;
   private _dragSpeedAccum = 0;
+  private _dragScrubAccumX = 0;
+  private _wheelSpeedAccum = 0;
+  private _wheelSpeedAccumTimer?: ReturnType<typeof setTimeout>;
+  private _wheelScrubAccumX = 0;
+  private _wheelScrubAccumTimer?: ReturnType<typeof setTimeout>;
   private _scrubTarget: number | null = null;
 
   // Seek-completion gate (see _requestSeek below): tracks whether the video
@@ -345,10 +350,7 @@ export class TVideoPlayer extends LitElement {
       // the self-tuning flush is unchanged. An end-of-gesture flush must
       // always land — the gesture is over, so waiting would drop the final
       // position.
-      if (
-        !isFlush &&
-        Date.now() - this._lastSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS
-      ) {
+      if (!isFlush && Date.now() - this._lastSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS) {
         return; // cadence window not open yet — stay stashed; a move/pointerup lands it
       }
       this._pendingSeekTime = null;
@@ -422,10 +424,7 @@ export class TVideoPlayer extends LitElement {
       this._flushStash = bypassCadence; // an end-of-gesture flush must survive the cadence too
       return;
     }
-    if (
-      !bypassCadence &&
-      Date.now() - this._lastSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS
-    ) {
+    if (!bypassCadence && Date.now() - this._lastSeekAt < TVideoPlayer.SCRUB_SEEK_INTERVAL_MS) {
       this._pendingSeekTime = time; // cadence window not open yet — keep the latest target
       this._flushStash = false;
       return;
@@ -603,6 +602,7 @@ export class TVideoPlayer extends LitElement {
     this._dragAxis = null;
     this._dragMoved = false;
     this._dragSpeedAccum = 0;
+    this._dragScrubAccumX = 0;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
 
@@ -637,8 +637,13 @@ export class TVideoPlayer extends LitElement {
       if (this._scrubTarget === null) {
         this._scrubTarget = video.currentTime; // base the accumulation on the real position
       }
+      const scrubMultiplier = this._getScrubMultiplier(this._dragScrubAccumX);
+      this._dragScrubAccumX += deltaX;
       this._scrubTarget = Math.min(
-        Math.max(0, this._scrubTarget + deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
+        Math.max(
+          0,
+          this._scrubTarget + deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX * scrubMultiplier
+        ),
         duration
       );
 
@@ -664,8 +669,9 @@ export class TVideoPlayer extends LitElement {
         return; // accumulate more pixels before emitting a whole-number step
       }
       this._dragSpeedAccum -= steps * TVideoPlayer.SPEED_PX_PER_STEP;
+      const effectiveStep = this._getSpeedStep(this._dragSpeedAccum);
       const newSpeed = Math.min(
-        Math.max(50, Math.round(this.speed) - steps * TVideoPlayer.SPEED_STEP_PERCENT),
+        Math.max(50, Math.round(Math.round(this.speed) - steps * effectiveStep)),
         200
       );
       this.speed = newSpeed; // keep the drag's running base in sync (v2Script also sets it via the event)
@@ -695,6 +701,20 @@ export class TVideoPlayer extends LitElement {
     this._dragAxis = null;
   }
 
+  /**
+   * Returns the effective speed step percent based on accumulated scroll
+   * distance. Starts at SPEED_STEP_PERCENT (1%) and grows to 3× that over
+   * ~200px of accumulated movement — fine control at first, then coarser.
+   */
+  private _getSpeedStep(accumulatedPx: number): number {
+    const multiplier = 1 + Math.min(Math.abs(accumulatedPx) / 40, 5);
+    return TVideoPlayer.SPEED_STEP_PERCENT * multiplier;
+  }
+
+  private _getScrubMultiplier(accumulatedPx: number): number {
+    return 1 + Math.min(Math.abs(accumulatedPx) / 100, 3);
+  }
+
   private _onFrameWheel(event: WheelEvent) {
     const video = this.querySelector('video');
     if (!video) {
@@ -709,13 +729,25 @@ export class TVideoPlayer extends LitElement {
     const absY = Math.abs(event.deltaY);
     if (absX > absY) {
       // Horizontal scroll: scrub (seek) the video.
+      // Accumulate across consecutive wheel events so that rapid scroll bursts
+      // produce accelerating scrub (slow at first, faster as you go).
+      const scrubMultiplier = this._getScrubMultiplier(this._wheelScrubAccumX);
+      this._wheelScrubAccumX += event.deltaX;
       const duration =
         Number.isFinite(video.duration) && video.duration > 0 ? video.duration : Infinity;
       const newTime = Math.min(
-        Math.max(0, video.currentTime + event.deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX),
+        Math.max(
+          0,
+          video.currentTime + event.deltaX * TVideoPlayer.SCRUB_SECONDS_PER_PX * scrubMultiplier
+        ),
         duration
       );
       video.currentTime = newTime;
+      // Reset the accumulator after a brief pause so a new gesture starts slow.
+      clearTimeout(this._wheelScrubAccumTimer);
+      this._wheelScrubAccumTimer = setTimeout(() => {
+        this._wheelScrubAccumX = 0;
+      }, 300);
       this.dispatchEvent(
         new CustomEvent('video-scrub-requested', {
           detail: { time: newTime },
@@ -731,11 +763,26 @@ export class TVideoPlayer extends LitElement {
       event.preventDefault();
     } else {
       // Vertical scroll: adjust the playback speed (v2Script applies it to the media).
-      const steps = Math.round(event.deltaY / TVideoPlayer.SPEED_PX_PER_STEP);
+      // Accumulate across consecutive wheel events so that rapid scroll bursts
+      // produce accelerating speed changes (slow at first, faster as you go).
+      this._wheelSpeedAccum += event.deltaY;
+      const steps =
+        Math.sign(this._wheelSpeedAccum) *
+        Math.round(Math.abs(this._wheelSpeedAccum) / TVideoPlayer.SPEED_PX_PER_STEP);
+      if (steps === 0) {
+        return; // accumulate more pixels before emitting a whole-number step
+      }
+      this._wheelSpeedAccum -= steps * TVideoPlayer.SPEED_PX_PER_STEP;
+      const effectiveStep = this._getSpeedStep(this._wheelSpeedAccum);
       const newSpeed = Math.min(
-        Math.max(50, Math.round(this.speed) - steps * TVideoPlayer.SPEED_STEP_PERCENT),
+        Math.max(50, Math.round(Math.round(this.speed) - steps * effectiveStep)),
         200
       );
+      // Reset the accumulator after a brief pause so a new gesture starts slow.
+      clearTimeout(this._wheelSpeedAccumTimer);
+      this._wheelSpeedAccumTimer = setTimeout(() => {
+        this._wheelSpeedAccum = 0;
+      }, 300);
       this.dispatchEvent(
         new CustomEvent('speed-changed', {
           detail: { speed: newSpeed },

@@ -504,3 +504,122 @@ describe('t-marker-slider marker cross-over guards', () => {
     expect(startEvents).toContain('m3');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Feature: click after active playing region extends stop to last marker (#43)
+//
+// When the user clicks on the timeline track at a position AFTER the current
+// playback stop time (past the active playing region), the LAST marker in the
+// markers array should be selected as the stop marker, extending the region.
+// ---------------------------------------------------------------------------
+describe('t-marker-slider click past playback stop extends stop marker (#43)', () => {
+  let element: MarkerSlider;
+
+  const markers: TroffMarker[] = [
+    { color: 'green', id: 'm1', info: '', name: 'Start', time: 10 },
+    { color: 'blue', id: 'm2', info: '', name: 'Mid', time: 50 },
+    { color: 'red', id: 'm3', info: '', name: 'End', time: 90 },
+  ];
+
+  beforeEach(() => {
+    element = new MarkerSlider();
+    element.markers = markers;
+    element.min = 0;
+    element.max = 100;
+    element.startMarkerId = 'm1';
+    element.stopMarkerId = 'm2S'; // playback region: 10..50
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  /**
+   * Simulates a click on the track wrapper at the given clientY.
+   * The track wrapper is mocked to be 100px tall starting at top=0.
+   *
+   * Formula: positionPercent = (1 - clickY / rect.height) * 100
+   *   → clickY = 0   → positionPercent = 100 → time = max (100)
+   *   → clickY = 100 → positionPercent = 0   → time = min (0)
+   */
+  function simulateTrackClick(clientY: number): void {
+    const trackWrapper = element.shadowRoot?.querySelector(
+      '.slider-track-wrapper'
+    ) as HTMLElement;
+    vi.spyOn(trackWrapper, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 100, 100)
+    );
+    const clickEvent = new MouseEvent('click', {
+      clientY,
+      bubbles: true,
+      cancelable: true,
+    });
+    trackWrapper.dispatchEvent(clickEvent);
+  }
+
+  it('clicking after playback stop sets the last marker as stop', async () => {
+    await element.updateComplete;
+
+    // Playback stop = 50 (m2 time). With a 100px track, value = clientY,
+    // so clientY=80 → value=80 > 50 (past the stop).
+    simulateTrackClick(80);
+
+    // The last marker (m3, time=90) should now be the stop marker.
+    expect(element.stopMarkerId).toBe('m3S');
+  });
+
+  it('clicking before playback stop does NOT change marker selection', async () => {
+    await element.updateComplete;
+
+    const stopMarkerIdBefore = element.stopMarkerId;
+
+    // Playback stop = 50. clientY=20 → value=20 < 50 (before the stop).
+    simulateTrackClick(20);
+
+    // Stop marker should remain unchanged.
+    expect(element.stopMarkerId).toBe(stopMarkerIdBefore);
+  });
+
+  it('clicking at exactly playback stop does NOT change marker selection', async () => {
+    await element.updateComplete;
+
+    // Playback stop = 50. clientY=50 → value=50 == stop.
+    simulateTrackClick(50);
+
+    // Stop marker should remain unchanged (not past the region).
+    expect(element.stopMarkerId).toBe('m2S');
+  });
+
+  it('dispatches set-stop-marker with the last marker ID when clicking past stop', async () => {
+    await element.updateComplete;
+
+    const stopEvents: string[] = [];
+    element.addEventListener('set-stop-marker', ((e: CustomEvent) => {
+      stopEvents.push(e.detail.markerId);
+    }) as EventListener);
+
+    // Click past the stop time (clientY=80 → value=80 > 50).
+    simulateTrackClick(80);
+
+    expect(stopEvents).toContain('m3');
+  });
+
+  it('still dispatches value-changed when clicking past stop', async () => {
+    await element.updateComplete;
+
+    const valueChangedEvents: number[] = [];
+    element.addEventListener('value-changed', ((e: CustomEvent) => {
+      valueChangedEvents.push(e.detail.value);
+    }) as EventListener);
+
+    // Click past the stop time (clientY=80 → value=80 > 50).
+    simulateTrackClick(80);
+
+    expect(valueChangedEvents.length).toBe(1);
+    expect(valueChangedEvents[0]).toBe(80);
+  });
+});

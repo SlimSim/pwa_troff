@@ -237,27 +237,7 @@ export class CurrentSongControls extends LitElement {
       }
     }
 
-    /* Hide pause before/wait between help items on narrow screens (they're in the footer on mobile) */
-    .loop-help-item-footer-only {
-      display: none;
-    }
 
-    @media (min-width: 768px) {
-      .loop-help-item-footer-only {
-        display: list-item;
-      }
-    }
-
-    /* Show where to find the wait control on narrow screens only (it's in the footer on mobile) */
-    .loop-help-item-phone-only {
-      display: list-item;
-    }
-
-    @media (min-width: 768px) {
-      .loop-help-item-phone-only {
-        display: none;
-      }
-    }
   `;
 
   @property({ type: String }) loopTimesValue = '1';
@@ -420,12 +400,13 @@ export class CurrentSongControls extends LitElement {
               <t-help-tip h3="Marker" position="up">
                 These options control how the song is played back.
                 <ul>
-                  <li>Play full song will select the first and last markers.</li>
-                  <li>Zoom will zoom in to the active playing region.</li>
+                  <li>"Play full song" will select the first and last markers.</li>
+                  <li>"Zoom" will zoom in to the active playing region.</li>
                   <li>
-                    Start before and stop after determine how many seconds before and after the
+                    "Start before" and "Stop after" determine how many seconds before and after the
                     selected markers is played back.
                   </li>
+                  <li>"Tap tempo" allows you to get the song tempo by tapping the button.</li>
                 </ul>
               </t-help-tip>
             </div>
@@ -527,11 +508,11 @@ export class CurrentSongControls extends LitElement {
           <div class="settings-section">
             <t-help-tip h3="Loop" position="up">
               <ul>
-                <li class="loop-help-item-footer-only">
+                <li class="hide-on-narrow">
                   "Pause before" sets how long the player will wait before starting to play the song
                   when you press play.
                 </li>
-                <li class="loop-help-item-footer-only">
+                <li class="hide-on-narrow">
                   "Wait between" sets how long the player will wait between loops of the song.
                 </li>
                 <li>
@@ -539,10 +520,10 @@ export class CurrentSongControls extends LitElement {
                   and it will increment every loop until it reaches that speed.
                 </li>
                 <li>The "1 - 9" buttons determine how many times the song will loop.</li>
-                <li class="loop-help-item-phone-only">
-                  On smaller screens the wait control ("Pause before" and "Wait between") and speed
-                  and volume controls are available from the buttons with the
-                  <t-icon name="time" slim></t-icon> and <t-icon name="speed" slim></t-icon>-icons
+                <li class="hide-on-wide">
+                  On smaller screens the "Speed and volume controls" and the "Wait controls" 
+                  ("Pause before" and "Wait between") and  are available from the buttons with the
+                  <t-icon name="speed" slim></t-icon> and <t-icon name="time" slim></t-icon> -icons
                   in the footer, respectively.
                 </li>
               </ul>
