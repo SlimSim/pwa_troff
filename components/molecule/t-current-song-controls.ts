@@ -420,12 +420,13 @@ export class CurrentSongControls extends LitElement {
               <t-help-tip h3="Marker" position="up">
                 These options control how the song is played back.
                 <ul>
-                  <li>Play full song will select the first and last markers.</li>
-                  <li>Zoom will zoom in to the active playing region.</li>
+                  <li>"Play full song" will select the first and last markers.</li>
+                  <li>"Zoom" will zoom in to the active playing region.</li>
                   <li>
-                    Start before and stop after determine how many seconds before and after the
+                    "Start before" and "Stop after" determine how many seconds before and after the
                     selected markers is played back.
                   </li>
+                  <li>"Tap tempo" allows you to get the song tempo by tapping the button.</li>
                 </ul>
               </t-help-tip>
             </div>

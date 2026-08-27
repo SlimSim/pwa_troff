@@ -126,7 +126,6 @@ export class SettingsPanel extends LitElement {
       gap: 16px;
 
       justify-content: space-between;
-      margin: -4px;
     }
 
     .settings-shell t-current-song-controls {
@@ -165,6 +164,9 @@ export class SettingsPanel extends LitElement {
       font-size: 0.85rem;
       color: var(--text-color, #000);
       opacity: 0.8;
+    }
+    .scope-badge-container {
+      padding-top: 16px;
     }
 
     .scope-badge {
@@ -610,27 +612,10 @@ export class SettingsPanel extends LitElement {
           ></t-current-song-controls>
 
           <div class="global-settings">
-            <div class="settings-section" style="margin-top: 16px; margin-bottom: 0;">
+            <div class="settings-section" style="margin-bottom: 8px;">
               <t-help-tip h3="Global Controls" position="up">
                 These key and button behaviors apply across Troff, not just this song.
               </t-help-tip>
-            </div>
-            <div class="settings-section" style="margin: 0;">
-              <t-butt
-                toggle
-                ellipsis
-                .active=${this.keepScreenSupported && this.keepScreenOn}
-                ?disabled=${!this.keepScreenSupported}
-                @click=${() => {
-                  if (this.keepScreenSupported)
-                    this._toggleSetting('keepScreenOn', this.keepScreenOn);
-                }}
-              >
-                Keep screen on
-              </t-butt>
-              ${!this.keepScreenSupported
-                ? html`<span class="unsupported-note">(not supported on this browser)</span>`
-                : ''}
             </div>
 
             <t-details
@@ -939,10 +924,27 @@ export class SettingsPanel extends LitElement {
                 </t-butt>
               </div>
             </t-details>
+            <div class="settings-section" style="margin: 0; margin-top: 8px;">
+              <t-butt
+                toggle
+                ellipsis
+                .active=${this.keepScreenSupported && this.keepScreenOn}
+                ?disabled=${!this.keepScreenSupported}
+                @click=${() => {
+                  if (this.keepScreenSupported)
+                    this._toggleSetting('keepScreenOn', this.keepScreenOn);
+                }}
+              >
+                Keep screen on
+              </t-butt>
+              ${!this.keepScreenSupported
+                ? html`<span class="unsupported-note">(not supported on this browser)</span>`
+                : ''}
+            </div>
           </div>
         </div>
 
-        <div>
+        <div class="scope-badge-container">
           <span class="scope-badge">Version: ${this.versionNumber}</span>
         </div>
       </div>
