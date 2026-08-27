@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { THelpTip } from '../../components/atom/t-help-tip.js';
+import { THelpTip, popupStyles } from '../../components/atom/t-help-tip.js';
 
 describe('t-help-tip', () => {
   let element: THelpTip;
@@ -467,6 +467,34 @@ describe('t-help-tip', () => {
       const styles = getComputedStyle(element.shadowRoot?.host as Element);
       // Check that CSS variables from variables.css are available
       expect(styles.getPropertyValue('--button-border-radius')).toBeDefined();
+    });
+  });
+
+  describe('popupStyles responsive utility classes', () => {
+    const cssText = popupStyles.cssText;
+
+    it('includes a default display:list-item rule for .hide-on-wide', () => {
+      // hide-on-wide items should be visible by default (on small/narrow screens)
+      expect(cssText).toMatch(/\.hide-on-wide\s*\{[^}]*display\s*:\s*list-item/);
+    });
+
+    it('includes @media (min-width:768px) rule hiding .hide-on-wide', () => {
+      // On wide screens, hide-on-wide items should be hidden
+      expect(cssText).toMatch(
+        /@media\s*\(min-width\s*:\s*768px\)\s*\{[^}]*\.hide-on-wide\s*\{[^}]*display\s*:\s*none/
+      );
+    });
+
+    it('includes a default display:none rule for .hide-on-narrow', () => {
+      // hide-on-narrow items should be hidden by default (on small/narrow screens)
+      expect(cssText).toMatch(/\.hide-on-narrow\s*\{[^}]*display\s*:\s*none/);
+    });
+
+    it('includes @media (min-width:768px) rule showing .hide-on-narrow as list-item', () => {
+      // On wide screens, hide-on-narrow items should be visible
+      expect(cssText).toMatch(
+        /@media\s*\(min-width\s*:\s*768px\)\s*\{[^}]*\.hide-on-narrow\s*\{[^}]*display\s*:\s*list-item/
+      );
     });
   });
 });
