@@ -348,6 +348,7 @@ export class MarkerDialog extends LitElement {
           label="Time"
           unit="s"
           min="0"
+          step="0.1"
           .max=${this.maxTime}
           .value=${this.markerTime}
           @value-changed=${this._handleTimeChange}

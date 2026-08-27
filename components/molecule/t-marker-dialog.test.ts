@@ -258,4 +258,54 @@ describe('t-marker-dialog', () => {
 
     expect(dialogCompletedSpy).toHaveBeenCalled();
   });
+
+  it('time dial has step="0.1" for sub-second precision', async () => {
+    await element.updateComplete;
+
+    const timeDial = element.shadowRoot?.querySelector('t-dial[label="Time"]') as
+      | (HTMLElement & { step: number })
+      | null;
+    expect(timeDial).toBeTruthy();
+    expect(timeDial!.step).toBe(0.1);
+  });
+
+  it('time dial step is a number, not the string "0.1"', async () => {
+    await element.updateComplete;
+
+    const timeDial = element.shadowRoot?.querySelector('t-dial[label="Time"]') as
+      | (HTMLElement & { step: number })
+      | null;
+    expect(timeDial).toBeTruthy();
+    expect(typeof timeDial!.step).toBe('number');
+  });
+
+  it('time dial does NOT have the old default step of 1', async () => {
+    await element.updateComplete;
+
+    const timeDial = element.shadowRoot?.querySelector('t-dial[label="Time"]') as
+      | (HTMLElement & { step: number })
+      | null;
+    expect(timeDial).toBeTruthy();
+    expect(timeDial!.step).not.toBe(1);
+  });
+
+  it('time dial is present with correct attributes', async () => {
+    element.mode = 'edit';
+    element.markerData = {
+      id: 'test-id',
+      name: 'Test Marker',
+      info: 'Test Info',
+      time: 15.3,
+      color: '#ff0000',
+    };
+    await element.updateComplete;
+
+    const timeDial = element.shadowRoot?.querySelector('t-dial[label="Time"]') as
+      | (HTMLElement & { step: number; min: number; unit: string })
+      | null;
+    expect(timeDial).toBeTruthy();
+    expect(timeDial!.step).toBe(0.1);
+    expect(timeDial!.min).toBe(0);
+    expect(timeDial!.unit).toBe('s');
+  });
 });
