@@ -158,6 +158,19 @@ export class MarkerSlider extends LitElement {
     const positionPercent = (1 - clickY / rect.height) * 100;
 
     const newValue = this._getValueFromPosition(positionPercent);
+
+    if (this.markers.length > 0 && newValue > this.getPlaybackStop()) {
+      const lastMarker = this.markers[this.markers.length - 1];
+      this.stopMarkerId = lastMarker.id + 'S';
+      this.dispatchEvent(
+        new CustomEvent('set-stop-marker', {
+          detail: { markerId: lastMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+
     this.value = Math.round(newValue);
     this._dispatchValueChanged();
   }
@@ -177,6 +190,19 @@ export class MarkerSlider extends LitElement {
     const positionPercent = Math.max(0, Math.min(100, (1 - moveY / rect.height) * 100));
 
     const newValue = this._getValueFromPosition(positionPercent);
+
+    if (this.markers.length > 0 && newValue > this.getPlaybackStop()) {
+      const lastMarker = this.markers[this.markers.length - 1];
+      this.stopMarkerId = lastMarker.id + 'S';
+      this.dispatchEvent(
+        new CustomEvent('set-stop-marker', {
+          detail: { markerId: lastMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+
     this.value = Math.round(newValue);
     this._dispatchValueChanged();
   }
