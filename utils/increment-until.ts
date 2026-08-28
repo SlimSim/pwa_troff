@@ -20,7 +20,7 @@
 export function calculateIncrementUntilSpeed(
   currentSpeed: number,
   targetSpeed: number,
-  loopTimesLeft: number | Infinity
+  loopTimesLeft: number
 ): number {
   if (currentSpeed === targetSpeed) {
     return currentSpeed;

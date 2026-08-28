@@ -590,34 +590,7 @@ export class CurrentSongControls extends LitElement {
             </div>
           </div>
 
-          <!-- 9. Increment until -->
-          <div class="settings-section">
-            <div class="settings-grid">
-              <div class="setting-item song-stepper-item">
-                <div class="song-stepper-grid">
-                  <t-dial
-                    label="Increment until"
-                    unit="%"
-                    show-disable-button
-                    defaultValue="100"
-                    .value=${this.incrementUntillValue}
-                    .disabled=${this.incrementUntillDisabled}
-                    .min=${50}
-                    .max=${200}
-                    .step=${1}
-                    @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
-                      this._setSongNumericSetting(
-                        'incrementUntill',
-                        event.detail.value,
-                        event.detail.disabled
-                      )}
-                  ></t-dial>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 10. Loop buttons (nr of loops) -->
+          <!-- 9. Loop buttons (nr of loops) -->
           <div class="settings-section">
             <div class="settings-grid">
               <div class="setting-item">
@@ -688,7 +661,34 @@ export class CurrentSongControls extends LitElement {
             </div>
           </div>
 
-          <!-- 1. Advanced -->
+          <!-- 12. Increment until -->
+          <div class="settings-section playback-control-section">
+            <div class="settings-grid">
+              <div class="setting-item song-stepper-item">
+                <div class="song-stepper-grid">
+                  <t-dial
+                    label="Increment until"
+                    unit="%"
+                    show-disable-button
+                    defaultValue="100"
+                    .value=${this.incrementUntillValue}
+                    .disabled=${this.incrementUntillDisabled}
+                    .min=${50}
+                    .max=${200}
+                    .step=${1}
+                    @value-changed=${(event: CustomEvent<{ value: number; disabled?: boolean }>) =>
+                      this._setSongNumericSetting(
+                        'incrementUntill',
+                        event.detail.value,
+                        event.detail.disabled
+                      )}
+                  ></t-dial>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 13. Advanced -->
           <div class="settings-section">
             <t-details title="Advanced" text="Marker actions and states!">
               <div class="song-action-buttons">

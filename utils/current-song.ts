@@ -75,6 +75,16 @@ export function updateFooterWithCurrentSong() {
       } else {
         footer.disableWaitBetween = !songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops;
       }
+      footer.incrementUntillValue = parseStoredNumber(
+        songData.TROFF_VALUE_incrementUntilValue,
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE')) || 100
+      );
+      if (songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === undefined) {
+        const globalIncrementUntilOn = nDB.get('TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_ON') ?? false;
+        footer.incrementUntillDisabled = !globalIncrementUntilOn;
+      } else {
+        footer.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
+      }
     }
   }
 }

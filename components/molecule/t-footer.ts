@@ -11,6 +11,8 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) settingsPanelVisible = false;
   @property({ type: Number }) speed = 100;
   @property({ type: Number }) volume = 75;
+  @property({ type: Number }) incrementUntillValue = 0;
+  @property({ type: Boolean }) incrementUntillDisabled = false;
   @property({ type: Boolean }) showSpeedDropdown = false;
   @property({ type: Boolean }) showTimeDropdown = false;
   @property({ type: Boolean }) showMarkerDropdown = false;
@@ -225,6 +227,23 @@ export class BottomNav extends LitElement {
     );
   }
 
+  private _handleIncrementUntilChanged(event: CustomEvent) {
+    this.incrementUntillValue = event.detail.value;
+    if (event.detail.disabled !== undefined) {
+      this.incrementUntillDisabled = event.detail.disabled;
+    }
+    this.dispatchEvent(
+      new CustomEvent('increment-until-changed', {
+        detail: {
+          value: this.incrementUntillValue,
+          disabled: this.incrementUntillDisabled,
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _handlePauseBeforeChanged(event: CustomEvent) {
     this.disablePauseBefore = event.detail.disabled;
     this.pauseBefore = event.detail.value;
@@ -276,6 +295,7 @@ export class BottomNav extends LitElement {
                 <ul>
                   <li>"Volume" sets how loud the song plays.</li>
                   <li>"Speed" sets how fast the song plays, as a percentage of normal speed.</li>
+                  <li>"Increment until" will gradually change speed each loop until it reaches the target.</li>
                 </ul>
               </t-help-tip>
               <t-dial
@@ -301,6 +321,18 @@ export class BottomNav extends LitElement {
                 .value=${this.speed}
                 unit="%"
                 @value-changed=${this._handleSpeedChanged}
+              ></t-dial>
+              <t-dial
+                label="Increment until"
+                unit="%"
+                show-disable-button
+                defaultValue="100"
+                .value=${this.incrementUntillValue}
+                .disabled=${this.incrementUntillDisabled}
+                .min=${50}
+                .max=${200}
+                .step=${1}
+                @value-changed=${this._handleIncrementUntilChanged}
               ></t-dial>
             </div>
           </t-dropdown-button>

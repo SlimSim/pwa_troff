@@ -2220,6 +2220,20 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCurrentSongControlsValues();
     });
 
+    footer.addEventListener('increment-until-changed', (event: any) => {
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        nDB.setOnSong(songKey, 'TROFF_VALUE_incrementUntilValue', event.detail.value);
+        nDB.setOnSong(
+          songKey,
+          'TROFF_CLASS_TO_TOGGLE_buttIncrementUntil',
+          !event.detail.disabled
+        );
+      }
+      syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
+    });
+
     footer.addEventListener('marker-created', (event: any) => {
       // Save the marker to localStorage (following existing pattern)
       const songKey = getCurrentSongKey();
