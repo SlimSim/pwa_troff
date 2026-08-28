@@ -64,7 +64,13 @@ export class MediaItem extends LitElement {
       align-items: center;
       justify-content: center;
       font-size: 1.2rem;
-      opacity: 0.7;
+      overflow: hidden;
+    }
+
+    .album-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* Info Column */

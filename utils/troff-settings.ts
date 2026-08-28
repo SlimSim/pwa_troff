@@ -138,7 +138,23 @@ function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: s
   if (ver !== 3 && ver !== 4) return m;
   const tagSize = _syncsafeToInt(bytes, 6);
   let p = 10;
-  const e = Math.min(10 + tagSize, bytes.length);
+  const tagFlags = bytes[5];
+  const hasFooter = ver === 4 && !!(tagFlags & 0x10);
+  const e = Math.min(10 + tagSize, bytes.length) - (hasFooter ? 10 : 0);
+  // Skip extended header if present (bit 6 of tag flags byte 5)
+  if (tagFlags & 0x40) {
+    if (p + 4 <= e) {
+      let extHeaderSize: number;
+      if (ver === 3) {
+        extHeaderSize = (bytes[p] << 24) | (bytes[p + 1] << 16) | (bytes[p + 2] << 8) | bytes[p + 3];
+      } else {
+        extHeaderSize = _syncsafeToInt(bytes, p);
+      }
+      if (extHeaderSize > 0 && p + extHeaderSize <= e) {
+        p += extHeaderSize;
+      }
+    }
+  }
   while (p + 10 <= e) {
     const id = String.fromCharCode(bytes[p], bytes[p + 1], bytes[p + 2], bytes[p + 3]);
     if (id.charCodeAt(0) === 0) break;

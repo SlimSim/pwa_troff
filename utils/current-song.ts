@@ -20,6 +20,7 @@ export function updateHeaderWithCurrentSong() {
       header.artistName = metadata.artist;
       header.currentTime = '0:00';
     }
+    header.albumArt = songData?.fileData?.albumArt || '';
     header.songInfo = songData?.info || '';
   } else {
     // No song selected, show default values
@@ -27,6 +28,7 @@ export function updateHeaderWithCurrentSong() {
     header.artistName = 'Select a song to play';
     header.currentTime = '0:00';
     header.totalTime = '0:00';
+    header.albumArt = '';
     header.songInfo = '';
   }
 }

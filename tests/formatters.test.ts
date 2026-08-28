@@ -9,6 +9,7 @@ import type { TroffLocalInformation } from '../types/troff.js';
 
 const baseFileData = {
   album: 'Test Album',
+  albumArt: '',
   artist: 'Test Artist',
   choreographer: '',
   choreography: '',
@@ -135,6 +136,22 @@ describe('formatSongForUI', () => {
     expect(result.album).toBe('Test Album');
     expect(result.genre).toBe('Test Genre');
     expect(result.duration).toBe('2:05');
+  });
+
+  it('includes albumArt from fileData', () => {
+    const result = formatSongForUI(songKey, songDataWithPlayCount);
+    expect(result).toHaveProperty('albumArt');
+    expect(result.albumArt).toBe('');
+  });
+
+  it('passes through albumArt data URL when present', () => {
+    const dataUrl = 'data:image/jpeg;base64,/9j/4AAQtest';
+    const songDataWithArt = {
+      ...songDataWithPlayCount,
+      fileData: { ...baseFileData, albumArt: dataUrl },
+    };
+    const result = formatSongForUI(songKey, songDataWithArt);
+    expect(result.albumArt).toBe(dataUrl);
   });
 
   it('includes playsMonth defaulting to 0 when songStartsLastMonth is undefined', () => {

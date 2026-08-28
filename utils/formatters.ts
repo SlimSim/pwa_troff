@@ -45,6 +45,7 @@ export function formatSongForUI(songKey: string, songData: TroffObjectLocal): an
     album: safeDecodeURIComponent(fileData.album || ''),
     genre: safeDecodeURIComponent(fileData.genre || ''),
     duration: formatDuration(fileData.duration),
+    albumArt: fileData.albumArt || '',
     playsTotal: songData.localInformation?.nrTimesLoaded || 0,
     playsMonth: countLast30Days(songData.localInformation?.songStartsLastMonth),
   };
