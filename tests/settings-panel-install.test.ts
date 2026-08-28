@@ -66,6 +66,9 @@ describe('SettingsPanel Install Troff button', () => {
     settingsPanel = document.createElement('t-settings-panel') as SettingsPanelType;
     document.body.appendChild(settingsPanel);
     await settingsPanel.updateComplete;
+    // Yield so the dynamic import in connectedCallback resolves and the
+    // install-state subscription is wired before tests dispatch events.
+    await new Promise<void>((r) => setTimeout(r, 0));
   });
 
   afterEach(() => {
@@ -119,7 +122,10 @@ describe('SettingsPanel Install Troff button', () => {
     expect(installButt).toBeTruthy();
 
     installButt?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    expect(event.prompt).toHaveBeenCalledTimes(1);
+    // _handleInstallClick dynamically imports pwa.ts before calling promptInstall
+    await vi.waitFor(() => {
+      expect(event.prompt).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('hides the Install Troff button after the user accepts the install prompt', async () => {

@@ -126,8 +126,13 @@ function _resolveGenre(raw: string): string {
   return g;
 }
 
+function _formatArtist(raw: string): string {
+  return raw.replace(/;/g, ', ').trim();
+}
+
 function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } {
   const m: { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } = { title: '', artist: '', album: '', genre: '', info: '', bpm: '' };
+  let albumArtist = '';
   if (bytes.length < 10 || bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) return m;
   const ver = bytes[3];
   if (ver !== 3 && ver !== 4) return m;
@@ -142,7 +147,7 @@ function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: s
     p += 10;
     if (sz <= 0 || p + sz > e) break;
     const d = bytes.subarray(p, p + sz);
-    if ((id === 'TIT2' || id === 'TPE1' || id === 'TALB' || id === 'TCON' || id === 'TBPM') && d.length > 0) {
+    if ((id === 'TIT2' || id === 'TPE1' || id === 'TPE2' || id === 'TALB' || id === 'TCON' || id === 'TBPM') && d.length > 0) {
       const enc = d[0];
       let t = '';
       const tb = d.subarray(1);
@@ -159,6 +164,7 @@ function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: s
       t = t.replace(/\0/g, '').trim();
       if (id === 'TIT2') m.title = t;
       else if (id === 'TPE1') m.artist = t;
+      else if (id === 'TPE2') albumArtist = t;
       else if (id === 'TALB') m.album = t;
       else if (id === 'TCON') m.genre = _resolveGenre(t);
       else if (id === 'TBPM') m.bpm = t;
@@ -217,6 +223,10 @@ function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: s
     }
     p += sz;
   }
+  if (!m.artist && albumArtist) {
+    m.artist = albumArtist;
+  }
+  m.artist = _formatArtist(m.artist);
   return m;
 }
 

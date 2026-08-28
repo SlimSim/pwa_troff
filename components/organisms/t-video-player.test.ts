@@ -1494,7 +1494,7 @@ describe('t-video-player', () => {
   //     `detail: { speed }` from the HOST — the same event contract as the
   //     footer speed control.
   //
-  // Constants: SCRUB_SECONDS_PER_PX = 0.05, SPEED_PX_PER_STEP = 10,
+  // Constants: SCRUB_SECONDS_PER_PX = 0.01, SPEED_PX_PER_STEP = 10,
   // SPEED_STEP_PERCENT = 1. Direction conventions: scroll RIGHT (deltaX > 0)
   // seeks forward; scroll UP (deltaY < 0) speeds up.
   //
@@ -1574,8 +1574,8 @@ describe('t-video-player', () => {
     el.addEventListener('video-scrub-requested', scrubSpy);
     const { preventSpy } = dispatchWheel(el, 100, 0);
 
-    // 100px * 0.05 s/px = 5s forward.
-    expect(video.currentTime).toBe(5);
+    // 100px * 0.01 s/px * multiplier(0) = 1s forward.
+    expect(video.currentTime).toBe(1);
     expect(scrubSpy).toHaveBeenCalledTimes(1);
     const event = scrubSpy.mock.calls[0][0] as CustomEvent;
     expect(event.type).toBe('video-scrub-requested');
@@ -1583,7 +1583,7 @@ describe('t-video-player', () => {
     expect(event.composed).toBe(true);
     // The event must be dispatched from the component host itself.
     expect(event.target).toBe(el);
-    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(5);
+    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(1);
     expect(preventSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -1597,10 +1597,10 @@ describe('t-video-player', () => {
     el.addEventListener('video-scrub-requested', scrubSpy);
     dispatchWheel(el, -100, 0);
 
-    // 10s - (100px * 0.05 s/px) = 5s.
+    // 10s - (100px * 0.01 s/px) = 9s.
     expect(scrubSpy).toHaveBeenCalledTimes(1);
-    expect(video.currentTime).toBe(5);
-    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(5);
+    expect(video.currentTime).toBe(9);
+    expect(detailOf<{ time: number }>(scrubSpy).time).toBe(9);
   });
 
   it('clamps scrubbing at the start of the video (time 0)', async () => {
@@ -1624,7 +1624,7 @@ describe('t-video-player', () => {
     defineDuration(video, 120);
     video.currentTime = 0;
 
-    dispatchWheel(el, 10000, 0);
+    dispatchWheel(el, 20000, 0);
 
     expect(video.currentTime).toBe(120);
   });
@@ -1638,7 +1638,7 @@ describe('t-video-player', () => {
 
     dispatchWheel(el, 100, 0);
 
-    expect(video.currentTime).toBe(5);
+    expect(video.currentTime).toBe(1);
   });
 
   it('vertical wheel up increases the speed and dispatches speed-changed', async () => {
@@ -1807,9 +1807,9 @@ describe('t-video-player', () => {
 
     const indicator = el.shadowRoot?.querySelector('.gesture-indicator');
     expect(indicator).not.toBeNull();
-    // 100px * 0.05 s/px = 5s → formatDuration(5) = "0:05", formatDuration(120)
+    // 100px * 0.01 s/px = 1s → formatDuration(1) = "0:01", formatDuration(120)
     // = "2:00".
-    expect(getGestureText(el)).toBe('0:05 / 2:00');
+    expect(getGestureText(el)).toBe('0:01 / 2:00');
     expect(getIconName(el, '.gesture-indicator')).toBe('time');
   });
 
@@ -1821,11 +1821,11 @@ describe('t-video-player', () => {
 
     dispatchWheel(el, 100, 0);
     await el.updateComplete;
-    expect(getGestureText(el)).toBe('0:05 / 2:00');
+    expect(getGestureText(el)).toBe('0:01 / 2:00');
 
     dispatchWheel(el, 100, 0);
     await el.updateComplete;
-    expect(getGestureText(el)).toBe('0:15 / 2:00');
+    expect(getGestureText(el)).toBe('0:03 / 2:00');
   });
 
   it('badge auto-hides after the feedback timeout', async () => {
@@ -1892,7 +1892,7 @@ describe('t-video-player', () => {
     await el.updateComplete;
 
     const text = getGestureText(el);
-    expect(text).toBe('0:05');
+    expect(text).toBe('0:01');
     expect(text).not.toContain(' / ');
   });
 
@@ -1945,7 +1945,7 @@ describe('t-video-player', () => {
   //   - Clamping [50, 200] is unchanged; the `.gesture-indicator` badge shows
   //     whole percents like `110%`.
   //
-  // Constants: SCRUB_SECONDS_PER_PX = 0.05, SPEED_PX_PER_STEP = 10,
+  // Constants: SCRUB_SECONDS_PER_PX = 0.01, SPEED_PX_PER_STEP = 10,
   // SPEED_STEP_PERCENT = 1, DRAG_THRESHOLD_PX = 5. Wheel UP = deltaY < 0 =
   // speed up. Drag UP = decreasing clientY = speed up.
   //
@@ -2318,14 +2318,14 @@ describe('t-video-player', () => {
       scrubSpy,
       'the first horizontal move of a drag must dispatch exactly one video-scrub-requested'
     ).toHaveBeenCalledTimes(1);
-    expect(video.currentTime, '60px × 0.05 s/px must seek to exactly 3s').toBe(3);
-    expect(detailOf<{ time: number }>(scrubSpy).time, 'event detail must carry the new time').toBe(
-      3
+    expect(video.currentTime, '60px × 0.01 s/px must seek to exactly 0.6s').toBeCloseTo(0.6, 5);
+    expect(detailOf<{ time: number }>(scrubSpy).time, 'event detail must carry the new time').toBeCloseTo(
+      0.6, 5
     );
     expect(
       getGestureText(el),
-      'badge must show the scrubbed time over the duration (3s in a 120s video)'
-    ).toBe('0:03 / 2:00');
+      'badge must show the scrubbed time over the duration (0.6s in a 120s video)'
+    ).toBe('0:00 / 2:00');
     expect(getIconName(el, '.gesture-indicator')).toBe('time');
     // Simulate the video completing the seek (happy-dom never fires `seeked`
     // on its own) so a later move in a real gesture would not be blocked.
@@ -2349,7 +2349,7 @@ describe('t-video-player', () => {
         scrubSpy,
         'the first move of a drag must always apply immediately'
       ).toHaveBeenCalledTimes(1);
-      expect(video.currentTime).toBe(3);
+      expect(video.currentTime).toBeCloseTo(0.6, 5);
 
       // The video completes that seek (happy-dom never fires `seeked` on its
       // own) — otherwise the event-gate would block every later move.
@@ -2360,22 +2360,22 @@ describe('t-video-player', () => {
       dispatchPointer(el, 'pointermove', 220, 100); // +60px, inside the throttle window
       expect(
         video.currentTime,
-        'a move inside the 50ms throttle window must NOT seek yet (current code applies 6s)'
-      ).toBe(3);
+        'a move inside the 50ms throttle window must NOT seek yet'
+      ).toBeCloseTo(0.6, 5);
       expect(
         scrubSpy,
-        'a move inside the 50ms throttle window must NOT dispatch (current code fires a 2nd event)'
+        'a move inside the 50ms throttle window must NOT dispatch'
       ).toHaveBeenCalledTimes(1);
 
       // After the 50ms window, the next move applies the ACCUMULATED target
-      // (3 + 4.8 + 6.6 = 14.4s), not the stale currentTime.
+      // (0.6 + 0.96 + 1.32 = 2.88s), not the stale currentTime.
       vi.advanceTimersByTime(50);
-      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 14.4s
+      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 2.88s
       await el.updateComplete;
 
-      expect(video.currentTime, 'accumulated 14.4s must apply once the window has elapsed').toBeCloseTo(14.4, 5);
+      expect(video.currentTime, 'accumulated 2.88s must apply once the window has elapsed').toBeCloseTo(2.88, 5);
       expect(scrubSpy, 'exactly two seeks may have fired by now').toHaveBeenCalledTimes(2);
-      expect(detailOf<{ time: number }>(scrubSpy, 1).time, '2nd seek must carry the accumulated 14.4s').toBeCloseTo(14.4, 5);
+      expect(detailOf<{ time: number }>(scrubSpy, 1).time, '2nd seek must carry the accumulated 2.88s').toBeCloseTo(2.88, 5);
     } finally {
       vi.useRealTimers();
     }
@@ -2393,27 +2393,27 @@ describe('t-video-player', () => {
       el.addEventListener('video-scrub-requested', scrubSpy);
 
       dispatchPointer(el, 'pointerdown', 100, 100);
-      dispatchPointer(el, 'pointermove', 160, 100); // +60px → applies 3s
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → applies 0.6s
       // The video completes that seek (happy-dom never fires `seeked` on its
       // own), so the following moves are gated by the 50ms cadence only.
       markSeekComplete(video);
-      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 7.8s, throttled
-      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 14.4s, throttled
-      dispatchPointer(el, 'pointerup', 280, 100); // flushes the accumulated 14.4s
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 1.56s, throttled
+      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 2.88s, throttled
+      dispatchPointer(el, 'pointerup', 280, 100); // flushes the accumulated 2.88s
       await el.updateComplete;
 
       expect(
         video.currentTime,
-        'pointerup must flush the exact accumulated target (14.4s) to the video'
-      ).toBeCloseTo(14.4, 5);
+        'pointerup must flush the exact accumulated target (2.88s) to the video'
+      ).toBeCloseTo(2.88, 5);
       expect(
         scrubSpy,
-        'only the first-move seek + the final flush may fire (current code fires one seek per move)'
+        'only the first-move seek + the final flush may fire'
       ).toHaveBeenCalledTimes(2);
       expect(
         detailOf<{ time: number }>(scrubSpy, 1).time,
-        'the flush event must carry the exact accumulated target (14.4s), not an intermediate value'
-      ).toBeCloseTo(14.4, 5);
+        'the flush event must carry the exact accumulated target (2.88s), not an intermediate value'
+      ).toBeCloseTo(2.88, 5);
     } finally {
       vi.useRealTimers();
     }
@@ -2429,7 +2429,7 @@ describe('t-video-player', () => {
 
       dispatchPointer(el, 'pointerdown', 100, 100);
       // Five +20px moves, one full 50ms throttle window between each so every
-      // move applies: 1.0s, 1.2s, 1.4s, 1.6s, 1.8s → total 7.0s.
+      // move applies: 0.2s, 0.24s, 0.28s, 0.32s, 0.36s → total 1.4s.
       const moves = [120, 140, 160, 180, 200];
       for (const x of moves) {
         vi.advanceTimersByTime(50);
@@ -2443,8 +2443,8 @@ describe('t-video-player', () => {
 
       expect(
         video.currentTime,
-        'a 100px drag (5 × 20px) must scrub 7s with acceleration — the throttle must not drop distance'
-      ).toBe(7);
+        'a 100px drag (5 × 20px) must scrub 1.4s with acceleration — the throttle must not drop distance'
+      ).toBeCloseTo(1.4, 5);
     } finally {
       vi.useRealTimers();
     }
@@ -2462,15 +2462,15 @@ describe('t-video-player', () => {
       el.addEventListener('video-scrub-requested', scrubSpy);
 
       dispatchPointer(el, 'pointerdown', 100, 100);
-      dispatchPointer(el, 'pointermove', 400, 100); // +300px → 15s
+      dispatchPointer(el, 'pointermove', 400, 100); // +300px → 3s
       expect(
         video.currentTime,
-        '+300px must scrub to exactly 15s (and never exceed the 120s duration)'
-      ).toBe(15);
+        '+300px must scrub to exactly 3s (and never exceed the 120s duration)'
+      ).toBe(3);
       expect(video.currentTime, 'scrub must never exceed the 120s duration').toBeLessThanOrEqual(
         120
       );
-      expect(detailOf<{ time: number }>(scrubSpy).time).toBe(15);
+      expect(detailOf<{ time: number }>(scrubSpy).time).toBe(3);
       // The video completes that seek (happy-dom never fires `seeked` on its
       // own), so the reversing move below is not blocked by the event-gate.
       markSeekComplete(video);
@@ -2501,23 +2501,23 @@ describe('t-video-player', () => {
       el.addEventListener('video-scrub-requested', scrubSpy);
 
       dispatchPointer(el, 'pointerdown', 100, 100);
-      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s applied, seek in flight
-      expect(video.currentTime).toBe(3);
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 0.6s applied, seek in flight
+      expect(video.currentTime).toBeCloseTo(0.6, 5);
       expect(scrubSpy).toHaveBeenCalledTimes(1);
 
       // 50ms elapse (cadence window open) but the video NEVER fired seeked:
       // the event-gate must still block the new target.
       vi.advanceTimersByTime(50);
-      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 7.8s
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 1.56s
       expect(
         video.currentTime,
         'the event-gate must block a seek that has not completed'
-      ).toBe(3);
+      ).toBeCloseTo(0.6, 5);
       expect(scrubSpy).toHaveBeenCalledTimes(1);
 
       // The moment the seek completes, the stashed target lands immediately.
       markSeekComplete(video);
-      expect(video.currentTime, 'the stashed target must land once the seek completes').toBeCloseTo(7.8, 5);
+      expect(video.currentTime, 'the stashed target must land once the seek completes').toBeCloseTo(1.56, 5);
       expect(scrubSpy).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
@@ -2536,24 +2536,24 @@ describe('t-video-player', () => {
       el.addEventListener('video-scrub-requested', scrubSpy);
 
       dispatchPointer(el, 'pointerdown', 100, 100);
-      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s applied
-      markSeekComplete(video); // 3s seek completes
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 0.6s applied
+      markSeekComplete(video); // 0.6s seek completes
 
-      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 7.8s, cadence-stashed
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 1.56s, cadence-stashed
       vi.advanceTimersByTime(50);
-      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 14.4s, cadence open → committed
-      expect(video.currentTime).toBeCloseTo(14.4, 5);
+      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 2.88s, cadence open → committed
+      expect(video.currentTime).toBeCloseTo(2.88, 5);
 
-      // Open the cadence window BEFORE the 14.4s seek completes, deliberately:
-      // 'seeked' now fires with the cadence open, so if a stale 7.8s stash
+      // Open the cadence window BEFORE the 2.88s seek completes, deliberately:
+      // 'seeked' now fires with the cadence open, so if a stale 1.56s stash
       // still existed it WOULD be committed — proving _pendingSeekTime was
-      // cleared at the 14.4s commit.
+      // cleared at the 2.88s commit.
       vi.advanceTimersByTime(50);
       markSeekComplete(video);
       expect(
         video.currentTime,
         'the stale cadence stash must not jump the video backward after the later seek completes'
-      ).toBeCloseTo(14.4, 5);
+      ).toBeCloseTo(2.88, 5);
       expect(
         scrubSpy,
         'the completed 14.4s seek must not re-dispatch a video-scrub-requested for the stale target'
@@ -2575,20 +2575,20 @@ describe('t-video-player', () => {
       el.addEventListener('video-scrub-requested', scrubSpy);
 
       dispatchPointer(el, 'pointerdown', 100, 100);
-      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s committed, seek in flight
-      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 7.8s, stashed while in flight
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 0.6s committed, seek in flight
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 1.56s, stashed while in flight
       markSeekComplete(video); // fast device: seek completes immediately — must NOT flush the stash yet
       expect(
         video.currentTime,
         'the seeked-driven flush must wait out the cadence window instead of committing early'
-      ).toBe(3);
+      ).toBeCloseTo(0.6, 5);
       expect(scrubSpy, 'the seeked-driven flush must not commit while inside the 50ms window').toHaveBeenCalledTimes(
         1
       );
 
       vi.advanceTimersByTime(50);
-      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 14.4s, cadence open → committed
-      expect(video.currentTime, 'the accumulated 14.4s must apply once the window has elapsed').toBeCloseTo(14.4, 5);
+      dispatchPointer(el, 'pointermove', 280, 100); // +60px → target 2.88s, cadence open → committed
+      expect(video.currentTime, 'the accumulated 2.88s must apply once the window has elapsed').toBeCloseTo(2.88, 5);
     } finally {
       vi.useRealTimers();
     }
@@ -2606,20 +2606,20 @@ describe('t-video-player', () => {
       el.addEventListener('video-scrub-requested', scrubSpy);
 
       dispatchPointer(el, 'pointerdown', 100, 100);
-      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 3s committed, seek in flight
-      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 7.8s, stashed while in flight
-      dispatchPointer(el, 'pointerup', 220, 100); // release: flush target 7.8s, deferred while in flight
+      dispatchPointer(el, 'pointermove', 160, 100); // +60px → 0.6s committed, seek in flight
+      dispatchPointer(el, 'pointermove', 220, 100); // +60px → target 1.56s, stashed while in flight
+      dispatchPointer(el, 'pointerup', 220, 100); // release: flush target 1.56s, deferred while in flight
       expect(
         video.currentTime,
         'the flush must wait for the in-flight seek to complete'
-      ).toBe(3);
+      ).toBeCloseTo(0.6, 5);
 
       // Fast device: seeked fires inside the 50ms window — the flush must STILL land.
       markSeekComplete(video);
       expect(
         video.currentTime,
         'the deferred pointerup flush must land even inside the cadence window'
-      ).toBeCloseTo(7.8, 5);
+      ).toBeCloseTo(1.56, 5);
       expect(scrubSpy, 'exactly the first-move seek + the flush commit').toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
@@ -2639,14 +2639,14 @@ describe('t-video-player', () => {
     // must seek immediately (discrete wheel events already paint between
     // notches). The drag throttle must NOT leak into the wheel path.
     dispatchWheel(el, 100, 0);
-    expect(video.currentTime, 'the first wheel notch must seek to 5s immediately').toBe(5);
+    expect(video.currentTime, 'the first wheel notch must seek to 1s immediately').toBe(1);
     expect(scrubSpy).toHaveBeenCalledTimes(1);
 
     dispatchWheel(el, 100, 0);
     expect(
       video.currentTime,
-      'a second wheel notch must seek immediately even without a 50ms gap (15s, not throttled to 5s)'
-    ).toBeCloseTo(15, 5);
+      'a second wheel notch must seek immediately even without a 50ms gap (3s, not throttled to 1s)'
+    ).toBeCloseTo(3, 5);
     expect(
       scrubSpy,
       'both wheel notches must dispatch — the wheel path is not throttled'

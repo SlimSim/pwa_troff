@@ -46,6 +46,7 @@ import {
   getIncrementUntil,
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
+import { calculateIncrementUntilSpeed } from './utils/increment-until.js';
 import type {
   TroffMarker,
   State,
@@ -2219,6 +2220,20 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCurrentSongControlsValues();
     });
 
+    footer.addEventListener('increment-until-changed', (event: any) => {
+      const songKey = getCurrentSongKey();
+      if (songKey) {
+        nDB.setOnSong(songKey, 'TROFF_VALUE_incrementUntilValue', event.detail.value);
+        nDB.setOnSong(
+          songKey,
+          'TROFF_CLASS_TO_TOGGLE_buttIncrementUntil',
+          !event.detail.disabled
+        );
+      }
+      syncSettingsPanelValues();
+      syncCurrentSongControlsValues();
+    });
+
     footer.addEventListener('marker-created', (event: any) => {
       // Save the marker to localStorage (following existing pattern)
       const songKey = getCurrentSongKey();
@@ -2545,6 +2560,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
           loopTimesLeft -= 1;
           updateLoopTimesDisplay();
+        }
+
+        // Apply "increment until" speed change on each loop restart
+        if (!settingsPanel.incrementUntillDisabled) {
+          const targetSpeed = Number(settingsPanel.incrementUntillValue) || 0;
+          const currentSpeed = getActiveMedia().playbackRate * 100;
+          const newSpeed = calculateIncrementUntilSpeed(
+            currentSpeed,
+            targetSpeed,
+            loopTimesLeft
+          );
+          getActiveMedia().playbackRate = newSpeed / 100;
+          if (videoElement) {
+            videoElement.playbackRate = newSpeed / 100;
+          }
+          if (videoPlayer) {
+            (videoPlayer as { speed?: number }).speed = newSpeed;
+          }
+          if (footer) {
+            footer.speed = newSpeed;
+          }
+          const songKey = getCurrentSongKey();
+          if (songKey) {
+            nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', newSpeed);
+          }
         }
 
         const waitBetweenDelay = getWaitBetweenDelay();
