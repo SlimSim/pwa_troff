@@ -214,6 +214,7 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) active = false;
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
+  @property({ type: Boolean }) hideEditButton = false;
 
   private _handleEditClick(event: Event) {
     event.stopPropagation();
@@ -375,7 +376,7 @@ export class MediaItem extends LitElement {
           </div>
         </div>
 
-        ${this.songKey
+        ${this.songKey && !this.hideEditButton
           ? html`<t-butt
               class="edit-btn"
               ghost

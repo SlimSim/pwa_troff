@@ -112,6 +112,23 @@ describe('t-media song edit button', () => {
     expect(selectedSpy).not.toHaveBeenCalled();
   });
 
+  it('does not render the edit button when hideEditButton is true', async () => {
+    el.songKey = 'my-song.mp3';
+    (el as any).hideEditButton = true;
+    await el.updateComplete;
+
+    expect(el.shadowRoot?.querySelector('.edit-btn')).toBeNull();
+  });
+
+  it('renders the edit button when hideEditButton is false', async () => {
+    el.songKey = 'my-song.mp3';
+    (el as any).hideEditButton = false;
+    await el.updateComplete;
+
+    const editBtn = el.shadowRoot?.querySelector('.edit-btn');
+    expect(editBtn).toBeTruthy();
+  });
+
   it('clicking the row itself still dispatches media-selected', async () => {
     const selectedSpy = vi.fn();
     el.addEventListener('media-selected', selectedSpy);
