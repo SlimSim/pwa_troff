@@ -1,8 +1,28 @@
 import { TroffObjectLocal } from 'types/troff';
 import { getSongDisplayName } from './song.js';
-import { safeDecodeURIComponent } from './utils.js';
+import { safeDecodeURIComponent, getFileExtension } from './utils.js';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+// Extensions that identify a video file (used to pick the placeholder icon when no album art)
+const VIDEO_EXTENSIONS = new Set([
+  'mp4',
+  'webm',
+  'avi',
+  'flv',
+  '3gp',
+  'mov',
+  'mpeg',
+  'mpg',
+  'wmv',
+  'm4v',
+  'ogv',
+  'mkv',
+]);
+
+function isVideoFile(songKey: string): boolean {
+  return VIDEO_EXTENSIONS.has(getFileExtension(songKey));
+}
 
 /**
  * Format duration in seconds to MM:SS format
@@ -46,6 +66,7 @@ export function formatSongForUI(songKey: string, songData: TroffObjectLocal): an
     genre: safeDecodeURIComponent(fileData.genre || ''),
     duration: formatDuration(fileData.duration),
     albumArt: fileData.albumArt || '',
+    isVideo: isVideoFile(songKey),
     playsTotal: songData.localInformation?.nrTimesLoaded || 0,
     playsMonth: countLast30Days(songData.localInformation?.songStartsLastMonth),
   };

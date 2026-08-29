@@ -46,6 +46,7 @@ export class TrackList extends LitElement {
               .rating=${track.rating}
               tempo=${track.tempo}
               albumArt=${track.albumArt}
+              .isVideo=${track.isVideo}
               .playsMonth=${track.playsMonth}
               .playsTotal=${track.playsTotal}
               .songKey=${track.songKey}

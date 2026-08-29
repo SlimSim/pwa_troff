@@ -179,6 +179,21 @@ describe('formatSongForUI', () => {
     expect(result).toHaveProperty('songKey');
     expect(result.songKey).toBe(songKey);
   });
+
+  it('returns isVideo=false for an audio file key', () => {
+    const result = formatSongForUI('song.mp3', songDataWithPlayCount);
+    expect(result.isVideo).toBe(false);
+  });
+
+  it('returns isVideo=true for a video file key (e.g. .mp4)', () => {
+    const result = formatSongForUI('movie.mp4', songDataWithPlayCount);
+    expect(result.isVideo).toBe(true);
+  });
+
+  it('returns isVideo=true for a .webm key and false for a .m4a key', () => {
+    expect(formatSongForUI('clip.webm', songDataWithPlayCount).isVideo).toBe(true);
+    expect(formatSongForUI('audio.m4a', songDataWithPlayCount).isVideo).toBe(false);
+  });
 });
 
 // ---- formatSongForUI decodes percent-encoded display names (issue #24) ----

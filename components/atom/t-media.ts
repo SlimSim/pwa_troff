@@ -210,6 +210,7 @@ export class MediaItem extends LitElement {
   @property({ type: Number }) playsTotal = 0;
   @property({ type: String }) albumArt = '';
   @property({ type: String }) songKey = '';
+  @property({ type: Boolean }) isVideo = false;
   @property({ type: Boolean, reflect: true }) active = false;
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
@@ -340,7 +341,9 @@ export class MediaItem extends LitElement {
         @click=${this._handleClick}
       >
         <div class="album-art">
-          ${this.albumArt ? html`<img src="${this.albumArt}" alt="Album art" />` : html`♪`}
+          ${this.albumArt
+            ? html`<img src="${this.albumArt}" alt="Album art" />`
+            : html`<t-icon name="${this.isVideo ? 'movie-tape' : 'note'}"></t-icon>`}
         </div>
 
         <div class="info-column">
