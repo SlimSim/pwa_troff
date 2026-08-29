@@ -2660,7 +2660,11 @@ document.addEventListener('DOMContentLoaded', () => {
       updateHeaderCountdownDisplay();
     };
     const onEnded = () => {
-      clearPendingPlaybackStart();
+      if (isLoopTransitionPause) {
+        isLoopTransitionPause = false;
+      } else {
+        clearPendingPlaybackStart();
+      }
       if (footer) {
         footer.isPlaying = false;
       }
