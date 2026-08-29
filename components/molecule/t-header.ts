@@ -47,6 +47,13 @@ export class Header extends LitElement {
       color: var(--text-color, #000);
       font-size: 16px;
       font-weight: bold;
+      overflow: hidden;
+    }
+
+    .artwork img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .song-info {
@@ -132,6 +139,7 @@ export class Header extends LitElement {
 
   @property({ type: String }) songTitle = 'Unknown Song';
   @property({ type: String }) artistName = 'Unknown Artist';
+  @property({ type: String }) albumArt = '';
   @property({ type: String }) currentTime = '0:00';
   @property({ type: String }) totalTime = '0:00';
   @property({ type: String }) statusCountdown = '';
@@ -172,8 +180,7 @@ export class Header extends LitElement {
       <div class="header-container" @click=${this._handleExpand}>
         <div class="artwork-section">
           <div class="artwork">
-            <!-- Placeholder for album artwork -->
-            ♪
+            ${this.albumArt ? html`<img src="${this.albumArt}" alt="Album art" />` : html`♪`}
           </div>
         </div>
 

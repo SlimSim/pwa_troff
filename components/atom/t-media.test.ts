@@ -129,3 +129,51 @@ describe('t-media song edit button', () => {
     expect(event.detail.songKey).toBe('my-song.mp3');
   });
 });
+
+describe('t-media icon (isVideo) diagnostic', () => {
+  let el: MediaItem;
+
+  beforeEach(() => {
+    el = new MediaItem();
+    document.body.appendChild(el);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(el)) {
+      document.body.removeChild(el);
+    }
+  });
+
+  const getIconName = (e: MediaItem): string | null => {
+    const icon = e.shadowRoot?.querySelector('t-icon');
+    return icon ? (icon.getAttribute('name') ?? (icon as any).name ?? null) : null;
+  };
+
+  it('property isVideo=false -> note', async () => {
+    el.albumArt = '';
+    el.isVideo = false;
+    await el.updateComplete;
+    expect(getIconName(el)).toBe('note');
+  });
+
+  it('property isVideo=true -> movie-tape', async () => {
+    el.albumArt = '';
+    el.isVideo = true;
+    await el.updateComplete;
+    expect(getIconName(el)).toBe('movie-tape');
+  });
+
+  it('attribute isVideo (absent) -> note', async () => {
+    el.albumArt = '';
+    el.removeAttribute('isVideo');
+    await el.updateComplete;
+    expect(getIconName(el)).toBe('note');
+  });
+
+  it('attribute isVideo="" -> movie-tape', async () => {
+    el.albumArt = '';
+    el.setAttribute('isVideo', '');
+    await el.updateComplete;
+    expect(getIconName(el)).toBe('movie-tape');
+  });
+});

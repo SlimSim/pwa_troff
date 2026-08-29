@@ -525,16 +525,238 @@ describe('createNewSongEntry', () => {
     expect(entry.currentStartMarker).toBe('markerNr0');
   });
 
-  // for a future feature:
-  // it('extracts albumArt as data URL from APIC frame', async () => {
-  //   const tinyPng = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,144,119,83,222,0,0,0,12,73,68,65,84,8,215,99,248,15,0,0,1,1,0,5,254,241,106,0,0,0,0,73,69,78,68,174,66,96,130]);
-  //   const id3Bytes = buildMinimalID3('ArtTitle', '', '', '', '', tinyPng);
-  //   const fileWithMeta = new File([id3Bytes], 'art.mp3', { type: 'audio/mpeg', lastModified: 400 });
-  //   const entry = await createNewSongEntry(fileWithMeta, 'art.mp3');
-  //   const fd = entry.fileData as TroffFileData;
-  //   expect(typeof fd.albumArt).toBe('string');
-  //   expect(fd.albumArt).toMatch(/^data:image\/png;base64,/);
-  //   expect(fd.albumArt!.length).toBeGreaterThan(100);
-  //   expect(fd.title).toBe('ArtTitle');
-  // });
+  // --- Album art (APIC) tests ---
+
+  it('extracts albumArt as data URL from APIC frame with JPEG image (VLC-style)', async () => {
+    // Simulate what VLC writes: JPEG image data with SOI marker 0xFF 0xD8
+    const tinyJpeg = new Uint8Array([
+      0xff, 0xd8, 0xff, 0xe0, // SOI + APP0 marker
+      0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, // JFIF header
+      0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+      0xff, 0xd9, // EOI
+    ]);
+    const id3Bytes = buildMinimalID3('ArtTitle', '', '', '', '', tinyJpeg);
+    const fileWithMeta = new File([id3Bytes], 'art.mp3', { type: 'audio/mpeg', lastModified: 400 });
+    const entry = await createNewSongEntry(fileWithMeta, 'art.mp3');
+    const fd = entry.fileData as TroffFileData;
+    expect(typeof fd.albumArt).toBe('string');
+    expect(fd.albumArt).toMatch(/^data:image\/jpeg;base64,/);
+    // Tiny 22-byte JPEG → base64 data URL is short (~55 chars total); just verify it's non-trivial
+    expect(fd.albumArt!.length).toBeGreaterThan(30);
+    expect(fd.title).toBe('ArtTitle');
+  });
+
+  it('extracts albumArt even when ID3v2 tag has an extended header (byte 5 flags = 0x40)', async () => {
+    // Build a raw ID3v2.3 tag with extended header flag set.
+    // The extended header causes the parser to misread frame positions
+    // because it starts reading at byte 10 without skipping the extended header.
+
+    const enc = 0; // ISO-8859-1
+    const term = 0;
+
+    const makeTextFrame = (id: string, text: string) => {
+      const textBytes = [...new TextEncoder().encode(text), term];
+      const dataLen = 1 + textBytes.length;
+      const sizeBytes = [0, 0, 0, dataLen];
+      return [
+        ...id.split('').map((c) => c.charCodeAt(0)),
+        ...sizeBytes,
+        0, 0, // flags
+        enc,
+        ...textBytes,
+      ];
+    };
+
+    // JPEG image data for APIC
+    const tinyJpeg = new Uint8Array([
+      0xff, 0xd8, 0xff, 0xe0,
+      0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+      0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+      0xff, 0xd9,
+    ]);
+
+    const makeApicFrame = (data: Uint8Array) => {
+      const mime = [...new TextEncoder().encode('image/jpeg'), 0];
+      const picType = [3]; // Front cover
+      const desc = [0]; // empty description + terminator
+      const dataLen = 1 + mime.length + picType.length + desc.length + data.length;
+      const sizeBytes = [0, 0, 0, dataLen];
+      return [
+        ...'APIC'.split('').map((c) => c.charCodeAt(0)),
+        ...sizeBytes,
+        0, 0, // flags
+        enc,
+        ...mime,
+        ...picType,
+        ...desc,
+        ...Array.from(data),
+      ];
+    };
+
+    const frames = [
+      ...makeTextFrame('TIT2', 'ExtendedTitle'),
+      ...makeApicFrame(tinyJpeg),
+    ];
+    const tagSize = frames.length;
+
+    // Extended header for ID3v2.3:
+    // 4 bytes: size of extended header (includes itself) = 6
+    // 1 byte: number of flag bytes = 1
+    // 1 byte: flags = 0x00 (no flags set)
+    const extendedHeader = [0x00, 0x00, 0x00, 0x06, 0x01, 0x00];
+
+    // ID3v2.3 header with flags byte 5 = 0x40 (extended header present)
+    const header = [
+      73, 68, 51, // 'ID3'
+      3, 0,       // v2.3
+      0x40,       // flags: extended header bit set
+      ...[0, 0, 0, tagSize + extendedHeader.length], // tag size includes extended header
+    ];
+
+    const id3Bytes = new Uint8Array([...header, ...extendedHeader, ...frames]);
+    const fileWithMeta = new File([id3Bytes], 'ext.mp3', { type: 'audio/mpeg', lastModified: 500 });
+    const entry = await createNewSongEntry(fileWithMeta, 'ext.mp3');
+    const fd = entry.fileData as TroffFileData;
+
+    // The parser currently does NOT skip extended headers, so it reads
+    // [0x00, 0x00, 0x00, 0x06] as the frame ID and breaks immediately
+    // at the null byte. This test should FAIL until the parser is fixed.
+    expect(fd.albumArt).toBeDefined();
+    expect(fd.albumArt).not.toBe('');
+    expect(fd.title).toBe('ExtendedTitle');
+  });
+
+  it('extracts albumArt from APIC frame with non-empty description (e.g. "Front Cover")', async () => {
+    const enc = 0; // ISO-8859-1
+
+    const tinyJpeg = new Uint8Array([
+      0xff, 0xd8, 0xff, 0xe0,
+      0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+      0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+      0xff, 0xd9,
+    ]);
+
+    // Build APIC frame with a non-empty description "Front Cover"
+    const mime = [...new TextEncoder().encode('image/jpeg'), 0];
+    const picType = [3]; // Front cover
+    const desc = [...new TextEncoder().encode('Front Cover'), 0]; // non-empty description
+    const dataLen = 1 + mime.length + picType.length + desc.length + tinyJpeg.length;
+    const sizeBytes = [0, 0, 0, dataLen];
+    const apicFrame = [
+      ...'APIC'.split('').map((c) => c.charCodeAt(0)),
+      ...sizeBytes,
+      0, 0, // flags
+      enc,
+      ...mime,
+      ...picType,
+      ...desc,
+      ...Array.from(tinyJpeg),
+    ];
+
+    // Minimal text frames for title only
+    const textBytes = [...new TextEncoder().encode('DescTitle'), 0];
+    const tit2Frame = [
+      ...'TIT2'.split('').map((c) => c.charCodeAt(0)),
+      0, 0, 0, 1 + textBytes.length,
+      0, 0, // flags
+      enc,
+      ...textBytes,
+    ];
+
+    const frames = [...tit2Frame, ...apicFrame];
+    const tagSize = frames.length;
+    const header = [
+      73, 68, 51, // 'ID3'
+      3, 0,       // v2.3
+      0,          // flags (no extended header)
+      ...[0, 0, 0, tagSize],
+    ];
+    const id3Bytes = new Uint8Array([...header, ...frames]);
+
+    const fileWithMeta = new File([id3Bytes], 'descart.mp3', { type: 'audio/mpeg', lastModified: 600 });
+    const entry = await createNewSongEntry(fileWithMeta, 'descart.mp3');
+    const fd = entry.fileData as TroffFileData;
+
+    // The parser uses magic-byte scanning, so it should find the JPEG data
+    // regardless of the description field content.
+    expect(fd.albumArt).toBeDefined();
+    expect(fd.albumArt).toMatch(/^data:image\/jpeg;base64,/);
+    expect(fd.title).toBe('DescTitle');
+  });
+
+  it('full pipeline: ID3 bytes with APIC → createNewSongEntry → fileData.albumArt is a non-empty data URL', async () => {
+    // Realistic JPEG bytes (VLC-style)
+    const jpegBytes = new Uint8Array([
+      0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46,
+      0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+      0xff, 0xdb, 0x00, 0x43, 0x00, // DQT marker + quantization table
+      0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08, 0x07,
+      0x07, 0x07, 0x09, 0x09, 0x08, 0x0a, 0x0c, 0x14,
+      0x0d, 0x0c, 0x0b, 0x0b, 0x0c, 0x19, 0x12, 0x13,
+      0x0f, 0x14, 0x1d, 0x1a, 0x1f, 0x1e, 0x1d, 0x1a,
+      0x1c, 0x1c, 0x20, 0x24, 0x2e, 0x27, 0x20, 0x22,
+      0x2c, 0x23, 0x1c, 0x1c, 0x28, 0x37, 0x29, 0x2c,
+      0x30, 0x31, 0x34, 0x34, 0x34, 0x1f, 0x27, 0x39,
+      0x3d, 0x38, 0x32, 0x3c, 0x2e, 0x33, 0x34, 0x32,
+      0xff, 0xd9, // EOI
+    ]);
+
+    // Build ID3 bytes manually to ensure proper syncsafe tag-size encoding
+    // (buildMinimalID3 writes plain big-endian which breaks for sizes >= 128)
+    const enc = 0;
+    const term = 0;
+    const makeTextFrame = (id: string, text: string) => {
+      const textBytes = [...new TextEncoder().encode(text), term];
+      const dataLen = 1 + textBytes.length;
+      const sizeBytes = [0, 0, 0, dataLen];
+      return [
+        ...id.split('').map((c) => c.charCodeAt(0)),
+        ...sizeBytes, 0, 0, enc, ...textBytes,
+      ];
+    };
+    const mime = [...new TextEncoder().encode('image/jpeg'), 0];
+    const picType = [3];
+    const desc = [0];
+    const apicDataLen = 1 + mime.length + picType.length + desc.length + jpegBytes.length;
+    const apicFrame = [
+      ...'APIC'.split('').map((c) => c.charCodeAt(0)),
+      0, 0, 0, apicDataLen, 0, 0, enc,
+      ...mime, ...picType, ...desc, ...Array.from(jpegBytes),
+    ];
+
+    const frames = [
+      ...makeTextFrame('TIT2', 'PipelineTitle'),
+      ...makeTextFrame('TPE1', 'PipelineArtist'),
+      ...makeTextFrame('TALB', 'PipelineAlbum'),
+      ...makeTextFrame('TCON', 'Rock'),
+      ...apicFrame,
+    ];
+    const tagSize = frames.length;
+
+    // Encode tag size as syncsafe integer (7 bits per byte)
+    const syncsafe = [
+      (tagSize >> 21) & 0x7f,
+      (tagSize >> 14) & 0x7f,
+      (tagSize >> 7) & 0x7f,
+      tagSize & 0x7f,
+    ];
+
+    const header = [73, 68, 51, 3, 0, 0, ...syncsafe];
+    const id3Bytes = new Uint8Array([...header, ...frames]);
+
+    const fileWithMeta = new File([id3Bytes], 'pipeline.mp3', { type: 'audio/mpeg', lastModified: 700 });
+    const entry = await createNewSongEntry(fileWithMeta, 'pipeline.mp3');
+    const fd = entry.fileData as TroffFileData;
+
+    // Verify the full pipeline: albumArt is a valid data URL with base64-encoded JPEG
+    expect(typeof fd.albumArt).toBe('string');
+    expect(fd.albumArt).toMatch(/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/);
+    expect(fd.albumArt!.length).toBeGreaterThan(100);
+
+    // Verify other metadata came through correctly
+    expect(fd.title).toBe('PipelineTitle');
+    expect(fd.artist).toBe('PipelineArtist');
+    expect(fd.album).toBe('PipelineAlbum');
+    expect(fd.genre).toBe('Rock');
+  });
 });

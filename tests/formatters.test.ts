@@ -9,6 +9,7 @@ import type { TroffLocalInformation } from '../types/troff.js';
 
 const baseFileData = {
   album: 'Test Album',
+  albumArt: '',
   artist: 'Test Artist',
   choreographer: '',
   choreography: '',
@@ -137,6 +138,22 @@ describe('formatSongForUI', () => {
     expect(result.duration).toBe('2:05');
   });
 
+  it('includes albumArt from fileData', () => {
+    const result = formatSongForUI(songKey, songDataWithPlayCount);
+    expect(result).toHaveProperty('albumArt');
+    expect(result.albumArt).toBe('');
+  });
+
+  it('passes through albumArt data URL when present', () => {
+    const dataUrl = 'data:image/jpeg;base64,/9j/4AAQtest';
+    const songDataWithArt = {
+      ...songDataWithPlayCount,
+      fileData: { ...baseFileData, albumArt: dataUrl },
+    };
+    const result = formatSongForUI(songKey, songDataWithArt);
+    expect(result.albumArt).toBe(dataUrl);
+  });
+
   it('includes playsMonth defaulting to 0 when songStartsLastMonth is undefined', () => {
     const result = formatSongForUI(songKey, songDataNoStarts);
     expect(result).toHaveProperty('playsMonth');
@@ -161,6 +178,21 @@ describe('formatSongForUI', () => {
     expect(result).toHaveProperty('playsTotal');
     expect(result).toHaveProperty('songKey');
     expect(result.songKey).toBe(songKey);
+  });
+
+  it('returns isVideo=false for an audio file key', () => {
+    const result = formatSongForUI('song.mp3', songDataWithPlayCount);
+    expect(result.isVideo).toBe(false);
+  });
+
+  it('returns isVideo=true for a video file key (e.g. .mp4)', () => {
+    const result = formatSongForUI('movie.mp4', songDataWithPlayCount);
+    expect(result.isVideo).toBe(true);
+  });
+
+  it('returns isVideo=true for a .webm key and false for a .m4a key', () => {
+    expect(formatSongForUI('clip.webm', songDataWithPlayCount).isVideo).toBe(true);
+    expect(formatSongForUI('audio.m4a', songDataWithPlayCount).isVideo).toBe(false);
   });
 });
 

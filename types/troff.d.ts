@@ -71,6 +71,7 @@ export interface TroffLocalInformation {
 
 export interface TroffFileData {
   album: string;
+  albumArt?: string;
   artist: string;
   choreographer: string;
   choreography: string;
