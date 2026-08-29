@@ -57,37 +57,41 @@ export class TVideoPlayer extends LitElement {
     .fullscreen-btn {
       right: 8px;
     }
-    .play-pause-btn {
-      top: auto;
-      bottom: var(--bottom-safe-offset, 8px);
-      left: 50%;
-      transform: translateX(-50%);
+    .bottom-controls {
+      position: absolute;
+      bottom: var(--bottom-safe-offset);
+      left: 0;
+      right: 0;
+      display: flex;
+      z-index: 1;
+      align-items: end;
     }
-    .marker-btn {
-      top: auto;
-      bottom: var(--bottom-safe-offset, 8px);
-      right: 8px;
+    .bottom-controls-cell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
     }
-    .replay-btn {
+    .bottom-controls .video-btn {
+      position: static;
       top: auto;
-      bottom: var(--bottom-safe-offset, 8px);
-      left: calc(30% - 8px);
-      transform: translateX(-50%);
+      bottom: auto;
+      left: auto;
+      right: auto;
+      transform: none;
     }
-    .prev-marker-btn {
-      top: auto;
-      bottom: var(--bottom-safe-offset, 8px);
-      left: 8px;
-    }
-    .next-marker-btn {
-      top: auto;
-      bottom: var(--bottom-safe-offset, 8px);
-      right: calc(30% - 8px);
-      transform: translateX(50%);
+    .bottom-controls .marker-label {
+      position: static;
+      bottom: auto;
+      left: auto;
+      right: auto;
+      transform: none;
+      white-space: normal;
+      max-width: 100%;
+      text-align: center;
     }
     .marker-label {
-      position: absolute;
-      bottom: calc(var(--bottom-safe-offset, 8px) + 32px);
       z-index: 1;
       padding: 2px 8px;
       border-radius: var(--button-border-radius);
@@ -121,17 +125,6 @@ export class TVideoPlayer extends LitElement {
       font-size: 0.9rem;
       white-space: nowrap;
       pointer-events: none;
-    }
-    .prev-marker-label {
-      left: 8px;
-    }
-    .replay-label {
-      left: calc(30% - 8px);
-      transform: translateX(-50%);
-    }
-    .next-marker-label {
-      right: calc(30% - 8px);
-      transform: translateX(50%);
     }
 
     .video-frame {
@@ -855,86 +848,97 @@ export class TVideoPlayer extends LitElement {
         >
           <t-icon name="${this._isFullscreen ? 'resize-small' : 'resize-full'}"></t-icon>
         </t-butt>
-        <t-butt
-          class="video-btn play-pause-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-            ._controlsVisible
-            ? ''
-            : 'controls-hidden'}"
-          slim
-          title="Play/Pause"
-          @click=${this._onPlayPauseClick}
-        >
-          <t-icon name="${this._isPlaying ? 'pause' : 'play'}"></t-icon>
-        </t-butt>
-        <t-butt
-          class="video-btn marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-            ._controlsVisible
-            ? ''
-            : 'controls-hidden'}"
-          slim
-          title="Add marker"
-          @click=${this._onMarkerClick}
-        >
-          <t-icon name="marker-plus"></t-icon>
-        </t-butt>
-        <t-butt
-          class="video-btn replay-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-            ._controlsVisible
-            ? ''
-            : 'controls-hidden'}"
-          slim
-          title="Replay"
-          @click=${this._onReplayClick}
-        >
-          <t-icon name="reload"></t-icon>
-        </t-butt>
-        ${this._replayMarkerName
-          ? html`<span
-              class="marker-label replay-label ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+        <div class="bottom-controls">
+          <div class="bottom-controls-cell">
+            ${this._prevMarkerName
+              ? html`<span
+                  class="marker-label prev-marker-label ${this._isFullscreen
+                    ? ''
+                    : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+                  >${this._prevMarkerName}</span
+                >`
+              : ''}
+            <t-butt
+              class="video-btn prev-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
                 ._controlsVisible
                 ? ''
                 : 'controls-hidden'}"
-              >${this._replayMarkerName}</span
-            >`
-          : ''}
-        <t-butt
-          class="video-btn prev-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-            ._controlsVisible
-            ? ''
-            : 'controls-hidden'}"
-          slim
-          title="Previous marker"
-          @click=${this._onPrevMarkerClick}
-        >
-          <t-icon name="previous-marker"></t-icon>
-        </t-butt>
-        ${this._prevMarkerName
-          ? html`<span
-              class="marker-label prev-marker-label ${this._isFullscreen
+              slim
+              title="Previous marker"
+              @click=${this._onPrevMarkerClick}
+            >
+              <t-icon name="previous-marker"></t-icon>
+            </t-butt>
+          </div>
+          <div class="bottom-controls-cell">
+            ${this._replayMarkerName
+              ? html`<span
+                  class="marker-label replay-label ${this._isFullscreen
+                    ? ''
+                    : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+                  >${this._replayMarkerName}</span
+                >`
+              : ''}
+            <t-butt
+              class="video-btn replay-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+                ._controlsVisible
                 ? ''
-                : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
-              >${this._prevMarkerName}</span
-            >`
-          : ''}
-        <t-butt
-          class="video-btn next-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-            ._controlsVisible
-            ? ''
-            : 'controls-hidden'}"
-          slim
-          title="Next marker"
-          @click=${this._onNextMarkerClick}
-        >
-          <t-icon name="next-marker"></t-icon>
-        </t-butt>
-        ${this._nextMarkerName
-          ? html`<span
-              class="marker-label next-marker-label ${this._isFullscreen
+                : 'controls-hidden'}"
+              slim
+              title="Replay"
+              @click=${this._onReplayClick}
+            >
+              <t-icon name="reload"></t-icon>
+            </t-butt>
+          </div>
+          <div class="bottom-controls-cell">
+            <t-butt
+              class="video-btn play-pause-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+                ._controlsVisible
                 ? ''
-                : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
-              >${this._nextMarkerName}</span
-            >`
-          : ''}
+                : 'controls-hidden'}"
+              slim
+              title="Play/Pause"
+              @click=${this._onPlayPauseClick}
+            >
+              <t-icon name="${this._isPlaying ? 'pause' : 'play'}"></t-icon>
+            </t-butt>
+          </div>
+          <div class="bottom-controls-cell">
+            ${this._nextMarkerName
+              ? html`<span
+                  class="marker-label next-marker-label ${this._isFullscreen
+                    ? ''
+                    : 'not-fullscreen'} ${this._controlsVisible ? '' : 'controls-hidden'}"
+                  >${this._nextMarkerName}</span
+                >`
+              : ''}
+            <t-butt
+              class="video-btn next-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+                ._controlsVisible
+                ? ''
+                : 'controls-hidden'}"
+              slim
+              title="Next marker"
+              @click=${this._onNextMarkerClick}
+            >
+              <t-icon name="next-marker"></t-icon>
+            </t-butt>
+          </div>
+          <div class="bottom-controls-cell">
+            <t-butt
+              class="video-btn marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
+                ._controlsVisible
+                ? ''
+                : 'controls-hidden'}"
+              slim
+              title="Add marker"
+              @click=${this._onMarkerClick}
+            >
+              <t-icon name="marker-plus"></t-icon>
+            </t-butt>
+          </div>
+        </div>
       </div>
     `;
   }

@@ -2652,4 +2652,231 @@ describe('t-video-player', () => {
       'both wheel notches must dispatch — the wheel path is not throttled'
     ).toHaveBeenCalledTimes(2);
   });
+
+  // ---- Bottom controls flex layout ------------------------------------------
+  //
+  // Feature: the 5 bottom-row buttons (prev-marker, replay, play-pause,
+  // next-marker, marker) are refactored from individually-positioned elements
+  // into a `.bottom-controls` flex container with 5 equal-width
+  // `.bottom-controls-cell` children. Each cell uses `flex-direction: column`
+  // to stack an optional marker label above the button. The top-row buttons
+  // (mirror-btn, fullscreen-btn) remain individually positioned and are NOT
+  // part of this flex container.
+
+  describe('bottom controls flex layout', () => {
+    /** Returns the `.bottom-controls` element inside the video frame, or null. */
+    const getBottomControls = (el: TVideoPlayer): HTMLElement | null =>
+      (el.shadowRoot?.querySelector('.bottom-controls') as HTMLElement) ?? null;
+
+    /** Returns all `.bottom-controls-cell` children of the bottom controls. */
+    const getBottomCells = (el: TVideoPlayer): Element[] =>
+      Array.from(el.shadowRoot?.querySelectorAll('.bottom-controls-cell') ?? []);
+
+    /** Returns the `.bottom-controls-cell` that contains the given selector. */
+    const findCellFor = (el: TVideoPlayer, buttonSelector: string): Element | null => {
+      const cells = getBottomCells(el);
+      return cells.find((cell) => cell.querySelector(buttonSelector) !== null) ?? null;
+    };
+
+    it('renders a .bottom-controls div as a descendant of .video-frame', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const frame = el.shadowRoot?.querySelector('.video-frame');
+      expect(frame, '.video-frame must exist').not.toBeNull();
+
+      const bottomControls = getBottomControls(el);
+      expect(
+        bottomControls,
+        '.bottom-controls must exist inside .video-frame'
+      ).not.toBeNull();
+      expect(
+        frame?.contains(bottomControls),
+        '.bottom-controls must be a descendant of .video-frame'
+      ).toBe(true);
+    });
+
+    it('.bottom-controls contains exactly 5 .bottom-controls-cell children', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const cells = getBottomCells(el);
+      expect(
+        cells.length,
+        '.bottom-controls must have exactly 5 children (prev, replay, play-pause, next, marker)'
+      ).toBe(5);
+    });
+
+    it('each .bottom-controls-cell contains exactly one .video-btn element', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const cells = getBottomCells(el);
+      expect(
+        cells.length,
+        'must have at least one .bottom-controls-cell to inspect (vacuous pass guard)'
+      ).toBeGreaterThanOrEqual(1);
+      for (const cell of cells) {
+        const buttons = cell.querySelectorAll('.video-btn');
+        expect(
+          buttons.length,
+          `each cell must contain exactly one .video-btn, but found ${buttons.length}`
+        ).toBe(1);
+      }
+    });
+
+    it('each cell corresponds to exactly one of the 5 expected button classes', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const expectedButtonClasses = [
+        '.prev-marker-btn',
+        '.replay-btn',
+        '.play-pause-btn',
+        '.next-marker-btn',
+        '.marker-btn',
+      ];
+
+      for (const btnClass of expectedButtonClasses) {
+        const cell = findCellFor(el, btnClass);
+        expect(
+          cell,
+          `a cell must contain ${btnClass}`
+        ).not.toBeNull();
+      }
+    });
+
+    it('the cell containing .prev-marker-btn also contains .prev-marker-label when markers are set', async () => {
+      const { el } = createPlayerWithVideo();
+      setMarkerProps(el, abcMarkers(), 'mB');
+      await el.updateComplete;
+
+      const cell = findCellFor(el, '.prev-marker-btn');
+      expect(cell, 'cell for prev-marker-btn must exist').not.toBeNull();
+      expect(
+        cell?.querySelector('.prev-marker-label'),
+        'the prev-marker-btn cell must contain .prev-marker-label when markers are set'
+      ).not.toBeNull();
+    });
+
+    it('the cell containing .prev-marker-btn does NOT contain .prev-marker-label when markers are empty', async () => {
+      const { el } = createPlayerWithVideo();
+      setMarkerProps(el, [], '');
+      await el.updateComplete;
+
+      const cell = findCellFor(el, '.prev-marker-btn');
+      expect(cell, 'cell for prev-marker-btn must exist').not.toBeNull();
+      expect(
+        cell?.querySelector('.prev-marker-label'),
+        'the prev-marker-btn cell must NOT contain .prev-marker-label when markers are empty'
+      ).toBeNull();
+    });
+
+    it('the cell containing .replay-btn also contains .replay-label when markers are set', async () => {
+      const { el } = createPlayerWithVideo();
+      setMarkerProps(el, abcMarkers(), 'mB');
+      await el.updateComplete;
+
+      const cell = findCellFor(el, '.replay-btn');
+      expect(cell, 'cell for replay-btn must exist').not.toBeNull();
+      expect(
+        cell?.querySelector('.replay-label'),
+        'the replay-btn cell must contain .replay-label when markers are set'
+      ).not.toBeNull();
+    });
+
+    it('the cell containing .next-marker-btn also contains .next-marker-label when markers are set', async () => {
+      const { el } = createPlayerWithVideo();
+      setMarkerProps(el, abcMarkers(), 'mB');
+      await el.updateComplete;
+
+      const cell = findCellFor(el, '.next-marker-btn');
+      expect(cell, 'cell for next-marker-btn must exist').not.toBeNull();
+      expect(
+        cell?.querySelector('.next-marker-label'),
+        'the next-marker-btn cell must contain .next-marker-label when markers are set'
+      ).not.toBeNull();
+    });
+
+    it('the .play-pause-btn cell never contains a marker label', async () => {
+      const { el } = createPlayerWithVideo();
+      setMarkerProps(el, abcMarkers(), 'mB');
+      await el.updateComplete;
+
+      const cell = findCellFor(el, '.play-pause-btn');
+      expect(cell, 'cell for play-pause-btn must exist').not.toBeNull();
+      expect(cell?.querySelector('.prev-marker-label')).toBeNull();
+      expect(cell?.querySelector('.replay-label')).toBeNull();
+      expect(cell?.querySelector('.next-marker-label')).toBeNull();
+    });
+
+    it('the .marker-btn cell never contains a marker label', async () => {
+      const { el } = createPlayerWithVideo();
+      setMarkerProps(el, abcMarkers(), 'mB');
+      await el.updateComplete;
+
+      const cell = findCellFor(el, '.marker-btn');
+      expect(cell, 'cell for marker-btn must exist').not.toBeNull();
+      expect(cell?.querySelector('.prev-marker-label')).toBeNull();
+      expect(cell?.querySelector('.replay-label')).toBeNull();
+      expect(cell?.querySelector('.next-marker-label')).toBeNull();
+    });
+
+    it('.bottom-controls is positioned at the bottom via position: absolute and bottom in the stylesheet', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const sheet = el.shadowRoot?.adoptedStyleSheets?.[0];
+      const rules = sheet?.cssRules;
+      if (!rules) {
+        throw new Error(
+          'Expected shadow root to expose adoptedStyleSheets[0].cssRules'
+        );
+      }
+
+      let foundRule = false;
+      for (let i = 0; i < rules.length; i += 1) {
+        const rule = rules[i] as CSSStyleRule;
+        if (rule.selectorText === '.bottom-controls') {
+          const cssText = rule.style.cssText;
+          expect(
+            cssText,
+            '.bottom-controls rule must set position: absolute'
+          ).toContain('position: absolute');
+          expect(
+            cssText,
+            '.bottom-controls rule must set bottom'
+          ).toContain('bottom:');
+          foundRule = true;
+          break;
+        }
+      }
+      expect(
+        foundRule,
+        'the component stylesheet must contain a .bottom-controls rule'
+      ).toBe(true);
+    });
+
+    it('.top-row buttons (mirror-btn, fullscreen-btn) are NOT inside .bottom-controls', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const bottomControls = getBottomControls(el);
+      expect(bottomControls, '.bottom-controls must exist').not.toBeNull();
+
+      expect(
+        bottomControls?.querySelector('.mirror-btn'),
+        '.mirror-btn must NOT be inside .bottom-controls'
+      ).toBeNull();
+      expect(
+        bottomControls?.querySelector('.fullscreen-btn'),
+        '.fullscreen-btn must NOT be inside .bottom-controls'
+      ).toBeNull();
+
+      // They should still be inside .video-frame directly
+      const frame = el.shadowRoot?.querySelector('.video-frame');
+      expect(frame?.querySelector('.mirror-btn')).not.toBeNull();
+      expect(frame?.querySelector('.fullscreen-btn')).not.toBeNull();
+    });
+  });
 });
