@@ -819,6 +819,7 @@ export class GroupList extends LitElement {
                   .playsMonth=${track.playsMonth}
                   .playsTotal=${track.playsTotal}
                   .songKey=${track.songKey}
+                  .hideEditButton=${this._songManagementOpen}
                 ></t-media>
                 ${this._songManagementOpen
                   ? html`

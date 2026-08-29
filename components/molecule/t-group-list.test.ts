@@ -104,6 +104,38 @@ describe('t-group-list detail search input', () => {
     expect(element.shadowRoot?.querySelector('.no-results')).toBeNull();
   });
 
+  it('t-media elements receive hideEditButton=true when song management mode is open', async () => {
+    await element.updateComplete;
+
+    // Open song management mode
+    (element as any)._songManagementOpen = true;
+    await element.updateComplete;
+
+    const mediaEls = element.shadowRoot?.querySelectorAll('t-media') as NodeListOf<HTMLElement> | undefined;
+    expect(mediaEls).toBeTruthy();
+    expect(mediaEls!.length).toBeGreaterThan(0);
+
+    mediaEls!.forEach((media) => {
+      expect((media as any).hideEditButton).toBe(true);
+    });
+  });
+
+  it('t-media elements receive hideEditButton=false when song management mode is closed', async () => {
+    await element.updateComplete;
+
+    // Ensure song management mode is closed (default)
+    (element as any)._songManagementOpen = false;
+    await element.updateComplete;
+
+    const mediaEls = element.shadowRoot?.querySelectorAll('t-media') as NodeListOf<HTMLElement> | undefined;
+    expect(mediaEls).toBeTruthy();
+    expect(mediaEls!.length).toBeGreaterThan(0);
+
+    mediaEls!.forEach((media) => {
+      expect((media as any).hideEditButton).toBe(false);
+    });
+  });
+
   it('closeDetail closes an open group detail', async () => {
     await element.updateComplete;
 

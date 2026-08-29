@@ -53,6 +53,7 @@ import type {
   State_WithTime,
   TroffManualImportExport,
   TroffFileData,
+  TroffHistoryList,
 } from './types/troff.d.js';
 import {
   TROFF_SETTING_ENTER_RESET_COUNTER,
@@ -80,6 +81,7 @@ import {
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_KEEP_SCREEN_ON,
+  TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
 import { showToast } from './utils/notification.js';
@@ -391,6 +393,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const withSafeNumber = (value: unknown, fallback: number) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const getVersionInfo = (songKey: string): { numberOfVersions: number; findUrl: string } => {
+    const fileNameUri = encodeURI(songKey);
+    const dbHistory: TroffHistoryList[] | null = nDB.get(
+      TROFF_TROFF_DATA_ID_AND_FILE_NAME
+    );
+    if (dbHistory == null) {
+      return { numberOfVersions: 0, findUrl: '' };
+    }
+
+    const hist = dbHistory.filter((h) => h.fileNameUri === fileNameUri);
+    if (
+      hist.length === 0 ||
+      hist[0].troffDataIdObjectList == null ||
+      hist[0].troffDataIdObjectList.length === 0
+    ) {
+      return { numberOfVersions: 0, findUrl: '' };
+    }
+
+    if (
+      hist[0].troffDataIdObjectList.length === 1 &&
+      nDB.get(songKey)?.serverId !== undefined
+    ) {
+      return { numberOfVersions: 0, findUrl: '' };
+    }
+
+    return {
+      numberOfVersions: hist[0].troffDataIdObjectList.length,
+      findUrl: 'find.html#f=my&id=' + fileNameUri,
+    };
   };
 
   const getTimelineDuration = () => {
@@ -1182,6 +1215,11 @@ document.addEventListener('DOMContentLoaded', () => {
       ? String(configuredLoops)
       : 'Inf';
 
+    // Version link info
+    const versionInfo = songKey ? getVersionInfo(songKey) : { numberOfVersions: 0, findUrl: '' };
+    currentSongControls.numberOfVersions = versionInfo.numberOfVersions;
+    currentSongControls.findUrl = versionInfo.findUrl;
+
     // Load song-specific numeric settings and their disabled states.
     // Disabled state must be set BEFORE value so the t-dial knows its disabled
     // state when receiving the new value (for correct display).
@@ -1281,6 +1319,8 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsControls.tempo = currentSongControls.tempo;
       settingsControls.disablePauseBefore = currentSongControls.disablePauseBefore;
       settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
+      settingsControls.numberOfVersions = currentSongControls.numberOfVersions;
+      settingsControls.findUrl = currentSongControls.findUrl;
     }
 
     // Also push tempo onto the settings panel host so the template binding
@@ -2620,7 +2660,11 @@ document.addEventListener('DOMContentLoaded', () => {
       updateHeaderCountdownDisplay();
     };
     const onEnded = () => {
-      clearPendingPlaybackStart();
+      if (isLoopTransitionPause) {
+        isLoopTransitionPause = false;
+      } else {
+        clearPendingPlaybackStart();
+      }
       if (footer) {
         footer.isPlaying = false;
       }

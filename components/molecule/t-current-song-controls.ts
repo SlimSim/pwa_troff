@@ -236,8 +236,6 @@ export class CurrentSongControls extends LitElement {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
-
-
   `;
 
   @property({ type: String }) loopTimesValue = '1';
@@ -256,6 +254,8 @@ export class CurrentSongControls extends LitElement {
   @property({ type: Number }) speed = 100;
   @property({ type: Number }) tempo = 0;
   @property({ type: Array }) songStates: string[] = [];
+  @property({ type: Number }) numberOfVersions = 0;
+  @property({ type: String }) findUrl = '';
 
   private _handleSettingChange(setting: string, value: unknown) {
     this.dispatchEvent(
@@ -521,8 +521,8 @@ export class CurrentSongControls extends LitElement {
                 </li>
                 <li>The "1 - 9" buttons determine how many times the song will loop.</li>
                 <li class="hide-on-wide">
-                  On smaller screens the "Speed and volume controls" and the "Wait controls" 
-                  ("Pause before" and "Wait between") and  are available from the buttons with the
+                  On smaller screens the "Speed and volume controls" and the "Wait controls" ("Pause
+                  before" and "Wait between") and are available from the buttons with the
                   <t-icon name="speed" slim></t-icon> and <t-icon name="time" slim></t-icon> -icons
                   in the footer, respectively.
                 </li>
@@ -697,6 +697,18 @@ export class CurrentSongControls extends LitElement {
                 ${this._renderSongActionButton('moveMarkers', 'Move markers')}
                 ${this._renderSongActionButton('deleteMarkers', 'Delete markers')}
                 ${this._renderSongActionButton('stretchMarkers', 'Stretch markers')}
+                ${this.numberOfVersions > 0
+                  ? html`
+                      <t-butt
+                        ellipsis
+                        href=${this.findUrl}
+                        target="_blank"
+                        title="There are a number of versions of this song in the find page"
+                      >
+                        ${this.numberOfVersions} versions
+                      </t-butt>
+                    `
+                  : ''}
               </div>
               <div class="states-section">
                 <div class="states-header">

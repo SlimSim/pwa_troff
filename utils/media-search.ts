@@ -7,7 +7,10 @@
  * - An empty or whitespace-only query returns the input array unchanged
  *   (same reference) — this lets callers cheaply skip filtering.
  * - A non-empty query is trimmed and matched case-insensitively as a
- *   substring against the item's primary name field.
+ *   substring against the item's primary name field. For tracks, the query
+ *   also matches against `artist`, `genre`, `album`, `tags`,
+ *   `choreographer`, `choreography`, `info`, and `songKey` (file name)
+ *   fields.
  * - The input array is never mutated; a new array is returned on the
  *   non-empty-query path.
  * - `filterGroups` additionally drops groups with no name
@@ -20,6 +23,14 @@ import type { TroffFirebaseGroupIdentifyer } from '../types/troff.d.js';
  * produced by `LocalSongDataService.getAllSongs()` satisfy this. */
 export interface TrackLike {
   title: string;
+  artist?: string;
+  genre?: string;
+  album?: string;
+  songKey?: string;
+  tags?: string;
+  choreographer?: string;
+  choreography?: string;
+  info?: string;
   [key: string]: unknown;
 }
 
@@ -51,7 +62,25 @@ export function filterTracks(tracks: TrackLike[], query: string): TrackLike[] {
   if (needle === '') {
     return tracks;
   }
-  return tracks.filter((track) => track.title.toLowerCase().includes(needle));
+  return tracks.filter((track) => matchesTrackSearch(track, needle));
+}
+
+function matchesTrackSearch(track: TrackLike, needle: string): boolean {
+  return (
+    track.title.toLowerCase().includes(needle) ||
+    strIncludes(track.artist, needle) ||
+    strIncludes(track.genre, needle) ||
+    strIncludes(track.album, needle) ||
+    strIncludes(track.tags, needle) ||
+    strIncludes(track.choreographer, needle) ||
+    strIncludes(track.choreography, needle) ||
+    strIncludes(track.info, needle) ||
+    strIncludes(track.songKey, needle)
+  );
+}
+
+function strIncludes(value: unknown, needle: string): boolean {
+  return typeof value === 'string' && value.toLowerCase().includes(needle);
 }
 
 export function filterArtists(artists: ArtistLike[], query: string): ArtistLike[] {
