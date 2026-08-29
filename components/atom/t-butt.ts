@@ -28,8 +28,11 @@ export class TButt extends LitElement {
 
     /* link-specific resets */
     a.base {
+      box-sizing: border-box;
       text-decoration: none;
       color: var(--on-regular-buton-color, black);
+      white-space: nowrap;
+      line-height: 33px;
     }
 
     .base.slim {
@@ -44,6 +47,7 @@ export class TButt extends LitElement {
       width: 100%;
       text-overflow: ellipsis;
       overflow: hidden;
+      text-align: center;
     }
 
     .base.round {
@@ -348,7 +352,11 @@ export class TButt extends LitElement {
           : html`<slot></slot>`}
       </a>`;
     }
-    return html`<button class="${this._getClasses()}" ?disabled=${this.disabled} @click=${this._handleClick}>
+    return html`<button
+      class="${this._getClasses()}"
+      ?disabled=${this.disabled}
+      @click=${this._handleClick}
+    >
       ${this._confirming
         ? html`<span class="confirm-text">${this.confirmText}</span>`
         : html`<slot></slot>`}
