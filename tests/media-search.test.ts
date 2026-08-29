@@ -94,6 +94,168 @@ describe('filterTracks', () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('t2');
   });
+
+  // -- artist / genre matching ------------------------------------------------
+
+  const tracksWithMetadata = [
+    { id: 't1', title: 'Tango Number One', artist: 'Piazzolla', genre: 'Tango' },
+    { id: 't2', title: 'Blue Waltz', artist: 'Strauss Jr', genre: 'Waltz' },
+    { id: 't3', title: 'Funky Fox', artist: 'James Brown', genre: 'Funk' },
+    { id: 't4', title: 'Just A Song', artist: 'Unknown', genre: 'Pop' },
+  ];
+
+  it('matches by artist name (case-insensitive)', () => {
+    const result = filterTracks(tracksWithMetadata, 'james brown');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t3');
+  });
+
+  it('matches by genre (case-insensitive)', () => {
+    const result = filterTracks(tracksWithMetadata, 'FUNK');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t3');
+  });
+
+  it('matches by artist substring', () => {
+    // 'strau' is a substring of 'Strauss Jr'
+    const result = filterTracks(tracksWithMetadata, 'strau');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches by genre substring', () => {
+    // 'tang' is a substring of 'Tango'
+    const result = filterTracks(tracksWithMetadata, 'tang');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('returns tracks with artist/genre unchanged when query is empty', () => {
+    const input = [...tracksWithMetadata];
+    const result = filterTracks(input, '');
+    expect(result).toBe(input);
+    expect(result).toHaveLength(4);
+  });
+
+  // -- album / songKey / tags / info matching ----------------------------------
+
+  const tracksWithExtendedMetadata = [
+    {
+      id: 't1',
+      title: 'Tango Number One',
+      artist: 'Piazzolla',
+      genre: 'Tango',
+      album: 'Best of Tango',
+      songKey: 'tango-number-one.mp3',
+      tags: 'slow romantic',
+      choreographer: 'Maria Nieves',
+      choreography: 'Argentine tango',
+      info: 'A beautiful tango piece',
+    },
+    {
+      id: 't2',
+      title: 'Blue Waltz',
+      artist: 'Strauss Jr',
+      genre: 'Waltz',
+      album: 'Vienna Nights',
+      songKey: 'blue-waltz.mp3',
+      tags: 'ballroom competition',
+      choreographer: 'Johann Strauss',
+      choreography: 'Viennese waltz',
+      info: 'Classic Viennese waltz',
+    },
+    {
+      id: 't3',
+      title: 'Just A Song',
+      artist: 'Unknown',
+      genre: 'Pop',
+      album: '',
+      songKey: 'just-a-song.mp3',
+      tags: '',
+      choreographer: '',
+      choreography: '',
+      info: '',
+    },
+  ];
+
+  it('matches by album name (case-insensitive)', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'vienna');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches by album substring', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'best of');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('matches by file name / songKey (case-insensitive)', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'BLUE-WALTZ');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches by file name substring', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'tango-number');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('matches by tags (case-insensitive)', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'BALLROOM');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches by tags substring', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'romant');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('matches by song info (case-insensitive)', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'beautiful');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('matches by song info substring', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'viennese');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches by choreographer (case-insensitive)', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'maria');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('matches by choreographer substring', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'strauss');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches by choreography (case-insensitive)', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'ARGENTINE');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
+
+  it('matches by choreography substring', () => {
+    const result = filterTracks(tracksWithExtendedMetadata, 'viennese wal');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t2');
+  });
+
+  it('matches across multiple fields for the same query', () => {
+    // 'tango' appears in title, genre, album, songKey, tags, and info of t1
+    const result = filterTracks(tracksWithExtendedMetadata, 'tango');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('t1');
+  });
 });
 
 // ---- filterArtists ----------------------------------------------------------
