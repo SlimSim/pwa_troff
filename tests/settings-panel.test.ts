@@ -580,6 +580,83 @@ describe('SettingsPanel numeric settings integration', () => {
       });
     });
   });
+
+  describe('Dark mode setting', () => {
+    describe('default property values', () => {
+      it('should have default darkMode of false', () => {
+        expect(settingsPanel.darkMode).toBe(false);
+      });
+    });
+
+    describe('setting values from parent', () => {
+      it('should update darkMode when property is set', async () => {
+        settingsPanel.darkMode = true;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.darkMode).toBe(true);
+      });
+
+      it('should toggle darkMode back to false', async () => {
+        settingsPanel.darkMode = true;
+        await settingsPanel.updateComplete;
+        settingsPanel.darkMode = false;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.darkMode).toBe(false);
+      });
+    });
+
+    describe('setting-changed event dispatch', () => {
+      it('should dispatch setting-changed when darkMode is toggled on', () => {
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('darkMode', false);
+
+        expect(settingsPanel.darkMode).toBe(true);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'darkMode', value: true },
+          })
+        );
+      });
+
+      it('should toggle darkMode off when already on', () => {
+        settingsPanel.darkMode = true;
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('darkMode', true);
+
+        expect(settingsPanel.darkMode).toBe(false);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'darkMode', value: false },
+          })
+        );
+      });
+    });
+
+    describe('rendered dark mode toggle in global controls area', () => {
+      it('should render a <t-butt toggle> for "Dark mode" inside the global controls area', () => {
+        const shells = Array.from(
+          settingsPanel.shadowRoot?.querySelectorAll('.settings-shell') ?? []
+        );
+        const globalShell = shells.find((shell) =>
+          shell.querySelector('t-help-tip[h3="Global Controls"]')
+        );
+        expect(globalShell, 'expected to find .settings-shell containing Global Controls help-tip').toBeTruthy();
+
+        const butts = Array.from(globalShell!.querySelectorAll('t-butt') ?? []);
+        const darkModeButt = butts.find((b) =>
+          (b.textContent || '').trim().toLowerCase().includes('dark mode')
+        );
+
+        expect(darkModeButt).toBeTruthy();
+        expect(darkModeButt!.hasAttribute('toggle')).toBe(true);
+      });
+    });
+  });
 });
 
 describe('SettingsPanel panel title', () => {

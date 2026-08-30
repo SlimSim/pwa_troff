@@ -81,6 +81,7 @@ import {
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_KEEP_SCREEN_ON,
+  TROFF_SETTING_DARK_MODE,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
@@ -1163,6 +1164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.playGoToMarker =
       nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
     settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
+    settingsPanel.darkMode = nDB.get(TROFF_SETTING_DARK_MODE) ?? false;
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -1983,6 +1985,7 @@ document.addEventListener('DOMContentLoaded', () => {
         extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
         keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
+        darkMode: TROFF_SETTING_DARK_MODE,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -1993,6 +1996,13 @@ document.addEventListener('DOMContentLoaded', () => {
       nDB.set(storageKey, value === true);
       if (setting === 'keepScreenOn') {
         void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+      }
+      if (setting === 'darkMode') {
+        if (value === true) {
+          document.body.setAttribute('data-mode', 'dark');
+        } else {
+          document.body.removeAttribute('data-mode');
+        }
       }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
@@ -2174,11 +2184,17 @@ document.addEventListener('DOMContentLoaded', () => {
       [TROFF_SETTING_SPACE_RESET_COUNTER, false],
       [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
       [TROFF_SETTING_KEEP_SCREEN_ON, true],
+      [TROFF_SETTING_DARK_MODE, false],
     ];
     for (const [key, defaultValue] of defaultsIfUnset) {
       if (nDB.get(key) == null) {
         nDB.set(key, defaultValue);
       }
+    }
+
+    // Apply dark mode on startup
+    if (nDB.get(TROFF_SETTING_DARK_MODE) === true) {
+      document.body.setAttribute('data-mode', 'dark');
     }
 
     updateFooterWithCurrentSong();

@@ -21,7 +21,8 @@ type ToggleSetting =
   | 'playGoToMarker'
   | 'extendedMarkerColor'
   | 'extraExtendedMarkerColor'
-  | 'keepScreenOn';
+  | 'keepScreenOn'
+  | 'darkMode';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -368,6 +369,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
   @property({ type: Boolean }) keepScreenOn = true;
+  @property({ type: Boolean }) darkMode = false;
 
   connectedCallback() {
     super.connectedCallback();
@@ -527,6 +529,9 @@ export class SettingsPanel extends LitElement {
         break;
       case 'keepScreenOn':
         this.keepScreenOn = nextValue;
+        break;
+      case 'darkMode':
+        this.darkMode = nextValue;
         break;
       default:
         return;
@@ -940,6 +945,14 @@ export class SettingsPanel extends LitElement {
               ${!this.keepScreenSupported
                 ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                 : ''}
+              <t-butt
+                toggle
+                ellipsis
+                .active=${this.darkMode}
+                @click=${() => this._toggleSetting('darkMode', this.darkMode)}
+              >
+                Dark mode
+              </t-butt>
             </div>
           </div>
         </div>
