@@ -312,6 +312,53 @@ describe('t-dial increment/decrement with step 0.1', () => {
   });
 });
 
+describe('t-dial max=0 should mean "no max" (unknown duration)', () => {
+  let element: Dial;
+
+  beforeEach(() => {
+    element = new Dial();
+    element.min = 0;
+    element.max = 0;
+    element.step = 0.1;
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+  });
+
+  it('should NOT clamp value to 0 when max=0', () => {
+    element.value = 6;
+    expect(dialInternal(element)._value).toBe(6);
+  });
+
+  it('should NOT clamp value to 0 when max=0 and value is set via Lit property binding', () => {
+    // Simulate Lit property binding: .value=${6} with .max=${0}
+    element.max = 0;
+    element.value = 6;
+    expect(dialInternal(element)._value).toBe(6);
+  });
+
+  it('should still respect min when max=0', () => {
+    element.value = -5;
+    expect(dialInternal(element)._value).toBe(0); // clamped to min=0
+  });
+
+  it('increment should not be capped at 0 when max=0', () => {
+    dialInternal(element)._value = 0;
+    dialInternal(element)._handleIncrement();
+    expect(dialInternal(element)._value).toBe(0.1);
+  });
+
+  it('increment should allow values above 0 when max=0', () => {
+    dialInternal(element)._value = 5;
+    dialInternal(element)._handleIncrement();
+    expect(dialInternal(element)._value).toBe(5.1);
+  });
+});
+
 describe('t-dial _formatDisplayValue', () => {
   let element: Dial;
 

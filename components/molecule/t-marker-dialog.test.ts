@@ -311,6 +311,31 @@ describe('t-marker-dialog', () => {
     expect(timeDial!.unit).toBe('s');
   });
 
+  it('does not clamp markerTime to 0 when maxTime is 0 (unknown duration)', async () => {
+    element.maxTime = 0; // unknown duration
+    element.initialTime = 6;
+    await element.updateComplete;
+
+    expect(element.markerTime).toBe(6);
+  });
+
+  it('does not clamp markerTime to 0 in edit mode when maxTime is 0', async () => {
+    const markerData: Partial<TroffMarker> = {
+      id: 'test-id',
+      name: 'Test Marker',
+      info: '',
+      time: 42,
+      color: '',
+    };
+
+    element.maxTime = 0; // unknown duration
+    element.mode = 'edit';
+    element.markerData = markerData;
+    await element.updateComplete;
+
+    expect(element.markerTime).toBe(42);
+  });
+
   // === Compact marker dialog tests ===
 
   describe('compact marker dialog layout', () => {
