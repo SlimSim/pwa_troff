@@ -98,6 +98,14 @@ export class MarkerToolsDialog extends LitElement {
     .button-group {
       display: flex;
       gap: 8px;
+      padding-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .move-markers-buttons {
+      display: flex;
+      gap: 8px;
+      flex-direction: column;
       flex-wrap: wrap;
     }
 
@@ -132,12 +140,7 @@ export class MarkerToolsDialog extends LitElement {
 
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('open') && this.open) {
-      this._value =
-        this.mode === 'copy'
-          ? this.initialTime
-          : this.mode === 'stretch'
-            ? 100
-            : 0;
+      this._value = this.mode === 'copy' ? this.initialTime : this.mode === 'stretch' ? 100 : 0;
       this._error = '';
     }
   }
@@ -255,14 +258,22 @@ export class MarkerToolsDialog extends LitElement {
           @value-changed=${this._handleValueChanged}
         ></t-dial>
         <div class="button-group">
-          <t-butt class="btn-primary" @click=${() => this._handleMove('moveUp')}>
-            move markers up
-          </t-butt>
-          <t-butt class="btn-primary" @click=${() => this._handleMove('moveDown')}>
-            move markers down
-          </t-butt>
-          <t-butt @click=${() => this._handleMove('moveAllUp')}>move all markers up</t-butt>
-          <t-butt @click=${() => this._handleMove('moveAllDown')}>move all markers down</t-butt>
+          <div class="move-markers-buttons">
+            <t-butt class="btn-primary" fullWidth @click=${() => this._handleMove('moveUp')}>
+              move markers up
+            </t-butt>
+            <t-butt class="btn-primary" fullWidth @click=${() => this._handleMove('moveDown')}>
+              move markers down
+            </t-butt>
+          </div>
+          <div class="move-markers-buttons">
+            <t-butt fullWidth @click=${() => this._handleMove('moveAllUp')}
+              >move all markers up</t-butt
+            >
+            <t-butt fullWidth @click=${() => this._handleMove('moveAllDown')}
+              >move all markers down</t-butt
+            >
+          </div>
         </div>
       </div>
     `;
@@ -272,8 +283,8 @@ export class MarkerToolsDialog extends LitElement {
     return html`
       <div>
         <p class="info-text">
-          Delete all the markers at the same time, or delete only those markers between the
-          selected markers (including the selected markers).
+          Delete all the markers at the same time, or delete only those markers between the selected
+          markers (including the selected markers).
         </p>
         <div class="button-group">
           <t-butt class="btn-danger" @click=${() => this._handleDelete('deleteSelected')}>

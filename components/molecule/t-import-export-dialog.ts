@@ -283,8 +283,8 @@ export class ImportExportDialog extends LitElement {
       <div>
         <div class="section-label">Export Markers, States & Song Info</div>
         <p class="info-text">
-          Copy the JSON below to save your markers, marker colors, loop states, and song info.
-          You can import this into another Troff instance with the same song.
+          Copy the JSON below to save your markers, states, settings and song info. You can import
+          this into another Troff instance with the same song.
         </p>
         <div class="stats-row">
           <span>${markerCount} marker${markerCount !== 1 ? 's' : ''}</span>
@@ -298,9 +298,7 @@ export class ImportExportDialog extends LitElement {
           aria-label="Exported JSON data"
         ></textarea>
         <div class="button-group">
-          <t-butt class="btn-primary" @click=${this._copyExportText}>
-            Copy to Clipboard
-          </t-butt>
+          <t-butt class="btn-primary" @click=${this._copyExportText}> Copy to Clipboard </t-butt>
         </div>
       </div>
     `;
@@ -311,7 +309,8 @@ export class ImportExportDialog extends LitElement {
       <div>
         <div class="section-label">Import Markers, States & Song Info</div>
         <p class="info-text">
-          Paste the JSON data you previously exported. This will restore markers, states, and song info.
+          Paste the JSON data you previously exported. This will restore markers, states, and song
+          info.
         </p>
         <div class="mode-toggle">
           <div class="mode-option">
@@ -356,16 +355,16 @@ export class ImportExportDialog extends LitElement {
         ></textarea>
         ${this._importError ? html`<div class="error-message">${this._importError}</div>` : ''}
         <div class="button-group">
-          <t-butt @click=${() => {
-            this._showImport = false;
-            this._importText = '';
-            this._importError = '';
-          }}>
+          <t-butt
+            @click=${() => {
+              this._showImport = false;
+              this._importText = '';
+              this._importError = '';
+            }}
+          >
             Back
           </t-butt>
-          <t-butt class="btn-primary" @click=${this._handleImportConfirm}>
-            Import
-          </t-butt>
+          <t-butt class="btn-primary" @click=${this._handleImportConfirm}> Import </t-butt>
         </div>
       </div>
     `;
@@ -389,9 +388,7 @@ export class ImportExportDialog extends LitElement {
                   <t-butt @click=${this._handleImportClick}>Import</t-butt>
                   <t-butt @click=${this._cancel}>Close</t-butt>
                 `
-              : html`
-                  <t-butt @click=${this._cancel}>Close</t-butt>
-                `}
+              : html` <t-butt @click=${this._cancel}>Close</t-butt> `}
           </div>
         </div>
       </div>
