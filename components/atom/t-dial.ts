@@ -29,6 +29,7 @@ export class Dial extends LitElement {
       height: 120px;
       border-radius: 50%;
       background-color: var(--theme-color);
+      border: 3px solid var(--on-body-background);
       cursor: grab;
       position: relative;
       transition: box-shadow 0.2s ease;
@@ -298,6 +299,7 @@ export class Dial extends LitElement {
             height: 120px;
             border-radius: 50%;
             background-color: var(--theme-color);
+            border: 3px solid var(--on-body-background);
             cursor: grab;
             display: flex;
             align-items: center;
