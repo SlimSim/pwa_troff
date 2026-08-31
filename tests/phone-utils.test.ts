@@ -23,6 +23,7 @@ describe('phoneUtils wake lock functions', () => {
   let wakeLockRequestMock: ReturnType<typeof vi.fn>;
   let sentinelReleaseMock: ReturnType<typeof vi.fn>;
   let mockSentinel: { release: ReturnType<typeof vi.fn> };
+  let addedVisibilityListeners: Array<(e?: Event) => void> = [];
 
   beforeEach(async () => {
     vi.resetModules();
@@ -47,11 +48,32 @@ describe('phoneUtils wake lock functions', () => {
       writable: true,
     });
 
+    // Track visibilitychange listeners added by module so we can remove them in afterEach.
+    // This prevents stale listeners (with different lastIs* closures) from previous module instances
+    // polluting later tests when we dispatchEvent.
+    addedVisibilityListeners = [];
+    const realAddEventListener = document.addEventListener.bind(document);
+    vi.spyOn(document, 'addEventListener').mockImplementation((type: string, listener: any, options?: any) => {
+      if (type === 'visibilitychange' && typeof listener === 'function') {
+        addedVisibilityListeners.push(listener);
+      }
+      return realAddEventListener(type, listener, options);
+    });
+
     // Dynamic import AFTER mocks (follows project pattern, never reimplement)
     mod = (await import('../utils/phoneUtils.js')) as PhoneUtilsModule;
   });
 
   afterEach(() => {
+    // Cleanup listeners added by the (reloaded) module instance. Must happen before restoreAllMocks
+    // so that removeEventListener works and we prevent listener accumulation / stale closures across tests.
+    addedVisibilityListeners.forEach((listener) => {
+      try {
+        document.removeEventListener('visibilitychange', listener);
+      } catch { /* ignore */ }
+    });
+    addedVisibilityListeners = [];
+
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     // restore document prop if needed
@@ -119,7 +141,7 @@ describe('phoneUtils wake lock functions', () => {
     });
   });
 
-  describe('updateWakeLockForPlayback (uses setting + isPlaying/isStartingPlayback)', () => {
+  describe('updateWakeLockForPlayback (respects keepScreenOn setting + page visible, independent of playback state)', () => {
     it('should request wake lock when isPlaying is true and keep screen on is true', async () => {
       nDBGetMock.mockReturnValue(true);
       wakeLockRequestMock.mockClear();
@@ -134,26 +156,42 @@ describe('phoneUtils wake lock functions', () => {
       expect(wakeLockRequestMock).toHaveBeenCalledWith('screen');
     });
 
-    it('should NOT request when keep screen on setting is false', async () => {
+    it('should request wake lock when neither playing nor starting if keepScreenOn true and visible (new behavior: keep on for idle/paused, ready for next user tap)', async () => {
+      nDBGetMock.mockReturnValue(true);
+      wakeLockRequestMock.mockClear();
+      await mod.updateWakeLockForPlayback(false, false);
+      expect(wakeLockRequestMock).toHaveBeenCalledWith('screen');
+    });
+
+    it('should NOT request when keep screen on setting is false, even during playback', async () => {
       nDBGetMock.mockReturnValue(false);
       wakeLockRequestMock.mockClear();
       await mod.updateWakeLockForPlayback(true, false);
       expect(wakeLockRequestMock).not.toHaveBeenCalled();
     });
 
-    it('should release when neither isPlaying nor isStartingPlayback', async () => {
+    it('should NOT release when playback stops (false, false) if keepScreenOn true (new: screen stays on while idle/paused)', async () => {
       nDBGetMock.mockReturnValue(true);
       await mod.requestWakeLock(); // ensure one is active
       sentinelReleaseMock.mockClear();
+      await mod.updateWakeLockForPlayback(false, false);
+      expect(sentinelReleaseMock).not.toHaveBeenCalled();
+    });
+
+    it('should release wake lock when keepScreenOn setting becomes false', async () => {
+      nDBGetMock.mockReturnValue(true);
+      await mod.requestWakeLock();
+      sentinelReleaseMock.mockClear();
+      nDBGetMock.mockReturnValue(false);
       await mod.updateWakeLockForPlayback(false, false);
       expect(sentinelReleaseMock).toHaveBeenCalled();
     });
   });
 
-  describe('re-acquire wake lock on visibilitychange if needed', () => {
-    it('should re-request wake lock when visibility becomes visible during active playback with setting on', async () => {
+  describe('re-acquire wake lock on visibilitychange if keepScreenOn and visible (independent of last playback state)', () => {
+    it('should re-request wake lock when visibility becomes visible with keepScreenOn true, even if not playing (new behavior for idle cases)', async () => {
       nDBGetMock.mockReturnValue(true);
-      await mod.updateWakeLockForPlayback(true, false);
+      // intentionally do not call update with playing=true; last* remain false, test new indep logic in listener
       wakeLockRequestMock.mockClear();
 
       // Simulate visibility change to visible

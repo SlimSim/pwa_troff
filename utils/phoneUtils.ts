@@ -28,8 +28,6 @@ interface WakeLockSentinelLike {
 }
 
 let wakeLockSentinel: WakeLockSentinelLike | null = null;
-let lastIsPlaying = false;
-let lastIsStartingPlayback = false;
 
 export function getKeepScreenOn(): boolean {
   const val = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON);
@@ -71,12 +69,10 @@ export async function releaseWakeLock(): Promise<void> {
 }
 
 export async function updateWakeLockForPlayback(
-  isPlaying: boolean,
-  isStartingPlayback: boolean
+  _isPlaying: boolean,
+  _isStartingPlayback: boolean
 ): Promise<void> {
-  lastIsPlaying = isPlaying;
-  lastIsStartingPlayback = isStartingPlayback;
-  const shouldKeep = (isPlaying || isStartingPlayback) && getKeepScreenOn();
+  const shouldKeep = getKeepScreenOn();
   if (shouldKeep) {
     await requestWakeLock();
   } else {
@@ -87,7 +83,7 @@ export async function updateWakeLockForPlayback(
 if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      const shouldKeep = (lastIsPlaying || lastIsStartingPlayback) && getKeepScreenOn();
+      const shouldKeep = getKeepScreenOn();
       if (shouldKeep) {
         void requestWakeLock();
       }
