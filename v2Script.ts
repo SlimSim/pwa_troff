@@ -1550,17 +1550,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (shouldResetLoopCounter(resetCounterSettingKey)) {
         resetLoopTimesCounter();
       }
+
+      // If "go to marker" is enabled, seek to the start marker time when pausing
+      if (goToMarkerSettingKey && nDB.get(goToMarkerSettingKey) === true) {
+        const startTime = markerSlider.getPlaybackStart();
+        if (Number.isFinite(startTime)) {
+          getActiveMedia().currentTime = startTime;
+        }
+      }
+
       getActiveMedia().pause();
       updateHeaderCountdownDisplay();
       return;
-    }
-
-    // If "go to marker" is enabled, seek to the start marker time before playing
-    if (goToMarkerSettingKey && nDB.get(goToMarkerSettingKey) === true) {
-      const startTime = markerSlider.getPlaybackStart();
-      if (Number.isFinite(startTime)) {
-        getActiveMedia().currentTime = startTime;
-      }
     }
 
     schedulePlaybackAfterDelay(getPauseBeforeDelay(timerSettingKey));

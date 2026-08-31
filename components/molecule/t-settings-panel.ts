@@ -725,6 +725,40 @@ export class SettingsPanel extends LitElement {
               text="Configure what happens when you press the Enter key, Space key, or Play button."
             >
               <div class="settings-section">
+                <h3>Play Button</h3>
+                <div class="settings-grid">
+                  <div class="setting-item">
+                    <div class="action-buttons">
+                      <t-butt
+                        toggle
+                        ellipsis
+                        .active=${this.playGoToMarker}
+                        @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
+                      >
+                        Go to marker
+                      </t-butt>
+                      <t-butt
+                        toggle
+                        ellipsis
+                        .active=${this.playUseTimer}
+                        @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
+                      >
+                        Use timer
+                      </t-butt>
+                      <t-butt
+                        toggle
+                        ellipsis
+                        .active=${this.playResetCounter}
+                        @click=${() =>
+                          this._toggleSetting('playResetCounter', this.playResetCounter)}
+                      >
+                        Reset counter
+                      </t-butt>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
                 <h3>Enter Key</h3>
                 <div class="settings-grid">
                   <div class="setting-item">
@@ -786,41 +820,6 @@ export class SettingsPanel extends LitElement {
                         .active=${this.spaceResetCounter}
                         @click=${() =>
                           this._toggleSetting('spaceResetCounter', this.spaceResetCounter)}
-                      >
-                        Reset counter
-                      </t-butt>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <h3>Play Button</h3>
-                <div class="settings-grid">
-                  <div class="setting-item">
-                    <div class="action-buttons">
-                      <t-butt
-                        toggle
-                        ellipsis
-                        .active=${this.playGoToMarker}
-                        @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
-                      >
-                        Go to marker
-                      </t-butt>
-                      <t-butt
-                        toggle
-                        ellipsis
-                        .active=${this.playUseTimer}
-                        @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
-                      >
-                        Use timer
-                      </t-butt>
-                      <t-butt
-                        toggle
-                        ellipsis
-                        .active=${this.playResetCounter}
-                        @click=${() =>
-                          this._toggleSetting('playResetCounter', this.playResetCounter)}
                       >
                         Reset counter
                       </t-butt>

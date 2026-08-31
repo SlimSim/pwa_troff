@@ -320,8 +320,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
   }
 
   describe('Enter key - go to marker', () => {
-    it('should seek to marker start time minus startBefore when Enter is pressed and enterGoToMarker is enabled', async () => {
-      // Set up marker slider with marker at 30s and startBefore = 5
+    it('should seek to marker start time when pausing with goToMarker enabled', async () => {
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
         { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
@@ -333,48 +332,22 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      // Reset audio time that was set during init, then enable go-to-marker
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
 
-      expect(audioMock.currentTime).toBe(0);
-
-      // Press Enter key
       dispatchKeyDown('Enter');
       await new Promise((r) => setTimeout(r, 0));
 
-      // Should seek to 25 (marker time - startBefore)
+      // Should seek to 25 (marker time - startBefore) and pause
       expect(audioMock.currentTime).toBe(25);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
 
-    it('should seek to marker start time when startBefore is 0 (disabled)', async () => {
-      markerSlider.markers = [
-        { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
-        { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
-      ];
-      markerSlider.startMarkerId = 'markerNr0';
-      markerSlider.stopMarkerId = 'markerNr1S';
-      markerSlider.startBefore = 0;
-      markerSlider.getPlaybackStart = vi.fn(() => 30);
-
-      await setupTest();
-
-      audioMock.currentTime = 0;
-      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
-      settingsPanel.enterGoToMarker = true;
-      await settingsPanel.updateComplete;
-
-      expect(audioMock.currentTime).toBe(0);
-
-      dispatchKeyDown('Enter');
-      await new Promise((r) => setTimeout(r, 0));
-
-      expect(audioMock.currentTime).toBe(30);
-    });
-
-    it('should not seek when enterGoToMarker is disabled', async () => {
+    it('should NOT seek when pausing with goToMarker disabled', async () => {
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
         { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
@@ -386,18 +359,46 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      // enterGoToMarker is false (default)
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       settingsPanel.enterGoToMarker = false;
       await settingsPanel.updateComplete;
-
-      expect(audioMock.currentTime).toBe(0);
 
       dispatchKeyDown('Enter');
       await new Promise((r) => setTimeout(r, 0));
 
-      // Should not seek
-      expect(audioMock.currentTime).toBe(0);
+      // Should not seek, just pause
+      expect(audioMock.currentTime).toBe(50);
+      expect(audioMock.pause).toHaveBeenCalled();
+    });
+
+    it('should NOT seek when starting playback even with goToMarker enabled', async () => {
+      markerSlider.markers = [
+        { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
+        { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
+      ];
+      markerSlider.startMarkerId = 'markerNr0';
+      markerSlider.stopMarkerId = 'markerNr1S';
+      markerSlider.startBefore = 5;
+      markerSlider.getPlaybackStart = vi.fn(() => 25);
+
+      await setupTest();
+
+      // Audio is paused (default), currentTime set to 50
+      audioMock.currentTime = 50;
+      nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
+      settingsPanel.enterGoToMarker = true;
+      await settingsPanel.updateComplete;
+
+      expect(audioMock.paused).toBe(true);
+
+      dispatchKeyDown('Enter');
+      await new Promise((r) => setTimeout(r, 0));
+
+      // Should NOT seek, just start playback
+      expect(audioMock.currentTime).toBe(50);
+      expect(audioMock.play).toHaveBeenCalled();
     });
 
     it('should not seek when no start marker is selected', async () => {
@@ -411,17 +412,20 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
 
-      expect(audioMock.currentTime).toBe(0);
-
       dispatchKeyDown('Enter');
       await new Promise((r) => setTimeout(r, 0));
 
+      // No start marker, so startTime from getPlaybackStart is 0 — still finite,
+      // but currentTime should be set to 0 and pause called
       expect(audioMock.currentTime).toBe(0);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
 
     it('should clamp at 0 when startBefore exceeds marker time', async () => {
@@ -436,7 +440,9 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.enterGoToMarker = true;
       await settingsPanel.updateComplete;
@@ -445,11 +451,12 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
   });
 
   describe('Space key - go to marker', () => {
-    it('should seek to marker start time minus startBefore when Space is pressed and spaceGoToMarker is enabled', async () => {
+    it('should seek to marker start time when pausing with goToMarker enabled', async () => {
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
         { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
@@ -461,44 +468,23 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
-
-      expect(audioMock.currentTime).toBe(0);
 
       // Press Space key
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
 
+      // Should seek to 25 and pause
       expect(audioMock.currentTime).toBe(25);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
 
-    it('should seek to marker start time when startBefore is 0 (disabled)', async () => {
-      markerSlider.markers = [
-        { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
-        { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
-      ];
-      markerSlider.startMarkerId = 'markerNr0';
-      markerSlider.stopMarkerId = 'markerNr1S';
-      markerSlider.startBefore = 0;
-      markerSlider.getPlaybackStart = vi.fn(() => 30);
-
-      await setupTest();
-
-      audioMock.currentTime = 0;
-      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
-      settingsPanel.spaceGoToMarker = true;
-      await settingsPanel.updateComplete;
-
-      dispatchKeyDown(' ');
-      await new Promise((r) => setTimeout(r, 0));
-
-      expect(audioMock.currentTime).toBe(30);
-    });
-
-    it('should not seek when spaceGoToMarker is disabled', async () => {
+    it('should NOT seek when pausing with goToMarker disabled', async () => {
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
         { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
@@ -510,16 +496,46 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       settingsPanel.spaceGoToMarker = false;
       await settingsPanel.updateComplete;
-
-      expect(audioMock.currentTime).toBe(0);
 
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
 
-      expect(audioMock.currentTime).toBe(0);
+      // Should not seek, just pause
+      expect(audioMock.currentTime).toBe(50);
+      expect(audioMock.pause).toHaveBeenCalled();
+    });
+
+    it('should NOT seek when starting playback even with goToMarker enabled', async () => {
+      markerSlider.markers = [
+        { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
+        { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
+      ];
+      markerSlider.startMarkerId = 'markerNr0';
+      markerSlider.stopMarkerId = 'markerNr1S';
+      markerSlider.startBefore = 5;
+      markerSlider.getPlaybackStart = vi.fn(() => 25);
+
+      await setupTest();
+
+      // Audio is paused (default), currentTime set to 50
+      audioMock.currentTime = 50;
+      nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
+      settingsPanel.spaceGoToMarker = true;
+      await settingsPanel.updateComplete;
+
+      expect(audioMock.paused).toBe(true);
+
+      dispatchKeyDown(' ');
+      await new Promise((r) => setTimeout(r, 0));
+
+      // Should NOT seek, just start playback
+      expect(audioMock.currentTime).toBe(50);
+      expect(audioMock.play).toHaveBeenCalled();
     });
 
     it('should not seek when no start marker is selected', async () => {
@@ -533,7 +549,9 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
@@ -541,7 +559,10 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
 
+      // No start marker, so startTime from getPlaybackStart is 0 — still finite,
+      // but currentTime should be set to 0 and pause called
       expect(audioMock.currentTime).toBe(0);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
 
     it('should clamp at 0 when startBefore exceeds marker time', async () => {
@@ -556,7 +577,9 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
@@ -565,6 +588,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(0);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
 
     it('should also work with Spacebar key (legacy)', async () => {
@@ -579,7 +603,9 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
 
       await setupTest();
 
-      audioMock.currentTime = 0;
+      // Simulate playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
       nDBOverrides[constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR] = true;
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
@@ -588,6 +614,7 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       await new Promise((r) => setTimeout(r, 0));
 
       expect(audioMock.currentTime).toBe(25);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
   });
 
@@ -610,18 +637,25 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       settingsPanel.spaceGoToMarker = false;
       await settingsPanel.updateComplete;
 
-      // Press Enter - should seek
+      // Press Enter while playing - should seek and pause
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
+      audioMock.pause.mockClear();
       dispatchKeyDown('Enter');
       await new Promise((r) => setTimeout(r, 0));
       expect(audioMock.currentTime).toBe(25);
+      expect(audioMock.pause).toHaveBeenCalled();
 
-      // Reset
-      audioMock.currentTime = 0;
+      // Reset to playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
+      audioMock.pause.mockClear();
 
-      // Press Space - should NOT seek
+      // Press Space while playing - should NOT seek, just pause
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
-      expect(audioMock.currentTime).toBe(0);
+      expect(audioMock.currentTime).toBe(50);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
 
     it('should only seek for Space when spaceGoToMarker is enabled but enterGoToMarker is disabled', async () => {
@@ -642,18 +676,25 @@ describe('Keyboard playback keys (Enter/Space) - go to marker behavior', () => {
       settingsPanel.spaceGoToMarker = true;
       await settingsPanel.updateComplete;
 
-      // Press Space - should seek
+      // Press Space while playing - should seek and pause
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
+      audioMock.pause.mockClear();
       dispatchKeyDown(' ');
       await new Promise((r) => setTimeout(r, 0));
       expect(audioMock.currentTime).toBe(25);
+      expect(audioMock.pause).toHaveBeenCalled();
 
-      // Reset
-      audioMock.currentTime = 0;
+      // Reset to playing state
+      audioMock.paused = false;
+      audioMock.currentTime = 50;
+      audioMock.pause.mockClear();
 
-      // Press Enter - should NOT seek
+      // Press Enter while playing - should NOT seek, just pause
       dispatchKeyDown('Enter');
       await new Promise((r) => setTimeout(r, 0));
-      expect(audioMock.currentTime).toBe(0);
+      expect(audioMock.currentTime).toBe(50);
+      expect(audioMock.pause).toHaveBeenCalled();
     });
   });
 });
