@@ -170,7 +170,7 @@
   --toggle-button-active-color: var(--accent-color-3);
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
-  --slider-color: var(--regular-button-color);
+  --slider-color: var(--accent-color-2);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -302,6 +302,66 @@
 
   --list-border-color: rgba(255, 255, 255, 0.1);
   --list-hover-bg: rgba(255, 255, 255, 0.08);
+}
+
+.theme-col6,
+[data-theme='col6'] {
+  --theme-color: #00796b;
+  --on-theme-color: #fff;
+  --primary-color: #80cbc4;
+  --secondary-color: #e0f2f1;
+  --tertiary-color: #b2dfdb;
+  --accent-color-1: #00897b;
+  --accent-color-2: #e65100;
+  --accent-color-3: #0277bd;
+
+  --on-primary-color: black;
+  --on-primary-color-link: #004d40;
+  --on-secondary-color: rgb(50, 50, 50);
+  --on-tertiary-color: black;
+
+  --regular-button-color: #b0bec5;
+  --on-regular-buton-color: black;
+  --data-tables-empty: white;
+  --on-data-tables-empty: black;
+
+  --gray-out: lightgray;
+  --on-gray-out: #595959;
+  --body-background: #e0f2f1;
+  --on-body-background: black;
+  --body-link-color: #004d40;
+  --text-area: #e0f7fa;
+  --drop-active: lightgray;
+  --on-drop-active: black;
+
+  --on-accent-color-1: white;
+  --on-accent-color-2: white;
+  --on-accent-color-3: white;
+
+  --active-play-region: var(--accent-color-1);
+  --group-indication: var(--accent-color-2);
+
+  --important-button: var(--accent-color-2);
+  --on-important-button: var(--on-accent-color-2);
+
+  --accent-color-green-ish: var(--accent-color-1);
+  --accent-color-red-ish: var(--accent-color-2);
+  --accent-color-yellow-ish: var(--accent-color-3);
+
+  --toggle-button-color: lightgray;
+  --on-toggle-button-color: black;
+
+  --toggle-button-active-color: var(--accent-color-1);
+  --on-toggle-button-active-color: var(--on-accent-color-1);
+
+  --slider-color: var(--regular-button-color);
+  --slider-playback-region-color: var(--accent-color-1);
+
+  --help-tip-background: var(--secondary-color);
+  --on-help-tip-background: var(--on-secondary-color);
+
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
 }
 
 /* ===================================================================
@@ -663,4 +723,54 @@ body[data-mode='dark'] {
   --accent-color-1: #c8b800;
   --accent-color-2: #009900;
   --accent-color-3: #0000cc;
+}
+
+/* ── Col6: Ocean / Teal — dark mode (default is light) ────────────── */
+[data-theme='col6'][data-mode='dark'] {
+  --theme-color: #004d40;
+  --on-theme-color: #b2dfdb;
+
+  --primary-color: #00695c;
+  --on-primary-color: #b2dfdb;
+  --on-primary-color-link: #80cbc4;
+
+  --secondary-color: #003330;
+  --on-secondary-color: #80cbc4;
+
+  --tertiary-color: #003d38;
+  --on-tertiary-color: #b2dfdb;
+
+  --body-background: #002b25;
+  --on-body-background: #b2dfdb;
+  --body-link-color: #80cbc4;
+
+  --regular-button-color: #005548;
+  --on-regular-buton-color: #80cbc4;
+
+  --toggle-button-color: #004d40;
+  --on-toggle-button-color: #80cbc4;
+
+  --text-area: #003d38;
+  --on-text-area: #b2dfdb;
+
+  --drop-active: #005548;
+  --on-drop-active: #80cbc4;
+
+  --gray-out: #003830;
+  --on-gray-out: #5a8a80;
+
+  --data-tables-empty: #003330;
+  --on-data-tables-empty: #80cbc4;
+
+  --help-tip-background: #003d38;
+  --on-help-tip-background: #b2dfdb;
+
+  --text-color: #b2dfdb;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #005548;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --slider-color: #7fbfb4;
+  --slider-playback-region-color: var(--accent-color-1);
 }

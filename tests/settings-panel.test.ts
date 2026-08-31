@@ -696,7 +696,7 @@ describe('SettingsPanel numeric settings integration', () => {
       });
 
       it('should dispatch setting-changed for each theme', () => {
-        for (const theme of ['col1', 'col2', 'col3', 'col4', 'col5']) {
+        for (const theme of ['col1', 'col2', 'col3', 'col4', 'col5', 'col6']) {
           const handler = vi.fn();
           settingsPanel.addEventListener('setting-changed', handler);
 
@@ -716,12 +716,12 @@ describe('SettingsPanel numeric settings integration', () => {
     });
 
     describe('rendered theme selector in global controls area', () => {
-      it('should render a theme selector with 5 t-butt elements', () => {
+      it('should render a theme selector with 6 t-butt elements', () => {
         const themeSelector = settingsPanel.shadowRoot?.querySelector('.theme-selector');
         expect(themeSelector).toBeTruthy();
 
         const butts = themeSelector!.querySelectorAll('t-butt');
-        expect(butts.length).toBe(5);
+        expect(butts.length).toBe(6);
       });
 
       it('should render theme buttons with correct titles', () => {
@@ -734,6 +734,7 @@ describe('SettingsPanel numeric settings integration', () => {
         expect(titles).toContain('Black and yellow');
         expect(titles).toContain('Gold and white');
         expect(titles).toContain('Black and red');
+        expect(titles).toContain('Teal and orange');
       });
 
       it('should highlight the active theme button', async () => {

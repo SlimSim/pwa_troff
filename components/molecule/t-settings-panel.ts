@@ -697,6 +697,14 @@ export class SettingsPanel extends LitElement {
                     @click=${() => this._setTheme('col5')}
                     ><span class="theme-swatch" style="background:#8b0000"></span>bold</t-butt
                   >
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.theme === 'col6'}
+                    title="Teal and orange"
+                    @click=${() => this._setTheme('col6')}
+                    ><span class="theme-swatch" style="background:#00796b"></span>ocean</t-butt
+                  >
                 </div>
               </div>
               <div class="settings-section" style="margin: 0; margin-top: 8px;">
