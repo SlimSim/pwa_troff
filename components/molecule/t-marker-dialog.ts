@@ -336,7 +336,7 @@ export class MarkerDialog extends LitElement {
           label="Info"
           placeholder="Put extra marker info here"
           .value=${this.markerInfo}
-          rows="2"
+          rows="3"
           compact
           @input=${this._handleInfoChange}
         ></t-textarea>

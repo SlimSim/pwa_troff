@@ -35,7 +35,7 @@ export class TInput extends LitElement {
       width: 100%;
       min-height: 44px; /* Mobile-friendly touch target */
       padding: 8px 12px;
-      border: 1px solid var(--secondary-color, #e6e9f0);
+      border: var(--t-input-border, 1px solid var(--secondary-color, #e6e9f0));
       border-radius: var(--button-border-radius, 0);
       background-color: var(--text-area, lightblue);
       color: var(--on-text-area, var(--on-secondary-color, rgb(50, 50, 50)));
@@ -61,7 +61,7 @@ export class TInput extends LitElement {
     }
 
     input::placeholder {
-      color: var(--on-gray-out, #595959);
+      color: var(--t-input-placeholder-color, var(--on-gray-out, #595959));
       opacity: 0.7;
     }
 
@@ -97,7 +97,7 @@ export class TInput extends LitElement {
 
     /* Variant styles */
     .input-wrapper.slim input {
-      min-height: 32px;
+      min-height: var(--t-input-slim-height, 32px);
       padding: 4px 8px;
       font-size: 14px;
     }
@@ -140,7 +140,7 @@ export class TInput extends LitElement {
 
     /* Clearable input padding */
     .input-wrapper.clearable input {
-      padding-right: 40px;
+      padding-right: var(--t-input-clearable-padding-right, 40px);
     }
 
     .clear-btn {

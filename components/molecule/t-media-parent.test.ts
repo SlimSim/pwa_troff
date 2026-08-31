@@ -2058,6 +2058,204 @@ describe('deleting the currently open group restores the song-list-header', () =
   });
 });
 
+describe('search input and header button size consistency', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    vi.spyOn(MediaParent.prototype as any, '_loadSongs').mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+
+    (element as any).songs = [
+      { songKey: 'a', title: 'Tango' },
+      { songKey: 'b', title: 'Waltz' },
+    ];
+    (element as any).groups = [];
+    (element as any).currentFilter = 'tracks';
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  // ---- helpers ----
+
+  /**
+   * Returns the inner `.base` element (button or anchor) inside a t-butt's
+   * shadow DOM so we can measure its computed styles.
+   */
+  function getButtBase(host: Element): HTMLElement {
+    const base = host.shadowRoot?.querySelector('.base') as HTMLElement | null;
+    if (!base) {
+      throw new Error('Expected .base inside t-butt shadow root');
+    }
+    return base;
+  }
+
+  /**
+   * Returns the native <input> element buried inside t-input's shadow DOM.
+   */
+  function getNativeInput(tInputHost: Element): HTMLInputElement {
+    const input = tInputHost.shadowRoot?.querySelector('input') as HTMLInputElement | null;
+    if (!input) {
+      throw new Error('Expected <input> inside t-input shadow root');
+    }
+    return input;
+  }
+
+  // ---- tests ----
+
+  it('search input min-height matches the header button min-height', async () => {
+    await element.updateComplete;
+
+    // The header "add songs" button — a t-butt with class header-add-btn.
+    const headerBtn = element.shadowRoot?.querySelector('t-butt.header-add-btn');
+    expect(headerBtn).toBeTruthy();
+    const btnBase = getButtBase(headerBtn!);
+
+    // The search input — a t-input with class search-input and attribute slim.
+    const tInputEl = element.shadowRoot?.querySelector('t-input.search-input');
+    expect(tInputEl).toBeTruthy();
+    const nativeInput = getNativeInput(tInputEl!);
+
+    const btnMinHeight = getComputedStyle(btnBase).minHeight;
+    const inputMinHeight = getComputedStyle(nativeInput).minHeight;
+
+    // Both should share the same height so they align in the header row.
+    // Before the CSS fix t-butt .base is 35px while t-input slim is 32px.
+    expect(inputMinHeight).toBe(btnMinHeight);
+  });
+
+  it('collapsed search-compact-wrap CSS width matches the header button min-width', async () => {
+    await element.updateComplete;
+
+    // The header "add songs" button.
+    const headerBtn = element.shadowRoot?.querySelector('t-butt.header-add-btn');
+    expect(headerBtn).toBeTruthy();
+    const btnBase = getButtBase(headerBtn!);
+
+    const btnMinWidth = getComputedStyle(btnBase).minWidth;
+
+    // happy-dom treats the viewport as ≥576px, so the desktop media query
+    // always overrides the base `.search-compact-wrap` width.  Instead of
+    // comparing computed values (which would always be 200px), we read the
+    // base CSS rule from t-media-parent's adopted stylesheet and verify
+    // its declared width matches the button's min-width.
+    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const baseRule = sheets
+      .flatMap((sheet) => Array.from(sheet.cssRules))
+      .filter(
+        (rule): rule is CSSStyleRule =>
+          typeof CSSStyleRule !== 'undefined' && rule instanceof CSSStyleRule
+      )
+      .find((rule) => rule.selectorText?.trim() === '.search-compact-wrap');
+
+    expect(baseRule).toBeTruthy();
+    const wrapWidth = baseRule!.style.getPropertyValue('width').trim();
+
+    // The collapsed search wrap should be as wide as the icon buttons
+    // beside it. Before the fix the base rule declares 32px while the
+    // button's min-width is 42px.
+    expect(wrapWidth).toBe(btnMinWidth);
+  });
+
+  it('search input uses a darker border (2px solid regular-button-color)', async () => {
+    await element.updateComplete;
+
+    // Read the CSS rule from the adopted stylesheet — the .search-input
+    // rule sets --t-input-border to a 2px solid border.
+    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const searchInputRule = sheets
+      .flatMap((sheet) => Array.from(sheet.cssRules))
+      .filter(
+        (rule): rule is CSSStyleRule =>
+          typeof CSSStyleRule !== 'undefined' && rule instanceof CSSStyleRule
+      )
+      .find((rule) => rule.selectorText?.trim() === '.search-input');
+
+    expect(searchInputRule).toBeTruthy();
+    const borderValue = searchInputRule!.style
+      .getPropertyValue('--t-input-border')
+      .trim();
+    // Should declare a 2px border (not the default 1px).
+    expect(borderValue).toContain('2px');
+    expect(borderValue).toContain('var(--regular-button-color');
+  });
+
+  it('placeholder is hidden when search is compressed', async () => {
+    await element.updateComplete;
+
+    // Read the CSS rule from the adopted stylesheet — the compressed
+    // selector sets --t-input-placeholder-color: transparent.
+    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const placeholderRule = sheets
+      .flatMap((sheet) => Array.from(sheet.cssRules))
+      .filter(
+        (rule): rule is CSSStyleRule =>
+          typeof CSSStyleRule !== 'undefined' && rule instanceof CSSStyleRule
+      )
+      .find(
+        (rule) =>
+          rule.selectorText?.trim() ===
+          '.search-compact-wrap:not(.search-expanded) .search-input'
+      );
+
+    expect(placeholderRule).toBeTruthy();
+    const placeholderColor = placeholderRule!.style
+      .getPropertyValue('--t-input-placeholder-color')
+      .trim();
+    expect(placeholderColor).toBe('transparent');
+  });
+
+  it('clearable padding is removed when search is compressed', async () => {
+    await element.updateComplete;
+
+    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const placeholderRule = sheets
+      .flatMap((sheet) => Array.from(sheet.cssRules))
+      .filter(
+        (rule): rule is CSSStyleRule =>
+          typeof CSSStyleRule !== 'undefined' && rule instanceof CSSStyleRule
+      )
+      .find(
+        (rule) =>
+          rule.selectorText?.trim() ===
+          '.search-compact-wrap:not(.search-expanded) .search-input'
+      );
+
+    expect(placeholderRule).toBeTruthy();
+    const clearablePadding = placeholderRule!.style
+      .getPropertyValue('--t-input-clearable-padding-right')
+      .trim();
+    expect(clearablePadding).toBe('0px');
+  });
+
+  it('search icon is centered horizontally in the collapsed wrapper', async () => {
+    await element.updateComplete;
+
+    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const iconRule = sheets
+      .flatMap((sheet) => Array.from(sheet.cssRules))
+      .filter(
+        (rule): rule is CSSStyleRule =>
+          typeof CSSStyleRule !== 'undefined' && rule instanceof CSSStyleRule
+      )
+      .find((rule) => rule.selectorText?.trim() === '.search-compact-icon');
+
+    expect(iconRule).toBeTruthy();
+    const left = iconRule!.style.getPropertyValue('left').trim();
+    const transform = iconRule!.style.getPropertyValue('transform').trim();
+
+    // Icon should be centered: left 50% + translate(-50%, -50%)
+    expect(left).toBe('50%');
+    expect(transform).toContain('translate(-50%, -50%)');
+  });
+});
+
 // Test hygiene: clear the saved nav state so it does not leak between tests.
 // MediaParent now applies the saved nav state on construction (for the
 // app-start scroll-to-active-song), so a stale state left by one test would
