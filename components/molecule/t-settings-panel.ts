@@ -166,6 +166,27 @@ export class SettingsPanel extends LitElement {
       color: var(--text-color, #000);
       opacity: 0.8;
     }
+
+    .theme-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .theme-selector t-butt {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .theme-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 3px;
+      vertical-align: middle;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+    }
     .scope-badge-container {
       padding-top: 16px;
     }
@@ -370,6 +391,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
   @property({ type: Boolean }) keepScreenOn = true;
   @property({ type: Boolean }) darkMode = false;
+  @property({ type: String }) theme = 'col1';
 
   connectedCallback() {
     super.connectedCallback();
@@ -554,6 +576,11 @@ export class SettingsPanel extends LitElement {
     return current === loopTimes;
   }
 
+  private _setTheme(theme: string) {
+    this.theme = theme;
+    this._handleSettingChange('theme', theme);
+  }
+
   private _handleCurrentSongSettingChange(event: CustomEvent) {
     const { setting, value } = event.detail;
     // Forward the event from t-current-song-controls
@@ -622,6 +649,67 @@ export class SettingsPanel extends LitElement {
                 These key and button behaviors apply across Troff, not just this song.
               </t-help-tip>
             </div>
+
+            <t-details
+              title="Theme"
+              class="settings-width"
+              text="Choose a color theme and toggle dark mode."
+            >
+              <div class="settings-section">
+                <div class="theme-selector">
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.theme === 'col1'}
+                    title="Blue and purple"
+                    @click=${() => this._setTheme('col1')}
+                    ><span class="theme-swatch" style="background:#003366"></span>standard</t-butt
+                  >
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.theme === 'col2'}
+                    title="Green and red"
+                    @click=${() => this._setTheme('col2')}
+                    ><span class="theme-swatch" style="background:#2e7d32"></span>forest</t-butt
+                  >
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.theme === 'col3'}
+                    title="Black and yellow"
+                    @click=${() => this._setTheme('col3')}
+                    ><span class="theme-swatch" style="background:#333"></span>sunset</t-butt
+                  >
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.theme === 'col4'}
+                    title="Gold and white"
+                    @click=${() => this._setTheme('col4')}
+                    ><span class="theme-swatch" style="background:#8b7832"></span>winning</t-butt
+                  >
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.theme === 'col5'}
+                    title="Black and red"
+                    @click=${() => this._setTheme('col5')}
+                    ><span class="theme-swatch" style="background:#8b0000"></span>bold</t-butt
+                  >
+                </div>
+              </div>
+              <div class="settings-section" style="margin: 0; margin-top: 8px;">
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.darkMode}
+                  @click=${() => this._toggleSetting('darkMode', this.darkMode)}
+                >
+                  Dark mode
+                </t-butt>
+              </div>
+            </t-details>
 
             <t-details
               title="Behaviour of keys and buttons"
@@ -945,14 +1033,6 @@ export class SettingsPanel extends LitElement {
               ${!this.keepScreenSupported
                 ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                 : ''}
-              <t-butt
-                toggle
-                ellipsis
-                .active=${this.darkMode}
-                @click=${() => this._toggleSetting('darkMode', this.darkMode)}
-              >
-                Dark mode
-              </t-butt>
             </div>
           </div>
         </div>

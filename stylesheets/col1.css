@@ -4,7 +4,7 @@
 
 /* standard color... */
 ::-webkit-input-placeholder {
-  color: dimgray;
+  color: var(--on-gray-out, dimgray);
 }
 
 h1,
@@ -18,7 +18,7 @@ p {
 }
 
 .table-row-selectable tr:hover {
-  outline-color: dimgray;
+  outline-color: var(--on-gray-out, dimgray);
 }
 
 .centerRoundButtCommon {
@@ -51,17 +51,17 @@ p {
 }
 
 .textareaEdit {
-  background: white;
-  color: black;
+  background: var(--data-tables-empty, white);
+  color: var(--on-data-tables-empty, black);
 }
 
 .fullscreen {
-  background-color: black;
+  background-color: var(--body-background, black);
 }
 
 .likeLink {
   background-color: transparent;
-  color: blue;
+  color: var(--body-link-color, blue);
 }
 
 .outerDialog {
@@ -69,11 +69,11 @@ p {
 }
 
 .helpText {
-  color: #696969;
+  color: var(--on-gray-out, #696969);
 }
 
 .colorPicker {
-  border-color: black;
+  border-color: var(--border-color, black);
 }
 .colorPickerSelected {
   border-color: var(--accent-color-1, #431c5d);

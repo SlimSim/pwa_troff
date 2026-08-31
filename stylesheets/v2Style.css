@@ -23,6 +23,8 @@ body[data-mode='dark'] {
   --text-color: #d8d8e8;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #353558;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Col1: Blue / Purple ──────────────────────────────────────────── */
@@ -68,6 +70,11 @@ body[data-mode='dark'] {
   --text-color: #d8d8e8;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #283848;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --slider-color: #4a6078;
+  --slider-playback-region-color: var(--accent-color-1);
 }
 
 /* ── Col2: Forest / Green ─────────────────────────────────────────── */
@@ -113,10 +120,16 @@ body[data-mode='dark'] {
   --text-color: #d8e8d0;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #253a28;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --slider-color: var(--on-gray-out);
 }
 
 /* ── Col3: Black / Yellow — already dark, darken the grays ────────── */
 [data-theme='col3'][data-mode='dark'] {
+  --theme-color: #1a1a1a;
+  --on-theme-color: #e0e0e0;
   --primary-color: #4a4a4a;
   --on-primary-color: #e0e0e0;
   --on-primary-color-link: #ffeb3b;
@@ -200,10 +213,17 @@ body[data-mode='dark'] {
   --text-color: #d8d0c0;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #302820;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --important-button: var(--accent-color-1);
+  --on-important-button: var(--on-accent-color-1);
 }
 
 /* ── Col5: Neon / Bold — already dark, just tighten up ────────────── */
 [data-theme='col5'][data-mode='dark'] {
+  --theme-color: #5a0000;
+  --on-theme-color: #f0f0f0;
   --primary-color: #5a0000;
   --on-primary-color: #f0f0f0;
 
@@ -241,6 +261,106 @@ body[data-mode='dark'] {
   --text-color: #f0f0f0;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #333333;
+}
+
+/* ── Col3: Black / Yellow — light mode (default is dark) ──────────── */
+[data-theme='col3'][data-mode='light'] {
+  --theme-color: #f5f5f5;
+  --on-theme-color: #333;
+  --primary-color: #e0e0e0;
+  --on-primary-color: #333;
+  --on-primary-color-link: #666;
+
+  --secondary-color: #f0f0f0;
+  --on-secondary-color: #333;
+
+  --tertiary-color: #e8e8e8;
+  --on-tertiary-color: #333;
+
+  --body-background: #fafafa;
+  --on-body-background: #333;
+  --body-link-color: #666;
+
+  --regular-button-color: #d0d0d0;
+  --on-regular-buton-color: #333;
+
+  --toggle-button-color: #e0e0e0;
+  --on-toggle-button-color: #555;
+
+  --text-area: #fff;
+  --on-text-area: #333;
+
+  --drop-active: #e0e0e0;
+  --on-drop-active: #333;
+
+  --gray-out: #e0e0e0;
+  --on-gray-out: #888;
+
+  --data-tables-empty: #f5f5f5;
+  --on-data-tables-empty: #888;
+
+  --help-tip-background: #f0f0f0;
+  --on-help-tip-background: #333;
+
+  --text-color: #333;
+  --item-background: rgba(0, 0, 0, 0.04);
+  --border-color: #d0d0d0;
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
+
+  --accent-color-1: #8a6d00;
+  --accent-color-3: #665500;
+  --on-toggle-button-active-color: var(--on-accent-color-3);
+}
+
+/* ── Col5: Neon / Bold — light mode (default is dark) ─────────────── */
+[data-theme='col5'][data-mode='light'] {
+  --theme-color: #cc0000;
+  --on-theme-color: #fff;
+  --primary-color: #f8d0d0;
+  --on-primary-color: #333;
+  --on-primary-color-link: #cc0000;
+
+  --secondary-color: #f5f5f5;
+  --on-secondary-color: #333;
+
+  --tertiary-color: #e8e8e8;
+  --on-tertiary-color: #333;
+
+  --body-background: #fafafa;
+  --on-body-background: #333;
+  --body-link-color: #cc0000;
+
+  --regular-button-color: #d0d0d0;
+  --on-regular-buton-color: #333;
+
+  --toggle-button-color: #e0e0e0;
+  --on-toggle-button-color: #555;
+
+  --text-area: #fff;
+  --on-text-area: #333;
+
+  --drop-active: #e0e0e0;
+  --on-drop-active: #333;
+
+  --gray-out: #e0e0e0;
+  --on-gray-out: #888;
+
+  --data-tables-empty: #f5f5f5;
+  --on-data-tables-empty: #888;
+
+  --help-tip-background: #f5f5f5;
+  --on-help-tip-background: #333;
+
+  --text-color: #333;
+  --item-background: rgba(0, 0, 0, 0.04);
+  --border-color: #d0d0d0;
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
+
+  --accent-color-1: #c8b800;
+  --accent-color-2: #009900;
+  --accent-color-3: #0000cc;
 }
 
 /* ===================================================================

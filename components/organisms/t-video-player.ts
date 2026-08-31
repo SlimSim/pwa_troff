@@ -33,7 +33,7 @@ export class TVideoPlayer extends LitElement {
       z-index: 1;
       transition: opacity 0.2s ease;
       --regular-button-color: rgba(0, 0, 0, 0.6);
-      --on-regular-buton-color: #fff;
+      --on-regular-buton-color: var(--on-theme-color, #fff);
     }
     .video-btn.controls-hidden {
       opacity: 0;
@@ -52,7 +52,7 @@ export class TVideoPlayer extends LitElement {
         var(--accent-color-1, #431c5d) 60%,
         transparent
       );
-      --on-toggle-button-active-color: #fff;
+      --on-toggle-button-active-color: var(--on-accent-color-1, #fff);
     }
     .fullscreen-btn {
       right: 8px;
@@ -96,7 +96,7 @@ export class TVideoPlayer extends LitElement {
       padding: 2px 8px;
       border-radius: var(--button-border-radius);
       background-color: rgba(0, 0, 0, 0.6);
-      color: #fff;
+      color: var(--on-theme-color, #fff);
       font-size: 0.75rem;
       white-space: nowrap;
       max-width: 30%;
@@ -121,7 +121,7 @@ export class TVideoPlayer extends LitElement {
       padding: 4px 12px;
       border-radius: var(--button-border-radius);
       background-color: rgba(0, 0, 0, 0.6);
-      color: #fff;
+      color: var(--on-theme-color, #fff);
       font-size: 0.9rem;
       white-space: nowrap;
       pointer-events: none;

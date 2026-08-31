@@ -17,7 +17,7 @@ export class MediaItem extends LitElement {
       gap: 12px;
       padding: 12px 16px;
       border-left: 4px solid transparent;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
       transition:
         background-color 0.2s ease,
@@ -26,7 +26,7 @@ export class MediaItem extends LitElement {
     }
 
     .media-container:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.1));
     }
 
     .media-container.active {
@@ -57,7 +57,7 @@ export class MediaItem extends LitElement {
     .album-art {
       width: 48px;
       height: 48px;
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: var(--gray-out, rgba(255, 255, 255, 0.2));
       border-radius: 4px;
       flex-shrink: 0;
       display: flex;
@@ -90,7 +90,7 @@ export class MediaItem extends LitElement {
     }
 
     .star-background {
-      color: rgba(255, 255, 255, 0.3);
+      color: var(--on-gray-out, rgba(255, 255, 255, 0.3));
     }
 
     .star-fill {

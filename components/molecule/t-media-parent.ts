@@ -256,8 +256,8 @@ export class MediaParent extends LitElement {
 
     .sort-order-container .sort-option-item {
       flex: 1;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
+      border-right: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       border-right: 1px solid color-mix(in srgb, currentColor 10%, transparent);
     }
 
@@ -275,7 +275,7 @@ export class MediaParent extends LitElement {
       display: flex;
       align-items: center;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
       transition: background-color 0.2s ease;
     }

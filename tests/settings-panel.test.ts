@@ -657,6 +657,98 @@ describe('SettingsPanel numeric settings integration', () => {
       });
     });
   });
+
+  describe('Theme setting', () => {
+    describe('default property values', () => {
+      it('should have default theme of col1', () => {
+        expect(settingsPanel.theme).toBe('col1');
+      });
+    });
+
+    describe('setting values from parent', () => {
+      it('should update theme when property is set', async () => {
+        settingsPanel.theme = 'col2';
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.theme).toBe('col2');
+      });
+
+      it('should change theme to col3', async () => {
+        settingsPanel.theme = 'col3';
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.theme).toBe('col3');
+      });
+    });
+
+    describe('setting-changed event dispatch', () => {
+      it('should dispatch setting-changed when theme is changed', () => {
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._setTheme('col2');
+
+        expect(settingsPanel.theme).toBe('col2');
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'theme', value: 'col2' },
+          })
+        );
+      });
+
+      it('should dispatch setting-changed for each theme', () => {
+        for (const theme of ['col1', 'col2', 'col3', 'col4', 'col5']) {
+          const handler = vi.fn();
+          settingsPanel.addEventListener('setting-changed', handler);
+
+          // @ts-expect-error - accessing private method for testing
+          settingsPanel._setTheme(theme);
+
+          expect(settingsPanel.theme).toBe(theme);
+          expect(handler).toHaveBeenCalledWith(
+            expect.objectContaining({
+              detail: { setting: 'theme', value: theme },
+            })
+          );
+
+          settingsPanel.removeEventListener('setting-changed', handler);
+        }
+      });
+    });
+
+    describe('rendered theme selector in global controls area', () => {
+      it('should render a theme selector with 5 t-butt elements', () => {
+        const themeSelector = settingsPanel.shadowRoot?.querySelector('.theme-selector');
+        expect(themeSelector).toBeTruthy();
+
+        const butts = themeSelector!.querySelectorAll('t-butt');
+        expect(butts.length).toBe(5);
+      });
+
+      it('should render theme buttons with correct titles', () => {
+        const themeSelector = settingsPanel.shadowRoot?.querySelector('.theme-selector');
+        const butts = Array.from(themeSelector!.querySelectorAll('t-butt'));
+
+        const titles = butts.map((b) => b.getAttribute('title'));
+        expect(titles).toContain('Blue and purple');
+        expect(titles).toContain('Green and red');
+        expect(titles).toContain('Black and yellow');
+        expect(titles).toContain('Gold and white');
+        expect(titles).toContain('Black and red');
+      });
+
+      it('should highlight the active theme button', async () => {
+        settingsPanel.theme = 'col3';
+        await settingsPanel.updateComplete;
+
+        const themeSelector = settingsPanel.shadowRoot?.querySelector('.theme-selector');
+        const butts = Array.from(themeSelector!.querySelectorAll('t-butt'));
+
+        const activeButt = butts.find((b) => b.hasAttribute('active'));
+        expect(activeButt).toBeTruthy();
+        expect(activeButt!.getAttribute('title')).toBe('Black and yellow');
+      });
+    });
+  });
 });
 
 describe('SettingsPanel panel title', () => {
@@ -728,9 +820,10 @@ describe('SettingsPanel advanced panels use t-details', () => {
     return getDetailsPanels().find((panel) => panel.title === title);
   }
 
-  it('renders t-details panels for Behaviour of keys and buttons, Marker color and Default Song Values (States moved to Advanced panel)', async () => {
+  it('renders t-details panels for Theme, Behaviour of keys and buttons, Marker color and Default Song Values', async () => {
     const titles = getDetailsPanels().map((panel) => panel.title);
     expect(titles).toEqual([
+      'Theme',
       'Behaviour of keys and buttons',
       'Marker color',
       'Default Song Values',

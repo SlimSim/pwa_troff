@@ -20,7 +20,7 @@ export class DropdownButton extends LitElement {
       position: fixed;
       background-color: var(--secondary-color);
       color: var(--on-secondary-color);
-      border: 2px solid var(--theme-color);
+      border: 2px solid var(--on-body-background);
       border-radius: 4px;
       z-index: 20000;
       min-width: 180px;

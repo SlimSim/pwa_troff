@@ -12,7 +12,7 @@ const popupStyles = css`
     position: fixed;
     background-color: var(--secondary-color);
     color: var(--on-secondary-color);
-    border: 2px solid var(--theme-color);
+    border: 2px solid var(--on-body-background);
     border-radius: 4px;
     z-index: 20000;
     max-width: min(300px, 90vw);
@@ -105,14 +105,8 @@ export class Popover extends LitElement {
     });
     window.removeEventListener('resize', this._boundReposition);
     if (window.visualViewport) {
-      window.visualViewport.removeEventListener(
-        'resize',
-        this._boundReposition
-      );
-      window.visualViewport.removeEventListener(
-        'scroll',
-        this._boundReposition
-      );
+      window.visualViewport.removeEventListener('resize', this._boundReposition);
+      window.visualViewport.removeEventListener('scroll', this._boundReposition);
     }
   }
 
@@ -139,7 +133,9 @@ export class Popover extends LitElement {
     if (!root) return;
     render(
       html`
-        <style>${popupStyles.cssText}</style>
+        <style>
+          ${popupStyles.cssText}
+        </style>
         <div class="popup" ?open=${this.open} @click=${this._handlePopupClick}>
           ${this.header
             ? html`
@@ -165,9 +161,7 @@ export class Popover extends LitElement {
   }
 
   private _positionPopup() {
-    const triggerWrapper = this.shadowRoot?.querySelector(
-      '.trigger-wrapper'
-    ) as HTMLElement | null;
+    const triggerWrapper = this.shadowRoot?.querySelector('.trigger-wrapper') as HTMLElement | null;
     const popup = this.popupElement;
     if (!triggerWrapper || !popup) return;
 
@@ -182,9 +176,8 @@ export class Popover extends LitElement {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    const boundaryRect = this.boundary instanceof Element
-      ? this.boundary.getBoundingClientRect()
-      : null;
+    const boundaryRect =
+      this.boundary instanceof Element ? this.boundary.getBoundingClientRect() : null;
     const { top, left } = computePopupPosition({
       triggerRect: triggerRect as PopupPositionInput['triggerRect'],
       popupWidth,
@@ -208,8 +201,7 @@ export class Popover extends LitElement {
   private _handleDocumentClick(event: MouseEvent) {
     const path = event.composedPath();
     const isInside =
-      path.includes(this) ||
-      Boolean(this._portalHost && path.includes(this._portalHost));
+      path.includes(this) || Boolean(this._portalHost && path.includes(this._portalHost));
     if (!isInside && this.open) {
       this._close();
     }

@@ -54,9 +54,15 @@
 
   --help-tip-background: var(--secondary-color);
   --on-help-tip-background: var(--on-secondary-color);
+
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
 }
 
-.theme-col2 {
+.theme-col2,
+[data-theme='col2'] {
+  --theme-color: #2e7d32;
+  --on-theme-color: #fff;
   --primary-color: #93c47d;
   --secondary-color: #c9e2be;
   --tertiary-color: #ced8e8;
@@ -103,8 +109,20 @@
 
   --toggle-button-active-color: var(--accent-color-1);
   --on-toggle-button-active-color: var(--on-accent-color-1);
+
+  --slider-color: var(--theme-color);
+  --slider-playback-region-color: var(--accent-color-1);
+
+  --help-tip-background: var(--secondary-color);
+  --on-help-tip-background: var(--on-secondary-color);
+
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
 }
-.theme-col3 {
+.theme-col3,
+[data-theme='col3'] {
+  --theme-color: #333;
+  --on-theme-color: #fff;
   --primary-color: #9e9e9e;
   --secondary-color: #616161;
   --tertiary-color: #7c7c7c;
@@ -152,9 +170,21 @@
   --toggle-button-active-color: var(--accent-color-3);
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
+  --slider-color: var(--regular-button-color);
+  --slider-playback-region-color: var(--accent-color-1);
+
+  --help-tip-background: var(--secondary-color);
+  --on-help-tip-background: var(--on-secondary-color);
+
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
   --marker-section-padding-left: 4px;
 }
-.theme-col4 {
+.theme-col4,
+[data-theme='col4'] {
+  --theme-color: #8b7832;
+  --on-theme-color: #fff;
   --primary-color: #f0f0f0;
   --secondary-color: #fcfcfc;
   --tertiary-color: #fff;
@@ -201,9 +231,21 @@
 
   --toggle-button-active-color: var(--accent-color-3);
   --on-toggle-button-active-color: var(--on-accent-color-3);
+
+  --slider-color: var(--regular-button-color);
+  --slider-playback-region-color: var(--accent-color-1);
+
+  --help-tip-background: var(--secondary-color);
+  --on-help-tip-background: var(--on-secondary-color);
+
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
 }
 
-.theme-col5 {
+.theme-col5,
+[data-theme='col5'] {
+  --theme-color: #8b0000;
+  --on-theme-color: #fff;
   --primary-color: #8b0000; /* Dark red for primary elements */
   --secondary-color: #000000; /* Black for secondary */
   --tertiary-color: #333333; /* Dark gray for tertiary */
@@ -214,6 +256,8 @@
   --on-primary-color: #ffffff; /* White text on red */
   --on-primary-color-link: #00ffff; /* Cyan links on red */
   --on-secondary-color: #ffffff; /* White on black */
+
+  --on-tertiary-color: #ffffff;
 
   --regular-button-color: #666666; /* Medium gray buttons */
   --on-regular-buton-color: #dddddd; /* White text */
@@ -249,4 +293,13 @@
 
   --toggle-button-active-color: var(--accent-color-3);
   --on-toggle-button-active-color: var(--on-accent-color-3);
+
+  --slider-color: var(--theme-color);
+  --slider-playback-region-color: var(--accent-color-1);
+
+  --help-tip-background: var(--secondary-color);
+  --on-help-tip-background: var(--on-secondary-color);
+
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
 }

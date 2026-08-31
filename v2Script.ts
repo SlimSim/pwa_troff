@@ -82,6 +82,7 @@ import {
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_KEEP_SCREEN_ON,
   TROFF_SETTING_DARK_MODE,
+  TROFF_SETTING_THEME,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
@@ -1165,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
       nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
     settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
     settingsPanel.darkMode = nDB.get(TROFF_SETTING_DARK_MODE) ?? false;
+    settingsPanel.theme = nDB.get(TROFF_SETTING_THEME) ?? 'col1';
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -1986,6 +1988,7 @@ document.addEventListener('DOMContentLoaded', () => {
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
         keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
         darkMode: TROFF_SETTING_DARK_MODE,
+        theme: TROFF_SETTING_THEME,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -1993,7 +1996,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      nDB.set(storageKey, value === true);
+      nDB.set(storageKey, value === true ? true : value);
       if (setting === 'keepScreenOn') {
         void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
       }
@@ -2001,8 +2004,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (value === true) {
           document.body.setAttribute('data-mode', 'dark');
         } else {
-          document.body.removeAttribute('data-mode');
+          document.body.setAttribute('data-mode', 'light');
         }
+      }
+      if (setting === 'theme') {
+        document.body.setAttribute('data-theme', String(value));
       }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
@@ -2191,10 +2197,19 @@ document.addEventListener('DOMContentLoaded', () => {
         nDB.set(key, defaultValue);
       }
     }
+    if (nDB.get(TROFF_SETTING_THEME) == null) {
+      nDB.set(TROFF_SETTING_THEME, 'col1');
+    }
+
+    // Apply theme on startup
+    const savedTheme = nDB.get(TROFF_SETTING_THEME) ?? 'col1';
+    document.body.setAttribute('data-theme', String(savedTheme));
 
     // Apply dark mode on startup
     if (nDB.get(TROFF_SETTING_DARK_MODE) === true) {
       document.body.setAttribute('data-mode', 'dark');
+    } else {
+      document.body.setAttribute('data-mode', 'light');
     }
 
     updateFooterWithCurrentSong();

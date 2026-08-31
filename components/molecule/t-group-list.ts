@@ -31,7 +31,7 @@ export class GroupList extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
       transition: filter 0.2s ease;
     }
@@ -94,8 +94,8 @@ export class GroupList extends LitElement {
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      background-color: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
+      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.05));
     }
 
     .back-arrow {
@@ -354,7 +354,7 @@ export class GroupList extends LitElement {
     /* Add songs section */
     .add-songs-section {
       padding: 12px 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
     }
 
     .add-songs-label {
@@ -371,7 +371,7 @@ export class GroupList extends LitElement {
     .add-songs-list {
       max-height: 200px;
       overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.15));
       border-radius: 4px;
       padding: 4px;
     }
@@ -388,7 +388,7 @@ export class GroupList extends LitElement {
     }
 
     .add-songs-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.1));
     }
 
     .add-songs-item.added {
@@ -405,7 +405,7 @@ export class GroupList extends LitElement {
 
     .section-divider {
       border: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       margin: 0;
     }
 
@@ -413,7 +413,7 @@ export class GroupList extends LitElement {
       display: flex;
       justify-content: center;
       padding: 8px 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
     }
 
     /* Mobile responsive adjustments */

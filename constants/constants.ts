@@ -2,6 +2,7 @@ import { DataTableColumnHelper } from 'types/dataTables';
 import { MarkerColorConfig } from 'types/markers';
 
 export const TROFF_SETTING_SET_THEME: string = 'TROFF_SETTING_SET_THEME';
+export const TROFF_SETTING_THEME: string = 'TROFF_SETTING_THEME';
 export const TROFF_SETTING_EXTENDED_MARKER_COLOR: string = 'TROFF_SETTING_EXTENDED_MARKER_COLOR';
 export const TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR: string =
   'TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR';

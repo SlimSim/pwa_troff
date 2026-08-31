@@ -27,13 +27,13 @@ export class ArtistList extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
       transition: background-color 0.2s ease;
     }
 
     .artist-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.1));
     }
 
     .artist-item.highlighted {
@@ -71,8 +71,8 @@ export class ArtistList extends LitElement {
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      background-color: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
+      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.05));
     }
 
     .back-arrow {
