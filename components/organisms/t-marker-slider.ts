@@ -109,6 +109,7 @@ export class MarkerSlider extends LitElement {
   @property({ type: String, attribute: 'fill-color' }) fillColor = '';
 
   private isDragging = false;
+  private isTouchDragging = false;
   private isPinching = false;
   private initialPinchDistance = 0;
   private initialZoom = 1;
@@ -148,7 +149,7 @@ export class MarkerSlider extends LitElement {
     return Math.max(this.min, Math.min(this.max, rawValue));
   }
 
-  private _handleTrackClick(event: MouseEvent) {
+  private _handleTrackMouseDown(event: MouseEvent) {
     event.stopPropagation();
     const trackWrapper = this._getTrackElement();
     if (!trackWrapper) return;
@@ -173,9 +174,12 @@ export class MarkerSlider extends LitElement {
 
     this.value = Math.round(newValue);
     this._dispatchValueChanged();
+
+    this.isDragging = true;
   }
 
   private _handleThumbMouseDown(event: MouseEvent) {
+    event.stopPropagation();
     this.isDragging = true;
     event.preventDefault();
   }
@@ -209,6 +213,32 @@ export class MarkerSlider extends LitElement {
 
   private _handleMouseUp() {
     this.isDragging = false;
+  }
+
+  private _updatePositionFromTouch(touch: Touch) {
+    const trackWrapper = this._getTrackElement();
+    if (!trackWrapper) return;
+
+    const rect = trackWrapper.getBoundingClientRect();
+    const moveY = touch.clientY - rect.top;
+    const positionPercent = Math.max(0, Math.min(100, (1 - moveY / rect.height) * 100));
+
+    const newValue = this._getValueFromPosition(positionPercent);
+
+    if (this.markers.length > 0 && newValue > this.getPlaybackStop()) {
+      const lastMarker = this.markers[this.markers.length - 1];
+      this.stopMarkerId = lastMarker.id + 'S';
+      this.dispatchEvent(
+        new CustomEvent('set-stop-marker', {
+          detail: { markerId: lastMarker.id },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+
+    this.value = Math.round(newValue);
+    this._dispatchValueChanged();
   }
 
   private _handleMarkerClick(event: CustomEvent, marker: TroffMarker) {
@@ -301,10 +331,35 @@ export class MarkerSlider extends LitElement {
 
   private _handleTouchStart(event: TouchEvent) {
     if (event.touches.length === 2) {
+      this.isTouchDragging = false;
+      this.isDragging = false;
       this.isPinching = true;
       this.initialPinchDistance = this._getDistance(event.touches[0], event.touches[1]);
       this.initialZoom = this.zoomLevel;
       this.lastMidpointY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+    } else if (event.touches.length === 1 && !this.isPinching) {
+      const touch = event.touches[0];
+      const trackWrapper = this._getTrackElement();
+      if (trackWrapper) {
+        const rect = trackWrapper.getBoundingClientRect();
+        // Expand hit area for easier targeting on mobile
+        const expandedLeft = rect.left - 15;
+        const expandedRight = rect.right + 15;
+        const expandedTop = rect.top - 20;
+        const expandedBottom = rect.bottom + 20;
+
+        if (
+          touch.clientX >= expandedLeft &&
+          touch.clientX <= expandedRight &&
+          touch.clientY >= expandedTop &&
+          touch.clientY <= expandedBottom
+        ) {
+          this.isTouchDragging = true;
+          this.isDragging = true;
+          event.preventDefault();
+          this._updatePositionFromTouch(touch);
+        }
+      }
     }
   }
 
@@ -318,12 +373,19 @@ export class MarkerSlider extends LitElement {
       const panDelta = -(midpointY - this.lastMidpointY);
       this.lastMidpointY = midpointY;
       this._setZoom(this.initialZoom * scale, midpointY, panDelta);
+    } else if (this.isTouchDragging && event.touches.length === 1) {
+      event.preventDefault();
+      this._updatePositionFromTouch(event.touches[0]);
     }
   }
 
   private _handleTouchEnd(event: TouchEvent) {
     if (event.touches.length < 2) {
       this.isPinching = false;
+    }
+    if (event.touches.length === 0) {
+      this.isTouchDragging = false;
+      this.isDragging = false;
     }
   }
 
@@ -676,7 +738,7 @@ export class MarkerSlider extends LitElement {
           .zoomLevel}) - var(--button-height) - calc(2 * var(--slider-top-padding)));"
         @click=${(e: Event) => e.stopPropagation()}
       >
-        <div class="slider-track-wrapper" @click=${this._handleTrackClick}>
+        <div class="slider-track-wrapper" @mousedown=${this._handleTrackMouseDown}>
           <div
             class="playback-region"
             style="--min-percent: ${startPercent}%; --height-percent: ${heightPercent}%;"

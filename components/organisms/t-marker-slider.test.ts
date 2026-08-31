@@ -553,7 +553,7 @@ describe('t-marker-slider click past playback stop extends stop marker (#43)', (
     vi.spyOn(trackWrapper, 'getBoundingClientRect').mockReturnValue(
       new DOMRect(0, 0, 100, 100)
     );
-    const clickEvent = new MouseEvent('click', {
+    const clickEvent = new MouseEvent('mousedown', {
       clientY,
       bubbles: true,
       cancelable: true,
