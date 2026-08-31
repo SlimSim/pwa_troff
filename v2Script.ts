@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (videoPlayer) videoPlayer.hidden = true;
       if (videoElement) videoElement.pause();
     }
+    applyStoredVolumeAndSpeedToMedia();
   };
 
   // Responsive placement: video player sits at the top on narrow screens and
@@ -2533,7 +2534,6 @@ document.addEventListener('DOMContentLoaded', () => {
           syncLoopTimesFromSong();
           syncSettingsPanelValues();
           syncCurrentSongControlsValues();
-          applyStoredVolumeAndSpeedToMedia();
           updateHeaderCountdownDisplay();
 
           // Update marker slider with new song markers
@@ -2564,7 +2564,6 @@ document.addEventListener('DOMContentLoaded', () => {
       syncLoopTimesFromSong();
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
-      applyStoredVolumeAndSpeedToMedia();
       updateHeaderCountdownDisplay();
       void applySavedZoomWindowForCurrentSong();
     }
@@ -2770,7 +2769,6 @@ document.addEventListener('DOMContentLoaded', () => {
     syncLoopTimesFromSong();
     syncSettingsPanelValues();
     syncCurrentSongControlsValues();
-    applyStoredVolumeAndSpeedToMedia();
     updateHeaderCountdownDisplay();
 
     updateMarkerSlider(markerSlider);

@@ -29,6 +29,7 @@ interface AudioElementMock {
   volume: number;
   paused: boolean;
   src?: string;
+  _src?: string;
   load: ReturnType<typeof vi.fn>;
   pause?: ReturnType<typeof vi.fn>;
   addEventListener: ReturnType<typeof vi.fn>;
@@ -219,7 +220,7 @@ describe('v2Script applies saved volume/speed to media elements (issue #38)', ()
   }
 
   function makeAudioMock(): AudioElementMock {
-    return {
+    const mock: AudioElementMock = {
       currentTime: 0,
       duration: 120,
       playbackRate: 1,
@@ -229,6 +230,21 @@ describe('v2Script applies saved volume/speed to media elements (issue #38)', ()
       pause: vi.fn(),
       addEventListener: vi.fn(),
     };
+    Object.defineProperty(mock, 'src', {
+      configurable: true,
+      enumerable: true,
+      get() {
+        return mock._src;
+      },
+      set(val: string) {
+        mock._src = val;
+        // Emulate the browser reset behavior on new src (the root cause of the
+        // reported speed bug during song switch): playbackRate snaps back to 1.
+        // Volume is unaffected by src changes, which is why volume worked.
+        mock.playbackRate = 1;
+      },
+    });
+    return mock;
   }
 
   const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -325,5 +341,54 @@ describe('v2Script applies saved volume/speed to media elements (issue #38)', ()
     // Defaults from nDB fallbacks: volume bar 75 -> 0.75, speed bar 100 -> 1.
     expect(audioEl.volume).toBe(0.75);
     expect(audioEl.playbackRate).toBe(1);
+  }, 30000);
+
+  it('applies the *new* song\'s speed after switching songs (regression for src/load reset)', async () => {
+    const { songList } = buildDom(false);
+    // Start with song A having 120 % speed
+    hooks.currentSongEntry = null;
+    hooks.currentSongKey = null;
+    hooks.songKey = 'songA.mp3';
+    hooks.songData = { TROFF_VALUE_volumeBar: 100, TROFF_VALUE_speedBar: 120 };
+    const audioEl = makeAudioMock();
+    hooks.audio = audioEl;
+    hooks.loadSongResult = { url: 'songA.mp3', isVideo: false };
+
+    await import('../v2Script.js');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await flush();
+
+    // Select song A
+    songList.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: 'songA.mp3' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await flush();
+    await flush();
+
+    // After load (which now resets rate in our mock), the stored must still be applied
+    expect(audioEl.playbackRate).toBe(1.2);
+
+    // Switch to song B with 80 % speed (this is the reported scenario)
+    hooks.songKey = 'songB.mp3';
+    hooks.songData = { TROFF_VALUE_volumeBar: 100, TROFF_VALUE_speedBar: 80 };
+    hooks.loadSongResult = { url: 'songB.mp3', isVideo: false };
+
+    songList.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: 'songB.mp3' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await flush();
+    await flush();
+
+    // Must be B's speed (0.8), not 1.0 (reset) or A's leftover (1.2)
+    expect(audioEl.playbackRate).toBe(0.8);
+    expect(audioEl.volume).toBe(1.0);
   }, 30000);
 });
