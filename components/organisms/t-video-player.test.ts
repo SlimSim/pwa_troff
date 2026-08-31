@@ -32,10 +32,10 @@ import type { TroffMarker } from '../../types/troff.js';
  *   overlay buttons never toggles the controls.
  *
  * Fullscreen-only controls + idle auto-fade (round 4):
- * - Play/pause and add-marker are only relevant in fullscreen: the component
- *   adds a `not-fullscreen` class to `.play-pause-btn` and `.marker-btn`
- *   whenever `_isFullscreen` is false (removed in fullscreen). `.mirror-btn`
- *   and `.fullscreen-btn` never carry it. The actual fade is pure CSS
+ * - All bottom control buttons (play/pause, marker, replay, prev-marker,
+ *   next-marker) are always visible regardless of fullscreen state. Only the
+ *   marker-name labels above prev/replay/next carry `not-fullscreen`.
+ *   `.mirror-btn` and `.fullscreen-btn` also never carry it. The actual fade is pure CSS
  *   (`opacity` transition on `.video-btn`) and is NOT tested here — happy-dom
  *   does not resolve stylesheet transitions.
  * - Auto-fade: while fullscreen AND playing, a 3000ms `setTimeout` hides the
@@ -862,18 +862,21 @@ describe('t-video-player', () => {
     expect(event.target).toBe(el);
   });
 
-  it('entering fullscreen removes not-fullscreen from play-pause, marker, replay, prev-marker and next-marker buttons', async () => {
+  it('bottom control buttons never carry not-fullscreen (only marker labels do)', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
-    // Precondition: outside fullscreen all five buttons carry the class...
-    expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(true);
+    // Outside fullscreen: buttons must NOT have not-fullscreen (only labels do).
+    expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    // Mirror and fullscreen never carry it either.
+    expect(getButton(el, '.mirror-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.fullscreen-btn').classList.contains('not-fullscreen')).toBe(false);
 
-    // ...and entering fullscreen strips it.
+    // Entering fullscreen: buttons still must NOT have it.
     enterFullscreen(el);
     await el.updateComplete;
 
@@ -882,17 +885,16 @@ describe('t-video-player', () => {
     expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(false);
-    // Mirror and fullscreen never carry it, in either state.
-    expect(getButton(el, '.mirror-btn').classList.contains('not-fullscreen')).toBe(false);
-    expect(getButton(el, '.fullscreen-btn').classList.contains('not-fullscreen')).toBe(false);
   });
 
-  it('leaving fullscreen restores not-fullscreen on play-pause, marker, replay, prev-marker and next-marker buttons', async () => {
+  it('leaving fullscreen does not add not-fullscreen to buttons (labels still get it)', async () => {
     const { el } = createPlayerWithVideo();
+    setMarkerProps(el, abcMarkers(), 'mB');
     await el.updateComplete;
 
     const setter = enterFullscreen(el);
     await el.updateComplete;
+    // In fullscreen, buttons never have not-fullscreen.
     expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(false);
     expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(false);
@@ -902,11 +904,12 @@ describe('t-video-player', () => {
     leaveFullscreen(setter);
     await el.updateComplete;
 
-    expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(true);
-    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(true);
+    // After leaving fullscreen, buttons still never carry not-fullscreen.
+    expect(getButton(el, '.play-pause-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.replay-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.prev-marker-btn').classList.contains('not-fullscreen')).toBe(false);
+    expect(getButton(el, '.next-marker-btn').classList.contains('not-fullscreen')).toBe(false);
   });
 
   it('auto-hides the control buttons after idle while fullscreen and playing', async () => {
@@ -1217,8 +1220,8 @@ describe('t-video-player', () => {
   // Rendering contract:
   // - Labels are `<span class="marker-label ...">` inside `.video-frame`.
   // - Class names: `.prev-marker-label`, `.replay-label`, `.next-marker-label`.
-  // - Each label carries the SAME visibility classes as its button:
-  //   `not-fullscreen` (when not fullscreen) + `controls-hidden` (when hidden).
+  // - Each label carries `not-fullscreen` (when not fullscreen) +
+  //   `controls-hidden` (when hidden). Buttons no longer use `not-fullscreen`.
   // - Labels are informational: pointer-events: none (never intercept clicks).
   // - If index === -1 (no markers / unknown startMarkerId) or the marker's
   //   name is empty, NO label is rendered.
@@ -1347,7 +1350,7 @@ describe('t-video-player', () => {
     expect(getLabel(el, '.next-marker-label').textContent).toBe('C');
   });
 
-  it('marker labels carry the same visibility classes as their buttons', async () => {
+  it('marker labels carry not-fullscreen and controls-hidden visibility classes (buttons no longer do)', async () => {
     const { el } = createPlayerWithVideo();
     setMarkerProps(el, abcMarkers(), 'mB');
     await el.updateComplete;

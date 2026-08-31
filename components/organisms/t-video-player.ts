@@ -859,10 +859,7 @@ export class TVideoPlayer extends LitElement {
                 >`
               : ''}
             <t-butt
-              class="video-btn prev-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-                ._controlsVisible
-                ? ''
-                : 'controls-hidden'}"
+              class="video-btn prev-marker-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
               slim
               title="Previous marker"
               @click=${this._onPrevMarkerClick}
@@ -880,10 +877,7 @@ export class TVideoPlayer extends LitElement {
                 >`
               : ''}
             <t-butt
-              class="video-btn replay-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-                ._controlsVisible
-                ? ''
-                : 'controls-hidden'}"
+              class="video-btn replay-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
               slim
               title="Replay"
               @click=${this._onReplayClick}
@@ -893,10 +887,7 @@ export class TVideoPlayer extends LitElement {
           </div>
           <div class="bottom-controls-cell">
             <t-butt
-              class="video-btn play-pause-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-                ._controlsVisible
-                ? ''
-                : 'controls-hidden'}"
+              class="video-btn play-pause-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
               slim
               title="Play/Pause"
               @click=${this._onPlayPauseClick}
@@ -914,10 +905,7 @@ export class TVideoPlayer extends LitElement {
                 >`
               : ''}
             <t-butt
-              class="video-btn next-marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-                ._controlsVisible
-                ? ''
-                : 'controls-hidden'}"
+              class="video-btn next-marker-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
               slim
               title="Next marker"
               @click=${this._onNextMarkerClick}
@@ -927,10 +915,7 @@ export class TVideoPlayer extends LitElement {
           </div>
           <div class="bottom-controls-cell">
             <t-butt
-              class="video-btn marker-btn ${this._isFullscreen ? '' : 'not-fullscreen'} ${this
-                ._controlsVisible
-                ? ''
-                : 'controls-hidden'}"
+              class="video-btn marker-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
               slim
               title="Add marker"
               @click=${this._onMarkerClick}
