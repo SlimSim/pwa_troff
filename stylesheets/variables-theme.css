@@ -116,6 +116,8 @@
   --help-tip-background: var(--secondary-color);
   --on-help-tip-background: var(--on-secondary-color);
 
+  --info-indicator-color: var(--accent-color-1);
+
   --list-border-color: rgba(0, 0, 0, 0.1);
   --list-hover-bg: rgba(0, 0, 0, 0.04);
 }
@@ -175,6 +177,8 @@
 
   --help-tip-background: var(--secondary-color);
   --on-help-tip-background: var(--on-secondary-color);
+
+  --info-indicator-color: var(--accent-color-1);
 
   --list-border-color: rgba(255, 255, 255, 0.1);
   --list-hover-bg: rgba(255, 255, 255, 0.08);
@@ -576,6 +580,8 @@ body[data-mode='dark'] {
 
   --important-button: var(--accent-color-1);
   --on-important-button: var(--on-accent-color-1);
+
+  --info-indicator-color: var(--accent-color-3);
 }
 
 /* ── Col5: Neon / Bold — already dark, just tighten up ────────────── */

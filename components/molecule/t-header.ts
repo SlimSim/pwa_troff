@@ -107,6 +107,18 @@ export class Header extends LitElement {
       opacity: 0.9;
     }
 
+    t-dropdown-button.info-dropdown.has-info::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      background-color: var(--info-indicator-color, var(--accent-color-2, #dd2c00));
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
     .info-dropdown-content {
       padding: 16px 8px;
       display: flex;
@@ -190,7 +202,11 @@ export class Header extends LitElement {
           <div class="time-info">${this.currentTime} / ${this.totalTime}</div>
         </div>
 
-        <t-dropdown-button position="down" align="right" class="info-dropdown">
+        <t-dropdown-button
+          position="down"
+          align="right"
+          class="info-dropdown${this.songInfo.trim() ? ' has-info' : ''}"
+        >
           <t-butt ghost slot="button" title="Song info">
             <t-icon name="info"></t-icon>
           </t-butt>

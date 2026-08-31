@@ -198,4 +198,46 @@ describe('t-header song info dropdown', () => {
     expect(expandSpy).toHaveBeenCalledTimes(1);
     expect(element.expanded).toBe(true);
   });
+
+  // --- Notification indicator tests ---
+
+  it('shows notification indicator when songInfo has content', async () => {
+    setSongInfo(element, 'some note');
+    await element.updateComplete;
+
+    const dropdownBtn = element.shadowRoot?.querySelector('t-dropdown-button') as HTMLElement | null;
+    expect(dropdownBtn).toBeTruthy();
+    expect(dropdownBtn!.classList.contains('has-info')).toBe(true);
+  });
+
+  it('does not show notification indicator when songInfo is empty', async () => {
+    await element.updateComplete;
+
+    const dropdownBtn = element.shadowRoot?.querySelector('t-dropdown-button') as HTMLElement | null;
+    expect(dropdownBtn).toBeTruthy();
+    expect(dropdownBtn!.classList.contains('has-info')).toBe(false);
+  });
+
+  it('removes notification indicator when songInfo is cleared', async () => {
+    setSongInfo(element, 'some note');
+    await element.updateComplete;
+
+    const dropdownBtn = element.shadowRoot?.querySelector('t-dropdown-button') as HTMLElement | null;
+    expect(dropdownBtn).toBeTruthy();
+    expect(dropdownBtn!.classList.contains('has-info')).toBe(true);
+
+    setSongInfo(element, '');
+    await element.updateComplete;
+
+    expect(dropdownBtn!.classList.contains('has-info')).toBe(false);
+  });
+
+  it('does not show indicator for whitespace-only songInfo', async () => {
+    setSongInfo(element, '   ');
+    await element.updateComplete;
+
+    const dropdownBtn = element.shadowRoot?.querySelector('t-dropdown-button') as HTMLElement | null;
+    expect(dropdownBtn).toBeTruthy();
+    expect(dropdownBtn!.classList.contains('has-info')).toBe(false);
+  });
 });
