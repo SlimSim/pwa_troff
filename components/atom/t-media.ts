@@ -57,7 +57,8 @@ export class MediaItem extends LitElement {
     .album-art {
       width: 48px;
       height: 48px;
-      background-color: var(--gray-out, rgba(255, 255, 255, 0.2));
+      background-color: var(--album-art-background, var(--gray-out, rgba(255, 255, 255, 0.2)));
+      color: var(--on-album-art-background, var(--on-gray-out, #595959));
       border-radius: 4px;
       flex-shrink: 0;
       display: flex;
