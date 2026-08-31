@@ -303,3 +303,364 @@
   --list-border-color: rgba(255, 255, 255, 0.1);
   --list-hover-bg: rgba(255, 255, 255, 0.08);
 }
+
+/* ===================================================================
+   DARK MODE — applied when body has data-mode="dark"
+   
+   Selector specificity: [data-theme='colX'][data-mode='dark'] = (0,2,0)
+   beats the light theme selector [data-theme='colX'] = (0,1,0).
+   
+   Strategy: each theme gets its own dark surface palette while
+   preserving accent colors (--accent-color-1/2/3) from the light theme.
+   =================================================================== */
+
+/* ── Generic dark-mode variables (used by components that reference
+      --text-color and --item-background, which are never defined in
+      the light theme but consumed by t-header, t-settings-panel, etc.) ── */
+body[data-mode='dark'] {
+  --text-color: #d8d8e8;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #353558;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Col1: Blue / Purple ──────────────────────────────────────────── */
+[data-theme='col1'][data-mode='dark'] {
+  --theme-color: #0d1b2a;
+  --on-theme-color: #d8d8e8;
+
+  --primary-color: #1b2838;
+  --on-primary-color: #d8d8e8;
+  --on-primary-color-link: #7eb8ff;
+
+  --secondary-color: #162030;
+  --on-secondary-color: #d0d0e0;
+
+  --tertiary-color: #1a2535;
+  --on-tertiary-color: #d8d8e8;
+
+  --body-background: #0f1923;
+  --on-body-background: #d8d8e8;
+  --body-link-color: #7eb8ff;
+
+  --regular-button-color: #283848;
+  --on-regular-buton-color: #d0d0e0;
+
+  --toggle-button-color: #253545;
+  --on-toggle-button-color: #a0b0c0;
+
+  --text-area: #1b2838;
+  --on-text-area: #d8d8e8;
+
+  --drop-active: #283848;
+  --on-drop-active: #d0d0e0;
+
+  --gray-out: #1e2e40;
+  --on-gray-out: #708090;
+
+  --data-tables-empty: #162030;
+  --on-data-tables-empty: #a0b0c0;
+
+  --help-tip-background: #1b2838;
+  --on-help-tip-background: #d8d8e8;
+
+  --text-color: #d8d8e8;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #283848;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --slider-color: #4a6078;
+  --slider-playback-region-color: var(--accent-color-1);
+}
+
+/* ── Col2: Forest / Green ─────────────────────────────────────────── */
+[data-theme='col2'][data-mode='dark'] {
+  --theme-color: #0d2818;
+  --on-theme-color: #d8e8d0;
+
+  --primary-color: #1a3020;
+  --on-primary-color: #d8e8d0;
+  --on-primary-color-link: #7ec87e;
+
+  --secondary-color: #142a1a;
+  --on-secondary-color: #c8dcc0;
+
+  --tertiary-color: #1a2828;
+  --on-tertiary-color: #d8e8d0;
+
+  --body-background: #0d1f12;
+  --on-body-background: #d8e8d0;
+  --body-link-color: #7ec87e;
+
+  --regular-button-color: #253a28;
+  --on-regular-buton-color: #c8dcc0;
+
+  --toggle-button-color: #223525;
+  --on-toggle-button-color: #90b890;
+
+  --text-area: #1a3020;
+  --on-text-area: #d8e8d0;
+
+  --drop-active: #253a28;
+  --on-drop-active: #c8dcc0;
+
+  --gray-out: #1e3020;
+  --on-gray-out: #68886a;
+
+  --data-tables-empty: #142a1a;
+  --on-data-tables-empty: #90b890;
+
+  --help-tip-background: #1a3020;
+  --on-help-tip-background: #d8e8d0;
+
+  --text-color: #d8e8d0;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #253a28;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --slider-color: var(--on-gray-out);
+}
+
+/* ── Col3: Black / Yellow — already dark, darken the grays ────────── */
+[data-theme='col3'][data-mode='dark'] {
+  --theme-color: #1a1a1a;
+  --on-theme-color: #e0e0e0;
+  --primary-color: #4a4a4a;
+  --on-primary-color: #e0e0e0;
+  --on-primary-color-link: #ffeb3b;
+
+  --secondary-color: #2a2a2a;
+  --on-secondary-color: #e0e0e0;
+
+  --tertiary-color: #333333;
+  --on-tertiary-color: #e0e0e0;
+
+  --body-background: #0a0a0a;
+  --on-body-background: #e0e0e0;
+  --body-link-color: #ccc;
+
+  --regular-button-color: #3a3a3a;
+  --on-regular-buton-color: #e0e0e0;
+
+  --toggle-button-color: #333333;
+  --on-toggle-button-color: #b0b0b0;
+
+  --text-area: #2a2a2a;
+  --on-text-area: #e0e0e0;
+
+  --drop-active: #3a3a3a;
+  --on-drop-active: #e0e0e0;
+
+  --gray-out: #222222;
+  --on-gray-out: #707070;
+
+  --data-tables-empty: #2a2a2a;
+  --on-data-tables-empty: #b0b0b0;
+
+  --help-tip-background: #2a2a2a;
+  --on-help-tip-background: #e0e0e0;
+
+  --text-color: #e0e0e0;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #3a3a3a;
+}
+
+/* ── Col4: Gold / White — dark warm tones ─────────────────────────── */
+[data-theme='col4'][data-mode='dark'] {
+  --theme-color: #1a1510;
+  --on-theme-color: #d8d0c0;
+
+  --primary-color: #2a2520;
+  --on-primary-color: #d8d0c0;
+  --on-primary-color-link: #c8a860;
+
+  --secondary-color: #1e1a18;
+  --on-secondary-color: #d0c8b8;
+
+  --tertiary-color: #161210;
+  --on-tertiary-color: #d8d0c0;
+
+  --body-background: #121010;
+  --on-body-background: #d8d0c0;
+  --body-link-color: #c8a860;
+
+  --regular-button-color: #302820;
+  --on-regular-buton-color: #d0c8b8;
+
+  --toggle-button-color: #2a2420;
+  --on-toggle-button-color: #a09880;
+
+  --text-area: #2a2520;
+  --on-text-area: #d8d0c0;
+
+  --drop-active: #302820;
+  --on-drop-active: #d0c8b8;
+
+  --gray-out: #252018;
+  --on-gray-out: #706858;
+
+  --data-tables-empty: #1e1a18;
+  --on-data-tables-empty: #a09880;
+
+  --help-tip-background: #2a2520;
+  --on-help-tip-background: #d8d0c0;
+
+  --text-color: #d8d0c0;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #302820;
+  --list-border-color: rgba(255, 255, 255, 0.1);
+  --list-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --important-button: var(--accent-color-1);
+  --on-important-button: var(--on-accent-color-1);
+}
+
+/* ── Col5: Neon / Bold — already dark, just tighten up ────────────── */
+[data-theme='col5'][data-mode='dark'] {
+  --theme-color: #5a0000;
+  --on-theme-color: #f0f0f0;
+  --primary-color: #5a0000;
+  --on-primary-color: #f0f0f0;
+
+  --secondary-color: #080808;
+  --on-secondary-color: #f0f0f0;
+
+  --tertiary-color: #1a1a1a;
+  --on-tertiary-color: #f0f0f0;
+
+  --body-background: #050505;
+  --on-body-background: #f0f0f0;
+  --body-link-color: #ffff66;
+
+  --regular-button-color: #333333;
+  --on-regular-buton-color: #e0e0e0;
+
+  --toggle-button-color: #2a2a2a;
+  --on-toggle-button-color: #b0b0b0;
+
+  --text-area: #1a1a1a;
+  --on-text-area: #e0e0e0;
+
+  --drop-active: #333333;
+  --on-drop-active: #c0c0c0;
+
+  --gray-out: #1a1a1a;
+  --on-gray-out: #888888;
+
+  --data-tables-empty: #080808;
+  --on-data-tables-empty: #b0b0b0;
+
+  --help-tip-background: #1a1a1a;
+  --on-help-tip-background: #f0f0f0;
+
+  --text-color: #f0f0f0;
+  --item-background: rgba(255, 255, 255, 0.06);
+  --border-color: #333333;
+}
+
+/* ===================================================================
+   LIGHT MODE OVERRIDES — for themes that default to dark
+   =================================================================== */
+
+/* ── Col3: Black / Yellow — light mode (default is dark) ──────────── */
+[data-theme='col3'][data-mode='light'] {
+  --theme-color: #f5f5f5;
+  --on-theme-color: #333;
+  --primary-color: #e0e0e0;
+  --on-primary-color: #333;
+  --on-primary-color-link: #666;
+
+  --secondary-color: #f0f0f0;
+  --on-secondary-color: #333;
+
+  --tertiary-color: #e8e8e8;
+  --on-tertiary-color: #333;
+
+  --body-background: #fafafa;
+  --on-body-background: #333;
+  --body-link-color: #666;
+
+  --regular-button-color: #d0d0d0;
+  --on-regular-buton-color: #333;
+
+  --toggle-button-color: #e0e0e0;
+  --on-toggle-button-color: #555;
+
+  --text-area: #fff;
+  --on-text-area: #333;
+
+  --drop-active: #e0e0e0;
+  --on-drop-active: #333;
+
+  --gray-out: #e0e0e0;
+  --on-gray-out: #888;
+
+  --data-tables-empty: #f5f5f5;
+  --on-data-tables-empty: #888;
+
+  --help-tip-background: #f0f0f0;
+  --on-help-tip-background: #333;
+
+  --text-color: #333;
+  --item-background: rgba(0, 0, 0, 0.04);
+  --border-color: #d0d0d0;
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
+
+  --accent-color-1: #8a6d00;
+  --accent-color-3: #665500;
+  --on-toggle-button-active-color: var(--on-accent-color-3);
+}
+
+/* ── Col5: Neon / Bold — light mode (default is dark) ─────────────── */
+[data-theme='col5'][data-mode='light'] {
+  --theme-color: #cc0000;
+  --on-theme-color: #fff;
+  --primary-color: #f8d0d0;
+  --on-primary-color: #333;
+  --on-primary-color-link: #cc0000;
+
+  --secondary-color: #f5f5f5;
+  --on-secondary-color: #333;
+
+  --tertiary-color: #e8e8e8;
+  --on-tertiary-color: #333;
+
+  --body-background: #fafafa;
+  --on-body-background: #333;
+  --body-link-color: #cc0000;
+
+  --regular-button-color: #d0d0d0;
+  --on-regular-buton-color: #333;
+
+  --toggle-button-color: #e0e0e0;
+  --on-toggle-button-color: #555;
+
+  --text-area: #fff;
+  --on-text-area: #333;
+
+  --drop-active: #e0e0e0;
+  --on-drop-active: #333;
+
+  --gray-out: #e0e0e0;
+  --on-gray-out: #888;
+
+  --data-tables-empty: #f5f5f5;
+  --on-data-tables-empty: #888;
+
+  --help-tip-background: #f5f5f5;
+  --on-help-tip-background: #333;
+
+  --text-color: #333;
+  --item-background: rgba(0, 0, 0, 0.04);
+  --border-color: #d0d0d0;
+  --list-border-color: rgba(0, 0, 0, 0.1);
+  --list-hover-bg: rgba(0, 0, 0, 0.04);
+
+  --accent-color-1: #c8b800;
+  --accent-color-2: #009900;
+  --accent-color-3: #0000cc;
+}
