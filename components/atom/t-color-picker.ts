@@ -362,7 +362,6 @@ export class TColorPicker extends LitElement {
               <!-- No color option on separate row -->
               <div
                 class="color-option no-color-option ${this.value === '' ? 'selected' : ''}"
-                style="color: ${noColorOption.onColor}"
                 data-name="${noColorOption.name}"
                 tabindex="0"
                 role="button"

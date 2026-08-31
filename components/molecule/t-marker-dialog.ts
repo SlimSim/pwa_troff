@@ -20,19 +20,18 @@ export class MarkerDialog extends LitElement {
     }
 
     .marker-dropdown-content {
-      padding: 16px 8px;
+      padding: 10px 8px;
       border: 1px solid var(--on-theme-color, #ffffff);
       border-radius: 4px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 8px;
       min-width: 200px;
     }
 
     .marker-dropdown-content .marker-text {
       text-align: center;
       font-weight: bold;
-      margin-bottom: 8px;
     }
 
     .marker-dropdown-content t-dial .button-row {
@@ -329,7 +328,6 @@ export class MarkerDialog extends LitElement {
         <t-input
           label="Name"
           placeholder="Enter Name of marker"
-          helper-text="Enter a name for the marker"
           .value=${this.markerName}
           clearable
           @input=${this._handleNameChange}
@@ -337,9 +335,9 @@ export class MarkerDialog extends LitElement {
         <t-textarea
           label="Info"
           placeholder="Put extra marker info here"
-          helper-text="You can add multiple lines"
           .value=${this.markerInfo}
-          rows="4"
+          rows="2"
+          compact
           @input=${this._handleInfoChange}
         ></t-textarea>
         <t-dial

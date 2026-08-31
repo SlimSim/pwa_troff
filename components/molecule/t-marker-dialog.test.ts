@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MarkerDialog } from './t-marker-dialog.js';
+import type { TInput } from '../atom/t-input.js';
+import type { TTextarea } from '../atom/t-textarea.js';
 import type { TroffMarker } from '../../types/troff.d.js';
 
 describe('t-marker-dialog', () => {
@@ -307,5 +309,118 @@ describe('t-marker-dialog', () => {
     expect(timeDial!.step).toBe(0.1);
     expect(timeDial!.min).toBe(0);
     expect(timeDial!.unit).toBe('s');
+  });
+
+  // === Compact marker dialog tests ===
+
+  describe('compact marker dialog layout', () => {
+    it('renders all 4 fields: name input, info textarea, time dial, color picker', async () => {
+      await element.updateComplete;
+
+      const nameInput = element.shadowRoot?.querySelector('t-input');
+      const infoTextarea = element.shadowRoot?.querySelector('t-textarea');
+      const timeDial = element.shadowRoot?.querySelector('t-dial');
+      const colorPicker = element.shadowRoot?.querySelector('t-color-picker');
+
+      expect(nameInput).toBeTruthy();
+      expect(infoTextarea).toBeTruthy();
+      expect(timeDial).toBeTruthy();
+      expect(colorPicker).toBeTruthy();
+    });
+
+    it('textarea has rows="2" (not the old rows="4")', async () => {
+      await element.updateComplete;
+
+      const textarea = element.shadowRoot?.querySelector('t-textarea') as TTextarea | null;
+      expect(textarea).toBeTruthy();
+
+      const rows = textarea!.getAttribute('rows');
+      expect(rows).toBe('2');
+    });
+
+    it('textarea does NOT have rows="4"', async () => {
+      await element.updateComplete;
+
+      const textarea = element.shadowRoot?.querySelector('t-textarea') as TTextarea | null;
+      expect(textarea).toBeTruthy();
+
+      const rows = textarea!.getAttribute('rows');
+      expect(rows).not.toBe('4');
+    });
+
+    it('textarea has the compact attribute set', async () => {
+      await element.updateComplete;
+
+      const textarea = element.shadowRoot?.querySelector('t-textarea') as TTextarea | null;
+      expect(textarea).toBeTruthy();
+      expect(textarea!.hasAttribute('compact')).toBe(true);
+    });
+
+    it('name input does NOT have a helper-text attribute', async () => {
+      await element.updateComplete;
+
+      const nameInput = element.shadowRoot?.querySelector('t-input') as TInput | null;
+      expect(nameInput).toBeTruthy();
+      expect(nameInput!.hasAttribute('helper-text')).toBe(false);
+    });
+
+    it('info textarea does NOT have a helper-text attribute', async () => {
+      await element.updateComplete;
+
+      const textarea = element.shadowRoot?.querySelector('t-textarea') as TTextarea | null;
+      expect(textarea).toBeTruthy();
+      expect(textarea!.hasAttribute('helper-text')).toBe(false);
+    });
+
+    it('title renders "Add a marker" in create mode', async () => {
+      element.mode = 'create';
+      await element.updateComplete;
+
+      const dialogTitle = element.shadowRoot?.querySelector('.marker-text') as HTMLElement;
+      expect(dialogTitle?.textContent).toBe('Add a marker');
+    });
+
+    it('title renders "Edit marker" in edit mode', async () => {
+      element.mode = 'edit';
+      element.markerData = { id: 'x', name: 'X', info: '', time: 0, color: '' };
+      await element.updateComplete;
+
+      const dialogTitle = element.shadowRoot?.querySelector('.marker-text') as HTMLElement;
+      expect(dialogTitle?.textContent).toBe('Edit marker');
+    });
+
+    it('container has tighter gap (8px) instead of old 16px', async () => {
+      await element.updateComplete;
+
+      const container = element.shadowRoot?.querySelector('.marker-dropdown-content') as HTMLElement;
+      expect(container).toBeTruthy();
+
+      const computed = getComputedStyle(container!);
+      expect(computed.gap).toBe('8px');
+    });
+
+    it('container has tighter padding (10px 8px) instead of old 16px 8px', async () => {
+      await element.updateComplete;
+
+      const container = element.shadowRoot?.querySelector('.marker-dropdown-content') as HTMLElement;
+      expect(container).toBeTruthy();
+
+      const computed = getComputedStyle(container!);
+      expect(computed.paddingTop).toBe('10px');
+      expect(computed.paddingBottom).toBe('10px');
+      expect(computed.paddingLeft).toBe('8px');
+      expect(computed.paddingRight).toBe('8px');
+    });
+
+    it('title has no bottom margin (margin-bottom: 0)', async () => {
+      await element.updateComplete;
+
+      const title = element.shadowRoot?.querySelector('.marker-text') as HTMLElement;
+      expect(title).toBeTruthy();
+
+      const computed = getComputedStyle(title!);
+      // getComputedStyle returns '' when margin-bottom isn't set, or '0px' if explicitly set to 0
+      expect(['', '0px']).toContain(computed.marginBottom);
+    });
   });
 });
