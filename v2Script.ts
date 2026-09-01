@@ -83,6 +83,7 @@ import {
   TROFF_SETTING_KEEP_SCREEN_ON,
   TROFF_SETTING_DARK_MODE,
   TROFF_SETTING_THEME,
+  TROFF_SETTING_BANNER_SHOW,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
@@ -121,6 +122,35 @@ function getSentryEnvironment(): 'dev' | 'test' | 'prod' {
       return 'prod';
     default:
       return 'dev';
+  }
+}
+
+function getBannerText(): string {
+  switch (window.location.hostname) {
+    case 'localhost':
+      return 'Welcome to dev';
+    case 'slimsim.github.io':
+    case 'beta.troff.app':
+      return 'Welcome to beta.troff.app';
+    case 'troff.app':
+    case 'ios.troff.app':
+    case 'troff.slimsim.heliohost.org':
+    case 'troff.ternsjo-it.heliohost.us':
+      return 'Welcome to prod';
+    default:
+      return 'Welcome to dev';
+  }
+}
+
+function getBannerDefault(): boolean {
+  switch (window.location.hostname) {
+    case 'localhost':
+      return true;
+    case 'slimsim.github.io':
+    case 'beta.troff.app':
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -333,6 +363,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // checked directly so v2 doesn't import that file.
       if (localStorage.getItem('TROFF_COOKIE_CONSENT_ACCEPTED') === 'true') {
         addAndStartSentry();
+      }
+      // Set up dev banner on header
+      if (header) {
+        header.versionNumber = manifest.version;
+        header.bannerText = getBannerText();
+        const storedBannerShow = nDB.get(TROFF_SETTING_BANNER_SHOW);
+        header.showBanner = storedBannerShow !== null ? storedBannerShow === true : getBannerDefault();
       }
     })
     .catch((error) => {
@@ -1172,6 +1209,9 @@ document.addEventListener('DOMContentLoaded', () => {
     void updateWakeLockForPlayback(false, false);
     settingsPanel.darkMode = nDB.get(TROFF_SETTING_DARK_MODE) ?? false;
     settingsPanel.theme = nDB.get(TROFF_SETTING_THEME) ?? 'col1';
+    const storedBannerShow = nDB.get(TROFF_SETTING_BANNER_SHOW);
+    settingsPanel.bannerShow =
+      storedBannerShow !== null ? storedBannerShow === true : getBannerDefault();
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -2015,6 +2055,7 @@ document.addEventListener('DOMContentLoaded', () => {
         keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
         darkMode: TROFF_SETTING_DARK_MODE,
         theme: TROFF_SETTING_THEME,
+        bannerShow: TROFF_SETTING_BANNER_SHOW,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -2038,6 +2079,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (setting === 'theme') {
         document.body.setAttribute('data-theme', String(value));
+      }
+      if (setting === 'bannerShow') {
+        header.showBanner = value === true;
       }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();

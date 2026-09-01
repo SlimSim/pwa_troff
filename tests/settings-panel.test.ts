@@ -821,13 +821,14 @@ describe('SettingsPanel advanced panels use t-details', () => {
     return getDetailsPanels().find((panel) => panel.title === title);
   }
 
-  it('renders t-details panels for Theme, Behaviour of keys and buttons, Marker color and Default Song Values', async () => {
+  it('renders t-details panels for Theme, Behaviour of keys and buttons, Marker color, Default Song Values and Advanced Settings', async () => {
     const titles = getDetailsPanels().map((panel) => panel.title);
     expect(titles).toEqual([
       'Theme',
       'Behaviour of keys and buttons',
       'Marker color',
       'Default Song Values',
+      'Advanced Settings',
     ]);
   });
 

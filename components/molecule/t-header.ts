@@ -147,6 +147,21 @@ export class Header extends LitElement {
     .expand-section t-icon.expanded {
       transform: none;
     }
+
+    .dev-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 2px;
+      background-color: var(--important-button, #dd2c00);
+      color: var(--on-important-button, #fff);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-top: -7px;
+      margin-bottom: 3px;
+    }
   `;
 
   @property({ type: String }) songTitle = 'Unknown Song';
@@ -158,6 +173,9 @@ export class Header extends LitElement {
   @property({ type: String }) statusLoopsLeft = '';
   @property({ type: Boolean, reflect: true }) expanded = false;
   @property({ type: String }) songInfo = '';
+  @property({ type: Boolean, reflect: true }) showBanner = false;
+  @property({ type: String }) bannerText = '';
+  @property({ type: String }) versionNumber = '';
 
   private _handleExpand() {
     this.expanded = !this.expanded;
@@ -189,6 +207,12 @@ export class Header extends LitElement {
 
   render() {
     return html`
+      ${this.showBanner
+        ? html`<div class="dev-banner">
+            <span>${this.versionNumber}</span>
+            <span>${this.bannerText}</span>
+          </div>`
+        : ''}
       <div class="header-container" @click=${this._handleExpand}>
         <div class="artwork-section">
           <div class="artwork">

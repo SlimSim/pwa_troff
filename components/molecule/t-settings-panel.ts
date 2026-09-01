@@ -23,7 +23,8 @@ type ToggleSetting =
   | 'extendedMarkerColor'
   | 'extraExtendedMarkerColor'
   | 'keepScreenOn'
-  | 'darkMode';
+  | 'darkMode'
+  | 'bannerShow';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -392,6 +393,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
   @property({ type: Boolean }) keepScreenOn = true;
   @property({ type: Boolean }) darkMode = false;
+  @property({ type: Boolean }) bannerShow = false;
   @property({ type: String }) theme = 'col1';
 
   connectedCallback() {
@@ -555,6 +557,9 @@ export class SettingsPanel extends LitElement {
         break;
       case 'darkMode':
         this.darkMode = nextValue;
+        break;
+      case 'bannerShow':
+        this.bannerShow = nextValue;
         break;
       default:
         return;
@@ -1047,6 +1052,16 @@ export class SettingsPanel extends LitElement {
                 ${!this.keepScreenSupported
                   ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                   : ''}
+                <div class="settings-section" style="margin: 0; margin-top: 8px;">
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.bannerShow}
+                    @click=${() => this._toggleSetting('bannerShow', this.bannerShow)}
+                  >
+                    Show dev banner
+                  </t-butt>
+                </div>
                 <div class="settings-section" style="margin: 0; margin-top: 8px;">
                   <t-butt
                     ellipsis
