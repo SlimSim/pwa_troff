@@ -627,6 +627,7 @@ export class Dial extends LitElement {
           ${this._hasDefaultValue()
             ? html`
                 <t-butt
+                  .key=${this.showDisableButton ? '' : this.key}
                   @click=${(e: MouseEvent) => this._handleDefaultClick(e)}
                   title="${this.defaultValue}"
                 >

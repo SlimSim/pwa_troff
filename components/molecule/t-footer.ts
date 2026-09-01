@@ -299,7 +299,6 @@ export class BottomNav extends LitElement {
                 </ul>
               </t-help-tip>
               <t-dial
-                key="v"
                 min="0"
                 max="100"
                 step="5"
@@ -311,7 +310,6 @@ export class BottomNav extends LitElement {
                 @value-changed=${this._handleVolumeChanged}
               ></t-dial>
               <t-dial
-                key="s"
                 min="50"
                 max="200"
                 step="5"
@@ -407,7 +405,6 @@ export class BottomNav extends LitElement {
                 </ul>
               </t-help-tip>
               <t-dial
-                key="p"
                 label="Pause before"
                 iconName="pause-before"
                 unit="s"
@@ -418,7 +415,6 @@ export class BottomNav extends LitElement {
                 @value-changed=${this._handlePauseBeforeChanged}
               ></t-dial>
               <t-dial
-                key="w"
                 label="Wait between"
                 iconName="wait-between"
                 unit="s"

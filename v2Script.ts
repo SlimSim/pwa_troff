@@ -1604,6 +1604,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('keydown', handlePlaybackKeyDown, true);
 
+  // Keyboard shortcut: n = next marker, Shift+n = previous marker
+  const handleMarkerNavigationKeyDown = (event: KeyboardEvent) => {
+    if (event.isComposing || event.repeat) {
+      return;
+    }
+    if (event.altKey || event.ctrlKey || event.metaKey || isEditableKeyEvent(event)) {
+      return;
+    }
+    if (event.key === 'n') {
+      event.preventDefault();
+      if (event.shiftKey) {
+        markerSlider?.selectPreviousMarker();
+      } else {
+        markerSlider?.selectNextMarker();
+      }
+    }
+  };
+  document.addEventListener('keydown', handleMarkerNavigationKeyDown);
+
   // Set CSS variables for header and footer heights (simple one-time calculation)
   const setComponentHeights = () => {
     if (typeof document === 'undefined') return;

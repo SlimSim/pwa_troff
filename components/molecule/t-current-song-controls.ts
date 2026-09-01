@@ -256,6 +256,7 @@ export class CurrentSongControls extends LitElement {
   @property({ type: Array }) songStates: string[] = [];
   @property({ type: Number }) numberOfVersions = 0;
   @property({ type: String }) findUrl = '';
+  @property({ type: Boolean, attribute: 'no-keyboard' }) noKeyboard = false;
 
   private _handleSettingChange(setting: string, value: unknown) {
     this.dispatchEvent(
@@ -375,9 +376,13 @@ export class CurrentSongControls extends LitElement {
     return current === loopTimes;
   }
 
-  private _renderSongActionButton(action: SongAction, label: string) {
+  private _renderSongActionButton(action: SongAction, label: string, key?: string) {
     return html`
-      <t-butt ellipsis @click=${() => this._handleSongAction(action)}>${label}</t-butt>
+      <t-butt
+        ellipsis
+        .key=${this.noKeyboard ? '' : key ?? ''}
+        @click=${() => this._handleSongAction(action)}
+      >${label}</t-butt>
     `;
   }
 
@@ -441,8 +446,8 @@ export class CurrentSongControls extends LitElement {
             <div class="settings-grid">
               <div class="setting-item">
                 <div class="song-action-buttons">
-                  ${this._renderSongActionButton('zoomOut', 'Zoom out')}
-                  ${this._renderSongActionButton('zoom', 'Zoom')}
+                  ${this._renderSongActionButton('zoomOut', 'Zoom out', 'Shift+z')}
+                  ${this._renderSongActionButton('zoom', 'Zoom', 'z')}
                 </div>
               </div>
             </div>
@@ -455,7 +460,7 @@ export class CurrentSongControls extends LitElement {
                 <div class="song-stepper-grid">
                   <t-dial
                     unit="s"
-                    key="b"
+                    .key=${this.noKeyboard ? '' : 'b'}
                     label="Start before"
                     show-disable-button
                     defaultValue="4"
@@ -483,7 +488,7 @@ export class CurrentSongControls extends LitElement {
                 <div class="song-stepper-grid">
                   <t-dial
                     label="Stop after"
-                    key="a"
+                    .key=${this.noKeyboard ? '' : 'a'}
                     show-disable-button
                     unit="s"
                     defaultValue="2"
@@ -536,7 +541,7 @@ export class CurrentSongControls extends LitElement {
               <div class="setting-item song-stepper-item">
                 <div class="song-stepper-grid">
                   <t-dial
-                    key="p"
+                    .key=${this.noKeyboard ? '' : 'p'}
                     label="Pause before"
                     iconName="pause-before"
                     unit="s"
@@ -566,7 +571,7 @@ export class CurrentSongControls extends LitElement {
               <div class="setting-item song-stepper-item">
                 <div class="song-stepper-grid">
                   <t-dial
-                    key="w"
+                    .key=${this.noKeyboard ? '' : 'w'}
                     label="Wait between"
                     iconName="wait-between"
                     unit="s"
@@ -599,6 +604,7 @@ export class CurrentSongControls extends LitElement {
                     (loopTimes) => html`
                       <t-butt
                         toggle
+                        .key=${this.noKeyboard ? '' : loopTimes === 'Inf' ? '0' : loopTimes}
                         .active=${this._isLoopButtonActive(loopTimes)}
                         @click=${() => this._setLoopTimes(loopTimes)}
                       >
@@ -617,7 +623,7 @@ export class CurrentSongControls extends LitElement {
               <div class="setting-item song-stepper-item">
                 <div class="song-stepper-grid">
                   <t-dial
-                    key="v"
+                    .key=${this.noKeyboard ? '' : 'v'}
                     min="0"
                     max="100"
                     step="5"
@@ -642,7 +648,7 @@ export class CurrentSongControls extends LitElement {
               <div class="setting-item song-stepper-item">
                 <div class="song-stepper-grid">
                   <t-dial
-                    key="s"
+                    .key=${this.noKeyboard ? '' : 's'}
                     min="50"
                     max="200"
                     step="5"
