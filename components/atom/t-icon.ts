@@ -28,6 +28,10 @@ export class TIcon extends LitElement {
       height: 1em;
     }
 
+    :host([fullSize]) .icon-wrapper {
+      font-size: 100%;
+    }
+
     .slim {
       font-size: 0.8rem;
     }
@@ -68,6 +72,7 @@ export class TIcon extends LitElement {
   @property({ type: String }) unit = '';
   @property({ type: Boolean }) slim = false;
   @property({ type: Boolean }) large = false;
+  @property({ type: Boolean, reflect: true }) fullSize = false;
 
   private _svgContent = '';
 

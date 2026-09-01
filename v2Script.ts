@@ -156,6 +156,7 @@ type FooterElement = HTMLElement & {
   waitBetween?: number;
   disablePauseBefore?: boolean;
   disableWaitBetween?: boolean;
+  playUseTimer?: boolean;
   isStartingPlayback?: boolean;
   playbackCountdown?: number;
   markerName?: string;
@@ -1094,7 +1095,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pauseBeforeSeconds =
-      footer && !footer.disablePauseBefore ? Math.max(0, footer.pauseBefore ?? 0) : 0;
+      footer && !footer.disablePauseBefore && footer.playUseTimer !== false
+        ? Math.max(0, footer.pauseBefore ?? 0)
+        : 0;
     header.statusCountdown = `${pauseBeforeSeconds}s`;
   };
 
@@ -2022,6 +2025,9 @@ document.addEventListener('DOMContentLoaded', () => {
       nDB.set(storageKey, value === true ? true : value);
       if (setting === 'keepScreenOn') {
         void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+      }
+      if (setting === 'playUseTimer' && footer) {
+        footer.playUseTimer = value === true;
       }
       if (setting === 'darkMode') {
         if (value === true) {

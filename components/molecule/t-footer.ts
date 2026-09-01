@@ -30,6 +30,7 @@ export class BottomNav extends LitElement {
   @property({ type: Number }) waitBetween = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
   @property({ type: Boolean }) disableWaitBetween = false;
+  @property({ type: Boolean }) playUseTimer = true;
   @property({ type: Number }) songDuration = 0;
 
   connectedCallback() {
@@ -93,13 +94,12 @@ export class BottomNav extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      line-height: 1;
+      line-height: 0.9;
     }
 
     .play-countdown {
-      font-size: 1.5rem;
+      font-size: 0.85em;
       font-weight: 700;
-      margin-bottom: 2px;
     }
 
     @media (min-width: 768px) {
@@ -338,14 +338,21 @@ export class BottomNav extends LitElement {
 
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
           <t-butt title="Play song" round important key=" ">
-            <div class="play-button-content">
+            <div
+              class="play-button-content"
+              style=${(this.isStartingPlayback || (this.playUseTimer && !this.isPlaying && !this.disablePauseBefore && this.pauseBefore > 0))
+                ? 'font-size: 1.4rem'
+                : ''}
+            >
               ${this.isStartingPlayback
                 ? html`<div class="play-countdown">${this.playbackCountdown}</div>`
-                : ''}
+                : this.playUseTimer && !this.isPlaying && !this.disablePauseBefore && this.pauseBefore > 0
+                  ? html`<div class="play-countdown">${this.pauseBefore}</div>`
+                  : ''}
               <t-icon
                 name="${this.isPlaying || this.isStartingPlayback ? 'pause' : 'play'}"
-                ?large=${!this.isStartingPlayback}
-                ?slim=${this.isStartingPlayback}
+                ?fullSize=${!!(this.isStartingPlayback || (this.playUseTimer && this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore))}
+                ?large=${!(this.isStartingPlayback || (this.playUseTimer && this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore))}
               ></t-icon>
             </div>
           </t-butt>
