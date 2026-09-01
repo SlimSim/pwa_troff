@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
+import { nDB } from '../../assets/internal/db.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-details.js';
@@ -194,8 +195,8 @@ export class SettingsPanel extends LitElement {
     .scope-badge {
       padding: 4px 8px;
       border-radius: 999px;
-      background: var(--secondary-color, rgba(0, 0, 0, 0.08));
-      color: var(--on-secondary-color, #000);
+      background: var(--tertiary-color, rgba(0, 0, 0, 0.08));
+      color: var(--on-tertiary-color, #000);
       font-size: 0.75rem;
       font-weight: 600;
       white-space: nowrap;
@@ -1025,28 +1026,46 @@ export class SettingsPanel extends LitElement {
                 </t-butt>
               </div>
             </t-details>
-            <div class="settings-section" style="margin: 0; margin-top: 8px;">
-              <t-butt
-                toggle
-                ellipsis
-                .active=${this.keepScreenSupported && this.keepScreenOn}
-                ?disabled=${!this.keepScreenSupported}
-                @click=${() => {
-                  if (this.keepScreenSupported)
-                    this._toggleSetting('keepScreenOn', this.keepScreenOn);
-                }}
-              >
-                Keep screen on
-              </t-butt>
-              ${!this.keepScreenSupported
-                ? html`<span class="unsupported-note">(not supported on this browser)</span>`
-                : ''}
-            </div>
-          </div>
-        </div>
+            <t-details
+              title="Advanced Settings"
+              class="settings-width"
+              text="Screen and version settings."
+            >
+              <div class="settings-section">
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.keepScreenSupported && this.keepScreenOn}
+                  ?disabled=${!this.keepScreenSupported}
+                  @click=${() => {
+                    if (this.keepScreenSupported)
+                      this._toggleSetting('keepScreenOn', this.keepScreenOn);
+                  }}
+                >
+                  Keep screen on
+                </t-butt>
+                ${!this.keepScreenSupported
+                  ? html`<span class="unsupported-note">(not supported on this browser)</span>`
+                  : ''}
+                <div class="settings-section" style="margin: 0; margin-top: 8px;">
+                  <t-butt
+                    ellipsis
+                    ghost
+                    @click=${() => {
+                      nDB.set('TROFF_SETTING_PREFER_VERSION', 1);
+                      window.location.href = '/' + window.location.hash;
+                    }}
+                  >
+                    Go back to version 1
+                  </t-butt>
+                </div>
 
-        <div class="scope-badge-container">
-          <span class="scope-badge">Version: ${this.versionNumber}</span>
+                <div class="scope-badge-container">
+                  <span class="scope-badge">Version: ${this.versionNumber}</span>
+                </div>
+              </div>
+            </t-details>
+          </div>
         </div>
       </div>
     `;

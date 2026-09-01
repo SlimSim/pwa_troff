@@ -219,6 +219,14 @@
         flex-grow: 2;
       }
     </style>
+    <script>
+      try {
+        var pref = JSON.parse(localStorage.getItem('TROFF_SETTING_PREFER_VERSION') || '1');
+        if (pref == 2) {
+          window.location.replace('/v2.html' + window.location.hash);
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body class="backgroundColor">
     <div id="loadScreen">
@@ -2660,7 +2668,21 @@
               value="Show env banner"
             />
             <br />
-            <a class="likeLink" href="/v2.html">V2</a>
+            <input
+              class="likeLink"
+              type="button"
+              id="preferVersionButton"
+              title="Switch to the new Version 2 of Troff (your preference will be saved)"
+              value="Prefer V2"
+            />
+            <script type="module">
+              import { nDB } from './assets/internal/db.js';
+              document.getElementById('preferVersionButton')
+                .addEventListener('click', () => {
+                  nDB.set('TROFF_SETTING_PREFER_VERSION', 2);
+                  window.location.href = '/v2.html' + window.location.hash;
+                });
+            </script>
           </div>
         </div>
         <input
