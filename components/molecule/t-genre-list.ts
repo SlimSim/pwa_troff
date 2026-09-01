@@ -167,15 +167,28 @@ export class GenreList extends LitElement {
       pointer-events: none;
     }
 
-    /* Compact search input that expands on focus */
+    .search-input {
+      display: block;
+      width: 100%;
+      --t-input-slim-height: 35px;
+      --t-input-border: 2px solid var(--regular-button-color, #b0bec5);
+    }
+
+    /* Compact search input that expands on focus (mobile-first: collapsed) */
     .search-compact-wrap {
       position: relative;
       display: flex;
       align-items: center;
       overflow: hidden;
       transition: width 0.3s ease;
-      width: 32px;
+      width: 42px;
       flex-shrink: 0;
+    }
+
+    /* When compressed: hide placeholder text and remove clearable padding */
+    .search-compact-wrap:not(.search-expanded) .search-input {
+      --t-input-placeholder-color: transparent;
+      --t-input-clearable-padding-right: 0px;
     }
 
     .search-compact-icon {
@@ -183,9 +196,9 @@ export class GenreList extends LitElement {
       /* z-index keeps the icon above the t-input's background (its inner
          .input-wrapper is position: relative). */
       z-index: 1;
-      left: 6px;
+      left: 50%;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translate(-50%, -50%);
       width: 18px;
       height: 18px;
       color: var(--on-gray-out, #595959);
@@ -234,6 +247,13 @@ export class GenreList extends LitElement {
 
       .search-compact-icon {
         display: none;
+      }
+
+      /* Restore placeholder and clearable padding on desktop where the
+         input is always wide enough to show text. */
+      .search-compact-wrap:not(.search-expanded) .search-input {
+        --t-input-placeholder-color: var(--on-gray-out, #595959);
+        --t-input-clearable-padding-right: 40px;
       }
     }
 
@@ -470,6 +490,7 @@ export class GenreList extends LitElement {
               <div class="search-compact-wrap ${this._isSearchFocused ? 'search-expanded' : ''}">
                 <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
                 <t-input
+                  class="search-input"
                   slim
                   clearable
                   placeholder="Search tracks…"
