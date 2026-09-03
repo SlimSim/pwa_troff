@@ -108,6 +108,11 @@ import {
 import { getManifest } from './utils/manifestHelper.js';
 import { updateWakeLockForPlayback } from './utils/phoneUtils.js';
 
+// Arrow key time increments (matching v1)
+export const ALT_TIME = 1 / 12;       // one frame at 12fps
+export const REGULAR_TIME = 10 / 12;  // 10 frames
+export const SHIFT_TIME = 100 / 12;   // 100 frames
+
 // Hostname→Sentry environment mapping — mirrors utils/firebase-getter.ts
 // (which itself mirrors the legacy assets/internal/environment.ts selection).
 function getSentryEnvironment(): 'dev' | 'test' | 'prod' {
@@ -310,8 +315,8 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
 /** Record a song start: increment nrTimesLoaded and save a timestamp for the month badge */
 function recordSongStart(songKey: string): void {
   const songData = nDB.get(songKey);
-  if (!songData) return;
-  const localInfo = songData.localInformation || {};
+  if (!songData?.localInformation) return;
+  const localInfo = songData.localInformation;
 
   // Increment total play count
   const nrTimesLoaded = localInfo.nrTimesLoaded || 0;
@@ -347,6 +352,149 @@ const setUrlToSong = (serverId: string | number | undefined, songKey: string | n
   }
   window.location.hash = '#' + String(serverId) + '&' + encodeURIComponent(songKey);
 };
+
+// --- Editable-element guard (module scope, usable by any handler) ---
+const isEditableHostElement = (element: HTMLElement): boolean => {
+  const tagName = element.tagName.toLowerCase();
+  return tagName === 't-input' || tagName === 't-textarea';
+};
+
+const isEditableKeyEvent = (event: KeyboardEvent) => {
+  const path = event.composedPath();
+  for (const target of path) {
+    if (!(target instanceof HTMLElement)) {
+      continue;
+    }
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      return true;
+    }
+    if (target.isContentEditable) {
+      return true;
+    }
+    if (isEditableHostElement(target)) {
+      return true;
+    }
+  }
+
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+    return true;
+  }
+  if (activeElement instanceof HTMLElement && activeElement.isContentEditable) {
+    return true;
+  }
+  if (activeElement instanceof HTMLElement && isEditableHostElement(activeElement)) {
+    return true;
+  }
+  if (activeElement instanceof HTMLElement) {
+    const shadowActiveElement = activeElement.shadowRoot?.activeElement;
+    if (
+      shadowActiveElement instanceof HTMLInputElement ||
+      shadowActiveElement instanceof HTMLTextAreaElement
+    ) {
+      return true;
+    }
+    if (shadowActiveElement instanceof HTMLElement && shadowActiveElement.isContentEditable) {
+      return true;
+    }
+    if (
+      shadowActiveElement instanceof HTMLElement &&
+      isEditableHostElement(shadowActiveElement)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+// --- Arrow key handler (module scope to avoid DOMContentLoaded accumulation) ---
+const handleArrowKeyDown = (event: KeyboardEvent) => {
+  if (event.isComposing) {
+    return;
+  }
+  if (event.ctrlKey || event.metaKey || isEditableKeyEvent(event)) {
+    return;
+  }
+
+  const isArrow =
+    event.key === 'ArrowLeft' ||
+    event.key === 'ArrowRight' ||
+    event.key === 'ArrowUp' ||
+    event.key === 'ArrowDown';
+
+  if (!isArrow) {
+    return;
+  }
+
+  // Left/Right arrows: seek audio (works without modifiers)
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const increment = event.shiftKey
+      ? SHIFT_TIME
+      : event.altKey
+        ? ALT_TIME
+        : REGULAR_TIME;
+
+    const media = getActiveMedia();
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    const duration = media.duration || 0;
+    media.currentTime = Math.min(
+      duration,
+      Math.max(0, media.currentTime + direction * increment)
+    );
+    return;
+  }
+
+  // ArrowUp / ArrowDown — move selected marker (requires Alt, Shift, or both)
+  // Bare up/down with no modifier is a no-op (matches v1 behavior)
+  if (!event.shiftKey && !event.altKey) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const increment = event.shiftKey && event.altKey
+    ? SHIFT_TIME
+    : event.shiftKey
+      ? REGULAR_TIME
+      : ALT_TIME;
+
+  const markerSlider = document.getElementById('markerSlider') as MarkerSlider | null;
+  if (!markerSlider?.startMarkerId) {
+    return;
+  }
+
+  const songKey = getCurrentSongKey();
+  if (!songKey) {
+    return;
+  }
+
+  const songData = nDB.get(songKey) || {};
+  const markers: TroffMarker[] = Array.isArray(songData.markers) ? songData.markers : [];
+  const maxTime = markerSlider?.max ?? getActiveMedia().duration ?? 0;
+
+  // Find only the start marker index — not the range that includes the stop marker
+  let startNr = -1;
+  for (let k = 0; k < markers.length; k++) {
+    if (markers[k].id === markerSlider.startMarkerId) {
+      startNr = k;
+      break;
+    }
+  }
+  if (startNr === -1) return;
+
+  const direction = event.key === 'ArrowDown' ? 1 : -1;
+  const result = moveMarkers(markers, direction * increment, startNr, startNr + 1, maxTime);
+
+  nDB.setOnSong(songKey, 'markers', result);
+  updateMarkerSlider(markerSlider, false);
+};
+
+document.addEventListener('keydown', handleArrowKeyDown, true);
 
 // Initialize components and set up event listeners
 
@@ -1463,68 +1611,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.clearTimeout(pendingPlaybackStart);
     pendingPlaybackStart = undefined;
     clearPlaybackCountdown();
-  };
-
-  const isEditableHostElement = (element: HTMLElement): boolean => {
-    const tagName = element.tagName.toLowerCase();
-    return tagName === 't-input' || tagName === 't-textarea';
-  };
-
-  const isEditableKeyEvent = (event: KeyboardEvent) => {
-    const path = event.composedPath();
-    for (const target of path) {
-      if (!(target instanceof HTMLElement)) {
-        continue;
-      }
-
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-        return true;
-      }
-
-      if (target.isContentEditable) {
-        return true;
-      }
-
-      if (isEditableHostElement(target)) {
-        return true;
-      }
-    }
-
-    const activeElement = document.activeElement;
-    if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
-      return true;
-    }
-
-    if (activeElement instanceof HTMLElement && activeElement.isContentEditable) {
-      return true;
-    }
-
-    if (activeElement instanceof HTMLElement && isEditableHostElement(activeElement)) {
-      return true;
-    }
-
-    if (activeElement instanceof HTMLElement) {
-      const shadowActiveElement = activeElement.shadowRoot?.activeElement;
-      if (
-        shadowActiveElement instanceof HTMLInputElement ||
-        shadowActiveElement instanceof HTMLTextAreaElement
-      ) {
-        return true;
-      }
-
-      if (shadowActiveElement instanceof HTMLElement && shadowActiveElement.isContentEditable) {
-        return true;
-      }
-
-      if (
-        shadowActiveElement instanceof HTMLElement &&
-        isEditableHostElement(shadowActiveElement)
-      ) {
-        return true;
-      }
-    }
-
-    return false;
   };
 
   const getPauseBeforeDelay = (settingKey: string) => {
