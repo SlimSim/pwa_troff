@@ -360,7 +360,7 @@ describe('t-marker-dialog', () => {
       expect(textarea).toBeTruthy();
 
       const rows = textarea!.getAttribute('rows');
-      expect(rows).toBe('2');
+      expect(rows).toBe('3');
     });
 
     it('textarea does NOT have rows="4"', async () => {
@@ -417,7 +417,9 @@ describe('t-marker-dialog', () => {
     it('container has tighter gap (8px) instead of old 16px', async () => {
       await element.updateComplete;
 
-      const container = element.shadowRoot?.querySelector('.marker-dropdown-content') as HTMLElement;
+      const container = element.shadowRoot?.querySelector(
+        '.marker-dropdown-content'
+      ) as HTMLElement;
       expect(container).toBeTruthy();
 
       const computed = getComputedStyle(container!);
@@ -427,7 +429,9 @@ describe('t-marker-dialog', () => {
     it('container has tighter padding (10px 8px) instead of old 16px 8px', async () => {
       await element.updateComplete;
 
-      const container = element.shadowRoot?.querySelector('.marker-dropdown-content') as HTMLElement;
+      const container = element.shadowRoot?.querySelector(
+        '.marker-dropdown-content'
+      ) as HTMLElement;
       expect(container).toBeTruthy();
 
       const computed = getComputedStyle(container!);

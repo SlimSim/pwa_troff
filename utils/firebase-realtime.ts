@@ -410,7 +410,9 @@ export async function setupGroupSongListeners(): Promise<void> {
       const unsub = onSnapshot(
         songsCollectionRef,
         (snapshot: GroupSongsSnapshot) => {
-          handleGroupSongsSnapshot(groupId, snapshot);
+          handleGroupSongsSnapshot(groupId, snapshot).catch((err) => {
+            log.e(`Failed to handle group songs snapshot for "${groupId}":`, err);
+          });
         },
         (err: unknown) => {
           log.e(`onSnapshot error for group "${groupId}":`, err);

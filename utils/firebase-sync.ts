@@ -39,6 +39,8 @@ async function fetchAndCacheFile(fileUrl: string, songKey: string): Promise<void
   await cache.put(songKey, response.clone());
 }
 
+const RETRY_DELAY_MS = 2000;
+
 /**
  * Fetch Firebase groups for the given user email, download any missing song
  * files, save metadata to nDB, and update `aoSongLists`.
@@ -46,10 +48,32 @@ async function fetchAndCacheFile(fileUrl: string, songKey: string): Promise<void
  * This is a no-op (safe to call) when Firebase is unavailable, offline,
  * or in test environments — all errors are caught and logged.
  *
+ * Retries once after a short delay if the first attempt fails (e.g. due to
+ * a transient IndexedDB connection loss on iOS).
+ *
  * @param firebaseUserEmail  The email of the signed-in Firebase user.
  */
 export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<void> {
-  try {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await doSyncFirebaseGroups(firebaseUserEmail);
+      return; // success
+    } catch (error) {
+      if (attempt === 0) {
+        log.i('Firebase sync attempt 1 failed, retrying in ' + RETRY_DELAY_MS + 'ms:', error);
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+      } else {
+        log.i('Firebase sync not available:', error);
+      }
+    }
+  }
+}
+
+/**
+ * Internal implementation of the Firebase sync — performs the actual
+ * Firestore queries, file downloads, and localStorage writes.
+ */
+async function doSyncFirebaseGroups(firebaseUserEmail: string): Promise<void> {
     const firebaseClient = await import('../services/firebaseClient.js');
 
     const { initiateAllFirebaseGroups, db, collection, getDocs } = firebaseClient;
@@ -95,42 +119,44 @@ export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<voi
          // never enter the local cache or nDB.
          const songKey = toSongKey(rawSongKey);
 
-         // Download the audio file if it's not already in cache
-         const cache = await caches.open(CACHE_NAME);
-         const cachedResponse = await cache.match(songKey);
+          // Download the audio file if it's not already in cache
+          let fileAvailable = true;
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(songKey);
 
-         if (!cachedResponse) {
-           try {
-             await fetchAndCacheFile(fileUrl, songKey);
-           } catch (err) {
-             log.e(`Failed to download song "${songKey}":`, err);
-             // Skip this song but continue with others
-             continue;
-           }
-         }
+          if (!cachedResponse) {
+            try {
+              await fetchAndCacheFile(fileUrl, songKey);
+            } catch (err) {
+              log.e(`Failed to download song "${songKey}":`, err);
+              fileAvailable = false;
+            }
+          }
 
-         // Save / update song metadata in nDB
-         const jsonDataInfo = songData.jsonDataInfo as string | undefined;
-         if (jsonDataInfo) {
-           try {
-             const parsedData = JSON.parse(jsonDataInfo) as Record<string, unknown>;
-             const existingData = nDB.get(songKey) as Record<string, unknown> | null;
-              const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
-              const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
-              if (serverUploadTime >= localUploadTime) {
-                const merged = mergeSyncedSongData(existingData, parsedData);
-                nDB.set(songKey, merged);
-              }
-           } catch (err) {
-             log.e(`Failed to parse song data for "${songKey}":`, err);
-           }
-         }
+          // Save / update song metadata in nDB (even if file download failed,
+          // so the song still appears in the list — it just won't play until
+          // the file is available)
+          const jsonDataInfo = songData.jsonDataInfo as string | undefined;
+          if (jsonDataInfo) {
+            try {
+              const parsedData = JSON.parse(jsonDataInfo) as Record<string, unknown>;
+              const existingData = nDB.get(songKey) as Record<string, unknown> | null;
+               const serverUploadTime = Number(parsedData.latestUploadToFirebase) || 0;
+               const localUploadTime = Number(existingData?.latestUploadToFirebase) || 0;
+               if (serverUploadTime >= localUploadTime) {
+                 const merged = mergeSyncedSongData(existingData, parsedData);
+                 nDB.set(songKey, merged);
+               }
+            } catch (err) {
+              log.e(`Failed to parse song data for "${songKey}":`, err);
+            }
+          }
 
-         groupSongs.push({
-           firebaseSongDocId: songDoc.id,
-           fullPath: songKey,
-           galleryId: 'pwa-galleryId',
-         });
+          groupSongs.push({
+            firebaseSongDocId: songDoc.id,
+            fullPath: songKey,
+            galleryId: 'pwa-galleryId',
+          });
       }
 
       firebaseSongLists.push({
@@ -179,8 +205,4 @@ export async function syncFirebaseGroups(firebaseUserEmail: string): Promise<voi
       `Firebase sync complete: ${firebaseSongLists.length} group(s), ` +
         `${firebaseSongLists.reduce((sum, g) => sum + g.songs.length, 0)} song(s)`
     );
-  } catch (error) {
-    // Firebase may not be available (tests, offline, CDN blocked)
-    log.i('Firebase sync not available:', error);
-  }
 }

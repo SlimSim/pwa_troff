@@ -499,6 +499,32 @@ document.addEventListener('keydown', handleArrowKeyDown, true);
 // Initialize components and set up event listeners
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Global handler for the iOS WebKit IndexedDB connection-lost bug
+  // (WebKit Bug #273827 / #277615). When iOS kills the network process under
+  // memory pressure, Firebase's internal IndexedDB operations fail with this
+  // error and the only reliable fix is a page reload.
+  let storageErrorToastShown = false;
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason;
+    const message =
+      reason instanceof Error ? reason.message : String(reason ?? '');
+    if (
+      message.includes('Connection to Indexed Database server lost') ||
+      message.includes('IndexedDB server lost')
+    ) {
+      event.preventDefault(); // suppress noisy console/Sentry error
+      if (!storageErrorToastShown) {
+        storageErrorToastShown = true;
+        showToast(
+          'Troff lost its connection to storage (a known iOS issue). Please reload to continue.',
+          'error',
+          60000,
+          { label: 'Reload', onClick: () => window.location.reload() }
+        );
+      }
+    }
+  });
+
   // Sentry observability — mirrors script.ts initEnvironment without legacy
   // imports. Tag every event with app: 'v2' unconditionally, then set env,
   // version, and init once consent has been given.
@@ -2283,50 +2309,54 @@ document.addEventListener('DOMContentLoaded', () => {
       await import('./assets/internal/notify-js/notify.config.js');
       const { auth, onAuthStateChanged } = await import('./services/firebaseClient.js');
       onAuthStateChanged(auth, async (user) => {
-        currentUserSignedIn = user !== null;
-        currentUserEmail = user?.email ?? '';
-        if (settingsPanel) {
-          settingsPanel.signedIn = user !== null;
-          settingsPanel.userName = user?.displayName ?? '';
-          settingsPanel.userPhotoUrl = user?.photoURL ?? '';
-        }
-        if (groupDialog) {
-          groupDialog.signedIn = user !== null;
-          groupDialog.userEmail = user?.email ?? '';
-        }
-
-        if (!user) {
-          // Tear down any active Firestore listeners when signing out
-          teardownListeners();
-        }
-
-        if (user) {
-          // Fetch groups and songs from Firestore, cache them, and update local DB
-          await syncFirebaseGroups(user.email ?? '');
-
-          // Reload song list to reflect newly cached Firebase songs
-          if (songList && typeof (songList as any).reloadSongs === 'function') {
-            await (songList as any).reloadSongs();
+        try {
+          currentUserSignedIn = user !== null;
+          currentUserEmail = user?.email ?? '';
+          if (settingsPanel) {
+            settingsPanel.signedIn = user !== null;
+            settingsPanel.userName = user?.displayName ?? '';
+            settingsPanel.userPhotoUrl = user?.photoURL ?? '';
+          }
+          if (groupDialog) {
+            groupDialog.signedIn = user !== null;
+            groupDialog.userEmail = user?.email ?? '';
           }
 
-          // Set up real-time listeners for Firebase song changes
-          await setupListeners();
-          await setupGroupSongListeners();
-          setLiveUpdateCallback((songKey: string) => {
-            // If the updated song is currently selected, refresh UI without interrupting playback
-            refreshCurrentSongUI(songKey);
-          });
-          setGroupUpdateCallback(() => {
-            // Refresh the group song list when a group's songs change remotely
-            if (songList && typeof (songList as any).reloadSongs === 'function') {
-              (songList as any).reloadSongs();
-            }
-          });
+          if (!user) {
+            // Tear down any active Firestore listeners when signing out
+            teardownListeners();
+          }
 
-          // A song that was already open (auto-restored) at boot may have had
-          // its markers drawn from stale nDB before this sync completed. Re-render
-          // it deterministically so synced markers/settings appear immediately.
-          refreshCurrentSongUI();
+          if (user) {
+            // Fetch groups and songs from Firestore, cache them, and update local DB
+            await syncFirebaseGroups(user.email ?? '');
+
+            // Reload song list to reflect newly cached Firebase songs
+            if (songList && typeof (songList as any).reloadSongs === 'function') {
+              await (songList as any).reloadSongs();
+            }
+
+            // Set up real-time listeners for Firebase song changes
+            await setupListeners();
+            await setupGroupSongListeners();
+            setLiveUpdateCallback((songKey: string) => {
+              // If the updated song is currently selected, refresh UI without interrupting playback
+              refreshCurrentSongUI(songKey);
+            });
+            setGroupUpdateCallback(() => {
+              // Refresh the group song list when a group's songs change remotely
+              if (songList && typeof (songList as any).reloadSongs === 'function') {
+                (songList as any).reloadSongs();
+              }
+            });
+
+            // A song that was already open (auto-restored) at boot may have had
+            // its markers drawn from stale nDB before this sync completed. Re-render
+            // it deterministically so synced markers/settings appear immediately.
+            refreshCurrentSongUI();
+          }
+        } catch (error) {
+          log.e('onAuthStateChanged callback failed:', error);
         }
       });
     } catch (error) {

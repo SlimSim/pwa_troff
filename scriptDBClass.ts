@@ -529,8 +529,8 @@ class DBClass {
       aMarkers[i] = oMarker;
     }
 
-    song.currentStartMarker = /** @type {HTMLElement} */ $('.currentMarker')[0].id;
-    song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0].id;
+    song.currentStartMarker = /** @type {HTMLElement} */ $('.currentMarker')[0]?.id;
+    song.currentStopMarker = /** @type {HTMLElement} */ $('.currentStopMarker')[0]?.id;
     song.markers = aMarkers;
     song.serverId = undefined;
     Troff.setUrlToSong(undefined, null);

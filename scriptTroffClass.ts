@@ -2226,14 +2226,17 @@ class TroffClass {
   };
 
   updateMarkerInfo = () => {
+    var currentMarkerEl = $('.currentMarker')[0] as any;
+    if (!currentMarkerEl) return;
+
     var strInfo = ($('#markerInfoArea')[0] as any).value;
-    var color = ($('.currentMarker')[0] as any).color;
+    var color = currentMarkerEl.color;
     var markerId = $('.currentMarker').attr('id') as string;
-    var time = ($('.currentMarker')[0] as any).timeValue;
+    var time = currentMarkerEl.timeValue;
     var markerName = $('.currentMarker').val() as string;
     var songId = this.getCurrentSong();
 
-    ($('.currentMarker')[0] as any).info = strInfo;
+    currentMarkerEl.info = strInfo;
 
     DB.updateMarker(markerId, markerName, strInfo, color, time, songId);
   };
@@ -2313,7 +2316,7 @@ class TroffClass {
           if (child.childNodes[2].info != info) {
             var newMarkerInfo = child.childNodes[2].info + '\n\n' + info;
             ($('#' + markerId)[0] as any).info = newMarkerInfo;
-            if ($('.currentMarker')[0].id == child.childNodes[2].id)
+            if ($('.currentMarker')[0]?.id == child.childNodes[2].id)
               $('#markerInfoArea').val(newMarkerInfo);
           }
           if (child.childNodes[2].value != name) {
@@ -2860,8 +2863,8 @@ class TroffClass {
         ($('#' + markerId + 'S')[0] as any).timeValue = newTime;
         this.setAppropriateMarkerDistance();
 
-        var startTime = Number(($('.currentMarker')[0] as any).timeValue);
-        var stopTime = Number(($('.currentStopMarker')[0] as any).timeValue);
+        var startTime = Number(($('.currentMarker')[0] as any)?.timeValue);
+        var stopTime = Number(($('.currentStopMarker')[0] as any)?.timeValue);
 
         if (startTime >= stopTime) {
           $('.currentStopMarker').removeClass('currentStopMarker');
@@ -2991,8 +2994,8 @@ class TroffClass {
   selectNext = (reverse: boolean) => {
     var markers = $('#markerList').children();
 
-    var currentMarkerTime = Number(($('.currentMarker')[0] as any).timeValue);
-    var currentStopTime = Number(($('.currentStopMarker')[0] as any).timeValue);
+    var currentMarkerTime = Number(($('.currentMarker')[0] as any)?.timeValue);
+    var currentStopTime = Number(($('.currentStopMarker')[0] as any)?.timeValue);
     (markers as any).sort((a: HTMLElement, b: HTMLElement) => {
       return (
         Number((a.childNodes[2] as any).timeValue) - Number((b.childNodes[2] as any).timeValue)

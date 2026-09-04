@@ -84,24 +84,39 @@ const nDB = {
     for (let i = keys.length - 1; i > 0; i--) {
       valObject[i - 1][keys[i - 1]] = valObject[i];
     }
-    nDB.set(songId, valObject[0]);
+    const writeOk = nDB.set(songId, valObject[0]);
+    if (!writeOk) {
+      log.e(
+        'setOnSong: Failed to persist updated song "' + songId + '" to localStorage'
+      );
+    }
   },
   /**
-   * Store a JSON-serializable value
+   * Store a JSON-serializable value.
+   * Returns true on success, false if the write failed (e.g. storage full
+   * or the IndexedDB connection was lost on iOS).
    */
-  set: function (key: string, value: any): void {
-    window.localStorage.setItem(key, JSON.stringify(value));
+  set: function (key: string, value: any): boolean {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      log.e('nDB.set: Failed to write to localStorage for key "' + key + '":', e);
+      return false;
+    }
   },
   /**
-   * Get a stored value parsed from JSON
+   * Get a stored value parsed from JSON.
+   * Returns null when the key is missing, the value is corrupted,
+   * or localStorage is unavailable (e.g. IndexedDB connection lost on iOS).
    */
   get: function (key: string): any | null {
-    const raw = window.localStorage.getItem(key);
-    if (raw === null) return null;
     try {
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) return null;
       return JSON.parse(raw);
     } catch (e) {
-      console.warn('nDB.get: Failed to parse JSON for key', key, e);
+      log.w('nDB.get: Failed to read from localStorage for key "' + key + '":', e);
       return null;
     }
   },
@@ -109,20 +124,32 @@ const nDB = {
    * Remove a stored value
    */
   delete: function (key: string): void {
-    window.localStorage.removeItem(key);
-    // todo, add print if "key" do not exist
+    try {
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      log.e('nDB.delete: Failed to remove key "' + key + '" from localStorage:', e);
+    }
   },
   /**
    * Get all keys stored in localStorage
    */
   getAllKeys: function (): string[] {
-    return Object.keys(localStorage);
+    try {
+      return Object.keys(localStorage);
+    } catch (e) {
+      log.e('nDB.getAllKeys: Failed to read localStorage keys:', e);
+      return [];
+    }
   },
   /**
    * Clear all localStorage
    */
   clearAllStorage: function (): void {
-    localStorage.clear();
+    try {
+      localStorage.clear();
+    } catch (e) {
+      log.e('nDB.clearAllStorage: Failed to clear localStorage:', e);
+    }
   },
 };
 
