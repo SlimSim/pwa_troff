@@ -210,6 +210,10 @@ export class GroupList extends LitElement {
       gap: 0;
     }
 
+    ::slotted([slot="sort-controls"]) {
+      flex-shrink: 0;
+    }
+
     .group-song-count {
       font-size: 0.85rem;
       opacity: 0.8;
@@ -775,10 +779,11 @@ export class GroupList extends LitElement {
                 : ''}
             </div>
 
-            <!-- Controls: add song, song count, search (moved from song-list-header) -->
+            <!-- Controls: add song, song count, search, sort (moved from song-list-header) -->
             <div
               class="detail-header-controls ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
             >
+              <slot name="sort-controls"></slot>
               <span class="group-song-count ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
                 <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
               </span>

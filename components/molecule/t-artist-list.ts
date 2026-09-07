@@ -135,6 +135,10 @@ export class ArtistList extends LitElement {
       gap: 0;
     }
 
+    ::slotted([slot="sort-controls"]) {
+      flex-shrink: 0;
+    }
+
     .artist-song-count {
       font-size: 0.85rem;
       opacity: 0.8;
@@ -483,8 +487,9 @@ export class ArtistList extends LitElement {
               <h2 class="detail-title">${this.selectedArtist}</h2>
             </div>
 
-            <!-- Controls: add song, track count, search -->
+            <!-- Controls: sort, add song, track count, search -->
             <div class="detail-header-controls ${this._isSearchFocused ? 'search-expanded' : ''}">
+              <slot name="sort-controls"></slot>
               <span class="artist-song-count ${this._isSearchFocused ? 'search-expanded' : ''}">
                 <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
               </span>

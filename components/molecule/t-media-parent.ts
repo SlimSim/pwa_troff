@@ -462,8 +462,8 @@ export class MediaParent extends LitElement {
 
   @property({ type: Boolean, reflect: true }) visible = false;
   @property({ type: String }) currentFilter = 'tracks';
-  @property({ type: String }) sortBy = 'title';
-  @property({ type: String }) sortOrder = 'ascending';
+  @property({ type: String }) sortBy = 'playsMonth';
+  @property({ type: String }) sortOrder = 'descending';
   @property({ type: Boolean }) showSortDropdown = false;
   @property({ type: String }) groupSortBy = 'name';
   @property({ type: String }) groupSortOrder = 'ascending';
@@ -1699,7 +1699,10 @@ export class MediaParent extends LitElement {
       }
       artists.get(artist).push(song);
     });
-    return Array.from(artists.entries()).map(([name, tracks]) => ({ name, tracks }));
+    return Array.from(artists.entries()).map(([name, tracks]) => ({
+      name,
+      tracks: this._getSortedSongs(tracks),
+    }));
   }
 
   private _getSortedArtists(songs: any[]): any[] {
@@ -1784,7 +1787,10 @@ export class MediaParent extends LitElement {
       }
       genres.get(genre).push(song);
     });
-    return Array.from(genres.entries()).map(([name, tracks]) => ({ name, tracks }));
+    return Array.from(genres.entries()).map(([name, tracks]) => ({
+      name,
+      tracks: this._getSortedSongs(tracks),
+    }));
   }
 
   private _getSortedGenres(songs: any[]): any[] {
@@ -1868,10 +1874,12 @@ export class MediaParent extends LitElement {
     let visibleGroups = this._getSortedGroups(
       filterGroups(this.groups, query).map((group) => ({
         ...group,
-        tracks: songs.filter((song) =>
-          group.songs.some(
-            (groupSong) =>
-              groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+        tracks: this._getSortedSongs(
+          songs.filter((song) =>
+            group.songs.some(
+              (groupSong) =>
+                groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+            )
           )
         ),
       }))
@@ -1894,10 +1902,12 @@ export class MediaParent extends LitElement {
             ...visibleGroups,
             {
               ...rawGroup,
-              tracks: songs.filter((song) =>
-                (rawGroup as any).songs?.some(
-                  (groupSong: any) =>
-                    groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+              tracks: this._getSortedSongs(
+                songs.filter((song) =>
+                  (rawGroup as any).songs?.some(
+                    (groupSong: any) =>
+                      groupSong.fullPath === song.songKey || groupSong.galleryId === song.songKey
+                  )
                 )
               ),
             } as any,
@@ -2266,7 +2276,22 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
-                      ></t-artist-list>
+                      >
+                        ${this._contextType === 'artist'
+                          ? html`<div slot="sort-controls">
+                              <t-dropdown-button
+                                class="header-sort-btn"
+                                .open=${this.showSortDropdown}
+                                @dropdown-toggled=${this._handleSortDropdownToggled}
+                              >
+                                <t-butt icon slot="button" title="Sort options">
+                                  <t-icon name="sort"></t-icon>
+                                </t-butt>
+                                <div slot="dropdown">${this._renderSortDropdown()}</div>
+                              </t-dropdown-button>
+                            </div>`
+                          : ''}
+                      </t-artist-list>
                     `
                 : ''}
               ${this.currentFilter === 'genre'
@@ -2286,7 +2311,22 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
-                      ></t-genre-list>
+                      >
+                        ${this._contextType === 'genre'
+                          ? html`<div slot="sort-controls">
+                              <t-dropdown-button
+                                class="header-sort-btn"
+                                .open=${this.showSortDropdown}
+                                @dropdown-toggled=${this._handleSortDropdownToggled}
+                              >
+                                <t-butt icon slot="button" title="Sort options">
+                                  <t-icon name="sort"></t-icon>
+                                </t-butt>
+                                <div slot="dropdown">${this._renderSortDropdown()}</div>
+                              </t-dropdown-button>
+                            </div>`
+                          : ''}
+                      </t-genre-list>
                     `
                 : ''}
               ${this.currentFilter === 'groups'
@@ -2306,7 +2346,22 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
-                      ></t-group-list>
+                      >
+                        ${this._currentGroupKey
+                          ? html`<div slot="sort-controls">
+                              <t-dropdown-button
+                                class="header-sort-btn"
+                                .open=${this.showSortDropdown}
+                                @dropdown-toggled=${this._handleSortDropdownToggled}
+                              >
+                                <t-butt icon slot="button" title="Sort options">
+                                  <t-icon name="sort"></t-icon>
+                                </t-butt>
+                                <div slot="dropdown">${this._renderSortDropdown()}</div>
+                              </t-dropdown-button>
+                            </div>`
+                          : ''}
+                      </t-group-list>
                     `
                 : ''}
             `}
