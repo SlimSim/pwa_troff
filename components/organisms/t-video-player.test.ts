@@ -2,6 +2,21 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TVideoPlayer } from './t-video-player.js';
 import type { TroffMarker } from '../../types/troff.js';
 
+// Mock browserEnv so we can control isAndroid per-test.
+// vi.hoisted ensures the state object is available when the mock factory runs.
+const mockBrowserEnv = vi.hoisted(() => ({ isAndroid: false }));
+
+vi.mock('../../utils/browserEnv.js', () => ({
+  get isAndroid() {
+    return mockBrowserEnv.isAndroid;
+  },
+  isSafari: false,
+  isIphone: false,
+  isIpad: false,
+  isPhone: false,
+  usePhoneLog: false,
+}));
+
 /**
  * Feature spec #32 (round 3): `t-video-player` is a dumb frame that hosts a
  * slotted <video> element. Its shadow DOM is
@@ -2881,5 +2896,166 @@ describe('t-video-player', () => {
       expect(frame?.querySelector('.mirror-btn')).not.toBeNull();
       expect(frame?.querySelector('.fullscreen-btn')).not.toBeNull();
     });
+  });
+
+  // ---- Round 14: orientation lock on all devices + portrait persistence -----
+  //
+  // Feature: when entering fullscreen video on ANY device, call
+  //   screen.orientation.lock('landscape') if the API exists.
+  //   When exiting fullscreen, call screen.orientation.unlock() unless
+  //   the portrait setting is true, in which case re-lock to 'portrait'.
+  //
+  //   When not in fullscreen and portrait=true, lock to 'portrait'.
+  //   When not in fullscreen and portrait=false, do nothing.
+  //
+  // The manifest.json `"orientation": "any"` allows devices to rotate the PWA
+  // (tested separately).  These tests verify the component-level behavior.
+
+  /**
+   * Installs a mock screen.orientation with lock() and unlock() spies on
+   * the given element's document scope.  Returns the spies for assertion.
+   */
+  const mockScreenOrientation = () => {
+    const lockSpy = vi.fn().mockResolvedValue(undefined);
+    const unlockSpy = vi.fn();
+    const orientation = { lock: lockSpy, unlock: unlockSpy } as unknown as ScreenOrientation;
+
+    // happy-dom does not implement screen.orientation at all — always
+    // install the mock.  If a future test runner provides it, we can branch.
+    Object.defineProperty(screen, 'orientation', {
+      configurable: true,
+      writable: true,
+      value: orientation,
+    });
+    cleanups.push(() => {
+      delete (screen as { orientation?: unknown }).orientation;
+    });
+
+    return { lockSpy, unlockSpy };
+  };
+
+  /**
+   * Controls the mocked `isAndroid` value.  The mock factory uses a getter
+   * that reads from `mockBrowserEnv.isAndroid`, so mutating this object
+   * updates the value that `t-video-player` reads at runtime.
+   */
+  const setIsAndroid = (value: boolean) => {
+    mockBrowserEnv.isAndroid = value;
+  };
+
+  it('enters landscape orientation lock when entering fullscreen on all devices', async () => {
+    setIsAndroid(false);
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const { lockSpy } = mockScreenOrientation();
+
+    enterFullscreen(el);
+    await el.updateComplete;
+
+    expect(
+      lockSpy,
+      'screen.orientation.lock("landscape") must be called when entering fullscreen on all devices'
+    ).toHaveBeenCalledTimes(1);
+    expect(lockSpy).toHaveBeenCalledWith('landscape');
+  });
+
+  it('unlocks orientation when exiting fullscreen on all devices', async () => {
+    setIsAndroid(false);
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const { lockSpy, unlockSpy } = mockScreenOrientation();
+
+    // Enter fullscreen first, then exit.
+    const setter = enterFullscreen(el);
+    await el.updateComplete;
+    expect(lockSpy).toHaveBeenCalledTimes(1);
+
+    leaveFullscreen(setter);
+    await el.updateComplete;
+
+    expect(
+      unlockSpy,
+      'screen.orientation.unlock() must be called when exiting fullscreen on all devices'
+    ).toHaveBeenCalledTimes(1);
+  });
+
+  it('also locks orientation on non-Android devices (not only Android)', async () => {
+    setIsAndroid(false);
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const { lockSpy } = mockScreenOrientation();
+
+    enterFullscreen(el);
+    await el.updateComplete;
+
+    expect(
+      lockSpy,
+      'screen.orientation.lock must be called on non-Android devices too'
+    ).toHaveBeenCalledTimes(1);
+    expect(lockSpy).toHaveBeenCalledWith('landscape');
+  });
+
+  it('locks to portrait when portrait property is true and not in fullscreen', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const { lockSpy } = mockScreenOrientation();
+
+    el.portrait = true;
+    await el.updateComplete;
+
+    // NOT in fullscreen, portrait=true → expect portrait lock.
+    expect(lockSpy).toHaveBeenCalledTimes(1);
+    expect(lockSpy).toHaveBeenCalledWith('portrait');
+  });
+
+  it('does not lock to portrait when portrait property is false', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const { lockSpy } = mockScreenOrientation();
+
+    el.portrait = false;
+    await el.updateComplete;
+
+    // Not in fullscreen, portrait=false — no lock expected.
+    expect(lockSpy).not.toHaveBeenCalled();
+  });
+
+  it('re-locks to portrait after exiting fullscreen when portrait is true', async () => {
+    const { el } = createPlayerWithVideo();
+    await el.updateComplete;
+
+    const { lockSpy, unlockSpy } = mockScreenOrientation();
+
+    el.portrait = true;
+    await el.updateComplete;
+    // portrait=true while not in fullscreen → portrait lock.
+    expect(lockSpy).toHaveBeenCalledTimes(1);
+    expect(lockSpy).toHaveBeenCalledWith('portrait');
+
+    // Enter fullscreen — should lock landscape.
+    const setter = enterFullscreen(el);
+    await el.updateComplete;
+    expect(lockSpy).toHaveBeenCalledTimes(2);
+    expect(lockSpy).toHaveBeenLastCalledWith('landscape');
+
+    // Exit fullscreen — should re-lock portrait because portrait=true.
+    leaveFullscreen(setter);
+    await el.updateComplete;
+
+    expect(
+      lockSpy,
+      'screen.orientation.lock must be called again after exiting fullscreen when portrait=true'
+    ).toHaveBeenCalledTimes(3);
+    expect(lockSpy).toHaveBeenLastCalledWith('portrait');
+
+    expect(
+      unlockSpy,
+      'screen.orientation.unlock must NOT be called when portrait=true'
+    ).not.toHaveBeenCalled();
   });
 });

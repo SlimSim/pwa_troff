@@ -18,6 +18,7 @@ import './components/molecule/t-share-song-dialog.js';
 import './components/molecule/t-text-input-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import './components/organisms/t-video-player.js';
+import type { TVideoPlayer } from './components/organisms/t-video-player.js';
 import {
   updateHeaderWithCurrentSong,
   setCurrentSong,
@@ -84,6 +85,7 @@ import {
   TROFF_SETTING_DARK_MODE,
   TROFF_SETTING_THEME,
   TROFF_SETTING_BANNER_SHOW,
+  TROFF_SETTING_PORTRAIT,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
@@ -1386,6 +1388,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const storedBannerShow = nDB.get(TROFF_SETTING_BANNER_SHOW);
     settingsPanel.bannerShow =
       storedBannerShow !== null ? storedBannerShow === true : getBannerDefault();
+    settingsPanel.portrait = nDB.get(TROFF_SETTING_PORTRAIT) ?? true;
+    if (videoPlayer) {
+      (videoPlayer as { portrait?: boolean }).portrait = nDB.get(TROFF_SETTING_PORTRAIT) ?? true;
+    }
     const extendedColorSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
     const extraExtendedColorSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
     settingsPanel.extendedMarkerColor = extendedColorSetting === true;
@@ -2168,6 +2174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         darkMode: TROFF_SETTING_DARK_MODE,
         theme: TROFF_SETTING_THEME,
         bannerShow: TROFF_SETTING_BANNER_SHOW,
+        portrait: TROFF_SETTING_PORTRAIT,
       };
 
       const storageKey = settingsKeyByPanelSetting[setting];
@@ -2194,6 +2201,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (setting === 'bannerShow') {
         header.showBanner = value === true;
+      }
+      if (setting === 'portrait') {
+        const videoPlayerEl = document.getElementById('videoPlayer') as TVideoPlayer | null;
+        if (videoPlayerEl) {
+          videoPlayerEl.portrait = value === true;
+        }
       }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
@@ -2385,6 +2398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
       [TROFF_SETTING_KEEP_SCREEN_ON, true],
       [TROFF_SETTING_DARK_MODE, false],
+      [TROFF_SETTING_PORTRAIT, true],
     ];
     for (const [key, defaultValue] of defaultsIfUnset) {
       if (nDB.get(key) == null) {

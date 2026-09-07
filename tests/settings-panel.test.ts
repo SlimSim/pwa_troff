@@ -750,6 +750,86 @@ describe('SettingsPanel numeric settings integration', () => {
       });
     });
   });
+
+  describe('Portrait setting', () => {
+    describe('default property values', () => {
+      it('should have default portrait of true', () => {
+        expect(settingsPanel.portrait).toBe(true);
+      });
+    });
+
+    describe('setting values from parent', () => {
+      it('should update portrait when property is set', async () => {
+        settingsPanel.portrait = false;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.portrait).toBe(false);
+      });
+
+      it('should toggle portrait back to true', async () => {
+        settingsPanel.portrait = false;
+        await settingsPanel.updateComplete;
+        settingsPanel.portrait = true;
+        await settingsPanel.updateComplete;
+        expect(settingsPanel.portrait).toBe(true);
+      });
+    });
+
+    describe('setting-changed event dispatch', () => {
+      it('should dispatch setting-changed when portrait is toggled on', () => {
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('portrait', false);
+
+        expect(settingsPanel.portrait).toBe(true);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'portrait', value: true },
+          })
+        );
+      });
+
+      it('should toggle portrait off via _toggleSetting', () => {
+        settingsPanel.portrait = true;
+        const handler = vi.fn();
+        settingsPanel.addEventListener('setting-changed', handler);
+
+        // @ts-expect-error - accessing private method for testing
+        settingsPanel._toggleSetting('portrait', true);
+
+        expect(settingsPanel.portrait).toBe(false);
+        expect(handler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            detail: { setting: 'portrait', value: false },
+          })
+        );
+      });
+    });
+
+    describe('rendered portrait toggle in Advanced Settings section', () => {
+      it('should render a <t-butt toggle> for "Portrait" inside the Advanced Settings section', () => {
+        const shells = Array.from(settingsPanel.shadowRoot?.querySelectorAll('.settings-shell') ?? []);
+        const globalShell = shells.find((shell) =>
+          shell.querySelector('t-help-tip[h3="Global Controls"]')
+        );
+        expect(globalShell, 'expected to find .settings-shell containing Global Controls help-tip').toBeTruthy();
+
+        // Find the Advanced Settings t-details
+        const details = Array.from(globalShell!.querySelectorAll('t-details') ?? []);
+        const advanced = details.find((d) => d.getAttribute('title') === 'Advanced Settings');
+        expect(advanced, 'expected to find Advanced Settings t-details').toBeTruthy();
+
+        const butts = Array.from(advanced!.querySelectorAll('t-butt') ?? []);
+        const portraitButt = butts.find((b) =>
+          (b.textContent || '').trim().toLowerCase().includes('portrait')
+        );
+
+        expect(portraitButt, 'expected to find a Portrait button in Advanced Settings').toBeTruthy();
+        expect(portraitButt!.hasAttribute('toggle')).toBe(true);
+      });
+    });
+  });
 });
 
 describe('SettingsPanel panel title', () => {

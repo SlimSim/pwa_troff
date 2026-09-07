@@ -227,6 +227,7 @@ export class TVideoPlayer extends LitElement {
   @property({ type: Array }) markers: TroffMarker[] = [];
   @property({ type: String }) startMarkerId = '';
   @property({ type: Number }) speed = 100;
+  @property({ type: Boolean }) portrait = false;
 
   private _controlsTimer?: ReturnType<typeof setTimeout>;
   private _gestureTimer?: ReturnType<typeof setTimeout>;
@@ -289,15 +290,48 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
+  /**
+   * Attempt to lock screen orientation via the Screen Orientation API.
+   * Not available in TypeScript's DOM types — access via type assertion.
+   * Fails silently on devices/browsers that don't support it.
+   */
+  private _lockOrientation(mode: 'portrait' | 'landscape') {
+    if (!screen.orientation) {
+      return;
+    }
+    const orient = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+    if (orient.lock) {
+      void orient.lock(mode).catch(() => {
+        // Orientation lock not supported or denied — fail silently
+      });
+    }
+  }
+
+  private _unlockOrientation() {
+    if (!screen.orientation?.unlock) {
+      return;
+    }
+    screen.orientation.unlock();
+  }
+
   private _onFullscreenChange = () => {
+    const wasFullscreen = this._isFullscreen;
     this._isFullscreen = document.fullscreenElement === this;
     if (!this._isFullscreen) {
       this._clearControlsTimer();
       this._controlsVisible = true;
       this._clearFullscreenHintBufferTimer();
       this._fullscreenHintBuffer = false;
+      if (wasFullscreen) {
+        if (this.portrait) {
+          this._lockOrientation('portrait');
+        } else {
+          this._unlockOrientation();
+        }
+      }
     } else {
       this._scheduleControlsHide();
+      this._lockOrientation('landscape');
       // Give Android's exit-fullscreen system hint room to appear without
       // covering the bottom-row buttons, then relax back to normal spacing.
       // iOS doesn't show this hint, so only buffer on Android.
@@ -433,6 +467,16 @@ export class TVideoPlayer extends LitElement {
       video.addEventListener('play', this._onVideoPlay);
       video.addEventListener('pause', this._onVideoPause);
       video.addEventListener('seeked', this._onVideoSeeked);
+    }
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('portrait') && !this._isFullscreen) {
+      if (this.portrait) {
+        this._lockOrientation('portrait');
+      } else {
+        this._unlockOrientation();
+      }
     }
   }
 
