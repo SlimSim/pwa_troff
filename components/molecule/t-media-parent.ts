@@ -25,6 +25,8 @@ import {
 import type { TrackLike } from '../../utils/media-search.js';
 import log from '../../utils/log.js';
 
+const ts = () => new Date().toLocaleTimeString();
+
 /** Minimal surface of the detail-view list components for closing details. */
 interface DetailViewListElement extends HTMLElement {
   closeDetail?: () => void;
@@ -414,6 +416,37 @@ export class MediaParent extends LitElement {
       margin: 0 0 8px 0;
     }
 
+    .empty-state-user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-bottom: 12px;
+      background: var(--border-color, #333);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state-user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .empty-state-user-avatar t-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--text-color, #000);
+    }
+
+    .empty-state-user-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: var(--on-primary-color);
+    }
+
     /* ── No-results state (active search, empty list) ── */
     .no-results {
       padding: 24px 16px;
@@ -449,6 +482,14 @@ export class MediaParent extends LitElement {
   @property({ type: Array }) private songs: any[] = [];
   @property({ type: Array }) private groups: TroffFirebaseGroupIdentifyer[] = [];
   @property({ type: String }) currentSongKey = '';
+
+  /** Auth state — pushed from v2Script on every onAuthStateChanged. */
+  @property({ type: Boolean }) signedIn = false;
+  @property({ type: String }) userName = '';
+  @property({ type: String }) userPhotoUrl = '';
+
+  /** Per-song download progress (songKey → 0-100, or -1 for waiting in queue). */
+  private _downloadProgress = new Map<string, number>();
 
   /** The group key of the currently open group detail view (empty = not in a group). */
   @property({ type: String, state: true }) private _currentGroupKey = '';
@@ -504,6 +545,11 @@ export class MediaParent extends LitElement {
       this.currentSongKey = e.detail.songKey || '';
       this.visible = false; // close the song list when a song is selected
       this.requestUpdate(); // Force re-render to update active states
+    });
+
+    // Handle click on a pending (not yet downloaded) song — start priority download
+    this.addEventListener('pending-song-clicked', (e: any) => {
+      this._handlePendingSongClick(e.detail.songKey);
     });
 
     // Listen for group detail open/close to change header controls
@@ -761,7 +807,7 @@ export class MediaParent extends LitElement {
   // Add method to load songs
   private async _loadSongs() {
     try {
-      this.songs = await LocalSongDataService.getAllSongs();
+      this.songs = await LocalSongDataService.getAllSongsWithDownloadStatus();
 
       // Load groups from localStorage
       const songLists = nDB.get('aoSongLists') || [];
@@ -779,12 +825,189 @@ export class MediaParent extends LitElement {
         }
       }
 
+      const downloaded = this.songs.filter((s: any) => s.downloaded === true);
+      const pending = this.songs.filter((s: any) => s.downloaded === false);
+      console.log(
+        `${ts()} [t-media-parent] _loadSongs: ${this.songs.length} total songs → ` +
+          `${downloaded.length} downloaded, ${pending.length} pending download`
+      );
+      for (const s of pending) {
+        console.log(`${ts()} [t-media-parent]   ⏳ pending: "${(s as any).title || (s as any).songKey}" (fileUrl: ${(s as any).fileUrl ? 'yes' : 'no'})`);
+      }
+
       this.requestUpdate();
+
+      // Kick off background downloads for pending songs (non-blocking)
+      this._downloadPendingSongs();
     } catch (error) {
       console.error('Failed to load songs and groups:', error);
       this.songs = [];
       this.groups = [];
     }
+  }
+
+  /**
+   * Download songs that are in groups but not yet in the local cache.
+   * Runs in the background — does not block rendering.
+   * Uses ReadableStream to track byte-level download progress per song.
+   */
+  private _downloadPendingSongs() {
+    const pending = this.songs.filter(
+      (s: any) => s.downloaded === false && s.fileUrl
+    );
+    if (pending.length === 0) {
+      console.log(`${ts()} [t-media-parent] _downloadPendingSongs: nothing to download`);
+      return;
+    }
+
+    console.log(`${ts()} [t-media-parent] _downloadPendingSongs: starting download of ${pending.length} song(s)`);
+    const downloadNext = async (index: number): Promise<void> => {
+      if (index >= pending.length) return;
+      const song = pending[index] as any;
+      await this._downloadSong(song);
+      // Continue to next song
+      await downloadNext(index + 1);
+    };
+
+    // Start but don't await — fire and forget
+    downloadNext(0).catch(() => {
+      /* intentionally ignored */
+    });
+  }
+
+  /**
+   * Download a single song with byte-level progress tracking.
+   * Updates _downloadProgress map and re-renders the track list as bytes arrive.
+   */
+  private async _downloadSong(song: any): Promise<boolean> {
+    const songKey = song.songKey as string;
+    const fileUrl = song.fileUrl as string;
+    if (!fileUrl) return false;
+
+    // Mark as waiting in queue if another song is currently downloading
+    if (!this._downloadProgress.has(songKey)) {
+      this._downloadProgress.set(songKey, -1);
+      this.requestUpdate();
+    }
+
+    console.log(`${ts()} [t-media-parent] ⬇️  downloading: "${song.title || songKey}"`);
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        console.warn(`${ts()} [t-media-parent] ❌ download failed (${response.status}): "${song.title || songKey}"`);
+        this._downloadProgress.delete(songKey);
+        this.requestUpdate();
+        return false;
+      }
+
+      // Use Content-Length for total bytes if available
+      const contentLength = Number(response.headers.get('Content-Length')) || 0;
+      const reader = response.body?.getReader();
+      if (!reader || contentLength === 0) {
+        // No stream or no Content-Length — store without progress tracking
+        const cache = await caches.open('songCache-v1.0');
+        await cache.put(songKey, response.clone());
+        await reader?.cancel();
+      } else {
+        // Read with byte-level progress
+        let received = 0;
+        const chunks: Uint8Array[] = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          const pct = Math.round((received / contentLength) * 100);
+          this._downloadProgress.set(songKey, pct);
+          // Throttle re-renders to ~4 per second
+          if (pct % 25 === 0 || pct >= 95) {
+            this.requestUpdate();
+          }
+        }
+        // Combine chunks and store in cache
+        const blob = new Blob(chunks as unknown as BlobPart[]);
+        const cacheResponse = new Response(blob, {
+          headers: response.headers,
+        });
+        const cache = await caches.open('songCache-v1.0');
+        await cache.put(songKey, cacheResponse);
+      }
+
+      // Mark as downloaded
+      song.downloaded = true;
+      this._downloadProgress.delete(songKey);
+      console.log(`${ts()} [t-media-parent] ✅ downloaded: "${song.title || songKey}"`);
+      this.requestUpdate();
+      return true;
+    } catch (err) {
+      console.warn(`${ts()} [t-media-parent] ❌ download error: "${song.title || songKey}"`, err);
+      this._downloadProgress.delete(songKey);
+      this.requestUpdate();
+      return false;
+    }
+  }
+
+  /**
+   * Handle click on a pending (not yet downloaded) song.
+   * Starts a priority download of that specific song, then auto-loads it.
+   */
+  private async _handlePendingSongClick(songKey: string): Promise<void> {
+    const song = this.songs.find((s: any) => s.songKey === songKey) as any;
+    if (!song || !song.fileUrl) {
+      const { showToast } = await import('../../utils/notification.js');
+      showToast(`"${songKey}" is not available for download.`, 'error');
+      return;
+    }
+
+    // If already being downloaded (progress >= 0), just inform the user
+    const currentProgress = this._downloadProgress.get(songKey);
+    if (currentProgress !== undefined && currentProgress >= 0) {
+      const { showToast } = await import('../../utils/notification.js');
+      showToast(`Downloading "${song.title || songKey}"... (${currentProgress}%)`, 'info', 2000);
+      return;
+    }
+
+    const { showToast } = await import('../../utils/notification.js');
+    showToast(`Downloading "${song.title || songKey}"...`, 'info', 2000);
+
+    // Download this song now (skips the queue)
+    const success = await this._downloadSong(song);
+    if (success) {
+      // Auto-load the song into the player
+      this.currentSongKey = songKey;
+      this.visible = false;
+      this.requestUpdate();
+      // Dispatch media-selected so v2Script loads the song
+      this.dispatchEvent(
+        new CustomEvent('media-selected', {
+          detail: { songKey },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  }
+
+  /**
+   * Get the download progress for a song (for passing to t-media).
+   * Returns -1 for waiting in queue, 0-100 for actively downloading,
+   * or -2 if not being tracked (already downloaded or not pending).
+   */
+  getDownloadProgress(songKey: string): number {
+    return this._downloadProgress.has(songKey)
+      ? (this._downloadProgress.get(songKey) ?? -1)
+      : -2;
+  }
+
+  /**
+   * Convert the download progress Map to a plain object for passing to child components.
+   */
+  private _getDownloadProgressMap(): Record<string, number> {
+    const obj: Record<string, number> = {};
+    this._downloadProgress.forEach((val, key) => {
+      obj[key] = val;
+    });
+    return obj;
   }
 
   /**
@@ -1962,8 +2185,21 @@ export class MediaParent extends LitElement {
           ? html`
               <div class="empty-state">
                 <div class="empty-state-content">
-                  <t-icon name="note" class="empty-state-icon" large></t-icon>
-                  <h2 class="empty-state-title">Welcome to Troff!</h2>
+                  ${this.signedIn
+                    ? html`
+                        <div class="empty-state-user-avatar">
+                          ${this.userPhotoUrl
+                            ? html`<img src=${this.userPhotoUrl} alt="User avatar" />`
+                            : html`<t-icon name="user"></t-icon>`}
+                        </div>
+                        <h2 class="empty-state-user-name">
+                          Welcome to Troff, ${this.userName || 'friend'}!
+                        </h2>
+                      `
+                    : html`
+                        <t-icon name="note" class="empty-state-icon" large></t-icon>
+                        <h2 class="empty-state-title">Welcome to Troff!</h2>
+                      `}
                   <p class="empty-state-subtitle">Get started by adding your first song</p>
                   <div class="empty-state-actions">
                     <t-butt class="empty-action-btn" href="#2582986745&demo.mp4">
@@ -1978,13 +2214,17 @@ export class MediaParent extends LitElement {
                       <t-icon name="note-search"></t-icon>
                       <span>Find songs online</span>
                     </t-butt>
-                    <p class="empty-state-sign-in-note">
-                      Sign in to get the songs shared in your groups
-                    </p>
-                    <t-butt class="empty-action-btn" @click=${this._handleSignIn}>
-                      <t-icon name="user-plus"></t-icon>
-                      <span>Sign in</span>
-                    </t-butt>
+                    ${!this.signedIn
+                      ? html`
+                          <p class="empty-state-sign-in-note">
+                            Sign in to get the songs shared in your groups
+                          </p>
+                          <t-butt class="empty-action-btn" @click=${this._handleSignIn}>
+                            <t-icon name="user-plus"></t-icon>
+                            <span>Sign in</span>
+                          </t-butt>
+                        `
+                      : ''}
                   </div>
                 </div>
               </div>
@@ -2005,6 +2245,7 @@ export class MediaParent extends LitElement {
                         .tracks=${visibleTracks}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
+                        .downloadProgressMap=${this._getDownloadProgressMap()}
                       ></t-track-list>
                     `
                 : ''}
@@ -2024,6 +2265,7 @@ export class MediaParent extends LitElement {
                         .tracks=${songs}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
+                        .downloadProgressMap=${this._getDownloadProgressMap()}
                       ></t-artist-list>
                     `
                 : ''}
@@ -2043,6 +2285,7 @@ export class MediaParent extends LitElement {
                         .tracks=${songs}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
+                        .downloadProgressMap=${this._getDownloadProgressMap()}
                       ></t-genre-list>
                     `
                 : ''}
@@ -2062,6 +2305,7 @@ export class MediaParent extends LitElement {
                         .tracks=${songs}
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
+                        .downloadProgressMap=${this._getDownloadProgressMap()}
                       ></t-group-list>
                     `
                 : ''}

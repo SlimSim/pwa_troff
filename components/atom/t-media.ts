@@ -19,6 +19,7 @@ export class MediaItem extends LitElement {
       border-left: 4px solid transparent;
       border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
+      position: relative;
       transition:
         background-color 0.2s ease,
         box-shadow 0.2s ease,
@@ -27,6 +28,49 @@ export class MediaItem extends LitElement {
 
     .media-container:hover {
       background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.1));
+    }
+
+    .media-container.pending-download .details-column {
+      opacity: 0.4;
+    }
+
+    /* Download progress bar — sits at the bottom of the row */
+    .download-progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 22px;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .download-progress-bar .fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: var(--theme-color, #003366);
+      opacity: 0.35;
+      transition: width 0.3s ease;
+    }
+
+    .download-progress-bar .progress-label {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--on-theme-color, #eee);
+      letter-spacing: 0.02em;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
     }
 
     .media-container.active {
@@ -216,6 +260,9 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
   @property({ type: Boolean }) hideEditButton = false;
+  @property({ type: Boolean }) downloaded = true;
+  /** 0-100 = downloading with progress, -1 = waiting in queue, undefined/missing = done */
+  @property({ type: Number }) downloadProgress = -1;
 
   private _handleEditClick(event: Event) {
     event.stopPropagation();
@@ -229,6 +276,17 @@ export class MediaItem extends LitElement {
   }
 
   private _handleClick() {
+    if (!this.downloaded) {
+      // Song is not yet cached — let the parent handle priority download
+      this.dispatchEvent(
+        new CustomEvent('pending-song-clicked', {
+          detail: { songKey: this.songKey },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      return;
+    }
     this.dispatchEvent(
       new CustomEvent('media-selected', {
         detail: {
@@ -339,7 +397,7 @@ export class MediaItem extends LitElement {
       <div
         class="media-container ${this.active ? 'active' : ''} ${this.highlighted
           ? 'highlighted'
-          : ''}"
+          : ''} ${!this.downloaded ? 'pending-download' : ''}"
         @click=${this._handleClick}
       >
         <div class="album-art">
@@ -387,6 +445,16 @@ export class MediaItem extends LitElement {
             >
               <t-icon name="edit"></t-icon>
             </t-butt>`
+          : ''}
+        ${!this.downloaded
+          ? html`<div class="download-progress-bar">
+              <div class="fill" style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"></div>
+              <span class="progress-label">
+                ${this.downloadProgress >= 0
+                  ? `Downloading ${this.downloadProgress}%`
+                  : 'Pending download'}
+              </span>
+            </div>`
           : ''}
       </div>
     `;

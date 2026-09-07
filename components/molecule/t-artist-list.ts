@@ -281,6 +281,7 @@ export class ArtistList extends LitElement {
   @property({ type: Array }) artists: any[] = [];
   @property({ type: String }) selectedArtist: string = '';
   @property({ type: String }) currentSongKey = '';
+  @property({ type: Object }) downloadProgressMap: Record<string, number> = {};
 
   /** Index of the highlighted item in the list view (-1 = none). */
   @property({ type: Number }) highlightedIndex = -1;
@@ -542,6 +543,8 @@ export class ArtistList extends LitElement {
                     .playsMonth=${track.playsMonth}
                     .playsTotal=${track.playsTotal}
                     .songKey=${track.songKey}
+                    .downloaded=${track.downloaded !== false}
+                    .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
                   ></t-media>
                 `
               )}

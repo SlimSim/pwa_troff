@@ -2317,6 +2317,11 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsPanel.userName = user?.displayName ?? '';
             settingsPanel.userPhotoUrl = user?.photoURL ?? '';
           }
+          if (songList) {
+            songList.signedIn = user !== null;
+            songList.userName = user?.displayName ?? '';
+            songList.userPhotoUrl = user?.photoURL ?? '';
+          }
           if (groupDialog) {
             groupDialog.signedIn = user !== null;
             groupDialog.userEmail = user?.email ?? '';

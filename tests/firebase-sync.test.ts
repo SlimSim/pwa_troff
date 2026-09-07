@@ -182,9 +182,10 @@ describe('syncFirebaseGroups', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Downloads missing songs
+  // Metadata saved even when song is not in cache (audio download handled
+  // separately by t-media-parent._downloadPendingSongs)
   // -----------------------------------------------------------------------
-  it('downloads a song file when not in cache', async () => {
+  it('saves metadata for songs not in cache (no audio download in sync)', async () => {
     const songKey1 = 'new-track.mp3';
     const fileUrl1 = 'https://example.com/new-track.mp3';
 
@@ -200,15 +201,21 @@ describe('syncFirebaseGroups', () => {
       }),
     ];
 
-    // No cached file — fetch should be called
-    fetchMock.mockResolvedValue(new Response('new audio content', { status: 200 }));
+    // No cached file — but fetch should NOT be called (downloads moved to t-media-parent)
 
     await expect(syncFirebaseGroups('user@example.com')).resolves.toBeUndefined();
 
-    // fetch was called with the fileUrl
-    expect(fetchMock).toHaveBeenCalledWith(fileUrl1);
-    // The response was stored in cache
-    expect(mockCacheInstance.put).toHaveBeenCalledWith(songKey1, expect.any(Response));
+    // fetch should NOT be called — audio downloads are handled by t-media-parent
+    expect(fetchMock).not.toHaveBeenCalled();
+    // Song should still appear in the group
+    const songLists = nDBStore['aoSongLists'] as any[];
+    expect(songLists).toHaveLength(1);
+    expect(songLists[0].songs).toHaveLength(1);
+    expect(songLists[0].songs[0].fullPath).toBe(songKey1);
+    // Song metadata should be saved to nDB
+    const savedSongData = nDBStore[songKey1] as any;
+    expect(savedSongData).toBeDefined();
+    expect(savedSongData.latestUploadToFirebase).toBe(1);
   });
 
   // -----------------------------------------------------------------------
@@ -239,10 +246,12 @@ describe('syncFirebaseGroups', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Handles download failure gracefully
+  // All songs included regardless of cache state (audio downloads are
+  // handled by t-media-parent._downloadPendingSongs, not here)
   // -----------------------------------------------------------------------
-  it('skips a song when download fails and continues with other songs', async () => {
-    const goodSongKey = 'good-track.mp3';
+  it('includes all songs in the group even when not cached (no download in sync)', async () => {
+    const songKey1 = 'track-one.mp3';
+    const songKey2 = 'track-two.mp3';
 
     mockFirebaseGroupSnapshot.docs = [
       groupDoc('group1', { name: 'Test', owners: ['user@example.com'] }),
@@ -250,29 +259,29 @@ describe('syncFirebaseGroups', () => {
 
     mockFirebaseSongsSnapshot.docs = [
       songDoc('s1', {
-        songKey: 'bad-track.mp3',
-        fileUrl: 'https://example.com/bad.mp3',
+        songKey: songKey1,
+        fileUrl: 'https://example.com/one.mp3',
         jsonDataInfo: JSON.stringify({ markers: [], latestUploadToFirebase: 1 }),
       }),
       songDoc('s2', {
-        songKey: goodSongKey,
-        fileUrl: 'https://example.com/good.mp3',
+        songKey: songKey2,
+        fileUrl: 'https://example.com/two.mp3',
         jsonDataInfo: JSON.stringify({ markers: [{ id: 'm1' }], latestUploadToFirebase: 2 }),
       }),
     ];
 
-    // First fetch fails, second succeeds
-    fetchMock
-      .mockRejectedValueOnce(new Error('Network error'))
-      .mockResolvedValueOnce(new Response('good audio', { status: 200 }));
+    // Neither song is cached — but that's fine, no download happens here
 
     await expect(syncFirebaseGroups('user@example.com')).resolves.toBeUndefined();
 
-    // Only the good song should be in the group
+    // Both songs should be in the group (no download failures to skip)
     const songLists = nDBStore['aoSongLists'] as any[];
     expect(songLists).toHaveLength(1);
-    expect(songLists[0].songs).toHaveLength(1);
-    expect(songLists[0].songs[0].fullPath).toBe(goodSongKey);
+    expect(songLists[0].songs).toHaveLength(2);
+    expect(songLists[0].songs[0].fullPath).toBe(songKey1);
+    expect(songLists[0].songs[1].fullPath).toBe(songKey2);
+    // fetch should NOT be called
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   // -----------------------------------------------------------------------

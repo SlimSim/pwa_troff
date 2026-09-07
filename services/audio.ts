@@ -16,7 +16,6 @@ export async function loadSong(
     return { url: URL.createObjectURL(blob), isVideo: blob.type.startsWith('video/') };
   } catch (error) {
     console.error('Error loading song:', error);
-    alert(`Error loading song: ${songKey}. It may not be cached.`);
     return null;
   }
 }
