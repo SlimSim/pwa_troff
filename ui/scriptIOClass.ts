@@ -22,6 +22,7 @@ import { TROFF_SETTING_CONFIRM_DELETE_MARKER, DATA_TABLE_COLUMNS } from '../cons
 import { IOInput } from 'types/io.js';
 import { sleep } from '../utils/timeHack.js';
 import { blurHack } from '../utils/utils.js';
+import { updatePWA } from '../utils/pwa.js';
 import { appendColorButtonsTo, markersExist } from './troffUi.js';
 import { MarkerColorConfig } from 'types/markers.js';
 
@@ -105,7 +106,7 @@ class IOClass {
   };
 
   removeLoadScreen = () => {
-    //$('#loadScreen, #loadScreenStyle').remove();
+    $('#loadScreen, #loadScreenStyle').remove();
   };
 
   startFunc = () => {
@@ -273,7 +274,7 @@ class IOClass {
     $('#buttZoomOut').click(Troff.zoomOut);
 
     $('#areaSelector >').click(Troff.toggleArea);
-    $('.onClickReload').click(() => window.location.reload());
+    $('.onClickReload').click(() => updatePWA());
 
     $('#markerInfoArea').change(Troff.updateMarkerInfo);
     $('#markerInfoArea').blur(Troff.exitMarkerInfo);

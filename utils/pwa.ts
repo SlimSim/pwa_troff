@@ -29,9 +29,7 @@ export function getInstallState(): PwaInstallState {
   return installState;
 }
 
-export function subscribeToInstallState(
-  listener: (state: PwaInstallState) => void
-): () => void {
+export function subscribeToInstallState(listener: (state: PwaInstallState) => void): () => void {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
@@ -57,6 +55,40 @@ export function promptInstall(): void {
     });
 }
 
+export async function updatePWA(): Promise<void> {
+  console.log('updatePWA ->');
+  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+    window.location.reload();
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (!registration) {
+    window.location.reload();
+    return;
+  }
+
+  await registration.update();
+
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  if (registration.installing) {
+    await new Promise<void>((resolve) => {
+      const worker = registration.installing!;
+      const onStateChange = () => {
+        if (worker.state === 'installed' || worker.state === 'activated') {
+          worker.removeEventListener('statechange', onStateChange);
+          resolve();
+        }
+      };
+      worker.addEventListener('statechange', onStateChange);
+      setTimeout(resolve, 3000);
+    });
+  }
+
+  window.location.reload();
+}
+
 export function initPwa(options?: {
   onNewVersionAvailable?: () => void;
   onFirstInstall?: () => void;
@@ -75,10 +107,7 @@ export function initPwa(options?: {
     setInstallState('installed');
   });
 
-  if (
-    !('serviceWorker' in navigator) ||
-    typeof navigator.serviceWorker.register !== 'function'
-  ) {
+  if (!('serviceWorker' in navigator) || typeof navigator.serviceWorker.register !== 'function') {
     log.e('PWA: navigator.serviceWorker is not available, skipping registration');
     return;
   }

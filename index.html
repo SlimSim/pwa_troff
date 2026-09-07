@@ -239,7 +239,26 @@
         <h1>Troff</h1>
         <h2>- training with music</h2>
         <p id="loadScreenMessage">loading... <span></span></p>
-        <script>
+        <div style="padding: 20px">
+          <button id="loadScreenUpdate" type="button" title="Update and reload the app">
+            Reload
+          </button>
+          <button id="loadScreenReset" type="button" title="Clear all saved info">
+            Hard reset
+          </button>
+        </div>
+
+        <button
+          style="display: none"
+          id="loadScreenConfirmReset"
+          type="button"
+          title="Clear all saved info"
+        >
+          Confirm Hard Reset? <br />
+          This will delete all locally stored songs, metadata, settings, caches and the app's
+          Service Worker.
+        </button>
+        <script async>
           fetch('/manifest.json')
             .then((res) => res.json())
             .then((manifest) => {
@@ -250,6 +269,76 @@
               document.getElementById('loadScreenMessage').textContent =
                 "loading... <can't get version number>";
             });
+          function updateApp() {
+            import('./utils/pwa.js').then(({ updatePWA }) => {
+              updatePWA();
+            });
+          }
+          document.getElementById('loadScreenUpdate').addEventListener('click', () => {
+            updateApp();
+          });
+          document.getElementById('loadScreenReset').addEventListener('click', () => {
+            document.getElementById('loadScreenConfirmReset').style.display = 'block';
+            document.getElementById('loadScreenReset').style.display = 'none';
+          });
+          async function hardReset() {
+            try {
+              // 1. Clear localStorage
+              localStorage.clear();
+
+              // 2. Clear sessionStorage
+              sessionStorage.clear();
+
+              // 3. Delete all IndexedDB databases
+              if (indexedDB.databases) {
+                const TROFF_DATABASES = ['music-file-storage', 'troff-settings'];
+                for (const name of TROFF_DATABASES) {
+                  await indexedDB.deleteDatabase(name);
+                }
+
+                await Promise.all(
+                  databases
+                    .filter((db) => db.name)
+                    .map(
+                      (db) =>
+                        new Promise((resolve, reject) => {
+                          const request = indexedDB.deleteDatabase(db.name);
+
+                          request.onsuccess = resolve;
+                          request.onerror = reject;
+                          request.onblocked = () => {
+                            console.warn(`IndexedDB deletion blocked: ${db.name}`);
+                            resolve();
+                          };
+                        })
+                    )
+                );
+              }
+
+              // 4. Clear Cache Storage
+              if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+              }
+
+              // 5. Unregister Service Workers
+              if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+
+                await Promise.all(registrations.map((registration) => registration.unregister()));
+              }
+
+              // 6. Reload
+              window.location.reload();
+            } catch (error) {
+              console.error('Hard reset failed:', error);
+
+              // Still give the user a way forward
+              window.location.reload();
+            }
+          }
+
+          document.getElementById('loadScreenConfirmReset').addEventListener('click', hardReset);
         </script>
       </div>
       <div class="f2"></div>
