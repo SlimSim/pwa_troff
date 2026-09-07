@@ -238,7 +238,19 @@
         />
         <h1>Troff</h1>
         <h2>- training with music</h2>
-        <p>loading...</p>
+        <p id="loadScreenMessage">loading... <span></span></p>
+        <script>
+          fetch('/manifest.json')
+            .then((res) => res.json())
+            .then((manifest) => {
+              document.getElementById('loadScreenMessage').textContent =
+                'loading version ' + manifest.version;
+            })
+            .catch((error) => {
+              document.getElementById('loadScreenMessage').textContent =
+                "loading... <can't get version number>";
+            });
+        </script>
       </div>
       <div class="f2"></div>
     </div>
@@ -2677,11 +2689,10 @@
             />
             <script type="module">
               import { nDB } from './assets/internal/db.js';
-              document.getElementById('preferVersionButton')
-                .addEventListener('click', () => {
-                  nDB.set('TROFF_SETTING_PREFER_VERSION', 2);
-                  window.location.href = '/v2.html' + window.location.hash;
-                });
+              document.getElementById('preferVersionButton').addEventListener('click', () => {
+                nDB.set('TROFF_SETTING_PREFER_VERSION', 2);
+                window.location.href = '/v2.html' + window.location.hash;
+              });
             </script>
           </div>
         </div>

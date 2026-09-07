@@ -105,7 +105,7 @@ class IOClass {
   };
 
   removeLoadScreen = () => {
-    $('#loadScreen, #loadScreenStyle').remove();
+    //$('#loadScreen, #loadScreenStyle').remove();
   };
 
   startFunc = () => {
