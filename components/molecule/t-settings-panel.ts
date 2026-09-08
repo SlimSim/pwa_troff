@@ -395,6 +395,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) keepScreenOn = true;
   @property({ type: Boolean }) darkMode = false;
   @property({ type: Boolean }) bannerShow = false;
+  @property({ type: Boolean }) preferVersion2 = false;
   @property({ type: Boolean }) portrait = true;
   @property({ type: String }) theme = 'col1';
 
@@ -1077,7 +1078,18 @@ export class SettingsPanel extends LitElement {
                     Show dev banner
                   </t-butt>
                 </div>
-                <div class="settings-section" style="margin: 0; margin-top: 8px;">
+                <div class="settings-section" style="margin: 0; margin-top: 8px; display: flex; gap: 8px;">
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.preferVersion2}
+                    @click=${() => {
+                      this.preferVersion2 = !this.preferVersion2;
+                      nDB.set('TROFF_SETTING_PREFER_VERSION', this.preferVersion2 ? 2 : 1);
+                    }}
+                  >
+                    Prefer version 2
+                  </t-butt>
                   <t-butt
                     ellipsis
                     ghost

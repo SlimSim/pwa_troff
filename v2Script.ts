@@ -86,6 +86,7 @@ import {
   TROFF_SETTING_THEME,
   TROFF_SETTING_BANNER_SHOW,
   TROFF_SETTING_PORTRAIT,
+  TROFF_SETTING_PREFER_VERSION,
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
@@ -1388,6 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const storedBannerShow = nDB.get(TROFF_SETTING_BANNER_SHOW);
     settingsPanel.bannerShow =
       storedBannerShow !== null ? storedBannerShow === true : getBannerDefault();
+    settingsPanel.preferVersion2 = nDB.get(TROFF_SETTING_PREFER_VERSION) === 2;
     settingsPanel.portrait = nDB.get(TROFF_SETTING_PORTRAIT) ?? true;
     if (videoPlayer) {
       (videoPlayer as { portrait?: boolean }).portrait = nDB.get(TROFF_SETTING_PORTRAIT) ?? true;
