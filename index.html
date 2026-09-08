@@ -227,6 +227,20 @@
         }
       } catch (e) {}
     </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "lit": "/assets/external/vendor/lit/index.js",
+          "lit/": "/assets/external/vendor/lit/",
+          "lit-html": "/assets/external/vendor/lit-html/lit-html.js",
+          "lit-html/": "/assets/external/vendor/lit-html/",
+          "@lit/reactive-element": "/assets/external/vendor/@lit/reactive-element/reactive-element.js",
+          "@lit/reactive-element/": "/assets/external/vendor/@lit/reactive-element/",
+          "lit-element": "/assets/external/vendor/lit-element/lit-element.js",
+          "lit-element/": "/assets/external/vendor/lit-element/"
+        }
+      }
+    </script>
   </head>
   <body class="backgroundColor">
     <div id="loadScreen">
@@ -2993,21 +3007,6 @@
 
     <!-- skipping for now, add Google Add later :) script src="assets/buy.js"></script-->
 
-    <script defer src="/assets/external/vendor/es-module-shims/es-module-shims.js"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "lit": "/assets/external/vendor/lit/index.js",
-          "lit/": "/assets/external/vendor/lit/",
-          "lit-html": "/assets/external/vendor/lit-html/lit-html.js",
-          "lit-html/": "/assets/external/vendor/lit-html/",
-          "@lit/reactive-element": "/assets/external/vendor/@lit/reactive-element/reactive-element.js",
-          "@lit/reactive-element/": "/assets/external/vendor/@lit/reactive-element/",
-          "lit-element": "/assets/external/vendor/lit-element/lit-element.js",
-          "lit-element/": "/assets/external/vendor/lit-element/"
-        }
-      }
-    </script>
     <script defer type="module" src="/script.js"></script>
     <script type="module" src="/pwa.js"></script>
   </body>
