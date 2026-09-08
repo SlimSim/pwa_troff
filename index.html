@@ -239,7 +239,7 @@
         <h1>Troff</h1>
         <h2>- training with music</h2>
         <p id="loadScreenMessage">loading... <span></span></p>
-        <div style="padding: 20px">
+        <div style="padding: 20px; display: none" id="loadScreenButtonParent">
           <button id="loadScreenUpdate" type="button" title="Update and reload the app">
             Reload
           </button>
@@ -259,6 +259,9 @@
           Service Worker.
         </button>
         <script async>
+          setTimeout(() => {
+            document.getElementById('loadScreenButtonParent').style.display = 'block';
+          }, 3000);
           fetch('/manifest.json')
             .then((res) => res.json())
             .then((manifest) => {
