@@ -411,36 +411,6 @@ describe('SettingsPanel numeric settings integration', () => {
   });
 
   describe('go to marker settings nDB persistence', () => {
-    it('should dispatch setting-changed when enterGoToMarker is toggled', () => {
-      const handler = vi.fn();
-      settingsPanel.addEventListener('setting-changed', handler);
-
-      // @ts-expect-error - accessing private method for testing
-      settingsPanel._toggleSetting('enterGoToMarker', false);
-
-      expect(settingsPanel.enterGoToMarker).toBe(true);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: { setting: 'enterGoToMarker', value: true },
-        })
-      );
-    });
-
-    it('should dispatch setting-changed when spaceGoToMarker is toggled', () => {
-      const handler = vi.fn();
-      settingsPanel.addEventListener('setting-changed', handler);
-
-      // @ts-expect-error - accessing private method for testing
-      settingsPanel._toggleSetting('spaceGoToMarker', false);
-
-      expect(settingsPanel.spaceGoToMarker).toBe(true);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: { setting: 'spaceGoToMarker', value: true },
-        })
-      );
-    });
-
     it('should dispatch setting-changed when playGoToMarker is toggled', () => {
       const handler = vi.fn();
       settingsPanel.addEventListener('setting-changed', handler);
@@ -452,38 +422,6 @@ describe('SettingsPanel numeric settings integration', () => {
       expect(handler).toHaveBeenCalledWith(
         expect.objectContaining({
           detail: { setting: 'playGoToMarker', value: true },
-        })
-      );
-    });
-
-    it('should toggle enterGoToMarker off when already on', () => {
-      settingsPanel.enterGoToMarker = true;
-      const handler = vi.fn();
-      settingsPanel.addEventListener('setting-changed', handler);
-
-      // @ts-expect-error - accessing private method for testing
-      settingsPanel._toggleSetting('enterGoToMarker', true);
-
-      expect(settingsPanel.enterGoToMarker).toBe(false);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: { setting: 'enterGoToMarker', value: false },
-        })
-      );
-    });
-
-    it('should toggle spaceGoToMarker off when already on', () => {
-      settingsPanel.spaceGoToMarker = true;
-      const handler = vi.fn();
-      settingsPanel.addEventListener('setting-changed', handler);
-
-      // @ts-expect-error - accessing private method for testing
-      settingsPanel._toggleSetting('spaceGoToMarker', true);
-
-      expect(settingsPanel.spaceGoToMarker).toBe(false);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: { setting: 'spaceGoToMarker', value: false },
         })
       );
     });
@@ -505,8 +443,6 @@ describe('SettingsPanel numeric settings integration', () => {
     });
 
     it('should have default go to marker values matching new defaults', () => {
-      expect(settingsPanel.enterGoToMarker).toBe(true);
-      expect(settingsPanel.spaceGoToMarker).toBe(false);
       expect(settingsPanel.playGoToMarker).toBe(true);
     });
   });
@@ -560,7 +496,7 @@ describe('SettingsPanel numeric settings integration', () => {
     });
 
     describe('rendered keep screen on toggle in global controls area', () => {
-      it('should render a <t-butt toggle> for "Keep screen on" inside the global controls area (under help-tip before "Behaviour of keys and buttons" details)', () => {
+      it('should render a <t-butt toggle> for "Keep screen on" inside the global controls area (under help-tip before "Behaviour of the Play button" details)', () => {
         // Identify the global controls area by the help-tip that precedes the Behaviour details
         const shells = Array.from(
           settingsPanel.shadowRoot?.querySelectorAll('.settings-shell') ?? []
@@ -901,11 +837,11 @@ describe('SettingsPanel advanced panels use t-details', () => {
     return getDetailsPanels().find((panel) => panel.title === title);
   }
 
-  it('renders t-details panels for Theme, Behaviour of keys and buttons, Marker color, Default Song Values and Advanced Settings', async () => {
+  it('renders t-details panels for Theme, Behaviour of the Play button, Marker color, Default Song Values and Advanced Settings', async () => {
     const titles = getDetailsPanels().map((panel) => panel.title);
     expect(titles).toEqual([
       'Theme',
-      'Behaviour of keys and buttons',
+      'Behaviour of the Play button',
       'Marker color',
       'Default Song Values',
       'Advanced Settings',
@@ -913,7 +849,7 @@ describe('SettingsPanel advanced panels use t-details', () => {
   });
 
   it('renders the correct descriptive text on the other t-details panels', async () => {
-    const keys = findDetailsByTitle('Behaviour of keys and buttons');
+    const keys = findDetailsByTitle('Behaviour of the Play button');
     const color = findDetailsByTitle('Marker color');
     const defaults = findDetailsByTitle('Default Song Values');
     expect(keys).toBeTruthy();
@@ -921,7 +857,7 @@ describe('SettingsPanel advanced panels use t-details', () => {
     expect(defaults).toBeTruthy();
 
     expect(keys?.text).toContain(
-      'Configure what happens when you press the Enter key'
+      'Configure what happens when you press the Play button'
     );
     expect(color?.text).toContain(
       'Control how markers extend their color across the timeline'

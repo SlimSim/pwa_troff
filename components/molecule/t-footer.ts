@@ -369,12 +369,13 @@ export class BottomNav extends LitElement {
           <t-butt
             class="quick-play-button"
             round important slim
+            key=" "
             title="Play from current position"
             @click=${(e: Event) => { e.stopPropagation(); this._handleNavClick(e, 'quick-play'); }}
           >
             <t-icon name="${this.isPlaying ? 'pause' : 'play'}" fullsize></t-icon>
           </t-butt>
-          <t-butt title="Play song" round important key=" ">
+          <t-butt title="Play song" round important key="Enter">
             <div class="play-button-content">
               <div class="reset-icon-overlay">
                 <t-icon name="jump-back" fullSize></t-icon>

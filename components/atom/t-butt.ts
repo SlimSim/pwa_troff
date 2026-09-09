@@ -209,6 +209,8 @@ export class TButt extends LitElement {
 
   private _handleKeyDown(event: KeyboardEvent) {
     if (this.disabled || this._isEditableKeyEvent(event)) return;
+    if (event.isComposing || event.repeat) return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
 
     if (this._confirming && event.key === 'Escape') {
       event.preventDefault();
@@ -216,11 +218,7 @@ export class TButt extends LitElement {
       return;
     }
 
-    if (
-      event.key.toLowerCase() === this.key.toLowerCase() &&
-      event.altKey === this.alt &&
-      event.shiftKey === this.shift
-    ) {
+    if (event.key.toLowerCase() === this.key.toLowerCase()) {
       event.preventDefault();
       (this.shadowRoot?.querySelector('.base') as HTMLElement)?.click();
     }

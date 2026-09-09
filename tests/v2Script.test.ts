@@ -88,25 +88,12 @@ describe('v2Script utilities and related functions', () => {
 
   describe('TROFF constants (actual implementation)', () => {
     it('should have required TROFF setting constants defined', () => {
-      expect(constants.TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR).toBeDefined();
-      expect(constants.TROFF_SETTING_ENTER_RESET_COUNTER).toBeDefined();
-      expect(constants.TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR).toBeDefined();
-      expect(constants.TROFF_SETTING_SPACE_RESET_COUNTER).toBeDefined();
       expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR).toBeDefined();
       expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER).toBeDefined();
     });
 
     it('should have go to marker setting constants defined', () => {
-      expect(constants.TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
-      expect(constants.TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
       expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
-    });
-
-    it('should have correct constant string values', () => {
-      expect(constants.TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR).toBe(
-        'TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR'
-      );
-      expect(constants.TROFF_SETTING_SPACE_RESET_COUNTER).toBe('TROFF_SETTING_SPACE_RESET_COUNTER');
     });
   });
 

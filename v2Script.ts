@@ -57,15 +57,9 @@ import type {
   TroffHistoryList,
 } from './types/troff.d.js';
 import {
-  TROFF_SETTING_ENTER_RESET_COUNTER,
-  TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
-  TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR,
   TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
   TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
   TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
-  TROFF_SETTING_SPACE_RESET_COUNTER,
-  TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
-  TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE,
@@ -1372,12 +1366,6 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsPanel.incrementUntillDisabled = false;
     }
 
-    settingsPanel.enterUseTimer = nDB.get(TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR) ?? true;
-    settingsPanel.enterResetCounter = nDB.get(TROFF_SETTING_ENTER_RESET_COUNTER) ?? true;
-    settingsPanel.enterGoToMarker = nDB.get(TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR) ?? true;
-    settingsPanel.spaceUseTimer = nDB.get(TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR) ?? false;
-    settingsPanel.spaceResetCounter = nDB.get(TROFF_SETTING_SPACE_RESET_COUNTER) ?? false;
-    settingsPanel.spaceGoToMarker = nDB.get(TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR) ?? false;
     settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) ?? true;
     settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) ?? true;
     settingsPanel.playGoToMarker =
@@ -1757,39 +1745,6 @@ document.addEventListener('DOMContentLoaded', () => {
     getActiveMedia().play().catch(console.error);
     updateHeaderCountdownDisplay();
   };
-
-  const handlePlaybackKeyDown = (event: KeyboardEvent) => {
-    if (event.isComposing || event.repeat) {
-      return;
-    }
-
-    if (event.altKey || event.ctrlKey || event.metaKey || isEditableKeyEvent(event)) {
-      return;
-    }
-
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      event.stopPropagation();
-      startPlayback(
-        TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
-        TROFF_SETTING_ENTER_RESET_COUNTER,
-        TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR
-      );
-      return;
-    }
-
-    if (event.key === ' ' || event.key === 'Spacebar') {
-      event.preventDefault();
-      event.stopPropagation();
-      startPlayback(
-        TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
-        TROFF_SETTING_SPACE_RESET_COUNTER,
-        TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR
-      );
-    }
-  };
-
-  document.addEventListener('keydown', handlePlaybackKeyDown, true);
 
   // Keyboard shortcut: n = next marker, Shift+n = previous marker
   const handleMarkerNavigationKeyDown = (event: KeyboardEvent) => {
@@ -2185,12 +2140,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const settingsKeyByPanelSetting: Record<string, string> = {
-        enterUseTimer: TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR,
-        enterResetCounter: TROFF_SETTING_ENTER_RESET_COUNTER,
-        enterGoToMarker: TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR,
-        spaceUseTimer: TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR,
-        spaceResetCounter: TROFF_SETTING_SPACE_RESET_COUNTER,
-        spaceGoToMarker: TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR,
         playUseTimer: TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
         playResetCounter: TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
         playGoToMarker: TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
@@ -2413,15 +2362,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set defaults for global control settings if they have never been stored.
     // This ensures both the UI and the behaviour start with the correct values.
     const defaultsIfUnset: [string, boolean][] = [
-      [TROFF_SETTING_ENTER_USE_TIMER_BEHAVIOUR, true],
-      [TROFF_SETTING_ENTER_RESET_COUNTER, true],
-      [TROFF_SETTING_ENTER_GO_TO_MARKER_BEHAVIOUR, true],
       [TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR, true],
       [TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER, true],
       [TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR, true],
-      [TROFF_SETTING_SPACE_USE_TIMER_BEHAVIOUR, false],
-      [TROFF_SETTING_SPACE_RESET_COUNTER, false],
-      [TROFF_SETTING_SPACE_GO_TO_MARKER_BEHAVIOUR, false],
       [TROFF_SETTING_KEEP_SCREEN_ON, true],
       [TROFF_SETTING_DARK_MODE, false],
       [TROFF_SETTING_PORTRAIT, true],
