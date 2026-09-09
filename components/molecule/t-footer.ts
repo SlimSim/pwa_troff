@@ -94,11 +94,28 @@ export class BottomNav extends LitElement {
     }
 
     .play-button-content {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      width: 3.2rem;
+      height: 3.2rem;
       line-height: 0.9;
+      font-size: 1.4rem;
+    }
+
+    .reset-icon-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      bottom: 2.75px;
+      font-size: 42px;
+    }
+
+    .reset-icon-overlay t-icon {
+      width: 100%;
+      height: 100%;
     }
 
     .play-countdown {
@@ -355,15 +372,13 @@ export class BottomNav extends LitElement {
             title="Play from current position"
             @click=${(e: Event) => { e.stopPropagation(); this._handleNavClick(e, 'quick-play'); }}
           >
-            <t-icon name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
+            <t-icon name="${this.isPlaying ? 'pause' : 'play'}" fullsize></t-icon>
           </t-butt>
           <t-butt title="Play song" round important key=" ">
-            <div
-              class="play-button-content"
-              style=${(this.isStartingPlayback || (this.playUseTimer && !this.isPlaying && !this.disablePauseBefore && this.pauseBefore > 0))
-                ? 'font-size: 1.4rem'
-                : ''}
-            >
+            <div class="play-button-content">
+              <div class="reset-icon-overlay">
+                <t-icon name="jump-back" fullSize></t-icon>
+              </div>
               ${this.isStartingPlayback
                 ? html`<div class="play-countdown">${this.playbackCountdown}</div>`
                 : this.playUseTimer && !this.isPlaying && !this.disablePauseBefore && this.pauseBefore > 0

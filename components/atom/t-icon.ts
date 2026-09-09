@@ -37,7 +37,7 @@ export class TIcon extends LitElement {
     }
 
     .large {
-      font-size: 1.875rem;
+      font-size: 1.5rem;
     }
 
     svg {
