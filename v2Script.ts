@@ -1734,6 +1734,30 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeaderCountdownDisplay();
   };
 
+  const startQuickPlayback = () => {
+    void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
+
+    // If a countdown is running, cancel it and play immediately
+    if (pendingPlaybackStart !== undefined) {
+      clearPendingPlaybackStart();
+      clearPlaybackCountdown();
+      getActiveMedia().play().catch(console.error);
+      updateHeaderCountdownDisplay();
+      return;
+    }
+
+    // If playing, pause immediately (no go-to-marker)
+    if (!getActiveMedia().paused) {
+      getActiveMedia().pause();
+      updateHeaderCountdownDisplay();
+      return;
+    }
+
+    // If paused, play immediately (no delay)
+    getActiveMedia().play().catch(console.error);
+    updateHeaderCountdownDisplay();
+  };
+
   const handlePlaybackKeyDown = (event: KeyboardEvent) => {
     if (event.isComposing || event.repeat) {
       return;
@@ -2436,6 +2460,9 @@ document.addEventListener('DOMContentLoaded', () => {
           TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
           TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR
         );
+      } else if (event.detail.action === 'quick-play') {
+        // Quick play: cancel countdown if running, then play/pause instantly
+        startQuickPlayback();
       }
     });
 

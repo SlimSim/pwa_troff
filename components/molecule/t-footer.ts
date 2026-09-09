@@ -89,6 +89,10 @@ export class BottomNav extends LitElement {
       width: min(280px, calc(100vw - 24px));
     }
 
+    .play-button-wrapper {
+      position: relative;
+    }
+
     .play-button-content {
       display: flex;
       flex-direction: column;
@@ -101,6 +105,14 @@ export class BottomNav extends LitElement {
       font-size: 0.85em;
       font-weight: 700;
     }
+
+    .quick-play-button {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      z-index: 1;
+    }
+
 
     @media (min-width: 768px) {
       .hide-on-wide {
@@ -336,7 +348,15 @@ export class BottomNav extends LitElement {
           </t-dropdown-button>
         </div>
 
-        <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
+        <div class="nav-item play-button-wrapper" @click=${(e: Event) => this._handleNavClick(e, 'play')}>
+          <t-butt
+            class="quick-play-button"
+            round important slim
+            title="Play from current position"
+            @click=${(e: Event) => { e.stopPropagation(); this._handleNavClick(e, 'quick-play'); }}
+          >
+            <t-icon name="${this.isPlaying ? 'pause' : 'play'}"></t-icon>
+          </t-butt>
           <t-butt title="Play song" round important key=" ">
             <div
               class="play-button-content"

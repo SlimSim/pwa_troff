@@ -73,6 +73,15 @@ export class TButt extends LitElement {
       height: 3.2rem;
     }
 
+    /* Style for SLIM + ROUND button (smaller circle) */
+    .base.slim.round {
+      width: 1.8rem;
+      height: 1.8rem;
+      min-width: 1.8rem;
+      min-height: 1.8rem;
+      font-size: 0.75rem;
+    }
+
     /* STYLE for the TOGGLE button */
     :host([toggle]) .base {
       background-color: var(--toggle-button-color, lightgray);
