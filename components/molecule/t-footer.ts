@@ -30,7 +30,6 @@ export class BottomNav extends LitElement {
   @property({ type: Number }) waitBetween = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
   @property({ type: Boolean }) disableWaitBetween = false;
-  @property({ type: Boolean }) playUseTimer = true;
   @property({ type: Number }) songDuration = 0;
 
   connectedCallback() {
@@ -375,20 +374,20 @@ export class BottomNav extends LitElement {
           >
             <t-icon name="${this.isPlaying ? 'pause' : 'play'}" fullsize></t-icon>
           </t-butt>
-          <t-butt title="Play song" round important key="Enter">
+          <t-butt class="main-play-button" title="Play song" round important key="Enter">
             <div class="play-button-content">
               <div class="reset-icon-overlay">
                 <t-icon name="jump-back" fullSize></t-icon>
               </div>
               ${this.isStartingPlayback
                 ? html`<div class="play-countdown">${this.playbackCountdown}</div>`
-                : this.playUseTimer && !this.isPlaying && !this.disablePauseBefore && this.pauseBefore > 0
+                : !this.isPlaying && !this.disablePauseBefore && this.pauseBefore > 0
                   ? html`<div class="play-countdown">${this.pauseBefore}</div>`
                   : ''}
               <t-icon
                 name="${this.isPlaying || this.isStartingPlayback ? 'pause' : 'play'}"
-                ?fullSize=${!!(this.isStartingPlayback || (this.playUseTimer && this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore))}
-                ?large=${!(this.isStartingPlayback || (this.playUseTimer && this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore))}
+                ?fullSize=${!!(this.isStartingPlayback || (this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore))}
+                ?large=${!(this.isStartingPlayback || (this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore))}
               ></t-icon>
             </div>
           </t-butt>

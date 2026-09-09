@@ -244,8 +244,6 @@ describe('Keyboard arrow key functionality', () => {
 
     settingsPanel = document.createElement('div');
     settingsPanel.id = 'settingsPanel';
-    settingsPanel.playUseTimer = false;
-    settingsPanel.playResetCounter = false;
     settingsPanel.visible = false;
     settingsPanel.startBeforeValue = 0;
     settingsPanel.startBeforeDisabled = false;

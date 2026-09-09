@@ -57,9 +57,6 @@ import type {
   TroffHistoryList,
 } from './types/troff.d.js';
 import {
-  TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
-  TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
-  TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE,
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE,
@@ -1303,7 +1300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pauseBeforeSeconds =
-      footer && !footer.disablePauseBefore && footer.playUseTimer !== false
+      footer && !footer.disablePauseBefore
         ? Math.max(0, footer.pauseBefore ?? 0)
         : 0;
     header.statusCountdown = `${pauseBeforeSeconds}s`;
@@ -1366,10 +1363,6 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsPanel.incrementUntillDisabled = false;
     }
 
-    settingsPanel.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) ?? true;
-    settingsPanel.playResetCounter = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) ?? true;
-    settingsPanel.playGoToMarker =
-      nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR) ?? true;
     settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
     void updateWakeLockForPlayback(false, false);
     settingsPanel.darkMode = nDB.get(TROFF_SETTING_DARK_MODE) ?? false;
@@ -1635,8 +1628,8 @@ document.addEventListener('DOMContentLoaded', () => {
     clearPlaybackCountdown();
   };
 
-  const getPauseBeforeDelay = (settingKey: string) => {
-    if (!footer || !nDB.get(settingKey) || footer.disablePauseBefore) {
+  const getPauseBeforeDelay = () => {
+    if (!footer || footer.disablePauseBefore) {
       return 0;
     }
 
@@ -1682,43 +1675,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }, delay);
   };
 
-  // Default to true (reset counter) when the setting has never been stored
-  const shouldResetLoopCounter = (settingKey: string) => nDB.get(settingKey) === true;
+  const seekToStartMarker = () => {
+    const startTime = markerSlider.getPlaybackStart();
+    if (Number.isFinite(startTime)) {
+      getActiveMedia().currentTime = startTime;
+    }
+  };
 
-  const startPlayback = (
-    timerSettingKey: string,
-    resetCounterSettingKey: string,
-    goToMarkerSettingKey?: string
-  ) => {
+  const startPlayback = () => {
     void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
     if (pendingPlaybackStart !== undefined) {
-      if (shouldResetLoopCounter(resetCounterSettingKey)) {
-        resetLoopTimesCounter();
-      }
+      resetLoopTimesCounter();
       clearPendingPlaybackStart();
       updateHeaderCountdownDisplay();
       return;
     }
 
     if (!getActiveMedia().paused) {
-      if (shouldResetLoopCounter(resetCounterSettingKey)) {
-        resetLoopTimesCounter();
-      }
-
-      // If "go to marker" is enabled, seek to the start marker time when pausing
-      if (goToMarkerSettingKey && nDB.get(goToMarkerSettingKey) === true) {
-        const startTime = markerSlider.getPlaybackStart();
-        if (Number.isFinite(startTime)) {
-          getActiveMedia().currentTime = startTime;
-        }
-      }
-
+      resetLoopTimesCounter();
+      seekToStartMarker();
       getActiveMedia().pause();
       updateHeaderCountdownDisplay();
       return;
     }
 
-    schedulePlaybackAfterDelay(getPauseBeforeDelay(timerSettingKey));
+    seekToStartMarker();
+    schedulePlaybackAfterDelay(getPauseBeforeDelay());
     updateHeaderCountdownDisplay();
   };
 
@@ -2140,9 +2122,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const settingsKeyByPanelSetting: Record<string, string> = {
-        playUseTimer: TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
-        playResetCounter: TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
-        playGoToMarker: TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR,
         extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
         keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
@@ -2160,9 +2139,6 @@ document.addEventListener('DOMContentLoaded', () => {
       nDB.set(storageKey, value === true ? true : value);
       if (setting === 'keepScreenOn') {
         void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
-      }
-      if (setting === 'playUseTimer' && footer) {
-        footer.playUseTimer = value === true;
       }
       if (setting === 'darkMode') {
         if (value === true) {
@@ -2362,9 +2338,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set defaults for global control settings if they have never been stored.
     // This ensures both the UI and the behaviour start with the correct values.
     const defaultsIfUnset: [string, boolean][] = [
-      [TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR, true],
-      [TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER, true],
-      [TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR, true],
       [TROFF_SETTING_KEEP_SCREEN_ON, true],
       [TROFF_SETTING_DARK_MODE, false],
       [TROFF_SETTING_PORTRAIT, true],
@@ -2398,11 +2371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for nav-click events
     footer.addEventListener('nav-click', (event: any) => {
       if (event.detail.action === 'play') {
-        startPlayback(
-          TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR,
-          TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER,
-          TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR
-        );
+        startPlayback();
       } else if (event.detail.action === 'quick-play') {
         // Quick play: cancel countdown if running, then play/pause instantly
         startQuickPlayback();

@@ -11,9 +11,6 @@ import '../atom/t-icon.js';
 
 type ToggleSetting =
   | 'playFullSong'
-  | 'playUseTimer'
-  | 'playResetCounter'
-  | 'playGoToMarker'
   | 'extendedMarkerColor'
   | 'extraExtendedMarkerColor'
   | 'keepScreenOn'
@@ -375,9 +372,6 @@ export class SettingsPanel extends LitElement {
   @property({ type: Number }) defaultSpeedValue = 100;
 
   // Global controls (app-wide settings)
-  @property({ type: Boolean }) playUseTimer = true;
-  @property({ type: Boolean }) playResetCounter = true;
-  @property({ type: Boolean }) playGoToMarker = true;
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
   @property({ type: Boolean }) keepScreenOn = true;
@@ -509,15 +503,6 @@ export class SettingsPanel extends LitElement {
     switch (setting) {
       case 'playFullSong':
         this.playFullSong = nextValue;
-        break;
-      case 'playUseTimer':
-        this.playUseTimer = nextValue;
-        break;
-      case 'playResetCounter':
-        this.playResetCounter = nextValue;
-        break;
-      case 'playGoToMarker':
-        this.playGoToMarker = nextValue;
         break;
       case 'extendedMarkerColor':
         this.extendedMarkerColor = nextValue;
@@ -699,47 +684,6 @@ export class SettingsPanel extends LitElement {
                 >
                   Dark mode
                 </t-butt>
-              </div>
-            </t-details>
-
-            <t-details
-              title="Behaviour of the Play button"
-              class="settings-width"
-              text="Configure what happens when you press the Play button (or Enter key)."
-            >
-              <div class="settings-section">
-                <h3>Play Button</h3>
-                <div class="settings-grid">
-                  <div class="setting-item">
-                    <div class="action-buttons">
-                      <t-butt
-                        toggle
-                        ellipsis
-                        .active=${this.playGoToMarker}
-                        @click=${() => this._toggleSetting('playGoToMarker', this.playGoToMarker)}
-                      >
-                        Go to marker
-                      </t-butt>
-                      <t-butt
-                        toggle
-                        ellipsis
-                        .active=${this.playUseTimer}
-                        @click=${() => this._toggleSetting('playUseTimer', this.playUseTimer)}
-                      >
-                        Use timer
-                      </t-butt>
-                      <t-butt
-                        toggle
-                        ellipsis
-                        .active=${this.playResetCounter}
-                        @click=${() =>
-                          this._toggleSetting('playResetCounter', this.playResetCounter)}
-                      >
-                        Reset counter
-                      </t-butt>
-                    </div>
-                  </div>
-                </div>
               </div>
             </t-details>
 

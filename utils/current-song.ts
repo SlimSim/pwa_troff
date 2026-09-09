@@ -1,5 +1,4 @@
 import { nDB } from '../assets/internal/db.js';
-import { TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR } from '../constants/constants.js';
 import { getSongMetadata } from './song.js';
 
 /**
@@ -88,7 +87,6 @@ export function updateFooterWithCurrentSong() {
       } else {
         footer.incrementUntillDisabled = songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil !== true;
       }
-      footer.playUseTimer = nDB.get(TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) ?? true;
     }
   }
 }

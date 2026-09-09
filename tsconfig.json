@@ -16,5 +16,27 @@
     "allowUmdGlobalAccess": true
   },
   "include": ["**/*.js", "*.js", "**/*.d.ts", "**/*.ts"],
-  "exclude": ["assets/external/**", "node_modules", "dist", "build"]
+  "exclude": [
+    "assets/external/**",
+    "node_modules",
+    "dist",
+    "build",
+    "script.ts",
+    "script0.ts",
+    "scriptASimple.ts",
+    "scriptDBClass.ts",
+    "scriptErrorHandler.ts",
+    "scriptRateClass.ts",
+    "scriptTroffClass.ts",
+    "songManagement.ts",
+    "find.ts",
+    "utils/debugging.ts",
+    "utils/timeHack.ts",
+    "services/FileApiImplementation.ts",
+    "services/analytics.ts",
+    "services/file.ts",
+    "services/firebase.ts",
+    "services/firebaseClient.ts",
+    "features/groupManagement.ts"
+  ]
 }

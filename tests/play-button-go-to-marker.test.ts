@@ -112,9 +112,6 @@ describe('play button "go to marker" behavior', () => {
     // Create settings panel as plain div
     settingsPanel = document.createElement('div');
     settingsPanel.id = 'settingsPanel';
-    settingsPanel.playGoToMarker = false;
-    settingsPanel.playUseTimer = false;
-    settingsPanel.playResetCounter = false;
     document.body.appendChild(settingsPanel);
 
     // Create header as plain div
@@ -167,21 +164,14 @@ describe('play button "go to marker" behavior', () => {
     document.body.innerHTML = '';
   });
 
-  describe('when playGoToMarker is enabled', () => {
+  describe('play button always seeks to start marker', () => {
     beforeEach(() => {
-      // Set up nDB to return playGoToMarker = true
+      // Set up nDB to return settings
       nDBGetMock.mockImplementation((key: string) => {
         // Check per-test overrides first
         if (key in nDBOverrides) return nDBOverrides[key];
-        // Always return true for any GO_TO_MARKER key to ensure the condition passes
         if (key.includes('GO_TO_MARKER')) {
           return true;
-        }
-        if (key === constants.TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR) {
-          return false;
-        }
-        if (key === constants.TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER) {
-          return false;
         }
         if (key === constants.TROFF_SETTING_EXTENDED_MARKER_COLOR) {
           return false;
@@ -289,9 +279,6 @@ describe('play button "go to marker" behavior', () => {
       // Audio should have sought to the marker start minus startBefore (30 - 5 = 25) on init
       expect(audioMock.currentTime).toBe(25);
 
-      // Enable playGoToMarker setting
-      settingsPanel.playGoToMarker = true;
-
       // Click the play button in footer
       footer.dispatchEvent(
         new CustomEvent('nav-click', {
@@ -330,8 +317,6 @@ describe('play button "go to marker" behavior', () => {
       // Audio should have sought to the marker start time (30 - 0 = 30) on init
       expect(audioMock.currentTime).toBe(30);
 
-      settingsPanel.playGoToMarker = true;
-
       // Click the play button in footer
       footer.dispatchEvent(
         new CustomEvent('nav-click', {
@@ -348,45 +333,6 @@ describe('play button "go to marker" behavior', () => {
       expect(audioMock.currentTime).toBe(30);
     });
 
-    it('should not seek when playGoToMarker is disabled', async () => {
-      markerSlider.markers = [
-        { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
-        { id: 'markerNr1', name: 'End', time: 90, info: '', color: 'None' },
-      ];
-      markerSlider.startMarkerId = 'markerNr0';
-      markerSlider.stopMarkerId = 'markerNr1S';
-      markerSlider.startBefore = 5;
-      // Return 0 initially so updateMarkerSlider doesn't seek on init
-      markerSlider.getPlaybackStart = vi.fn(() => 0);
-
-      await import('../v2Script.js');
-      document.dispatchEvent(new Event('DOMContentLoaded'));
-
-      await new Promise((r) => setTimeout(r, 0));
-
-      // playGoToMarker is disabled — override nDB to return false
-      nDBOverrides[constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR] = false;
-      settingsPanel.playGoToMarker = false;
-
-      // Now set the expected value for the play button click
-      markerSlider.getPlaybackStart = vi.fn(() => 25);
-
-      expect(audioMock.currentTime).toBe(0);
-
-      footer.dispatchEvent(
-        new CustomEvent('nav-click', {
-          detail: { action: 'play' },
-          bubbles: true,
-          composed: true,
-        })
-      );
-
-      await new Promise((r) => setTimeout(r, 0));
-
-      // Should NOT seek to marker, stay at 0
-      expect(audioMock.currentTime).toBe(0);
-    });
-
     it('should not seek when no start marker is selected', async () => {
       markerSlider.markers = [
         { id: 'markerNr0', name: 'Start', time: 30, info: '', color: 'None' },
@@ -401,8 +347,6 @@ describe('play button "go to marker" behavior', () => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
       await new Promise((r) => setTimeout(r, 0));
-
-      settingsPanel.playGoToMarker = true;
 
       // Now set the expected value for the play button click
       markerSlider.getPlaybackStart = vi.fn(() => 0);
@@ -438,8 +382,6 @@ describe('play button "go to marker" behavior', () => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
 
       await new Promise((r) => setTimeout(r, 0));
-
-      settingsPanel.playGoToMarker = true;
 
       // Now set the expected value for the play button click (clamped at 0)
       markerSlider.getPlaybackStart = vi.fn(() => 0); // Math.max(3 - 10, 0) = 0

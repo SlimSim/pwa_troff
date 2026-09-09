@@ -410,43 +410,6 @@ describe('SettingsPanel numeric settings integration', () => {
     });
   });
 
-  describe('go to marker settings nDB persistence', () => {
-    it('should dispatch setting-changed when playGoToMarker is toggled', () => {
-      const handler = vi.fn();
-      settingsPanel.addEventListener('setting-changed', handler);
-
-      // @ts-expect-error - accessing private method for testing
-      settingsPanel._toggleSetting('playGoToMarker', false);
-
-      expect(settingsPanel.playGoToMarker).toBe(true);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: { setting: 'playGoToMarker', value: true },
-        })
-      );
-    });
-
-    it('should toggle playGoToMarker off when already on', () => {
-      settingsPanel.playGoToMarker = true;
-      const handler = vi.fn();
-      settingsPanel.addEventListener('setting-changed', handler);
-
-      // @ts-expect-error - accessing private method for testing
-      settingsPanel._toggleSetting('playGoToMarker', true);
-
-      expect(settingsPanel.playGoToMarker).toBe(false);
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: { setting: 'playGoToMarker', value: false },
-        })
-      );
-    });
-
-    it('should have default go to marker values matching new defaults', () => {
-      expect(settingsPanel.playGoToMarker).toBe(true);
-    });
-  });
-
   describe('keep screen on setting (syncs like extendedMarkerColor)', () => {
     describe('default property values', () => {
       it('should have default keepScreenOn of true', () => {
@@ -837,11 +800,10 @@ describe('SettingsPanel advanced panels use t-details', () => {
     return getDetailsPanels().find((panel) => panel.title === title);
   }
 
-  it('renders t-details panels for Theme, Behaviour of the Play button, Marker color, Default Song Values and Advanced Settings', async () => {
+  it('renders t-details panels for Theme, Marker color, Default Song Values and Advanced Settings', async () => {
     const titles = getDetailsPanels().map((panel) => panel.title);
     expect(titles).toEqual([
       'Theme',
-      'Behaviour of the Play button',
       'Marker color',
       'Default Song Values',
       'Advanced Settings',
@@ -849,16 +811,11 @@ describe('SettingsPanel advanced panels use t-details', () => {
   });
 
   it('renders the correct descriptive text on the other t-details panels', async () => {
-    const keys = findDetailsByTitle('Behaviour of the Play button');
     const color = findDetailsByTitle('Marker color');
     const defaults = findDetailsByTitle('Default Song Values');
-    expect(keys).toBeTruthy();
     expect(color).toBeTruthy();
     expect(defaults).toBeTruthy();
 
-    expect(keys?.text).toContain(
-      'Configure what happens when you press the Play button'
-    );
     expect(color?.text).toContain(
       'Control how markers extend their color across the timeline'
     );

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { formatDuration } from '../utils/formatters.js';
-import * as constants from '../constants/constants.js';
 
 // Shared holder so the hoisted firebaseClient mock can capture the
 // onAuthStateChanged callback for tests that trigger the sign-in flow.
@@ -83,17 +82,6 @@ describe('v2Script utilities and related functions', () => {
     it('should round down seconds', () => {
       expect(formatDuration(30.9)).toBe('0:30');
       expect(formatDuration(60.7)).toBe('1:00');
-    });
-  });
-
-  describe('TROFF constants (actual implementation)', () => {
-    it('should have required TROFF setting constants defined', () => {
-      expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_USE_TIMER_BEHAVIOUR).toBeDefined();
-      expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_RESET_COUNTER).toBeDefined();
-    });
-
-    it('should have go to marker setting constants defined', () => {
-      expect(constants.TROFF_SETTING_PLAY_UI_BUTTON_GO_TO_MARKER_BEHAVIOUR).toBeDefined();
     });
   });
 
