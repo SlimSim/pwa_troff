@@ -274,16 +274,16 @@
         </button>
         <script async>
           setTimeout(() => {
-            document.getElementById('loadScreenButtonParent').style.display = 'block';
+            document.getElementById('loadScreenButtonParent')?.style.setProperty('display', 'block');
           }, 3000);
           fetch('/manifest.json')
             .then((res) => res.json())
             .then((manifest) => {
-              document.getElementById('loadScreenMessage').textContent =
+              document.getElementById('loadScreenMessage')?.textContent =
                 'loading version ' + manifest.version;
             })
             .catch((error) => {
-              document.getElementById('loadScreenMessage').textContent =
+              document.getElementById('loadScreenMessage')?.textContent =
                 "loading... <can't get version number>";
             });
           function updateApp() {
@@ -291,12 +291,12 @@
               updatePWA();
             });
           }
-          document.getElementById('loadScreenUpdate').addEventListener('click', () => {
+          document.getElementById('loadScreenUpdate')?.addEventListener('click', () => {
             updateApp();
           });
-          document.getElementById('loadScreenReset').addEventListener('click', () => {
-            document.getElementById('loadScreenConfirmReset').style.display = 'block';
-            document.getElementById('loadScreenReset').style.display = 'none';
+          document.getElementById('loadScreenReset')?.addEventListener('click', () => {
+            document.getElementById('loadScreenConfirmReset')?.style.display = 'block';
+            document.getElementById('loadScreenReset')?.style.display = 'none';
           });
           async function hardReset() {
             try {
@@ -355,7 +355,7 @@
             }
           }
 
-          document.getElementById('loadScreenConfirmReset').addEventListener('click', hardReset);
+          document.getElementById('loadScreenConfirmReset')?.addEventListener('click', hardReset);
         </script>
       </div>
       <div class="f2"></div>
