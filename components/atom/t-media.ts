@@ -14,8 +14,8 @@ export class MediaItem extends LitElement {
     .media-container {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      padding: 12px 16px;
+      gap: 8px;
+      padding: 8px 12px;
       border-left: 4px solid transparent;
       border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
@@ -69,8 +69,13 @@ export class MediaItem extends LitElement {
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+      50% {
+        opacity: 1;
+      }
     }
 
     .media-container.active {
@@ -99,8 +104,8 @@ export class MediaItem extends LitElement {
 
     /* Album Art Section */
     .album-art {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       background-color: var(--album-art-background, var(--gray-out, rgba(255, 255, 255, 0.2)));
       color: var(--on-album-art-background, var(--on-gray-out, #595959));
       border-radius: 4px;
@@ -108,7 +113,7 @@ export class MediaItem extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       overflow: hidden;
     }
 
@@ -170,7 +175,7 @@ export class MediaItem extends LitElement {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .media-title {
@@ -209,13 +214,13 @@ export class MediaItem extends LitElement {
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .media-container {
-        gap: 16px;
-        padding: 14px 20px;
+        gap: 12px;
+        padding: 8px 16px;
       }
 
       .album-art {
-        width: 56px;
-        height: 56px;
+        width: 48px;
+        height: 48px;
       }
 
       .star-rating {
@@ -223,12 +228,12 @@ export class MediaItem extends LitElement {
       }
 
       .play-stats {
-        gap: 4px;
+        gap: 3px;
       }
 
       .play-circle {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         font-size: 0.7rem;
       }
 
@@ -448,7 +453,10 @@ export class MediaItem extends LitElement {
           : ''}
         ${!this.downloaded
           ? html`<div class="download-progress-bar">
-              <div class="fill" style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"></div>
+              <div
+                class="fill"
+                style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"
+              ></div>
               <span class="progress-label">
                 ${this.downloadProgress >= 0
                   ? `Downloading ${this.downloadProgress}%`

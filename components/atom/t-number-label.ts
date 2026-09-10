@@ -11,13 +11,13 @@ export class NumberLabel extends LitElement {
     }
 
     .number-circle {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       color: var(--on-theme-color, #ffffff);
       font-weight: 500;
     }
@@ -37,9 +37,9 @@ export class NumberLabel extends LitElement {
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .number-circle {
-        width: 22px;
-        height: 22px;
-        font-size: 0.65rem;
+        width: 20px;
+        height: 20px;
+        font-size: 0.6rem;
       }
     }
   `;
