@@ -1,14 +1,14 @@
 // Centralized Firebase initialization and exports for both main app and admin
 // v9 modular SDK via CDN
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
-} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
 import {
   getFirestore,
   doc,
@@ -22,7 +22,7 @@ import {
   updateDoc,
   addDoc,
   onSnapshot,
-} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import {
   getStorage,
   ref,
@@ -30,7 +30,7 @@ import {
   deleteObject,
   uploadBytesResumable,
   getDownloadURL,
-} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js';
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js';
 
 import { environment } from '../assets/internal/environment.js';
 import { COOKIE_CONSENT_ACCEPTED } from '../assets/internal/cookie_consent.js';
@@ -61,7 +61,7 @@ async function loadAnalytics(): Promise<any> {
     // Dynamically import analytics module
     const { initializeAnalytics, logEvent, setAnalyticsCollectionEnabled } = await import(
       //@ts-ignore
-      'https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js'
+      'https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js'
     );
 
     eventLogger = logEvent;
@@ -86,7 +86,7 @@ async function enableAnalyticsIfConsented(): Promise<void> {
     if (analytics) {
       const { setAnalyticsCollectionEnabled } = await import(
         //@ts-ignore
-        'https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js'
+        'https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js'
       );
       setAnalyticsCollectionEnabled(analytics, false);
     }
@@ -98,7 +98,7 @@ async function enableAnalyticsIfConsented(): Promise<void> {
   if (analyticsInstance) {
     const { setAnalyticsCollectionEnabled } = await import(
       //@ts-ignore
-      'https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js'
+      'https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js'
     );
     setAnalyticsCollectionEnabled(analyticsInstance, true);
   }

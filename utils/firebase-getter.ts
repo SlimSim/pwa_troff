@@ -97,10 +97,10 @@ export async function getFirestore(): Promise<FirestoreHandle> {
     };
 
     const firebaseApp = (await import(
-      'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js'
+      'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js'
     )) as unknown as FirebaseAppModule;
     const firebaseFirestore = (await import(
-      'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js'
+      'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js'
     )) as unknown as FirebaseFirestoreModule;
 
     const initializeApp = firebaseApp.initializeApp as (config: FirebaseConfig, name: string) => unknown;

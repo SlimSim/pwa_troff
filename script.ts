@@ -311,8 +311,11 @@ const replaceTroffDataWithoutInterupt = function (songData: DocumentData) {
   }
 
   // Update the current marker info:
-  if (!$('#markerInfoArea').is(':focus')) {
-    $('#markerInfoArea').val(($('#' + currentMarkerId)[0] as TroffHtmlMarkerElement).info);
+  const markerElement = currentMarkerId
+    ? ($('#' + currentMarkerId)[0] as TroffHtmlMarkerElement | undefined)
+    : undefined;
+  if (!$('#markerInfoArea').is(':focus') && markerElement) {
+    $('#markerInfoArea').val(markerElement.info);
   }
 };
 
