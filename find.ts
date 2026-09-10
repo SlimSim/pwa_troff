@@ -68,7 +68,7 @@ $(document).ready(async function () {
 
   let firebaseUser: User | null = null;
   let serverSongListHistory: ServerSong[];
-  let allPublicTroffDataFromServer: PublicTroffDataFromServer[];
+  let allPublicTroffDataFromServer: PublicTroffDataFromServer[] = [];
 
   const googleSignIn = async function () {
     try {
