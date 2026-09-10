@@ -638,7 +638,7 @@ class DBClass {
 
       Troff.setUrlToSong(song.serverId, songId);
 
-      Troff.addMarkers(song.markers);
+      Troff.addMarkers(song.markers || []);
       Troff.selectMarker(song.currentStartMarker);
       Troff.selectStopMarker(song.currentStopMarker);
       Troff.setMood('pause');

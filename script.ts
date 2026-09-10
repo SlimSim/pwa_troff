@@ -298,7 +298,7 @@ const replaceTroffDataWithoutInterupt = function (songData: DocumentData) {
   const currentMarkerId = $('.currentMarker').attr('id');
   const currentStopMarkerId = $('.currentStopMarker').attr('id');
   $('#markerList').children().remove();
-  Troff.addMarkers(serverTroffData.markers);
+  Troff.addMarkers(serverTroffData.markers || []);
   $('.currentMarker').removeClass('currentMarker');
   $('.currentStopMarker').removeClass('currentStopMarker');
   $('#' + currentMarkerId).addClass('currentMarker');

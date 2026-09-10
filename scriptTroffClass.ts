@@ -2242,6 +2242,8 @@ class TroffClass {
   };
 
   addMarkers = (aMarkers: TroffMarker[]) => {
+    if (!aMarkers) return;
+
     var startM = (event: MouseEvent) => {
       this.selectMarker((event.currentTarget as HTMLInputElement).id);
       blurHack();
@@ -2257,6 +2259,8 @@ class TroffClass {
 
     for (var i = 0; i < aMarkers.length; i++) {
       var oMarker = aMarkers[i];
+      if (!oMarker) continue;
+
       var name = oMarker.name;
       var time = Number(oMarker.time);
       var info = oMarker.info;
@@ -2309,18 +2313,23 @@ class TroffClass {
       var bInserted = false;
       var bContinue = false;
       while (child) {
-        var childTime = parseFloat(child.childNodes[2].timeValue);
+        var childNode2 = child.childNodes[2];
+        if (!childNode2) {
+          child = child.nextSibling;
+          continue;
+        }
+        var childTime = parseFloat(childNode2.timeValue);
         if (childTime !== undefined && Math.abs(time - childTime) < 0.001) {
-          var markerId = child.childNodes[2].id;
+          var markerId = childNode2.id;
 
-          if (child.childNodes[2].info != info) {
-            var newMarkerInfo = child.childNodes[2].info + '\n\n' + info;
+          if (childNode2.info != info) {
+            var newMarkerInfo = childNode2.info + '\n\n' + info;
             ($('#' + markerId)[0] as any).info = newMarkerInfo;
-            if ($('.currentMarker')[0]?.id == child.childNodes[2].id)
+            if ($('.currentMarker')[0]?.id == childNode2.id)
               $('#markerInfoArea').val(newMarkerInfo);
           }
-          if (child.childNodes[2].value != name) {
-            var newMarkerName = child.childNodes[2].value + ', ' + name;
+          if (childNode2.value != name) {
+            var newMarkerName = childNode2.value + ', ' + name;
             $('#' + markerId).val(newMarkerName);
           }
 
