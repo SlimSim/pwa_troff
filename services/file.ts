@@ -173,14 +173,36 @@ $(() => {
   };
 
   fileHandler.fetchAndSaveResponse = async (fileUrl, songKey) => {
-    const response = await fetch(fileUrl);
-    if (!response.ok || response.body == null || response.headers == null) {
+    const maxRetries = 3;
+    let response: Response | undefined;
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        response = await fetch(fileUrl);
+        if (response.ok && response.body != null && response.headers != null) {
+          break;
+        }
+      } catch (err) {
+        lastError = err;
+        response = undefined;
+      }
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000;
+        log.d(`fetchAndSaveResponse retry ${attempt + 1}/${maxRetries} for ${songKey} in ${delay}ms`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+    if (!response || !response.ok || response.body == null || response.headers == null) {
+      const status = response?.status ?? 0;
+      const statusText = response?.statusText ?? 'Network error';
       log.e('fileHandler.fetchAndSaveResponse fetch failed', {
         songKey,
-        status: response.status,
-        statusText: response.statusText,
+        status,
+        statusText,
       });
-      throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
+      const error = new Error(`Fetch failed for ${songKey}: ${statusText}`) as Error & { status: number };
+      error.status = status;
+      throw error;
     }
     const contentLength = Number(response.headers.get('Content-Length'));
     const headerContentType = response.headers.get('Content-Type');

@@ -234,7 +234,8 @@ describe('downloadSongFromHash', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null when fetch to file URL fails', async () => {
+  it('returns null when fetch to file URL throws', async () => {
+    vi.useFakeTimers();
     mockNdbGet.mockReturnValue(null);
     mockGetDoc.mockResolvedValue({
       exists: () => true,
@@ -253,11 +254,16 @@ describe('downloadSongFromHash', () => {
       new Error('Network error')
     );
 
-    const result = await downloadSongFromHash('#1&fail.mp3');
+    const promise = downloadSongFromHash('#1&fail.mp3');
+    // Advance through retries: 1s + 2s + 4s = 7s
+    await vi.advanceTimersByTimeAsync(7000);
+    const result = await promise;
     expect(result).toBeNull();
+    vi.useRealTimers();
   });
 
-  it('returns null when fetch response is not ok', async () => {
+  it('returns null when fetch response is not ok after retries', async () => {
+    vi.useFakeTimers();
     mockNdbGet.mockReturnValue(null);
     mockGetDoc.mockResolvedValue({
       exists: () => true,
@@ -276,8 +282,18 @@ describe('downloadSongFromHash', () => {
       new Response('Not Found', { status: 404 })
     );
 
-    const result = await downloadSongFromHash('#2&fail.mp3');
+    const promise = downloadSongFromHash('#2&fail.mp3');
+
+    // Advance through all retries
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.advanceTimersByTimeAsync(4000);
+
+    const result = await promise;
     expect(result).toBeNull();
+    // 1 initial + 3 retries = 4 calls
+    expect(globalThis.fetch).toHaveBeenCalledTimes(4);
+    vi.useRealTimers();
   });
 
   it('updates download history when song already has history entries', async () => {
@@ -366,5 +382,271 @@ describe('downloadSongFromHash', () => {
     expect(historyCall).toBeDefined();
     expect(historyCall![1]).toHaveLength(1);
     expect(historyCall![1][0].troffDataIdObjectList).toHaveLength(1);
+  });
+
+  // Helper: set up nDB + Firestore mocks for a new song download that reaches fetchAndCacheFile
+  function setupDownloadToFetchPoint(
+    troffId: number,
+    fileUrl: string,
+    fileName: string
+  ) {
+    mockNdbGet.mockImplementation((key: string) => {
+      if (key === fileName) return null;
+      if (key === 'TROFF_TROFF_DATA_ID_AND_FILE_NAME') return [];
+      return null;
+    });
+    mockNdbSet.mockResolvedValue(undefined);
+
+    mockGetDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        fileName,
+        fileUrl,
+        fileSize: 0,
+        fileType: 'audio/mpeg',
+        id: troffId,
+        markerJsonString: '{"markers":[],"fileData":{}}',
+        troffDataPublic: true,
+        troffDataUploadedMillis: Date.now(),
+      }),
+    });
+  }
+
+  // --------------- Retry logic (fetchAndCacheFile) ---------------
+
+  describe('fetchAndCacheFile retry logic', () => {
+    it('retries on non-ok response and succeeds on the second attempt', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(10, 'https://example.com/retry1.mp3', 'retry1.mp3');
+
+      const okResponse = new Response('data', { status: 200 });
+      const failResponse = new Response('Server Error', { status: 500, statusText: 'Internal Server Error' });
+
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce(failResponse).mockResolvedValueOnce(okResponse);
+
+      const promise = downloadSongFromHash('#10&retry1.mp3');
+
+      // Let the setTimeout resolve — first retry has 1000ms delay (2^0 * 1000)
+      await vi.advanceTimersByTimeAsync(1000);
+
+      const result = await promise;
+      expect(result).toBe('retry1.mp3');
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
+    });
+
+    it('does not retry past maxRetries (3) and throws', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(12, 'https://example.com/retry3.mp3', 'retry3.mp3');
+
+      const failResponse = new Response('Server Error', { status: 500, statusText: 'Internal Server Error' });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      // Always fail: attempt 0, 1, 2, 3 = 4 calls total
+      fetchMock.mockResolvedValue(failResponse);
+
+      const promise = downloadSongFromHash('#12&retry3.mp3');
+
+      // Advance through all retries: 1000ms + 2000ms + 4000ms
+      await vi.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBeNull();
+      // 1 initial + 3 retries = 4 calls
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+      vi.useRealTimers();
+    });
+
+    it('uses exponential backoff delays (1s, 2s, 4s)', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(13, 'https://example.com/backoff.mp3', 'backoff.mp3');
+
+      const failResponse = new Response('Error', { status: 503, statusText: 'Service Unavailable' });
+      const okResponse = new Response('data', { status: 200 });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce(failResponse)   // attempt 0 → retry after 1s
+        .mockResolvedValueOnce(failResponse)            // attempt 1 → retry after 2s
+        .mockResolvedValueOnce(failResponse)            // attempt 2 → retry after 4s
+        .mockResolvedValueOnce(okResponse);             // attempt 3 → success
+
+      const promise = downloadSongFromHash('#13&backoff.mp3');
+
+      // Attempt 0 fails, timer for 1s (2^0 * 1000)
+      await vi.advanceTimersByTimeAsync(1000);
+      // Attempt 1 fails, timer for 2s (2^1 * 1000)
+      await vi.advanceTimersByTimeAsync(2000);
+      // Attempt 2 fails, timer for 4s (2^2 * 1000)
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBe('backoff.mp3');
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+      vi.useRealTimers();
+    });
+
+    it('does not retry when the first attempt succeeds', async () => {
+      setupDownloadToFetchPoint(14, 'https://example.com/first-ok.mp3', 'first-ok.mp3');
+
+      const okResponse = new Response('data', { status: 200 });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValue(okResponse);
+
+      const result = await downloadSongFromHash('#14&first-ok.mp3');
+      expect(result).toBe('first-ok.mp3');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('carries the HTTP status code on the thrown error after retries exhausted', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(15, 'https://example.com/status.mp3', 'status.mp3');
+
+      const failResponse = new Response('Not Found', { status: 404, statusText: 'Not Found' });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValue(failResponse);
+
+      const promise = downloadSongFromHash('#15&status.mp3');
+
+      // Advance through all retries
+      await vi.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBeNull();
+      // The error message in the alert should contain the status code info
+      expect(window.alert).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+
+  // --------------- 404 error handling ---------------
+
+  describe('downloadSongFromHash 404 error handling', () => {
+    it('shows "could not be found on the server" when fetch returns 404', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(20, 'https://example.com/404-song.mp3', '404-song.mp3');
+
+      const notFoundResponse = new Response('Not Found', { status: 404, statusText: 'Not Found' });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValue(notFoundResponse);
+
+      const promise = downloadSongFromHash('#20&404-song.mp3');
+
+      // Advance through all retries
+      await vi.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBeNull();
+
+      // The alert should mention the song not being found on the server
+      const alertCalls = (window.alert as ReturnType<typeof vi.fn>).mock.calls;
+      expect(alertCalls.length).toBeGreaterThan(0);
+      const lastAlert = alertCalls[alertCalls.length - 1][0] as string;
+      expect(lastAlert).toContain('could not be found on the server');
+      vi.useRealTimers();
+    });
+
+    it('shows "temporary issue" for non-404 errors after retries exhausted', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(21, 'https://example.com/server-error.mp3', 'server-error.mp3');
+
+      const serverErrorResponse = new Response('Server Error', {
+        status: 500,
+        statusText: 'Internal Server Error',
+      });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValue(serverErrorResponse);
+
+      const promise = downloadSongFromHash('#21&server-error.mp3');
+
+      // Advance through all retries
+      await vi.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBeNull();
+
+      // The alert should mention a temporary issue
+      const alertCalls = (window.alert as ReturnType<typeof vi.fn>).mock.calls;
+      expect(alertCalls.length).toBeGreaterThan(0);
+      const lastAlert = alertCalls[alertCalls.length - 1][0] as string;
+      expect(lastAlert).toContain('temporary issue');
+      expect(lastAlert).not.toContain('could not be found on the server');
+      vi.useRealTimers();
+    });
+
+    it('shows "temporary issue" for 503 errors', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(22, 'https://example.com/unavailable.mp3', 'unavailable.mp3');
+
+      const unavailableResponse = new Response('Service Unavailable', {
+        status: 503,
+        statusText: 'Service Unavailable',
+      });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValue(unavailableResponse);
+
+      const promise = downloadSongFromHash('#22&unavailable.mp3');
+
+      await vi.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBeNull();
+
+      const alertCalls = (window.alert as ReturnType<typeof vi.fn>).mock.calls;
+      const lastAlert = alertCalls[alertCalls.length - 1][0] as string;
+      expect(lastAlert).toContain('temporary issue');
+      vi.useRealTimers();
+    });
+
+    it('shows generic network error when fetch itself throws', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(23, 'https://example.com/network-error.mp3', 'network-error.mp3');
+
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      // fetch throws a TypeError on network failure — no .status on TypeError, so status is 0
+      fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+
+      const promise = downloadSongFromHash('#23&network-error.mp3');
+      // Advance through retries: 1s + 2s + 4s = 7s
+      await vi.advanceTimersByTimeAsync(7000);
+      const result = await promise;
+      expect(result).toBeNull();
+
+      // Network errors don't carry .status, so should show "temporary issue"
+      const alertCalls = (window.alert as ReturnType<typeof vi.fn>).mock.calls;
+      const lastAlert = alertCalls[alertCalls.length - 1][0] as string;
+      expect(lastAlert).toContain('temporary issue');
+      vi.useRealTimers();
+    });
+
+    it('returns null on error and does not proceed further', async () => {
+      vi.useFakeTimers();
+      setupDownloadToFetchPoint(24, 'https://example.com/returns-null.mp3', 'returns-null.mp3');
+
+      const failResponse = new Response('Error', { status: 404 });
+      const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValue(failResponse);
+
+      const promise = downloadSongFromHash('#24&returns-null.mp3');
+
+      await vi.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const result = await promise;
+      expect(result).toBeNull();
+
+      // Should not have cached anything
+      expect(cacheStore.has('returns-null.mp3')).toBe(false);
+      vi.useRealTimers();
+    });
   });
 });

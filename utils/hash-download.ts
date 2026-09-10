@@ -136,10 +136,18 @@ export async function downloadSongFromHash(
     ]);
   } catch (error) {
     log.e('Error saving song to cache:', error);
-    alert(
-      `Failed to save "${fileName}" for offline playback.\n\n` +
-        'This could be a temporary issue. Please try again.'
-    );
+    const status = (error as Error & { status?: number }).status;
+    if (status === 404) {
+      alert(
+        `The song "${fileName}" could not be found on the server. ` +
+          'It may have been removed. Please check the link and try again.'
+      );
+    } else {
+      alert(
+        `Failed to save "${fileName}" for offline playback.\n\n` +
+          'This could be a temporary issue. Please try again.'
+      );
+    }
     return null;
   }
 
@@ -209,9 +217,29 @@ async function fetchAndCacheFile(
   songKey: string,
   onProgress?: (loaded: number, total: number) => void
 ): Promise<void> {
-  const response = await fetch(fileUrl);
-  if (!response.ok) {
-    throw new Error(`Fetch failed for ${songKey}: ${response.statusText}`);
+  const maxRetries = 3;
+  let response: Response | undefined;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      response = await fetch(fileUrl);
+      if (response.ok) {
+        break;
+      }
+    } catch {
+      response = undefined;
+    }
+    if (attempt < maxRetries) {
+      const delay = Math.pow(2, attempt) * 1000;
+      log.d(`fetchAndCacheFile retry ${attempt + 1}/${maxRetries} for ${songKey} in ${delay}ms`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  if (!response || !response.ok) {
+    const status = response?.status ?? 0;
+    const statusText = response?.statusText ?? 'Network error';
+    const error = new Error(`Fetch failed for ${songKey}: ${statusText}`) as Error & { status: number };
+    error.status = status;
+    throw error;
   }
 
   const contentLength = response.headers.get('Content-Length');
