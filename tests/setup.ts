@@ -14,3 +14,23 @@ globalThis.fetch = vi.fn(
       { status: 200 }
     )
 ) as unknown as typeof fetch;
+
+/**
+ * happy-dom with pool:'forks' does not provide window.localStorage. The app
+ * uses localStorage directly (via nDB and plain calls), so provide an
+ * in-memory polyfill when it is missing. Each test file runs in its own fork,
+ * so state never leaks between files.
+ */
+if (!window.localStorage) {
+  const store = new Map<string, string>();
+  window.localStorage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => store.set(key, value),
+    removeItem: (key: string) => store.delete(key),
+    clear: () => store.clear(),
+    key: (index: number) => [...store.keys()][index] ?? null,
+    get length() {
+      return store.size;
+    },
+  } as Storage;
+}
