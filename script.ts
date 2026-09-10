@@ -533,11 +533,34 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
       reject(new Error('newElem is not defined in the final return!'));
       return;
     }
-    const timer = setTimeout(() => reject(new Error('Metadata load timeout')), 10000); // 10s timeout
-    newElem.addEventListener(
+
+    const mediaElem = newElem as HTMLMediaElement;
+
+    const onError = () => {
+      clearTimeout(timer);
+      const errorCode = mediaElem.error?.code;
+      const mediaErrorMessages: Record<number, string> = {
+        1: 'Aborted',
+        2: 'Network error',
+        3: 'Decoding failed',
+        4: 'Source not supported',
+      };
+      const detail = errorCode ? mediaErrorMessages[errorCode] || `code ${errorCode}` : 'unknown';
+      reject(new Error(`Media load error: ${detail}`));
+    };
+
+    mediaElem.addEventListener('error', onError, { once: true });
+
+    const timer = setTimeout(() => {
+      mediaElem.removeEventListener('error', onError);
+      reject(new Error('Metadata load timeout'));
+    }, 10000);
+
+    mediaElem.addEventListener(
       'loadedmetadata',
       () => {
         clearTimeout(timer);
+        mediaElem.removeEventListener('error', onError);
         resolve();
       },
       { once: true }
