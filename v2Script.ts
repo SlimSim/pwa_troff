@@ -2810,14 +2810,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           if (footer) {
             footer.speed = newSpeed;
-            if (typeof (footer as unknown as { requestUpdate?: () => void }).requestUpdate === 'function') {
-              (footer as unknown as { requestUpdate: () => void }).requestUpdate();
-            }
           }
           const songKey = getCurrentSongKey();
           if (songKey) {
             nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', newSpeed);
           }
+          syncCurrentSongControlsValues();
         }
 
         const waitBetweenDelay = getWaitBetweenDelay();
