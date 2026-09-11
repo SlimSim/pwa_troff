@@ -57,6 +57,57 @@ export class TVideoPlayer extends LitElement {
     .fullscreen-btn {
       right: 8px;
     }
+    .reset-speed-btn {
+      position: static;
+      transform: none;
+      pointer-events: auto;
+    }
+    .speed-info .reset-speed-btn {
+      position: static;
+      top: auto;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      transform: none;
+      pointer-events: auto;
+    }
+    .speed-info.controls-hidden,
+    .time-info.controls-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .speed-info {
+      position: absolute;
+      top: 8px;
+      left: 48px;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--button-border-radius);
+      background-color: rgba(0, 0, 0, 0.6);
+      color: var(--on-theme-color, #fff);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .time-info {
+      position: absolute;
+      top: 8px;
+      right: 48px;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--button-border-radius);
+      background-color: rgba(0, 0, 0, 0.6);
+      color: var(--on-theme-color, #fff);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      pointer-events: none;
+    }
     .bottom-controls {
       position: absolute;
       bottom: var(--bottom-safe-offset);
@@ -65,6 +116,25 @@ export class TVideoPlayer extends LitElement {
       display: flex;
       z-index: 1;
       align-items: end;
+    }
+    .top-controls {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1;
+    }
+    .top-controls .video-btn,
+    .top-controls .speed-info,
+    .top-controls .time-info {
+      position: static;
+      top: auto;
+      left: auto;
+      right: auto;
+      transform: none;
     }
     .bottom-controls-cell {
       flex: 1;
@@ -109,24 +179,13 @@ export class TVideoPlayer extends LitElement {
     .marker-label.not-fullscreen {
       opacity: 0;
     }
-    .gesture-indicator {
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: var(--button-border-radius);
-      background-color: rgba(0, 0, 0, 0.6);
-      color: var(--on-theme-color, #fff);
-      font-size: 0.9rem;
-      white-space: nowrap;
-      pointer-events: none;
+    @media (min-width: 768px) {
+      .speed-info.not-fullscreen,
+      .time-info.not-fullscreen {
+        opacity: 0;
+        pointer-events: none;
+      }
     }
-
     .video-frame {
       position: relative;
       width: 100%;
@@ -221,6 +280,7 @@ export class TVideoPlayer extends LitElement {
   @state() private _controlsVisible = true;
   @state() private _gestureIcon = '';
   @state() private _gestureText = '';
+  @state() private _lastScrubText = '';
   @state() private _fullscreenHintBuffer = false;
   @state() private _cssFullscreenFallback = false;
 
@@ -488,6 +548,18 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
+  private _onResetSpeedClick() {
+    this.speed = 100;
+    this.dispatchEvent(
+      new CustomEvent('speed-changed', {
+        detail: { speed: 100 },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    this._showGestureFeedback('speed', '100%');
+  }
+
   private _onFullScreenClick() {
     if (document.fullscreenElement === this) {
       void document.exitFullscreen?.();
@@ -691,6 +763,7 @@ export class TVideoPlayer extends LitElement {
         Number.isFinite(duration) && duration > 0
           ? `${formatDuration(this._scrubTarget)} / ${formatDuration(duration)}`
           : formatDuration(this._scrubTarget);
+      this._lastScrubText = scrubLabel;
       this._showGestureFeedback('time', scrubLabel);
 
       this._requestSeek(this._scrubTarget);
@@ -796,6 +869,7 @@ export class TVideoPlayer extends LitElement {
         Number.isFinite(duration) && duration > 0
           ? `${formatDuration(newTime)} / ${formatDuration(duration)}`
           : formatDuration(newTime);
+      this._lastScrubText = scrubLabel;
       this._showGestureFeedback('time', scrubLabel);
       event.preventDefault();
     } else {
@@ -815,6 +889,7 @@ export class TVideoPlayer extends LitElement {
         Math.max(50, Math.round(Math.round(this.speed) - steps * effectiveStep)),
         200
       );
+      this.speed = newSpeed;
       // Reset the accumulator after a brief pause so a new gesture starts slow.
       clearTimeout(this._wheelSpeedAccumTimer);
       this._wheelSpeedAccumTimer = setTimeout(() => {
@@ -830,6 +905,38 @@ export class TVideoPlayer extends LitElement {
       this._showGestureFeedback('speed', `${newSpeed}%`);
       event.preventDefault();
     }
+  }
+
+  private get _showSpeedInfo(): boolean {
+    if (this._controlsVisible) {
+      return true;
+    }
+    return this._gestureIcon === 'speed' && this._gestureText !== '';
+  }
+
+  private get _showTimeInfo(): boolean {
+    if (this._controlsVisible) {
+      return true;
+    }
+    return this._gestureIcon === 'time' && this._gestureText !== '';
+  }
+
+  private get _timeLabel(): string {
+    if (this._lastScrubText) {
+      return this._lastScrubText;
+    }
+    const video = this.querySelector('video');
+    if (video) {
+      const time = video.currentTime;
+      const duration = video.duration;
+      if (Number.isFinite(duration) && duration > 0) {
+        return `${formatDuration(time)} / ${formatDuration(duration)}`;
+      }
+      if (Number.isFinite(time)) {
+        return formatDuration(time);
+      }
+    }
+    return formatDuration(0);
   }
 
   private get _markerIndex(): number {
@@ -867,31 +974,46 @@ export class TVideoPlayer extends LitElement {
         @pointercancel=${this._onFramePointerUp}
       >
         <slot></slot>
-        ${this._gestureIcon && this._gestureText
-          ? html`
-              <div class="gesture-indicator">
-                <t-icon name="${this._gestureIcon}"></t-icon>
-                <span>${this._gestureText}</span>
-              </div>
-            `
-          : ''}
-        <t-butt
-          class="video-btn mirror-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
-          slim
-          title="Mirror video"
-          .active=${this._mirrored}
-          @click=${this._onMirrorClick}
-        >
-          <t-icon name="mirror"></t-icon>
-        </t-butt>
-        <t-butt
-          class="video-btn fullscreen-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
-          slim
-          title="Fullscreen"
-          @click=${this._onFullScreenClick}
-        >
-          <t-icon name="${this._isFullscreen ? 'resize-small' : 'resize-full'}"></t-icon>
-        </t-butt>
+        <div class="top-controls">
+          <t-butt
+            class="video-btn mirror-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
+            slim
+            title="Mirror video"
+            .active=${this._mirrored}
+            @click=${this._onMirrorClick}
+          >
+            <t-icon name="mirror"></t-icon>
+          </t-butt>
+          <div class="speed-info ${this._showSpeedInfo ? '' : 'controls-hidden'} ${this._isFullscreen ? '' : 'not-fullscreen'}">
+            <t-icon name="speed"></t-icon>
+            <span class="speed-text">${Math.round(this.speed)}%</span>
+            ${Math.round(this.speed) !== 100
+              ? html`
+                  <t-butt
+                    class="video-btn reset-speed-btn ${this._showSpeedInfo ? '' : 'controls-hidden'}"
+                    slim
+                    title="Reset speed"
+                    @click=${this._onResetSpeedClick}
+                  >
+                    <t-icon name="reset"></t-icon>
+                    <span class="reset-text">100%</span>
+                  </t-butt>
+                `
+              : ''}
+          </div>
+          <div class="time-info ${this._showTimeInfo ? '' : 'controls-hidden'} ${this._isFullscreen ? '' : 'not-fullscreen'}">
+            <t-icon name="time"></t-icon>
+            <span class="time-text">${this._timeLabel}</span>
+          </div>
+          <t-butt
+            class="video-btn fullscreen-btn ${this._controlsVisible ? '' : 'controls-hidden'}"
+            slim
+            title="Fullscreen"
+            @click=${this._onFullScreenClick}
+          >
+            <t-icon name="${this._isFullscreen ? 'resize-small' : 'resize-full'}"></t-icon>
+          </t-butt>
+        </div>
         <div class="bottom-controls">
           <div class="bottom-controls-cell">
             ${this._prevMarkerName

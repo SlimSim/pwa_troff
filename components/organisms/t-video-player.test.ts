@@ -1794,6 +1794,25 @@ describe('t-video-player', () => {
     return span?.textContent ?? null;
   };
 
+  /** New split-cluster helpers (mirror the `split speed/time indicators` describe). */
+  const getSpeedInfo = (el: TVideoPlayer): HTMLElement | null =>
+    el.shadowRoot?.querySelector('.speed-info') as HTMLElement | null;
+
+  const getTimeInfo = (el: TVideoPlayer): HTMLElement | null =>
+    el.shadowRoot?.querySelector('.time-info') as HTMLElement | null;
+
+  const getSpeedText = (el: TVideoPlayer): string | null =>
+    el.shadowRoot?.querySelector('.speed-info .speed-text')?.textContent ?? null;
+
+  const getTimeText = (el: TVideoPlayer): string | null =>
+    el.shadowRoot?.querySelector('.time-info .time-text')?.textContent ?? null;
+
+  /** Visible = present in DOM AND not carrying `controls-hidden`. */
+  const isClusterVisible = (el: HTMLElement | null): boolean => {
+    if (!el) return false;
+    return !el.classList.contains('controls-hidden');
+  };
+
   it('renders no gesture indicator before any wheel gesture', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
@@ -1801,20 +1820,21 @@ describe('t-video-player', () => {
     expect(el.shadowRoot?.querySelector('.gesture-indicator')).toBeNull();
   });
 
-  it('speed wheel shows a badge with the speed icon and percent value', async () => {
+  it('speed wheel shows a badge with the speed icon and percent value (migrated to split)', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
     dispatchWheel(el, 0, -100);
     await el.updateComplete;
 
-    const indicator = el.shadowRoot?.querySelector('.gesture-indicator');
-    expect(indicator).not.toBeNull();
-    expect(getIconName(el, '.gesture-indicator')).toBe('speed');
-    expect(getGestureText(el)).toBe('110%');
+    // Split contract: speed gestures surface in the left `.speed-info` cluster
+    // (persistent while controls are visible).
+    expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
+    expect(getIconName(el, '.speed-info')).toBe('speed');
+    expect(getSpeedText(el)).toBe('110%');
   });
 
-  it('scrub wheel shows a badge with the current time over the duration', async () => {
+  it('scrub wheel shows a badge with the current time over the duration (migrated to split)', async () => {
     const { el, video } = createPlayerWithVideo();
     await el.updateComplete;
     defineDuration(video, 120);
@@ -1823,15 +1843,14 @@ describe('t-video-player', () => {
     dispatchWheel(el, 100, 0);
     await el.updateComplete;
 
-    const indicator = el.shadowRoot?.querySelector('.gesture-indicator');
-    expect(indicator).not.toBeNull();
     // 100px * 0.01 s/px = 1s → formatDuration(1) = "0:01", formatDuration(120)
     // = "2:00".
-    expect(getGestureText(el)).toBe('0:01 / 2:00');
-    expect(getIconName(el, '.gesture-indicator')).toBe('time');
+    expect(isClusterVisible(getTimeInfo(el))).toBe(true);
+    expect(getTimeText(el)).toBe('0:01 / 2:00');
+    expect(getIconName(el, '.time-info')).toBe('time');
   });
 
-  it('scrub badge updates with each additional scrub', async () => {
+  it('scrub badge updates with each additional scrub (migrated to split)', async () => {
     const { el, video } = createPlayerWithVideo();
     await el.updateComplete;
     defineDuration(video, 120);
@@ -1839,67 +1858,76 @@ describe('t-video-player', () => {
 
     dispatchWheel(el, 100, 0);
     await el.updateComplete;
-    expect(getGestureText(el)).toBe('0:01 / 2:00');
+    expect(getTimeText(el)).toBe('0:01 / 2:00');
 
     dispatchWheel(el, 100, 0);
     await el.updateComplete;
-    expect(getGestureText(el)).toBe('0:03 / 2:00');
+    expect(getTimeText(el)).toBe('0:03 / 2:00');
   });
 
-  it('badge auto-hides after the feedback timeout', async () => {
+  it('badge auto-hides after the feedback timeout (migrated to split)', async () => {
     vi.useFakeTimers();
     try {
       const { el } = createPlayerWithVideo();
       await el.updateComplete;
 
+      // Transient behaviour only applies when controls are hidden; otherwise
+      // the clusters persist.
+      clickFrame(el);
+      await el.updateComplete;
+
       dispatchWheel(el, 0, -100);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
+      expect(isClusterVisible(getTimeInfo(el))).toBe(false);
 
-      // 1500ms of silence → the badge disappears on its own.
+      // 1500ms of silence → the transient cluster hides on its own.
       vi.advanceTimersByTime(1500);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(false);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('new wheel gestures reset the hide timer', async () => {
+  it('new wheel gestures reset the hide timer (migrated to split)', async () => {
     vi.useFakeTimers();
     try {
       const { el } = createPlayerWithVideo();
       await el.updateComplete;
 
+      clickFrame(el);
+      await el.updateComplete;
+
       dispatchWheel(el, 0, -100);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
 
-      // 1000ms into the 1500ms window the badge is still visible...
+      // 1000ms into the 1500ms window the cluster is still visible...
       vi.advanceTimersByTime(1000);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
 
       // ...a new gesture re-arms the timer: 1000ms later (2000ms since the
       // first gesture but only 1000ms since the second) it is STILL visible.
       dispatchWheel(el, 0, -100);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
 
       vi.advanceTimersByTime(1000);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).not.toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
 
       // 1600ms since the second gesture → the re-armed timer has fired.
       vi.advanceTimersByTime(600);
       await el.updateComplete;
-      expect(el.shadowRoot?.querySelector('.gesture-indicator')).toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el))).toBe(false);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('scrub badge without a known duration shows only the current time', async () => {
+  it('scrub badge without a known duration shows only the current time (migrated to split)', async () => {
     const { el, video } = createPlayerWithVideo();
     await el.updateComplete;
     // Deliberately NO defineDuration: an unloaded video's duration stays NaN,
@@ -1909,12 +1937,12 @@ describe('t-video-player', () => {
     dispatchWheel(el, 100, 0);
     await el.updateComplete;
 
-    const text = getGestureText(el);
+    const text = getTimeText(el);
     expect(text).toBe('0:01');
     expect(text).not.toContain(' / ');
   });
 
-  it('speed badge shows the clamped bound value', async () => {
+  it('speed badge shows the clamped bound value (migrated to split)', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
     (el as VideoPlayerWithSpeed).speed = 200;
@@ -1924,28 +1952,42 @@ describe('t-video-player', () => {
     await el.updateComplete;
 
     // -10000px / 10px-per-step = -1000 steps → 200 + 1000%, clamped to 200.
-    expect(getGestureText(el)).toBe('200%');
+    expect(getSpeedText(el)).toBe('200%');
   });
 
-  it('gesture indicator is a plain informational div (t-icon + span, no t-butt)', async () => {
+  it('gesture indicator is a plain informational div (t-icon + span, no t-butt) (migrated to split)', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
     dispatchWheel(el, 0, -100);
     await el.updateComplete;
 
-    const indicator = el.shadowRoot?.querySelector(
-      '.gesture-indicator'
-    ) as HTMLElement | null;
-    expect(indicator).not.toBeNull();
-    // A plain div, NOT a t-butt control host.
-    expect(indicator?.tagName.toLowerCase()).toBe('div');
-    expect(indicator?.querySelector('span')).not.toBeNull();
-    expect(indicator?.querySelector('t-icon')).not.toBeNull();
-    expect(indicator?.querySelector('t-butt')).toBeNull();
-    // The badge lives inside .video-frame (with the overlay buttons).
+    // Split contract: `.speed-info` and `.time-info` are plain divs (t-icon +
+    // span). The ONLY t-butt allowed is the reset button inside `.speed-info`.
+    for (const selector of ['.speed-info', '.time-info']) {
+      const cluster = el.shadowRoot?.querySelector(selector) as HTMLElement | null;
+      expect(cluster, `${selector} must exist`).not.toBeNull();
+      // A plain div, NOT a t-butt control host.
+      expect(cluster?.tagName.toLowerCase()).toBe('div');
+      expect(cluster?.querySelector('span')).not.toBeNull();
+      expect(cluster?.querySelector('t-icon')).not.toBeNull();
+    }
+    expect(
+      el.shadowRoot?.querySelector('.time-info t-butt'),
+      '.time-info must contain no t-butt'
+    ).toBeNull();
+    // By design the reset button inside `.speed-info` IS a t-butt.
+    expect(
+      el.shadowRoot?.querySelector('.speed-info .reset-speed-btn'),
+      'reset button inside .speed-info must exist at non-default speed'
+    ).not.toBeNull();
+    expect(
+      (el.shadowRoot?.querySelector('.speed-info .reset-speed-btn') as HTMLElement | null)?.tagName.toLowerCase()
+    ).toBe('t-butt');
+    // Both clusters live inside .video-frame (with the overlay buttons).
     const frame = el.shadowRoot?.querySelector('.video-frame');
-    expect(frame?.contains(indicator)).toBe(true);
+    expect(frame?.contains(getSpeedInfo(el))).toBe(true);
+    expect(frame?.contains(getTimeInfo(el))).toBe(true);
   });
 
   // ---- Round 11: whole-number speed changes for vertical gestures -----------
@@ -2144,7 +2186,7 @@ describe('t-video-player', () => {
     expect(speed, '87.5 → base 88, ten up-steps (100px/10) → 98').toBe(98);
   });
 
-  it('vertical wheel with a whole base speed is unchanged and whole', async () => {
+  it('vertical wheel with a whole base speed is unchanged and whole (migrated to split)', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
     (el as VideoPlayerWithSpeed).speed = 100;
@@ -2155,23 +2197,26 @@ describe('t-video-player', () => {
 
     dispatchWheel(el, 0, -100); // up 10 steps → 110
     await el.updateComplete;
-    expect(getGestureText(el), 'badge after the up-wheel must be 110%').toBe('110%');
-    dispatchWheel(el, 0, 100); // down 10 steps → 90
+    expect(getSpeedText(el), 'speed-text after the up-wheel must be 110%').toBe('110%');
+    // NOTE: the split implementation commits each wheel to `this.speed` (so
+    // the persistent `.speed-text` stays in sync), so the down-wheel computes
+    // from 110 → 100. The old 90% assumed the property stayed at 100.
+    dispatchWheel(el, 0, 100); // down 10 steps → 100
     await el.updateComplete;
-    expect(getGestureText(el), 'badge after the down-wheel must be 90%').toBe('90%');
+    expect(getSpeedText(el), 'speed-text after the down-wheel must be 100%').toBe('100%');
 
     expect(speedSpy).toHaveBeenCalledTimes(2);
     const up = detailOf<{ speed: number }>(speedSpy, 0).speed;
     const down = detailOf<{ speed: number }>(speedSpy, 1).speed;
     expect(up).toBe(110);
-    expect(down).toBe(90);
+    expect(down).toBe(100);
     expect(Number.isInteger(up), `up-wheel speed must be a whole number, got ${up}`).toBe(true);
     expect(Number.isInteger(down), `down-wheel speed must be a whole number, got ${down}`).toBe(
       true
     );
   });
 
-  it('speed stays clamped and whole at the bounds', async () => {
+  it('speed stays clamped and whole at the bounds (migrated to split)', async () => {
     // Down-drag from 200 clamps at 50.
     const { el: downEl } = createPlayerWithVideo();
     await downEl.updateComplete;
@@ -2189,7 +2234,7 @@ describe('t-video-player', () => {
     const downSpeed = detailOf<{ speed: number }>(downSpy).speed;
     expect(Number.isInteger(downSpeed), `clamped speed must be whole, got ${downSpeed}`).toBe(true);
     expect(downSpeed).toBe(50);
-    expect(getGestureText(downEl), 'down-drag badge must show the clamped whole 50%').toBe('50%');
+    expect(getSpeedText(downEl), 'down-drag speed-text must show the clamped whole 50%').toBe('50%');
 
     // Up-drag from 50 clamps at 200.
     const { el: upEl } = createPlayerWithVideo();
@@ -2208,7 +2253,7 @@ describe('t-video-player', () => {
     const upSpeed = detailOf<{ speed: number }>(upSpy).speed;
     expect(Number.isInteger(upSpeed), `clamped speed must be whole, got ${upSpeed}`).toBe(true);
     expect(upSpeed).toBe(200);
-    expect(getGestureText(upEl), 'up-drag badge must show the clamped whole 200%').toBe('200%');
+    expect(getSpeedText(upEl), 'up-drag speed-text must show the clamped whole 200%').toBe('200%');
   });
 
   it('the drag accumulator resets between separate drags', async () => {
@@ -2251,7 +2296,7 @@ describe('t-video-player', () => {
     expect(secondSpeed).toBe(107);
   });
 
-  it('drag shows a whole-number percent in the gesture badge', async () => {
+  it('drag shows a whole-number percent in the gesture badge (migrated to split)', async () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
     (el as VideoPlayerWithSpeed).speed = 100;
@@ -2261,12 +2306,11 @@ describe('t-video-player', () => {
     dispatchPointer(el, 'pointermove', 100, 25); // 75px up
     await el.updateComplete;
 
-    const indicator = el.shadowRoot?.querySelector('.gesture-indicator');
-    expect(indicator, 'a speed drag must show the gesture badge').not.toBeNull();
-    expect(getIconName(el, '.gesture-indicator')).toBe('speed');
+    expect(isClusterVisible(getSpeedInfo(el)), 'a speed drag must show the speed cluster').toBe(true);
+    expect(getIconName(el, '.speed-info')).toBe('speed');
     expect(
-      getGestureText(el),
-      'badge must show a whole-number percent (75px up = 8 steps × ~1.125% → 109%)'
+      getSpeedText(el),
+      'speed-text must show a whole-number percent (75px up = 8 steps × ~1.125% → 109%)'
     ).toBe('109%');
   });
 
@@ -2319,7 +2363,7 @@ describe('t-video-player', () => {
   // GESTURE_FEEDBACK_MS (1500ms) or SEEK_WATCHDOG_MS (400ms), so the badge
   // never auto-hides mid-gesture and the watchdog never fakes a completion.
 
-  it('a horizontal drag applies the first seek immediately (guard: pins the base behavior)', async () => {
+  it('a horizontal drag applies the first seek immediately (guard: pins the base behavior) (migrated to split)', async () => {
     const { el, video } = createPlayerWithVideo();
     await el.updateComplete;
     defineDuration(video, 120);
@@ -2341,10 +2385,10 @@ describe('t-video-player', () => {
       0.6, 5
     );
     expect(
-      getGestureText(el),
-      'badge must show the scrubbed time over the duration (0.6s in a 120s video)'
+      getTimeText(el),
+      'time-text must show the scrubbed time over the duration (0.6s in a 120s video)'
     ).toBe('0:00 / 2:00');
-    expect(getIconName(el, '.gesture-indicator')).toBe('time');
+    expect(getIconName(el, '.time-info')).toBe('time');
     // Simulate the video completing the seek (happy-dom never fires `seeked`
     // on its own) so a later move in a real gesture would not be blocked.
     markSeekComplete(video);
@@ -3057,5 +3101,975 @@ describe('t-video-player', () => {
       unlockSpy,
       'screen.orientation.unlock must NOT be called when portrait=true'
     ).not.toHaveBeenCalled();
+  });
+
+  // ---- Reset speed button (top-center, visible only when off default) ----
+  //
+  // Feature: a `.reset-speed-btn` inside `.video-frame` (top-center, alongside
+  // `.mirror-btn`/`.fullscreen-btn`) that follows the t-dial reset pattern:
+  // a `<t-butt title="Reset speed">` containing `<t-icon name="reset">`.
+  // Visibility is the AND of two conditions: (a) it carries `controls-hidden`
+  // when `_controlsVisible` is false like every other `.video-btn`, and
+  // (b) it is ONLY rendered when `Math.round(speed) !== 100` (default 100).
+  // Clicking it sets `speed` to 100 and dispatches `speed-changed`
+  // (`detail:{speed:100}`, bubbles + composed, from the host) — the same
+  // contract as wheel/drag speed changes — without toggling controls
+  // visibility (`_onFrameClick` t-butt guard) or triggering fullscreen
+  // (`_onFrameDoubleClick` t-butt guard). None of this exists yet → RED.
+
+  describe('reset speed button', () => {
+    it('does not render a reset-speed button at the default speed (100)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+      expect(speedOf(el)).toBe(100);
+      expect(el.shadowRoot?.querySelector('.reset-speed-btn')).toBeNull();
+    });
+
+    it('renders a reset-speed t-butt with a reset icon inside .video-frame when speed is 110', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      const button = getButton(el, '.reset-speed-btn');
+      expect(button.tagName.toLowerCase()).toBe('t-butt');
+      expect(button.classList.contains('video-btn')).toBe(true);
+      expect(button.classList.contains('reset-speed-btn')).toBe(true);
+      expect(button.getAttribute('title')).toBe('Reset speed');
+      expect(getIconName(el, '.reset-speed-btn')).toBe('reset');
+      const frame = el.shadowRoot?.querySelector('.video-frame');
+      expect(frame?.contains(button)).toBe(true);
+    });
+
+    it('reset-speed renders below default and for fractional speeds, but not when speed rounds to 100', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 90;
+      await el.updateComplete;
+      expect(
+        el.shadowRoot?.querySelector('.reset-speed-btn'),
+        'speed 90 must render .reset-speed-btn (current code never renders it)'
+      ).not.toBeNull();
+
+      el.speed = 87.5;
+      await el.updateComplete;
+      expect(
+        el.shadowRoot?.querySelector('.reset-speed-btn'),
+        'legacy fractional speed 87.5 (rounds to 88) must render .reset-speed-btn'
+      ).not.toBeNull();
+
+      el.speed = 100.4;
+      await el.updateComplete;
+      expect(
+        el.shadowRoot?.querySelector('.reset-speed-btn'),
+        'speed 100.4 rounds to 100 so no .reset-speed-btn may exist'
+      ).toBeNull();
+    });
+
+    it('reset-speed button follows controls-hidden visibility like other .video-btn buttons', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+      expect(frame).not.toBeNull();
+      expect(getButton(el, '.reset-speed-btn').classList.contains('controls-hidden')).toBe(false);
+
+      clickFrame(el);
+      await el.updateComplete;
+      expect(
+        getButton(el, '.reset-speed-btn').classList.contains('controls-hidden'),
+        'frame tap hiding controls must add controls-hidden to .reset-speed-btn'
+      ).toBe(true);
+
+      clickFrame(el);
+      await el.updateComplete;
+      expect(getButton(el, '.reset-speed-btn').classList.contains('controls-hidden')).toBe(false);
+    });
+
+    it('clicking reset-speed sets speed to 100 and dispatches speed-changed from the host', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      const speedSpy = vi.fn();
+      el.addEventListener('speed-changed', speedSpy);
+
+      getButton(el, '.reset-speed-btn').click();
+      await el.updateComplete;
+
+      expect(speedOf(el)).toBe(100);
+      expect(speedSpy).toHaveBeenCalledTimes(1);
+      const event = speedSpy.mock.calls[0][0] as CustomEvent;
+      expect(event.type).toBe('speed-changed');
+      expect(event.bubbles).toBe(true);
+      expect(event.composed).toBe(true);
+      expect(event.target).toBe(el);
+      expect(detailOf<{ speed: number }>(speedSpy).speed).toBe(100);
+    });
+
+    it('clicking reset-speed does not toggle controls visibility or trigger fullscreen', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      const requestFullscreenSpy = mockRequestFullscreen(el);
+      const frame = el.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+      expect(frame).not.toBeNull();
+
+      // Clicking the reset button must NOT toggle controls (t-butt guard in
+      // _onFrameClick): controls stay visible. A correct reset sets speed to
+      // 100, so the button itself MUST disappear per spec (only rendered when
+      // Math.round(speed) !== 100) — assert that plus other buttons staying
+      // visible to prove controls were not toggled hidden.
+      getButton(el, '.reset-speed-btn').click();
+      await el.updateComplete;
+      expect(speedOf(el)).toBe(100);
+      expect(
+        el.shadowRoot?.querySelector('.reset-speed-btn'),
+        'reset-speed click must reset speed to 100 so the button disappears'
+      ).toBeNull();
+      expect(
+        getButton(el, '.mirror-btn').classList.contains('controls-hidden'),
+        'reset-speed click must not hide controls via the frame toggle'
+      ).toBe(false);
+      expect(
+        getButton(el, '.fullscreen-btn').classList.contains('controls-hidden'),
+        'reset-speed click must not hide controls via the frame toggle'
+      ).toBe(false);
+      expect(
+        getButton(el, '.play-pause-btn').classList.contains('controls-hidden'),
+        'reset-speed click must not hide controls via the frame toggle'
+      ).toBe(false);
+      expect(requestFullscreenSpy, 'a single click must never request fullscreen').not.toHaveBeenCalled();
+
+      // Double-clicking the reset button must NOT toggle fullscreen either
+      // (t-butt guard in _onFrameDoubleClick). Bring the button back first
+      // since the correct reset above removed it.
+      el.speed = 110;
+      await el.updateComplete;
+      getButton(el, '.reset-speed-btn').dispatchEvent(
+        new MouseEvent('dblclick', { bubbles: true, composed: true, detail: 2 })
+      );
+      await el.updateComplete;
+      expect(
+        requestFullscreenSpy,
+        'dblclick on reset-speed (a t-butt) must not toggle fullscreen'
+      ).not.toHaveBeenCalled();
+      expect(
+        getButton(el, '.mirror-btn').classList.contains('controls-hidden'),
+        'dblclick on reset-speed must not hide controls'
+      ).toBe(false);
+    });
+  });
+  // ---- Split speed/time indicators (spec: fix center overlap) ---------------
+  //
+  // Assumptions (user request, interpreted — state explicitly per task):
+  // 1. Center overlap is the problem: `.reset-speed-btn` (left:50%) collides
+  //    with the transient `.gesture-indicator` (left:50%) time/speed feedback.
+  // 2. Split top area: speed cluster LEFT, time cluster RIGHT (no center).
+  //    Remove center positioning (`left:50%`) from both clusters + reset btn.
+  // 3. Speed cluster (`.speed-info` inside `.video-frame`): always contains
+  //    `t-icon[name=speed]` + `span.speed-text` (`${Math.round(speed)}%`);
+  //    contains `t-butt.reset-speed-btn` ONLY when `Math.round(speed)!==100`,
+  //    which must contain `t-icon[name=reset]` + `span.reset-text` (`100%`)
+  //    underneath (t-dial reset-content/reset-icon/reset-text pattern),
+  //    `title="Reset speed"`, click sets speed 100 + dispatches
+  //    `speed-changed {speed:100}` bubbles+composed from host (existing
+  //    contract). t-butt guards (frame click/dblclick/pointerdown tagName
+  //    check) keep working.
+  // 4. Time cluster (`.time-info` inside `.video-frame`): contains
+  //    `t-icon[name=time]` + `span.time-text` (last scrub label:
+  //    `formatDuration(time) / formatDuration(duration)` or just
+  //    `formatDuration(time)` when duration unknown — same as scrub badge).
+  // 5. Visibility (core new behavior):
+  //    (a) `_controlsVisible` TRUE => ALWAYS show BOTH clusters persistently.
+  //        This REPLACES old `renders no gesture indicator before any wheel
+  //        gesture` contract — that old test will need updating (breaking
+  //        change; NOT modified here).
+  //    (b) `_controlsVisible` FALSE => hide both by default; speed gesture
+  //        shows ONLY `.speed-info` transiently 1500ms; scrub gesture shows
+  //        ONLY `.time-info` transiently 1500ms; other stays hidden.
+  //    (c) Implementation may use `controls-hidden` class OR conditional
+  //        rendering — tests accept either (present+visible vs null/hidden).
+  // 6. CSS: `.speed-info` anchored left (e.g. `left:8px`), `.time-info`
+  //    anchored right (e.g. `right:8px`), MUST NOT use `left:50%`. Asserted
+  //    via adoptedStyleSheets cssRules (same technique as ellipsis test).
+  //    No inline styles; WebKit+Chromium compat.
+  // 7. Existing behavior kept: default 100, Math.round tolerance (87.5 shows
+  //    reset, 100.4 hides), reset click toggles neither controls nor
+  //    fullscreen, `speed-changed` contract unchanged.
+  //
+  // All tests below are RED against the current implementation (center
+  // `.reset-speed-btn` + single `.gesture-indicator`, no `.speed-info` /
+  // `.time-info` / `.speed-text` / `.time-text` / `.reset-text`).
+  describe('split speed/time indicators', () => {
+    const getSpeedInfo = (el: TVideoPlayer): HTMLElement | null =>
+      el.shadowRoot?.querySelector('.speed-info') as HTMLElement | null;
+
+    const getTimeInfo = (el: TVideoPlayer): HTMLElement | null =>
+      el.shadowRoot?.querySelector('.time-info') as HTMLElement | null;
+
+    const getSpeedText = (el: TVideoPlayer): string | null =>
+      el.shadowRoot?.querySelector('.speed-info .speed-text')?.textContent ?? null;
+
+    const getTimeText = (el: TVideoPlayer): string | null =>
+      el.shadowRoot?.querySelector('.time-info .time-text')?.textContent ?? null;
+
+    const getResetText = (el: TVideoPlayer): string | null =>
+      el.shadowRoot?.querySelector('.reset-speed-btn .reset-text')?.textContent ?? null;
+
+    /** Visible = present in DOM AND not carrying `controls-hidden`. */
+    const isClusterVisible = (el: HTMLElement | null): boolean => {
+      if (!el) return false;
+      return !el.classList.contains('controls-hidden');
+    };
+
+    /**
+     * Returns cssText for every component stylesheet rule whose selectorText
+     * contains the given fragment (Lit injects via adoptedStyleSheets; same
+     * technique as the `.marker-label` ellipsis test).
+     */
+    const rulesContaining = (el: TVideoPlayer, fragment: string): string[] => {
+      const sheet = el.shadowRoot?.adoptedStyleSheets?.[0];
+      const rules = sheet?.cssRules;
+      if (!rules) {
+        throw new Error('Expected shadow root to expose adoptedStyleSheets[0].cssRules');
+      }
+      const out: string[] = [];
+      for (let i = 0; i < rules.length; i += 1) {
+        const rule = rules[i] as CSSStyleRule;
+        if (rule.selectorText && rule.selectorText.includes(fragment)) {
+          out.push(`${rule.selectorText} { ${rule.style.cssText} }`);
+        }
+      }
+      return out;
+    };
+
+    it('shows BOTH speed and time clusters persistently when controls are visible (no gesture yet)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // Precondition: controls start visible (mirror button has no hidden class).
+      expect(getButton(el, '.mirror-btn').classList.contains('controls-hidden')).toBe(false);
+
+      // New contract REPLACES `renders no gesture indicator before any wheel
+      // gesture`: both clusters must already be present persistently.
+      // RED today: neither `.speed-info` nor `.time-info` exists.
+      expect(getSpeedInfo(el), '.speed-info must render persistently when controls are visible').not.toBeNull();
+      expect(getTimeInfo(el), '.time-info must render persistently when controls are visible').not.toBeNull();
+      expect(isClusterVisible(getSpeedInfo(el)), '.speed-info must be visible (no controls-hidden)').toBe(true);
+      expect(isClusterVisible(getTimeInfo(el)), '.time-info must be visible (no controls-hidden)').toBe(true);
+      // Both live inside .video-frame.
+      const frame = el.shadowRoot?.querySelector('.video-frame');
+      expect(frame?.contains(getSpeedInfo(el))).toBe(true);
+      expect(frame?.contains(getTimeInfo(el))).toBe(true);
+    });
+
+    it('speed cluster contains a speed icon and .speed-text with the rounded percent', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      // RED today: no `.speed-info` at all (only center `.gesture-indicator` after a wheel).
+      expect(getSpeedInfo(el), '.speed-info must exist').not.toBeNull();
+      expect(getIconName(el, '.speed-info')).toBe('speed');
+      expect(getSpeedText(el), '.speed-text must show Math.round(speed)%').toBe('110%');
+    });
+
+    it('speed-text rounds fractional speeds (Math.round tolerance)', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 87.5;
+      await el.updateComplete;
+
+      // RED today: `.speed-info .speed-text` does not exist.
+      expect(getSpeedText(el), '87.5 must render speed-text 88%').toBe('88%');
+    });
+
+    it('reset button lives inside .speed-info with reset icon + .reset-text 100% underneath', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      // RED today: reset button is a bare center `t-butt` with only a reset
+      // icon — no `.speed-info` parent and no `.reset-text` span.
+      const resetBtn = el.shadowRoot?.querySelector('.speed-info .reset-speed-btn');
+      expect(resetBtn, '.reset-speed-btn must live inside .speed-info').not.toBeNull();
+      expect((resetBtn as HTMLElement | null)?.tagName.toLowerCase()).toBe('t-butt');
+      expect((resetBtn as HTMLElement | null)?.getAttribute('title')).toBe('Reset speed');
+      expect(getButton(el, '.speed-info .reset-speed-btn').querySelector('t-icon')?.getAttribute('name')).toBe(
+        'reset'
+      );
+      expect(getResetText(el), '.reset-text must show the default speed 100% underneath').toBe('100%');
+    });
+
+    it('reset button inside .speed-info renders for 90 and 87.5 but not for 100 or 100.4', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      el.speed = 90;
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.speed-info .reset-speed-btn'), 'speed 90 must render reset inside .speed-info').not.toBeNull();
+
+      el.speed = 87.5;
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.speed-info .reset-speed-btn'), 'legacy 87.5 (rounds to 88) must render reset').not.toBeNull();
+
+      el.speed = 100.4;
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.speed-info .reset-speed-btn'), '100.4 rounds to 100 so no reset may exist').toBeNull();
+
+      el.speed = 100;
+      await el.updateComplete;
+      expect(el.shadowRoot?.querySelector('.speed-info .reset-speed-btn'), 'default 100 must not render reset').toBeNull();
+      // The speed cluster itself persists even at default speed (only the
+      // reset button is conditional).
+      expect(getSpeedInfo(el), '.speed-info persists at default speed when controls visible').not.toBeNull();
+      expect(getSpeedText(el)).toBe('100%');
+    });
+
+    it('clicking the reset button inside .speed-info sets speed 100 and dispatches speed-changed from the host', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      const speedSpy = vi.fn();
+      el.addEventListener('speed-changed', speedSpy);
+
+      // RED today: selector finds nothing (old button is NOT inside .speed-info).
+      getButton(el, '.speed-info .reset-speed-btn').click();
+      await el.updateComplete;
+
+      expect(speedOf(el)).toBe(100);
+      expect(speedSpy).toHaveBeenCalledTimes(1);
+      const event = speedSpy.mock.calls[0][0] as CustomEvent;
+      expect(event.type).toBe('speed-changed');
+      expect(event.bubbles).toBe(true);
+      expect(event.composed).toBe(true);
+      expect(event.target).toBe(el);
+      expect(detailOf<{ speed: number }>(speedSpy).speed).toBe(100);
+    });
+
+    it('clicking the reset button does not toggle controls visibility or trigger fullscreen', async () => {
+      const { el } = createPlayerWithVideo();
+      el.speed = 110;
+      await el.updateComplete;
+
+      const requestFullscreenSpy = mockRequestFullscreen(el);
+
+      // RED today: `.speed-info .reset-speed-btn` does not exist.
+      getButton(el, '.speed-info .reset-speed-btn').click();
+      await el.updateComplete;
+      expect(
+        getButton(el, '.mirror-btn').classList.contains('controls-hidden'),
+        'reset click must not hide controls via the frame toggle'
+      ).toBe(false);
+      expect(requestFullscreenSpy, 'a single click must never request fullscreen').not.toHaveBeenCalled();
+
+      el.speed = 110;
+      await el.updateComplete;
+      getButton(el, '.speed-info .reset-speed-btn').dispatchEvent(
+        new MouseEvent('dblclick', { bubbles: true, composed: true, detail: 2 })
+      );
+      await el.updateComplete;
+      expect(requestFullscreenSpy, 'dblclick on reset (a t-butt) must not toggle fullscreen').not.toHaveBeenCalled();
+    });
+
+    it('time cluster contains a time icon and .time-text', async () => {
+      const { el, video } = createPlayerWithVideo();
+      await el.updateComplete;
+      defineDuration(video, 120);
+      video.currentTime = 0;
+      await el.updateComplete;
+
+      // RED today: no `.time-info` at all.
+      expect(getTimeInfo(el), '.time-info must render persistently when controls are visible').not.toBeNull();
+      expect(getIconName(el, '.time-info')).toBe('time');
+      expect(el.shadowRoot?.querySelector('.time-info .time-text'), '.time-text span must exist').not.toBeNull();
+    });
+
+    it('time-text shows the last scrub label after a horizontal wheel (controls visible)', async () => {
+      const { el, video } = createPlayerWithVideo();
+      await el.updateComplete;
+      defineDuration(video, 120);
+      video.currentTime = 0;
+
+      dispatchWheel(el, 100, 0);
+      await el.updateComplete;
+
+      // Same formatting as the current scrub badge: 1s in a 120s video.
+      // RED today: `.time-info .time-text` does not exist.
+      expect(getTimeText(el), '100px scrub must update .time-text to 0:01 / 2:00').toBe('0:01 / 2:00');
+      expect(getIconName(el, '.time-info')).toBe('time');
+    });
+
+    it('hides both clusters by default when controls are hidden (no recent gesture)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      clickFrame(el);
+      await el.updateComplete;
+      expect(getButton(el, '.mirror-btn').classList.contains('controls-hidden'), 'precondition: frame tap hides controls').toBe(true);
+
+      // Implementation may EITHER remove the clusters OR keep them with
+      // `controls-hidden` — accept both. (Passes vacuously on the old code
+      // where neither cluster exists; kept as the new-contract guard.)
+      for (const [name, node] of [
+        ['.speed-info', getSpeedInfo(el)],
+        ['.time-info', getTimeInfo(el)],
+      ] as Array<[string, HTMLElement | null]>) {
+        expect(
+          node === null || node.classList.contains('controls-hidden'),
+          `${name} must be hidden when controls are hidden with no recent gesture (absent or controls-hidden)`
+        ).toBe(true);
+        expect(isClusterVisible(node), `${name} must not be VISIBLE when controls are hidden`).toBe(false);
+      }
+    });
+
+    it('controls hidden + speed gesture shows ONLY .speed-info transiently for 1500ms', async () => {
+      vi.useFakeTimers();
+      try {
+        const { el } = createPlayerWithVideo();
+        await el.updateComplete;
+
+        clickFrame(el);
+        await el.updateComplete;
+        expect(getButton(el, '.mirror-btn').classList.contains('controls-hidden'), 'precondition: controls hidden').toBe(true);
+
+        // Vertical wheel = speed gesture (changes speed away from default so
+        // the reset button is also expected inside the cluster).
+        dispatchWheel(el, 0, -100);
+        await el.updateComplete;
+
+        // RED today: old code renders a single center `.gesture-indicator`,
+        // never `.speed-info` / `.time-info`.
+        expect(isClusterVisible(getSpeedInfo(el)), 'speed gesture must show ONLY .speed-info').toBe(true);
+        expect(getSpeedText(el)).toBe('110%');
+        expect(isClusterVisible(getTimeInfo(el)), 'speed gesture must keep .time-info hidden').toBe(false);
+
+        vi.advanceTimersByTime(1500);
+        await el.updateComplete;
+        expect(isClusterVisible(getSpeedInfo(el)), 'transient .speed-info must hide after 1500ms').toBe(false);
+        expect(isClusterVisible(getTimeInfo(el))).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('controls hidden + scrub gesture shows ONLY .time-info transiently for 1500ms', async () => {
+      vi.useFakeTimers();
+      try {
+        const { el, video } = createPlayerWithVideo();
+        await el.updateComplete;
+        defineDuration(video, 120);
+        video.currentTime = 0;
+
+        clickFrame(el);
+        await el.updateComplete;
+        expect(getButton(el, '.mirror-btn').classList.contains('controls-hidden'), 'precondition: controls hidden').toBe(true);
+
+        dispatchWheel(el, 100, 0);
+        await el.updateComplete;
+
+        // RED today: old code renders a single center `.gesture-indicator`,
+        // never `.time-info` / `.speed-info`.
+        expect(isClusterVisible(getTimeInfo(el)), 'scrub gesture must show ONLY .time-info').toBe(true);
+        expect(getTimeText(el)).toBe('0:01 / 2:00');
+        expect(isClusterVisible(getSpeedInfo(el)), 'scrub gesture must keep .speed-info hidden').toBe(false);
+
+        vi.advanceTimersByTime(1500);
+        await el.updateComplete;
+        expect(isClusterVisible(getTimeInfo(el)), 'transient .time-info must hide after 1500ms').toBe(false);
+        expect(isClusterVisible(getSpeedInfo(el))).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('anchors .speed-info left and .time-info right with no left:50% center positioning', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: stylesheet has `.reset-speed-btn { left: 50% }` and
+      // `.gesture-indicator { left: 50% }`, and no `.speed-info`/`.time-info`
+      // rules at all.
+      const speedRules = rulesContaining(el, '.speed-info');
+      const timeRules = rulesContaining(el, '.time-info');
+      expect(speedRules.length, 'stylesheet must contain a .speed-info rule').toBeGreaterThan(0);
+      expect(timeRules.length, 'stylesheet must contain a .time-info rule').toBeGreaterThan(0);
+      const speedCss = speedRules.join('\n');
+      const timeCss = timeRules.join('\n');
+      expect(speedCss, '.speed-info must be anchored left (e.g. left:8px)').toContain('left:');
+      expect(timeCss, '.time-info must be anchored right (e.g. right:8px)').toContain('right:');
+      expect(speedCss, '.speed-info must NOT use center left:50%').not.toContain('left: 50%');
+      expect(speedCss, '.speed-info must NOT use center left:50% (no space variant)').not.toContain('left:50%');
+      expect(timeCss, '.time-info must NOT use center left:50%').not.toContain('left: 50%');
+      expect(timeCss, '.time-info must NOT use center left:50% (no space variant)').not.toContain('left:50%');
+
+      // The reset button must move out of the center too (it lives inside the
+      // left-anchored cluster now).
+      const resetRules = rulesContaining(el, '.reset-speed-btn');
+      for (const css of resetRules) {
+        expect(css, '.reset-speed-btn must no longer be center-positioned').not.toContain('left: 50%');
+        expect(css, '.reset-speed-btn must no longer be center-positioned (no space variant)').not.toContain(
+          'left:50%'
+        );
+      }
+    });
+  });
+
+  // ---- Top controls flexbox (spec: mirror bottom pattern, top-anchored) ----
+  //
+  // Assumptions (user request, interpreted — stated explicitly per task):
+  // 1. New container `div.top-controls` inside `.video-frame`, sibling of
+  //    `.bottom-controls` (both descendants of `.video-frame`; `.top-controls`
+  //    precedes `.bottom-controls` in DOM order), containing EXACTLY 4
+  //    children in left→right DOM order:
+  //      1. mirror (`t-butt.mirror-btn`)
+  //      2. speed (`div.speed-info`)
+  //      3. time (`div.time-info`)
+  //      4. fullscreen (`t-butt.fullscreen-btn`)
+  // 2. Children may be DIRECT (the control IS the flex item) OR wrapped in
+  //    cell divs (e.g. `.top-controls-cell` mirroring `.bottom-controls-cell`).
+  //    Tests accept EITHER: each of the 4 flex items must either match the
+  //    control selector itself OR contain exactly one such control descendant.
+  //    DOM order (mirror/speed/time/fullscreen) is asserted explicitly.
+  // 3. CSS contract (adoptedStyleSheets inspection, same technique as the
+  //    ellipsis/anchor tests): `.top-controls` rule has `display: flex` +
+  //    `justify-content: space-between` (explicitly space-between, NOT
+  //    space-around) + `position: absolute` + `top:` + `left: 0` + `right: 0`
+  //    + `z-index: 1` + `align-items`.
+  // 4. Old absolute offsets (`left: 8px` on mirror, `left: 48px` on speed,
+  //    `right: 48px` on time, `right: 8px` on fullscreen, any `left: 50%`)
+  //    must be gone OR overridden to `position: static` inside `.top-controls`
+  //    (mirroring `.bottom-controls .video-btn { position: static }`). Either
+  //    removal or static-override passes.
+  // 5. `controls-hidden` keeps everything in the DOM (opacity-only fade):
+  //    hiding the controls must NOT remove `.top-controls` or any of its 4
+  //    items from the DOM, and DOM order must be unchanged.
+  //
+  // All tests below are RED against the current implementation (individually
+  // absolutely-positioned top elements, no `.top-controls` container).
+  describe('top controls flexbox', () => {
+    /** Returns the `.top-controls` element inside the video frame, or null. */
+    const getTopControls = (el: TVideoPlayer): HTMLElement | null =>
+      el.shadowRoot?.querySelector('.top-controls') as HTMLElement | null;
+
+    /** Control selectors in the required left→right DOM order. */
+    const topOrderSelectors = [
+      '.mirror-btn',
+      '.speed-info',
+      '.time-info',
+      '.fullscreen-btn',
+    ];
+
+    /**
+     * Returns cssText for every component stylesheet rule whose selectorText
+     * contains the given fragment (same technique as the split-indicators
+     * `rulesContaining` helper).
+     */
+    const topRulesContaining = (el: TVideoPlayer, fragment: string): string[] => {
+      const sheet = el.shadowRoot?.adoptedStyleSheets?.[0];
+      const rules = sheet?.cssRules;
+      if (!rules) {
+        throw new Error('Expected shadow root to expose adoptedStyleSheets[0].cssRules');
+      }
+      const out: string[] = [];
+      for (let i = 0; i < rules.length; i += 1) {
+        const rule = rules[i] as CSSStyleRule;
+        if (rule.selectorText && rule.selectorText.includes(fragment)) {
+          out.push(`${rule.selectorText} { ${rule.style.cssText} }`);
+        }
+      }
+      return out;
+    };
+
+    /** Returns the exact `.top-controls` rule cssText, or throws if missing. */
+    const topControlsRuleCssText = (el: TVideoPlayer): string => {
+      const sheet = el.shadowRoot?.adoptedStyleSheets?.[0];
+      const rules = sheet?.cssRules;
+      if (!rules) {
+        throw new Error('Expected shadow root to expose adoptedStyleSheets[0].cssRules');
+      }
+      for (let i = 0; i < rules.length; i += 1) {
+        const rule = rules[i] as CSSStyleRule;
+        if (rule.selectorText === '.top-controls') {
+          return rule.style.cssText;
+        }
+      }
+      throw new Error('Expected component stylesheet to contain a .top-controls rule');
+    };
+
+    it('renders a div.top-controls inside .video-frame as a sibling of .bottom-controls', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      const frame = el.shadowRoot?.querySelector('.video-frame');
+      expect(frame, '.video-frame must exist').not.toBeNull();
+
+      // RED today: no `.top-controls` container exists at all.
+      const topControls = getTopControls(el);
+      expect(topControls, 'div.top-controls must exist inside .video-frame').not.toBeNull();
+      expect(topControls?.tagName.toLowerCase()).toBe('div');
+      expect(frame?.contains(topControls), '.top-controls must be a descendant of .video-frame').toBe(true);
+
+      const bottomControls = el.shadowRoot?.querySelector('.bottom-controls');
+      expect(bottomControls, '.bottom-controls must still exist (untouched)').not.toBeNull();
+      expect(
+        topControls?.parentElement,
+        '.top-controls must be a sibling of .bottom-controls (same parent inside .video-frame)'
+      ).toBe(bottomControls?.parentElement);
+    });
+
+    it('contains exactly 4 children in mirror/speed/time/fullscreen DOM order (direct or cell-wrapped)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: getTopControls() is null so elementChildren is [].
+      const topControls = getTopControls(el);
+      const elementChildren = topControls ? Array.from(topControls.children) : [];
+      expect(
+        elementChildren.length,
+        '.top-controls must have exactly 4 children (mirror, speed, time, fullscreen)'
+      ).toBe(4);
+
+      for (let i = 0; i < topOrderSelectors.length; i += 1) {
+        const selector = topOrderSelectors[i];
+        const child = elementChildren[i] as Element | undefined;
+        expect(child, `child index ${i} must exist`).not.toBeUndefined();
+        const isDirect = child?.matches(selector) ?? false;
+        const containsOne = child?.querySelector(selector) !== null;
+        expect(
+          isDirect || containsOne,
+          `child index ${i} must be ${selector} itself OR wrap exactly one ${selector} (direct or .top-controls-cell pattern)`
+        ).toBe(true);
+      }
+    });
+
+    it('lays out .top-controls as a top-anchored flex row with space-between via the stylesheet', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: no `.top-controls` rule exists at all (throws).
+      const css = topControlsRuleCssText(el);
+      expect(css, '.top-controls rule must set display: flex').toContain('display: flex');
+      expect(css, '.top-controls rule must set justify-content: space-between (user explicitly space-between)').toContain(
+        'justify-content: space-between'
+      );
+      expect(css, '.top-controls rule must NOT use space-around').not.toContain('space-around');
+      expect(css, '.top-controls rule must set position: absolute').toContain('position: absolute');
+      expect(css, '.top-controls rule must set top (8px, or 0 with padding)').toContain('top:');
+      expect(css, '.top-controls rule must span left: 0').toContain('left: 0');
+      expect(css, '.top-controls rule must span right: 0').toContain('right: 0');
+      expect(css, '.top-controls rule must set z-index: 1').toContain('z-index: 1');
+      expect(css, '.top-controls rule must set align-items').toContain('align-items');
+    });
+
+    it('removes the old absolute offsets from top children OR overrides them to position: static inside .top-controls', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // Collect every rule mentioning a top control (RED today: these carry
+      // left:8px / left:48px / right:48px / right:8px with no static override).
+      const controlCss = [
+        ...topRulesContaining(el, '.mirror-btn'),
+        ...topRulesContaining(el, '.fullscreen-btn'),
+        ...topRulesContaining(el, '.speed-info'),
+        ...topRulesContaining(el, '.time-info'),
+      ].join('\n');
+      expect(controlCss.length, 'stylesheet must mention the top controls').toBeGreaterThan(0);
+
+      const forbidden = ['left: 8px', 'right: 8px', 'left: 48px', 'right: 48px', 'left: 50%', 'left:50%'];
+      const leaked = forbidden.filter((offset) => controlCss.includes(offset));
+      if (leaked.length > 0) {
+        // Offsets still present → they must be neutralised by a static override
+        // scoped inside .top-controls (mirrors `.bottom-controls .video-btn`).
+        // RED today: no `.top-controls` rule exists, so this fails.
+        const topScoped = topRulesContaining(el, '.top-controls').join('\n');
+        expect(
+          topScoped,
+          `absolute offsets still present (${leaked.join(', ')}) must be overridden by a .top-controls-scoped position: static rule`
+        ).toContain('position: static');
+      }
+      // If no forbidden offsets remain, the removal path passes vacuously.
+      expect(
+        leaked.length === 0 || topRulesContaining(el, '.top-controls').join('\n').includes('position: static'),
+        'top children must not be absolutely positioned with old offsets (remove them or static-override inside .top-controls)'
+      ).toBe(true);
+    });
+
+    it('keeps .top-controls and all 4 items in the DOM with unchanged order when controls are hidden', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: no `.top-controls` at all.
+      expect(getTopControls(el), 'precondition: .top-controls must exist while visible').not.toBeNull();
+
+      clickFrame(el);
+      await el.updateComplete;
+      expect(
+        getButton(el, '.mirror-btn').classList.contains('controls-hidden'),
+        'precondition: frame tap hides controls'
+      ).toBe(true);
+
+      // Hidden controls fade via opacity — nothing may leave the DOM and the
+      // flex order must be unchanged.
+      const topControls = getTopControls(el);
+      expect(topControls, '.top-controls must stay in the DOM when hidden (opacity only, no removal)').not.toBeNull();
+      const elementChildren = topControls ? Array.from(topControls.children) : [];
+      expect(elementChildren.length, '.top-controls must still have exactly 4 children when hidden').toBe(4);
+      for (let i = 0; i < topOrderSelectors.length; i += 1) {
+        const selector = topOrderSelectors[i];
+        const child = elementChildren[i] as Element | undefined;
+        const isDirect = child?.matches(selector) ?? false;
+        const containsOne = child?.querySelector(selector) !== null;
+        expect(isDirect || containsOne, `hidden child index ${i} must still be/wrap ${selector}`).toBe(true);
+      }
+    });
+  });
+
+  // ---- Responsive speed/time visibility (side vs docked + fullscreen) ----
+  //
+  // Assumption (stated per task): "side on larger screens" = viewport
+  // >=768px (t-main-layout `.sidebar` breakpoint; v2Script places the player in
+  // `video-sidebar` there) vs "docked above timeline" = <768px (`video-top`).
+  // Mobile-first: only `@media (min-width:768px)` — never max-width, never
+  // 576px.
+  //
+  // Contract (mirrors the marker-label `not-fullscreen` precedent):
+  // - `.speed-info` / `.time-info` carry `not-fullscreen` when NOT fullscreen,
+  //   and drop it when fullscreen. Mirror/fullscreen buttons NEVER carry it.
+  // - Base (narrow, docked above timeline): `.speed-info.not-fullscreen` /
+  //   `.time-info.not-fullscreen` must NOT hide (visible whenever controls are
+  //   visible — existing persistent/transient logic unchanged).
+  // - Inside `@media (min-width:768px)`: `.speed-info.not-fullscreen` and
+  //   `.time-info.not-fullscreen` hide via `opacity:0` (+ `pointer-events:none`),
+  //   so side-docked non-fullscreen never shows them — even a transient gesture
+  //   (controls-hidden removed) must stay hidden on wide. Fullscreen (no
+  //   `not-fullscreen` class) stays visible at any viewport.
+  // - happy-dom does not resolve media queries via getComputedStyle, so the CSS
+  //   contract is asserted via adoptedStyleSheets cssRules inspection (same
+  //   technique as the ellipsis/anchor tests).
+  //
+  // All tests below are RED against the current implementation (no
+  // `not-fullscreen` on speed/time, no 768px media rule).
+  describe('responsive speed/time visibility', () => {
+    /** All top-level stylesheet rules of the component. */
+    const allStyleRules = (el: TVideoPlayer): CSSRule[] => {
+      const sheet = el.shadowRoot?.adoptedStyleSheets?.[0];
+      const rules = sheet?.cssRules;
+      if (!rules) {
+        throw new Error('Expected shadow root to expose adoptedStyleSheets[0].cssRules');
+      }
+      return Array.from(rules);
+    };
+
+    /** True when the rule is a @media rule (happy-dom exposes cssRules inside). */
+    const asMediaRule = (rule: CSSRule): CSSMediaRule | null => {
+      const maybe = rule as CSSMediaRule;
+      if (typeof maybe.media?.mediaText === 'string' && typeof (maybe as { cssRules?: unknown }).cssRules !== 'undefined') {
+        return maybe;
+      }
+      return null;
+    };
+
+    /** Inner rules of every @media block whose condition mentions the fragment. */
+    const mediaInnerRules = (el: TVideoPlayer, fragment: string): string[] => {
+      const out: string[] = [];
+      for (const rule of allStyleRules(el)) {
+        const media = asMediaRule(rule);
+        if (media && media.media.mediaText.includes(fragment)) {
+          for (const inner of Array.from(media.cssRules)) {
+            const styleRule = inner as CSSStyleRule;
+            out.push(`${styleRule.selectorText ?? ''} { ${styleRule.style?.cssText ?? ''} }`);
+          }
+        }
+      }
+      return out;
+    };
+
+    /** cssText of every @media condition in the component stylesheet. */
+    const mediaConditions = (el: TVideoPlayer): string[] => {
+      const out: string[] = [];
+      for (const rule of allStyleRules(el)) {
+        const media = asMediaRule(rule);
+        if (media) {
+          out.push(media.media.mediaText);
+        }
+      }
+      return out;
+    };
+
+    /** Top-level (non-media) rules only, as `selector { cssText }` strings. */
+    const baseRules = (el: TVideoPlayer): string[] => {
+      const out: string[] = [];
+      for (const rule of allStyleRules(el)) {
+        if (asMediaRule(rule)) {
+          continue;
+        }
+        const styleRule = rule as CSSStyleRule;
+        if (styleRule.selectorText) {
+          out.push(`${styleRule.selectorText} { ${styleRule.style?.cssText ?? ''} }`);
+        }
+      }
+      return out;
+    };
+
+    it('speed/time carry not-fullscreen when not fullscreen and drop it in fullscreen (marker-label pattern)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: neither cluster ever carries not-fullscreen.
+      const speedInfo = getSpeedInfo(el);
+      const timeInfo = getTimeInfo(el);
+      expect(speedInfo, '.speed-info must exist').not.toBeNull();
+      expect(timeInfo, '.time-info must exist').not.toBeNull();
+      expect(
+        speedInfo?.classList.contains('not-fullscreen'),
+        '.speed-info must carry not-fullscreen when NOT fullscreen (same pattern as span.marker-label)'
+      ).toBe(true);
+      expect(
+        timeInfo?.classList.contains('not-fullscreen'),
+        '.time-info must carry not-fullscreen when NOT fullscreen (same pattern as span.marker-label)'
+      ).toBe(true);
+
+      enterFullscreen(el);
+      await el.updateComplete;
+      expect(
+        getSpeedInfo(el)?.classList.contains('not-fullscreen'),
+        'fullscreen must strip not-fullscreen from .speed-info (fullscreen always visible)'
+      ).toBe(false);
+      expect(
+        getTimeInfo(el)?.classList.contains('not-fullscreen'),
+        'fullscreen must strip not-fullscreen from .time-info (fullscreen always visible)'
+      ).toBe(false);
+    });
+
+    it('leaving fullscreen re-adds not-fullscreen to speed/time (fullscreen flip)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: the class is never added, so the flip cannot be observed.
+      const setter = enterFullscreen(el);
+      await el.updateComplete;
+      expect(getSpeedInfo(el)?.classList.contains('not-fullscreen')).toBe(false);
+      expect(getTimeInfo(el)?.classList.contains('not-fullscreen')).toBe(false);
+
+      leaveFullscreen(setter);
+      await el.updateComplete;
+      expect(
+        getSpeedInfo(el)?.classList.contains('not-fullscreen'),
+        'leaving fullscreen must re-add not-fullscreen to .speed-info'
+      ).toBe(true);
+      expect(
+        getTimeInfo(el)?.classList.contains('not-fullscreen'),
+        'leaving fullscreen must re-add not-fullscreen to .time-info'
+      ).toBe(true);
+    });
+
+    it('mirror/fullscreen buttons NEVER carry not-fullscreen while speed/time do (regression guard)', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // Buttons never carry it — in either state (existing contract, like the
+      // bottom buttons). RED overall today because the speed/time half fails.
+      expect(getButton(el, '.mirror-btn').classList.contains('not-fullscreen')).toBe(false);
+      expect(getButton(el, '.fullscreen-btn').classList.contains('not-fullscreen')).toBe(false);
+      expect(
+        getSpeedInfo(el)?.classList.contains('not-fullscreen'),
+        '.speed-info must carry not-fullscreen when NOT fullscreen (buttons must not)'
+      ).toBe(true);
+      expect(
+        getTimeInfo(el)?.classList.contains('not-fullscreen'),
+        '.time-info must carry not-fullscreen when NOT fullscreen (buttons must not)'
+      ).toBe(true);
+
+      enterFullscreen(el);
+      await el.updateComplete;
+      expect(getButton(el, '.mirror-btn').classList.contains('not-fullscreen')).toBe(false);
+      expect(getButton(el, '.fullscreen-btn').classList.contains('not-fullscreen')).toBe(false);
+      expect(getSpeedInfo(el)?.classList.contains('not-fullscreen')).toBe(false);
+      expect(getTimeInfo(el)?.classList.contains('not-fullscreen')).toBe(false);
+    });
+
+    it('stylesheet hides not-fullscreen speed/time inside @media (min-width:768px) via opacity:0 + pointer-events:none', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // RED today: no @media block exists at all.
+      const conditions = mediaConditions(el);
+      expect(
+        conditions.length,
+        'component stylesheet must contain an @media block (min-width:768px, matching the sidebar breakpoint)'
+      ).toBeGreaterThan(0);
+      const wide = conditions.filter((condition) => condition.includes('min-width'));
+      expect(wide.length, 'the @media block must use min-width (mobile-first, never max-width)').toBeGreaterThan(0);
+      expect(
+        wide.join(' | '),
+        'the @media block must target min-width:768px (the video-sidebar breakpoint, not 576px)'
+      ).toContain('768px');
+      expect(wide.join(' | '), 'the @media block must not use 576px').not.toContain('576px');
+      expect(conditions.join(' | '), 'the stylesheet must never use a max-width media query').not.toContain(
+        'max-width'
+      );
+
+      const inner = mediaInnerRules(el, '768px').join('\n');
+      expect(inner, '@media (min-width:768px) must mention .speed-info.not-fullscreen').toContain(
+        '.speed-info.not-fullscreen'
+      );
+      expect(inner, '@media (min-width:768px) must mention .time-info.not-fullscreen').toContain(
+        '.time-info.not-fullscreen'
+      );
+      expect(inner, 'wide not-fullscreen speed/time must hide via opacity:0').toContain('opacity: 0');
+      expect(inner, 'wide not-fullscreen speed/time must disable pointer-events').toContain(
+        'pointer-events: none'
+      );
+    });
+
+    it('base stylesheet never hides not-fullscreen speed/time (narrow stays visible) and fullscreen is never hidden', async () => {
+      const { el } = createPlayerWithVideo();
+      await el.updateComplete;
+
+      // Base (mobile-first, narrow — docked above the timeline): a
+      // `.speed-info.not-fullscreen` / `.time-info.not-fullscreen` rule outside
+      // any media query must NOT set opacity:0, so narrow non-fullscreen stays
+      // visible whenever controls are visible. (Vacuous today — RED comes from
+      // the required 768px media block asserted below.)
+      for (const css of baseRules(el)) {
+        if (css.includes('.speed-info.not-fullscreen') || css.includes('.time-info.not-fullscreen')) {
+          expect(css, `base rule must NOT hide narrow not-fullscreen speed/time: ${css}`).not.toContain(
+            'opacity: 0'
+          );
+          expect(css, `base rule must NOT hide narrow not-fullscreen speed/time: ${css}`).not.toContain(
+            'opacity:0'
+          );
+        }
+      }
+
+      // The wide hiding must exist (otherwise this mobile-first contract is
+      // meaningless) and must be scoped to `not-fullscreen` only: bare
+      // `.speed-info` / `.time-info` (fullscreen, class dropped) must never be
+      // hidden by any rule, so fullscreen stays visible at every viewport —
+      // even a transient gesture (controls-hidden removed) cannot reveal the
+      // side-docked clusters on wide because the opacity:0 sits on the
+      // more-specific `.not-fullscreen` selector, not on the transient class.
+      const inner = mediaInnerRules(el, '768px').join('\n');
+      expect(
+        inner.length,
+        'the @media (min-width:768px) block hiding not-fullscreen speed/time must exist'
+      ).toBeGreaterThan(0);
+      for (const css of [...baseRules(el), ...mediaInnerRules(el, '')]) {
+        const hidesBareSpeed =
+          /(^|[\s,{])\.speed-info(\s*\{|\s*,|\s*$)/.test(css) && css.includes('opacity: 0');
+        const hidesBareTime =
+          /(^|[\s,{])\.time-info(\s*\{|\s*,|\s*$)/.test(css) && css.includes('opacity: 0');
+        expect(
+          hidesBareSpeed,
+          `fullscreen .speed-info (no not-fullscreen class) must never be hidden at any viewport: ${css}`
+        ).toBe(false);
+        expect(
+          hidesBareTime,
+          `fullscreen .time-info (no not-fullscreen class) must never be hidden at any viewport: ${css}`
+        ).toBe(false);
+      }
+    });
   });
 });
