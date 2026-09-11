@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { LitElement, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import { Dial } from './t-dial.js';
 
 // Access private members for testing via cast
@@ -356,6 +358,92 @@ describe('t-dial max=0 should mean "no max" (unknown duration)', () => {
     dialInternal(element)._value = 5;
     dialInternal(element)._handleIncrement();
     expect(dialInternal(element)._value).toBe(5.1);
+  });
+});
+
+/**
+ * Parent element that mimics how t-footer binds .value to its speed dial.
+ * This is the exact pattern used in t-footer.ts:
+ *
+ *   <t-dial .value=${this.speed} ...></t-dial>
+ *
+ * If the t-dial doesn't update when the parent's speed property changes,
+ * this test will catch it.
+ */
+@customElement('test-speed-host')
+class TestSpeedHost extends LitElement {
+  @property({ type: Number }) speed = 50;
+
+  render() {
+    return html`
+      <t-dial
+        min="50"
+        max="200"
+        step="5"
+        label="Speed"
+        iconName="speed"
+        defaultValue="100"
+        .value=${this.speed}
+        unit="%"
+      ></t-dial>
+    `;
+  }
+}
+
+describe('t-dial speed dial update via parent Lit binding (speed dial bug)', () => {
+  let host: TestSpeedHost;
+  let dial: Dial;
+
+  beforeEach(async () => {
+    host = document.createElement('test-speed-host') as TestSpeedHost;
+    document.body.appendChild(host);
+    await host.updateComplete;
+    dial = host.shadowRoot!.querySelector('t-dial')! as Dial;
+  });
+
+  afterEach(() => {
+    if (document.body.contains(host)) {
+      document.body.removeChild(host);
+    }
+  });
+
+  it('should update the speed dial display when parent speed changes from 50 to 100', async () => {
+    // Initial state: speed = 50 (default on TestSpeedHost)
+    expect(host.speed).toBe(50);
+    await dial.updateComplete;
+    const displayAfter50 = dial.shadowRoot?.querySelector('.value-content');
+    expect(displayAfter50?.textContent?.trim()).toBe('50%');
+
+    // Simulate "increment until" logic: speed jumps from 50 to 100
+    // This mirrors v2Script.ts line 2800: footer.speed = newSpeed
+    host.speed = 100;
+    await host.updateComplete;
+    await dial.updateComplete;
+
+    const displayAfter100 = dial.shadowRoot?.querySelector('.value-content');
+    expect(displayAfter100?.textContent?.trim()).toBe('100%');
+  });
+
+  it('should update through a sequence of speed increments', async () => {
+    // Simulate 3 loops: 50 → 75 → 100
+    expect(dial.shadowRoot?.querySelector('.value-content')?.textContent?.trim()).toBe('50%');
+
+    host.speed = 75;
+    await host.updateComplete;
+    await dial.updateComplete;
+    expect(dial.shadowRoot?.querySelector('.value-content')?.textContent?.trim()).toBe('75%');
+
+    host.speed = 100;
+    await host.updateComplete;
+    await dial.updateComplete;
+    expect(dial.shadowRoot?.querySelector('.value-content')?.textContent?.trim()).toBe('100%');
+  });
+
+  it('should update _value property through parent binding', async () => {
+    host.speed = 100;
+    await host.updateComplete;
+    await dial.updateComplete;
+    expect(dialInternal(dial)._value).toBe(100);
   });
 });
 

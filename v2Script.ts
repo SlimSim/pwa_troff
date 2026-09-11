@@ -2466,6 +2466,12 @@ document.addEventListener('DOMContentLoaded', () => {
         existingMarkers.push(event.detail.marker);
         // Merge any markers that are now within the time threshold of each other
         const mergedMarkers = mergeNearbyMarkers(existingMarkers);
+        // Sort by time so next/prev marker navigation works correctly
+        mergedMarkers.sort((a, b) => {
+          const timeA = a.time === 'max' ? Infinity : Number(a.time);
+          const timeB = b.time === 'max' ? Infinity : Number(b.time);
+          return timeA - timeB;
+        });
         nDB.setOnSong(songKey, 'markers', mergedMarkers);
         void saveSongData(songKey);
       }
@@ -2571,6 +2577,12 @@ document.addEventListener('DOMContentLoaded', () => {
           existingMarkers[markerIndex] = event.detail.marker;
           // Merge any markers that are now within the time threshold of each other
           const mergedMarkers = mergeNearbyMarkers(existingMarkers);
+          // Sort by time so next/prev marker navigation works correctly
+          mergedMarkers.sort((a, b) => {
+            const timeA = a.time === 'max' ? Infinity : Number(a.time);
+            const timeB = b.time === 'max' ? Infinity : Number(b.time);
+            return timeA - timeB;
+          });
           nDB.setOnSong(songKey, 'markers', mergedMarkers);
         }
         void saveSongData(songKey);
@@ -2798,6 +2810,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           if (footer) {
             footer.speed = newSpeed;
+            if (typeof (footer as unknown as { requestUpdate?: () => void }).requestUpdate === 'function') {
+              (footer as unknown as { requestUpdate: () => void }).requestUpdate();
+            }
           }
           const songKey = getCurrentSongKey();
           if (songKey) {
