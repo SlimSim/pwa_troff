@@ -272,7 +272,18 @@ export class TVideoPlayer extends LitElement {
 
   private static readonly DRAG_THRESHOLD_PX = 5;
 
+  static readonly MIN_ZOOM = 1;
+  static readonly MAX_ZOOM = 4;
+
   private _dragPointerId: number | null = null;
+  private _activePointers = new Map<number, { x: number; y: number }>();
+  private _pinching = false;
+  private _pinchInitialDist = 0;
+  private _pinchInitialMidX = 0;
+  private _pinchInitialMidY = 0;
+  private _pinchBaseScale = 1;
+  private _pinchBasePanX = 0;
+  private _pinchBasePanY = 0;
   private _dragStartX = 0;
   private _dragStartY = 0;
   private _dragLastX = 0;
@@ -315,6 +326,46 @@ export class TVideoPlayer extends LitElement {
   @property({ type: String }) startMarkerId = '';
   @property({ type: Number }) speed = 100;
   @property({ type: Boolean }) portrait = false;
+
+  @property({ type: Number }) zoomScale = 1;
+  @property({ type: Number }) zoomPanX = 0;
+  @property({ type: Number }) zoomPanY = 0;
+
+  get zoomX(): number {
+    return this.zoomPanX;
+  }
+
+  get zoomY(): number {
+    return this.zoomPanY;
+  }
+
+  get panX(): number {
+    return this.zoomPanX;
+  }
+
+  get panY(): number {
+    return this.zoomPanY;
+  }
+
+  resetZoom(): void {
+    this.zoomScale = 1;
+    this.zoomPanX = 0;
+    this.zoomPanY = 0;
+    this._pinching = false;
+    this._applyZoomTransform();
+    this.requestUpdate();
+  }
+
+  private _applyZoomTransform(): void {
+    const video = this.querySelector('video');
+    if (!video) return;
+    if (this.zoomScale <= 1) {
+      video.style.transform = this._mirrored ? 'scaleX(-1)' : '';
+      return;
+    }
+    const pan = `translate(${this.zoomPanX}px, ${this.zoomPanY}px) scale(${this.zoomScale})`;
+    video.style.transform = this._mirrored ? `${pan} scaleX(-1)` : pan;
+  }
 
   private _controlsTimer?: ReturnType<typeof setTimeout>;
   private _gestureTimer?: ReturnType<typeof setTimeout>;
@@ -571,10 +622,7 @@ export class TVideoPlayer extends LitElement {
 
   private _onMirrorClick() {
     this._mirrored = !this._mirrored;
-    const video = this.querySelector('video');
-    if (video) {
-      video.style.transform = this._mirrored ? 'scaleX(-1)' : '';
-    }
+    this._applyZoomTransform();
   }
 
   private _onResetSpeedClick() {
@@ -734,6 +782,29 @@ export class TVideoPlayer extends LitElement {
     }
     if (event.button !== 0) return; // primary button / touch only
 
+    this._activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (this._activePointers.size === 2) {
+      // Second finger lands: cancel the in-progress single-finger gesture so
+      // no further scrub/speed events fire while pinched.
+      this._dragAxis = null;
+      this._dragSpeedAccum = 0;
+      this._dragScrubAccumX = 0;
+      this._scrubTarget = null;
+      this._pendingSeekTime = null;
+      this._flushStash = false;
+      const points = [...this._activePointers.values()];
+      this._pinchInitialDist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+      this._pinchInitialMidX = (points[0].x + points[1].x) / 2;
+      this._pinchInitialMidY = (points[0].y + points[1].y) / 2;
+      this._pinchBaseScale = this.zoomScale;
+      this._pinchBasePanX = this.zoomPanX;
+      this._pinchBasePanY = this.zoomPanY;
+      this._pinching = true;
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+      return;
+    }
+    if (this._activePointers.size > 2) return;
+
     this._dragPointerId = event.pointerId;
     this._dragStartX = this._dragLastX = event.clientX;
     this._dragStartY = this._dragLastY = event.clientY;
@@ -745,7 +816,18 @@ export class TVideoPlayer extends LitElement {
   }
 
   private _onFramePointerMove(event: PointerEvent) {
+    if (this._activePointers.has(event.pointerId) && this._activePointers.size >= 2) {
+      this._activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (this._pinching) {
+        this._updatePinchZoom();
+      }
+      return;
+    }
+    if (this._activePointers.size >= 2) return;
     if (this._dragPointerId === null || event.pointerId !== this._dragPointerId) return;
+    if (this._activePointers.has(event.pointerId)) {
+      this._activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
 
     const deltaX = event.clientX - this._dragLastX;
     const deltaY = event.clientY - this._dragLastY;
@@ -825,7 +907,77 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
+  private _updatePinchZoom(): void {
+    const points = [...this._activePointers.values()];
+    if (points.length < 2 || this._pinchInitialDist <= 0) return;
+    const newDist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    const newMidX = (points[0].x + points[1].x) / 2;
+    const newMidY = (points[0].y + points[1].y) / 2;
+    const newScale = Math.min(
+      Math.max(this._pinchBaseScale * (newDist / this._pinchInitialDist), TVideoPlayer.MIN_ZOOM),
+      TVideoPlayer.MAX_ZOOM
+    );
+    if (newScale <= TVideoPlayer.MIN_ZOOM) {
+      this.zoomScale = TVideoPlayer.MIN_ZOOM;
+      this.zoomPanX = 0;
+      this.zoomPanY = 0;
+    } else {
+      let panX = this._pinchBasePanX + (newMidX - this._pinchInitialMidX);
+      let panY = this._pinchBasePanY + (newMidY - this._pinchInitialMidY);
+      const frame = this.shadowRoot?.querySelector('.video-frame') as HTMLElement | null;
+      const frameW = frame?.clientWidth ?? 0;
+      const frameH = frame?.clientHeight ?? 0;
+      if (frameW > 0) {
+        const maxX = ((newScale - 1) * frameW) / 2;
+        panX = Math.min(Math.max(panX, -maxX), maxX);
+      }
+      if (frameH > 0) {
+        const maxY = ((newScale - 1) * frameH) / 2;
+        panY = Math.min(Math.max(panY, -maxY), maxY);
+      }
+      this.zoomScale = newScale;
+      this.zoomPanX = panX;
+      this.zoomPanY = panY;
+    }
+    this._dragMoved = true; // suppress the click-to-toggle-controls after pinch
+    this._applyZoomTransform();
+  }
+
   private _onFramePointerUp(event: PointerEvent) {
+    const wasPinching = this._pinching;
+    if (this._activePointers.has(event.pointerId)) {
+      this._activePointers.delete(event.pointerId);
+    }
+    if (wasPinching) {
+      if (this._activePointers.size === 1) {
+        // End pinch: re-anchor single-finger tracking on the remaining pointer
+        // so returning to 1 finger causes no jump.
+        const [[remainingId, remaining]] = [...this._activePointers.entries()];
+        this._pinching = false;
+        this._dragPointerId = remainingId;
+        this._dragStartX = this._dragLastX = remaining.x;
+        this._dragStartY = this._dragLastY = remaining.y;
+        this._dragAxis = null;
+        this._dragSpeedAccum = 0;
+        this._dragScrubAccumX = 0;
+        this._scrubTarget = null;
+        this._pendingSeekTime = null;
+        this._flushStash = false;
+        this._dragMoved = true;
+        return;
+      }
+      if (this._activePointers.size === 0) {
+        this._pinching = false;
+        this._dragPointerId = null;
+        this._dragAxis = null;
+        this._scrubTarget = null;
+        this._pendingSeekTime = null;
+        this._flushStash = false;
+        this._dragMoved = true;
+        return;
+      }
+      return;
+    }
     if (this._dragPointerId !== event.pointerId) return;
     if (this._scrubTarget !== null) {
       // The gesture is over, so flush the exact accumulated target even
