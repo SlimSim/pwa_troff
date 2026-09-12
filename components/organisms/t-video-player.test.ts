@@ -1830,7 +1830,8 @@ describe('t-video-player', () => {
     // Split contract: speed gestures surface in the left `.speed-info` cluster
     // (persistent while controls are visible).
     expect(isClusterVisible(getSpeedInfo(el))).toBe(true);
-    expect(getIconName(el, '.speed-info')).toBe('speed');
+    // Reset button (with reset icon) now precedes speed icon in .speed-info DOM order — assert order-agnostic containment.
+    expect(getButton(el, '.speed-info').querySelector('t-icon[name="speed"]')?.getAttribute('name')).toBe('speed');
     expect(getSpeedText(el)).toBe('110%');
   });
 
@@ -2307,7 +2308,8 @@ describe('t-video-player', () => {
     await el.updateComplete;
 
     expect(isClusterVisible(getSpeedInfo(el)), 'a speed drag must show the speed cluster').toBe(true);
-    expect(getIconName(el, '.speed-info')).toBe('speed');
+    // Reset button (with reset icon) now precedes speed icon in .speed-info DOM order — assert order-agnostic containment.
+    expect(getButton(el, '.speed-info').querySelector('t-icon[name="speed"]')?.getAttribute('name')).toBe('speed');
     expect(
       getSpeedText(el),
       'speed-text must show a whole-number percent (75px up = 8 steps × ~1.125% → 109%)'
@@ -3371,7 +3373,8 @@ describe('t-video-player', () => {
 
       // RED today: no `.speed-info` at all (only center `.gesture-indicator` after a wheel).
       expect(getSpeedInfo(el), '.speed-info must exist').not.toBeNull();
-      expect(getIconName(el, '.speed-info')).toBe('speed');
+      // Reset button (with reset icon) now precedes speed icon in .speed-info DOM order — assert order-agnostic containment.
+    expect(getButton(el, '.speed-info').querySelector('t-icon[name="speed"]')?.getAttribute('name')).toBe('speed');
       expect(getSpeedText(el), '.speed-text must show Math.round(speed)%').toBe('110%');
     });
 

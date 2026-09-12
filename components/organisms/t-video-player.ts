@@ -30,6 +30,7 @@ export class TVideoPlayer extends LitElement {
     .video-btn {
       position: absolute;
       top: 8px;
+      height: 1rem;
       z-index: 1;
       transition: opacity 0.2s ease;
       --regular-button-color: rgba(0, 0, 0, 0.6);
@@ -70,6 +71,31 @@ export class TVideoPlayer extends LitElement {
       bottom: auto;
       transform: none;
       pointer-events: auto;
+    }
+    .reset-content {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.4em;
+      min-height: 1.6em;
+    }
+    .reset-icon {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      transform: scale(2, -2);
+      transform-origin: center;
+      rotate: 90deg;
+      top: 1rem;
+      right: 0.2rem;
+    }
+    .reset-text {
+      position: relative;
+      z-index: 1;
+      margin-top: 1em;
+      font-size: 0.5em;
+      line-height: 1;
     }
     .speed-info.controls-hidden,
     .time-info.controls-hidden {
@@ -131,6 +157,7 @@ export class TVideoPlayer extends LitElement {
     .top-controls .speed-info,
     .top-controls .time-info {
       position: static;
+      height: 1rem;
       top: auto;
       left: auto;
       right: auto;
@@ -359,7 +386,9 @@ export class TVideoPlayer extends LitElement {
     if (!screen.orientation) {
       return;
     }
-    const orient = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+    const orient = screen.orientation as ScreenOrientation & {
+      lock?: (o: string) => Promise<void>;
+    };
     if (orient.lock) {
       void orient.lock(mode).catch(() => {
         // Orientation lock not supported or denied — fail silently
@@ -984,24 +1013,37 @@ export class TVideoPlayer extends LitElement {
           >
             <t-icon name="mirror"></t-icon>
           </t-butt>
-          <div class="speed-info ${this._showSpeedInfo ? '' : 'controls-hidden'} ${this._isFullscreen ? '' : 'not-fullscreen'}">
-            <t-icon name="speed"></t-icon>
-            <span class="speed-text">${Math.round(this.speed)}%</span>
+          <div
+            class="speed-info ${this._showSpeedInfo ? '' : 'controls-hidden'} ${this._isFullscreen
+              ? ''
+              : 'not-fullscreen'}"
+          >
             ${Math.round(this.speed) !== 100
               ? html`
                   <t-butt
-                    class="video-btn reset-speed-btn ${this._showSpeedInfo ? '' : 'controls-hidden'}"
+                    class="video-btn reset-speed-btn ${this._showSpeedInfo
+                      ? ''
+                      : 'controls-hidden'}"
                     slim
+                    ghost
                     title="Reset speed"
                     @click=${this._onResetSpeedClick}
                   >
-                    <t-icon name="reset"></t-icon>
-                    <span class="reset-text">100%</span>
+                    <span class="reset-content">
+                      <t-icon class="reset-icon" name="jump-back"></t-icon>
+                      <span class="reset-text">100%</span>
+                    </span>
                   </t-butt>
                 `
               : ''}
+            <t-icon name="speed"></t-icon>
+            <span class="speed-text">${Math.round(this.speed)}%</span>
           </div>
-          <div class="time-info ${this._showTimeInfo ? '' : 'controls-hidden'} ${this._isFullscreen ? '' : 'not-fullscreen'}">
+          <div
+            class="time-info ${this._showTimeInfo ? '' : 'controls-hidden'} ${this._isFullscreen
+              ? ''
+              : 'not-fullscreen'}"
+          >
             <t-icon name="time"></t-icon>
             <span class="time-text">${this._timeLabel}</span>
           </div>
