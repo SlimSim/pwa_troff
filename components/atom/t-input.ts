@@ -194,6 +194,14 @@ export class TInput extends LitElement {
 
   @query('input') private _input!: HTMLInputElement;
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    // Ensure the shadow DOM is rendered synchronously so that focus() and
+    // blur() work immediately after the element is connected (e.g. when
+    // called right after a parent Lit re-render).
+    this.performUpdate();
+  }
+
   private _generateId() {
     return `t-input-${Math.random().toString(36).substr(2, 9)}`;
   }

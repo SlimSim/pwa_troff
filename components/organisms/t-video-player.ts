@@ -41,8 +41,7 @@ export class TVideoPlayer extends LitElement {
       pointer-events: none;
     }
     .video-btn.not-fullscreen {
-      opacity: 0;
-      pointer-events: none;
+      display: none;
     }
     .mirror-btn {
       left: 8px;
@@ -204,13 +203,12 @@ export class TVideoPlayer extends LitElement {
     }
     .marker-label.controls-hidden,
     .marker-label.not-fullscreen {
-      opacity: 0;
+      display: none;
     }
     @media (min-width: 768px) {
       .speed-info.not-fullscreen,
       .time-info.not-fullscreen {
-        opacity: 0;
-        pointer-events: none;
+        display: none;
       }
     }
     .video-frame {
