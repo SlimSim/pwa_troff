@@ -49,6 +49,9 @@ jobs:
             --exclude '*.ts' \
             ./ dist/
 
+      - name: Set PWA name to "Troff Beta"
+        run: node scripts/set-pwa-name.js beta
+
       - name: Generate Workbox service worker (beta)
         run: npm run workbox:beta
 

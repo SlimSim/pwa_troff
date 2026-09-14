@@ -15,6 +15,7 @@ module.exports = [
       'build/**',
       'assets/external/**',
       '**/*.min.js',
+      'scripts/**',
       // 'making list longer to avoid single row
       // 'assets/external/notify-js/notify.min.js',
       // 'assets/external/jquery-3.6.0.min.js',
