@@ -320,6 +320,16 @@ export class MarkerSlider extends LitElement {
     );
   }
 
+  private _dispatchZoomChanged() {
+    this.dispatchEvent(
+      new CustomEvent('zoom-changed', {
+        detail: { zoomLevel: this.zoomLevel },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _handleWheel(event: WheelEvent) {
     if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
@@ -445,6 +455,15 @@ export class MarkerSlider extends LitElement {
 
     const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
     this.zoomLevel = clampedZoom;
+
+    // Notify listeners (v2Script) so gesture zooms/pans can be persisted.
+    this.dispatchEvent(
+      new CustomEvent('zoom-changed', {
+        detail: { zoomLevel: this.zoomLevel },
+        bubbles: true,
+        composed: true,
+      })
+    );
 
     // Apply the scroll AFTER the zoom re-renders so the browser clamps against
     // the NEW scroll extent (maxScroll grows when zooming in).

@@ -189,3 +189,177 @@ describe('t-butt confirm behavior', () => {
     expect(button.classList.contains('ghost')).toBe(true);
   });
 });
+
+describe('t-butt keyboard modifier routing', () => {
+  const created: TButt[] = [];
+
+  const pressKey = (key: string, init: KeyboardEventInit = {}) => {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    );
+  };
+
+  async function makeButt(opts: { key: string; shift?: boolean; alt?: boolean }) {
+    const el = new TButt();
+    el.key = opts.key;
+    el.shift = opts.shift ?? false;
+    el.alt = opts.alt ?? false;
+    const clicks: Event[] = [];
+    el.addEventListener('click', (e: Event) => clicks.push(e));
+    document.body.appendChild(el);
+    created.push(el);
+    await el.updateComplete;
+    return { el, clicks };
+  }
+
+  afterEach(() => {
+    for (const el of created.splice(0)) {
+      if (document.body.contains(el)) {
+        document.body.removeChild(el);
+      }
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('plain button fires on plain key press', async () => {
+    const { clicks } = await makeButt({ key: 'x' });
+    pressKey('x');
+    expect(clicks.length).toBe(1);
+  });
+
+  it('plain button does NOT fire on Shift+key', async () => {
+    const { clicks } = await makeButt({ key: 'x' });
+    pressKey('x', { shiftKey: true });
+    expect(clicks.length).toBe(0);
+  });
+
+  it('plain button does NOT fire on Alt+key', async () => {
+    const { clicks } = await makeButt({ key: 'x' });
+    pressKey('x', { altKey: true });
+    expect(clicks.length).toBe(0);
+  });
+
+  it('shift button fires on Shift+key', async () => {
+    const { clicks } = await makeButt({ key: 'x', shift: true });
+    pressKey('x', { shiftKey: true });
+    expect(clicks.length).toBe(1);
+  });
+
+  it('shift button does NOT fire on plain key press', async () => {
+    const { clicks } = await makeButt({ key: 'x', shift: true });
+    pressKey('x');
+    expect(clicks.length).toBe(0);
+  });
+
+  it('alt button fires on Alt+key', async () => {
+    const { clicks } = await makeButt({ key: 'x', alt: true });
+    pressKey('x', { altKey: true });
+    expect(clicks.length).toBe(1);
+  });
+
+  it('alt button does NOT fire on plain key press', async () => {
+    const { clicks } = await makeButt({ key: 'x', alt: true });
+    pressKey('x');
+    expect(clicks.length).toBe(0);
+  });
+
+  it('Ctrl/Meta must never trigger, even on plain button', async () => {
+    const { clicks } = await makeButt({ key: 'x' });
+    pressKey('x', { ctrlKey: true });
+    pressKey('x', { metaKey: true });
+    expect(clicks.length).toBe(0);
+  });
+
+  it('three buttons sharing one key: plain press triggers ONLY the plain button (exactly one click)', async () => {
+    const plain = await makeButt({ key: 'b' });
+    const withAlt = await makeButt({ key: 'b', alt: true });
+    const withShift = await makeButt({ key: 'b', shift: true });
+    pressKey('b');
+    const total = plain.clicks.length + withAlt.clicks.length + withShift.clicks.length;
+    expect(total).toBe(1);
+    expect(plain.clicks.length).toBe(1);
+    expect(withAlt.clicks.length).toBe(0);
+    expect(withShift.clicks.length).toBe(0);
+  });
+
+  it('three buttons sharing one key: Shift+B triggers ONLY the shift button', async () => {
+    const plain = await makeButt({ key: 'b' });
+    const withAlt = await makeButt({ key: 'b', alt: true });
+    const withShift = await makeButt({ key: 'b', shift: true });
+    pressKey('b', { shiftKey: true });
+    const total = plain.clicks.length + withAlt.clicks.length + withShift.clicks.length;
+    expect(total).toBe(1);
+    expect(withShift.clicks.length).toBe(1);
+    expect(plain.clicks.length).toBe(0);
+    expect(withAlt.clicks.length).toBe(0);
+  });
+
+  it('three buttons sharing one key: Alt+B triggers ONLY the alt button', async () => {
+    const plain = await makeButt({ key: 'b' });
+    const withAlt = await makeButt({ key: 'b', alt: true });
+    const withShift = await makeButt({ key: 'b', shift: true });
+    pressKey('b', { altKey: true });
+    const total = plain.clicks.length + withAlt.clicks.length + withShift.clicks.length;
+    expect(total).toBe(1);
+    expect(withAlt.clicks.length).toBe(1);
+    expect(plain.clicks.length).toBe(0);
+    expect(withShift.clicks.length).toBe(0);
+  });
+});
+
+describe('t-butt Shift+z prefix (zoom-out regression)', () => {
+  const created: TButt[] = [];
+
+  const pressKey = (key: string, init: KeyboardEventInit = {}) => {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    );
+  };
+
+  async function makeZoomPair() {
+    // Mirrors t-current-song-controls lines 449-450:
+    // zoomOut button uses key "Shift+z", zoom button uses key "z".
+    const zoomOut = new TButt();
+    zoomOut.key = 'Shift+z';
+    const zoomOutClicks: Event[] = [];
+    zoomOut.addEventListener('click', (e: Event) => zoomOutClicks.push(e));
+    document.body.appendChild(zoomOut);
+    created.push(zoomOut);
+    await zoomOut.updateComplete;
+
+    const zoom = new TButt();
+    zoom.key = 'z';
+    const zoomClicks: Event[] = [];
+    zoom.addEventListener('click', (e: Event) => zoomClicks.push(e));
+    document.body.appendChild(zoom);
+    created.push(zoom);
+    await zoom.updateComplete;
+
+    return { zoomOutClicks, zoomClicks };
+  }
+
+  afterEach(() => {
+    for (const el of created.splice(0)) {
+      if (document.body.contains(el)) {
+        document.body.removeChild(el);
+      }
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('plain "z" triggers ONLY the zoom button (exactly one click)', async () => {
+    const { zoomOutClicks, zoomClicks } = await makeZoomPair();
+    pressKey('z');
+    expect(zoomClicks.length).toBe(1);
+    expect(zoomOutClicks.length).toBe(0);
+  });
+
+  it('Shift+Z triggers ONLY the zoom-out button (exactly one click)', async () => {
+    const { zoomOutClicks, zoomClicks } = await makeZoomPair();
+    pressKey('Z', { shiftKey: true });
+    const total = zoomOutClicks.length + zoomClicks.length;
+    expect(total).toBe(1);
+    expect(zoomOutClicks.length).toBe(1);
+    expect(zoomClicks.length).toBe(0);
+  });
+});

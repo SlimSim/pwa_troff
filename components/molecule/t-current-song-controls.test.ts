@@ -186,6 +186,69 @@ describe('t-current-song-controls share song feature', () => {
   });
 });
 
+describe('t-current-song-controls zoom keyboard shortcuts (Shift+Z zoom-out regression)', () => {
+  let element: CurrentSongControls;
+
+  beforeEach(() => {
+    element = new CurrentSongControls();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  function pressKey(key: string, init: KeyboardEventInit = {}) {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    );
+  }
+
+  function collectSongActions() {
+    const events: CustomEvent[] = [];
+    element.addEventListener('song-action-requested', (e: Event) => {
+      events.push(e as CustomEvent);
+    });
+    return events;
+  }
+
+  it('plain "z" triggers ONLY Zoom (exactly one song-action-requested with action zoom)', async () => {
+    await element.updateComplete;
+    const events = collectSongActions();
+
+    pressKey('z');
+    await element.updateComplete;
+
+    expect(events.length).toBe(1);
+    expect(events[0].detail).toEqual({ action: 'zoom' });
+  });
+
+  it('Shift+Z (uppercase Z) triggers ONLY ZoomOut (exactly one event with action zoomOut)', async () => {
+    await element.updateComplete;
+    const events = collectSongActions();
+
+    pressKey('Z', { shiftKey: true });
+    await element.updateComplete;
+
+    expect(events.length).toBe(1);
+    expect(events[0].detail).toEqual({ action: 'zoomOut' });
+  });
+
+  it('Shift+z (lowercase z with shiftKey) triggers ONLY ZoomOut (exactly one event)', async () => {
+    await element.updateComplete;
+    const events = collectSongActions();
+
+    pressKey('z', { shiftKey: true });
+    await element.updateComplete;
+
+    expect(events.length).toBe(1);
+    expect(events[0].detail).toEqual({ action: 'zoomOut' });
+  });
+});
+
 describe('t-current-song-controls advanced panels use t-details', () => {
   let element: CurrentSongControls;
 

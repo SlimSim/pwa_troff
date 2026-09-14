@@ -191,16 +191,19 @@ export class DetailHeader extends LitElement {
 
   render() {
     const cls = this.isSearchFocused ? 'search-expanded' : '';
-    const headerStyle =
-      this.headerColor
-        ? `background-color: ${this.headerColor}; color: ${this.headerTextColor}; border-bottom-color: ${this.headerBorderColor || 'transparent'};`
-        : '';
+    const headerStyle = this.headerColor
+      ? `background-color: ${this.headerColor}; color: ${this.headerTextColor}; border-bottom-color: ${this.headerBorderColor || 'transparent'};`
+      : '';
 
     return html`
       <div class="detail-header" style=${headerStyle}>
         <div class="left-area">
           <div class="back-and-icon">
-            <span class="back-arrow" @click=${() => this.dispatchEvent(new CustomEvent('back', { bubbles: true, composed: true }))}>
+            <span
+              class="back-arrow"
+              @click=${() =>
+                this.dispatchEvent(new CustomEvent('back', { bubbles: true, composed: true }))}
+            >
               <t-icon name="chevron-up"></t-icon>
             </span>
 

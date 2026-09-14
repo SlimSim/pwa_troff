@@ -33,7 +33,7 @@ export class HeaderActions extends LitElement {
 
     /* Mobile: when search is collapsed (narrow), constrain the right area
        so the buttons wrap to 2 rows much sooner */
-    .header-actions:not(.search-expanded) {
+    .header-actions.narrow:not(.search-expanded) {
       max-width: 90px;
     }
 
@@ -109,7 +109,7 @@ export class HeaderActions extends LitElement {
     }
 
     /* Hide sort slot when search is expanded on mobile */
-    .header-actions.search-expanded > slot[name="sort"] {
+    .header-actions.search-expanded > slot[name='sort'] {
       display: none;
     }
 
@@ -117,6 +117,9 @@ export class HeaderActions extends LitElement {
     @media (min-width: 576px) {
       .header-actions:not(.search-expanded),
       .header-actions.search-expanded {
+        max-width: none;
+      }
+      .header-actions.narrow:not(.search-expanded) {
         max-width: none;
       }
 
@@ -149,7 +152,7 @@ export class HeaderActions extends LitElement {
         pointer-events: auto;
       }
 
-      .header-actions.search-expanded > slot[name="sort"] {
+      .header-actions.search-expanded > slot[name='sort'] {
         display: contents;
       }
     }
@@ -179,8 +182,11 @@ export class HeaderActions extends LitElement {
   /** Whether the search input is focused (drives mobile button collapse). */
   @property({ type: Boolean, reflect: true }) isSearchFocused = false;
 
+  @property({ type: Boolean }) narrow = false;
+
   render() {
-    const cls = this.isSearchFocused ? 'search-expanded' : '';
+    const cls =
+      `${this.isSearchFocused ? 'search-expanded' : ''} ${this.narrow ? 'narrow' : ''}`.trim();
 
     return html`
       <div class="header-actions ${cls}">
@@ -190,7 +196,10 @@ export class HeaderActions extends LitElement {
               <t-butt
                 class="action-btn ${cls}"
                 icon
-                @click=${() => this.dispatchEvent(new CustomEvent('add-click', { bubbles: true, composed: true }))}
+                @click=${() =>
+                  this.dispatchEvent(
+                    new CustomEvent('add-click', { bubbles: true, composed: true })
+                  )}
                 title=${this.addTitle}
               >
                 <t-icon name=${this.addIcon}></t-icon>
@@ -209,7 +218,10 @@ export class HeaderActions extends LitElement {
                 icon
                 href="/find.html"
                 target="_blank"
-                @click=${() => this.dispatchEvent(new CustomEvent('find-click', { bubbles: true, composed: true }))}
+                @click=${() =>
+                  this.dispatchEvent(
+                    new CustomEvent('find-click', { bubbles: true, composed: true })
+                  )}
                 title="Find new songs!"
               >
                 <t-icon name="note-search"></t-icon>
@@ -246,7 +258,9 @@ export class HeaderActions extends LitElement {
                 })
               )}
             @focus=${() =>
-              this.dispatchEvent(new CustomEvent('search-focus', { bubbles: true, composed: true }))}
+              this.dispatchEvent(
+                new CustomEvent('search-focus', { bubbles: true, composed: true })
+              )}
             @blur=${() =>
               this.dispatchEvent(new CustomEvent('search-blur', { bubbles: true, composed: true }))}
           ></t-input>
@@ -258,7 +272,10 @@ export class HeaderActions extends LitElement {
               <t-butt
                 class="action-btn ${cls}"
                 icon
-                @click=${() => this.dispatchEvent(new CustomEvent('edit-click', { bubbles: true, composed: true }))}
+                @click=${() =>
+                  this.dispatchEvent(
+                    new CustomEvent('edit-click', { bubbles: true, composed: true })
+                  )}
                 title=${this.editTitle}
               >
                 <t-icon name="edit"></t-icon>

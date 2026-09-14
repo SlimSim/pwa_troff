@@ -519,9 +519,10 @@ export class GroupList extends LitElement {
               addIcon="note-plus"
               addTitle="Add song to group"
               searchPlaceholder="Search songs…"
-              searchValue=${this._groupTrackSearch}
-              ?isSearchFocused=${this._isGroupSearchFocused}
-              ?showEdit=${true}
+               searchValue=${this._groupTrackSearch}
+               ?isSearchFocused=${this._isGroupSearchFocused}
+               ?narrow=${true}
+               ?showEdit=${true}
               editTitle="Edit group"
               @add-click=${this._handleAddSongToGroup}
               @search-input=${this._handleGroupSearchInput}
