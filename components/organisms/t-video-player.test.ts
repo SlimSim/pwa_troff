@@ -3137,7 +3137,7 @@ describe('t-video-player', () => {
       expect(button.classList.contains('video-btn')).toBe(true);
       expect(button.classList.contains('reset-speed-btn')).toBe(true);
       expect(button.getAttribute('title')).toBe('Reset speed');
-      expect(getIconName(el, '.reset-speed-btn')).toBe('reset');
+      expect(getIconName(el, '.reset-speed-btn')).toBe('jump-back');
       const frame = el.shadowRoot?.querySelector('.video-frame');
       expect(frame?.contains(button)).toBe(true);
     });
@@ -3399,7 +3399,7 @@ describe('t-video-player', () => {
       expect((resetBtn as HTMLElement | null)?.tagName.toLowerCase()).toBe('t-butt');
       expect((resetBtn as HTMLElement | null)?.getAttribute('title')).toBe('Reset speed');
       expect(getButton(el, '.speed-info .reset-speed-btn').querySelector('t-icon')?.getAttribute('name')).toBe(
-        'reset'
+        'jump-back'
       );
       expect(getResetText(el), '.reset-text must show the default speed 100% underneath').toBe('100%');
     });
@@ -3993,7 +3993,7 @@ describe('t-video-player', () => {
       expect(getTimeInfo(el)?.classList.contains('not-fullscreen')).toBe(false);
     });
 
-    it('stylesheet hides not-fullscreen speed/time inside @media (min-width:768px) via opacity:0 + pointer-events:none', async () => {
+    it('stylesheet hides not-fullscreen speed/time inside @media (min-width:768px) via display:none', async () => {
       const { el } = createPlayerWithVideo();
       await el.updateComplete;
 
@@ -4021,10 +4021,7 @@ describe('t-video-player', () => {
       expect(inner, '@media (min-width:768px) must mention .time-info.not-fullscreen').toContain(
         '.time-info.not-fullscreen'
       );
-      expect(inner, 'wide not-fullscreen speed/time must hide via opacity:0').toContain('opacity: 0');
-      expect(inner, 'wide not-fullscreen speed/time must disable pointer-events').toContain(
-        'pointer-events: none'
-      );
+      expect(inner, 'wide not-fullscreen speed/time must hide via display:none').toContain('display: none');
     });
 
     it('base stylesheet never hides not-fullscreen speed/time (narrow stays visible) and fullscreen is never hidden', async () => {

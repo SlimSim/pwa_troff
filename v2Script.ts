@@ -2985,6 +2985,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Setup for persisting manual scroll of the zoomed timeline (debounced).
   // We attach to the nearest scroll container used by the marker slider.
   const setupScrollPersistence = () => {
+    if (typeof document === 'undefined' || typeof document.querySelector !== 'function') {
+      return;
+    }
     const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
     const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
     if (!mainContent) {

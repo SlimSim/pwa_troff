@@ -294,6 +294,15 @@ describe('Keyboard arrow key functionality', () => {
 
   /** Import v2Script and fire DOMContentLoaded so handlers are registered. */
   async function setupTest() {
+    // Provide the main layout + scroll container that v2Script's setupScrollPersistence
+    // looks for (prevents infinite 50ms retry setTimeout that causes post-teardown errors).
+    const mainLayout = document.createElement('t-main-layout');
+    const mlShadow = mainLayout.attachShadow({ mode: 'open' });
+    const mainContent = document.createElement('div');
+    mainContent.className = 'main-content';
+    mlShadow.appendChild(mainContent);
+    document.body.appendChild(mainLayout);
+
     await import('../v2Script.js');
     document.dispatchEvent(new Event('DOMContentLoaded'));
 
