@@ -223,6 +223,13 @@ export type TroffDataIdObject = {
   nrStates?: number;
   tags: string;
   troffDataId: number;
+  customName?: string;
+  choreography?: string;
+  title?: string;
+  artist?: string;
+  album?: string;
+  choreographer?: string;
+  info?: string;
 };
 
 export type TroffManualImportExport = {
