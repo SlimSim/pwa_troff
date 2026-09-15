@@ -233,7 +233,7 @@ export class DetailHeader extends LitElement {
             ${this.countLabel
               ? html`
                   <span class="song-count ${cls}">
-                    <t-icon name="note"></t-icon> ${this.count}
+                    # ${this.count}
                   </span>
                 `
               : ''}

@@ -102,7 +102,7 @@ export class ListHeader extends LitElement {
         <div class="title-group">
           <h3 class="song-list-title">${this.title}</h3>
           <span class="song-count ${cls}">
-            <t-icon name=${this.countIcon}></t-icon> ${this.count}
+            # ${this.count}
           </span>
         </div>
 
