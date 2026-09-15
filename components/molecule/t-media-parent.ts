@@ -60,7 +60,7 @@ export class MediaParent extends LitElement {
       background-color: var(--tertiary-color);
       color: var(--on-primary-color);
       z-index: 999;
-      transition: transform 0.3s ease-in-out;
+      transition: transform 0.15s ease-in-out;
       height: 100%;
       overflow-y: auto;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
