@@ -556,7 +556,11 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
         4: 'Source not supported',
       };
       const detail = errorCode ? mediaErrorMessages[errorCode] || `code ${errorCode}` : 'unknown';
-      reject(new Error(`Media load error: ${detail}`));
+      if (errorCode === 2 || errorCode === 3 || errorCode === 4) {
+        reject(new ShowUserException(`Could not play "${path}": ${detail}`));
+      } else {
+        reject(new Error(`Media load error: ${detail}`));
+      }
     };
 
     const onAbort = () => {
