@@ -3465,6 +3465,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync edited metadata to Firebase groups (v2 equivalent of ifGroupSongUpdateFirestore)
   });
 
+  // Listen for song-deleted events from the dialog
+  document.addEventListener('song-deleted', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ songKey?: string }>;
+    const { songKey } = customEvent.detail ?? {};
+    if (!songKey) return;
+
+    try {
+      nDB.delete(songKey);
+
+      const { cacheImplementation } = await import('./services/FileApiImplementation.js');
+      await cacheImplementation.removeSong(songKey);
+
+      // Reload the song list to reflect the deletion
+      if (songList && typeof songList.reloadSongs === 'function') {
+        await songList.reloadSongs();
+      }
+
+      // Refresh header/footer if this is the currently playing song
+      if (getCurrentSongKey() === songKey) {
+        updateHeaderWithCurrentSong();
+        updateFooterWithCurrentSong();
+      }
+    } catch (error) {
+      log.e('Error deleting song:', error);
+    }
+  });
+
   // Listen for song info saves from the header dropdown
   document.addEventListener('song-info-saved', (event: Event) => {
     const customEvent = event as CustomEvent<{ info?: string }>;

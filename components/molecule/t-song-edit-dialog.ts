@@ -9,6 +9,7 @@
  *
  * Events (bubbles, composed):
  *   - `song-saved`: detail = { songKey: string, fileData: TroffFileData-like }
+ *   - `song-deleted`: detail = { songKey: string }
  *   - `dialog-cancelled`: no detail
  */
 
@@ -17,6 +18,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { TroffFileData } from '../../types/troff.d.js';
 import '../atom/t-input.js';
 import '../atom/t-butt.js';
+import '../atom/t-icon.js';
 
 /** Editable fileData fields (v1 editSongDialog set, minus the readonly ones). */
 type SongEditFields = Pick<
@@ -112,6 +114,14 @@ export class SongEditDialog extends LitElement {
     .readonly-field span {
       padding: 8px 12px;
       font-size: 0.9rem;
+    }
+
+    /* Buttons */
+    .btn-danger {
+      --butt-bg-color: var(--accent-color-2, #dd2c00);
+    }
+    .delete-btn {
+      margin-right: auto;
     }
   `;
 
@@ -210,6 +220,17 @@ export class SongEditDialog extends LitElement {
     );
   }
 
+  private _delete() {
+    this.open = false;
+    this.dispatchEvent(
+      new CustomEvent('song-deleted', {
+        detail: { songKey: this.songKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   // ── Field handler ──────────────────────────────────────────────────────────
 
   private _handleFieldInput(field: keyof SongEditFields, event: CustomEvent) {
@@ -293,6 +314,15 @@ export class SongEditDialog extends LitElement {
           </div>
 
           <div class="dialog-footer">
+            <t-butt
+              confirm
+              confirmText="Delete song?"
+              class="btn-danger delete-btn"
+              @click=${this._delete}
+              title="Delete song"
+            >
+              <t-icon name="delete"></t-icon>
+            </t-butt>
             <t-butt class="cancel-btn" @click=${this._cancel}>Cancel</t-butt>
             <t-butt class="save-btn" @click=${this._save}>Save</t-butt>
           </div>

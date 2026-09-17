@@ -271,3 +271,126 @@ describe('t-song-edit-dialog', () => {
     expect(element.open).toBe(false);
   });
 });
+
+describe('t-song-edit-dialog song deletion', () => {
+  let element: SongEditDialog;
+
+  beforeEach(() => {
+    element = new SongEditDialog();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+  });
+
+  type ConfirmButt = HTMLElement & {
+    updateComplete: Promise<unknown>;
+    shadowRoot: ShadowRoot;
+  };
+
+  async function openDialog(songKey = 'my-song.mp3'): Promise<void> {
+    element.songKey = songKey;
+    element.songData = { fileData: {} };
+    element.open = true;
+    await element.updateComplete;
+  }
+
+  function getDeleteBtn(): ConfirmButt | null {
+    return element.shadowRoot?.querySelector('t-butt.delete-btn') as ConfirmButt | null;
+  }
+
+  function getDeleteInnerButton(): HTMLElement | null {
+    const deleteBtn = getDeleteBtn();
+    return deleteBtn?.shadowRoot?.querySelector('button') as HTMLElement | null;
+  }
+
+  async function confirmedDeleteClick(): Promise<void> {
+    // First click — enters t-butt confirming state (intercepted).
+    getDeleteInnerButton()?.click();
+    await getDeleteBtn()?.updateComplete;
+    await element.updateComplete;
+    // Second click — confirmed, must reach the dialog handler.
+    getDeleteInnerButton()?.click();
+    await getDeleteBtn()?.updateComplete;
+    await element.updateComplete;
+  }
+
+  it('renders a delete button with confirm state in the footer when open', async () => {
+    await openDialog();
+
+    const deleteBtn = element.shadowRoot?.querySelector(
+      '.dialog-footer t-butt.delete-btn'
+    ) as HTMLElement | null;
+    expect(deleteBtn).toBeTruthy();
+    expect(deleteBtn?.hasAttribute('confirm')).toBe(true);
+    expect(deleteBtn?.getAttribute('confirmText')).toBe('Delete song?');
+  });
+
+  it('second (confirmed) click dispatches song-deleted with songKey and closes', async () => {
+    const deletedSpy = vi.fn();
+    element.addEventListener('song-deleted', deletedSpy);
+    await openDialog('my-song.mp3');
+
+    await confirmedDeleteClick();
+
+    expect(deletedSpy).toHaveBeenCalledTimes(1);
+    const event = deletedSpy.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe('song-deleted');
+    expect(event.detail.songKey).toBe('my-song.mp3');
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+    expect(element.open).toBe(false);
+  });
+
+  it('first click alone does NOT dispatch song-deleted (confirm interception)', async () => {
+    const deletedSpy = vi.fn();
+    element.addEventListener('song-deleted', deletedSpy);
+    await openDialog();
+
+    // The delete button must exist for this guard to be meaningful.
+    expect(getDeleteBtn()).toBeTruthy();
+    expect(getDeleteInnerButton()).toBeTruthy();
+
+    getDeleteInnerButton()?.click();
+    await getDeleteBtn()?.updateComplete;
+    await element.updateComplete;
+
+    expect(deletedSpy).not.toHaveBeenCalled();
+    expect(element.open).toBe(true);
+  });
+
+  it('Escape still dispatches dialog-cancelled, not song-deleted', async () => {
+    const cancelledSpy = vi.fn();
+    const deletedSpy = vi.fn();
+    element.addEventListener('dialog-cancelled', cancelledSpy);
+    element.addEventListener('song-deleted', deletedSpy);
+    await openDialog();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await element.updateComplete;
+
+    expect(cancelledSpy).toHaveBeenCalledTimes(1);
+    expect(deletedSpy).not.toHaveBeenCalled();
+    expect(element.open).toBe(false);
+  });
+
+  it('backdrop click still dispatches dialog-cancelled, not song-deleted', async () => {
+    const cancelledSpy = vi.fn();
+    const deletedSpy = vi.fn();
+    element.addEventListener('dialog-cancelled', cancelledSpy);
+    element.addEventListener('song-deleted', deletedSpy);
+    await openDialog();
+
+    const overlay = element.shadowRoot?.querySelector('.overlay') as HTMLElement | null;
+    expect(overlay).toBeTruthy();
+    overlay?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await element.updateComplete;
+
+    expect(cancelledSpy).toHaveBeenCalledTimes(1);
+    expect(deletedSpy).not.toHaveBeenCalled();
+    expect(element.open).toBe(false);
+  });
+});
