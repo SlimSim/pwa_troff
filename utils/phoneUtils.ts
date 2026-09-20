@@ -16,6 +16,9 @@ export function optimizeMobile() {
 }
 
 export function isWakeLockSupported(): boolean {
+  if (typeof navigator === 'undefined' || navigator === null) {
+    return false;
+  }
   const nav = navigator as unknown as {
     wakeLock?: { request?: unknown };
   };
@@ -35,6 +38,9 @@ export function getKeepScreenOn(): boolean {
 }
 
 export async function requestWakeLock(): Promise<unknown> {
+  if (typeof navigator === 'undefined' || navigator === null) {
+    return null;
+  }
   const nav = navigator as unknown as {
     wakeLock?: { request: (type: string) => Promise<unknown> };
   };

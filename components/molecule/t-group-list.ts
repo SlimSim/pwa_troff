@@ -4,6 +4,8 @@ import '../atom/t-media.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-input.js';
+import './t-detail-header.js';
+import './t-header-actions.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
 
@@ -89,41 +91,6 @@ export class GroupList extends LitElement {
       padding: 0;
     }
 
-    .detail-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
-      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.05));
-    }
-
-    .back-arrow {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .back-arrow t-icon {
-      transform: rotate(-90deg);
-      font-size: 1.3rem;
-    }
-
-    .shared-with {
-      font-size: 0.65rem;
-      opacity: 0.5;
-      line-height: 1.2;
-    }
-
-    .detail-title-group {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-
     .no-results {
       padding: 24px 16px;
       text-align: center;
@@ -133,221 +100,6 @@ export class GroupList extends LitElement {
     .no-results-text {
       margin-bottom: 12px;
       font-size: 0.9rem;
-    }
-
-    .detail-icon {
-      width: 40px;
-      height: 40px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .detail-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .detail-category-label {
-      font-size: 0.65rem;
-      opacity: 0.5;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      line-height: 1.2;
-    }
-
-    .detail-info-text {
-      font-size: 0.7rem;
-      opacity: 0.6;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      cursor: pointer;
-      line-height: 1.3;
-      transition: opacity 0.15s;
-    }
-
-    .detail-info-text:hover {
-      opacity: 0.9;
-    }
-
-    .detail-info-text.expanded {
-      white-space: normal;
-      overflow: visible;
-    }
-
-    .detail-edit-btn {
-      flex-shrink: 0;
-      margin-left: auto;
-      transition:
-        opacity 0.2s ease,
-        width 0.2s ease,
-        margin 0.2s ease;
-    }
-
-    .detail-edit-btn.search-expanded {
-      opacity: 0;
-      width: 0;
-      margin: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    /* Controls section in the detail header (song count, search, add button) */
-    .detail-header-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 1;
-      min-width: 0;
-      overflow: hidden;
-      transition: gap 0.2s ease;
-    }
-
-    .detail-header-controls.search-expanded {
-      gap: 0;
-    }
-
-    ::slotted([slot="sort-controls"]) {
-      flex-shrink: 0;
-    }
-
-    .group-song-count {
-      font-size: 0.85rem;
-      opacity: 0.8;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      transition:
-        opacity 0.2s ease,
-        width 0.2s ease,
-        margin 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .group-song-count.search-expanded {
-      opacity: 0;
-      width: 0;
-      margin: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .detail-add-song-btn {
-      flex-shrink: 0;
-      transition:
-        opacity 0.2s ease,
-        width 0.2s ease,
-        margin 0.2s ease;
-    }
-
-    .detail-add-song-btn.search-expanded {
-      opacity: 0;
-      width: 0;
-      margin: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .search-input-compact {
-      display: block;
-      width: 100%;
-      --t-input-slim-height: 35px;
-      --t-input-border: 2px solid var(--regular-button-color, #b0bec5);
-    }
-
-    /* Compact search input that expands on focus (mobile-first: collapsed) */
-    .search-compact-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      transition: width 0.3s ease;
-      width: 42px;
-      flex-shrink: 0;
-    }
-
-    /* When compressed: hide placeholder text and remove clearable padding */
-    .search-compact-wrap:not(.search-expanded) .search-input-compact {
-      --t-input-placeholder-color: transparent;
-      --t-input-clearable-padding-right: 0px;
-    }
-
-    .search-compact-icon {
-      position: absolute;
-      /* z-index keeps the icon above the t-input's background (its inner
-         .input-wrapper is position: relative). */
-      z-index: 1;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 18px;
-      height: 18px;
-      color: var(--on-gray-out, #595959);
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .search-compact-wrap.search-expanded {
-      width: 160px;
-      flex-shrink: 1;
-    }
-
-    .search-compact-wrap.search-expanded .search-compact-icon {
-      opacity: 0;
-    }
-
-    /* On wider screens the search is always expanded (never collapses). */
-    @media (min-width: 576px) {
-      .detail-header-controls.search-expanded {
-        gap: 6px;
-      }
-
-      .group-song-count.search-expanded {
-        opacity: 0.8;
-        width: auto;
-        margin: initial;
-        overflow: visible;
-        pointer-events: auto;
-      }
-
-      .detail-add-song-btn.search-expanded {
-        opacity: 1;
-        width: auto;
-        margin: initial;
-        overflow: visible;
-        pointer-events: auto;
-      }
-
-      .detail-edit-btn.search-expanded {
-        opacity: 1;
-        width: auto;
-        margin-left: auto;
-        overflow: visible;
-        pointer-events: auto;
-      }
-
-      .search-compact-wrap {
-        width: 200px;
-      }
-
-      .search-compact-wrap.search-expanded {
-        width: 200px;
-      }
-
-      .search-compact-icon {
-        display: none;
-      }
-
-      /* Restore placeholder and clearable padding on desktop where the
-         input is always wide enough to show text. */
-      .search-compact-wrap:not(.search-expanded) .search-input-compact {
-        --t-input-placeholder-color: var(--on-gray-out, #595959);
-        --t-input-clearable-padding-right: 40px;
-      }
     }
 
     /* Track row — relative container for absolute delete overlay */
@@ -630,9 +382,12 @@ export class GroupList extends LitElement {
   }
 
   /** Handle arrow key navigation and Enter selection in the detail search. */
-  private _handleGroupSearchKeydown(e: KeyboardEvent) {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
+  private _handleGroupSearchKeydown(e: CustomEvent) {
+    const key = e.detail?.key as string;
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      e.preventDefault?.();
+      const originalEvent = e.detail?.originalEvent as KeyboardEvent | undefined;
+      originalEvent?.preventDefault();
       const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
       if (!selectedGroup) return;
       const query = this._groupTrackSearch.trim().toLowerCase();
@@ -642,15 +397,17 @@ export class GroupList extends LitElement {
       if (filtered.length === 0) return;
       const max = filtered.length - 1;
       if (this._highlightedIndex === -1) {
-        this._highlightedIndex = e.key === 'ArrowDown' ? 0 : max;
+        this._highlightedIndex = key === 'ArrowDown' ? 0 : max;
       } else {
-        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        const delta = key === 'ArrowDown' ? 1 : -1;
         this._highlightedIndex += delta;
         if (this._highlightedIndex > max) this._highlightedIndex = 0;
         if (this._highlightedIndex < 0) this._highlightedIndex = max;
       }
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
+    } else if (key === 'Enter') {
+      e.preventDefault?.();
+      const originalEvent = e.detail?.originalEvent as KeyboardEvent | undefined;
+      originalEvent?.preventDefault();
       if (this._highlightedIndex < 0) return;
       const selectedGroup = this.groups.find((g) => this._groupKey(g) === this._selectedGroupKey);
       if (!selectedGroup) return;
@@ -744,85 +501,40 @@ export class GroupList extends LitElement {
 
       return html`
         <div class="detail-view">
-          <div
-            class="detail-header"
-            style=${selectedGroup.color
-              ? `background-color: ${this._cssColor(selectedGroup.color)}; color: ${this._contrastColor(selectedGroup.color)}; border-bottom-color: color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent);`
-              : ''}
+          <t-detail-header
+            entityName=${selectedGroup.name}
+            icon=${(selectedGroup.icon ?? '').replace(/^fa-/, '')}
+            infoText=${infoText}
+            .sharedWithCount=${selectedGroup.owners?.length ?? 0}
+            countLabel="songs"
+            count=${selectedGroup.tracks.length}
+            headerColor=${selectedGroup.color ? this._cssColor(selectedGroup.color) : ''}
+            headerTextColor=${selectedGroup.color ? this._contrastColor(selectedGroup.color) : ''}
+            headerBorderColor=${selectedGroup.color ? `color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent)` : ''}
+            ?isSearchFocused=${this._isGroupSearchFocused}
+            @back=${this._handleBack}
           >
-            <span class="back-arrow" @click=${this._handleBack}>
-              <t-icon name="chevron-up"></t-icon>
-            </span>
-            ${selectedGroup.icon
-              ? html`<div class="detail-icon">
-                  <t-icon large name=${(selectedGroup.icon ?? '').replace(/^fa-/, '')}></t-icon>
-                </div>`
-              : ''}
-            <div class="detail-title-group">
-              <span class="detail-category-label">Groups</span>
-              <h2 class="detail-title">${selectedGroup.name}</h2>
-              ${infoText
-                ? html`<span
-                    class="detail-info-text ${this._infoExpanded ? 'expanded' : ''}"
-                    @click=${() => {
-                      this._infoExpanded = !this._infoExpanded;
-                    }}
-                    title="${this._infoExpanded ? 'Collapse' : 'Expand info'}"
-                    >${infoText}</span
-                  >`
-                : ''}
-              ${selectedGroup.owners && selectedGroup.owners.length > 0
-                ? html`<span class="shared-with"
-                    >Shared with ${selectedGroup.owners.length}
-                    ${selectedGroup.owners.length === 1 ? 'person' : 'people'}</span
-                  >`
-                : ''}
-            </div>
-
-            <!-- Controls: add song, song count, search, sort (moved from song-list-header) -->
-            <div
-              class="detail-header-controls ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
+            <t-header-actions
+              slot="actions"
+              addIcon="note-plus"
+              addTitle="Add song to group"
+              searchPlaceholder="Search songs…"
+               searchValue=${this._groupTrackSearch}
+               ?isSearchFocused=${this._isGroupSearchFocused}
+               ?narrow=${true}
+               ?showEdit=${true}
+              editTitle="Edit group"
+              @add-click=${this._handleAddSongToGroup}
+              @search-input=${this._handleGroupSearchInput}
+              @search-keydown=${this._handleGroupSearchKeydown}
+              @search-focus=${this._handleGroupSearchFocus}
+              @search-blur=${this._handleGroupSearchBlur}
+              @edit-click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
             >
-              <slot name="sort-controls"></slot>
-              <span class="group-song-count ${this._isGroupSearchFocused ? 'search-expanded' : ''}">
-                <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
-              </span>
-              <div
-                class="search-compact-wrap ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
-              >
-                <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
-                <t-input
-                  class="search-input-compact"
-                  slim
-                  clearable
-                  placeholder="Search songs…"
-                  aria-label="Search songs in group"
-                  .value=${this._groupTrackSearch}
-                  @input=${this._handleGroupSearchInput}
-                  @keydown=${this._handleGroupSearchKeydown}
-                  @focus=${this._handleGroupSearchFocus}
-                  @blur=${this._handleGroupSearchBlur}
-                ></t-input>
-              </div>
-              <t-butt
-                class="detail-add-song-btn ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
-                icon
-                @click=${this._handleAddSongToGroup}
-                title="Add song to group"
-              >
-                <t-icon name="note-plus"></t-icon>
-              </t-butt>
-            </div>
-
-            <t-butt
-              class="detail-edit-btn ${this._isGroupSearchFocused ? 'search-expanded' : ''}"
-              icon
-              @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
-              title="Edit group"
-            >
-              <t-icon name="edit"></t-icon>
-            </t-butt>
-          </div>
+              <!-- re-project sort from parent into the single actions element -->
+              <slot slot="sort" name="sort-controls"></slot>
+            </t-header-actions>
+          </t-detail-header>
 
           <!-- Current songs: with delete overlay when management is open -->
           ${filteredTracks.map(

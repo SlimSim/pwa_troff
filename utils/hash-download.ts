@@ -3,6 +3,7 @@ import { TROFF_TROFF_DATA_ID_AND_FILE_NAME } from '../constants/constants.js';
 import log from './log.js';
 import { getFirestore, getStorageHandle } from './firebase-getter.js';
 import { normalizeMarkerTime } from './marker-actions.js';
+import { showToast } from './notification.js';
 import { safeDecodeURIComponent, toSongKey } from './utils.js';
 import type { TroffData, TroffMarker, TroffHistoryList, TroffDataIdObject } from '../types/troff.d.js';
 
@@ -49,10 +50,11 @@ export function parseHash(hash: string): { serverId: number; fileName: string } 
  * 5. Parse markers and save to nDB
  * 6. Download audio file and cache it for offline playback
  *
- * @param hash      URL hash in `#serverId&fileName` format.
- * @param callbacks Optional callbacks for progress reporting.
- * @returns The file name on success, `null` if an error occurs.
- *          User-visible error messages are shown via `alert()`.
+  * @param hash      URL hash in `#serverId&fileName` format.
+  * @param callbacks Optional callbacks for progress reporting.
+  * @returns The file name on success, `null` if an error occurs.
+  *          User-visible errors for a missing/mismatched song are shown
+  *          via toast notifications (`showToast`), not `alert()`.
  */
 export async function downloadSongFromHash(
   hash: string,
@@ -88,10 +90,12 @@ export async function downloadSongFromHash(
     const troffDocRef = doc(db, 'TroffData', String(serverId));
     const snapshot = await getDoc(troffDocRef);
     if (!snapshot.exists()) {
-      alert(
-        `Could not find the song "${fileName}" on the server.\n\n` +
-          'The link may be wrong, or the song has been removed. ' +
-          'Please check the link and try again.'
+      log.e(`Song "${fileName}" (id: ${serverId}) not found on the server`);
+      showToast(
+        `Could not find the song "${fileName}" on the server. ` +
+          'The link may be wrong, or the song has been removed.',
+        'error',
+        5000
       );
       return null;
     }
@@ -106,6 +110,23 @@ export async function downloadSongFromHash(
           'Please check your internet connection and try again.'
       );
     }
+    return null;
+  }
+
+  // Both the hash (serverId) AND the filename in the URL must match the
+  // server record — otherwise refuse to download anything (no fetch,
+  // no nDB write, no cache).
+  if (toSongKey(troffData.fileName || '') !== fileName) {
+    log.e(
+      `Filename mismatch for server id ${serverId}: ` +
+        `URL has "${fileName}" but server has "${troffData.fileName}"`
+    );
+    showToast(
+      'This download link does not match the song on the server. ' +
+        'Please check the link and try again.',
+      'error',
+      5000
+    );
     return null;
   }
 
@@ -162,7 +183,7 @@ export async function downloadSongFromHash(
  */
 export async function fetchServerTroffData(
   serverId: string | number,
-  _fileName: string
+  fileName: string
 ): Promise<{
   markers: TroffMarker[];
   states: string[];
@@ -176,10 +197,28 @@ export async function fetchServerTroffData(
     const troffDocRef = doc(db, 'TroffData', String(serverId));
     const snapshot = await getDoc(troffDocRef);
     if (!snapshot.exists()) {
-      alert(`Could not find the song data on the server. The link may be outdated.`);
+      log.e(`Server song data (id: ${serverId}) not found on the server`);
+      showToast(
+        'Could not find the song data on the server. The link may be outdated.',
+        'error',
+        5000
+      );
       return null;
     }
     const troffData = snapshot.data() as TroffData;
+    if (toSongKey(troffData.fileName || '') !== toSongKey(fileName)) {
+      log.e(
+        `Filename mismatch for server id ${serverId}: ` +
+          `URL has "${fileName}" but server has "${troffData.fileName}"`
+      );
+      showToast(
+        'This download link does not match the song on the server. ' +
+          'Please check the link and try again.',
+        'error',
+        5000
+      );
+      return null;
+    }
     const markerObject = JSON.parse(troffData.markerJsonString || '{}');
     const parsedDuration = Number(markerObject.fileData?.duration);
     return {

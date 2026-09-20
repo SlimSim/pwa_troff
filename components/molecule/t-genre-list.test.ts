@@ -27,9 +27,9 @@ describe('t-genre-list detail search input', () => {
   // ---- helpers ----
 
   function getDetailSearchInput(): HTMLElement & { focus: () => void; blur: () => void } {
-    const tInputEl = element.shadowRoot?.querySelector(
-      '.search-compact-wrap t-input'
-    ) as (HTMLElement & { focus: () => void; blur: () => void }) | null;
+    const headerActions = element.shadowRoot?.querySelector('t-header-actions');
+    const tInputEl = headerActions?.shadowRoot?.querySelector('t-input') as
+      (HTMLElement & { focus: () => void; blur: () => void }) | null;
     if (!tInputEl) {
       throw new Error('Expected detail search t-input to be in the shadow root');
     }

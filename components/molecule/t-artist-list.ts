@@ -4,6 +4,8 @@ import '../atom/t-media.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-input.js';
+import './t-detail-header.js';
+import './t-header-actions.js';
 
 interface ArtistGroup {
   artist: string;
@@ -66,49 +68,6 @@ export class ArtistList extends LitElement {
       padding: 0;
     }
 
-    .detail-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
-      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.05));
-    }
-
-    .back-arrow {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .back-arrow t-icon {
-      transform: rotate(-90deg);
-      font-size: 1.3rem;
-    }
-
-    .detail-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .detail-category-label {
-      font-size: 0.65rem;
-      opacity: 0.5;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      line-height: 1.2;
-    }
-
-    .detail-title-group {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-
     .no-results {
       padding: 24px 16px;
       text-align: center;
@@ -120,147 +79,6 @@ export class ArtistList extends LitElement {
       font-size: 0.9rem;
     }
 
-    /* Controls section in the detail header */
-    .detail-header-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 1;
-      min-width: 0;
-      overflow: hidden;
-      transition: gap 0.2s ease;
-    }
-
-    .detail-header-controls.search-expanded {
-      gap: 0;
-    }
-
-    ::slotted([slot="sort-controls"]) {
-      flex-shrink: 0;
-    }
-
-    .artist-song-count {
-      font-size: 0.85rem;
-      opacity: 0.8;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .artist-song-count.search-expanded {
-      opacity: 0;
-      width: 0;
-      margin: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .detail-add-song-btn {
-      flex-shrink: 0;
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
-    }
-
-    .detail-add-song-btn.search-expanded {
-      opacity: 0;
-      width: 0;
-      margin: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .search-input {
-      display: block;
-      width: 100%;
-      --t-input-slim-height: 35px;
-      --t-input-border: 2px solid var(--regular-button-color, #b0bec5);
-    }
-
-    /* Compact search input that expands on focus (mobile-first: collapsed) */
-    .search-compact-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      transition: width 0.3s ease;
-      width: 42px;
-      flex-shrink: 0;
-    }
-
-    /* When compressed: hide placeholder text and remove clearable padding */
-    .search-compact-wrap:not(.search-expanded) .search-input {
-      --t-input-placeholder-color: transparent;
-      --t-input-clearable-padding-right: 0px;
-    }
-
-    .search-compact-icon {
-      position: absolute;
-      /* z-index keeps the icon above the t-input's background (its inner
-         .input-wrapper is position: relative). */
-      z-index: 1;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 18px;
-      height: 18px;
-      color: var(--on-gray-out, #595959);
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .search-compact-wrap.search-expanded {
-      width: 160px;
-      flex-shrink: 1;
-    }
-
-    .search-compact-wrap.search-expanded .search-compact-icon {
-      opacity: 0;
-    }
-
-    /* On wider screens the search is always expanded (never collapses). */
-    @media (min-width: 576px) {
-      .detail-header-controls.search-expanded {
-        gap: 6px;
-      }
-
-      .artist-song-count.search-expanded {
-        opacity: 0.8;
-        width: auto;
-        margin: initial;
-        overflow: visible;
-        pointer-events: auto;
-      }
-
-      .detail-add-song-btn.search-expanded {
-        opacity: 1;
-        width: auto;
-        margin: initial;
-        overflow: visible;
-        pointer-events: auto;
-      }
-
-      .search-compact-wrap {
-        width: 200px;
-      }
-
-      .search-compact-wrap.search-expanded {
-        width: 200px;
-      }
-
-      .search-compact-icon {
-        display: none;
-      }
-
-      /* Restore placeholder and clearable padding on desktop where the
-         input is always wide enough to show text. */
-      .search-compact-wrap:not(.search-expanded) .search-input {
-        --t-input-placeholder-color: var(--on-gray-out, #595959);
-        --t-input-clearable-padding-right: 40px;
-      }
-    }
-
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .artist-item {
@@ -269,14 +87,6 @@ export class ArtistList extends LitElement {
 
       .artist-name {
         font-size: 1rem;
-      }
-
-      .detail-header {
-        padding: 14px 20px;
-      }
-
-      .detail-title {
-        font-size: 1.1rem;
       }
     }
   `;
@@ -380,9 +190,12 @@ export class ArtistList extends LitElement {
   }
 
   /** Handle arrow key navigation and Enter in the detail search. */
-  private _handleSearchKeydown(e: KeyboardEvent) {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
+  private _handleSearchKeydown(e: CustomEvent) {
+    const key = e.detail?.key as string;
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      e.preventDefault?.();
+      const originalEvent = e.detail?.originalEvent as KeyboardEvent | undefined;
+      originalEvent?.preventDefault();
       const selectedGroup = this._getArtistGroups().find((g) => g.artist === this.selectedArtist);
       if (!selectedGroup) return;
       const query = this._artistTrackSearch.trim().toLowerCase();
@@ -392,15 +205,17 @@ export class ArtistList extends LitElement {
       if (filtered.length === 0) return;
       const max = filtered.length - 1;
       if (this._highlightedIndex === -1) {
-        this._highlightedIndex = e.key === 'ArrowDown' ? 0 : max;
+        this._highlightedIndex = key === 'ArrowDown' ? 0 : max;
       } else {
-        const delta = e.key === 'ArrowDown' ? 1 : -1;
+        const delta = key === 'ArrowDown' ? 1 : -1;
         this._highlightedIndex += delta;
         if (this._highlightedIndex > max) this._highlightedIndex = 0;
         if (this._highlightedIndex < 0) this._highlightedIndex = max;
       }
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
+    } else if (key === 'Enter') {
+      e.preventDefault?.();
+      const originalEvent = e.detail?.originalEvent as KeyboardEvent | undefined;
+      originalEvent?.preventDefault();
       if (this._highlightedIndex < 0) return;
       const selectedGroup = this._getArtistGroups().find((g) => g.artist === this.selectedArtist);
       if (!selectedGroup) return;
@@ -478,46 +293,30 @@ export class ArtistList extends LitElement {
 
       return html`
         <div class="detail-view">
-          <div class="detail-header">
-            <span class="back-arrow" @click=${this._handleBack}>
-              <t-icon name="chevron-up"></t-icon>
-            </span>
-            <div class="detail-title-group">
-              <span class="detail-category-label">Artists</span>
-              <h2 class="detail-title">${this.selectedArtist}</h2>
-            </div>
-
-            <!-- Controls: sort, add song, track count, search -->
-            <div class="detail-header-controls ${this._isSearchFocused ? 'search-expanded' : ''}">
-              <slot name="sort-controls"></slot>
-              <span class="artist-song-count ${this._isSearchFocused ? 'search-expanded' : ''}">
-                <t-icon name="note"></t-icon> ${selectedGroup.tracks.length}
-              </span>
-              <div class="search-compact-wrap ${this._isSearchFocused ? 'search-expanded' : ''}">
-                <t-icon class="search-compact-icon" name="search" aria-hidden="true"></t-icon>
-                <t-input
-                  class="search-input"
-                  slim
-                  clearable
-                  placeholder="Search tracks…"
-                  aria-label="Search tracks in artist"
-                  .value=${this._artistTrackSearch}
-                  @input=${this._handleSearchInput}
-                  @keydown=${this._handleSearchKeydown}
-                  @focus=${this._handleSearchFocus}
-                  @blur=${this._handleSearchBlur}
-                ></t-input>
-              </div>
-              <t-butt
-                class="detail-add-song-btn ${this._isSearchFocused ? 'search-expanded' : ''}"
-                icon
-                @click=${this._handleAddSong}
-                title="Add songs"
-              >
-                <t-icon name="note-plus"></t-icon>
-              </t-butt>
-            </div>
-          </div>
+          <t-detail-header
+            entityName=${this.selectedArtist}
+            countLabel="songs"
+            count=${selectedGroup.tracks.length}
+            ?isSearchFocused=${this._isSearchFocused}
+            @back=${this._handleBack}
+          >
+            <t-header-actions
+              slot="actions"
+              addIcon="note-plus"
+              addTitle="Add songs"
+              searchPlaceholder="Search tracks…"
+              searchValue=${this._artistTrackSearch}
+              ?isSearchFocused=${this._isSearchFocused}
+              @add-click=${this._handleAddSong}
+              @search-input=${this._handleSearchInput}
+              @search-keydown=${this._handleSearchKeydown}
+              @search-focus=${this._handleSearchFocus}
+              @search-blur=${this._handleSearchBlur}
+            >
+              <!-- re-project sort from parent into the single actions element -->
+              <slot slot="sort" name="sort-controls"></slot>
+            </t-header-actions>
+          </t-detail-header>
           ${filteredTracks.length === 0 && trackQuery
             ? html`
                 <div class="no-results">

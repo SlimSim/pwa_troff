@@ -89,6 +89,9 @@ describe('downloadSongFromHash', () => {
         doc: mockDoc,
         getDoc: mockGetDoc,
       }),
+      getStorageHandle: vi.fn().mockResolvedValue({
+        getFreshDownloadUrl: vi.fn(async (url: string) => url),
+      }),
     }));
 
     // Mock constants — re‑export the real value for

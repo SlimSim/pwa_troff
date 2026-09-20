@@ -623,3 +623,154 @@ describe('t-marker-slider click past playback stop extends stop marker (#43)', (
     expect(valueChangedEvents[0]).toBe(80);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Feature: gesture zoom persistence notification (regression: pinch/ctrl+wheel
+// zoom lost on restart).
+//
+// `MarkerSlider._setZoom` is called from `_handleWheel` (ctrl/meta+wheel) and
+// `_handleTouchMove` (two-finger pinch). It sets `zoomLevel` and adjusts the
+// ancestor scrollTop but dispatches NO event and persists nothing, while
+// `v2Script.ts` only persists the button path. The component MUST notify the
+// persistence layer via a bubbling/composed `zoom-changed` CustomEvent with
+// detail containing at least `{ zoomLevel: number }` so v2Script can save.
+//
+// Exactly one notification per effective zoom change; no notification when
+// zoom is unchanged and panDelta == 0. Programmatic `zoomLevel = X` (how
+// applyMarkerSliderZoom zooms) must NOT fire the gesture event.
+// ---------------------------------------------------------------------------
+describe('t-marker-slider gesture persistence notification', () => {
+  let element: MarkerSlider;
+  let wrapper: HTMLDivElement;
+
+  beforeEach(() => {
+    element = new MarkerSlider();
+    wrapper = document.createElement('div');
+    wrapper.style.overflowY = 'auto';
+    wrapper.style.height = '800px';
+    wrapper.appendChild(element);
+    document.body.appendChild(wrapper);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(wrapper)) {
+      document.body.removeChild(wrapper);
+    }
+    vi.restoreAllMocks();
+  });
+
+  function dispatchCtrlWheelGesture(clientY: number, deltaY: number): void {
+    const event = new WheelEvent('wheel', {
+      deltaY,
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.assign(event, { ctrlKey: true, clientY });
+    element.dispatchEvent(event);
+  }
+
+  function mockGeometry(): void {
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 800, 800));
+    const trackWrapper = element.shadowRoot?.querySelector('.slider-track-wrapper') as HTMLElement;
+    vi.spyOn(trackWrapper, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 800, 800));
+  }
+
+  function makeTouch(clientY: number, clientX = 0) {
+    return { clientX, clientY } as Touch;
+  }
+
+  function dispatchTouchGesture(
+    type: 'touchstart' | 'touchmove' | 'touchend',
+    touchYs: number[]
+  ): void {
+    const touches = touchYs.map((y) => makeTouch(y));
+    const event = new Event(type) as TouchEvent;
+    Object.assign(event, { touches, changedTouches: touches, targetTouches: touches });
+    element.dispatchEvent(event);
+  }
+
+  function collectZoomChanged(): { events: CustomEvent[]; listener: EventListener } {
+    const events: CustomEvent[] = [];
+    const listener = ((e: Event) => {
+      events.push(e as CustomEvent);
+    }) as EventListener;
+    element.addEventListener('zoom-changed', listener);
+    return { events, listener };
+  }
+
+  it('ctrl+wheel zoom dispatches zoom-changed once with new zoomLevel ~1.1', async () => {
+    await element.updateComplete;
+    mockGeometry();
+    const { events } = collectZoomChanged();
+
+    dispatchCtrlWheelGesture(400, -100); // zoom 1 -> 1.1
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBeCloseTo(1.1, 6);
+    expect(events.length).toBe(1);
+    expect(typeof events[0].detail.zoomLevel).toBe('number');
+    expect(events[0].detail.zoomLevel).toBeCloseTo(1.1, 6);
+    expect(events[0].bubbles).toBe(true);
+    expect(events[0].composed).toBe(true);
+  });
+
+  it('pinch zoom with fixed midpoint dispatches zoom-changed once with zoomLevel 3', async () => {
+    await element.updateComplete;
+    mockGeometry();
+    const { events } = collectZoomChanged();
+
+    dispatchTouchGesture('touchstart', [300, 500]); // midpoint 400, distance 200
+    dispatchTouchGesture('touchmove', [100, 700]); // midpoint 400, distance 600 -> zoom 3
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(3);
+    expect(events.length).toBe(1);
+    expect(events[0].detail.zoomLevel).toBe(3);
+    expect(events[0].bubbles).toBe(true);
+    expect(events[0].composed).toBe(true);
+  });
+
+  it('pinch pan alone (constant distance, midpoint move) dispatches zoom-changed', async () => {
+    await element.updateComplete;
+    mockGeometry();
+    const { events } = collectZoomChanged();
+
+    dispatchTouchGesture('touchstart', [300, 500]); // midpoint 400, distance 200
+    dispatchTouchGesture('touchmove', [400, 600]); // midpoint 500, distance 200 -> pan only
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(1);
+    expect(wrapper.scrollTop).toBe(-100);
+    // Position changed so the persistence layer must be notified.
+    expect(events.length).toBe(1);
+    expect(typeof events[0].detail.zoomLevel).toBe('number');
+  });
+
+  it('dispatches no event when zoom unchanged and no pan (zoom-out clamped at minZoom)', async () => {
+    await element.updateComplete;
+    mockGeometry();
+    expect(element.zoomLevel).toBe(1);
+    expect(element.minZoom).toBe(1);
+    const { events } = collectZoomChanged();
+
+    // deltaY > 0 -> zoom 1 * 0.9 = 0.9 clamped back to minZoom 1, panDelta 0.
+    dispatchCtrlWheelGesture(400, 100);
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(1);
+    expect(events.length).toBe(0);
+  });
+
+  it('programmatic zoomLevel set dispatches NOTHING', async () => {
+    await element.updateComplete;
+    mockGeometry();
+    const { events } = collectZoomChanged();
+
+    // v2Script.ts applyMarkerSliderZoom zooms by setting zoomLevel directly.
+    element.zoomLevel = 4;
+    await element.updateComplete;
+
+    expect(element.zoomLevel).toBe(4);
+    expect(events.length).toBe(0);
+  });
+});

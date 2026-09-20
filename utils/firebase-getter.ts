@@ -104,7 +104,7 @@ export async function getFirestore(): Promise<FirestoreHandle> {
     // Dynamic import of Firebase SDK modules from CDN.
     // These modules have no TS types available, so we cast to unknown
     // and treat the result as the expected object shape.
-    type FirebaseAppModule = { initializeApp: (...args: unknown[]) => unknown };
+    type FirebaseAppModule = { initializeApp: (...args: unknown[]) => unknown; getApp: (...args: unknown[]) => unknown };
     type FirebaseFirestoreModule = {
       getFirestore: (...args: unknown[]) => unknown;
       doc: (...args: unknown[]) => unknown;
@@ -122,7 +122,12 @@ export async function getFirestore(): Promise<FirestoreHandle> {
     const getFirestoreFn = firebaseFirestore.getFirestore as (
       app: unknown
     ) => unknown;
-    const app = initializeApp(config, 'troff-hash-download');
+    let app: unknown;
+    try {
+      app = initializeApp(config, 'troff-hash-download');
+    } catch {
+      app = firebaseApp.getApp('troff-hash-download');
+    }
     const db = getFirestoreFn(app);
     return {
       doc: firebaseFirestore.doc,
@@ -160,7 +165,13 @@ export async function getStorageHandle(): Promise<StorageHandle> {
       'https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js'
     )) as unknown as FirebaseStorageModule;
 
-    const app = firebaseApp.initializeApp(config, 'troff-hash-download');
+    const app = (() => {
+      try {
+        return firebaseApp.initializeApp(config, 'troff-hash-download');
+      } catch {
+        return firebaseApp.getApp('troff-hash-download');
+      }
+    })();
     const storage = firebaseStorage.getStorage(app);
     const refFn = firebaseStorage.ref as (storage: unknown, path: string) => unknown;
     const getDownloadURL = firebaseStorage.getDownloadURL as (ref: unknown) => Promise<string>;

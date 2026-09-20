@@ -34,3 +34,14 @@ if (!window.localStorage) {
     },
   } as Storage;
 }
+
+/**
+ * happy-dom with pool:'forks' may not provide a global `navigator`.
+ * phoneUtils (and thus v2Script countdowns) access `navigator` (for Wake Lock)
+ * directly, which throws ReferenceError if undefined. Provide a minimal
+ * polyfill so late timers from v2Script don't cause unhandled errors after
+ * test teardown.
+ */
+if (typeof navigator === 'undefined' || navigator === null) {
+  (globalThis as any).navigator = {} as Navigator;
+}

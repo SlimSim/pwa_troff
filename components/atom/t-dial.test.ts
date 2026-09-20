@@ -527,3 +527,84 @@ describe('t-dial _formatDisplayValue', () => {
     expect(dialInternal(element)._formatDisplayValue()).toBe('5.2');
   });
 });
+
+describe('t-dial keyboard isolation (t-dial + t-butt keyboard bug)', () => {
+  let element: Dial;
+  type ValueChangedDetail = { value: number; disabled: boolean };
+
+  async function makeDial() {
+    element = new Dial();
+    element.key = 'b';
+    element.showDisableButton = true;
+    element.step = 1;
+    element.min = 0;
+    element.max = 10;
+    element.value = 4;
+    element.disabled = false;
+    document.body.appendChild(element);
+    await element.updateComplete;
+    return element;
+  }
+
+  afterEach(() => {
+    if (element && document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+  });
+
+  function listenValueChanged(dial: Dial) {
+    const payloads: ValueChangedDetail[] = [];
+    dial.addEventListener('value-changed', (e: Event) => {
+      payloads.push((e as CustomEvent<ValueChangedDetail>).detail);
+    });
+    return payloads;
+  }
+
+  function pressKey(key: string, init: KeyboardEventInit = {}) {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    );
+  }
+
+  it('plain "b" triggers ONLY the disable-toggle: single value-changed with flipped disabled, value unchanged', async () => {
+    const dial = await makeDial();
+    const payloads = listenValueChanged(dial);
+
+    pressKey('b');
+    await dial.updateComplete;
+
+    expect(payloads.length).toBe(1);
+    expect(dial.disabled).toBe(true);
+    expect(payloads[0].disabled).toBe(true);
+    expect(payloads[0].value).toBe(4);
+    expect(dialInternal(dial)._value).toBe(4);
+  });
+
+  it('Shift+B triggers ONLY increment: single value-changed with value+step, disabled unchanged', async () => {
+    const dial = await makeDial();
+    const payloads = listenValueChanged(dial);
+
+    pressKey('b', { shiftKey: true });
+    await dial.updateComplete;
+
+    expect(payloads.length).toBe(1);
+    expect(dial.disabled).toBe(false);
+    expect(payloads[0].disabled).toBe(false);
+    expect(payloads[0].value).toBe(5);
+    expect(dialInternal(dial)._value).toBe(5);
+  });
+
+  it('Alt+B triggers ONLY decrement: single value-changed with value-step, disabled unchanged', async () => {
+    const dial = await makeDial();
+    const payloads = listenValueChanged(dial);
+
+    pressKey('b', { altKey: true });
+    await dial.updateComplete;
+
+    expect(payloads.length).toBe(1);
+    expect(dial.disabled).toBe(false);
+    expect(payloads[0].disabled).toBe(false);
+    expect(payloads[0].value).toBe(3);
+    expect(dialInternal(dial)._value).toBe(3);
+  });
+});

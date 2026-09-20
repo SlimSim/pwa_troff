@@ -99,7 +99,7 @@ describe('t-video-player reset-speed ghost + stacked pattern', () => {
 
     const icon = content?.querySelector('t-icon.reset-icon');
     expect(icon, '.reset-content must contain <t-icon class="reset-icon" name="reset">').not.toBeNull();
-    expect(icon?.getAttribute('name')).toBe('reset');
+    expect(icon?.getAttribute('name')).toBe('jump-back');
 
     const text = content?.querySelector('.reset-text');
     expect(text, '.reset-content must contain <span class="reset-text">100%</span>').not.toBeNull();

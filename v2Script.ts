@@ -1173,6 +1173,63 @@ document.addEventListener('DOMContentLoaded', () => {
     await applyMarkerSliderZoom(normalized.startTime, normalized.endTime, false);
   };
 
+  /**
+   * Compute the currently visible time window from the markerSlider's zoomLevel
+   * and the main-content scroll position, then persist it via the existing
+   * zoomStartTime/zoomEndTime keys so that pinch, ctrl+wheel and manual scroll
+   * survive app restart.
+   */
+  const persistCurrentViewport = () => {
+    const songKey = getCurrentSongKey();
+    if (!songKey || !markerSlider) {
+      return;
+    }
+
+    const duration = getTimelineDuration();
+    if (duration <= 0) {
+      return;
+    }
+
+    const zoom = markerSlider.zoomLevel || 1;
+    if (zoom <= 1) {
+      persistZoomWindow(0, duration);
+      return;
+    }
+
+    const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
+    const sliderContainer = markerSlider.shadowRoot?.querySelector('.slider-container') as HTMLElement | null;
+
+    if (!mainContent || !sliderContainer) {
+      persistZoomWindow(0, duration);
+      return;
+    }
+
+    const viewportHeight = mainContent.clientHeight || 0;
+    const scrollTop = mainContent.scrollTop;
+
+    const sliderRect = sliderContainer.getBoundingClientRect();
+    const contentRect = mainContent.getBoundingClientRect();
+
+    // Map viewport center to a fraction of the (zoomed) slider content
+    const sliderTopInContent = sliderRect.top - contentRect.top + scrollTop;
+    const viewportCenterY = scrollTop + viewportHeight / 2;
+    const yInSlider = viewportCenterY - sliderTopInContent;
+    const sliderContentHeight = sliderRect.height || 1;
+
+    const fraction = Math.max(0, Math.min(1, yInSlider / sliderContentHeight));
+    const centerTime = fraction * duration;
+
+    const visibleDuration = duration / zoom;
+    const half = visibleDuration / 2;
+
+    const startTime = Math.max(0, centerTime - half);
+    const endTime = Math.min(duration, centerTime + half);
+
+    const normalized = normalizeZoomWindow(startTime, endTime, duration);
+    persistZoomWindow(normalized.startTime, normalized.endTime);
+  };
+
   const selectFirstAndLastMarkers = (force: boolean = false) => {
     const songKey = getCurrentSongKey();
     if (!songKey) {
@@ -2913,7 +2970,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // Persist zoom/position when the user uses pinch, ctrl+wheel or scroll
+    // (the component only fires this for actual gesture changes, not programmatic sets).
+    markerSlider.addEventListener('zoom-changed', () => {
+      // Wait for any async scroll adjustment from the gesture to land,
+      // then capture the final viewport for persistence.
+      void markerSlider.updateComplete.then(() => {
+        persistCurrentViewport();
+      });
+    });
   }
+
+  // Setup for persisting manual scroll of the zoomed timeline (debounced).
+  // We attach to the nearest scroll container used by the marker slider.
+  const setupScrollPersistence = () => {
+    if (typeof document === 'undefined' || typeof document.querySelector !== 'function') {
+      return;
+    }
+    const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
+    if (!mainContent) {
+      // Try once more shortly after first paint (custom elements may upgrade late)
+      setTimeout(setupScrollPersistence, 50);
+      return;
+    }
+    // Prevent duplicate listeners (use dataset to avoid `any`)
+    if (mainContent.dataset.troffZoomScrollHooked === 'true') {
+      return;
+    }
+    mainContent.dataset.troffZoomScrollHooked = 'true';
+
+    let scrollTimer: number | undefined;
+    mainContent.addEventListener(
+      'scroll',
+      () => {
+        if (!markerSlider || (markerSlider.zoomLevel || 1) <= 1) {
+          return;
+        }
+        if (scrollTimer !== undefined) {
+          window.clearTimeout(scrollTimer);
+        }
+        scrollTimer = window.setTimeout(() => {
+          persistCurrentViewport();
+        }, 250);
+      },
+      { passive: true }
+    );
+  };
+  setupScrollPersistence();
 
   // -------- Helper: load/select a song (shared by hash download and dialog actions) --------
   const selectSongFromHash = async (fileName: string) => {
@@ -3358,6 +3463,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Sync edited metadata to Firebase groups (v2 equivalent of ifGroupSongUpdateFirestore)
+  });
+
+  // Listen for song-deleted events from the dialog
+  document.addEventListener('song-deleted', async (event: Event) => {
+    const customEvent = event as CustomEvent<{ songKey?: string }>;
+    const { songKey } = customEvent.detail ?? {};
+    if (!songKey) return;
+
+    try {
+      nDB.delete(songKey);
+
+      const { cacheImplementation } = await import('./services/FileApiImplementation.js');
+      await cacheImplementation.removeSong(songKey);
+
+      // Reload the song list to reflect the deletion
+      if (songList && typeof songList.reloadSongs === 'function') {
+        await songList.reloadSongs();
+      }
+
+      // Refresh header/footer if this is the currently playing song
+      if (getCurrentSongKey() === songKey) {
+        updateHeaderWithCurrentSong();
+        updateFooterWithCurrentSong();
+      }
+    } catch (error) {
+      log.e('Error deleting song:', error);
+    }
   });
 
   // Listen for song info saves from the header dropdown

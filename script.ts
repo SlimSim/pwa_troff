@@ -82,6 +82,8 @@ import {
   TroffSongIdentifyer_sk,
 } from './types/troff.js';
 import { initSongTable } from './dataTable.js';
+let currentMetadataAbort: AbortController | null = null;
+
 import { sleep } from './utils/timeHack.js';
 import { addAndStartSentry, setSentryEnvironment, setSentryVersion } from './utils/sentry.js';
 import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
@@ -475,6 +477,8 @@ const mergeSongListHistorys = function (
 };
 
 function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promise<void> {
+  currentMetadataAbort?.abort();
+  currentMetadataAbort = new AbortController();
   Troff.pauseSong(false);
 
   if ($('#TROFF_SETTING_SONG_LIST_CLEAR_ON_SELECT').hasClass('active')) {
@@ -531,6 +535,8 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
 
   updateGroupNotification(path);
 
+  const signal = currentMetadataAbort.signal;
+
   return new Promise((resolve, reject) => {
     if (!newElem) {
       reject(new Error('newElem is not defined in the final return!'));
@@ -541,6 +547,7 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
 
     const onError = () => {
       clearTimeout(timer);
+      signal.removeEventListener('abort', onAbort);
       const errorCode = mediaElem.error?.code;
       const mediaErrorMessages: Record<number, string> = {
         1: 'Aborted',
@@ -549,25 +556,42 @@ function setSong2(/*fullPath, galleryId*/ path: string, songData: string): Promi
         4: 'Source not supported',
       };
       const detail = errorCode ? mediaErrorMessages[errorCode] || `code ${errorCode}` : 'unknown';
-      reject(new Error(`Media load error: ${detail}`));
+      if (errorCode === 2 || errorCode === 3 || errorCode === 4) {
+        reject(new ShowUserException(`Could not play "${path}": ${detail}`));
+      } else {
+        reject(new Error(`Media load error: ${detail}`));
+      }
     };
 
+    const onAbort = () => {
+      clearTimeout(timer);
+      mediaElem.removeEventListener('error', onError);
+      mediaElem.removeEventListener('loadedmetadata', onLoadedMetadata);
+      reject(new Error('Song changed'));
+    };
+
+    const onLoadedMetadata = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', onAbort);
+      mediaElem.removeEventListener('error', onError);
+      resolve();
+    };
+
+    if (signal.aborted) {
+      reject(new Error('Song changed'));
+      return;
+    }
+
+    signal.addEventListener('abort', onAbort, { once: true });
     mediaElem.addEventListener('error', onError, { once: true });
 
     const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
       mediaElem.removeEventListener('error', onError);
       reject(new Error('Metadata load timeout'));
     }, 10000);
 
-    mediaElem.addEventListener(
-      'loadedmetadata',
-      () => {
-        clearTimeout(timer);
-        mediaElem.removeEventListener('error', onError);
-        resolve();
-      },
-      { once: true }
-    );
+    mediaElem.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
   });
 } //end setSong2
 

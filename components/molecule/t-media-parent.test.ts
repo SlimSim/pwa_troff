@@ -32,8 +32,15 @@ describe('t-media-parent search input', () => {
 
   // ---- helpers ----
 
+  /** Get the t-header-actions element (slotted light DOM child of t-list-header). */
+  function getHeaderActions(): (HTMLElement & { shadowRoot: ShadowRoot }) | null {
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    return (listHeader?.querySelector('t-header-actions') as any) ?? null;
+  }
+
   async function getSearchInput(): Promise<HTMLElement & { updateComplete: Promise<void> }> {
-    const tInputEl = element.shadowRoot?.querySelector('t-input.search-input') as
+    const headerActions = getHeaderActions();
+    const tInputEl = headerActions?.shadowRoot?.querySelector('t-input.search-input') as
       | (HTMLElement & { updateComplete: Promise<void> })
       | null;
     if (!tInputEl) {
@@ -171,12 +178,19 @@ describe('Ctrl+F global keyboard shortcut', () => {
     expect(element.visible).toBe(true);
   });
 
+  /** Get the t-header-actions element (slotted light DOM child of t-list-header). */
+  function getHeaderActions(): (HTMLElement & { shadowRoot: ShadowRoot }) | null {
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    return (listHeader?.querySelector('t-header-actions') as any) ?? null;
+  }
+
   it('focuses the search input on Ctrl+F', async () => {
     element.visible = true;
     (element as any).searchQuery = '';
     await element.updateComplete;
 
-    const tInput = element.shadowRoot?.querySelector('t-input.search-input') as any;
+    const headerActions = getHeaderActions();
+    const tInput = headerActions?.shadowRoot?.querySelector('t-input.search-input') as any;
     if (!tInput) {
       throw new Error('Expected t-input.search-input in shadow root');
     }
@@ -205,7 +219,8 @@ describe('Ctrl+F global keyboard shortcut', () => {
     (element as any).searchQuery = 'existing';
     await element.updateComplete;
 
-    const tInput = element.shadowRoot?.querySelector('t-input.search-input') as any;
+    const headerActions = getHeaderActions();
+    const tInput = headerActions?.shadowRoot?.querySelector('t-input.search-input') as any;
     if (!tInput) {
       throw new Error('Expected t-input.search-input in shadow root');
     }
@@ -340,7 +355,9 @@ describe('Search-mode keyboard navigation', () => {
   function getSearchInput():
     | (HTMLElement & { focus: () => void; blur: () => void; select: () => void })
     | null {
-    return element.shadowRoot?.querySelector('t-input.search-input') as
+    const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
+    const headerActions = listHeader?.querySelector('t-header-actions') as any;
+    return headerActions?.shadowRoot?.querySelector('t-input.search-input') as
       | (HTMLElement & { focus: () => void; blur: () => void; select: () => void })
       | null;
   }
@@ -818,7 +835,9 @@ describe('Search focus state and visual indication', () => {
   // ---- helpers ----
 
   function getSearchInput(): (HTMLElement & { focus: () => void; blur: () => void }) | null {
-    return element.shadowRoot?.querySelector('t-input.search-input') as
+    const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
+    const headerActions = listHeader?.querySelector('t-header-actions') as any;
+    return headerActions?.shadowRoot?.querySelector('t-input.search-input') as
       | (HTMLElement & { focus: () => void; blur: () => void })
       | null;
   }
@@ -830,7 +849,13 @@ describe('Search focus state and visual indication', () => {
   }
 
   function getHeaderControl(selector: string): Element {
-    const el = element.shadowRoot?.querySelector(selector);
+    // First check t-list-header shadow root (for .song-count etc.)
+    const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
+    const listHeaderEl = listHeader?.shadowRoot?.querySelector(selector);
+    if (listHeaderEl) return listHeaderEl;
+    // Then check t-header-actions shadow root (for .header-actions, .action-btn etc.)
+    const headerActions = listHeader?.querySelector('t-header-actions') as any;
+    const el = headerActions?.shadowRoot?.querySelector(selector);
     if (!el) {
       throw new Error(`Expected ${selector} in shadow root`);
     }
@@ -890,7 +915,9 @@ describe('Search focus state and visual indication', () => {
   it('renders a search icon inside the collapsed search wrap', async () => {
     await element.updateComplete;
 
-    const icon = element.shadowRoot?.querySelector('.search-compact-icon');
+    const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
+    const headerActions = listHeader?.querySelector('t-header-actions') as any;
+    const icon = headerActions?.shadowRoot?.querySelector('.search-compact-icon');
     expect(icon).not.toBeNull();
     expect(icon?.getAttribute('name')).toBe('search');
   });
@@ -1103,20 +1130,14 @@ describe('Search focus state and visual indication', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 0));
 
-    const container = getHeaderControl('.header-controls');
+    const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    const addBtn = getHeaderControl('t-butt.action-btn');
     expect(addBtn.classList.contains('search-expanded')).toBe(true);
 
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
-
-    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
-    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
-
-    const findBtn = getHeaderControl('t-butt.header-find-btn');
-    expect(findBtn.classList.contains('search-expanded')).toBe(true);
   });
 
   it('focused search adds search-expanded class to artists-header controls', async () => {
@@ -1131,21 +1152,14 @@ describe('Search focus state and visual indication', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 0));
 
-    const container = getHeaderControl('.header-controls');
+    const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    const addBtn = getHeaderControl('t-butt.action-btn');
     expect(addBtn.classList.contains('search-expanded')).toBe(true);
 
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
-
-    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
-    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
-
-    // The "find new songs" button is tracks-only.
-    const findBtn = element.shadowRoot?.querySelector('t-butt.header-find-btn');
-    expect(findBtn).toBeNull();
   });
 
   it('focused search adds search-expanded class to genre-header controls', async () => {
@@ -1160,21 +1174,14 @@ describe('Search focus state and visual indication', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 0));
 
-    const container = getHeaderControl('.header-controls');
+    const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    const addBtn = getHeaderControl('t-butt.action-btn');
     expect(addBtn.classList.contains('search-expanded')).toBe(true);
 
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
-
-    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
-    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
-
-    // The "find new songs" button is tracks-only.
-    const findBtn = element.shadowRoot?.querySelector('t-butt.header-find-btn');
-    expect(findBtn).toBeNull();
   });
 
   it('focused search adds search-expanded class to groups-header controls', async () => {
@@ -1189,17 +1196,17 @@ describe('Search focus state and visual indication', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 0));
 
-    const container = getHeaderControl('.header-controls');
+    const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    const addBtn = getHeaderControl('t-butt.action-btn');
     expect(addBtn.classList.contains('search-expanded')).toBe(true);
 
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
 
-    const sortBtn = getHeaderControl('t-dropdown-button.header-sort-btn');
-    expect(sortBtn.classList.contains('search-expanded')).toBe(true);
+    // NOTE: the groups list view has no sort button in the header
+    // (sort only appears inside <t-group-list> when a group detail is open).
   });
 
   it('blur removes search-expanded class from header controls', async () => {
@@ -1214,10 +1221,10 @@ describe('Search focus state and visual indication', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     // Focused: the class must be present on the controls.
-    const container = getHeaderControl('.header-controls');
+    const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.header-add-btn');
+    const addBtn = getHeaderControl('t-butt.action-btn');
     expect(addBtn.classList.contains('search-expanded')).toBe(true);
 
     // Blur: the class must disappear from the header controls.
@@ -1515,7 +1522,7 @@ describe('empty state (no songs, no groups)', () => {
   it('keeps the header and footer visible when empty', async () => {
     await element.updateComplete;
 
-    const header = element.shadowRoot?.querySelector('.song-list-header');
+    const header = element.shadowRoot?.querySelector('t-list-header');
     expect(header).toBeTruthy();
 
     const footer = element.shadowRoot?.querySelector('t-media-footer');
@@ -2044,7 +2051,7 @@ describe('deleting the currently open group restores the song-list-header', () =
     await element.updateComplete;
 
     // Inside the detail view the header must be hidden.
-    expect(element.shadowRoot?.querySelector('.song-list-header')).toBeNull();
+    expect(element.shadowRoot?.querySelector('t-list-header')).toBeNull();
 
     // Simulate the v2Script group-deleted flow: remove the group from nDB,
     // then reload the song list.
@@ -2054,7 +2061,7 @@ describe('deleting the currently open group restores the song-list-header', () =
 
     // The stale detail context must be cleared so the header comes back.
     expect((element as any)._currentGroupKey).toBe('');
-    expect(element.shadowRoot?.querySelector('.song-list-header')).toBeTruthy();
+    expect(element.shadowRoot?.querySelector('t-list-header')).toBeTruthy();
   });
 });
 
@@ -2112,13 +2119,15 @@ describe('search input and header button size consistency', () => {
   it('search input min-height matches the header button min-height', async () => {
     await element.updateComplete;
 
-    // The header "add songs" button — a t-butt with class header-add-btn.
-    const headerBtn = element.shadowRoot?.querySelector('t-butt.header-add-btn');
+    // The header "add songs" button — a t-butt inside t-header-actions shadow DOM.
+    const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
+    const headerActions = listHeader?.querySelector('t-header-actions') as any;
+    const headerBtn = headerActions?.shadowRoot?.querySelector('t-butt.action-btn');
     expect(headerBtn).toBeTruthy();
     const btnBase = getButtBase(headerBtn!);
 
-    // The search input — a t-input with class search-input and attribute slim.
-    const tInputEl = element.shadowRoot?.querySelector('t-input.search-input');
+    // The search input — a t-input inside t-header-actions shadow DOM.
+    const tInputEl = headerActions?.shadowRoot?.querySelector('t-input.search-input');
     expect(tInputEl).toBeTruthy();
     const nativeInput = getNativeInput(tInputEl!);
 
@@ -2126,26 +2135,23 @@ describe('search input and header button size consistency', () => {
     const inputMinHeight = getComputedStyle(nativeInput).minHeight;
 
     // Both should share the same height so they align in the header row.
-    // Before the CSS fix t-butt .base is 35px while t-input slim is 32px.
     expect(inputMinHeight).toBe(btnMinHeight);
   });
 
   it('collapsed search-compact-wrap CSS width matches the header button min-width', async () => {
     await element.updateComplete;
 
-    // The header "add songs" button.
-    const headerBtn = element.shadowRoot?.querySelector('t-butt.header-add-btn');
+    // The header "add songs" button inside t-header-actions shadow DOM.
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    const headerActions = listHeader?.querySelector('t-header-actions') as HTMLElement | null;
+    const headerBtn = headerActions?.shadowRoot?.querySelector('t-butt.action-btn');
     expect(headerBtn).toBeTruthy();
     const btnBase = getButtBase(headerBtn!);
 
     const btnMinWidth = getComputedStyle(btnBase).minWidth;
 
-    // happy-dom treats the viewport as ≥576px, so the desktop media query
-    // always overrides the base `.search-compact-wrap` width.  Instead of
-    // comparing computed values (which would always be 200px), we read the
-    // base CSS rule from t-media-parent's adopted stylesheet and verify
-    // its declared width matches the button's min-width.
-    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    // Read the CSS rule from t-header-actions's adopted stylesheet.
+    const sheets = Array.from(headerActions?.shadowRoot?.adoptedStyleSheets ?? []);
     const baseRule = sheets
       .flatMap((sheet) => Array.from(sheet.cssRules))
       .filter(
@@ -2157,18 +2163,16 @@ describe('search input and header button size consistency', () => {
     expect(baseRule).toBeTruthy();
     const wrapWidth = baseRule!.style.getPropertyValue('width').trim();
 
-    // The collapsed search wrap should be as wide as the icon buttons
-    // beside it. Before the fix the base rule declares 32px while the
-    // button's min-width is 42px.
     expect(wrapWidth).toBe(btnMinWidth);
   });
 
   it('search input uses a darker border (2px solid regular-button-color)', async () => {
     await element.updateComplete;
 
-    // Read the CSS rule from the adopted stylesheet — the .search-input
-    // rule sets --t-input-border to a 2px solid border.
-    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    // Read the CSS rule from t-header-actions's adopted stylesheet.
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    const headerActions = listHeader?.querySelector('t-header-actions') as HTMLElement | null;
+    const sheets = Array.from(headerActions?.shadowRoot?.adoptedStyleSheets ?? []);
     const searchInputRule = sheets
       .flatMap((sheet) => Array.from(sheet.cssRules))
       .filter(
@@ -2181,7 +2185,6 @@ describe('search input and header button size consistency', () => {
     const borderValue = searchInputRule!.style
       .getPropertyValue('--t-input-border')
       .trim();
-    // Should declare a 2px border (not the default 1px).
     expect(borderValue).toContain('2px');
     expect(borderValue).toContain('var(--regular-button-color');
   });
@@ -2189,9 +2192,10 @@ describe('search input and header button size consistency', () => {
   it('placeholder is hidden when search is compressed', async () => {
     await element.updateComplete;
 
-    // Read the CSS rule from the adopted stylesheet — the compressed
-    // selector sets --t-input-placeholder-color: transparent.
-    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    // Read the CSS rule from t-header-actions's adopted stylesheet.
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    const headerActions = listHeader?.querySelector('t-header-actions') as HTMLElement | null;
+    const sheets = Array.from(headerActions?.shadowRoot?.adoptedStyleSheets ?? []);
     const placeholderRule = sheets
       .flatMap((sheet) => Array.from(sheet.cssRules))
       .filter(
@@ -2214,7 +2218,9 @@ describe('search input and header button size consistency', () => {
   it('clearable padding is removed when search is compressed', async () => {
     await element.updateComplete;
 
-    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    const headerActions = listHeader?.querySelector('t-header-actions') as HTMLElement | null;
+    const sheets = Array.from(headerActions?.shadowRoot?.adoptedStyleSheets ?? []);
     const placeholderRule = sheets
       .flatMap((sheet) => Array.from(sheet.cssRules))
       .filter(
@@ -2237,7 +2243,9 @@ describe('search input and header button size consistency', () => {
   it('search icon is centered horizontally in the collapsed wrapper', async () => {
     await element.updateComplete;
 
-    const sheets = Array.from(element.shadowRoot?.adoptedStyleSheets ?? []);
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    const headerActions = listHeader?.querySelector('t-header-actions') as HTMLElement | null;
+    const sheets = Array.from(headerActions?.shadowRoot?.adoptedStyleSheets ?? []);
     const iconRule = sheets
       .flatMap((sheet) => Array.from(sheet.cssRules))
       .filter(

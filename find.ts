@@ -58,6 +58,7 @@ import { environment } from './assets/internal/environment.js';
 import { getManifest } from './utils/manifestHelper.js';
 import { COOKIE_CONSENT_ACCEPTED } from './assets/internal/cookie_consent.js';
 import { updateHtmlMarkerColor, setCssVariablesForMarkerDistanceAndColor } from './ui/troffUi.js';
+import { matchesServerSongSearch } from './utils/find-search.js';
 
 $(document).ready(async function () {
   'use strict';
@@ -396,6 +397,13 @@ $(document).ready(async function () {
             tdioHistory.infoBeginning = tdioHistory.infoBeginning || tdioFromServer.infoBeginning;
             tdioHistory.genre = tdioHistory.genre || tdioFromServer.genre;
             tdioHistory.tags = tdioHistory.tags || tdioFromServer.tags;
+            tdioHistory.customName = tdioHistory.customName || tdioFromServer.customName;
+            tdioHistory.choreography = tdioHistory.choreography || tdioFromServer.choreography;
+            tdioHistory.title = tdioHistory.title || tdioFromServer.title;
+            tdioHistory.artist = tdioHistory.artist || tdioFromServer.artist;
+            tdioHistory.album = tdioHistory.album || tdioFromServer.album;
+            tdioHistory.choreographer = tdioHistory.choreographer || tdioFromServer.choreographer;
+            tdioHistory.info = tdioHistory.info || tdioFromServer.info;
           }
         });
       }
@@ -465,12 +473,9 @@ $(document).ready(async function () {
       newDiv.toggleClass('grayOut', !!serverSong.deleted); // <-- !! converts undefined and null to false :)
 
       let addNewDiv = false;
-      let defaultValue = false;
-      if (fileName.toLowerCase().includes(($('#search').val() as string).toLowerCase())) {
-        defaultValue = true;
-      }
+      const searchQuery = $('#search').val() as string;
       $.each(serverSong.troffDataIdObjectList, (tdIndex, troffDataIdObject) => {
-        if (!includesSearch($('#search').val() as string, troffDataIdObject, defaultValue)) {
+        if (!matchesServerSongSearch(searchQuery, fileName, troffDataIdObject)) {
           return;
         }
         addNewDiv = true;
@@ -653,6 +658,15 @@ $(document).ready(async function () {
       infoBeginning: (troffDataP.songData.info || '').substring(0, 99),
       genre: (troffDataP.songData.fileData && troffDataP.songData.fileData.genre) || '',
       tags: (troffDataP.songData.fileData && troffDataP.songData.fileData.tags) || '',
+      customName: (troffDataP.songData.fileData && troffDataP.songData.fileData.customName) || '',
+      choreography:
+        (troffDataP.songData.fileData && troffDataP.songData.fileData.choreography) || '',
+      title: (troffDataP.songData.fileData && troffDataP.songData.fileData.title) || '',
+      artist: (troffDataP.songData.fileData && troffDataP.songData.fileData.artist) || '',
+      album: (troffDataP.songData.fileData && troffDataP.songData.fileData.album) || '',
+      choreographer:
+        (troffDataP.songData.fileData && troffDataP.songData.fileData.choreographer) || '',
+      info: troffDataP.songData.info || '',
     };
   };
 
@@ -714,34 +728,6 @@ $(document).ready(async function () {
     }
 
     return displayName;
-  };
-
-  const getSearchableFields = function (troffDataIdObject: TroffDataIdObject) {
-    const customName = '';
-    const choreography = '';
-    const displayName = troffDataIdObject.displayName || '';
-    const genre = troffDataIdObject.genre || '';
-    const tags = troffDataIdObject.tags || '';
-    return [customName, choreography, displayName, genre, tags];
-  };
-
-  const includesSearch = function (
-    text: string,
-    troffDataIdObject: TroffDataIdObject,
-    defaultValue: boolean
-  ) {
-    if (text == '') return true;
-    text = text.toLowerCase();
-    const searchableFields = getSearchableFields(troffDataIdObject);
-    if (searchableFields.every((f) => f == '')) {
-      return defaultValue;
-    }
-
-    return searchableFields
-      .map((t) => {
-        return t.toLowerCase().includes(text);
-      })
-      .some((a) => a);
   };
 
   const sortFileList = function (cssToSort: string, orderByAsc: boolean) {
