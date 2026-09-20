@@ -732,8 +732,57 @@ export class MediaParent extends LitElement {
 
     console.log(`${ts()} [t-media-parent] ⬇️  downloading: "${song.title || songKey}"`);
     try {
-      const response = await fetch(fileUrl);
-      if (!response.ok) {
+      let response: Response = await fetch(fileUrl);
+      if (!response.ok && (response.status === 401 || response.status === 403)) {
+        const staleUrl: string = fileUrl;
+        const staleStatus: number = response.status;
+        const songTitle: string = song.title || songKey;
+        let freshUrl: string = staleUrl;
+        try {
+          const { getStorageHandle } = await import('../../utils/firebase-getter.js');
+          const storageHandle = await getStorageHandle();
+          const mintedUrl: string = await storageHandle.getFreshDownloadUrl(staleUrl);
+          if (mintedUrl) {
+            freshUrl = mintedUrl;
+          }
+        } catch {
+          // Fall through — still retry once with the stale URL below.
+        }
+        if (freshUrl !== staleUrl) {
+          song.fileUrl = freshUrl;
+        }
+        let retryResponse: Response;
+        try {
+          retryResponse = await fetch(freshUrl);
+        } catch (retryErr) {
+          console.warn(
+            `${ts()} [t-media-parent] ❌ download retry error: "${songTitle}"`,
+            retryErr
+          );
+          this._downloadProgress.delete(songKey);
+          this.requestUpdate();
+          const { showToast } = await import('../../utils/notification.js');
+          showToast(
+            `Could not download "${songTitle}" (${staleStatus}). The link may have expired.`,
+            'error'
+          );
+          return false;
+        }
+        if (!retryResponse.ok) {
+          console.warn(
+            `${ts()} [t-media-parent] ❌ download retry failed (${retryResponse.status}): "${songTitle}"`
+          );
+          this._downloadProgress.delete(songKey);
+          this.requestUpdate();
+          const { showToast } = await import('../../utils/notification.js');
+          showToast(
+            `Could not download "${songTitle}" (${retryResponse.status}). The link may have expired.`,
+            'error'
+          );
+          return false;
+        }
+        response = retryResponse;
+      } else if (!response.ok) {
         console.warn(`${ts()} [t-media-parent] ❌ download failed (${response.status}): "${song.title || songKey}"`);
         this._downloadProgress.delete(songKey);
         this.requestUpdate();
