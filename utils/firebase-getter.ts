@@ -144,6 +144,13 @@ export async function getFirestore(): Promise<FirestoreHandle> {
  * Lazily initialise Firebase Storage and return a helper that generates
  * fresh, short-lived download URLs.  This avoids stale-token 403 errors
  * when the stored `fileUrl` has an expired token.
+ *
+ * IMPORTANT: Uses the main authenticated Firebase app (the default app
+ * initialised by firebaseClient.ts) when available, so that `getDownloadURL`
+ * has the user's auth state and can generate valid signed URLs for files
+ * behind authenticated Storage rules.  Falls back to a standalone
+ * unauthenticated app only when the default app does not exist (e.g.
+ * hash-download flow before sign-in).
  */
 export async function getStorageHandle(): Promise<StorageHandle> {
   if (cachedStoragePromise) return cachedStoragePromise;
@@ -165,11 +172,19 @@ export async function getStorageHandle(): Promise<StorageHandle> {
       'https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js'
     )) as unknown as FirebaseStorageModule;
 
+    // Prefer the default app (authenticated via firebaseClient.ts) so that
+    // getDownloadURL inherits the user's auth token.  Only fall back to the
+    // standalone app for unauthenticated flows.
     const app = (() => {
       try {
-        return firebaseApp.initializeApp(config, 'troff-hash-download');
+        return firebaseApp.getApp();
       } catch {
-        return firebaseApp.getApp('troff-hash-download');
+        // Default app not yet initialised (e.g. hash-download page).
+        try {
+          return firebaseApp.initializeApp(config, 'troff-hash-download');
+        } catch {
+          return firebaseApp.getApp('troff-hash-download');
+        }
       }
     })();
     const storage = firebaseStorage.getStorage(app);
@@ -179,8 +194,21 @@ export async function getStorageHandle(): Promise<StorageHandle> {
     const getFreshDownloadUrl = async (fileUrl: string): Promise<string> => {
       const storagePath = extractStoragePath(fileUrl);
       if (!storagePath) return fileUrl;
+
+      // Always prefer the default (authenticated) app for URL minting so that
+      // the request carries the user's auth token.  The `storage` variable
+      // above may point to an unauthenticated standalone app if getStorageHandle()
+      // was first called before firebaseClient.ts initialised the default app.
+      let activeStorage = storage;
       try {
-        const storageRef = refFn(storage, storagePath);
+        const defaultApp = firebaseApp.getApp();
+        activeStorage = firebaseStorage.getStorage(defaultApp);
+      } catch {
+        // Default app not available — use the fallback storage from init.
+      }
+
+      try {
+        const storageRef = refFn(activeStorage, storagePath);
         return await getDownloadURL(storageRef);
       } catch {
         return fileUrl;
