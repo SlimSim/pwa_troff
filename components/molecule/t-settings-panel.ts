@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
+import { isStandalone } from '../../utils/browserEnv.js';
 import { nDB } from '../../assets/internal/db.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
@@ -903,6 +904,7 @@ export class SettingsPanel extends LitElement {
                 ${!this.keepScreenSupported
                   ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                   : ''}
+                ${isStandalone ? html`
                 <div class="settings-section" style="margin: 0; margin-top: 8px;">
                   <t-butt
                     toggle
@@ -913,6 +915,7 @@ export class SettingsPanel extends LitElement {
                     Portrait
                   </t-butt>
                 </div>
+                ` : ''}
                 <div class="settings-section" style="margin: 0; margin-top: 8px;">
                   <t-butt
                     toggle

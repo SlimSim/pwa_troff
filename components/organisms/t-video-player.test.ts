@@ -3011,7 +3011,7 @@ describe('t-video-player', () => {
     const { el } = createPlayerWithVideo();
     await el.updateComplete;
 
-    const { lockSpy, unlockSpy } = mockScreenOrientation();
+    const { lockSpy } = mockScreenOrientation();
 
     // Enter fullscreen first, then exit.
     const setter = enterFullscreen(el);
@@ -3021,10 +3021,14 @@ describe('t-video-player', () => {
     leaveFullscreen(setter);
     await el.updateComplete;
 
+    // _unlockOrientation uses lock('any') instead of unlock() because
+    // unlock() does not reliably release a previous lock in standalone
+    // PWA mode on Android.
     expect(
-      unlockSpy,
-      'screen.orientation.unlock() must be called when exiting fullscreen on all devices'
-    ).toHaveBeenCalledTimes(1);
+      lockSpy,
+      'screen.orientation.lock("any") must be called when exiting fullscreen to release the lock'
+    ).toHaveBeenCalledTimes(2);
+    expect(lockSpy).toHaveBeenLastCalledWith('any');
   });
 
   it('also locks orientation on non-Android devices (not only Android)', async () => {

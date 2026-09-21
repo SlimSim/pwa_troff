@@ -5,7 +5,12 @@ import { getFirestore, getStorageHandle } from './firebase-getter.js';
 import { normalizeMarkerTime } from './marker-actions.js';
 import { showToast } from './notification.js';
 import { safeDecodeURIComponent, toSongKey } from './utils.js';
-import type { TroffData, TroffMarker, TroffHistoryList, TroffDataIdObject } from '../types/troff.d.js';
+import type {
+  TroffData,
+  TroffMarker,
+  TroffHistoryList,
+  TroffDataIdObject,
+} from '../types/troff.d.js';
 
 const CACHE_NAME = 'songCache-v1.0';
 
@@ -50,11 +55,11 @@ export function parseHash(hash: string): { serverId: number; fileName: string } 
  * 5. Parse markers and save to nDB
  * 6. Download audio file and cache it for offline playback
  *
-  * @param hash      URL hash in `#serverId&fileName` format.
-  * @param callbacks Optional callbacks for progress reporting.
-  * @returns The file name on success, `null` if an error occurs.
-  *          User-visible errors for a missing/mismatched song are shown
-  *          via toast notifications (`showToast`), not `alert()`.
+ * @param hash      URL hash in `#serverId&fileName` format.
+ * @param callbacks Optional callbacks for progress reporting.
+ * @returns The file name on success, `null` if an error occurs.
+ *          User-visible errors for a missing/mismatched song are shown
+ *          via toast notifications (`showToast`), not `alert()`.
  */
 export async function downloadSongFromHash(
   hash: string,
@@ -71,8 +76,8 @@ export async function downloadSongFromHash(
     );
     return null;
   }
-   const { serverId, fileName: rawFileName } = parsed;
-   const fileName = toSongKey(rawFileName);
+  const { serverId, fileName: rawFileName } = parsed;
+  const fileName = toSongKey(rawFileName);
 
   // If the song already exists in local storage, no need to download
   const existingData = nDB.get(fileName);
@@ -122,8 +127,8 @@ export async function downloadSongFromHash(
         `URL has "${fileName}" but server has "${troffData.fileName}"`
     );
     showToast(
-      'This download link does not match the song on the server. ' +
-        'Please check the link and try again.',
+      `Could not find the song "${fileName}" on the server. ` +
+        'The link may be wrong, or the song has been removed.',
       'error',
       5000
     );
@@ -212,8 +217,8 @@ export async function fetchServerTroffData(
           `URL has "${fileName}" but server has "${troffData.fileName}"`
       );
       showToast(
-        'This download link does not match the song on the server. ' +
-          'Please check the link and try again.',
+        `Could not find the song "${fileName}" on the server. ` +
+          'The link may be wrong, or the song has been removed.',
         'error',
         5000
       );
@@ -279,7 +284,9 @@ async function fetchAndCacheFile(
   if (!response || !response.ok) {
     const status = response?.status ?? 0;
     const statusText = response?.statusText ?? 'Network error';
-    const error = new Error(`Fetch failed for ${songKey}: ${statusText}`) as Error & { status: number };
+    const error = new Error(`Fetch failed for ${songKey}: ${statusText}`) as Error & {
+      status: number;
+    };
     error.status = status;
     throw error;
   }
@@ -336,8 +343,7 @@ export function saveDownloadLinkHistory(
   const markerObject = JSON.parse(troffData.markerJsonString || '{}');
   const fileData = markerObject.fileData;
 
-  const displayName =
-    fileData?.customName || fileData?.choreography || fileData?.title || fileName;
+  const displayName = fileData?.customName || fileData?.choreography || fileData?.title || fileName;
   const nrMarkers = Array.isArray(markerObject.markers) ? markerObject.markers.length : 0;
   const nrStates = Array.isArray(markerObject.aStates) ? markerObject.aStates.length : 0;
   const info = (markerObject.info || '').substring(0, 99);
