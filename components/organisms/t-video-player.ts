@@ -151,6 +151,7 @@ export class TVideoPlayer extends LitElement {
       justify-content: space-between;
       align-items: center;
       z-index: 1;
+      padding: 0 8px;
     }
     .top-controls .video-btn,
     .top-controls .speed-info,
