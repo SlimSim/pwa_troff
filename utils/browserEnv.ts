@@ -5,4 +5,8 @@ export const isAndroid: boolean = /Android/i.test(navigator.userAgent);
 
 export const isPhone: boolean = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
+/** True when the app is running in installed PWA (standalone) mode. */
+export const isStandalone: boolean =
+  window.matchMedia('(display-mode: standalone)').matches;
+
 export const usePhoneLog = isPhone;
