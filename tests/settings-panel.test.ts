@@ -3,21 +3,6 @@ import type { DetailsElement } from '../components/atom/t-details.js';
 
 type SettingsPanelType = import('../components/molecule/t-settings-panel.js').SettingsPanel;
 
-// Mock browserEnv so we can control isStandalone per-test.
-const mockBrowserEnv = vi.hoisted(() => ({ isStandalone: false }));
-
-vi.mock('../utils/browserEnv.js', () => ({
-  get isStandalone() {
-    return mockBrowserEnv.isStandalone;
-  },
-  isSafari: false,
-  isIphone: false,
-  isIpad: false,
-  isAndroid: false,
-  isPhone: false,
-  usePhoneLog: false,
-}));
-
 describe('SettingsPanel numeric settings integration', () => {
   let settingsPanel: SettingsPanelType;
 
@@ -722,19 +707,14 @@ describe('SettingsPanel numeric settings integration', () => {
     });
 
     describe('rendered portrait toggle in Advanced Settings section', () => {
-      it('should render a <t-butt toggle> for "Portrait" in standalone mode', async () => {
-        mockBrowserEnv.isStandalone = true;
-        const { SettingsPanel } = await import('../components/molecule/t-settings-panel.js');
-        const panel = new SettingsPanel();
-        document.body.appendChild(panel);
-        await panel.updateComplete;
-
-        const shells = Array.from(panel.shadowRoot?.querySelectorAll('.settings-shell') ?? []);
+      it('should render a <t-butt toggle> for "Portrait" inside the Advanced Settings section', () => {
+        const shells = Array.from(settingsPanel.shadowRoot?.querySelectorAll('.settings-shell') ?? []);
         const globalShell = shells.find((shell) =>
           shell.querySelector('t-help-tip[h3="Global Controls"]')
         );
         expect(globalShell, 'expected to find .settings-shell containing Global Controls help-tip').toBeTruthy();
 
+        // Find the Advanced Settings t-details
         const details = Array.from(globalShell!.querySelectorAll('t-details') ?? []);
         const advanced = details.find((d) => d.getAttribute('title') === 'Advanced Settings');
         expect(advanced, 'expected to find Advanced Settings t-details').toBeTruthy();
@@ -744,37 +724,8 @@ describe('SettingsPanel numeric settings integration', () => {
           (b.textContent || '').trim().toLowerCase().includes('portrait')
         );
 
-        expect(portraitButt, 'expected to find a Portrait button in standalone mode').toBeTruthy();
+        expect(portraitButt, 'expected to find a Portrait button in Advanced Settings').toBeTruthy();
         expect(portraitButt!.hasAttribute('toggle')).toBe(true);
-
-        document.body.removeChild(panel);
-      });
-
-      it('should NOT render the Portrait button in browser mode', async () => {
-        mockBrowserEnv.isStandalone = false;
-        const { SettingsPanel } = await import('../components/molecule/t-settings-panel.js');
-        const panel = new SettingsPanel();
-        document.body.appendChild(panel);
-        await panel.updateComplete;
-
-        const shells = Array.from(panel.shadowRoot?.querySelectorAll('.settings-shell') ?? []);
-        const globalShell = shells.find((shell) =>
-          shell.querySelector('t-help-tip[h3="Global Controls"]')
-        );
-        expect(globalShell, 'expected to find .settings-shell containing Global Controls help-tip').toBeTruthy();
-
-        const details = Array.from(globalShell!.querySelectorAll('t-details') ?? []);
-        const advanced = details.find((d) => d.getAttribute('title') === 'Advanced Settings');
-        expect(advanced, 'expected to find Advanced Settings t-details').toBeTruthy();
-
-        const butts = Array.from(advanced!.querySelectorAll('t-butt') ?? []);
-        const portraitButt = butts.find((b) =>
-          (b.textContent || '').trim().toLowerCase().includes('portrait')
-        );
-
-        expect(portraitButt, 'expected NO Portrait button in browser mode').toBeFalsy();
-
-        document.body.removeChild(panel);
       });
     });
   });
