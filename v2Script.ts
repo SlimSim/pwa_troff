@@ -16,6 +16,8 @@ import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/molecule/t-share-song-dialog.js';
 import './components/molecule/t-text-input-dialog.js';
+import './components/molecule/t-import-dialog.js';
+import type { ImportDialog } from './components/molecule/t-import-dialog.js';
 import './components/organisms/t-marker-slider.js';
 import './components/organisms/t-video-player.js';
 import {
@@ -3035,85 +3037,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // -------- Import dialog for songs that already exist locally --------
-  let importDialogOverlay: HTMLDivElement | null = null;
+  // -------- Import dialog for songs that already exist locally (V2) --------
+  let importDialog: ImportDialog | null = null;
 
-  const destroyImportDialog = () => {
-    if (importDialogOverlay) {
-      importDialogOverlay.remove();
-      importDialogOverlay = null;
+  const openImportDialog = (fileName: string, hashServerId: number) => {
+    if (!importDialog) {
+      importDialog = document.createElement('t-import-dialog');
+      document.body.append(importDialog);
     }
-  };
 
-  const createImportDialog = (fileName: string, hashServerId: number) => {
-    destroyImportDialog();
+    importDialog.fileName = fileName;
+    importDialog.open = true;
 
-    const overlay = document.createElement('div');
-    overlay.className = 'import-dialog-overlay';
-    overlay.style.cssText = `
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6); z-index: 10000;
-      display: flex; align-items: center; justify-content: center;
-    `;
-
-    const box = document.createElement('div');
-    box.className = 'import-dialog-box';
-    box.style.cssText = `
-      background: var(--on-theme-color, #fff); color: var(--theme-color, #000);
-      padding: 24px; border-radius: 8px; max-width: 400px; width: 90%;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      display: flex; flex-direction: column; gap: 16px;
-    `;
-
-    const title = document.createElement('h2');
-    title.textContent = 'Update markers?';
-    title.style.cssText = 'margin: 0; font-size: 1.2em;';
-
-    const message = document.createElement('p');
-    message.style.cssText = 'margin: 0; line-height: 1.5;';
-    message.textContent = `You seem to already have the song "${fileName}". Do you want to update that song with the new markers or merge them or abort?`;
-
-    const buttonRow = document.createElement('div');
-    buttonRow.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
-
-    const btnImport = document.createElement('button');
-    btnImport.textContent = 'Import new markers';
-    btnImport.className = 'regularButton';
-    btnImport.onclick = () => {
-      destroyImportDialog();
-      handleImportNewMarkers(fileName, hashServerId);
+    const handleAction = (event: Event) => {
+      const { action } = (event as CustomEvent).detail as { action: 'import' | 'merge' | 'keep' };
+      if (action === 'import') {
+        handleImportNewMarkers(fileName, hashServerId);
+      } else if (action === 'merge') {
+        handleMergeMarkers(fileName, hashServerId);
+      } else {
+        handleKeepExistingMarkers(fileName);
+      }
     };
 
-    const btnMerge = document.createElement('button');
-    btnMerge.textContent = 'Merge with existing markers';
-    btnMerge.className = 'regularButton';
-    btnMerge.onclick = () => {
-      destroyImportDialog();
-      handleMergeMarkers(fileName, hashServerId);
-    };
-
-    const btnKeep = document.createElement('button');
-    btnKeep.textContent = 'Keep existing markers';
-    btnKeep.className = 'regularButton';
-    btnKeep.onclick = () => {
-      destroyImportDialog();
-      handleKeepExistingMarkers(fileName);
-    };
-
-    // Style buttons
-    [btnImport, btnMerge, btnKeep].forEach((btn) => {
-      btn.style.cssText = `
-        padding: 10px 16px; border: 1px solid var(--theme-color, #000);
-        border-radius: 4px; background: var(--secondary-color, #eee);
-        color: var(--theme-color, #000); cursor: pointer; font-size: 0.95em;
-      `;
-    });
-
-    buttonRow.append(btnImport, btnMerge, btnKeep);
-    box.append(title, message, buttonRow);
-    overlay.append(box);
-    document.body.append(overlay);
-    importDialogOverlay = overlay;
+    importDialog.addEventListener('import-action-selected', handleAction, { once: true });
   };
 
   // -------- Dialog actions --------
@@ -3264,7 +3211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Different or missing serverId — show import dialog
-    createImportDialog(fileName, hashServerId);
+    openImportDialog(fileName, hashServerId);
   };
 
   // -------- Group edit dialog (V2) --------
