@@ -15,8 +15,7 @@ type ToggleSetting =
   | 'extraExtendedMarkerColor'
   | 'keepScreenOn'
   | 'darkMode'
-  | 'bannerShow'
-  | 'portrait';
+  | 'bannerShow';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -378,7 +377,6 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) darkMode = false;
   @property({ type: Boolean }) bannerShow = false;
   @property({ type: Boolean }) preferVersion2 = false;
-  @property({ type: Boolean }) portrait = true;
   @property({ type: String }) theme = 'col1';
 
   connectedCallback() {
@@ -518,9 +516,6 @@ export class SettingsPanel extends LitElement {
         break;
       case 'bannerShow':
         this.bannerShow = nextValue;
-        break;
-      case 'portrait':
-        this.portrait = nextValue;
         break;
       default:
         return;
@@ -903,16 +898,6 @@ export class SettingsPanel extends LitElement {
                 ${!this.keepScreenSupported
                   ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                   : ''}
-                <div class="settings-section" style="margin: 0; margin-top: 8px;">
-                  <t-butt
-                    toggle
-                    ellipsis
-                    .active=${this.portrait}
-                    @click=${() => this._toggleSetting('portrait', this.portrait)}
-                  >
-                    Portrait
-                  </t-butt>
-                </div>
                 <div class="settings-section" style="margin: 0; margin-top: 8px;">
                   <t-butt
                     toggle
