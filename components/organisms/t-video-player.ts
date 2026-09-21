@@ -445,27 +445,11 @@ export class TVideoPlayer extends LitElement {
     }
   }
 
-  /**
-   * Release the orientation lock.  Uses lock('any') as the primary approach
-   * because screen.orientation.unlock() does not reliably release a previous
-   * lock in standalone PWA mode on Android.  Falls back to unlock() if
-   * lock('any') is not available.
-   */
   private _unlockOrientation() {
-    if (!screen.orientation) {
+    if (!screen.orientation?.unlock) {
       return;
     }
-    const orient = screen.orientation as ScreenOrientation & {
-      lock?: (o: string) => Promise<void>;
-      unlock?: () => void;
-    };
-    if (orient.lock) {
-      void orient.lock('any').catch(() => {
-        orient.unlock?.();
-      });
-    } else if (orient.unlock) {
-      orient.unlock();
-    }
+    screen.orientation.unlock();
   }
 
   private _onFullscreenChange = () => {
