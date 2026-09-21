@@ -1,12 +1,14 @@
 /**
  * Lightweight notification system for Troff PWA.
- * Uses DOM overlays — no jQuery dependency.
+ * Uses the <t-toast> web component for toast notifications.
  *
  * Provides:
  *  - `showDownloadProgress(fileName)` → controller with `update(percent)` / `done()`
  *  - `showToast(message, type?, duration?)` → auto-dismissing toast
  *  - `hideDownloadProgress()` → hide immediately
  */
+
+import '../components/atom/t-toast.js';
 
 // ---------------------------------------------------------------------------
 // Toast notifications (top-right, auto-dismiss)
@@ -26,23 +28,6 @@ function getToastContainer(): HTMLDivElement {
   return toastContainer;
 }
 
-// Inject keyframe animation once
-if (!document.getElementById('troff-notification-style')) {
-  const style = document.createElement('style');
-  style.id = 'troff-notification-style';
-  style.textContent = `
-    @keyframes troff-toast-in {
-      from { opacity: 0; transform: translateX(100%); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes troff-toast-out {
-      from { opacity: 1; transform: translateX(0); }
-      to   { opacity: 0; transform: translateX(100%); }
-    }
-  `;
-  document.head.append(style);
-}
-
 /**
  * Show a brief toast notification that auto-dismisses.
  *
@@ -59,40 +44,30 @@ export function showToast(
   action?: { label: string; onClick: () => void }
 ): void {
   const container = getToastContainer();
-  const toast = document.createElement('div');
-  const bgColor =
-    type === 'success' ? '#2e7d32' : type === 'error' ? '#c62828' : '#1565c0';
-  toast.style.cssText =
-    `padding:12px 18px;border-radius:6px;font-size:0.95em;` +
-    `box-shadow:0 2px 12px rgba(0,0,0,0.2);background:${bgColor};` +
-    `color:#fff;line-height:1.4;animation:troff-toast-in 0.2s ease-out;` +
-    `word-break:break-word;`;
-  toast.textContent = message;
+
+  const toast = document.createElement('t-toast');
+  toast.message = message;
+  toast.type = type;
+  toast.duration = duration;
+  if (action) {
+    toast.actionLabel = action.label;
+  }
+
   container.append(toast);
 
-  const autoDismissTimer = setTimeout(() => {
-    toast.style.animation = 'troff-toast-out 0.3s ease-out forwards';
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+  const handleDismiss = () => {
+    toast.removeEventListener('toast-dismissed', handleDismiss);
+    toast.removeEventListener('toast-action-clicked', handleActionClick);
+    toast.remove();
+  };
 
+  const handleActionClick = () => {
+    action?.onClick();
+  };
+
+  toast.addEventListener('toast-dismissed', handleDismiss);
   if (action) {
-    toast.style.display = 'flex';
-    toast.style.alignItems = 'center';
-    toast.style.gap = '8px';
-    toast.style.justifyContent = 'space-between';
-
-    const actionButton = document.createElement('button');
-    actionButton.textContent = action.label;
-    actionButton.style.cssText =
-      'background:rgba(255,255,255,0.25);color:#fff;' +
-      'border:1px solid rgba(255,255,255,0.6);border-radius:4px;' +
-      'padding:2px 10px;cursor:pointer;font-size:0.9em;flex-shrink:0;';
-    actionButton.addEventListener('click', () => {
-      clearTimeout(autoDismissTimer);
-      toast.remove();
-      action.onClick();
-    });
-    toast.append(actionButton);
+    toast.addEventListener('toast-action-clicked', handleActionClick);
   }
 }
 
