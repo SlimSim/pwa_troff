@@ -268,5 +268,122 @@ describe('utils/upload-song.js', () => {
       expect(fakeTask.on).not.toHaveBeenCalled();
       expect(result?.fileUrl).toBe(FILE_URL);
     });
+
+    it('strips albumArt from fileData in markerJsonString to stay under Firestore 1 MiB limit', async () => {
+      const largeAlbumArt = 'data:image/jpeg;base64,' + 'A'.repeat(500_000);
+      nDBStore['track.mp3'] = {
+        markers: [{ id: 'm1', time: 1.5 }],
+        localInformation: { playCount: 7 },
+        fileData: {
+          title: 'My Song',
+          artist: 'Artist',
+          album: 'Album',
+          genre: 'Rock',
+          albumArt: largeAlbumArt,
+          duration: 120,
+          customName: 'track.mp3',
+          choreographer: '',
+          choreography: '',
+          tags: '',
+        },
+      };
+      mockCache['track.mp3'] = new Response('fake-audio-bytes');
+
+      firebaseMocks.getDownloadURL
+        .mockRejectedValueOnce(new Error('storage/object-not-found'))
+        .mockResolvedValueOnce(FILE_URL);
+
+      await uploadSongToServer('track.mp3');
+
+      expect(firebaseMocks.setDoc).toHaveBeenCalledTimes(1);
+      const [, troffData] = firebaseMocks.setDoc.mock.calls[0];
+      const markerJson = JSON.parse(troffData.markerJsonString);
+
+      // albumArt must NOT be in the serialized markerJsonString
+      expect(markerJson.fileData.albumArt).toBeUndefined();
+      expect(markerJson.fileData).not.toHaveProperty('albumArt');
+
+      // The serialized markerJsonString should be significantly smaller
+      // than if the full albumArt were included
+      expect(troffData.markerJsonString.length).toBeLessThan(100_000);
+    });
+
+    it('preserves other fileData properties (title, artist, album, genre) in markerJsonString after stripping albumArt', async () => {
+      nDBStore['track.mp3'] = {
+        markers: [{ id: 'm1', time: 1.5 }],
+        localInformation: { playCount: 7 },
+        fileData: {
+          title: 'My Title',
+          artist: 'My Artist',
+          album: 'My Album',
+          genre: 'Jazz',
+          albumArt: 'data:image/jpeg;base64,ABCDEF',
+          duration: 200,
+          customName: 'track.mp3',
+          choreographer: 'Choreo',
+          choreography: 'Choreo Name',
+          tags: 'tag1,tag2',
+        },
+      };
+      mockCache['track.mp3'] = new Response('fake-audio-bytes');
+
+      firebaseMocks.getDownloadURL
+        .mockRejectedValueOnce(new Error('storage/object-not-found'))
+        .mockResolvedValueOnce(FILE_URL);
+
+      await uploadSongToServer('track.mp3');
+
+      expect(firebaseMocks.setDoc).toHaveBeenCalledTimes(1);
+      const [, troffData] = firebaseMocks.setDoc.mock.calls[0];
+      const markerJson = JSON.parse(troffData.markerJsonString);
+
+      // albumArt must be stripped
+      expect(markerJson.fileData.albumArt).toBeUndefined();
+
+      // All other fileData properties must be preserved
+      expect(markerJson.fileData.title).toBe('My Title');
+      expect(markerJson.fileData.artist).toBe('My Artist');
+      expect(markerJson.fileData.album).toBe('My Album');
+      expect(markerJson.fileData.genre).toBe('Jazz');
+      expect(markerJson.fileData.duration).toBe(200);
+      expect(markerJson.fileData.customName).toBe('track.mp3');
+      expect(markerJson.fileData.choreographer).toBe('Choreo');
+      expect(markerJson.fileData.choreography).toBe('Choreo Name');
+      expect(markerJson.fileData.tags).toBe('tag1,tag2');
+
+      // Other top-level properties must also be preserved
+      expect(markerJson.markers).toEqual([{ id: 'm1', time: 1.5 }]);
+      expect(markerJson.localInformation).toBeUndefined();
+    });
+
+    it('handles song without albumArt gracefully (no albumArt to strip)', async () => {
+      nDBStore['track.mp3'] = {
+        markers: [{ id: 'm1', time: 1.5 }],
+        localInformation: { playCount: 7 },
+        fileData: {
+          title: 'No Art Song',
+          artist: 'Artist',
+          album: 'Album',
+          genre: 'Pop',
+          duration: 90,
+        },
+      };
+      mockCache['track.mp3'] = new Response('fake-audio-bytes');
+
+      firebaseMocks.getDownloadURL
+        .mockRejectedValueOnce(new Error('storage/object-not-found'))
+        .mockResolvedValueOnce(FILE_URL);
+
+      await uploadSongToServer('track.mp3');
+
+      expect(firebaseMocks.setDoc).toHaveBeenCalledTimes(1);
+      const [, troffData] = firebaseMocks.setDoc.mock.calls[0];
+      const markerJson = JSON.parse(troffData.markerJsonString);
+
+      // fileData should still be present and correct
+      expect(markerJson.fileData.title).toBe('No Art Song');
+      expect(markerJson.fileData.artist).toBe('Artist');
+      expect(markerJson.fileData.albumArt).toBeUndefined();
+    });
   });
 });

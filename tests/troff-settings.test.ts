@@ -760,3 +760,208 @@ describe('createNewSongEntry', () => {
     expect(fd.genre).toBe('Rock');
   });
 });
+
+// ---------------------------------------------------------------------------
+// parseId3 – direct export test
+// ---------------------------------------------------------------------------
+
+describe('parseId3', () => {
+  let parseId3: (bytes: Uint8Array) => {
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    info: string;
+    bpm?: string;
+    albumArt?: string;
+  };
+
+  beforeAll(async () => {
+    const mod = await import('../utils/troff-settings.js');
+    parseId3 = mod.parseId3;
+  });
+
+  const buildMinimalID3 = (
+    title: string,
+    artist: string,
+    album: string,
+    genre: string,
+    comment = '',
+    pic?: Uint8Array
+  ) => {
+    const enc = 0;
+    const term = 0;
+    const makeTextFrame = (id: string, text: string) => {
+      const textBytes = [...new TextEncoder().encode(text), term];
+      const dataLen = 1 + textBytes.length;
+      const sizeBytes = [0, 0, 0, dataLen];
+      return [
+        ...id.split('').map((c) => c.charCodeAt(0)),
+        ...sizeBytes,
+        0,
+        0,
+        enc,
+        ...textBytes,
+      ];
+    };
+
+    const makeCommentFrame = (text: string) => {
+      const encC = 0;
+      const lang = [101, 110, 103]; // 'eng'
+      const desc = [0];
+      const textBytes = [...new TextEncoder().encode(text), 0];
+      const dataLen = 1 + 3 + 1 + textBytes.length;
+      const sizeBytes = [0, 0, 0, dataLen];
+      return [
+        ...'COMM'.split('').map((c) => c.charCodeAt(0)),
+        ...sizeBytes,
+        0,
+        0,
+        encC,
+        ...lang,
+        ...desc,
+        ...textBytes,
+      ];
+    };
+
+    const makePicFrame = (data: Uint8Array) => {
+      const mime = [...new TextEncoder().encode('image/png'), 0];
+      const picType = [3];
+      const desc = [0];
+      const dataLen = 1 + mime.length + picType.length + desc.length + data.length;
+      const sizeBytes = [0, 0, 0, dataLen];
+      return [
+        ...'APIC'.split('').map((c) => c.charCodeAt(0)),
+        ...sizeBytes,
+        0,
+        0,
+        enc,
+        ...mime,
+        ...picType,
+        ...desc,
+        ...Array.from(data),
+      ];
+    };
+
+    const frames = [
+      ...makeTextFrame('TIT2', title),
+      ...makeTextFrame('TPE1', artist),
+      ...makeTextFrame('TALB', album),
+      ...makeTextFrame('TCON', genre),
+      ...(comment ? makeCommentFrame(comment) : []),
+      ...(pic ? makePicFrame(pic) : []),
+    ];
+    const tagSize = frames.length;
+    const sizeSync = [0, 0, 0, tagSize];
+    const header = [73, 68, 51, 3, 0, 0, ...sizeSync];
+    return new Uint8Array([...header, ...frames]);
+  };
+
+  it('extracts title, artist, album, genre from ID3 text frames', () => {
+    const bytes = buildMinimalID3('TestTitle', 'TestArtist', 'TestAlbum', 'Rock');
+    const result = parseId3(bytes);
+    expect(result.title).toBe('TestTitle');
+    expect(result.artist).toBe('TestArtist');
+    expect(result.album).toBe('TestAlbum');
+    expect(result.genre).toBe('Rock');
+  });
+
+  it('extracts comment into info field', () => {
+    const bytes = buildMinimalID3('T', 'A', '', '', 'Hello world');
+    const result = parseId3(bytes);
+    expect(result.info).toBe('Hello world');
+  });
+
+  it('returns empty strings for non-ID3 input', () => {
+    const bytes = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+    const result = parseId3(bytes);
+    expect(result.title).toBe('');
+    expect(result.artist).toBe('');
+    expect(result.album).toBe('');
+    expect(result.genre).toBe('');
+    expect(result.info).toBe('');
+  });
+
+  it('returns empty strings for too-short input', () => {
+    const bytes = new Uint8Array([73, 68, 51]); // "ID3" but < 10 bytes
+    const result = parseId3(bytes);
+    expect(result.title).toBe('');
+  });
+
+  it('extracts albumArt as base64 data URL from APIC frame with JPEG data', () => {
+    const tinyJpeg = new Uint8Array([
+      0xff, 0xd8, 0xff, 0xe0, // SOI + APP0
+      0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+      0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+      0xff, 0xd9, // EOI
+    ]);
+    const bytes = buildMinimalID3('Art', '', '', '', '', tinyJpeg);
+    const result = parseId3(bytes);
+    expect(result.albumArt).toBeDefined();
+    expect(result.albumArt).toMatch(/^data:image\/jpeg;base64,/);
+    expect(result.albumArt!.length).toBeGreaterThan(30);
+  });
+
+  it('does not set albumArt when there is no APIC frame', () => {
+    const bytes = buildMinimalID3('NoArt', '', '', '');
+    const result = parseId3(bytes);
+    expect(result.albumArt).toBeUndefined();
+  });
+
+  it('extracts albumArt from APIC frame with PNG data', () => {
+    const tinyPng = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, // PNG signature start
+      0x0d, 0x0a, 0x1a, 0x0a,
+      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
+      0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41,
+      0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
+      0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
+      0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e,
+      0x44, 0xae, 0x42, 0x60, 0x82, // PNG IEND
+    ]);
+    const bytes = buildMinimalID3('PngArt', '', '', '', '', tinyPng);
+    const result = parseId3(bytes);
+    expect(result.albumArt).toBeDefined();
+    expect(result.albumArt).toMatch(/^data:image\/png;base64,/);
+  });
+
+  it('parses ID3v2.4 tags (version byte = 4)', () => {
+    // Build ID3v2.4 tag
+    const enc = 3; // UTF-8 for v2.4
+    const term = 0;
+    const makeTextFrame = (id: string, text: string) => {
+      const textBytes = [...new TextEncoder().encode(text), term];
+      const dataLen = 1 + textBytes.length;
+      // ID3v2.4 uses syncsafe sizes
+      const sizeSync = [
+        (dataLen >> 21) & 0x7f,
+        (dataLen >> 14) & 0x7f,
+        (dataLen >> 7) & 0x7f,
+        dataLen & 0x7f,
+      ];
+      return [
+        ...id.split('').map((c) => c.charCodeAt(0)),
+        ...sizeSync,
+        0,
+        0,
+        enc,
+        ...textBytes,
+      ];
+    };
+
+    const frames = [...makeTextFrame('TIT2', 'V4Title')];
+    const tagSize = frames.length;
+    const sizeSync = [
+      (tagSize >> 21) & 0x7f,
+      (tagSize >> 14) & 0x7f,
+      (tagSize >> 7) & 0x7f,
+      tagSize & 0x7f,
+    ];
+    const header = [73, 68, 51, 4, 0, 0, ...sizeSync]; // version 4
+    const bytes = new Uint8Array([...header, ...frames]);
+    const result = parseId3(bytes);
+    expect(result.title).toBe('V4Title');
+  });
+});

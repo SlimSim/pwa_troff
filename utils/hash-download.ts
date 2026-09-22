@@ -5,6 +5,7 @@ import { getFirestore, getStorageHandle } from './firebase-getter.js';
 import { normalizeMarkerTime } from './marker-actions.js';
 import { showToast } from './notification.js';
 import { safeDecodeURIComponent, toSongKey } from './utils.js';
+import { parseId3 } from './troff-settings.js';
 import type {
   TroffData,
   TroffMarker,
@@ -160,6 +161,27 @@ export async function downloadSongFromHash(
       fetchAndCacheFile(troffData.fileUrl, troffData.fileName, callbacks?.onProgress),
       nDB.set(troffData.fileName, markers),
     ]);
+
+    // Extract album art from the downloaded audio file's ID3 tags.
+    // The album art was stripped from markerJsonString before upload to
+    // stay under Firestore's 1 MiB document limit, so we recover it
+    // from the audio file itself.
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const cachedResponse = await cache.match(troffData.fileName);
+      if (cachedResponse) {
+        const blob = await cachedResponse.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const id3Data = parseId3(new Uint8Array(arrayBuffer));
+        if (id3Data.albumArt) {
+          markers.fileData = markers.fileData || {};
+          markers.fileData.albumArt = id3Data.albumArt;
+          await nDB.set(troffData.fileName, markers);
+        }
+      }
+    } catch (id3Error) {
+      log.d('Could not extract album art from audio file:', id3Error);
+    }
   } catch (error) {
     log.e('Error saving song to cache:', error);
     const status = (error as Error & { status?: number }).status;

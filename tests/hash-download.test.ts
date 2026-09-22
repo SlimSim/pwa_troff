@@ -524,6 +524,263 @@ describe('downloadSongFromHash', () => {
     });
   });
 
+  // --------------- Album art extraction from ID3 on download ---------------
+
+  describe('albumArt extraction from downloaded audio', () => {
+    it('extracts albumArt from ID3 tags in cached audio blob and merges it into nDB entry', async () => {
+      // Build minimal ID3 bytes with APIC (album art) frame
+      const buildId3WithAlbumArt = () => {
+        const enc = 0;
+        const term = 0;
+        const makeTextFrame = (id: string, text: string) => {
+          const textBytes = [...new TextEncoder().encode(text), term];
+          const dataLen = 1 + textBytes.length;
+          const sizeBytes = [0, 0, 0, dataLen];
+          return [
+            ...id.split('').map((c) => c.charCodeAt(0)),
+            ...sizeBytes,
+            0, 0, enc, ...textBytes,
+          ];
+        };
+
+        const tinyJpeg = new Uint8Array([
+          0xff, 0xd8, 0xff, 0xe0,
+          0x00, 0x10, 0x4a, 0x46, 0x49, 0x46,
+          0x00, 0x01, 0x01, 0x00, 0x00, 0x01,
+          0x00, 0x01, 0x00, 0x00,
+          0xff, 0xd9,
+        ]);
+
+        const mime = [...new TextEncoder().encode('image/jpeg'), 0];
+        const picType = [3];
+        const desc = [0];
+        const apicDataLen = 1 + mime.length + picType.length + desc.length + tinyJpeg.length;
+        const apicFrame = [
+          ...'APIC'.split('').map((c) => c.charCodeAt(0)),
+          0, 0, 0, apicDataLen, 0, 0, enc,
+          ...mime, ...picType, ...desc, ...Array.from(tinyJpeg),
+        ];
+
+        const frames = [
+          ...makeTextFrame('TIT2', 'AlbumArtTitle'),
+          ...apicFrame,
+        ];
+        const tagSize = frames.length;
+        const sizeSync = [0, 0, 0, tagSize];
+        const header = [73, 68, 51, 3, 0, 0, ...sizeSync];
+        return new Uint8Array([...header, ...frames]);
+      };
+
+      const id3Bytes = buildId3WithAlbumArt();
+      const audioData = new Uint8Array([...id3Bytes, ...new Array(100).fill(0)]);
+      const audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
+
+      mockNdbGet.mockImplementation((key: string) => {
+        if (key === 'album-art-song.mp3') return null;
+        if (key === 'TROFF_TROFF_DATA_ID_AND_FILE_NAME') return [];
+        return null;
+      });
+      mockNdbSet.mockResolvedValue(undefined);
+
+      const markerJsonWithoutAlbumArt = JSON.stringify({
+        markers: [{ id: 'm1', time: 0 }],
+        fileData: { title: 'AlbumArtTitle' },
+      });
+
+      mockGetDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({
+          fileName: 'album-art-song.mp3',
+          fileUrl: 'https://example.com/album-art-song.mp3',
+          fileSize: 0,
+          fileType: 'audio/mpeg',
+          id: 777,
+          markerJsonString: markerJsonWithoutAlbumArt,
+          troffDataPublic: true,
+          troffDataUploadedMillis: Date.now(),
+        }),
+      });
+
+      // Mock fetch to return the audio data with ID3 album art
+      const fetchResponse = new Response(audioBlob, {
+        status: 200,
+        headers: { 'Content-Type': 'audio/mpeg' },
+      });
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(fetchResponse);
+
+      const result = await downloadSongFromHash('#777&album-art-song.mp3');
+      expect(result).toBe('album-art-song.mp3');
+
+      // nDB.set should have been called for the song with markers + albumArt merged in
+      const ndbSongSetCall = mockNdbSet.mock.calls.find(
+        (call: unknown[]) => call[0] === 'album-art-song.mp3'
+      );
+      expect(ndbSongSetCall).toBeDefined();
+      const savedMarkers = ndbSongSetCall![1];
+
+      // The markers should have serverId and fileUrl merged in
+      expect(savedMarkers.serverId).toBe(777);
+      expect(savedMarkers.fileUrl).toBe('https://example.com/album-art-song.mp3');
+
+      // albumArt should have been extracted from ID3 and merged into the nDB entry
+      expect(savedMarkers.fileData).toBeDefined();
+      expect(savedMarkers.fileData.albumArt).toBeDefined();
+      expect(savedMarkers.fileData.albumArt).toMatch(/^data:image\/jpeg;base64,/);
+    });
+
+    it('succeeds without albumArt when cached audio has no ID3 tags', async () => {
+      // Plain audio data with no ID3 header
+      const plainAudio = new Uint8Array([0xFF, 0xFB, 0x90, 0x00, 0x00, 0x00]);
+      const audioBlob = new Blob([plainAudio], { type: 'audio/mpeg' });
+
+      mockNdbGet.mockImplementation((key: string) => {
+        if (key === 'no-id3-song.mp3') return null;
+        if (key === 'TROFF_TROFF_DATA_ID_AND_FILE_NAME') return [];
+        return null;
+      });
+      mockNdbSet.mockResolvedValue(undefined);
+
+      mockGetDoc.mockResolvedValue({
+        exists: () => true,
+        data: () => ({
+          fileName: 'no-id3-song.mp3',
+          fileUrl: 'https://example.com/no-id3-song.mp3',
+          fileSize: 0,
+          fileType: 'audio/mpeg',
+          id: 888,
+          markerJsonString: JSON.stringify({
+            markers: [],
+            fileData: { title: 'No ID3 Song' },
+          }),
+          troffDataPublic: true,
+          troffDataUploadedMillis: Date.now(),
+        }),
+      });
+
+      const fetchResponse = new Response(audioBlob, {
+        status: 200,
+        headers: { 'Content-Type': 'audio/mpeg' },
+      });
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(fetchResponse);
+
+      const result = await downloadSongFromHash('#888&no-id3-song.mp3');
+      expect(result).toBe('no-id3-song.mp3');
+
+      // nDB.set should still be called, but without albumArt
+      const ndbSongSetCall = mockNdbSet.mock.calls.find(
+        (call: unknown[]) => call[0] === 'no-id3-song.mp3'
+      );
+      expect(ndbSongSetCall).toBeDefined();
+      const savedMarkers = ndbSongSetCall![1];
+      expect(savedMarkers.fileData).toBeDefined();
+      // albumArt should be absent or empty when there's no ID3 tag with APIC
+      expect(savedMarkers.fileData.albumArt).toBeUndefined();
+    });
+
+    it('calls parseId3 from troff-settings to extract album art', async () => {
+      // Verify that hash-download imports and calls parseId3 (not _parseId3).
+      // When the implementation is in place, parseId3 will be called on the
+      // audio bytes fetched from the network. This test checks that the
+      // albumArt returned by parseId3 is present in the nDB entry.
+      const parseId3Spy = vi.fn().mockReturnValue({
+        title: 'Parsed Title',
+        artist: '',
+        album: '',
+        genre: '',
+        info: '',
+        albumArt: 'data:image/jpeg;base64,extractedArt',
+      });
+
+      // Create a fresh module scope with parseId3 mock
+      await vi.resetModules();
+
+      const freshNdbGet = vi.fn();
+      const freshNdbSet = vi.fn();
+      freshNdbGet.mockImplementation((key: string) => {
+        if (key === 'parse-test.mp3') return null;
+        if (key === 'TROFF_TROFF_DATA_ID_AND_FILE_NAME') return [];
+        return null;
+      });
+      freshNdbSet.mockResolvedValue(undefined);
+
+      vi.doMock('../assets/internal/db.js', () => ({
+        nDB: { get: freshNdbGet, set: freshNdbSet, setOnSong: vi.fn() },
+      }));
+      vi.doMock('../utils/troff-settings.js', () => ({
+        parseId3: parseId3Spy,
+      }));
+      vi.doMock('../utils/firebase-getter.js', () => ({
+        getFirestore: vi.fn().mockResolvedValue({
+          db: {},
+          doc: vi.fn((_db: unknown, _col: string, id: string) => ({ id })),
+          getDoc: vi.fn().mockResolvedValue({
+            exists: () => true,
+            data: () => ({
+              fileName: 'parse-test.mp3',
+              fileUrl: 'https://example.com/parse-test.mp3',
+              fileSize: 0,
+              fileType: 'audio/mpeg',
+              id: 111,
+              markerJsonString: JSON.stringify({
+                markers: [],
+                fileData: { title: 'Original Title' },
+              }),
+              troffDataPublic: true,
+              troffDataUploadedMillis: Date.now(),
+            }),
+          }),
+        }),
+        getStorageHandle: vi.fn().mockResolvedValue({
+          getFreshDownloadUrl: vi.fn(async (url: string) => url),
+        }),
+      }));
+      vi.doMock('../constants/constants.js', () => ({
+        TROFF_TROFF_DATA_ID_AND_FILE_NAME: 'TROFF_TROFF_DATA_ID_AND_FILE_NAME',
+      }));
+
+      const freshCacheStore = new Map<string, Response>();
+      Object.defineProperty(globalThis, 'caches', {
+        value: {
+          open: vi.fn(async () => ({
+            put: vi.fn(async (req: RequestInfo | URL, resp: Response) => {
+              const key = typeof req === 'string' ? req : req.toString();
+              freshCacheStore.set(key, resp);
+            }),
+            match: vi.fn(async (req: RequestInfo | URL) => {
+              const key = typeof req === 'string' ? req : req.toString();
+              return freshCacheStore.get(key);
+            }),
+          })),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response(new Uint8Array([0xFF, 0xFB]), {
+          status: 200,
+          headers: { 'Content-Type': 'audio/mpeg' },
+        })
+      );
+
+      const mod = await import('../utils/hash-download.js');
+      const result = await mod.downloadSongFromHash('#111&parse-test.mp3');
+
+      expect(result).toBe('parse-test.mp3');
+
+      // parseId3 should have been called with a Uint8Array
+      expect(parseId3Spy).toHaveBeenCalled();
+      expect(parseId3Spy.mock.calls[0][0]).toBeInstanceOf(Uint8Array);
+
+      // The albumArt from parseId3 should have been merged into the nDB entry
+      const songSetCall = freshNdbSet.mock.calls.find(
+        (call: unknown[]) => call[0] === 'parse-test.mp3'
+      );
+      expect(songSetCall).toBeDefined();
+      expect(songSetCall![1].fileData.albumArt).toBe('data:image/jpeg;base64,extractedArt');
+    });
+  });
+
   // --------------- 404 error handling ---------------
 
   describe('downloadSongFromHash 404 error handling', () => {
