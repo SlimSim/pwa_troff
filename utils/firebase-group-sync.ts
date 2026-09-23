@@ -111,6 +111,13 @@ export async function shareSongToFirebaseGroup(
     const fileUrl = await getDownloadURL(task.ref);
 
     const publicData = removeLocalInfo(nDB.get(cleanSongKey));
+    // Strip albumArt from fileData — it can be up to 1 MB of base64 and
+    // would push the Firestore document over its 1 MiB size limit.
+    // The receiver extracts album art from the audio file's ID3 tags instead.
+    if (publicData.fileData) {
+      const { albumArt: _albumArt, ...fileDataWithoutArt } = publicData.fileData;
+      publicData.fileData = fileDataWithoutArt;
+    }
     publicData.latestUploadToFirebase = Date.now();
 
     const payload: Record<string, unknown> = {

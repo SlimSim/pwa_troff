@@ -130,7 +130,7 @@ function _formatArtist(raw: string): string {
   return raw.replace(/;/g, ', ').trim();
 }
 
-function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } {
+export function parseId3(bytes: Uint8Array): { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } {
   const m: { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } = { title: '', artist: '', album: '', genre: '', info: '', bpm: '' };
   let albumArtist = '';
   if (bytes.length < 10 || bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) return m;
@@ -251,7 +251,7 @@ async function _readId3FromFile(f: File | { name: string; lastModified: number; 
   if (!hasArrayBuffer) return { title: '', artist: '', album: '', genre: '', info: '' };
   try {
     const buf = await (f as File).arrayBuffer();
-    return _parseId3(new Uint8Array(buf));
+    return parseId3(new Uint8Array(buf));
   } catch {
     return { title: '', artist: '', album: '', genre: '', info: '' };
   }
