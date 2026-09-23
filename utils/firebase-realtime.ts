@@ -15,6 +15,7 @@ import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
 import log from './log.js';
 import { mergeSyncedSongData } from './merge-synced-song-data.js';
+import { extractAlbumArt } from './album-art.js';
 
 const CACHE_NAME = 'songCache-v1.0';
 
@@ -223,9 +224,16 @@ export async function saveSongData(songKey: string): Promise<void> {
      const refs = songRefMap.get(cleanSongKey);
      if (!refs || refs.length === 0) return;
 
-     // Strip local-only fields
-     const { localInformation, ...publicData } = existingData;
-     publicData.latestUploadToFirebase = Date.now();
+      // Strip local-only fields
+      const { localInformation, ...publicData } = existingData;
+      // Strip albumArt from fileData — it can be up to 1 MB of base64 and
+      // would push the Firestore document over its 1 MiB size limit.
+      // The receiver extracts album art from the audio file's ID3 tags instead.
+      if (publicData.fileData) {
+        const { albumArt: _albumArt, ...fileDataWithoutArt } = publicData.fileData;
+        publicData.fileData = fileDataWithoutArt;
+      }
+      publicData.latestUploadToFirebase = Date.now();
 
      const payload = {
        songKey: cleanSongKey,
@@ -365,6 +373,7 @@ async function downloadAndCacheFile(serverDoc: ServerSongDoc): Promise<boolean> 
       throw new Error(`Failed to fetch ${serverDoc.fullPath}: ${response.statusText}`);
     }
     await cache.put(serverDoc.fullPath, response.clone());
+    await extractAlbumArt(serverDoc.fullPath);
     return true;
   } catch (err) {
     log.e(`Failed to download song "${serverDoc.fullPath}":`, err);

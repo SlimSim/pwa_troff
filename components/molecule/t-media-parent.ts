@@ -26,6 +26,7 @@ import {
 } from '../../utils/media-search.js';
 import type { TrackLike } from '../../utils/media-search.js';
 import log from '../../utils/log.js';
+import { extractAlbumArt } from '../../utils/album-art.js';
 
 const ts = () => new Date().toLocaleTimeString();
 
@@ -821,6 +822,9 @@ export class MediaParent extends LitElement {
         const cache = await caches.open('songCache-v1.0');
         await cache.put(songKey, cacheResponse);
       }
+
+      // Extract album art from the freshly cached file's ID3 tags.
+      await extractAlbumArt(songKey);
 
       // Mark as downloaded
       song.downloaded = true;

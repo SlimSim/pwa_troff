@@ -61,6 +61,17 @@ vi.mock('../services/firebaseClient.js', () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock the shared album-art helper so we can assert its call sites.
+// (No import of the path here — vi.mock on the factory is enough, and the
+// module does not exist yet while the helper is being implemented.)
+// ---------------------------------------------------------------------------
+
+const extractAlbumArtSpy = vi.hoisted(() => vi.fn(async (_songKey: string) => {}));
+vi.mock('../utils/album-art.js', () => ({
+  extractAlbumArt: extractAlbumArtSpy,
+}));
+
+// ---------------------------------------------------------------------------
 // Global caches + fetch stubs (needed by setupGroupSongListeners to download
 // audio files for newly-added remote songs).
 // ---------------------------------------------------------------------------
@@ -316,6 +327,111 @@ describe('firebase-realtime', () => {
 
     // Should use merge:true
     expect(callArgs[2]).toEqual({ merge: true });
+  });
+
+  // -----------------------------------------------------------------------
+  // saveSongData — albumArt stripping (keep jsonDataInfo under Firestore 1 MiB)
+  // -----------------------------------------------------------------------
+
+  it('strips albumArt from fileData before serializing to jsonDataInfo', async () => {
+    const largeAlbumArt = 'data:image/jpeg;base64,' + 'A'.repeat(500_000);
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'track.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['track.mp3'] = {
+      markers: [{ id: 'm1', name: 'Start', time: 0 }],
+      latestUploadToFirebase: 100,
+      fileData: {
+        title: 'My Title',
+        artist: 'My Artist',
+        album: 'My Album',
+        genre: 'Jazz',
+        albumArt: largeAlbumArt,
+        duration: 200,
+      },
+      localInformation: { nrTimesLoaded: 5 },
+    };
+
+    await saveSongData('track.mp3');
+
+    expect(mockSetDoc).toHaveBeenCalledTimes(1);
+    const callArgs = mockSetDoc.mock.calls[0];
+    const payload = callArgs[1] as Record<string, unknown>;
+    const jsonDataInfo = payload.jsonDataInfo as string;
+
+    // Neither the albumArt key nor its base64 payload may enter Firestore
+    expect(jsonDataInfo).not.toContain('albumArt');
+    expect(jsonDataInfo).not.toContain(largeAlbumArt);
+    expect(jsonDataInfo.length).toBeLessThan(100_000);
+
+    const parsed = JSON.parse(jsonDataInfo) as {
+      markers?: unknown;
+      localInformation?: unknown;
+      fileData?: Record<string, unknown>;
+    };
+    expect(parsed.fileData).toBeDefined();
+    expect(parsed.fileData).not.toHaveProperty('albumArt');
+    // Everything else in fileData is preserved
+    expect(parsed.fileData?.title).toBe('My Title');
+    expect(parsed.fileData?.artist).toBe('My Artist');
+    expect(parsed.fileData?.album).toBe('My Album');
+    expect(parsed.fileData?.genre).toBe('Jazz');
+    expect(parsed.fileData?.duration).toBe(200);
+    expect(parsed.markers).toEqual([{ id: 'm1', name: 'Start', time: 0 }]);
+    expect(parsed.localInformation).toBeUndefined();
+  });
+
+  it('saveSongData handles a song whose fileData has no albumArt', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'track.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['track.mp3'] = {
+      markers: [{ id: 'm1' }],
+      latestUploadToFirebase: 100,
+      fileData: { title: 'No Art Song', artist: 'Artist', duration: 90 },
+    };
+
+    await saveSongData('track.mp3');
+
+    expect(mockSetDoc).toHaveBeenCalledTimes(1);
+    const payload = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+    const jsonDataInfo = payload.jsonDataInfo as string;
+    const parsed = JSON.parse(jsonDataInfo) as { fileData?: Record<string, unknown> };
+
+    expect(jsonDataInfo).not.toContain('albumArt');
+    expect(parsed.fileData?.title).toBe('No Art Song');
+    expect(parsed.fileData?.artist).toBe('Artist');
+    expect(parsed.fileData?.albumArt).toBeUndefined();
+  });
+
+  it('saveSongData handles a song with no fileData at all', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'track.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['track.mp3'] = {
+      markers: [{ id: 'm1' }],
+      latestUploadToFirebase: 100,
+    };
+
+    await saveSongData('track.mp3');
+
+    expect(mockSetDoc).toHaveBeenCalledTimes(1);
+    const payload = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+    const jsonDataInfo = payload.jsonDataInfo as string;
+    const parsed = JSON.parse(jsonDataInfo) as Record<string, unknown>;
+
+    expect(jsonDataInfo).not.toContain('albumArt');
+    expect(parsed.fileData).toBeUndefined();
+    expect(parsed.markers).toEqual([{ id: 'm1' }]);
   });
 
   // -----------------------------------------------------------------------
@@ -669,6 +785,7 @@ describe('setupGroupSongListeners', () => {
     mockCacheInstance.match.mockClear();
     mockCacheInstance.put.mockClear();
     cachesMock.open.mockClear();
+    extractAlbumArtSpy.mockClear();
 
     const mod = await import('../utils/firebase-realtime.js');
     setupGroupSongListeners = mod.setupGroupSongListeners;
@@ -780,6 +897,30 @@ describe('setupGroupSongListeners', () => {
 
     // Callback invoked with the groupId
     expect(cb).toHaveBeenCalledWith('g1');
+  });
+
+  it('calls extractAlbumArt after caching a newly downloaded group song', async () => {
+    nDBStore['aoSongLists'] = [{ firebaseGroupDocId: 'g1', songs: [] }];
+    fetchMock.mockResolvedValue(new Response('audio data', { status: 200 }));
+
+    await setupGroupSongListeners();
+    setGroupUpdateCallback(vi.fn());
+
+    triggerGroupSnapshot('g1', [
+      songDoc('s1', {
+        songKey: 'new-track.mp3',
+        fileUrl: 'https://example.com/new-track.mp3',
+        jsonDataInfo: JSON.stringify({ markers: [{ id: 'm1' }], latestUploadToFirebase: 100 }),
+      }),
+    ]);
+
+    // The download + helper call are awaited inside the snapshot handler —
+    // flush pending microtasks
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // File was cached, then the shared ID3 album-art helper ran for it
+    expect(mockCacheInstance.put).toHaveBeenCalledWith('new-track.mp3', expect.any(Response));
+    expect(extractAlbumArtSpy).toHaveBeenCalledWith('new-track.mp3');
   });
 
   it('does not re-download files that are already in the cache', async () => {

@@ -49,6 +49,7 @@ import {
   getIncrementUntil,
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
+import { extractAlbumArt } from './utils/album-art.js';
 import { calculateIncrementUntilSpeed } from './utils/increment-until.js';
 import type {
   TroffMarker,
@@ -569,6 +570,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadSongIntoPlayer = async (songKey: string) => {
     const result = await loadSong(songKey);
     if (!result) return;
+    // Recover album art from the cached file's ID3 tags — no-op when the art
+    // is already present or the nDB entry does not exist yet.
+    void extractAlbumArt(songKey);
     if (result.isVideo) {
       activeMedia = videoElement ?? audio;
       if (videoElement) {
