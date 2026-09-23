@@ -220,15 +220,31 @@
       #loadScreen p {
         font-size: 16px;
       }
+      #loadScreen t-loading {
+        --t-loading-size: 96px;
+        color: #fff;
+      }
       .f1 {
         flex-grow: 1;
       }
-      .f2 {
-        flex-grow: 2;
+      .f3 {
+        flex-grow: 3;
       }
     </style>
   </head>
   <body data-theme="col1">
+    <div id="loadScreen">
+      <div class="f1"></div>
+      <div>
+        <t-loading label="Loading Troff"></t-loading>
+
+        <h1>Troff</h1>
+        <h2>- training with music</h2>
+        <p>loading...</p>
+      </div>
+      <div class="f3"></div>
+    </div>
+
     <t-main-layout>
       <t-header id="header" slot="header"></t-header>
       <t-video-player id="videoPlayer" slot="video-top" hidden>
@@ -260,6 +276,9 @@
           "lit-element/": "/assets/external/vendor/lit-element/"
         }
       }
+    </script>
+    <script type="module">
+      import '/components/atom/t-loading.js';
     </script>
     <script defer type="module" src="/v2Script.js"></script>
   </body>

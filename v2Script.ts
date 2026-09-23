@@ -1,5 +1,6 @@
 import './components/atom/t-butt.js';
 import './components/atom/t-icon.js';
+import './components/atom/t-loading.js';
 import './assets/external/jquery-3.6.0.min.js';
 import './components/molecule/t-footer.js';
 import './components/molecule/t-settings-panel.js';
@@ -3573,5 +3574,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  document.getElementById('loadScreen')?.remove();
 });
 
