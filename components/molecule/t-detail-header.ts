@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
+import '../atom/t-loading.js';
 import './t-header-actions.js';
 
 /**
@@ -78,10 +79,32 @@ export class DetailHeader extends LitElement {
       overflow: hidden;
     }
 
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
     .detail-title {
       font-size: 1rem;
       font-weight: 600;
       margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .syncing-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      flex-shrink: 0;
+      --t-loading-size: 1em;
     }
 
     .detail-info-text {
@@ -181,6 +204,9 @@ export class DetailHeader extends LitElement {
   /** Whether the search input is focused (drives mobile count collapse). */
   @property({ type: Boolean, reflect: true }) isSearchFocused = false;
 
+  /** Whether a background group save/sync is in progress (shows the badge). */
+  @property({ type: Boolean }) syncing = false;
+
   /** Whether the info text is expanded. */
   private _infoExpanded = false;
 
@@ -215,7 +241,15 @@ export class DetailHeader extends LitElement {
           </div>
 
           <div class="detail-title-group">
-            <h2 class="detail-title">${this.entityName}</h2>
+            <div class="title-row">
+              <h2 class="detail-title">${this.entityName}</h2>
+              ${this.syncing
+                ? html`<span class="syncing-badge">
+                    <t-loading label="Syncing"></t-loading>
+                    syncing
+                  </span>`
+                : ''}
+            </div>
             ${this.infoText
               ? html`<span
                   class="detail-info-text ${this._infoExpanded ? 'expanded' : ''}"

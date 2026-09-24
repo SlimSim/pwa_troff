@@ -3283,7 +3283,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const group = customEvent.detail?.group;
     if (!group) return;
 
-    const ctl = showLoading('Saving group online…');
+    document.dispatchEvent(
+      new CustomEvent('group-sync-status', {
+        detail: { syncing: true },
+        bubbles: true,
+        composed: true,
+      })
+    );
 
     try {
       const songLists: any[] = nDB.get('aoSongLists') || [];
@@ -3332,11 +3338,17 @@ document.addEventListener('DOMContentLoaded', () => {
           songList.openGroupDetail(groupKey);
         }
       }
-
-      ctl.done('Group saved');
     } catch (error) {
       log.e('Error saving group:', error);
-      ctl.fail('Could not save group');
+      showToast('Could not save group', 'error');
+    } finally {
+      document.dispatchEvent(
+        new CustomEvent('group-sync-status', {
+          detail: { syncing: false },
+          bubbles: true,
+          composed: true,
+        })
+      );
     }
   });
 

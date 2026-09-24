@@ -246,6 +246,30 @@ export class GroupList extends LitElement {
   /** Index of the highlighted track in filtered results (-1 = none). */
   @state() private _highlightedIndex = -1;
 
+  /** Whether a group save/sync is in progress (forwards to the detail header badge). */
+  @state() private _groupSyncing = false;
+
+  private _boundSyncStatusHandler?: (event: Event) => void;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._boundSyncStatusHandler = (event: Event) => {
+      const detail = (event as CustomEvent<{ syncing: boolean }>).detail;
+      if (detail && typeof detail.syncing === 'boolean') {
+        this._groupSyncing = detail.syncing;
+      }
+    };
+    document.addEventListener('group-sync-status', this._boundSyncStatusHandler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._boundSyncStatusHandler) {
+      document.removeEventListener('group-sync-status', this._boundSyncStatusHandler);
+      this._boundSyncStatusHandler = undefined;
+    }
+  }
+
   /** Resolve a legacy class-name colour (e.g. `bg-red-3`) to a CSS-safe value. */
   private _cssColor(c: string | undefined): string {
     if (!c) return '';
@@ -504,6 +528,7 @@ export class GroupList extends LitElement {
         <div class="detail-view">
           <t-detail-header
             entityName=${selectedGroup.name}
+            .syncing=${this._groupSyncing}
             icon=${(selectedGroup.icon ?? '').replace(/^fa-/, '')}
             infoText=${infoText}
             .sharedWithCount=${selectedGroup.owners?.length ?? 0}

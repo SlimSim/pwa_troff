@@ -247,7 +247,33 @@ export class GroupDialog extends LitElement {
     );
   }
 
+  /**
+   * True when editing an existing group and none of the editable fields
+   * (name, info, color, icon, owners) differ from the values at open time.
+   * Values are normalized the same way `_cloneGroupForEditing` does.
+   */
+  private _hasUnchangedEditableFields(): boolean {
+    const g = this.group;
+    if (!g) return false;
+
+    const originalOwners = g.owners ?? [];
+    return (
+      this._editName === (g.name ?? '') &&
+      this._editInfo === (g.info ?? '') &&
+      this._editColor === (g.color ?? '') &&
+      this._editIcon === (g.icon ?? '').replace(/^fa-/, '') &&
+      this._editOwners.length === originalOwners.length &&
+      this._editOwners.every((owner, i) => owner === originalOwners[i])
+    );
+  }
+
   private _save() {
+    // No edits on an existing group → just close, don't dispatch anything.
+    if (this._hasUnchangedEditableFields()) {
+      this.open = false;
+      return;
+    }
+
     // Preserve original songs (song management is done in the group detail view)
     const updatedGroup: TroffFirebaseGroupIdentifyer = {
       name: this._editName,
