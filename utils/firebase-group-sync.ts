@@ -71,6 +71,11 @@ export async function deleteGroupFromFirebase(groupDocId: string): Promise<void>
   }
 }
 
+interface UploadSnapshot {
+  bytesTransferred: number;
+  totalBytes: number;
+}
+
 /**
  * Upload a song file to Firebase Storage and create a Songs subcollection
  * document for the given Firebase group. Updates the local `aoSongLists`
@@ -80,13 +85,15 @@ export async function deleteGroupFromFirebase(groupDocId: string): Promise<void>
  * `firebaseGroupDocId`, the device is offline, the song has no local nDB
  * data, or the audio file is not in the song cache.
  *
- * @param group    The group to share the song with.
- * @param songKey  The local nDB key (filename) of the song to share.
+ * @param group      The group to share the song with.
+ * @param songKey    The local nDB key (filename) of the song to share.
+ * @param onProgress Optional callback receiving upload progress (0-100).
  * @returns The new firebaseSongDocId, or undefined on no-op/failure.
  */
 export async function shareSongToFirebaseGroup(
   group: TroffFirebaseGroupIdentifyer,
-  songKey: string
+  songKey: string,
+  onProgress?: (percent: number) => void
 ): Promise<string | undefined> {
   try {
     const cleanSongKey = toSongKey(songKey);
@@ -107,8 +114,14 @@ export async function shareSongToFirebaseGroup(
     const { db, storage, ref, uploadBytesResumable, getDownloadURL, addDoc, collection } = firebaseClient;
 
     const storageRef = ref(storage, 'Groups/' + group.firebaseGroupDocId + '/' + cleanSongKey);
-    const task = await uploadBytesResumable(storageRef, file);
-    const fileUrl = await getDownloadURL(task.ref);
+    const task = uploadBytesResumable(storageRef, file);
+    if (onProgress) {
+      task.on('state_changed', (snapshot: UploadSnapshot) => {
+        onProgress(Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+      });
+    }
+    const taskSnapshot = await task;
+    const fileUrl = await getDownloadURL(taskSnapshot.ref);
 
     const publicData = removeLocalInfo(nDB.get(cleanSongKey));
     // Strip albumArt from fileData — it can be up to 1 MB of base64 and

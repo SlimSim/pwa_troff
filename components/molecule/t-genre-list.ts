@@ -96,6 +96,7 @@ export class GenreList extends LitElement {
   @property({ type: String }) selectedGenre: string = '';
   @property({ type: String }) currentSongKey = '';
   @property({ type: Object }) downloadProgressMap: Record<string, number> = {};
+  @property({ type: Object }) uploadProgressMap: Record<string, number> = {};
 
   /** Index of the highlighted item in the list view (-1 = none). */
   @property({ type: Number }) highlightedIndex = -1;
@@ -349,6 +350,7 @@ export class GenreList extends LitElement {
                     .songKey=${track.songKey}
                     .downloaded=${track.downloaded !== false}
                     .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
+                    .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
                   ></t-media>
                 `
               )}

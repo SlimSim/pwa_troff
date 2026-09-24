@@ -50,7 +50,7 @@ const mockAddDoc = vi.fn(async (_ref: unknown, _payload: unknown) => ({ id: 'son
 const mockDeleteDoc = vi.fn(async () => {});
 const mockRef = vi.fn((_storage: unknown, path: string) => ({ path }));
 const mockDeleteObject = vi.fn(async () => {});
-const mockUploadBytesResumable = vi.fn(async () => ({ ref: {} }));
+const mockUploadBytesResumable = vi.fn(() => ({ ref: {}, on: vi.fn() }));
 const mockGetDownloadURL = vi.fn(
   async () => 'https://firebasestorage.googleapis.com/v0/b/bucket.appspot.com/o/Groups%2Fg1%2Ftrack.mp3?alt=media'
 );

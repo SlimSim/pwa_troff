@@ -332,6 +332,30 @@ export class MediaParent extends LitElement {
   /** Per-song download progress (songKey → 0-100, or -1 for waiting in queue). */
   private _downloadProgress = new Map<string, number>();
 
+  /**
+   * Per-song upload progress (songKey → 0-100) while a share-upload is in
+   * flight. A percent of -1 is a clear sentinel: the entry is deleted, so a
+   * finished/failed upload drops back to "not tracked".
+   */
+  private _uploadProgress = new Map<string, number>();
+
+  /**
+   * Handle song-upload-progress events. Listens on `document` (registered in
+   * connectedCallback, removed in disconnectedCallback) because v2Script
+   * dispatches there — the originating element (e.g. t-group-list) can
+   * unmount mid-upload, and a detached target would swallow the final -1
+   * clear, leaving a stuck "Uploading X%" bar.
+   */
+  private readonly _handleSongUploadProgress = (e: Event) => {
+    const { songKey, percent } = (e as CustomEvent<{ songKey: string; percent: number }>).detail;
+    if (percent === -1) {
+      this._uploadProgress.delete(songKey);
+    } else {
+      this._uploadProgress.set(songKey, percent);
+    }
+    this.requestUpdate();
+  };
+
   /** The group key of the currently open group detail view (empty = not in a group). */
   @property({ type: String, state: true }) private _currentGroupKey = '';
   /** Type of the current detail context ('group' | 'artist' | 'genre' | ''). */
@@ -392,6 +416,10 @@ export class MediaParent extends LitElement {
     this.addEventListener('pending-song-clicked', (e: any) => {
       this._handlePendingSongClick(e.detail.songKey);
     });
+
+    // Per-row upload progress while sharing songs to a Firebase group
+    // (document-level so events dispatched on `document` are received).
+    document.addEventListener('song-upload-progress', this._handleSongUploadProgress);
 
     // Listen for group detail open/close to change header controls
     this.addEventListener('group-detail-opened', this._handleGroupDetailOpened);
@@ -468,6 +496,7 @@ export class MediaParent extends LitElement {
     super.disconnectedCallback();
     window.removeEventListener('keydown', this._handleGlobalKeydown);
     window.removeEventListener('keydown', this._handleGlobalEsc);
+    document.removeEventListener('song-upload-progress', this._handleSongUploadProgress);
   }
 
   updated(changedProperties: PropertyValues) {
@@ -898,6 +927,29 @@ export class MediaParent extends LitElement {
   private _getDownloadProgressMap(): Record<string, number> {
     const obj: Record<string, number> = {};
     this._downloadProgress.forEach((val, key) => {
+      obj[key] = val;
+    });
+    return obj;
+  }
+
+  /**
+   * Get the upload progress for a song (for passing to t-media).
+   * Returns 0-100 while uploading, or -2 if not tracked — a -1 clear
+   * removes the entry (upload finished/failed), so it reports -2 again
+   * (mirrors getDownloadProgress).
+   */
+  getUploadProgress(songKey: string): number {
+    return this._uploadProgress.has(songKey)
+      ? (this._uploadProgress.get(songKey) ?? -1)
+      : -2;
+  }
+
+  /**
+   * Convert the upload progress Map to a plain object for passing to child components.
+   */
+  private _getUploadProgressMap(): Record<string, number> {
+    const obj: Record<string, number> = {};
+    this._uploadProgress.forEach((val, key) => {
       obj[key] = val;
     });
     return obj;
@@ -2053,6 +2105,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       ></t-track-list>
                     `
                 : ''}
@@ -2073,6 +2126,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       >
                         ${this._contextType === 'artist'
                           ? html`<div slot="sort-controls">
@@ -2108,6 +2162,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       >
                         ${this._contextType === 'genre'
                           ? html`<div slot="sort-controls">
@@ -2143,6 +2198,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       >
                         ${this._currentGroupKey
                           ? html`<div slot="sort-controls">

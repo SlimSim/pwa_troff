@@ -216,6 +216,7 @@ export class GroupList extends LitElement {
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) currentSongKey = '';
   @property({ type: Object }) downloadProgressMap: Record<string, number> = {};
+  @property({ type: Object }) uploadProgressMap: Record<string, number> = {};
 
   /** Index of the highlighted item in the list view (-1 = none). */
   @property({ type: Number }) highlightedIndex = -1;
@@ -560,6 +561,7 @@ export class GroupList extends LitElement {
                   .hideEditButton=${this._songManagementOpen}
                   .downloaded=${track.downloaded !== false}
                   .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
+                  .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
                 ></t-media>
                 ${this._songManagementOpen
                   ? html`

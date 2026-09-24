@@ -268,6 +268,13 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean }) downloaded = true;
   /** 0-100 = downloading with progress, -1 = waiting in queue, undefined/missing = done */
   @property({ type: Number }) downloadProgress = -1;
+  /**
+   * -2 = not tracked/done, 0-100 = uploading with progress.
+   * -1 renders "Pending upload", but t-media-parent treats -1 as a clear
+   * sentinel and never stores it — so that branch is currently unreachable
+   * in production (kept for future producers; covered by unit test).
+   */
+  @property({ type: Number }) uploadProgress = -2;
 
   private _handleEditClick(event: Event) {
     event.stopPropagation();
@@ -451,19 +458,31 @@ export class MediaItem extends LitElement {
               <t-icon name="edit"></t-icon>
             </t-butt>`
           : ''}
-        ${!this.downloaded
+        ${this.uploadProgress >= -1
           ? html`<div class="download-progress-bar">
               <div
                 class="fill"
-                style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"
+                style="width: ${this.uploadProgress > 0 ? this.uploadProgress : 0}%"
               ></div>
               <span class="progress-label">
-                ${this.downloadProgress >= 0
-                  ? `Downloading ${this.downloadProgress}%`
-                  : 'Pending download'}
+                ${this.uploadProgress >= 0
+                  ? `Uploading ${this.uploadProgress}%`
+                  : 'Pending upload'}
               </span>
             </div>`
-          : ''}
+          : !this.downloaded
+            ? html`<div class="download-progress-bar">
+                <div
+                  class="fill"
+                  style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"
+                ></div>
+                <span class="progress-label">
+                  ${this.downloadProgress >= 0
+                    ? `Downloading ${this.downloadProgress}%`
+                    : 'Pending download'}
+                </span>
+              </div>`
+            : ''}
       </div>
     `;
   }

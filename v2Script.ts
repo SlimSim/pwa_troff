@@ -3553,10 +3553,43 @@ document.addEventListener('DOMContentLoaded', () => {
         return slKey != null && String(slKey) === String(groupKey);
       });
       if (updatedGroup?.firebaseGroupDocId) {
+        // Report per-row upload progress to t-media-parent via a bubbling
+        // CustomEvent dispatched on `document` — always connected for the
+        // upload's lifetime, so progress updates (including the final -1
+        // clear) still arrive if the originating element (e.g. t-group-list)
+        // unmounts while the upload is in flight.
+        const dispatchUploadProgress = (percent: number) => {
+          document.dispatchEvent(
+            new CustomEvent('song-upload-progress', {
+              detail: { songKey, percent },
+              bubbles: true,
+              composed: true,
+            })
+          );
+        };
         try {
           const { shareSongToFirebaseGroup } = await import('./utils/firebase-group-sync.js');
-          await shareSongToFirebaseGroup(updatedGroup, songKey);
+          dispatchUploadProgress(0);
+          const firebaseSongDocId = await shareSongToFirebaseGroup(
+            updatedGroup,
+            songKey,
+            dispatchUploadProgress
+          );
+          dispatchUploadProgress(-1);
+          if (firebaseSongDocId) {
+            showToast(`"${title || songKey}" was shared with the group.`, 'success');
+          } else {
+            // shareSongToFirebaseGroup returns undefined on no-op (offline /
+            // file not cached) — the song WAS added to the group locally
+            // above, so don't report the group-add itself as failed.
+            showToast(
+              `"${title || songKey}" was added to the group but not uploaded — check your connection, it may sync later.`,
+              'info'
+            );
+          }
         } catch (err) {
+          dispatchUploadProgress(-1);
+          showToast(`Could not share "${title || songKey}" with the group.`, 'error');
           log.e('Error sharing song to Firebase group:', err);
         }
       }
