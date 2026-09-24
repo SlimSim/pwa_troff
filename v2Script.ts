@@ -2295,6 +2295,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const customEvent = event as CustomEvent<{ action: string }>;
       const action = customEvent.detail?.action;
 
+      // Re-entry guard: ignore a second request while one is still pending
+      if (settingsPanel?.authBusy) {
+        return;
+      }
+
+      if (settingsPanel) {
+        settingsPanel.authBusy = true;
+      }
+      if (songList) {
+        songList.authBusy = true;
+      }
+
       try {
         // Ensure notify.js is loaded so cookie_consent doesn't enter an infinite retry loop
         await import('./assets/internal/notify-js/notify.config.js');
@@ -2310,6 +2322,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (error) {
         log.e('Auth error:', error);
+        const code = (error as { code?: string } | null)?.code;
+        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+          showToast('Sign-in cancelled', 'info');
+        }
+      } finally {
+        if (settingsPanel) {
+          settingsPanel.authBusy = false;
+        }
+        if (songList) {
+          songList.authBusy = false;
+        }
       }
     };
 

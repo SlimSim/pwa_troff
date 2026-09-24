@@ -410,7 +410,13 @@ describe('createNewSongEntry', () => {
       ...(pic ? makePicFrame(pic) : []),
     ];
     const tagSize = frames.length;
-    const sizeSync = [0, 0, 0, tagSize];
+    // Encode tag size as syncsafe integer (7 bits per byte)
+    const sizeSync = [
+      (tagSize >> 21) & 0x7f,
+      (tagSize >> 14) & 0x7f,
+      (tagSize >> 7) & 0x7f,
+      tagSize & 0x7f,
+    ];
     const header = [
       73,
       68,
@@ -852,7 +858,13 @@ describe('parseId3', () => {
       ...(pic ? makePicFrame(pic) : []),
     ];
     const tagSize = frames.length;
-    const sizeSync = [0, 0, 0, tagSize];
+    // Encode tag size as syncsafe integer (7 bits per byte)
+    const sizeSync = [
+      (tagSize >> 21) & 0x7f,
+      (tagSize >> 14) & 0x7f,
+      (tagSize >> 7) & 0x7f,
+      tagSize & 0x7f,
+    ];
     const header = [73, 68, 51, 3, 0, 0, ...sizeSync];
     return new Uint8Array([...header, ...frames]);
   };

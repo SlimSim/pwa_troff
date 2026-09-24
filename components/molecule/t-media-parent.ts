@@ -10,6 +10,7 @@ import './t-header-actions.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-input.js';
+import '../atom/t-loading.js';
 import type { TInput } from '../atom/t-input.js';
 import { LocalSongDataService } from '../../utils/local-song-data.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
@@ -257,6 +258,15 @@ export class MediaParent extends LitElement {
       margin: 0 0 8px 0;
     }
 
+    .empty-state-auth-busy {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      width: 100%;
+      font-size: 1rem;
+    }
+
     .empty-state-user-avatar {
       width: 48px;
       height: 48px;
@@ -328,6 +338,8 @@ export class MediaParent extends LitElement {
   @property({ type: Boolean }) signedIn = false;
   @property({ type: String }) userName = '';
   @property({ type: String }) userPhotoUrl = '';
+  /** True while a sign-in/sign-out request is in flight. */
+  @property({ type: Boolean }) authBusy = false;
 
   /** Per-song download progress (songKey → 0-100, or -1 for waiting in queue). */
   private _downloadProgress = new Map<string, number>();
@@ -371,6 +383,8 @@ export class MediaParent extends LitElement {
   private _pendingNavState: { tab: string; entity: string } | null = null;
   /** When set, the next file upload will also add songs to this group. */
   private _pendingGroupKey: string | null = null;
+  /** Pending scroll-to-active-song timeout — cleared on disconnect so it never fires after teardown. */
+  private _scrollActiveSongTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /** Persist the current navigation state (tab + selected entity) to nDB. */
   private _saveNavigationState() {
@@ -494,6 +508,10 @@ export class MediaParent extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    if (this._scrollActiveSongTimeout !== null) {
+      clearTimeout(this._scrollActiveSongTimeout);
+      this._scrollActiveSongTimeout = null;
+    }
     window.removeEventListener('keydown', this._handleGlobalKeydown);
     window.removeEventListener('keydown', this._handleGlobalEsc);
     document.removeEventListener('song-upload-progress', this._handleSongUploadProgress);
@@ -537,7 +555,15 @@ export class MediaParent extends LitElement {
   private _scrollActiveSongIntoView() {
     void this.updateComplete.then(() => {
       // Wait for the slide-in transition to finish and the sub-list to render.
-      setTimeout(() => {
+      // The timeout is tracked so it can be cancelled on disconnect, and the
+      // callback bails on a detached element — otherwise the timer outlives
+      // the component (and, in tests, the DOM environment itself).
+      if (this._scrollActiveSongTimeout !== null) {
+        clearTimeout(this._scrollActiveSongTimeout);
+      }
+      this._scrollActiveSongTimeout = setTimeout(() => {
+        this._scrollActiveSongTimeout = null;
+        if (!this.isConnected) return;
         const activeMedia = this._findActiveMediaElement();
         if (!activeMedia) return;
 
@@ -598,6 +624,7 @@ export class MediaParent extends LitElement {
   }
 
   private _isScrollable(el: HTMLElement): boolean {
+    if (typeof getComputedStyle === 'undefined') return false;
     const overflowY = getComputedStyle(el).overflowY;
     return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
   }
@@ -2078,10 +2105,15 @@ export class MediaParent extends LitElement {
                           <p class="empty-state-sign-in-note">
                             Sign in to get the songs shared in your groups
                           </p>
-                          <t-butt class="empty-action-btn" @click=${this._handleSignIn}>
-                            <t-icon name="user-plus"></t-icon>
-                            <span>Sign in</span>
-                          </t-butt>
+                          ${this.authBusy
+                            ? html`<div class="empty-state-auth-busy">
+                                <t-loading></t-loading>
+                                <span>Signing in…</span>
+                              </div>`
+                            : html`<t-butt class="empty-action-btn" @click=${this._handleSignIn}>
+                                <t-icon name="login"></t-icon>
+                                <span style="padding-left: 4px;">Sign in</span>
+                              </t-butt>`}
                         `
                       : ''}
                   </div>

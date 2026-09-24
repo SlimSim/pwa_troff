@@ -8,6 +8,7 @@ import '../atom/t-dropdown-button.js';
 import '../atom/t-details.js';
 import '../atom/t-slide-stepper.js';
 import '../atom/t-icon.js';
+import '../atom/t-loading.js';
 
 type ToggleSetting =
   | 'playFullSong'
@@ -106,6 +107,13 @@ export class SettingsPanel extends LitElement {
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
+    }
+
+    .auth-busy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
 
     .settings-section {
@@ -331,6 +339,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) signedIn = false;
   @property({ type: String }) userName = '';
   @property({ type: String }) userPhotoUrl = '';
+  @property({ type: Boolean }) authBusy = false;
 
   @state() private installState: PwaInstallState = 'unavailable';
   private _unsubscribeInstallState?: () => void;
@@ -575,13 +584,27 @@ export class SettingsPanel extends LitElement {
                         >Welcome to Troff, ${this.userName || 'Signed in'}</span
                       >
                       <span class="user-dropdown-name2">Happy training!</span>
-                      <t-butt @click=${this._handleSignInClick}>Sign out</t-butt>
+                      ${this.authBusy
+                        ? html`<span class="auth-busy"
+                            ><t-loading></t-loading>Signing out…</span
+                          >`
+                        : html`<t-butt @click=${this._handleSignInClick}>
+                          <t-icon name="logout"></t-icon>
+                          <span style="padding-left: 4px;">Sign out</span>
+                        </t-butt>`}
                     </div>
                   </t-dropdown-button>
                 `
               : ''}
             ${!this.signedIn
-              ? html`<t-butt @click=${this._handleSignInClick}>Sign in</t-butt>`
+              ? this.authBusy
+                ? html`<span class="auth-busy"
+                    ><t-loading></t-loading>Signing in…</span
+                  >`
+                : html`<t-butt @click=${this._handleSignInClick}>
+                  <t-icon name="login"></t-icon>
+                  <span style="padding-left: 4px;">Sign in</span>
+                </t-butt>`
               : ''}
             <t-butt ghost class="close-button" @click=${this._handleClose}>
               <t-icon name="chevron-down"></t-icon>

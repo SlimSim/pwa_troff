@@ -3,6 +3,15 @@ import { MediaParent } from './t-media-parent.js';
 import { nDB } from '../../assets/internal/db.js';
 import { LocalSongDataService } from '../../utils/local-song-data.js';
 
+// Test hygiene: _scrollActiveSongIntoView() schedules a fire-and-forget
+// setTimeout(350) that can outlive the test — happy-dom tears down globals
+// like getComputedStyle afterwards, turning the late timer into an unhandled
+// error. No test in this file asserts on scroll behaviour (that is covered by
+// t-media-parent-scroll.test.ts), so neutralize it here.
+beforeEach(() => {
+  vi.spyOn(MediaParent.prototype as any, '_scrollActiveSongIntoView').mockImplementation(() => {});
+});
+
 describe('t-media-parent search input', () => {
   let element: MediaParent;
 
@@ -1487,7 +1496,7 @@ describe('empty state (no songs, no groups)', () => {
     expect(signInBtn.textContent?.trim()).toContain('Sign in');
 
     const signInIcon = signInBtn.querySelector('t-icon');
-    expect(signInIcon?.getAttribute('name')).toBe('user-plus');
+    expect(signInIcon?.getAttribute('name')).toBe('login');
 
     const note = element.shadowRoot?.querySelector('.empty-state-sign-in-note');
     expect(note).toBeTruthy();

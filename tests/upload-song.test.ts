@@ -55,6 +55,9 @@ describe('utils/upload-song.js', () => {
 
   beforeEach(async () => {
     vi.resetModules();
+    // Re-stub caches every test: the module-level stubGlobal('caches', …)
+    // above is removed by vi.unstubAllGlobals() in afterEach.
+    vi.stubGlobal('caches', cachesMock);
     Object.keys(nDBStore).forEach((k) => delete nDBStore[k]);
     Object.keys(mockCache).forEach((k) => delete mockCache[k]);
     uploadMocks.setOnSong.mockClear();
@@ -93,6 +96,20 @@ describe('utils/upload-song.js', () => {
       vi.stubGlobal('crypto', { subtle: { digest: cryptoDigest } });
     }
 
+    // Silence duplicate custom element definitions that happen when
+    // multiple tests re-import modules that register components.
+    // Without this guard, the second import throws:
+    //   "the name "t-butt" has already been used with this registry"
+    const registry = customElements;
+    const originalDefine = registry.define.bind(registry);
+    const patched = Object.create(registry);
+    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+      if (!registry.get(name)) {
+        originalDefine(name, constructor, options);
+      }
+    };
+    vi.stubGlobal('customElements', patched);
+
     const mod = await import('../utils/upload-song.js');
     crc32Hash = mod.crc32Hash;
     buildShareUrl = mod.buildShareUrl;
@@ -101,6 +118,7 @@ describe('utils/upload-song.js', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe('crc32Hash', () => {

@@ -7,8 +7,25 @@ describe('parseHash', () => {
 
   beforeEach(async () => {
     vi.resetModules();
+    // Silence duplicate custom element definitions that happen when
+    // multiple tests re-import modules that register components.
+    // Without this guard, the second import throws:
+    //   "the name "t-butt" has already been used with this registry"
+    const registry = customElements;
+    const originalDefine = registry.define.bind(registry);
+    const patched = Object.create(registry);
+    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+      if (!registry.get(name)) {
+        originalDefine(name, constructor, options);
+      }
+    };
+    vi.stubGlobal('customElements', patched);
     const mod = await import('../utils/hash-download.js');
     parseHash = mod.parseHash;
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('returns null for empty string', () => {
@@ -126,6 +143,20 @@ describe('downloadSongFromHash', () => {
 
     // Hide alerts during tests
     vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    // Silence duplicate custom element definitions that happen when
+    // multiple tests re-import modules that register components.
+    // Without this guard, the second import throws:
+    //   "the name "t-butt" has already been used with this registry"
+    const registry = customElements;
+    const originalDefine = registry.define.bind(registry);
+    const patched = Object.create(registry);
+    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+      if (!registry.get(name)) {
+        originalDefine(name, constructor, options);
+      }
+    };
+    vi.stubGlobal('customElements', patched);
 
     const mod = await import('../utils/hash-download.js');
     downloadSongFromHash = mod.downloadSongFromHash;
@@ -575,12 +606,18 @@ describe('downloadSongFromHash', () => {
       const audioData = new Uint8Array([...id3Bytes, ...new Array(100).fill(0)]);
       const audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
 
+      // Backing store so nDB.set → nDB.get round-trips: extractAlbumArt
+      // re-reads the entry after the download writes it. (The old mock
+      // returned null for the song key forever, so extractAlbumArt
+      // always early-returned and albumArt was never set.)
+      const nDBStore: Record<string, unknown> = {};
       mockNdbGet.mockImplementation((key: string) => {
-        if (key === 'album-art-song.mp3') return null;
         if (key === 'TROFF_TROFF_DATA_ID_AND_FILE_NAME') return [];
-        return null;
+        return nDBStore[key] ?? null;
       });
-      mockNdbSet.mockResolvedValue(undefined);
+      mockNdbSet.mockImplementation(async (key: string, value: unknown) => {
+        nDBStore[key] = value;
+      });
 
       const markerJsonWithoutAlbumArt = JSON.stringify({
         markers: [{ id: 'm1', time: 0 }],
@@ -696,12 +733,17 @@ describe('downloadSongFromHash', () => {
 
       const freshNdbGet = vi.fn();
       const freshNdbSet = vi.fn();
+      // Backing store so nDB.set → nDB.get round-trips: extractAlbumArt
+      // re-reads the entry after the download writes it (and only then
+      // calls the mocked parseId3).
+      const freshNdbStore: Record<string, unknown> = {};
       freshNdbGet.mockImplementation((key: string) => {
-        if (key === 'parse-test.mp3') return null;
         if (key === 'TROFF_TROFF_DATA_ID_AND_FILE_NAME') return [];
-        return null;
+        return freshNdbStore[key] ?? null;
       });
-      freshNdbSet.mockResolvedValue(undefined);
+      freshNdbSet.mockImplementation(async (key: string, value: unknown) => {
+        freshNdbStore[key] = value;
+      });
 
       vi.doMock('../assets/internal/db.js', () => ({
         nDB: { get: freshNdbGet, set: freshNdbSet, setOnSong: vi.fn() },
