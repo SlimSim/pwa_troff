@@ -83,7 +83,7 @@ import {
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
-import { showToast } from './utils/notification.js';
+import { showToast, showLoading } from './utils/notification.js';
 import { initPwa } from './utils/pwa.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import { toSongKey } from './utils/utils.js';
@@ -3283,6 +3283,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const group = customEvent.detail?.group;
     if (!group) return;
 
+    const ctl = showLoading('Saving group online…');
+
     try {
       const songLists: any[] = nDB.get('aoSongLists') || [];
       let found = false;
@@ -3330,8 +3332,11 @@ document.addEventListener('DOMContentLoaded', () => {
           songList.openGroupDetail(groupKey);
         }
       }
+
+      ctl.done('Group saved');
     } catch (error) {
       log.e('Error saving group:', error);
+      ctl.fail('Could not save group');
     }
   });
 
@@ -3341,6 +3346,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const groupId = customEvent.detail?.groupId;
     const group = customEvent.detail?.group;
     if (!groupId) return;
+
+    const ctl = showLoading('Deleting group online…');
 
     try {
       // Remove from local nDB
@@ -3361,8 +3368,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (songList && typeof songList.reloadSongs === 'function') {
         await songList.reloadSongs();
       }
+
+      ctl.done('Group deleted');
     } catch (error) {
       log.e('Error deleting group:', error);
+      ctl.fail('Could not delete group');
     }
   });
 

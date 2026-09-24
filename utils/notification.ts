@@ -5,6 +5,7 @@
  * Provides:
  *  - `showDownloadProgress(fileName)` → controller with `update(percent)` / `done()`
  *  - `showToast(message, type?, duration?)` → auto-dismissing toast
+ *  - `showLoading(message)` → sticky loading toast with `update()` / `done()` / `fail()`
  *  - `hideDownloadProgress()` → hide immediately
  */
 
@@ -69,6 +70,62 @@ export function showToast(
   if (action) {
     toast.addEventListener('toast-action-clicked', handleActionClick);
   }
+}
+
+/**
+ * Show a sticky loading toast (info, no auto-dismiss) and return a
+ * controller to finish it later.
+ *
+ * Returns a controller object:
+ *  - `update(message)`      — replace the message (still loading/sticky)
+ *  - `done(successMessage?)`— success toast, auto-dismiss after 4 s
+ *  - `fail(errorMessage?)`  — error toast, auto-dismiss after 5 s
+ *
+ * Calling `done()`/`fail()` multiple times is safe.
+ */
+export function showLoading(message: string): {
+  update(message: string): void;
+  done(successMessage?: string): void;
+  fail(errorMessage?: string): void;
+} {
+  const container = getToastContainer();
+
+  const toast = document.createElement('t-toast');
+  toast.message = message;
+  toast.type = 'info';
+  toast.duration = 0;
+  toast.loading = true;
+
+  container.append(toast);
+
+  const handleDismiss = () => {
+    toast.removeEventListener('toast-dismissed', handleDismiss);
+    toast.remove();
+  };
+  toast.addEventListener('toast-dismissed', handleDismiss);
+
+  const finish = (
+    type: 'success' | 'error',
+    finishedMessage: string,
+    duration: number
+  ) => {
+    toast.loading = false;
+    toast.type = type;
+    toast.message = finishedMessage;
+    toast.duration = duration;
+  };
+
+  return {
+    update(newMessage: string) {
+      toast.message = newMessage;
+    },
+    done(successMessage?: string) {
+      finish('success', successMessage ?? 'Done', 4000);
+    },
+    fail(errorMessage?: string) {
+      finish('error', errorMessage ?? 'Something went wrong', 5000);
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------

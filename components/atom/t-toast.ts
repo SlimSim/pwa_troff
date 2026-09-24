@@ -9,6 +9,7 @@
  *   - `type`: 'success' | 'error' | 'info' (default 'info')
  *   - `duration`: ms before auto-dismiss (default 3000)
  *   - `actionLabel`: optional label for an action button
+ *   - `loading`: when true, renders <t-loading> next to the message
  *
  * Events (bubbles, composed):
  *   - `toast-action-clicked`: fired when the action button is clicked
@@ -18,6 +19,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '../atom/t-butt.js';
+import '../atom/t-loading.js';
 
 @customElement('t-toast')
 export class Toast extends LitElement {
@@ -64,6 +66,11 @@ export class Toast extends LitElement {
       flex: 1;
     }
 
+    t-loading {
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
     t-butt {
       --butt-bg-color: rgba(255, 255, 255, 0.25);
       --butt-hover-bg-color: rgba(255, 255, 255, 0.35);
@@ -103,6 +110,8 @@ export class Toast extends LitElement {
   @property({ type: Number }) duration = 3000;
 
   @property({ type: String }) actionLabel = '';
+
+  @property({ type: Boolean }) loading = false;
 
   private _dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -178,6 +187,7 @@ export class Toast extends LitElement {
 
     return html`
       <div class=${classes.join(' ')}>
+        ${this.loading ? html`<t-loading></t-loading>` : ''}
         <span class="message">${this.message}</span>
         ${this.actionLabel
           ? html`<t-butt ghost @click=${this._handleActionClick}
