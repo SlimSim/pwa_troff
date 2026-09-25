@@ -165,7 +165,11 @@ describe('firebase-realtime', () => {
     );
 
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb).toHaveBeenCalledWith('track.mp3', expect.objectContaining({ markers: [{ id: 'm1' }] }));
+    // Assert on the captured call (not toHaveBeenCalledWith) so the growing
+    // callback signature (songKey, remoteData, metadataChanged) does not break this guard.
+    const [cbSongKey, cbRemoteData] = cb.mock.calls[0];
+    expect(cbSongKey).toBe('track.mp3');
+    expect(cbRemoteData).toEqual(expect.objectContaining({ markers: [{ id: 'm1' }] }));
   });
 
   // -----------------------------------------------------------------------
@@ -545,8 +549,9 @@ describe('firebase-realtime', () => {
 
     // The UI callback must fire so an already-loaded song picks up the synced markers
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb).toHaveBeenCalledWith(
-      'track.mp3',
+    const [cbSongKey, cbRemoteData] = cb.mock.calls[0];
+    expect(cbSongKey).toBe('track.mp3');
+    expect(cbRemoteData).toEqual(
       expect.objectContaining({ markers: [{ id: 'synced-marker' }] })
     );
 
@@ -671,10 +676,192 @@ describe('firebase-realtime', () => {
     // localInfo always preserved
     expect((stored.localInformation as Record<string, unknown>).nrTimesLoaded).toBe(5);
     // UI callback fired with (merged-ish) data
-    expect(cb).toHaveBeenCalledWith(
-      'selective.mp3',
+    const [cbSongKey, cbRemoteData] = cb.mock.calls[0];
+    expect(cbSongKey).toBe('selective.mp3');
+    expect(cbRemoteData).toEqual(
       expect.objectContaining({ markers: [{ id: 'remote-marker', time: 42 }] })
     );
+  });
+
+  // -----------------------------------------------------------------------
+  // Remote update — metadataChanged (3rd argument of the live-update callback)
+  //
+  // metadataChanged is true ONLY when (a) the remote data was actually
+  // applied (newTime > existingTime) AND (b) the merged result differs from
+  // the pre-existing local data in `info` or in one of the 8 shared fileData
+  // fields (customName, choreography, choreographer, title, artist, album,
+  // genre, tags). It is false when the data was not applied or when only
+  // non-metadata fields (markers, aStates, ...) changed.
+  // -----------------------------------------------------------------------
+
+  /** Read the (songKey, remoteData, metadataChanged) args of the last live-update call. */
+  function lastLiveUpdateCall(cb: { mock: { calls: unknown[][] } }): {
+    songKey: unknown;
+    remoteData: unknown;
+    metadataChanged: unknown;
+  } {
+    const calls = cb.mock.calls;
+    const call = calls[calls.length - 1];
+    if (!call) throw new Error('live update callback was never invoked');
+    return { songKey: call[0], remoteData: call[1], metadataChanged: call[2] };
+  }
+
+  it('remote update flags metadataChanged=true when a newer remote changes a shared fileData field', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'meta.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['meta.mp3'] = {
+      markers: [{ id: 'local' }],
+      fileData: { title: 'Local Title', albumArt: 'data:image/jpeg;base64,LOCAL', duration: 120 },
+      latestUploadToFirebase: 100,
+      localInformation: { nrTimesLoaded: 1 },
+    };
+
+    await setupListeners();
+    const cb = vi.fn();
+    setLiveUpdateCallback(cb);
+
+    triggerSnapshot(
+      's1',
+      {
+        jsonDataInfo: JSON.stringify({
+          markers: [{ id: 'remote' }],
+          fileData: { title: 'Remote Title' },
+          latestUploadToFirebase: 200,
+        }),
+      },
+      false
+    );
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    const { songKey, metadataChanged } = lastLiveUpdateCall(cb);
+    expect(songKey).toBe('meta.mp3');
+    expect(metadataChanged, 'shared fileData field changed by an applied update').toBe(true);
+  });
+
+  it('remote update flags metadataChanged=true when a newer remote changes info', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'info.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['info.mp3'] = {
+      markers: [{ id: 'local' }],
+      info: 'local note',
+      latestUploadToFirebase: 100,
+      localInformation: { nrTimesLoaded: 1 },
+    };
+
+    await setupListeners();
+    const cb = vi.fn();
+    setLiveUpdateCallback(cb);
+
+    triggerSnapshot(
+      's1',
+      {
+        jsonDataInfo: JSON.stringify({
+          markers: [{ id: 'local' }],
+          info: 'remote note',
+          latestUploadToFirebase: 200,
+        }),
+      },
+      false
+    );
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(lastLiveUpdateCall(cb).metadataChanged, 'info changed by an applied update').toBe(true);
+  });
+
+  it('remote update flags metadataChanged=false when the remote timestamp is not newer (data not applied)', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'equal.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['equal.mp3'] = {
+      markers: [{ id: 'local' }],
+      info: 'local note',
+      fileData: { title: 'Local Title' },
+      latestUploadToFirebase: 200,
+      localInformation: { nrTimesLoaded: 1 },
+    };
+
+    await setupListeners();
+    const cb = vi.fn();
+    setLiveUpdateCallback(cb);
+
+    // Equal timestamp → callback fires (UI refresh) but nDB is NOT written.
+    triggerSnapshot(
+      's1',
+      {
+        jsonDataInfo: JSON.stringify({
+          markers: [{ id: 'local' }],
+          info: 'remote note',
+          fileData: { title: 'Remote Title' },
+          latestUploadToFirebase: 200,
+        }),
+      },
+      false
+    );
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(
+      lastLiveUpdateCall(cb).metadataChanged,
+      'metadata not applied → not a metadata change'
+    ).toBe(false);
+
+    // ... and the local metadata really was left alone.
+    const stored = nDBStore['equal.mp3'] as Record<string, unknown>;
+    expect(stored.info).toBe('local note');
+    expect((stored.fileData as Record<string, unknown>).title).toBe('Local Title');
+  });
+
+  it('remote update flags metadataChanged=false when the applied data only changes markers', async () => {
+    nDBStore['aoSongLists'] = [
+      {
+        firebaseGroupDocId: 'group1',
+        songs: [{ firebaseSongDocId: 's1', fullPath: 'markers-only.mp3', galleryId: 'pwa-galleryId' }],
+      },
+    ];
+    nDBStore['markers-only.mp3'] = {
+      markers: [{ id: 'local' }],
+      info: 'same note',
+      fileData: { title: 'Same Title', artist: 'Same Artist' },
+      latestUploadToFirebase: 100,
+      localInformation: { nrTimesLoaded: 1 },
+    };
+
+    await setupListeners();
+    const cb = vi.fn();
+    setLiveUpdateCallback(cb);
+
+    triggerSnapshot(
+      's1',
+      {
+        jsonDataInfo: JSON.stringify({
+          markers: [{ id: 'remote', time: 42 }],
+          info: 'same note',
+          fileData: { title: 'Same Title', artist: 'Same Artist' },
+          latestUploadToFirebase: 200,
+        }),
+      },
+      false
+    );
+
+    // The data WAS applied (proves the false below is not "nothing happened").
+    const stored = nDBStore['markers-only.mp3'] as Record<string, unknown>;
+    expect((stored.markers as Array<{ id: string }>)[0].id).toBe('remote');
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(
+      lastLiveUpdateCall(cb).metadataChanged,
+      'only markers changed → not a metadata change'
+    ).toBe(false);
   });
 
   // -----------------------------------------------------------------------

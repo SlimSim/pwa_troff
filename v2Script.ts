@@ -2382,10 +2382,35 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set up real-time listeners for Firebase song changes
             await setupListeners();
             await setupGroupSongListeners();
-            setLiveUpdateCallback((songKey: string) => {
-              // If the updated song is currently selected, refresh UI without interrupting playback
-              refreshCurrentSongUI(songKey);
-            });
+            setLiveUpdateCallback(
+              async (songKey: string, _remoteData: Record<string, unknown>, metadataChanged: boolean) => {
+                // The caller discards this promise, so catch here to avoid an
+                // unhandled rejection escaping the invocation's try/catch.
+                try {
+                  // If the updated song is currently selected, refresh UI without interrupting playback
+                  refreshCurrentSongUI(songKey);
+
+                  if (!metadataChanged) return;
+
+                  // Shared metadata (info / fileData) changed remotely: refresh the
+                  // header/footer titles when the changed song is the open one, and
+                  // always reload the track list so other songs' metadata updates show.
+                  const currentKey = getCurrentSongKey();
+                  const isCurrentSong =
+                    !!currentKey && (!songKey || toSongKey(currentKey) === toSongKey(songKey));
+                  if (isCurrentSong) {
+                    updateHeaderWithCurrentSong();
+                    updateFooterWithCurrentSong();
+                  }
+
+                  if (songList && typeof songList.reloadSongs === 'function') {
+                    await songList.reloadSongs();
+                  }
+                } catch (error) {
+                  log.e('setLiveUpdateCallback handler failed:', error);
+                }
+              }
+            );
             setGroupUpdateCallback(() => {
               // Refresh the group song list when a group's songs change remotely
               if (songList && typeof (songList as any).reloadSongs === 'function') {
@@ -3391,6 +3416,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------- Song edit dialog (V2) --------
   let songEditDialog: SongEditDialog | null = null;
 
+  /** Per-song debounce timers for the Firebase sync of song-info edits. */
+  const songInfoSyncTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
   const ensureSongEditDialog = () => {
     if (!songEditDialog) {
       songEditDialog = document.createElement('t-song-edit-dialog');
@@ -3445,7 +3473,29 @@ document.addEventListener('DOMContentLoaded', () => {
       updateFooterWithCurrentSong();
     }
 
-    // Sync edited metadata to Firebase groups (v2 equivalent of ifGroupSongUpdateFirestore)
+    const { isSongInFirebaseGroup } = await import('./utils/firebase-realtime.js');
+    if (isSongInFirebaseGroup(songKey)) {
+      document.dispatchEvent(
+        new CustomEvent('song-sync-status', {
+          detail: { songKey, syncing: true },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      try {
+        await saveSongData(songKey);
+      } catch (error) {
+        log.e('Error saving song data:', error);
+      } finally {
+        document.dispatchEvent(
+          new CustomEvent('song-sync-status', {
+            detail: { songKey, syncing: false },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      }
+    }
   });
 
   // Listen for song-deleted events from the dialog
@@ -3483,6 +3533,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const songKey = getCurrentSongKey();
     if (!songKey) return;
     nDB.setOnSong(songKey, 'info', info);
+
+    // Debounce the Firebase sync per song (the nDB write above stays immediate).
+    const previousTimer = songInfoSyncTimers.get(songKey);
+    if (previousTimer !== undefined) clearTimeout(previousTimer);
+    songInfoSyncTimers.set(
+      songKey,
+      setTimeout(() => {
+        songInfoSyncTimers.delete(songKey);
+        void saveSongData(songKey);
+      }, 2000)
+    );
   });
 
   // -------- Group song management (add/remove from detail view) --------

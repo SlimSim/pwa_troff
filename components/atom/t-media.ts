@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-number-label.js';
 import './t-icon.js';
+import './t-loading.js';
 
 @customElement('t-media')
 export class MediaItem extends LitElement {
@@ -182,6 +183,26 @@ export class MediaItem extends LitElement {
       font-size: 0.95rem;
       font-weight: 500;
       line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .media-title .title-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .syncing-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      flex-shrink: 0;
+      --t-loading-size: 1em;
     }
 
     .media-details {
@@ -275,6 +296,29 @@ export class MediaItem extends LitElement {
    * in production (kept for future producers; covered by unit test).
    */
   @property({ type: Number }) uploadProgress = -2;
+  /** Whether a Firebase metadata sync for this song is in progress (badge). */
+  @property({ type: Boolean }) syncing = false;
+
+  private _boundSyncStatusHandler?: (event: Event) => void;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._boundSyncStatusHandler = (event: Event) => {
+      const detail = (event as CustomEvent<{ songKey?: string; syncing?: boolean }>).detail;
+      if (detail && typeof detail.syncing === 'boolean' && detail.songKey === this.songKey) {
+        this.syncing = detail.syncing;
+      }
+    };
+    document.addEventListener('song-sync-status', this._boundSyncStatusHandler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._boundSyncStatusHandler) {
+      document.removeEventListener('song-sync-status', this._boundSyncStatusHandler);
+      this._boundSyncStatusHandler = undefined;
+    }
+  }
 
   private _handleEditClick(event: Event) {
     event.stopPropagation();
@@ -404,6 +448,9 @@ export class MediaItem extends LitElement {
   render() {
     const starData = this._generateStar(this.rating);
     const { text, hasMoreToShow } = this._getFormattedDetailsWithComment();
+    const syncingBadge = this.syncing
+      ? html`<span class="syncing-badge"><t-loading label="Syncing"></t-loading> syncing</span>`
+      : '';
 
     return html`
       <div
@@ -433,7 +480,7 @@ export class MediaItem extends LitElement {
         </div>
 
         <div class="details-column">
-          <div class="media-title">${this.title}</div>
+          <div class="media-title"><span class="title-text">${this.title}</span>${syncingBadge}</div>
           <div class="media-details">
             ${text}
             ${hasMoreToShow && !this.expanded

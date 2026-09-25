@@ -18,6 +18,10 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
   // Will be assigned the spied saveSongData from the firebase-realtime mock.
   let saveSongDataMock: ReturnType<typeof vi.fn>;
 
+  // Spied isSongInFirebaseGroup from the same mock — the song-saved handler
+  // must consult it before syncing metadata to Firebase / showing the badge.
+  let isSongInFirebaseGroupMock: ReturnType<typeof vi.fn>;
+
   // Captured audio mock so tests can inspect/set playback position.
   let audioMock: {
     currentTime: number;
@@ -114,11 +118,13 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
     }));
 
     saveSongDataMock = vi.fn().mockResolvedValue(undefined);
+    isSongInFirebaseGroupMock = vi.fn(() => true);
     vi.doMock('../utils/firebase-realtime.js', () => ({
       setupListeners: vi.fn().mockResolvedValue(undefined),
       setupGroupSongListeners: vi.fn().mockResolvedValue(undefined),
       teardownListeners: vi.fn(),
       saveSongData: saveSongDataMock,
+      isSongInFirebaseGroup: isSongInFirebaseGroupMock,
       setLiveUpdateCallback: vi.fn(),
       setGroupUpdateCallback: vi.fn(),
     }));
@@ -182,6 +188,7 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
     Object.keys(nDBStore).forEach((key) => delete nDBStore[key]);
     document.body.innerHTML = '';
     saveSongDataMock = vi.fn().mockResolvedValue(undefined);
+    isSongInFirebaseGroupMock = vi.fn(() => true);
 
     // Make rAF synchronous (happy-dom does not implement it; v2Script uses for UI timing).
     const raf = (cb: Function) => {
@@ -302,24 +309,55 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
 
       expect(saveSongDataMock).not.toHaveBeenCalled();
     });
+  });
 
-    it('does not call saveSongData for song-info-saved or song-saved (metadata edit)', async () => {
+  describe('song-info-saved: immediate nDB write + debounced Firebase sync (no badge)', () => {
+    it('writes info to nDB immediately and calls saveSongData exactly once after the 2000ms debounce', async () => {
       createRequiredDom();
       nDBStore['test-song.mp3'] = { markers: [] };
       mockModules();
       await bootV2Script();
       saveSongDataMock.mockClear();
 
-      document.dispatchEvent(
-        new CustomEvent('song-info-saved', { detail: { info: 'new info' } })
-      );
-      document.dispatchEvent(
-        new CustomEvent('song-saved', {
-          detail: { songKey: 'test-song.mp3', fileData: { title: 'New Title' } },
-        })
-      );
+      // song-info sync must never drive the syncing badge.
+      const syncEvents: Array<{ songKey: string; syncing: boolean }> = [];
+      const onSyncStatus = (event: Event) => {
+        const detail = (event as CustomEvent<{ songKey?: string; syncing?: boolean }>).detail;
+        syncEvents.push({ songKey: detail?.songKey ?? '', syncing: detail?.syncing === true });
+      };
+      document.addEventListener('song-sync-status', onSyncStatus);
 
-      expect(saveSongDataMock).not.toHaveBeenCalled();
+      vi.useFakeTimers();
+      try {
+        // Three rapid info edits (song-info-saved is what t-header autosaves).
+        for (const info of ['first', 'second', 'third']) {
+          document.dispatchEvent(new CustomEvent('song-info-saved', { detail: { info } }));
+
+          // The local write is immediate, every time.
+          expect(nDBStore['test-song.mp3'].info).toBe(info);
+          expect(
+            saveSongDataMock,
+            'no Firebase save before the debounce window'
+          ).not.toHaveBeenCalled();
+        }
+
+        await vi.advanceTimersByTimeAsync(1999);
+        expect(
+          saveSongDataMock,
+          'save must wait for the full 2000ms window'
+        ).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        expect(
+          saveSongDataMock,
+          '3 rapid edits must collapse into ONE debounced save'
+        ).toHaveBeenCalledTimes(1);
+        expect(saveSongDataMock).toHaveBeenCalledWith('test-song.mp3');
+        expect(syncEvents, 'song-info sync must never dispatch song-sync-status').toEqual([]);
+      } finally {
+        vi.useRealTimers();
+        document.removeEventListener('song-sync-status', onSyncStatus);
+      }
     });
   });
 

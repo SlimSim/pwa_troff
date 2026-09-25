@@ -209,7 +209,32 @@ export class SongEditDialog extends LitElement {
     );
   }
 
+  /**
+   * True when every editable field still equals the prefill source
+   * (`songData.fileData`, normalized with `?? ''` like `_prefillFromSongData`).
+   * `songData === null` counts as unchanged (all fields '' on both sides).
+   */
+  private _hasUnchangedFields(): boolean {
+    const fd: Partial<TroffFileData> = this.songData?.fileData ?? {};
+    return (
+      this._editFields.customName === (fd.customName ?? '') &&
+      this._editFields.choreography === (fd.choreography ?? '') &&
+      this._editFields.choreographer === (fd.choreographer ?? '') &&
+      this._editFields.title === (fd.title ?? '') &&
+      this._editFields.artist === (fd.artist ?? '') &&
+      this._editFields.album === (fd.album ?? '') &&
+      this._editFields.genre === (fd.genre ?? '') &&
+      this._editFields.tags === (fd.tags ?? '')
+    );
+  }
+
   private _save() {
+    // No edits → just close, don't dispatch anything.
+    if (this._hasUnchangedFields()) {
+      this.open = false;
+      return;
+    }
+
     this.open = false;
     this.dispatchEvent(
       new CustomEvent('song-saved', {

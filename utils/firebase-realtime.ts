@@ -14,7 +14,7 @@ import { nDB } from '../assets/internal/db.js';
 import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
 import log from './log.js';
-import { mergeSyncedSongData } from './merge-synced-song-data.js';
+import { mergeSyncedSongData, SHARED_FILE_DATA_FIELDS } from './merge-synced-song-data.js';
 import { extractAlbumArt } from './album-art.js';
 
 const CACHE_NAME = 'songCache-v1.0';
@@ -31,10 +31,13 @@ let groupUnsubscribers: Array<() => void> = [];
 
 /**
  * Optional callback invoked when the *currently-playing* song receives a
- * remote update. Receives the songKey and the parsed jsonDataInfo from
- * Firestore.
+ * remote update. Receives the songKey, the parsed jsonDataInfo from
+ * Firestore, and whether the update changed shared song metadata
+ * (`info` or one of the 8 shared fileData fields).
  */
-let liveUpdateCallback: ((songKey: string, remoteData: Record<string, unknown>) => void) | null = null;
+let liveUpdateCallback:
+  | ((songKey: string, remoteData: Record<string, unknown>, metadataChanged: boolean) => void)
+  | null = null;
 
 /**
  * Optional callback invoked when a group's Songs collection changes remotely.
@@ -70,9 +73,41 @@ function buildSongRefMap(): Map<string, Array<{ groupDocId: string; songDocId: s
   return map;
 }
 
+/**
+ * True when the song is part of a synced Firebase group (i.e. it has at least
+ * one group/song Firestore reference in the local `aoSongLists` cache).
+ */
+export function isSongInFirebaseGroup(songKey: string): boolean {
+  return buildSongRefMap().has(songKey);
+}
+
 // ---------------------------------------------------------------------------
 // Remote update handling
 // ---------------------------------------------------------------------------
+
+/**
+ * True when the merged result differs from the pre-merge local data in any
+ * field that is shared across clients: top-level `info` or one of the 8
+ * shared `fileData` metadata fields. Everything else (markers, settings, ...)
+ * is not metadata.
+ */
+function hasMetadataChange(
+  existingData: Record<string, unknown> | null,
+  merged: Record<string, unknown>
+): boolean {
+  if (!Object.is(merged.info, existingData?.info)) {
+    return true;
+  }
+
+  const existingFileData = (existingData?.fileData ?? {}) as Record<string, unknown>;
+  const mergedFileData = (merged.fileData ?? {}) as Record<string, unknown>;
+  for (const field of SHARED_FILE_DATA_FIELDS) {
+    if (!Object.is(mergedFileData[field], existingFileData[field])) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Called when an `onSnapshot` listener fires for a song document.
@@ -112,14 +147,16 @@ function handleRemoteUpdate(songKey: string, snapshot: { data: () => Record<stri
     // syncFirebaseGroups already applied the data to nDB) the UI is still
     // refreshed so a song that was already loaded at boot picks up the
     // synced markers without requiring a manual re-select.
+    let metadataChanged = false;
     if (newTime > existingTime) {
       const merged = mergeSyncedSongData(existingData, newData);
+      metadataChanged = hasMetadataChange(existingData, merged);
       nDB.set(songKey, merged);
     }
 
     // If this is the currently-playing song, refresh the UI
     if (liveUpdateCallback) {
-      liveUpdateCallback(songKey, newData);
+      liveUpdateCallback(songKey, newData, metadataChanged);
     }
   } catch (err) {
     log.e(`Failed to apply remote update for "${songKey}":`, err);
@@ -133,9 +170,12 @@ function handleRemoteUpdate(songKey: string, snapshot: { data: () => Record<stri
 /**
  * Register a callback that will be called when the currently-playing song
  * receives a remote update. The callback should refresh the marker slider,
- * settings panel, and any other UI that reflects song data.
+ * settings panel, and any other UI that reflects song data. `metadataChanged`
+ * is true when the update changed shared song metadata (info / fileData).
  */
-export function setLiveUpdateCallback(cb: (songKey: string, remoteData: Record<string, unknown>) => void): void {
+export function setLiveUpdateCallback(
+  cb: (songKey: string, remoteData: Record<string, unknown>, metadataChanged: boolean) => void
+): void {
   liveUpdateCallback = cb;
 }
 
