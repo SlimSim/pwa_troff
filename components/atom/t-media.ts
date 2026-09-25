@@ -124,6 +124,10 @@ export class MediaItem extends LitElement {
       object-fit: cover;
     }
 
+    .album-art t-loading {
+      --t-loading-size: 1.5rem;
+    }
+
     /* Info Column */
     .info-column {
       display: flex;
@@ -460,9 +464,11 @@ export class MediaItem extends LitElement {
         @click=${this._handleClick}
       >
         <div class="album-art">
-          ${this.albumArt
-            ? html`<img src="${this.albumArt}" alt="Album art" />`
-            : html`<t-icon name="${this.isVideo ? 'movie-tape' : 'note'}"></t-icon>`}
+          ${this.downloaded === false
+            ? html`<t-loading></t-loading>`
+            : this.albumArt
+              ? html`<img src="${this.albumArt}" alt="Album art" />`
+              : html`<t-icon name="${this.isVideo ? 'movie-tape' : 'note'}"></t-icon>`}
         </div>
 
         <div class="info-column">

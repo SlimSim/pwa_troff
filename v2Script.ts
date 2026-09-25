@@ -349,6 +349,15 @@ const setUrlToSong = (serverId: string | number | undefined, songKey: string | n
   window.location.hash = '#' + String(serverId) + '&' + encodeURIComponent(songKey);
 };
 
+const saveSharedSongData = (songKey: string): Promise<void> => {
+  const p = saveSongData(songKey);
+  if (songKey) {
+    nDB.setOnSong(songKey, 'serverId', undefined);
+  }
+  setUrlToSong(undefined, null);
+  return p;
+};
+
 // --- Editable-element guard (module scope, usable by any handler) ---
 const isEditableHostElement = (element: HTMLElement): boolean => {
   const tagName = element.tagName.toLowerCase();
@@ -949,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
         syncCurrentSongControlsValues();
 
         // Save to Firebase if applicable
-        await saveSongData(songKey);
+        await saveSharedSongData(songKey);
       } catch (error) {
         log.e('Import failed:', error);
         alert('Import failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -1155,7 +1164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCurrentSongControlsValues();
 
       // Save to Firebase if applicable
-      void saveSongData(songKey);
+      void saveSharedSongData(songKey);
     } catch (error) {
       log.e('Marker tools action failed:', error);
     }
@@ -1870,7 +1879,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const aStates: string[] = existingStates.slice();
         aStates.push(JSON.stringify(state));
         nDB.setOnSong(songKey, 'aStates', aStates);
-        void saveSongData(songKey);
+        void saveSharedSongData(songKey);
         syncSettingsPanelValues();
         syncCurrentSongControlsValues();
         // Deliberately do NOT touch the marker slider here.
@@ -2084,7 +2093,7 @@ document.addEventListener('DOMContentLoaded', () => {
           clearTimeout(existing);
         }
         const timer = setTimeout(() => {
-          void saveSongData(songKey);
+          void saveSharedSongData(songKey);
           tempoSaveTimers.delete(songKey);
         }, 900);
         tempoSaveTimers.set(songKey, timer);
@@ -2240,7 +2249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         removeState(stateIndex);
         const songKey = getCurrentSongKey();
         if (songKey) {
-          void saveSongData(songKey);
+          void saveSharedSongData(songKey);
         }
         return;
       }
@@ -2571,15 +2580,8 @@ document.addEventListener('DOMContentLoaded', () => {
           return timeA - timeB;
         });
         nDB.setOnSong(songKey, 'markers', mergedMarkers);
-        void saveSongData(songKey);
+        void saveSharedSongData(songKey);
       }
-
-      // When markers are modified, the URL hash is no longer valid for sharing
-      // Also clear the serverId so a future hash link shows the import dialog
-      if (songKey) {
-        nDB.setOnSong(songKey, 'serverId', undefined);
-      }
-      setUrlToSong(undefined, null);
 
       // Update the marker slider UI
       updateMarkerSlider(markerSlider, false);
@@ -2683,15 +2685,8 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           nDB.setOnSong(songKey, 'markers', mergedMarkers);
         }
-        void saveSongData(songKey);
+        void saveSharedSongData(songKey);
       }
-
-      // When markers are modified, the URL hash is no longer valid for sharing
-      // Also clear the serverId so a future hash link shows the import dialog
-      if (songKey) {
-        nDB.setOnSong(songKey, 'serverId', undefined);
-      }
-      setUrlToSong(undefined, null);
 
       // Update the marker slider UI
       updateMarkerSlider(markerSlider, false);
@@ -2708,15 +2703,8 @@ document.addEventListener('DOMContentLoaded', () => {
           (m: TroffMarker) => m.id !== customEvent.detail.markerId
         );
         nDB.setOnSong(songKey, 'markers', updatedMarkers);
-        void saveSongData(songKey);
+        void saveSharedSongData(songKey);
       }
-
-      // When markers are modified, the URL hash is no longer valid for sharing
-      // Also clear the serverId so a future hash link shows the import dialog
-      if (songKey) {
-        nDB.setOnSong(songKey, 'serverId', undefined);
-      }
-      setUrlToSong(undefined, null);
 
       // Update the marker slider UI
       updateMarkerSlider(markerSlider, false);
@@ -3483,7 +3471,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       );
       try {
-        await saveSongData(songKey);
+        await saveSharedSongData(songKey);
       } catch (error) {
         log.e('Error saving song data:', error);
       } finally {
@@ -3541,7 +3529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       songKey,
       setTimeout(() => {
         songInfoSyncTimers.delete(songKey);
-        void saveSongData(songKey);
+        void saveSharedSongData(songKey);
       }, 2000)
     );
   });
