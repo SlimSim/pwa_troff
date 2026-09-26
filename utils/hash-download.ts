@@ -304,6 +304,31 @@ export async function fetchServerTroffData(
 // ---------------------------------------------------------------------------
 
 /**
+ * Rebuild a `markerJsonString` from an already-parsed server payload so the
+ * import/merge dialog handlers (which only have `fetchServerTroffData` data)
+ * can record version history via `saveDownloadLinkHistory` (v1 parity:
+ * `scriptTroffClass` importNew/merge save the raw server TroffData).
+ *
+ * Only `markers`/`aStates`/`info`/`duration` survive the parsed payload —
+ * `fileData` details (title/genre/tags) are unavailable, so history entries
+ * from this path fall back to the file name for `displayName` and `''` for
+ * genre/tags. The `troffDataId` (what version counting needs) is always exact.
+ */
+export function buildMarkerJsonStringForHistory(serverData: {
+  markers: TroffMarker[];
+  states: string[];
+  info: string;
+  duration: number;
+}): string {
+  return JSON.stringify({
+    markers: serverData.markers,
+    aStates: serverData.states,
+    info: serverData.info,
+    fileData: { duration: serverData.duration },
+  });
+}
+
+/**
  * Fetch a file from a remote URL and store it in the cache for offline playback.
  *
  * When an `onProgress` callback is provided and the server sends a

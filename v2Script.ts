@@ -3106,9 +3106,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // -------- Dialog actions --------
   const handleImportNewMarkers = async (fileName: string, hashServerId: number) => {
-    const { fetchServerTroffData } = await import('./utils/hash-download.js');
+    const { fetchServerTroffData, saveDownloadLinkHistory, buildMarkerJsonStringForHistory } =
+      await import('./utils/hash-download.js');
     const serverData = await fetchServerTroffData(hashServerId, fileName);
     if (!serverData) return;
+
+    // v1 parity (scriptTroffClass importNew): record the newly seen server
+    // version so getVersionInfo counts it.
+    saveDownloadLinkHistory(hashServerId, fileName, {
+      markerJsonString: buildMarkerJsonStringForHistory(serverData),
+    });
 
     const songData = nDB.get(fileName) || {};
     // Clamp imported marker times to the song duration (no duration -> only clamp below 0)
@@ -3127,9 +3134,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleMergeMarkers = async (fileName: string, hashServerId: number) => {
-    const { fetchServerTroffData } = await import('./utils/hash-download.js');
+    const { fetchServerTroffData, saveDownloadLinkHistory, buildMarkerJsonStringForHistory } =
+      await import('./utils/hash-download.js');
     const serverData = await fetchServerTroffData(hashServerId, fileName);
     if (!serverData) return;
+
+    // v1 parity (scriptTroffClass merge): record the newly seen server
+    // version so getVersionInfo counts it.
+    saveDownloadLinkHistory(hashServerId, fileName, {
+      markerJsonString: buildMarkerJsonStringForHistory(serverData),
+    });
 
     const songData = nDB.get(fileName) || {};
     const existingMarkers: TroffMarker[] = songData.markers || [];
