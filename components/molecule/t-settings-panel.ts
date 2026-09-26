@@ -121,6 +121,11 @@ export class SettingsPanel extends LitElement {
       width: var(--settings-column-width);
     }
 
+    .settings-sub {
+      margin: 0;
+      margin-top: 8px;
+    }
+
     .settings-shell {
       display: grid;
       display: flex;
@@ -451,6 +456,10 @@ export class SettingsPanel extends LitElement {
 
   private _handleInstallClick() {
     import('../../utils/pwa.js').then(({ promptInstall }) => promptInstall?.());
+  }
+
+  private _handleReloadClick() {
+    import('../../utils/pwa.js').then(({ updatePWA }) => updatePWA?.());
   }
 
   private _handleClose() {
@@ -952,6 +961,13 @@ export class SettingsPanel extends LitElement {
                     }}
                   >
                     Go back to version 1
+                  </t-butt>
+                </div>
+
+                <div class="settings-section settings-sub">
+                  <t-butt ellipsis title="Restart Troff!" @click=${this._handleReloadClick}>
+                    <t-icon name="reload"></t-icon>
+                    Restart Troff
                   </t-butt>
                 </div>
 

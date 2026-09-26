@@ -1325,6 +1325,24 @@ export class MediaParent extends LitElement {
     // Refresh the song list to include the newly added songs
     await this._loadSongs();
 
+    if (addedKeys.length === 0) {
+      if (groupKey) {
+        this._pendingGroupKey = null;
+      }
+      return;
+    }
+
+    // Select the first added song so it loads in the player.
+    const selectedKey = addedKeys[0];
+    this.currentSongKey = selectedKey;
+    this.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: selectedKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
     // If we were inside a group, add the new songs to the group
     if (groupKey) {
       this._pendingGroupKey = null;
@@ -1336,6 +1354,45 @@ export class MediaParent extends LitElement {
             composed: true,
           })
         );
+      }
+      return;
+    }
+
+    // A group is selected but the add came from the generic "+" button —
+    // ask whether the new song(s) should be added to that group.
+    const activeGroupKey =
+      this._currentGroupKey || (this._contextType === 'group' ? this._contextKey : '');
+    if (activeGroupKey) {
+      this.dispatchEvent(
+        new CustomEvent('group-add-songs-prompt', {
+          detail: { groupKey: activeGroupKey, songKeys: addedKeys, songKey: selectedKey },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      const message =
+        addedKeys.length === 1
+          ? `Add "${addedKeys[0]}" to the selected group?`
+          : `Add ${addedKeys.length} songs (${addedKeys.join(', ')}) to the selected group?`;
+      let confirmed = false;
+      try {
+        confirmed =
+          typeof window !== 'undefined' && typeof window.confirm === 'function'
+            ? window.confirm(message)
+            : false;
+      } catch {
+        confirmed = false;
+      }
+      if (confirmed) {
+        for (const songKey of addedKeys) {
+          this.dispatchEvent(
+            new CustomEvent('group-song-added', {
+              detail: { groupKey: activeGroupKey, songKey, title: songKey },
+              bubbles: true,
+              composed: true,
+            })
+          );
+        }
       }
     }
   }
