@@ -72,11 +72,6 @@ export class Toast extends LitElement {
     }
 
     t-butt {
-      --butt-bg-color: rgba(255, 255, 255, 0.25);
-      --butt-hover-bg-color: rgba(255, 255, 255, 0.35);
-      --butt-active-bg-color: rgba(255, 255, 255, 0.45);
-      --butt-border: 1px solid rgba(255, 255, 255, 0.6);
-      --butt-color: #fff;
       font-size: 0.9em;
     }
 
