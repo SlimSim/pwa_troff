@@ -188,6 +188,9 @@ export class GroupList extends LitElement {
     .manage-toggle-wrap {
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
       padding: 8px 16px;
       border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
     }
@@ -620,8 +623,20 @@ export class GroupList extends LitElement {
                   <div class="no-results-text">
                     No songs match "${this._groupTrackSearch.trim()}".
                   </div>
-                  <t-butt class="no-results-clear" slim @click=${this._clearDetailSearch}>
+                  <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
                     Clear search
+                  </t-butt>
+                </div>
+              `
+            : ''}
+          ${trackQuery && filteredTracks.length > 0
+            ? html`
+                <div class="no-results">
+                  <div class="no-results-text">
+                    showing ${filteredTracks.length} out of ${selectedGroup.tracks.length}
+                  </div>
+                  <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                    Show all
                   </t-butt>
                 </div>
               `

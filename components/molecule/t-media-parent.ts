@@ -729,7 +729,9 @@ export class MediaParent extends LitElement {
           `${downloaded.length} downloaded, ${pending.length} pending download`
       );
       for (const s of pending) {
-        console.log(`${ts()} [t-media-parent]   ⏳ pending: "${(s as any).title || (s as any).songKey}" (fileUrl: ${(s as any).fileUrl ? 'yes' : 'no'})`);
+        console.log(
+          `${ts()} [t-media-parent]   ⏳ pending: "${(s as any).title || (s as any).songKey}" (fileUrl: ${(s as any).fileUrl ? 'yes' : 'no'})`
+        );
       }
 
       this.requestUpdate();
@@ -749,15 +751,15 @@ export class MediaParent extends LitElement {
    * Uses ReadableStream to track byte-level download progress per song.
    */
   private _downloadPendingSongs() {
-    const pending = this.songs.filter(
-      (s: any) => s.downloaded === false && s.fileUrl
-    );
+    const pending = this.songs.filter((s: any) => s.downloaded === false && s.fileUrl);
     if (pending.length === 0) {
       console.log(`${ts()} [t-media-parent] _downloadPendingSongs: nothing to download`);
       return;
     }
 
-    console.log(`${ts()} [t-media-parent] _downloadPendingSongs: starting download of ${pending.length} song(s)`);
+    console.log(
+      `${ts()} [t-media-parent] _downloadPendingSongs: starting download of ${pending.length} song(s)`
+    );
     const downloadNext = async (index: number): Promise<void> => {
       if (index >= pending.length) return;
       const song = pending[index] as any;
@@ -840,7 +842,9 @@ export class MediaParent extends LitElement {
         }
         response = retryResponse;
       } else if (!response.ok) {
-        console.warn(`${ts()} [t-media-parent] ❌ download failed (${response.status}): "${song.title || songKey}"`);
+        console.warn(
+          `${ts()} [t-media-parent] ❌ download failed (${response.status}): "${song.title || songKey}"`
+        );
         this._downloadProgress.delete(songKey);
         this.requestUpdate();
         return false;
@@ -943,9 +947,7 @@ export class MediaParent extends LitElement {
    * or -2 if not being tracked (already downloaded or not pending).
    */
   getDownloadProgress(songKey: string): number {
-    return this._downloadProgress.has(songKey)
-      ? (this._downloadProgress.get(songKey) ?? -1)
-      : -2;
+    return this._downloadProgress.has(songKey) ? (this._downloadProgress.get(songKey) ?? -1) : -2;
   }
 
   /**
@@ -966,9 +968,7 @@ export class MediaParent extends LitElement {
    * (mirrors getDownloadProgress).
    */
   getUploadProgress(songKey: string): number {
-    return this._uploadProgress.has(songKey)
-      ? (this._uploadProgress.get(songKey) ?? -1)
-      : -2;
+    return this._uploadProgress.has(songKey) ? (this._uploadProgress.get(songKey) ?? -1) : -2;
   }
 
   /**
@@ -1488,7 +1488,9 @@ export class MediaParent extends LitElement {
    */
   private _getSearchInput(): TInput | null {
     const listHeader = this.shadowRoot?.querySelector('t-list-header');
-    const headerActions = (listHeader as HTMLElement | null)?.querySelector('t-header-actions') as HTMLElement | null;
+    const headerActions = (listHeader as HTMLElement | null)?.querySelector(
+      't-header-actions'
+    ) as HTMLElement | null;
     return headerActions?.shadowRoot?.querySelector<TInput>('t-input.search-input') ?? null;
   }
 
@@ -2126,7 +2128,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No tracks match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2139,6 +2141,18 @@ export class MediaParent extends LitElement {
                         .downloadProgressMap=${this._getDownloadProgressMap()}
                         .uploadProgressMap=${this._getUploadProgressMap()}
                       ></t-track-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleTracks.length} out of ${songs.length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
               ${this.currentFilter === 'artists'
@@ -2146,7 +2160,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No artists match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2175,6 +2189,19 @@ export class MediaParent extends LitElement {
                             </div>`
                           : ''}
                       </t-artist-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleArtists.length} out of
+                                ${this._getUniqueArtists(songs).length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
               ${this.currentFilter === 'genre'
@@ -2182,7 +2209,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No genres match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2211,6 +2238,19 @@ export class MediaParent extends LitElement {
                             </div>`
                           : ''}
                       </t-genre-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleGenres.length} out of
+                                ${this._getUniqueGenres(songs).length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
               ${this.currentFilter === 'groups'
@@ -2218,7 +2258,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No groups match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2247,6 +2287,18 @@ export class MediaParent extends LitElement {
                             </div>`
                           : ''}
                       </t-group-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleGroups.length} out of ${this.groups.length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
             `}

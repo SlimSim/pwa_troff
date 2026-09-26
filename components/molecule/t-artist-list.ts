@@ -40,11 +40,7 @@ export class ArtistList extends LitElement {
 
     .artist-item.highlighted {
       border-left: 4px solid var(--accent-color-1, #431c5d);
-      background-color: color-mix(
-        in srgb,
-        var(--accent-color-1, #431c5d) 18%,
-        transparent
-      );
+      background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 18%, transparent);
       box-shadow: inset 0 0 0 1px
         color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
     }
@@ -324,36 +320,50 @@ export class ArtistList extends LitElement {
                   <div class="no-results-text">
                     No tracks match "${this._artistTrackSearch.trim()}".
                   </div>
-                  <t-butt class="no-results-clear" slim @click=${this._clearDetailSearch}>
+                  <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
                     Clear search
                   </t-butt>
                 </div>
               `
-            : filteredTracks.map(
-                (track, index) => html`
-                  <t-media
-                    .active=${track.songKey === this.currentSongKey}
-                    ?highlighted=${index === this._highlightedIndex}
-                    title=${track.title}
-                    artist=${track.artist}
-                    album=${track.album}
-                    genre=${track.genre}
-                    year=${track.year}
-                    comment=${track.comment}
-                    duration=${track.duration}
-                    .rating=${track.rating}
-                    tempo=${track.tempo}
-                    albumArt=${track.albumArt}
-                    .isVideo=${track.isVideo}
-                    .playsMonth=${track.playsMonth}
-                    .playsTotal=${track.playsTotal}
-                    .songKey=${track.songKey}
-                    .downloaded=${track.downloaded !== false}
-                    .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
-                    .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
-                  ></t-media>
-                `
-              )}
+            : html`
+                ${filteredTracks.map(
+                  (track, index) => html`
+                    <t-media
+                      .active=${track.songKey === this.currentSongKey}
+                      ?highlighted=${index === this._highlightedIndex}
+                      title=${track.title}
+                      artist=${track.artist}
+                      album=${track.album}
+                      genre=${track.genre}
+                      year=${track.year}
+                      comment=${track.comment}
+                      duration=${track.duration}
+                      .rating=${track.rating}
+                      tempo=${track.tempo}
+                      albumArt=${track.albumArt}
+                      .isVideo=${track.isVideo}
+                      .playsMonth=${track.playsMonth}
+                      .playsTotal=${track.playsTotal}
+                      .songKey=${track.songKey}
+                      .downloaded=${track.downloaded !== false}
+                      .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
+                      .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
+                    ></t-media>
+                  `
+                )}
+                ${trackQuery
+                  ? html`
+                      <div class="no-results">
+                        <div class="no-results-text">
+                          showing ${filteredTracks.length} out of ${selectedGroup.tracks.length}
+                        </div>
+                        <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                          Show all
+                        </t-butt>
+                      </div>
+                    `
+                  : ''}
+              `}
         </div>
       `;
     }
