@@ -1068,6 +1068,10 @@ export class MediaParent extends LitElement {
     this._dispatchHeaderColor();
   }
 
+  private _handleFooterSwipeUp() {
+    if (this.visible) this.visible = false;
+  }
+
   /** Close any open detail view in the mounted list components. */
   private _closeOpenDetailViews() {
     this.shadowRoot?.querySelector<DetailViewListElement>('t-group-list')?.closeDetail?.();
@@ -2364,6 +2368,7 @@ export class MediaParent extends LitElement {
       <t-media-footer
         .selected=${this.currentFilter}
         @filter-changed=${this._handleFilterChanged}
+        @footer-swipe-up=${this._handleFooterSwipeUp}
       ></t-media-footer>
     `;
   }
