@@ -2003,10 +2003,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (setting === 'playFullSong') {
         selectFirstAndLastMarkers(true);
-        settingsPanel.playFullSong = false;
-        if (currentSongControls) {
-          currentSongControls.playFullSong = false;
-        }
         return;
       }
 

@@ -11,7 +11,6 @@ import '../atom/t-icon.js';
 import '../atom/t-loading.js';
 
 type ToggleSetting =
-  | 'playFullSong'
   | 'extendedMarkerColor'
   | 'extraExtendedMarkerColor'
   | 'keepScreenOn'
@@ -359,7 +358,6 @@ export class SettingsPanel extends LitElement {
 
   // Current Song Controls - forwarded to t-current-song-controls (for mobile settings panel)
   @property({ type: String }) loopTimesValue = '1';
-  @property({ type: Boolean }) playFullSong = false;
   @property({ type: Number }) startBeforeValue = 0;
   @property({ type: Boolean }) startBeforeDisabled = false;
   @property({ type: Number }) stopAfterValue = 0;
@@ -517,9 +515,6 @@ export class SettingsPanel extends LitElement {
     const nextValue = !currentValue;
 
     switch (setting) {
-      case 'playFullSong':
-        this.playFullSong = nextValue;
-        break;
       case 'extendedMarkerColor':
         this.extendedMarkerColor = nextValue;
         break;
@@ -559,12 +554,6 @@ export class SettingsPanel extends LitElement {
   private _setTheme(theme: string) {
     this.theme = theme;
     this._handleSettingChange('theme', theme);
-  }
-
-  private _handleCurrentSongSettingChange(event: CustomEvent) {
-    const { setting, value } = event.detail;
-    // Forward the event from t-current-song-controls
-    this._handleSettingChange(setting, value);
   }
 
   render() {
@@ -627,7 +616,6 @@ export class SettingsPanel extends LitElement {
             id="settingsCurrentSongControls"
             no-keyboard
             .loopTimesValue=${this.loopTimesValue}
-            .playFullSong=${this.playFullSong}
             .startBeforeValue=${this.startBeforeValue}
             .startBeforeDisabled=${this.startBeforeDisabled}
             .stopAfterValue=${this.stopAfterValue}
@@ -635,7 +623,6 @@ export class SettingsPanel extends LitElement {
             .incrementUntillValue=${this.incrementUntillValue}
             .incrementUntillDisabled=${this.incrementUntillDisabled}
             .tempo=${this.tempo}
-            @setting-changed=${this._handleCurrentSongSettingChange}
           ></t-current-song-controls>
 
           <div class="global-settings">

@@ -8,8 +8,6 @@ import '../atom/t-icon.js';
 import { createTapTempoState, calculateTapTempo } from '../../utils/tap-tempo.js';
 import type { TapTempoState } from '../../utils/tap-tempo.js';
 
-type ToggleSetting = 'playFullSong';
-
 type SongAction =
   | 'zoomOut'
   | 'zoom'
@@ -338,20 +336,6 @@ export class CurrentSongControls extends LitElement {
     this._handleSettingChange(setting, value);
   }
 
-  private _toggleSetting(setting: ToggleSetting, currentValue: boolean) {
-    const nextValue = !currentValue;
-
-    switch (setting) {
-      case 'playFullSong':
-        this.playFullSong = nextValue;
-        break;
-      default:
-        return;
-    }
-
-    this._handleSettingChange(setting, nextValue);
-  }
-
   private _setLoopTimes(loopTimes: string) {
     this.loopTimesValue = loopTimes;
     this._handleSettingChange('loopTimes', loopTimes);
@@ -425,8 +409,7 @@ export class CurrentSongControls extends LitElement {
                   <t-butt
                     key="u"
                     ellipsis
-                    .active=${this.playFullSong}
-                    @click=${() => this._toggleSetting('playFullSong', this.playFullSong)}
+                    @click=${() => this._handleSettingChange('playFullSong', true)}
                   >
                     Play full song
                   </t-butt>
