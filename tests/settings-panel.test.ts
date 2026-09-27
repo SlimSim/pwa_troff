@@ -758,6 +758,7 @@ describe('SettingsPanel advanced panels use t-details', () => {
     const titles = getDetailsPanels().map((panel) => panel.title);
     expect(titles).toEqual([
       'Theme',
+      'Visibility',
       'Marker color',
       'Default Song Values',
       'Advanced Settings',

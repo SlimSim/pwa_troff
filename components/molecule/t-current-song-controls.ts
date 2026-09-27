@@ -7,6 +7,12 @@ import '../atom/t-help-tip.js';
 import '../atom/t-icon.js';
 import { createTapTempoState, calculateTapTempo } from '../../utils/tap-tempo.js';
 import type { TapTempoState } from '../../utils/tap-tempo.js';
+import { nDB } from '../../assets/internal/db.js';
+import {
+  TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
+  TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW,
+  TROFF_SETTING_UI_ZOOM_SHOW,
+} from '../../constants/constants.js';
 
 type SongAction =
   | 'zoomOut'
@@ -256,6 +262,20 @@ export class CurrentSongControls extends LitElement {
   @property({ type: String }) findUrl = '';
   @property({ type: Boolean, attribute: 'no-keyboard' }) noKeyboard = false;
 
+  private _onVisibilityChanged = (): void => {
+    this.requestUpdate();
+  };
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    window.addEventListener('troff-visibility-changed', this._onVisibilityChanged);
+  }
+
+  override disconnectedCallback(): void {
+    window.removeEventListener('troff-visibility-changed', this._onVisibilityChanged);
+    super.disconnectedCallback();
+  }
+
   private _handleSettingChange(setting: string, value: unknown) {
     this.dispatchEvent(
       new CustomEvent('setting-changed', {
@@ -360,6 +380,18 @@ export class CurrentSongControls extends LitElement {
     return current === loopTimes;
   }
 
+  private _isZoomVisible(): boolean {
+    return nDB.get(TROFF_SETTING_UI_ZOOM_SHOW) !== false;
+  }
+
+  private _isPlayFullSongVisible(): boolean {
+    return nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
+  }
+
+  private _isLoopVisible(): boolean {
+    return nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
+  }
+
   private _renderSongActionButton(action: SongAction, label: string, key?: string) {
     return html`
       <t-butt
@@ -406,13 +438,17 @@ export class CurrentSongControls extends LitElement {
             <div class="settings-grid">
               <div class="setting-item">
                 <div class="song-action-buttons">
-                  <t-butt
-                    key="u"
-                    ellipsis
-                    @click=${() => this._handleSettingChange('playFullSong', true)}
-                  >
-                    Play full song
-                  </t-butt>
+                  ${this._isPlayFullSongVisible()
+                    ? html`
+                        <t-butt
+                          key="u"
+                          ellipsis
+                          @click=${() => this._handleSettingChange('playFullSong', true)}
+                        >
+                          Play full song
+                        </t-butt>
+                      `
+                    : ''}
                   <t-butt key="t" ellipsis @click=${this._handleTapTempo}>
                     <div class="tap-tempo-butt">
                       <t-icon name="metronome"></t-icon>
@@ -429,8 +465,12 @@ export class CurrentSongControls extends LitElement {
             <div class="settings-grid">
               <div class="setting-item">
                 <div class="song-action-buttons">
-                  ${this._renderSongActionButton('zoomOut', 'Zoom out', 'Shift+z')}
-                  ${this._renderSongActionButton('zoom', 'Zoom', 'z')}
+                  ${this._isZoomVisible()
+                    ? html`
+                        ${this._renderSongActionButton('zoomOut', 'Zoom out', 'Shift+z')}
+                        ${this._renderSongActionButton('zoom', 'Zoom', 'z')}
+                      `
+                    : ''}
                 </div>
               </div>
             </div>
@@ -579,10 +619,12 @@ export class CurrentSongControls extends LitElement {
           </div>
 
           <!-- 9. Loop buttons (nr of loops) -->
-          <div class="settings-section">
-            <div class="settings-grid">
-              <div class="setting-item">
-                <div class="loop-buttons">
+          ${this._isLoopVisible()
+            ? html`
+                <div class="settings-section">
+                  <div class="settings-grid">
+                    <div class="setting-item">
+                      <div class="loop-buttons">
                   ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
                     (loopTimes) => html`
                       <t-butt
@@ -595,10 +637,12 @@ export class CurrentSongControls extends LitElement {
                       </t-butt>
                     `
                   )}
-                </div>
-              </div>
-            </div>
-          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `
+            : ''}
 
           <!-- 11. Volume -->
           <div class="settings-section playback-control-section">

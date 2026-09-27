@@ -3,6 +3,11 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import { nDB } from '../../assets/internal/db.js';
+import {
+  TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
+  TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW,
+  TROFF_SETTING_UI_ZOOM_SHOW,
+} from '../../constants/constants.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-details.js';
@@ -390,9 +395,15 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) bannerShow = false;
   @property({ type: Boolean }) preferVersion2 = false;
   @property({ type: String }) theme = 'col1';
+  @property({ type: Boolean }) zoomShow = true;
+  @property({ type: Boolean }) playFullSongShow = true;
+  @property({ type: Boolean }) loopButtonsShow = true;
 
   connectedCallback() {
     super.connectedCallback();
+    this.zoomShow = nDB.get(TROFF_SETTING_UI_ZOOM_SHOW) !== false;
+    this.playFullSongShow = nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
+    this.loopButtonsShow = nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
     // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
     import('../../utils/pwa.js')
       .then(({ getInstallState, subscribeToInstallState }) => {
@@ -556,6 +567,15 @@ export class SettingsPanel extends LitElement {
     this._handleSettingChange('theme', theme);
   }
 
+  private _setVisibilitySetting(key: string, value: boolean): void {
+    nDB.set(key, value);
+    window.dispatchEvent(
+      new CustomEvent<{ setting: string; value: boolean }>('troff-visibility-changed', {
+        detail: { setting: key, value },
+      })
+    );
+  }
+
   render() {
     return html`
       <div class="panel-content">
@@ -698,6 +718,56 @@ export class SettingsPanel extends LitElement {
                 >
                   Dark mode
                 </t-butt>
+              </div>
+            </t-details>
+
+            <t-details
+              title="Visibility"
+              class="settings-width"
+              text="Show or hide song controls."
+            >
+              <div class="settings-section">
+                <div class="action-buttons">
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.zoomShow}
+                    @click=${() => {
+                      this.zoomShow = !this.zoomShow;
+                      this._setVisibilitySetting(TROFF_SETTING_UI_ZOOM_SHOW, this.zoomShow);
+                    }}
+                  >
+                    Zoom buttons
+                  </t-butt>
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.playFullSongShow}
+                    @click=${() => {
+                      this.playFullSongShow = !this.playFullSongShow;
+                      this._setVisibilitySetting(
+                        TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW,
+                        this.playFullSongShow
+                      );
+                    }}
+                  >
+                    Play full song button
+                  </t-butt>
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.loopButtonsShow}
+                    @click=${() => {
+                      this.loopButtonsShow = !this.loopButtonsShow;
+                      this._setVisibilitySetting(
+                        TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
+                        this.loopButtonsShow
+                      );
+                    }}
+                  >
+                    Loop count selector
+                  </t-butt>
+                </div>
               </div>
             </t-details>
 
