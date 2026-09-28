@@ -17,6 +17,9 @@ import './components/molecule/t-import-export-dialog.js';
 import './components/molecule/t-marker-tools-dialog.js';
 import './components/molecule/t-share-song-dialog.js';
 import './components/molecule/t-text-input-dialog.js';
+import './components/molecule/t-zoom-info-dialog.js';
+import type { ZoomInfoDialog } from './components/molecule/t-zoom-info-dialog.js';
+import { ZOOM_INFO_DONT_SHOW_KEY, isZoomNoop, shouldShowZoomInfo } from './utils/zoom-info.js';
 import './components/molecule/t-import-dialog.js';
 import type { ImportDialog } from './components/molecule/t-import-dialog.js';
 import './components/organisms/t-marker-slider.js';
@@ -770,6 +773,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const zoomToPlayableRegion = async () => {
     if (!markerSlider) {
       return;
+    }
+
+    // Detect the no-op case (already zoomed to the active playing region) and
+    // show the zoom-info dialog, mirroring v1 `zoomToMarker()`. Compare the
+    // UNPADDED normalized playback window against the saved window with a
+    // 0.5s tolerance to cover marker padding and float rounding.
+    const duration = getTimelineDuration();
+    const target = normalizeZoomWindow(
+      markerSlider.getPlaybackStart(),
+      markerSlider.getPlaybackStop(),
+      duration
+    );
+    const songKey = getCurrentSongKey();
+    const songData = songKey ? nDB.get(songKey) || {} : {};
+    const saved = normalizeZoomWindow(
+      withSafeNumber(songData.zoomStartTime, 0),
+      withSafeNumber(songData.zoomEndTime, duration),
+      duration
+    );
+    if (shouldShowZoomInfo(isZoomNoop(saved, target, 0.5), nDB.get(ZOOM_INFO_DONT_SHOW_KEY))) {
+      const zoomInfoDialog = document.getElementById('zoomInfoDialog') as ZoomInfoDialog | null;
+      if (zoomInfoDialog) {
+        zoomInfoDialog.open = true;
+      }
     }
 
     await applyMarkerSliderZoom(
@@ -3062,6 +3089,14 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   };
   setupScrollPersistence();
+
+  // Persist the zoom-info "Don't show again" suppression flag (v1 compatible).
+  document.addEventListener('zoom-info-closed', (event: Event) => {
+    const detail = (event as CustomEvent<{ dontShowAgain?: boolean }>).detail;
+    if (detail?.dontShowAgain) {
+      nDB.set(ZOOM_INFO_DONT_SHOW_KEY, true);
+    }
+  });
 
   // -------- Helper: load/select a song (shared by hash download and dialog actions) --------
   const selectSongFromHash = async (fileName: string) => {

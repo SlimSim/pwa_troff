@@ -236,6 +236,18 @@ export class MediaItem extends LitElement {
       display: flex;
     }
 
+    /* Slim mode — compact rows for management lists */
+    :host([slim]) .media-container {
+      padding: 6px 8px 4px;
+      gap: 6px;
+    }
+
+    :host([slim]) .album-art {
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .media-container {
@@ -290,6 +302,7 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
   @property({ type: Boolean }) hideEditButton = false;
+  @property({ type: Boolean, reflect: true }) slim = false;
   @property({ type: Boolean }) downloaded = true;
   /** 0-100 = downloading with progress, -1 = waiting in queue, undefined/missing = done */
   @property({ type: Number }) downloadProgress = -1;
