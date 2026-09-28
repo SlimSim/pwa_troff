@@ -16,6 +16,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import '../atom/t-input.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
+import '../atom/t-loading.js';
 import '../atom/t-color-picker.js';
 import '../atom/t-icon-picker.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
@@ -169,6 +170,19 @@ export class GroupDialog extends LitElement {
       align-self: flex-end;
     }
 
+    .share-popup-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .auth-busy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
     /* Buttons */
     .btn-danger {
       --butt-bg-color: var(--accent-color-2, #dd2c00);
@@ -188,6 +202,9 @@ export class GroupDialog extends LitElement {
 
   /** The signed-in user's email address. */
   @property({ type: String }) userEmail = '';
+
+  /** Whether a sign-in request is in flight (set by v2Script, same contract as settings-panel/media-parent). */
+  @property({ type: Boolean }) authBusy = false;
 
   // ── Internal editing state (cloned from `group` when opened) ───────────────
 
@@ -210,6 +227,18 @@ export class GroupDialog extends LitElement {
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('open') && this.open) {
       this._cloneGroupForEditing();
+    }
+    if (
+      changedProperties.has('signedIn') &&
+      changedProperties.get('signedIn') === false &&
+      this.signedIn === true &&
+      this.open &&
+      this._showSharePopup
+    ) {
+      this._showSharePopup = false;
+      if (this.group === null && this._editOwners.length === 0 && this.userEmail) {
+        this._editOwners = [this.userEmail];
+      }
     }
   }
 
@@ -365,6 +394,17 @@ export class GroupDialog extends LitElement {
     this._showSharePopup = false;
   }
 
+  private _handleShareSignInClick() {
+    if (this.authBusy) return;
+    this.dispatchEvent(
+      new CustomEvent('sign-in-requested', {
+        detail: { action: 'sign-in' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   // ── Color handler ──────────────────────────────────────────────────────────
 
   private _handleColorChange(event: CustomEvent) {
@@ -376,12 +416,20 @@ export class GroupDialog extends LitElement {
   private _renderOwnersSection() {
     if (this.group) {
       // Editing an existing group — only show owners for Firebase-backed groups
-      return this._isFirebaseGroup ? this._renderOwners() : '';
+      if (this._isFirebaseGroup) return this._renderOwners();
+      // Local-only group while signed out: show the share teaser
+      // so users can discover sign-in sharing.
+      if (!this.signedIn) return this._renderShareTeaser();
+      return '';
     }
     // Creating a new group
     if (this.signedIn) {
       return this._renderOwners();
     }
+    return this._renderShareTeaser();
+  }
+
+  private _renderShareTeaser() {
     return html`
       <div>
         <div class="section-label">Share this group with others</div>
@@ -395,6 +443,7 @@ export class GroupDialog extends LitElement {
 
   private _renderSharePopup() {
     if (!this._showSharePopup) return '';
+    if (this.signedIn) return '';
     return html`
       <div class="share-popup-overlay" @click=${this._handleShareOverlayClick}>
         <div class="share-popup">
@@ -404,7 +453,15 @@ export class GroupDialog extends LitElement {
             shared to all the members of the group. Therefore, you have to sign in to share the
             group.
           </div>
-          <t-butt class="share-popup-ok" @click=${this._closeSharePopup}>OK</t-butt>
+          <div class="share-popup-buttons">
+            ${this.authBusy
+              ? html`<span class="auth-busy"><t-loading></t-loading>Signing in…</span>`
+              : html`<t-butt @click=${this._handleShareSignInClick}>
+                  <t-icon name="login"></t-icon>
+                  <span style="padding-left: 4px;">Sign in</span>
+                </t-butt>`}
+            <t-butt class="share-popup-ok" @click=${this._closeSharePopup}>OK</t-butt>
+          </div>
         </div>
       </div>
     `;

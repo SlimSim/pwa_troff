@@ -2311,6 +2311,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (songList) {
         songList.authBusy = true;
       }
+      const signInGroupDialog = document.querySelector('t-group-dialog') as unknown as {
+        authBusy: boolean;
+      } | null;
+      if (signInGroupDialog) {
+        signInGroupDialog.authBusy = true;
+      }
 
       try {
         // Ensure notify.js is loaded so cookie_consent doesn't enter an infinite retry loop
@@ -2338,9 +2344,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (songList) {
           songList.authBusy = false;
         }
+        const doneGroupDialog = document.querySelector('t-group-dialog') as unknown as {
+          authBusy: boolean;
+        } | null;
+        if (doneGroupDialog) {
+          doneGroupDialog.authBusy = false;
+        }
       }
     };
 
+    // Element-scoped so the listeners die with their elements on re-boot
+    // (a document-level listener would accumulate stale handlers whose
+    // re-entry guard closes over detached elements). Events from the lazily
+    // created group dialog are forwarded via settingsPanel (see
+    // ensureGroupDialog); the dialog stays open and onAuthStateChanged syncs
+    // its signedIn state.
     settingsPanel.addEventListener('sign-in-requested', handleSignInRequest);
     songList?.addEventListener('sign-in-requested', handleSignInRequest);
   }
@@ -3415,6 +3433,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const ensureGroupDialog = () => {
     if (!groupDialog) {
       groupDialog = document.createElement('t-group-dialog') as any;
+      // Element-scoped: forward to the settings panel so the single
+      // handleSignInRequest above processes it (one signInWithPopup per
+      // gesture). Attached once — ensureGroupDialog reuses the instance.
+      groupDialog.addEventListener('sign-in-requested', (event: Event) => {
+        const detail = (event as CustomEvent<{ action: string }>).detail;
+        settingsPanel?.dispatchEvent(
+          new CustomEvent('sign-in-requested', { detail, bubbles: true, composed: true })
+        );
+      });
       document.body.append(groupDialog);
     }
     groupDialog.signedIn = currentUserSignedIn;
