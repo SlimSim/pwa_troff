@@ -231,6 +231,15 @@
         flex-grow: 3;
       }
     </style>
+    <script>
+      try {
+        const raw = localStorage.getItem('TROFF_SETTING_PREFER_VERSION');
+        const pref = raw != null ? JSON.parse(raw) : null;
+        if (pref == 1) {
+          window.location.replace('/v1.html' + window.location.hash);
+        }
+      } catch(e) {}
+    </script>
   </head>
   <body data-theme="col1">
     <div id="loadScreen">
@@ -264,6 +273,7 @@
     </t-main-layout>
 
     <t-zoom-info-dialog id="zoomInfoDialog"></t-zoom-info-dialog>
+    <t-v2-welcome-dialog id="v2WelcomeDialog"></t-v2-welcome-dialog>
 
     <script type="importmap">
       {

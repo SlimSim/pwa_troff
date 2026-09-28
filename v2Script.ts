@@ -19,6 +19,8 @@ import './components/molecule/t-share-song-dialog.js';
 import './components/molecule/t-text-input-dialog.js';
 import './components/molecule/t-zoom-info-dialog.js';
 import type { ZoomInfoDialog } from './components/molecule/t-zoom-info-dialog.js';
+import './components/molecule/t-v2-welcome-dialog.js';
+import type { V2WelcomeDialog } from './components/molecule/t-v2-welcome-dialog.js';
 import { ZOOM_INFO_DONT_SHOW_KEY, isZoomNoop, shouldShowZoomInfo } from './utils/zoom-info.js';
 import './components/molecule/t-import-dialog.js';
 import type { ImportDialog } from './components/molecule/t-import-dialog.js';
@@ -108,9 +110,9 @@ import { getManifest } from './utils/manifestHelper.js';
 import { updateWakeLockForPlayback } from './utils/phoneUtils.js';
 
 // Arrow key time increments (matching v1)
-export const ALT_TIME = 1 / 12;       // one frame at 12fps
-export const REGULAR_TIME = 10 / 12;  // 10 frames
-export const SHIFT_TIME = 100 / 12;   // 100 frames
+export const ALT_TIME = 1 / 12; // one frame at 12fps
+export const REGULAR_TIME = 10 / 12; // 10 frames
+export const SHIFT_TIME = 100 / 12; // 100 frames
 
 // Hostname→Sentry environment mapping — mirrors utils/firebase-getter.ts
 // (which itself mirrors the legacy assets/internal/environment.ts selection).
@@ -405,10 +407,7 @@ const isEditableKeyEvent = (event: KeyboardEvent) => {
     if (shadowActiveElement instanceof HTMLElement && shadowActiveElement.isContentEditable) {
       return true;
     }
-    if (
-      shadowActiveElement instanceof HTMLElement &&
-      isEditableHostElement(shadowActiveElement)
-    ) {
+    if (shadowActiveElement instanceof HTMLElement && isEditableHostElement(shadowActiveElement)) {
       return true;
     }
   }
@@ -440,19 +439,12 @@ const handleArrowKeyDown = (event: KeyboardEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const increment = event.shiftKey
-      ? SHIFT_TIME
-      : event.altKey
-        ? ALT_TIME
-        : REGULAR_TIME;
+    const increment = event.shiftKey ? SHIFT_TIME : event.altKey ? ALT_TIME : REGULAR_TIME;
 
     const media = getActiveMedia();
     const direction = event.key === 'ArrowRight' ? 1 : -1;
     const duration = media.duration || 0;
-    media.currentTime = Math.min(
-      duration,
-      Math.max(0, media.currentTime + direction * increment)
-    );
+    media.currentTime = Math.min(duration, Math.max(0, media.currentTime + direction * increment));
     return;
   }
 
@@ -465,11 +457,8 @@ const handleArrowKeyDown = (event: KeyboardEvent) => {
   event.preventDefault();
   event.stopPropagation();
 
-  const increment = event.shiftKey && event.altKey
-    ? SHIFT_TIME
-    : event.shiftKey
-      ? REGULAR_TIME
-      : ALT_TIME;
+  const increment =
+    event.shiftKey && event.altKey ? SHIFT_TIME : event.shiftKey ? REGULAR_TIME : ALT_TIME;
 
   const markerSlider = document.getElementById('markerSlider') as MarkerSlider | null;
   if (!markerSlider?.startMarkerId) {
@@ -514,8 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let storageErrorToastShown = false;
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event.reason;
-    const message =
-      reason instanceof Error ? reason.message : String(reason ?? '');
+    const message = reason instanceof Error ? reason.message : String(reason ?? '');
     if (
       message.includes('Connection to Indexed Database server lost') ||
       message.includes('IndexedDB server lost')
@@ -532,6 +520,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // v2 default rollout welcome (placed right after settingsPanel setup per spec, inside listener; parent controls .open)
+  const pref = nDB.get(TROFF_SETTING_PREFER_VERSION);
+  if (pref == null) {
+    localStorage.getItem('millisFirstTimeStartingApp');
+    if (nDB.get('millisFirstTimeStartingApp') != null) {
+      const dlg = document.getElementById('v2WelcomeDialog') as V2WelcomeDialog | null;
+      if (dlg) {
+        dlg.open = true;
+      }
+      // attach listeners for the events the dialog dispatches ('v2-welcome-continue', 'v2-welcome-switch-back' or 'dialog-cancelled')
+      // on continue/close: nDB.set(TROFF_SETTING_PREFER_VERSION, 2)
+      // on switch-back: nDB.set(..., 1); location = '/v1.html' + ...
+      const onContinueOrClose = () => {
+        nDB.set(TROFF_SETTING_PREFER_VERSION, 2);
+      };
+      const onBack = () => {
+        nDB.set(TROFF_SETTING_PREFER_VERSION, 1);
+        window.location.replace('/v1.html' + (window.location.hash || ''));
+      };
+      if (dlg) {
+        dlg.addEventListener('v2-welcome-continue', onContinueOrClose, { once: true });
+        dlg.addEventListener('dialog-cancelled', onContinueOrClose, { once: true });
+        dlg.addEventListener('v2-welcome-switch-back', onBack, { once: true });
+      }
+    }
+    // no else, no set for new users
+  }
 
   // Sentry observability — mirrors script.ts initEnvironment without legacy
   // imports. Tag every event with app: 'v2' unconditionally, then set env,
@@ -551,7 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
         header.versionNumber = manifest.version;
         header.bannerText = getBannerText();
         const storedBannerShow = nDB.get(TROFF_SETTING_BANNER_SHOW);
-        header.showBanner = storedBannerShow !== null ? storedBannerShow === true : getBannerDefault();
+        header.showBanner =
+          storedBannerShow !== null ? storedBannerShow === true : getBannerDefault();
       }
     })
     .catch((error) => {
@@ -623,9 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const getVersionInfo = (songKey: string): { numberOfVersions: number; findUrl: string } => {
     const fileNameUri = encodeURI(songKey);
-    const dbHistory: TroffHistoryList[] | null = nDB.get(
-      TROFF_TROFF_DATA_ID_AND_FILE_NAME
-    );
+    const dbHistory: TroffHistoryList[] | null = nDB.get(TROFF_TROFF_DATA_ID_AND_FILE_NAME);
     if (dbHistory == null) {
       return { numberOfVersions: 0, findUrl: '' };
     }
@@ -639,10 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return { numberOfVersions: 0, findUrl: '' };
     }
 
-    if (
-      hist[0].troffDataIdObjectList.length === 1 &&
-      nDB.get(songKey)?.serverId !== undefined
-    ) {
+    if (hist[0].troffDataIdObjectList.length === 1 && nDB.get(songKey)?.serverId !== undefined) {
       return { numberOfVersions: 0, findUrl: '' };
     }
 
@@ -1238,8 +1250,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
-    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
-    const sliderContainer = markerSlider.shadowRoot?.querySelector('.slider-container') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector(
+      '.main-content'
+    ) as HTMLElement | null;
+    const sliderContainer = markerSlider.shadowRoot?.querySelector(
+      '.slider-container'
+    ) as HTMLElement | null;
 
     if (!mainContent || !sliderContainer) {
       persistZoomWindow(0, duration);
@@ -1398,9 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pauseBeforeSeconds =
-      footer && !footer.disablePauseBefore
-        ? Math.max(0, footer.pauseBefore ?? 0)
-        : 0;
+      footer && !footer.disablePauseBefore ? Math.max(0, footer.pauseBefore ?? 0) : 0;
     header.statusCountdown = `${pauseBeforeSeconds}s`;
   };
 
@@ -1414,7 +1428,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const states = songKey && songData && Array.isArray(songData.aStates) ? songData.aStates : [];
     type SongStatesHost = HTMLElement & { songStates?: string[] };
     if (currentSongControls) (currentSongControls as SongStatesHost).songStates = states;
-    const settingsCtl = settingsPanel?.shadowRoot?.querySelector('#settingsCurrentSongControls') as SongStatesHost | null;
+    const settingsCtl = settingsPanel?.shadowRoot?.querySelector(
+      '#settingsCurrentSongControls'
+    ) as SongStatesHost | null;
     if (settingsCtl) settingsCtl.songStates = states;
     const rawLoopTimes =
       songData?.loopTimes !== undefined ? songData.loopTimes : getDefaultLoopTimesValue();
@@ -1689,7 +1705,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = true;
       footer.playbackCountdown = countdownSeconds;
     }
-    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+    void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
 
     if (header) {
       header.statusCountdown = `${countdownSeconds}s`;
@@ -1706,7 +1722,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.isStartingPlayback = false;
       footer.playbackCountdown = 0;
     }
-    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+    void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
 
     updateHeaderCountdownDisplay();
   };
@@ -1777,7 +1793,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const startPlayback = () => {
-    void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+    void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
     if (pendingPlaybackStart !== undefined) {
       resetLoopTimesCounter();
       clearPendingPlaybackStart();
@@ -1888,20 +1904,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const state: State = {
           name,
-          currentMarker: markerSlider ? markerSlider.startMarkerId : (songData.currentStartMarker || ''),
-          currentStopMarker: markerSlider ? markerSlider.stopMarkerId : (songData.currentStopMarker || ''),
+          currentMarker: markerSlider
+            ? markerSlider.startMarkerId
+            : songData.currentStartMarker || '',
+          currentStopMarker: markerSlider
+            ? markerSlider.stopMarkerId
+            : songData.currentStopMarker || '',
           currentLoop: songData.loopTimes !== undefined ? songData.loopTimes : '1',
           buttPauseBefStart: songData.TROFF_CLASS_TO_TOGGLE_buttPauseBefStart !== false,
           buttStartBefore: songData.TROFF_CLASS_TO_TOGGLE_buttStartBefore !== false,
           buttStopAfter: songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter !== false,
           buttWaitBetweenLoops: songData.TROFF_CLASS_TO_TOGGLE_buttWaitBetweenLoops !== false,
           buttIncrementUntil: songData.TROFF_CLASS_TO_TOGGLE_buttIncrementUntil === true,
-          pauseBeforeStart: parseNum(songData.TROFF_VALUE_pauseBeforeStart, parseNum(footer?.pauseBefore, 3)),
+          pauseBeforeStart: parseNum(
+            songData.TROFF_VALUE_pauseBeforeStart,
+            parseNum(footer?.pauseBefore, 3)
+          ),
           speedBar: parseNum(songData.TROFF_VALUE_speedBar, parseNum(footer?.speed, 100)),
           startBefore: parseNum(songData.TROFF_VALUE_startBefore, 0),
           stopAfter: parseNum(songData.TROFF_VALUE_stopAfter, 0),
           volumeBar: parseNum(songData.TROFF_VALUE_volumeBar, parseNum(footer?.volume, 75)),
-          waitBetweenLoops: parseNum(songData.TROFF_VALUE_waitBetweenLoops, parseNum(footer?.waitBetween, 1)),
+          waitBetweenLoops: parseNum(
+            songData.TROFF_VALUE_waitBetweenLoops,
+            parseNum(footer?.waitBetween, 1)
+          ),
         };
         const aStates: string[] = existingStates.slice();
         aStates.push(JSON.stringify(state));
@@ -1933,7 +1959,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const songData: Record<string, unknown> = nDB.get(songKey) || {};
-    const aStates: string[] = Array.isArray(songData.aStates) ? (songData.aStates as string[]).slice() : [];
+    const aStates: string[] = Array.isArray(songData.aStates)
+      ? (songData.aStates as string[]).slice()
+      : [];
     if (index < 0 || index >= aStates.length) {
       return;
     }
@@ -1943,8 +1971,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {
       return;
     }
-    songData.currentStartMarker = state.currentMarker || (songData.currentStartMarker as string) || '';
-    songData.currentStopMarker = state.currentStopMarker || (songData.currentStopMarker as string) || '';
+    songData.currentStartMarker =
+      state.currentMarker || (songData.currentStartMarker as string) || '';
+    songData.currentStopMarker =
+      state.currentStopMarker || (songData.currentStopMarker as string) || '';
     if (state.currentLoop !== undefined) {
       songData.loopTimes = state.currentLoop;
     }
@@ -1993,7 +2023,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const songData = nDB.get(songKey) || {};
-    const aStates: string[] = Array.isArray(songData.aStates) ? (songData.aStates as string[]).slice() : [];
+    const aStates: string[] = Array.isArray(songData.aStates)
+      ? (songData.aStates as string[]).slice()
+      : [];
     if (index < 0 || index >= aStates.length) {
       return;
     }
@@ -2227,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       nDB.set(storageKey, value === true ? true : value);
       if (setting === 'keepScreenOn') {
-        void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+        void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
       }
       if (setting === 'darkMode') {
         if (value === true) {
@@ -2433,7 +2465,11 @@ document.addEventListener('DOMContentLoaded', () => {
             await setupListeners();
             await setupGroupSongListeners();
             setLiveUpdateCallback(
-              async (songKey: string, _remoteData: Record<string, unknown>, metadataChanged: boolean) => {
+              async (
+                songKey: string,
+                _remoteData: Record<string, unknown>,
+                metadataChanged: boolean
+              ) => {
                 // The caller discards this promise, so catch here to avoid an
                 // unhandled rejection escaping the invocation's try/catch.
                 try {
@@ -2592,11 +2628,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const songKey = getCurrentSongKey();
       if (songKey) {
         nDB.setOnSong(songKey, 'TROFF_VALUE_incrementUntilValue', event.detail.value);
-        nDB.setOnSong(
-          songKey,
-          'TROFF_CLASS_TO_TOGGLE_buttIncrementUntil',
-          !event.detail.disabled
-        );
+        nDB.setOnSong(songKey, 'TROFF_CLASS_TO_TOGGLE_buttIncrementUntil', !event.detail.disabled);
       }
       syncSettingsPanelValues();
       syncCurrentSongControlsValues();
@@ -2679,12 +2711,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (markerSlider) {
           markerSlider.value = time;
 
-          if (
-            markerSlider.markers.length > 0 &&
-            time > markerSlider.getPlaybackStop()
-          ) {
-            const lastMarker =
-              markerSlider.markers[markerSlider.markers.length - 1];
+          if (markerSlider.markers.length > 0 && time > markerSlider.getPlaybackStop()) {
+            const lastMarker = markerSlider.markers[markerSlider.markers.length - 1];
             markerSlider.stopMarkerId = lastMarker.id + 'S';
 
             const songKey = getCurrentSongKey();
@@ -2923,11 +2951,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!settingsPanel.incrementUntillDisabled) {
           const targetSpeed = Number(settingsPanel.incrementUntillValue) || 0;
           const currentSpeed = getActiveMedia().playbackRate * 100;
-          const newSpeed = calculateIncrementUntilSpeed(
-            currentSpeed,
-            targetSpeed,
-            loopTimesLeft
-          );
+          const newSpeed = calculateIncrementUntilSpeed(currentSpeed, targetSpeed, loopTimesLeft);
           getActiveMedia().playbackRate = newSpeed / 100;
           if (videoElement) {
             videoElement.playbackRate = newSpeed / 100;
@@ -2959,7 +2983,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (footer) {
         footer.isPlaying = true;
       }
-      void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+      void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
       updateHeaderCountdownDisplay();
     };
     const onPause = () => {
@@ -2973,7 +2997,7 @@ document.addEventListener('DOMContentLoaded', () => {
         footer.isPlaying = false;
       }
       if (!wasLoopTransition) {
-        void updateWakeLockForPlayback(!!footer?.isPlaying , !!footer?.isStartingPlayback );
+        void updateWakeLockForPlayback(!!footer?.isPlaying, !!footer?.isStartingPlayback);
       }
       updateHeaderCountdownDisplay();
     };
@@ -3059,7 +3083,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const mainLayout = document.querySelector('t-main-layout') as HTMLElement | null;
-    const mainContent = mainLayout?.shadowRoot?.querySelector('.main-content') as HTMLElement | null;
+    const mainContent = mainLayout?.shadowRoot?.querySelector(
+      '.main-content'
+    ) as HTMLElement | null;
     if (!mainContent) {
       // Try once more shortly after first paint (custom elements may upgrade late)
       setTimeout(setupScrollPersistence, 50);
@@ -3235,7 +3261,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const getImportServerData = async (
     fileName: string,
     hashServerId: number
-  ): Promise<PrefetchedServerData extends never ? never : Extract<PrefetchedServerData, { ok: true }>['data'] | null> => {
+  ): Promise<
+    PrefetchedServerData extends never
+      ? never
+      : Extract<PrefetchedServerData, { ok: true }>['data'] | null
+  > => {
     const surfaceError = async (result: Extract<PrefetchedServerData, { ok: false }>) => {
       const { showToast } = await import('./utils/notification.js');
       if (result.useAlert) {
@@ -3647,7 +3677,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Listen for song-saved events from the dialog
   document.addEventListener('song-saved', async (event: Event) => {
-    const customEvent = event as CustomEvent<{ songKey?: string; fileData?: Partial<TroffFileData> }>;
+    const customEvent = event as CustomEvent<{
+      songKey?: string;
+      fileData?: Partial<TroffFileData>;
+    }>;
     const { songKey, fileData } = customEvent.detail ?? {};
     if (!songKey || !fileData) return;
 
@@ -3924,4 +3957,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('loadScreen')?.remove();
 });
-

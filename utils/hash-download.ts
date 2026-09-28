@@ -73,7 +73,7 @@ export async function downloadSongFromHash(
   if (!parsed) {
     alert(
       'Invalid download link. A valid link looks like:\n' +
-        '  https://troff.app/v2.html#123&filename.mp3'
+        '  https://troff.app/#123&filename.mp3'
     );
     return null;
   }

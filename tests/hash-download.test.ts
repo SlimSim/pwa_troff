@@ -171,6 +171,10 @@ describe('downloadSongFromHash', () => {
     const result = await downloadSongFromHash('');
     expect(result).toBeNull();
     expect(mockNdbGet).not.toHaveBeenCalled();
+    // The example URL in the alert must use the new root path (not /v2.html)
+    const alertCall = (window.alert as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as string;
+    expect(alertCall).toContain('https://troff.app/#123&filename.mp3');
+    expect(alertCall).not.toContain('/v2.html');
   });
 
   it('returns file name immediately when song already exists in nDB', async () => {

@@ -1,5 +1,3 @@
-v1.html
-
 <!doctype html>
 <html lang="en-US">
   <head>
@@ -2924,6 +2922,51 @@ v1.html
         </span>
       </div>
     </div>
+
+    <div id="v1PromoteDialog" class="outerDialog noCloseOnClick p-3 hidden">
+      <div class="innerDialog flexCol scroll mh-100">
+        <h2 class="paragraph bold line-height-1_5">
+          This version of Troff is not supported any more.
+        </h2>
+        <p class="paragraph normalSize pt-3">
+          Switch to Troff 2.0 to get <b class="bold">improved mobile design</b>, a new theme and
+          future improvements!
+        </p>
+        <span class="flexRow pt-3">
+          <input
+            type="button"
+            id="v1PromoteToV2"
+            class="regularButton important flexOne"
+            value="Switch to Troff 2.0"
+          />
+          <input
+            type="button"
+            style="background: none"
+            id="v1PromoteContinueV1"
+            class="dialogCancelButton"
+            value="Stay with old version"
+          />
+        </span>
+      </div>
+    </div>
+
+    <script type="module">
+      import { nDB } from './assets/internal/db.js';
+      const raw = nDB.get('TROFF_SETTING_PREFER_VERSION');
+      const pref = raw != null ? raw : null;
+      if (pref == null || pref === 1) {
+        // show for unset or ==1 (nudging)
+        const d = document.getElementById('v1PromoteDialog');
+        if (d) d.classList.remove('hidden');
+      }
+      document.getElementById('v1PromoteToV2')?.addEventListener('click', () => {
+        nDB.set('TROFF_SETTING_PREFER_VERSION', 2);
+        window.location.href = '/' + window.location.hash;
+      });
+      document.getElementById('v1PromoteContinueV1')?.addEventListener('click', () => {
+        nDB.set('TROFF_SETTING_PREFER_VERSION', 1);
+      });
+    </script>
 
     <link
       rel="preload"
