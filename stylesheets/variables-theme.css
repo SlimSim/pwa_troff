@@ -52,6 +52,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-1);
 
   --slider-color: var(--regular-button-color);
+  --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -115,6 +116,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-1);
 
   --slider-color: var(--theme-color);
+  --countdown-overlay-color: var(--on-theme-color);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -179,6 +181,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --slider-color: var(--accent-color-2);
+  --countdown-overlay-color: var(--on-accent-color-2);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -245,6 +248,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --slider-color: var(--regular-button-color);
+  --countdown-overlay-color: var(--on-regular-buton-color);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -309,6 +313,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --slider-color: var(--theme-color);
+  --countdown-overlay-color: var(--theme-color);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -371,6 +376,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-1);
 
   --slider-color: var(--regular-button-color);
+  --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 
   --help-tip-background: var(--secondary-color);
@@ -450,6 +456,7 @@ body[data-mode='dark'] {
   --list-hover-bg: rgba(255, 255, 255, 0.08);
 
   --slider-color: #4a6078;
+  --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 }
 
@@ -502,6 +509,7 @@ body[data-mode='dark'] {
   --list-hover-bg: rgba(255, 255, 255, 0.08);
 
   --slider-color: var(--on-gray-out);
+  --countdown-overlay-color: var(--on-theme-color);
 }
 
 /* ── Col3: Black / Yellow — already dark, darken the grays ────────── */
@@ -548,6 +556,9 @@ body[data-mode='dark'] {
   --text-color: #e0e0e0;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #3a3a3a;
+
+  --slider-color: var(--accent-color-2);
+  --countdown-overlay-color: var(--on-accent-color-2);
 }
 
 /* ── Col4: Gold / White — dark warm tones ─────────────────────────── */
@@ -602,6 +613,9 @@ body[data-mode='dark'] {
   --on-important-button: var(--on-accent-color-1);
 
   --info-indicator-color: var(--accent-color-3);
+
+  --slider-color: var(--regular-button-color);
+  --countdown-overlay-color: var(--accent-color-1);
 }
 
 /* ── Col5: Neon / Bold — already dark, just tighten up ────────────── */
@@ -647,11 +661,23 @@ body[data-mode='dark'] {
   --text-color: #f0f0f0;
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #333333;
+
+  --slider-color: var(--theme-color);
+  --countdown-overlay-color: var(--theme-color);
 }
 
 /* ===================================================================
    LIGHT MODE OVERRIDES — for themes that default to dark
    =================================================================== */
+
+/* ── Col2: Forest / Green — light mode (default is light) ────────────
+   Base [data-theme='col2'] already targets light; this override only
+   darkens the countdown number (--countdown-overlay-color) so it stays readable
+   over the near-white --body-background. No background is added to the
+   overlay per user request. --slider-color is untouched. ─────────── */
+[data-theme='col2'][data-mode='light'] {
+  --countdown-overlay-color: #1b5e20;
+}
 
 /* ── Col3: Black / Yellow — light mode (default is dark) ──────────── */
 [data-theme='col3'][data-mode='light'] {
@@ -703,6 +729,9 @@ body[data-mode='dark'] {
   --accent-color-1: #8a6d00;
   --accent-color-3: #665500;
   --on-toggle-button-active-color: var(--on-accent-color-3);
+
+  --slider-color: var(--accent-color-2);
+  --countdown-overlay-color: var(--on-theme-color);
 }
 
 /* ── Col5: Neon / Bold — light mode (default is dark) ─────────────── */
@@ -755,6 +784,14 @@ body[data-mode='dark'] {
   --accent-color-1: #c8b800;
   --accent-color-2: #009900;
   --accent-color-3: #0000cc;
+
+  --slider-color: var(--theme-color);
+  --countdown-overlay-color: var(--theme-color);
+}
+
+/* ── Col4: Gold / White — light mode (default is light) ──────────── */
+[data-theme='col4'][data-mode='light'] {
+  --countdown-overlay-color: var(--accent-color-3);
 }
 
 /* ── Col6: Ocean / Teal — dark mode (default is light) ────────────── */
@@ -806,5 +843,6 @@ body[data-mode='dark'] {
   --list-hover-bg: rgba(255, 255, 255, 0.08);
 
   --slider-color: #7fbfb4;
+  --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 }

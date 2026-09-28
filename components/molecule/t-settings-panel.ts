@@ -7,6 +7,7 @@ import {
   TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
   TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW,
   TROFF_SETTING_UI_ZOOM_SHOW,
+  TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN,
 } from '../../constants/constants.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
@@ -327,7 +328,7 @@ export class SettingsPanel extends LitElement {
       }
 
       .action-buttons {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        /* grid-template-columns: repeat(3, minmax(0, 1fr));*/
       }
 
       .song-action-buttons {
@@ -398,12 +399,14 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) zoomShow = true;
   @property({ type: Boolean }) playFullSongShow = true;
   @property({ type: Boolean }) loopButtonsShow = true;
+  @property({ type: Boolean }) fullScreenCountdownShow = true;
 
   connectedCallback() {
     super.connectedCallback();
     this.zoomShow = nDB.get(TROFF_SETTING_UI_ZOOM_SHOW) !== false;
     this.playFullSongShow = nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
     this.loopButtonsShow = nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
+    this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
     // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
     import('../../utils/pwa.js')
       .then(({ getInstallState, subscribeToInstallState }) => {
@@ -603,26 +606,22 @@ export class SettingsPanel extends LitElement {
                       >
                       <span class="user-dropdown-name2">Happy training!</span>
                       ${this.authBusy
-                        ? html`<span class="auth-busy"
-                            ><t-loading></t-loading>Signing out…</span
-                          >`
+                        ? html`<span class="auth-busy"><t-loading></t-loading>Signing out…</span>`
                         : html`<t-butt @click=${this._handleSignInClick}>
-                          <t-icon name="logout"></t-icon>
-                          <span style="padding-left: 4px;">Sign out</span>
-                        </t-butt>`}
+                            <t-icon name="logout"></t-icon>
+                            <span style="padding-left: 4px;">Sign out</span>
+                          </t-butt>`}
                     </div>
                   </t-dropdown-button>
                 `
               : ''}
             ${!this.signedIn
               ? this.authBusy
-                ? html`<span class="auth-busy"
-                    ><t-loading></t-loading>Signing in…</span
-                  >`
+                ? html`<span class="auth-busy"><t-loading></t-loading>Signing in…</span>`
                 : html`<t-butt @click=${this._handleSignInClick}>
-                  <t-icon name="login"></t-icon>
-                  <span style="padding-left: 4px;">Sign in</span>
-                </t-butt>`
+                    <t-icon name="login"></t-icon>
+                    <span style="padding-left: 4px;">Sign in</span>
+                  </t-butt>`
               : ''}
             <t-butt ghost class="close-button" @click=${this._handleClose}>
               <t-icon name="chevron-down"></t-icon>
@@ -721,11 +720,7 @@ export class SettingsPanel extends LitElement {
               </div>
             </t-details>
 
-            <t-details
-              title="Visibility"
-              class="settings-width"
-              text="Show or hide song controls."
-            >
+            <t-details title="Visibility" class="settings-width" text="Show or hide song controls.">
               <div class="settings-section">
                 <div class="action-buttons">
                   <t-butt
@@ -766,6 +761,20 @@ export class SettingsPanel extends LitElement {
                     }}
                   >
                     Loop count selector
+                  </t-butt>
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.fullScreenCountdownShow}
+                    @click=${() => {
+                      this.fullScreenCountdownShow = !this.fullScreenCountdownShow;
+                      this._setVisibilitySetting(
+                        TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN,
+                        this.fullScreenCountdownShow
+                      );
+                    }}
+                  >
+                    Full screen countdown
                   </t-butt>
                 </div>
               </div>
@@ -997,7 +1006,10 @@ export class SettingsPanel extends LitElement {
                     Show dev banner
                   </t-butt>
                 </div>
-                <div class="settings-section" style="margin: 0; margin-top: 8px; display: flex; gap: 8px;">
+                <div
+                  class="settings-section"
+                  style="margin: 0; margin-top: 8px; display: flex; gap: 8px;"
+                >
                   <t-butt
                     toggle
                     ellipsis

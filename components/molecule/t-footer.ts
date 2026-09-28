@@ -5,6 +5,8 @@ import '../atom/t-dial.js';
 import '../atom/t-help-tip.js';
 import './t-marker-dialog.js';
 import { audio } from '../../services/audio.js';
+import { nDB } from '../../assets/internal/db.js';
+import { TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN } from '../../constants/constants.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
@@ -24,7 +26,8 @@ export class BottomNav extends LitElement {
   @property({ type: String }) markerDialogSuggestedName = '';
   @property({ type: Boolean }) isPlaying = false;
   @property({ type: Boolean }) isStartingPlayback = false;
-  @property({ type: Number }) playbackCountdown = 0;
+  @property({ type: Number, hasChanged: () => true }) playbackCountdown = 0;
+  @property({ type: Boolean }) fullScreenCountdownShow = true;
   @property({ type: String }) loopTimesLeftLabel = '';
   @property({ type: Number }) pauseBefore = 3;
   @property({ type: Number }) waitBetween = 1;
@@ -34,9 +37,12 @@ export class BottomNav extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
+    window.addEventListener('troff-visibility-changed', this._onVisibilityChanged);
   }
 
   disconnectedCallback() {
+    window.removeEventListener('troff-visibility-changed', this._onVisibilityChanged);
     super.disconnectedCallback();
   }
 
@@ -48,7 +54,7 @@ export class BottomNav extends LitElement {
       z-index: 1000;
       padding: 5px var(--container-padding-x);
       /* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); */
-      // todo: have box-shadow ONLY when the body is scrollable, not the host
+      /* todo: have box-shadow ONLY when the body is scrollable, not the host */
     }
 
     .nav-container {
@@ -118,6 +124,18 @@ export class BottomNav extends LitElement {
     .play-countdown {
       font-size: 0.85em;
       font-weight: 700;
+    }
+
+    .countdown-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      font-size: 6rem;
+      color: var(--countdown-overlay-color, #fff);
     }
 
     .quick-play-button {
@@ -293,7 +311,15 @@ export class BottomNav extends LitElement {
     );
   }
 
+  private _onVisibilityChanged = (event: Event): void => {
+    const customEvent = event as CustomEvent<{ setting: string; value: boolean }>;
+    if (customEvent.detail?.setting === TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) {
+      this.fullScreenCountdownShow = customEvent.detail.value;
+    }
+  };
+
   render() {
+    const showFullScreenCountdown = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
     return html`
       <div class="nav-container">
         <div class="nav-item" @click=${(e: Event) => this._handleNavClick(e, 'info')}>
@@ -484,6 +510,11 @@ export class BottomNav extends LitElement {
           </t-dropdown-button>
         </div>
       </div>
+      ${this.isStartingPlayback && showFullScreenCountdown
+        ? html`<div class="countdown-overlay" data-testid="countdown-overlay">
+            ${this.playbackCountdown}
+          </div>`
+        : ''}
     `;
   }
 }

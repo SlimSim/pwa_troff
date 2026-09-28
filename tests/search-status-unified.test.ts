@@ -58,6 +58,15 @@ function mediaState(el: MediaParent): MediaParentPrivateState {
   return el as unknown as MediaParentPrivateState;
 }
 
+/**
+ * Whitespace-normalized text: Lit templates sometimes split
+ * `showing X out of Y` across lines (`out of\n Y`), so raw
+ * `textContent` contains newlines. Collapse whitespace before asserting.
+ */
+function normalizedText(el: HTMLElement | null): string {
+  return (el?.textContent ?? '').toLowerCase().replace(/\s+/g, ' ');
+}
+
 /** Private lifecycle hooks on MediaParent, for spying in setup. */
 interface MediaParentProtoHooks {
   _loadSongs: () => Promise<void>;
@@ -148,7 +157,7 @@ describe('t-media-parent unified search-status (.no-results for 0 and >0)', () =
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = getClearButton();
     expect(clear).toBeTruthy();
@@ -196,7 +205,7 @@ describe('t-media-parent unified search-status (.no-results for 0 and >0)', () =
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = getClearButton();
     expect(clear).toBeTruthy();
@@ -247,7 +256,7 @@ describe('t-media-parent unified search-status (.no-results for 0 and >0)', () =
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = getClearButton();
     expect(clear).toBeTruthy();
@@ -296,7 +305,7 @@ describe('t-media-parent unified search-status (.no-results for 0 and >0)', () =
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = getClearButton();
     expect(clear).toBeTruthy();
@@ -497,7 +506,7 @@ describe('t-group-list detail unified search-status', () => {
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = noResults?.querySelector('t-butt.no-results-clear') as HTMLElement | null;
     expect(clear).toBeTruthy();
@@ -595,7 +604,7 @@ describe('t-artist-list detail unified search-status', () => {
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = noResults?.querySelector('t-butt.no-results-clear') as HTMLElement | null;
     expect(clear).toBeTruthy();
@@ -692,7 +701,7 @@ describe('t-genre-list detail unified search-status', () => {
 
     const noResults = getNoResults();
     expect(noResults).toBeTruthy();
-    expect((noResults?.textContent ?? '').toLowerCase()).toContain('showing 1 out of 3');
+    expect(normalizedText(noResults)).toContain('showing 1 out of 3');
 
     const clear = noResults?.querySelector('t-butt.no-results-clear') as HTMLElement | null;
     expect(clear).toBeTruthy();

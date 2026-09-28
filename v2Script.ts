@@ -3077,6 +3077,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------- Import dialog for songs that already exist locally (V2) --------
   let importDialog: ImportDialog | null = null;
 
+  // Prefetch state: the server fetch starts when the dialog opens, so
+  // import/merge apply instantly if it already settled, or show loading only
+  // while still in flight. Errors stay deferred until the user picks an
+  // action. `keep` discards the prefetch so a late settlement never surfaces.
+  type PrefetchedServerData =
+    | {
+        ok: true;
+        data: {
+          markers: TroffMarker[];
+          states: string[];
+          info: string;
+          serverId: number;
+          fileUrl: string;
+          duration: number;
+        };
+      }
+    | { ok: false; message: string; useAlert: boolean };
+  let importPrefetchPromise: Promise<PrefetchedServerData> | null = null;
+  let importPrefetchSettled = false;
+  let importPrefetchResult: PrefetchedServerData | null = null;
+  let importPrefetchDiscarded = false;
+
   const openImportDialog = (fileName: string, hashServerId: number) => {
     if (!importDialog) {
       importDialog = document.createElement('t-import-dialog');
@@ -3086,25 +3108,143 @@ document.addEventListener('DOMContentLoaded', () => {
     importDialog.fileName = fileName;
     importDialog.open = true;
 
+    // Start the prefetch immediately (once per dialog open).
+    importPrefetchDiscarded = false;
+    importPrefetchSettled = false;
+    importPrefetchResult = null;
+    importPrefetchPromise = null;
+    void import('./utils/hash-download.js')
+      .then((mod) => {
+        const fetchResult = (
+          mod as unknown as {
+            fetchServerTroffDataResult?: (
+              serverId: number,
+              fileName: string
+            ) => Promise<PrefetchedServerData>;
+          }
+        ).fetchServerTroffDataResult;
+        if (typeof fetchResult !== 'function') return;
+        try {
+          const p = fetchResult(hashServerId, fileName);
+          if (!p || typeof p.then !== 'function') return;
+          importPrefetchPromise = p;
+          p.then(
+            (r) => {
+              if (importPrefetchDiscarded) return;
+              importPrefetchSettled = true;
+              importPrefetchResult = r;
+            },
+            (e: unknown) => {
+              if (importPrefetchDiscarded) return;
+              importPrefetchSettled = true;
+              importPrefetchResult = {
+                ok: false,
+                useAlert: true,
+                message:
+                  e instanceof Error
+                    ? e.message
+                    : 'Could not fetch the song data from the server due to a network error.',
+              };
+            }
+          );
+          p.catch(() => {
+            // Handled via the then() above; avoid unhandled rejection noise.
+          });
+        } catch {
+          // No prefetch; handlers fall back to the legacy fetch below.
+        }
+      })
+      .catch(() => {
+        // No prefetch; handlers fall back to the legacy fetch below.
+      });
+
     const handleAction = (event: Event) => {
       const { action } = (event as CustomEvent).detail as { action: 'import' | 'merge' | 'keep' };
       if (action === 'import') {
-        handleImportNewMarkers(fileName, hashServerId);
+        void handleImportNewMarkers(fileName, hashServerId);
       } else if (action === 'merge') {
-        handleMergeMarkers(fileName, hashServerId);
+        void handleMergeMarkers(fileName, hashServerId);
       } else {
-        handleKeepExistingMarkers(fileName);
+        void handleKeepExistingMarkers(fileName);
       }
     };
 
     importDialog.addEventListener('import-action-selected', handleAction, { once: true });
   };
 
+  /**
+   * Resolve the server data for import/merge, preferring the dialog-open
+   * prefetch: settled → apply instantly with no loading; pending → show
+   * loading until it settles; failed → surface at click time (toast/alert).
+   * Falls back to the legacy fetch when no prefetch exists (e.g. the quiet
+   * fetch is unavailable).
+   */
+  const getImportServerData = async (
+    fileName: string,
+    hashServerId: number
+  ): Promise<PrefetchedServerData extends never ? never : Extract<PrefetchedServerData, { ok: true }>['data'] | null> => {
+    const surfaceError = async (result: Extract<PrefetchedServerData, { ok: false }>) => {
+      const { showToast } = await import('./utils/notification.js');
+      if (result.useAlert) {
+        alert(result.message);
+      } else {
+        showToast(result.message, 'error', 5000);
+      }
+    };
+
+    // Already settled before the click → no loading UI.
+    if (importPrefetchSettled && importPrefetchResult) {
+      const settled = importPrefetchResult;
+      importPrefetchPromise = null;
+      if (!settled.ok) {
+        await surfaceError(settled);
+        return null;
+      }
+      return settled.data;
+    }
+
+    // Still in flight → show loading until it settles.
+    const pending = importPrefetchPromise;
+    if (pending) {
+      const { showLoading } = await import('./utils/notification.js');
+      const ctl = showLoading('Fetching markers from server…');
+      let result: PrefetchedServerData;
+      try {
+        result = await pending;
+      } catch (e: unknown) {
+        result = {
+          ok: false,
+          useAlert: true,
+          message:
+            e instanceof Error
+              ? e.message
+              : 'Could not fetch the song data from the server due to a network error.',
+        };
+      }
+      if (importPrefetchDiscarded) return null;
+      importPrefetchPromise = null;
+      importPrefetchSettled = true;
+      importPrefetchResult = result;
+      if (!result.ok) {
+        ctl.fail(result.message);
+        await surfaceError(result);
+        return null;
+      }
+      ctl.done();
+      return result.data;
+    }
+
+    // No prefetch (unavailable) → legacy behavior with its own UI.
+    const { fetchServerTroffData } = await import('./utils/hash-download.js');
+    return await fetchServerTroffData(hashServerId, fileName);
+  };
+
   // -------- Dialog actions --------
   const handleImportNewMarkers = async (fileName: string, hashServerId: number) => {
-    const { fetchServerTroffData, saveDownloadLinkHistory, buildMarkerJsonStringForHistory } =
-      await import('./utils/hash-download.js');
-    const serverData = await fetchServerTroffData(hashServerId, fileName);
+    const { saveDownloadLinkHistory, buildMarkerJsonStringForHistory } = await import(
+      './utils/hash-download.js'
+    );
+    const serverData = await getImportServerData(fileName, hashServerId);
     if (!serverData) return;
 
     // v1 parity (scriptTroffClass importNew): record the newly seen server
@@ -3130,9 +3270,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleMergeMarkers = async (fileName: string, hashServerId: number) => {
-    const { fetchServerTroffData, saveDownloadLinkHistory, buildMarkerJsonStringForHistory } =
-      await import('./utils/hash-download.js');
-    const serverData = await fetchServerTroffData(hashServerId, fileName);
+    const { saveDownloadLinkHistory, buildMarkerJsonStringForHistory } = await import(
+      './utils/hash-download.js'
+    );
+    const serverData = await getImportServerData(fileName, hashServerId);
     if (!serverData) return;
 
     // v1 parity (scriptTroffClass merge): record the newly seen server
@@ -3222,6 +3363,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleKeepExistingMarkers = async (fileName: string) => {
+    // Discard the prefetch so a late settlement never surfaces UI or writes.
+    importPrefetchDiscarded = true;
+    importPrefetchPromise = null;
     await selectSongFromHash(fileName);
     setUrlToSong(undefined, null); // Clear hash — we chose not to sync with server
   };
