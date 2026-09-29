@@ -48,8 +48,8 @@ describe('t-zoom-info-dialog', () => {
     await element.updateComplete;
 
     expect(element.shadowRoot?.querySelector('.overlay.open')).toBeTruthy();
-    const text = dialogText();
-    // v1 sentence must be preserved verbatim.
+    const text = dialogText().replace(/\s+/g, ' ');
+    // v1 sentence must be preserved verbatim (whitespace-normalized).
     expect(text).toContain(
       "When you press zoom, or 'Z', Troff will zoom to the active playing region, or the purple part of the timeline."
     );

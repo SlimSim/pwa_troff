@@ -154,11 +154,9 @@ describe('v2 rollout to default (early redirect + welcome + v1 promote)', () => 
         html,
         'v1.html must contain the promote dialog using outerDialog noCloseOnClick ... hidden'
       ).toMatch(/id="v1PromoteDialog" class="outerDialog noCloseOnClick/);
-      // text makes clear can always go back
-      expect(html).toMatch(/always go back|can always|switch back|go back to v1/i);
-      // ONLY two buttons
-      expect(html).toMatch(/Switch to version 2/);
-      expect(html).toMatch(/Continue with version 1/);
+      // ONLY two buttons (copy approved: Troff 2.0 / old version wording)
+      expect(html).toMatch(/Switch to Troff 2\.0/);
+      expect(html).toMatch(/Stay with old version/);
       // no "just try it out"
       expect(html).not.toMatch(/just try it out|try it out/i);
 

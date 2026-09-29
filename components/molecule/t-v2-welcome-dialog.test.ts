@@ -53,7 +53,7 @@ describe('t-v2-welcome-dialog', () => {
     await element.updateComplete;
     expect(element.shadowRoot?.querySelector('.overlay.open')).toBeTruthy();
     const text = dialogText().toLowerCase();
-    expect(text).toContain('version 2');
+    expect(text).toMatch(/version 2|2\.0/);
     expect(text).toMatch(/always|back|switch/);
   });
 

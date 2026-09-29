@@ -524,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // v2 default rollout welcome (placed right after settingsPanel setup per spec, inside listener; parent controls .open)
   const pref = nDB.get(TROFF_SETTING_PREFER_VERSION);
   if (pref == null) {
-    localStorage.getItem('millisFirstTimeStartingApp');
     if (nDB.get('millisFirstTimeStartingApp') != null) {
       const dlg = document.getElementById('v2WelcomeDialog') as V2WelcomeDialog | null;
       if (dlg) {
