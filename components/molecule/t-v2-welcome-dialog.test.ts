@@ -65,7 +65,7 @@ describe('t-v2-welcome-dialog', () => {
     expect(buttons.length).toBe(2);
     const labels = buttons.map((b) => (b.textContent ?? '').trim().toLowerCase());
     expect(labels.some((l) => l.includes('continue') || l.includes('stay'))).toBe(true);
-    expect(labels.some((l) => l.includes('switch') || l.includes('back'))).toBe(true);
+    expect(labels.some((l) => l.includes('use old') || l.includes('old version'))).toBe(true);
     // Must not have a third "just try" button
     expect(labels.join(' ')).not.toMatch(/try it|just try/);
   });
@@ -100,7 +100,7 @@ describe('t-v2-welcome-dialog', () => {
     await element.updateComplete;
 
     const switchBtn = getButtons().find((b) =>
-      (b.textContent ?? '').toLowerCase().includes('switch')
+      (b.textContent ?? '').toLowerCase().includes('old')
     );
     expect(switchBtn, 'switch-back button must exist').toBeTruthy();
     switchBtn!.click();

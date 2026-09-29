@@ -70,13 +70,20 @@ export class V2WelcomeDialog extends LitElement {
       padding: 16px 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
       flex: 1;
       overflow-y: auto;
     }
 
     .dialog-body p {
       margin: 0;
+    }
+
+    .dialog-body ul {
+      margin-top: 12px
+    }
+
+    .dialog-body ul li {
+      padding-top: 4px;
     }
 
     .dialog-footer {
@@ -86,6 +93,25 @@ export class V2WelcomeDialog extends LitElement {
       border-top: 1px solid rgba(0, 0, 0, 0.1);
       justify-content: flex-end;
       flex-wrap: wrap;
+    }
+
+    .small {
+      font-size: 0.75rem;
+    }
+
+    .only-wide {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .only-small {
+        display: none;
+      }
+
+      .only-wide {
+        display: inline;
+      }
+
     }
   `;
 
@@ -144,19 +170,29 @@ export class V2WelcomeDialog extends LitElement {
     return html`
       <div
         class="overlay ${this.open ? 'open' : ''}"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="v2-welcome-title"
         @click=${this._handleOverlayClick}
         @keydown=${this._handleKeydown}
       >
         <div class="dialog">
           <div class="dialog-header">
-            <h2 class="dialog-title">Welcome to Troff 2.0!</h2>
+            <h2 id="v2-welcome-title" class="dialog-title">Welcome to Troff 2.0!</h2>
           </div>
 
           <div class="dialog-body">
-            <p>Troff now has <strong>better mobile design!</strong></p>
-            <p>Your songs are found in the header!</p>
-            <p>Settings are in the footer (or to the left on desktop).</p>
-            <p>You can pinch to zoom on the time line.</p>
+            <p>Troff has a new design with <strong>improved mobile support</strong>.</p>
+            <ul>
+              <li>Your songs are in the header.</li>
+              <li>
+                <span class="only-small">Settings are in the footer on mobile.</span>
+                <span class="only-wide">Settings are to the left on desktop.</span>
+              </li>
+              <li>Pinch the timeline to zoom.</li>
+              <li>Your songs and settings are kept when switching versions.</li>
+            </ul>
+            <p class="small">You can switch back to the old version at any time.</p>
           </div>
 
           <div class="dialog-footer">
@@ -164,8 +200,7 @@ export class V2WelcomeDialog extends LitElement {
               >Continue</t-butt
             >
             <t-butt ghost @click=${this._handleSwitchBack}
-              >Switch to<br />
-              old version</t-butt
+              >Use old<br />version</t-butt
             >
           </div>
         </div>
