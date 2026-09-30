@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { property } from 'lit/decorators.js';
+import './t-loading.js';
 
 export class TIcon extends LitElement {
   static styles = css`
@@ -52,19 +53,6 @@ export class TIcon extends LitElement {
       color: inherit;
       font-weight: 500;
     }
-
-    .spinner {
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
   `;
 
   @property({ type: String }) name = '';
@@ -107,15 +95,7 @@ export class TIcon extends LitElement {
     if (!this._svgContent) {
       return html`
         <div class="icon-wrapper">
-          <svg
-            class="spinner"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10" stroke-dasharray="10" stroke-linecap="round" />
-          </svg>
+          <t-loading></t-loading>
         </div>
         ${this.label || this.unit ? html`<div class="label">${this.label}${this.unit}</div>` : ''}
       `;

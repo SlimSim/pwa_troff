@@ -230,7 +230,113 @@
         />
         <h1>Troff</h1>
         <h2>- training with music</h2>
-        <p>loading...</p>
+        <p id="loadScreenMessage">loading... <span></span></p>
+        <div style="padding: 20px; display: none" id="loadScreenButtonParent">
+          <button id="loadScreenUpdate" type="button" title="Update and reload the app">
+            Reload
+          </button>
+          <button id="loadScreenReset" type="button" title="Clear all saved info">
+            Hard reset
+          </button>
+        </div>
+
+        <button
+          style="display: none"
+          id="loadScreenConfirmReset"
+          type="button"
+          title="Clear all saved info"
+        >
+          Confirm Hard Reset? <br />
+          This will delete all locally stored songs, metadata, settings, caches and the app's
+          Service Worker.
+        </button>
+        <script async>
+          setTimeout(() => {
+            document
+              .getElementById('loadScreenButtonParent')
+              ?.style.setProperty('display', 'block');
+          }, 3000);
+          fetch('/manifest.json')
+            .then((res) => res.json())
+            .then((manifest) => {
+              document.getElementById('loadScreenMessage')?.textContent =
+                'loading version ' + manifest.version;
+            })
+            .catch((error) => {
+              document.getElementById('loadScreenMessage')?.textContent =
+                "loading... <can't get version number>";
+            });
+          function updateApp() {
+            import('./utils/pwa.js').then(({ updatePWA }) => {
+              updatePWA();
+            });
+          }
+          document.getElementById('loadScreenUpdate')?.addEventListener('click', () => {
+            updateApp();
+          });
+          document.getElementById('loadScreenReset')?.addEventListener('click', () => {
+            document.getElementById('loadScreenConfirmReset')?.style.display = 'block';
+            document.getElementById('loadScreenReset')?.style.display = 'none';
+          });
+          async function hardReset() {
+            try {
+              // 1. Clear localStorage
+              localStorage.clear();
+
+              // 2. Clear sessionStorage
+              sessionStorage.clear();
+
+              // 3. Delete all IndexedDB databases
+              if (indexedDB.databases) {
+                const TROFF_DATABASES = ['music-file-storage', 'troff-settings'];
+                for (const name of TROFF_DATABASES) {
+                  await indexedDB.deleteDatabase(name);
+                }
+
+                await Promise.all(
+                  databases
+                    .filter((db) => db.name)
+                    .map(
+                      (db) =>
+                        new Promise((resolve, reject) => {
+                          const request = indexedDB.deleteDatabase(db.name);
+
+                          request.onsuccess = resolve;
+                          request.onerror = reject;
+                          request.onblocked = () => {
+                            console.warn(`IndexedDB deletion blocked: ${db.name}`);
+                            resolve();
+                          };
+                        })
+                    )
+                );
+              }
+
+              // 4. Clear Cache Storage
+              if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+              }
+
+              // 5. Unregister Service Workers
+              if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+
+                await Promise.all(registrations.map((registration) => registration.unregister()));
+              }
+
+              // 6. Reload
+              window.location.reload();
+            } catch (error) {
+              console.error('Hard reset failed:', error);
+
+              // Still give the user a way forward
+              window.location.reload();
+            }
+          }
+
+          document.getElementById('loadScreenConfirmReset')?.addEventListener('click', hardReset);
+        </script>
       </div>
       <div class="f2"></div>
     </div>
@@ -261,11 +367,17 @@
             important
             round
             id="buttPlayUiButtonParent"
-            class="fixToBottomRightOnMobile hideOnPicture"
+            class="fixToBottomRightOnMobile hideOnPicture small"
             title="Move to selected marker and play song (key: enter or space)"
           >
-            <t-icon id="buttPlayUiButtonPlay" class="font-size-relative-8" name="play"></t-icon>
             <t-icon
+              large
+              id="buttPlayUiButtonPlay"
+              class="font-size-relative-8"
+              name="play"
+            ></t-icon>
+            <t-icon
+              large
               id="buttPlayUiButtonPause"
               class="font-size-relative-8 hidden"
               name="pause"
@@ -2653,6 +2765,21 @@
               title="Show the environment banner under the title area"
               value="Show env banner"
             />
+            <br />
+            <input
+              class="likeLink"
+              type="button"
+              id="preferVersionButton"
+              title="Switch to the new Version 2 of Troff (your preference will be saved)"
+              value="Prefer V2"
+            />
+            <script type="module">
+              import { nDB } from './assets/internal/db.js';
+              document.getElementById('preferVersionButton').addEventListener('click', () => {
+                nDB.set('TROFF_SETTING_PREFER_VERSION', 2);
+                window.location.href = '/v2.html' + window.location.hash;
+              });
+            </script>
           </div>
         </div>
         <input
@@ -2795,6 +2922,59 @@
         </span>
       </div>
     </div>
+
+    <div id="v1PromoteDialog" class="outerDialog noCloseOnClick p-3 hidden">
+      <div class="innerDialog flexCol scroll mh-100">
+        <h2 class="paragraph bold line-height-1_5">
+          This version of Troff is not supported any more.
+        </h2>
+        <p class="paragraph normalSize pt-3">
+          Switch to Troff 2.0 to get a new design with
+          <b class="bold">improved mobile support</b>
+          and future improvements!
+        </p>
+        <ul class="normal p-3">
+          <li class="pb-3">- Your songs and settings are kept when switching versions.</li>
+          <li class="pb-3">- Your songs are found in the header.</li>
+          <li class="pb-3">- Settings are found in the footer on mobile and to the left on desktop.</li>
+          <li>- You can pinch the timeline to zoom.</li>
+        </ul>
+        <p class="small">You can switch back to the old version at any time.</p>
+        <span class="flexRow pt-3">
+          <input
+            type="button"
+            id="v1PromoteToV2"
+            class="regularButton important flexOne"
+            value="Switch to Troff 2.0"
+          />
+          <input
+            type="button"
+            style="background: none"
+            id="v1PromoteContinueV1"
+            class="dialogCancelButton"
+            value="Stay with old version"
+          />
+        </span>
+      </div>
+    </div>
+
+    <script type="module">
+      import { nDB } from './assets/internal/db.js';
+      const raw = nDB.get('TROFF_SETTING_PREFER_VERSION');
+      const pref = raw != null ? raw : null;
+      if (pref == null || pref === 1) {
+        // show for unset or ==1 (nudging)
+        const d = document.getElementById('v1PromoteDialog');
+        if (d) d.classList.remove('hidden');
+      }
+      document.getElementById('v1PromoteToV2')?.addEventListener('click', () => {
+        nDB.set('TROFF_SETTING_PREFER_VERSION', 2);
+        window.location.href = '/' + window.location.hash;
+      });
+      document.getElementById('v1PromoteContinueV1')?.addEventListener('click', () => {
+        nDB.set('TROFF_SETTING_PREFER_VERSION', 1);
+      });
+    </script>
 
     <link
       rel="preload"

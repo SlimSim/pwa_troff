@@ -289,7 +289,6 @@ describe('v2Script onEnded race condition with loop transition', () => {
 
     await bootWithAudio(audioEl, footer);
 
-    const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
     const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
 
     // ── Step 1: Create a pending playback via the loop transition, then ───

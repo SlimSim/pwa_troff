@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './t-number-label.js';
 import './t-icon.js';
+import './t-loading.js';
 
 @customElement('t-media')
 export class MediaItem extends LitElement {
@@ -123,6 +124,10 @@ export class MediaItem extends LitElement {
       object-fit: cover;
     }
 
+    .album-art t-loading {
+      --t-loading-size: 1.5rem;
+    }
+
     /* Info Column */
     .info-column {
       display: flex;
@@ -182,6 +187,26 @@ export class MediaItem extends LitElement {
       font-size: 0.95rem;
       font-weight: 500;
       line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .media-title .title-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .syncing-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      flex-shrink: 0;
+      --t-loading-size: 1em;
     }
 
     .media-details {
@@ -209,6 +234,18 @@ export class MediaItem extends LitElement {
       align-self: center;
       background: none;
       display: flex;
+    }
+
+    /* Slim mode — compact rows for management lists */
+    :host([slim]) .media-container {
+      padding: 6px 8px 4px;
+      gap: 6px;
+    }
+
+    :host([slim]) .album-art {
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
     }
 
     /* Mobile responsive adjustments */
@@ -265,9 +302,40 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
   @property({ type: Boolean }) hideEditButton = false;
+  @property({ type: Boolean, reflect: true }) slim = false;
   @property({ type: Boolean }) downloaded = true;
   /** 0-100 = downloading with progress, -1 = waiting in queue, undefined/missing = done */
   @property({ type: Number }) downloadProgress = -1;
+  /**
+   * -2 = not tracked/done, 0-100 = uploading with progress.
+   * -1 renders "Pending upload", but t-media-parent treats -1 as a clear
+   * sentinel and never stores it — so that branch is currently unreachable
+   * in production (kept for future producers; covered by unit test).
+   */
+  @property({ type: Number }) uploadProgress = -2;
+  /** Whether a Firebase metadata sync for this song is in progress (badge). */
+  @property({ type: Boolean }) syncing = false;
+
+  private _boundSyncStatusHandler?: (event: Event) => void;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._boundSyncStatusHandler = (event: Event) => {
+      const detail = (event as CustomEvent<{ songKey?: string; syncing?: boolean }>).detail;
+      if (detail && typeof detail.syncing === 'boolean' && detail.songKey === this.songKey) {
+        this.syncing = detail.syncing;
+      }
+    };
+    document.addEventListener('song-sync-status', this._boundSyncStatusHandler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._boundSyncStatusHandler) {
+      document.removeEventListener('song-sync-status', this._boundSyncStatusHandler);
+      this._boundSyncStatusHandler = undefined;
+    }
+  }
 
   private _handleEditClick(event: Event) {
     event.stopPropagation();
@@ -397,6 +465,9 @@ export class MediaItem extends LitElement {
   render() {
     const starData = this._generateStar(this.rating);
     const { text, hasMoreToShow } = this._getFormattedDetailsWithComment();
+    const syncingBadge = this.syncing
+      ? html`<span class="syncing-badge"><t-loading label="Syncing"></t-loading> syncing</span>`
+      : '';
 
     return html`
       <div
@@ -406,9 +477,11 @@ export class MediaItem extends LitElement {
         @click=${this._handleClick}
       >
         <div class="album-art">
-          ${this.albumArt
-            ? html`<img src="${this.albumArt}" alt="Album art" />`
-            : html`<t-icon name="${this.isVideo ? 'movie-tape' : 'note'}"></t-icon>`}
+          ${this.downloaded === false
+            ? html`<t-loading></t-loading>`
+            : this.albumArt
+              ? html`<img src="${this.albumArt}" alt="Album art" />`
+              : html`<t-icon name="${this.isVideo ? 'movie-tape' : 'note'}"></t-icon>`}
         </div>
 
         <div class="info-column">
@@ -426,7 +499,7 @@ export class MediaItem extends LitElement {
         </div>
 
         <div class="details-column">
-          <div class="media-title">${this.title}</div>
+          <div class="media-title"><span class="title-text">${this.title}</span>${syncingBadge}</div>
           <div class="media-details">
             ${text}
             ${hasMoreToShow && !this.expanded
@@ -451,19 +524,31 @@ export class MediaItem extends LitElement {
               <t-icon name="edit"></t-icon>
             </t-butt>`
           : ''}
-        ${!this.downloaded
+        ${this.uploadProgress >= -1
           ? html`<div class="download-progress-bar">
               <div
                 class="fill"
-                style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"
+                style="width: ${this.uploadProgress > 0 ? this.uploadProgress : 0}%"
               ></div>
               <span class="progress-label">
-                ${this.downloadProgress >= 0
-                  ? `Downloading ${this.downloadProgress}%`
-                  : 'Pending download'}
+                ${this.uploadProgress >= 0
+                  ? `Uploading ${this.uploadProgress}%`
+                  : 'Pending upload'}
               </span>
             </div>`
-          : ''}
+          : !this.downloaded
+            ? html`<div class="download-progress-bar">
+                <div
+                  class="fill"
+                  style="width: ${this.downloadProgress > 0 ? this.downloadProgress : 0}%"
+                ></div>
+                <span class="progress-label">
+                  ${this.downloadProgress >= 0
+                    ? `Downloading ${this.downloadProgress}%`
+                    : 'Pending download'}
+                </span>
+              </div>`
+            : ''}
       </div>
     `;
   }

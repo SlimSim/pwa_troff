@@ -7,6 +7,7 @@ import '../atom/t-input.js';
 import './t-detail-header.js';
 import './t-header-actions.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
+import { filterTracks } from '../../utils/media-search.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
 
 // Re-export so group-list can double as barrel if needed
@@ -112,7 +113,8 @@ export class GroupList extends LitElement {
     }
 
     /* Delete button overlaid on top of t-media, right-aligned */
-    .track-remove-overlay {
+    .track-remove-overlay,
+    .track-add-overlay {
       position: absolute;
       right: 4px;
       top: 0;
@@ -123,20 +125,33 @@ export class GroupList extends LitElement {
       transition: opacity 0.15s;
     }
 
-    .track-remove-overlay:hover {
+    .track-remove-overlay:hover,
+    .track-add-overlay:hover {
       opacity: 1;
     }
 
     /* Add songs section */
     .add-songs-section {
       padding: 12px 16px;
+      padding-bottom: 0;
       border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
+      flex: 2 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .add-songs-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     .add-songs-label {
       font-size: 0.85rem;
       font-weight: 600;
-      margin-bottom: 8px;
       opacity: 0.8;
     }
 
@@ -145,31 +160,18 @@ export class GroupList extends LitElement {
     }
 
     .add-songs-list {
-      max-height: 200px;
+      max-height: 320px;
       overflow-y: auto;
+      min-height: 0;
       border: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.15));
       border-radius: 4px;
       padding: 4px;
     }
 
-    .add-songs-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 8px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      transition: background-color 0.15s;
-    }
-
-    .add-songs-item:hover {
-      background-color: var(--list-hover-bg, rgba(255, 255, 255, 0.1));
-    }
-
-    .add-songs-item.added {
-      opacity: 0.4;
-      pointer-events: none;
+    .add-songs-count {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      padding: 4px 0;
     }
 
     .empty-text {
@@ -188,8 +190,38 @@ export class GroupList extends LitElement {
     .manage-toggle-wrap {
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
       padding: 8px 16px;
-      border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
+    }
+
+    :host(.managing) {
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .detail-view.managing {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .detail-view.managing .manage-toggle-wrap {
+      flex-shrink: 0;
+    }
+
+    .manage-tracks {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .detail-view.managing .add-songs-list {
+      flex: 1;
+      max-height: none;
     }
 
     /* Mobile responsive adjustments */
@@ -216,6 +248,7 @@ export class GroupList extends LitElement {
   @property({ type: Array }) groups: Group[] = [];
   @property({ type: String }) currentSongKey = '';
   @property({ type: Object }) downloadProgressMap: Record<string, number> = {};
+  @property({ type: Object }) uploadProgressMap: Record<string, number> = {};
 
   /** Index of the highlighted item in the list view (-1 = none). */
   @property({ type: Number }) highlightedIndex = -1;
@@ -244,6 +277,30 @@ export class GroupList extends LitElement {
 
   /** Index of the highlighted track in filtered results (-1 = none). */
   @state() private _highlightedIndex = -1;
+
+  /** Whether a group save/sync is in progress (forwards to the detail header badge). */
+  @state() private _groupSyncing = false;
+
+  private _boundSyncStatusHandler?: (event: Event) => void;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._boundSyncStatusHandler = (event: Event) => {
+      const detail = (event as CustomEvent<{ syncing: boolean }>).detail;
+      if (detail && typeof detail.syncing === 'boolean') {
+        this._groupSyncing = detail.syncing;
+      }
+    };
+    document.addEventListener('group-sync-status', this._boundSyncStatusHandler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._boundSyncStatusHandler) {
+      document.removeEventListener('group-sync-status', this._boundSyncStatusHandler);
+      this._boundSyncStatusHandler = undefined;
+    }
+  }
 
   /** Resolve a legacy class-name colour (e.g. `bg-red-3`) to a CSS-safe value. */
   private _cssColor(c: string | undefined): string {
@@ -468,6 +525,9 @@ export class GroupList extends LitElement {
         highlighted.scrollIntoView({ block: 'nearest' });
       }
     }
+
+    const isManaging = this._selectedGroupKey !== '' && this._songManagementOpen;
+    this.classList.toggle('managing', isManaging);
   }
 
   /** Songs from `tracks` that are NOT already in the selected group. */
@@ -476,13 +536,9 @@ export class GroupList extends LitElement {
     if (!selectedGroup) return [];
 
     const inGroup = new Set(selectedGroup.songs.map((s) => s.fullPath));
-    const query = this._addSongQuery.trim().toLowerCase();
+    const available = this.tracks.filter((t) => !inGroup.has(t.songKey));
 
-    return this.tracks.filter((t) => {
-      if (inGroup.has(t.songKey)) return false;
-      if (!query) return true;
-      return (t.title || '').toLowerCase().includes(query);
-    });
+    return filterTracks(available, this._addSongQuery);
   }
 
   render() {
@@ -491,6 +547,8 @@ export class GroupList extends LitElement {
 
     if (isDetailView && selectedGroup) {
       const availableSongs = this._getAvailableSongs();
+      const inGroupKeys = new Set(selectedGroup.songs.map((s) => s.fullPath));
+      const totalAvailable = this.tracks.filter((t) => !inGroupKeys.has(t.songKey)).length;
       const infoText = selectedGroup.info || '';
       const trackQuery = this._groupTrackSearch.trim().toLowerCase();
       const filteredTracks = trackQuery
@@ -499,13 +557,92 @@ export class GroupList extends LitElement {
           )
         : selectedGroup.tracks;
 
+      const inGroupContent = html`
+        ${filteredTracks.map(
+          (track, index) => html`
+            <div class="track-row">
+              <t-media
+                .active=${track.songKey === this.currentSongKey}
+                ?highlighted=${index === this._highlightedIndex}
+                title=${track.title}
+                artist=${track.artist}
+                album=${track.album}
+                genre=${track.genre}
+                year=${track.year}
+                comment=${track.comment}
+                duration=${track.duration}
+                .rating=${track.rating}
+                tempo=${track.tempo}
+                albumArt=${track.albumArt}
+                .isVideo=${track.isVideo}
+                .playsMonth=${track.playsMonth}
+                .playsTotal=${track.playsTotal}
+                .songKey=${track.songKey}
+                .hideEditButton=${this._songManagementOpen}
+                .downloaded=${track.downloaded !== false}
+                .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
+                .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
+              ></t-media>
+              ${this._songManagementOpen
+                ? html`
+                    <div class="track-remove-overlay">
+                      <t-butt
+                        icon
+                        confirm
+                        confirmText="Remove?"
+                        @click=${() => this._handleRemoveSong(track.songKey)}
+                        title="Remove from group"
+                      >
+                        <t-icon name="delete"></t-icon>
+                      </t-butt>
+                    </div>
+                  `
+                : ''}
+            </div>
+          `
+        )}
+        ${filteredTracks.length === 0 && !trackQuery && !this._songManagementOpen
+          ? html`<div class="empty-text" style="padding: 16px;">No songs in this group.</div>`
+          : ''}
+        ${filteredTracks.length === 0 && !trackQuery && this._songManagementOpen
+          ? html`<div class="empty-text" style="padding: 16px;">
+              No songs in this group yet. Add some below!
+            </div>`
+          : ''}
+        ${filteredTracks.length === 0 && trackQuery
+          ? html`
+              <div class="no-results">
+                <div class="no-results-text">No songs match "${this._groupTrackSearch.trim()}".</div>
+                <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                  Clear search
+                </t-butt>
+              </div>
+            `
+          : ''}
+        ${trackQuery && filteredTracks.length > 0
+          ? html`
+              <div class="no-results">
+                <div class="no-results-text">
+                  showing ${filteredTracks.length} out of ${selectedGroup.tracks.length}
+                </div>
+                <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                  Show all
+                </t-butt>
+              </div>
+            `
+          : ''}
+      `;
+
       return html`
-        <div class="detail-view">
+        <div class="detail-view${this._songManagementOpen ? ' managing' : ''}">
           <t-detail-header
-            entityName=${selectedGroup.name}
-            icon=${(selectedGroup.icon ?? '').replace(/^fa-/, '')}
-            infoText=${infoText}
-            .sharedWithCount=${selectedGroup.owners?.length ?? 0}
+            entityName=${this._songManagementOpen
+              ? `Add / remove songs to ${selectedGroup.name}`
+              : selectedGroup.name}
+            .syncing=${this._groupSyncing}
+            icon=${this._songManagementOpen ? '' : (selectedGroup.icon ?? '').replace(/^fa-/, '')}
+            infoText=${this._songManagementOpen ? '' : infoText}
+            .sharedWithCount=${this._songManagementOpen ? 0 : (selectedGroup.owners?.length ?? 0)}
             countLabel="songs"
             count=${selectedGroup.tracks.length}
             headerColor=${selectedGroup.color ? this._cssColor(selectedGroup.color) : ''}
@@ -516,13 +653,13 @@ export class GroupList extends LitElement {
           >
             <t-header-actions
               slot="actions"
-              addIcon="note-plus"
+              addIcon=${this._songManagementOpen ? '' : 'note-plus'}
               addTitle="Add song to group"
               searchPlaceholder="Search songs…"
                searchValue=${this._groupTrackSearch}
                ?isSearchFocused=${this._isGroupSearchFocused}
                ?narrow=${true}
-               ?showEdit=${true}
+               ?showEdit=${!this._songManagementOpen}
               editTitle="Edit group"
               @add-click=${this._handleAddSongToGroup}
               @search-input=${this._handleGroupSearchInput}
@@ -532,79 +669,29 @@ export class GroupList extends LitElement {
               @edit-click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
             >
               <!-- re-project sort from parent into the single actions element -->
-              <slot slot="sort" name="sort-controls"></slot>
+              ${this._songManagementOpen
+                ? ''
+                : html`<slot slot="sort" name="sort-controls"></slot>`}
             </t-header-actions>
           </t-detail-header>
 
           <!-- Current songs: with delete overlay when management is open -->
-          ${filteredTracks.map(
-            (track, index) => html`
-              <div class="track-row">
-                <t-media
-                  .active=${track.songKey === this.currentSongKey}
-                  ?highlighted=${index === this._highlightedIndex}
-                  title=${track.title}
-                  artist=${track.artist}
-                  album=${track.album}
-                  genre=${track.genre}
-                  year=${track.year}
-                  comment=${track.comment}
-                  duration=${track.duration}
-                  .rating=${track.rating}
-                  tempo=${track.tempo}
-                  albumArt=${track.albumArt}
-                  .isVideo=${track.isVideo}
-                  .playsMonth=${track.playsMonth}
-                  .playsTotal=${track.playsTotal}
-                  .songKey=${track.songKey}
-                  .hideEditButton=${this._songManagementOpen}
-                  .downloaded=${track.downloaded !== false}
-                  .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
-                ></t-media>
-                ${this._songManagementOpen
-                  ? html`
-                      <div class="track-remove-overlay">
-                        <t-butt
-                          icon
-                          confirm
-                          confirmText="Remove?"
-                          @click=${() => this._handleRemoveSong(track.songKey)}
-                          title="Remove from group"
-                        >
-                          <t-icon name="delete"></t-icon>
-                        </t-butt>
-                      </div>
-                    `
-                  : ''}
-              </div>
-            `
-          )}
-          ${filteredTracks.length === 0 && !trackQuery && !this._songManagementOpen
-            ? html`<div class="empty-text" style="padding: 16px;">No songs in this group.</div>`
-            : ''}
-          ${filteredTracks.length === 0 && !trackQuery && this._songManagementOpen
-            ? html`<div class="empty-text" style="padding: 16px;">
-                No songs in this group yet. Add some below!
-              </div>`
-            : ''}
-          ${filteredTracks.length === 0 && trackQuery
-            ? html`
-                <div class="no-results">
-                  <div class="no-results-text">
-                    No songs match "${this._groupTrackSearch.trim()}".
-                  </div>
-                  <t-butt class="no-results-clear" slim @click=${this._clearDetailSearch}>
-                    Clear search
-                  </t-butt>
-                </div>
-              `
-            : ''}
+          ${this._songManagementOpen
+            ? html`<div class="manage-tracks">${inGroupContent}</div>`
+            : inGroupContent}
 
           <!-- Add songs section + toggle at the bottom -->
           ${this._songManagementOpen
             ? html`
                 <div class="add-songs-section">
-                  <div class="add-songs-label">Add songs</div>
+                  <div class="add-songs-header">
+                    <div class="add-songs-label">Add songs</div>
+                    ${availableSongs.length > 0
+                      ? html`<div class="add-songs-count">
+                          showing ${availableSongs.length} of ${totalAvailable} songs
+                        </div>`
+                      : ''}
+                  </div>
                   <t-input
                     class="add-songs-search"
                     .value=${this._addSongQuery}
@@ -623,15 +710,50 @@ export class GroupList extends LitElement {
                     : ''}
                   ${availableSongs.length > 0
                     ? html`
-                        <div class="add-songs-list">
+                        <div
+                          class="add-songs-list"
+                          @media-selected=${(e: Event) => e.stopPropagation()}
+                          @pending-song-clicked=${(e: Event) => e.stopPropagation()}
+                        >
                           ${availableSongs.map(
                             (s) => html`
                               <div
-                                class="add-songs-item"
+                                class="track-row add-songs-row"
                                 @click=${() => this._handleAddSong(s.songKey, s.title)}
                               >
-                                <span>${s.title}</span>
-                                <t-icon name="note-plus"></t-icon>
+                                <t-media
+                                  ?slim=${true}
+                                  title=${s.title}
+                                  artist=${s.artist}
+                                  album=${s.album}
+                                  genre=${s.genre}
+                                  year=${s.year}
+                                  comment=${s.comment}
+                                  duration=${s.duration}
+                                  .rating=${s.rating}
+                                  tempo=${s.tempo}
+                                  albumArt=${s.albumArt}
+                                  .isVideo=${s.isVideo}
+                                  .playsMonth=${s.playsMonth}
+                                  .playsTotal=${s.playsTotal}
+                                  .songKey=${s.songKey}
+                                  .hideEditButton=${true}
+                                  .downloaded=${s.downloaded !== false}
+                                  .downloadProgress=${this.downloadProgressMap[s.songKey] ?? -2}
+                                  .uploadProgress=${this.uploadProgressMap[s.songKey] ?? -2}
+                                ></t-media>
+                                <div class="track-add-overlay">
+                                  <t-butt
+                                    icon
+                                    title="Add to group"
+                                    @click=${(e: Event) => {
+                                      e.stopPropagation();
+                                      this._handleAddSong(s.songKey, s.title);
+                                    }}
+                                  >
+                                    <t-icon name="note-plus"></t-icon>
+                                  </t-butt>
+                                </div>
                               </div>
                             `
                           )}

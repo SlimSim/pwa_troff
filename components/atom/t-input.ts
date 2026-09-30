@@ -20,7 +20,6 @@ export class TInput extends LitElement {
       font-family: sans-serif;
       font-size: 14px;
       font-weight: 500;
-      color: var(--on-secondary-color, rgb(50, 50, 50));
       margin-bottom: 2px;
       text-align: left;
     }

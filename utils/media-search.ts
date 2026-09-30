@@ -67,7 +67,7 @@ export function filterTracks(tracks: TrackLike[], query: string): TrackLike[] {
 
 function matchesTrackSearch(track: TrackLike, needle: string): boolean {
   return (
-    track.title.toLowerCase().includes(needle) ||
+    strIncludes(track.title, needle) ||
     strIncludes(track.artist, needle) ||
     strIncludes(track.genre, needle) ||
     strIncludes(track.album, needle) ||

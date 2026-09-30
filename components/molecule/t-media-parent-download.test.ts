@@ -3,6 +3,17 @@ import { MediaParent } from './t-media-parent.js';
 import * as firebaseGetter from '../../utils/firebase-getter.js';
 import * as notification from '../../utils/notification.js';
 
+// ---------------------------------------------------------------------------
+// Mock the shared album-art helper so the call site after cache.put can be
+// asserted. (Factory-only mock — no import of the path, the module does not
+// exist yet while the helper is being implemented.)
+// ---------------------------------------------------------------------------
+
+const extractAlbumArtSpy = vi.hoisted(() => vi.fn(async (_songKey: string) => {}));
+vi.mock('../../utils/album-art.js', () => ({
+  extractAlbumArt: extractAlbumArtSpy,
+}));
+
 describe('t-media-parent _downloadSong stale-token retry (403)', () => {
   let element: MediaParent;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -14,6 +25,7 @@ describe('t-media-parent _downloadSong stale-token retry (403)', () => {
     'https://firebasestorage.googleapis.com/v0/b/troff-prod.appspot.com/o/TroffFiles%2Fabc123?alt=media&token=fresh-token';
 
   beforeEach(() => {
+    extractAlbumArtSpy.mockClear();
     vi.spyOn(MediaParent.prototype as unknown as { _loadSongs: () => Promise<void> }, '_loadSongs').mockResolvedValue(undefined);
 
     element = new MediaParent();
@@ -85,6 +97,31 @@ describe('t-media-parent _downloadSong stale-token retry (403)', () => {
     // Retry success follows the existing success path.
     expect(result).toBe(true);
     expect(song.downloaded).toBe(true);
+  });
+
+  it('calls extractAlbumArt after caching the downloaded file', async () => {
+    // Isolate from icon fetches sharing the same global mock (see above).
+    await element.updateComplete;
+    fetchMock.mockClear();
+    fetchMock.mockImplementation(async (input: unknown) => {
+      const url = String(input);
+      if (url === freshUrl) return new Response('audio data', { status: 200 });
+      return new Response('', { status: 200 });
+    });
+
+    const song = {
+      songKey: 'album-art-song',
+      title: 'Album Art Song',
+      fileUrl: freshUrl,
+      downloaded: false,
+    };
+
+    const result = await (element as unknown as { _downloadSong: (s: unknown) => Promise<boolean> })._downloadSong(song);
+
+    // File reached the song cache, then the shared ID3 album-art helper ran
+    expect(result).toBe(true);
+    expect(cachePutSpy).toHaveBeenCalledWith('album-art-song', expect.any(Response));
+    expect(extractAlbumArtSpy).toHaveBeenCalledWith('album-art-song');
   });
 
   it('returns false and shows an error toast when retry still fails', async () => {

@@ -3,6 +3,8 @@ description: Main orchestrator agent for Troff. Manages the other agents!
 mode: primary
 ---
 
+Start by reading agents.md in the project root so you understand the project.
+
 Pipeline for a new feature:
 
 1. Invoke @test-writer with the feature spec.

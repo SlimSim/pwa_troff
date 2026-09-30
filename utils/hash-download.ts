@@ -5,6 +5,7 @@ import { getFirestore, getStorageHandle } from './firebase-getter.js';
 import { normalizeMarkerTime } from './marker-actions.js';
 import { showToast } from './notification.js';
 import { safeDecodeURIComponent, toSongKey } from './utils.js';
+import { extractAlbumArt } from './album-art.js';
 import type {
   TroffData,
   TroffMarker,
@@ -72,7 +73,7 @@ export async function downloadSongFromHash(
   if (!parsed) {
     alert(
       'Invalid download link. A valid link looks like:\n' +
-        '  https://troff.app/v2.html#123&filename.mp3'
+        '  https://troff.app/#123&filename.mp3'
     );
     return null;
   }
@@ -160,6 +161,12 @@ export async function downloadSongFromHash(
       fetchAndCacheFile(troffData.fileUrl, troffData.fileName, callbacks?.onProgress),
       nDB.set(troffData.fileName, markers),
     ]);
+
+    // Extract album art from the downloaded audio file's ID3 tags.
+    // The album art was stripped from markerJsonString before upload to
+    // stay under Firestore's 1 MiB document limit, so we recover it
+    // from the audio file itself.
+    await extractAlbumArt(troffData.fileName);
   } catch (error) {
     log.e('Error saving song to cache:', error);
     const status = (error as Error & { status?: number }).status;
@@ -182,9 +189,92 @@ export async function downloadSongFromHash(
 }
 
 /**
+ * Result of a quiet fetch: either the parsed server payload, or an error the
+ * CALLER decides when/where to surface (`useAlert` picks alert vs toast).
+ */
+export type ServerTroffDataResult =
+  | {
+      ok: true;
+      data: {
+        markers: TroffMarker[];
+        states: string[];
+        info: string;
+        serverId: number;
+        fileUrl: string;
+        duration: number;
+      };
+    }
+  | { ok: false; message: string; useAlert: boolean };
+
+/**
+ * Fetch TroffData from Firestore for a given serverId/fileName pair, without
+ * any UI of its own — no toast, no alert, only `log.e`. Errors are returned as
+ * `{ ok:false, message, useAlert }` so the caller can defer them (e.g. until
+ * the user has picked import/merge in the dialog).
+ */
+export async function fetchServerTroffDataResult(
+  serverId: string | number,
+  fileName: string
+): Promise<ServerTroffDataResult> {
+  try {
+    const { db, doc, getDoc } = await getFirestore();
+    const troffDocRef = doc(db, 'TroffData', String(serverId));
+    const snapshot = await getDoc(troffDocRef);
+    if (!snapshot.exists()) {
+      log.e(`Server song data (id: ${serverId}) not found on the server`);
+      return {
+        ok: false,
+        useAlert: false,
+        message: 'Could not find the song data on the server. The link may be outdated.',
+      };
+    }
+    const troffData = snapshot.data() as TroffData;
+    if (toSongKey(troffData.fileName || '') !== toSongKey(fileName)) {
+      log.e(
+        `Filename mismatch for server id ${serverId}: ` +
+          `URL has "${fileName}" but server has "${troffData.fileName}"`
+      );
+      return {
+        ok: false,
+        useAlert: false,
+        message:
+          `Could not find the song "${fileName}" on the server. ` +
+          'The link may be wrong, or the song has been removed.',
+      };
+    }
+    const markerObject = JSON.parse(troffData.markerJsonString || '{}');
+    const parsedDuration = Number(markerObject.fileData?.duration);
+    return {
+      ok: true,
+      data: {
+        markers: markerObject.markers || [],
+        states: markerObject.aStates || [],
+        info: markerObject.info || '',
+        serverId: Number(serverId),
+        fileUrl: troffData.fileUrl || '',
+        duration: Number.isFinite(parsedDuration) && parsedDuration > 0 ? parsedDuration : 0,
+      },
+    };
+  } catch (error) {
+    log.e('Error fetching server troff data:', error);
+    if (error instanceof Error && error.message.startsWith('No Firebase config')) {
+      return { ok: false, useAlert: true, message: error.message };
+    }
+    return {
+      ok: false,
+      useAlert: true,
+      message: 'Could not fetch the song data from the server due to a network error.',
+    };
+  }
+}
+
+/**
  * Fetch TroffData from Firestore for a given serverId/fileName pair.
  * Returns the parsed marker data including markers, states, and info.
  * Used by the import/merge dialog when a hash link points to an existing song.
+ *
+ * Thin wrapper over `fetchServerTroffDataResult` keeping the legacy UX:
+ * toast for link problems, alert for thrown errors, `null` on failure.
  */
 export async function fetchServerTroffData(
   serverId: string | number,
@@ -197,57 +287,46 @@ export async function fetchServerTroffData(
   fileUrl: string;
   duration: number;
 } | null> {
-  try {
-    const { db, doc, getDoc } = await getFirestore();
-    const troffDocRef = doc(db, 'TroffData', String(serverId));
-    const snapshot = await getDoc(troffDocRef);
-    if (!snapshot.exists()) {
-      log.e(`Server song data (id: ${serverId}) not found on the server`);
-      showToast(
-        'Could not find the song data on the server. The link may be outdated.',
-        'error',
-        5000
-      );
-      return null;
-    }
-    const troffData = snapshot.data() as TroffData;
-    if (toSongKey(troffData.fileName || '') !== toSongKey(fileName)) {
-      log.e(
-        `Filename mismatch for server id ${serverId}: ` +
-          `URL has "${fileName}" but server has "${troffData.fileName}"`
-      );
-      showToast(
-        `Could not find the song "${fileName}" on the server. ` +
-          'The link may be wrong, or the song has been removed.',
-        'error',
-        5000
-      );
-      return null;
-    }
-    const markerObject = JSON.parse(troffData.markerJsonString || '{}');
-    const parsedDuration = Number(markerObject.fileData?.duration);
-    return {
-      markers: markerObject.markers || [],
-      states: markerObject.aStates || [],
-      info: markerObject.info || '',
-      serverId: Number(serverId),
-      fileUrl: troffData.fileUrl || '',
-      duration: Number.isFinite(parsedDuration) && parsedDuration > 0 ? parsedDuration : 0,
-    };
-  } catch (error) {
-    log.e('Error fetching server troff data:', error);
-    if (error instanceof Error && error.message.startsWith('No Firebase config')) {
-      alert(error.message);
+  const result = await fetchServerTroffDataResult(serverId, fileName);
+  if (!result.ok) {
+    if (result.useAlert) {
+      alert(result.message);
     } else {
-      alert('Could not fetch the song data from the server due to a network error.');
+      showToast(result.message, 'error', 5000);
     }
     return null;
   }
+  return result.data;
 }
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Rebuild a `markerJsonString` from an already-parsed server payload so the
+ * import/merge dialog handlers (which only have `fetchServerTroffData` data)
+ * can record version history via `saveDownloadLinkHistory` (v1 parity:
+ * `scriptTroffClass` importNew/merge save the raw server TroffData).
+ *
+ * Only `markers`/`aStates`/`info`/`duration` survive the parsed payload —
+ * `fileData` details (title/genre/tags) are unavailable, so history entries
+ * from this path fall back to the file name for `displayName` and `''` for
+ * genre/tags. The `troffDataId` (what version counting needs) is always exact.
+ */
+export function buildMarkerJsonStringForHistory(serverData: {
+  markers: TroffMarker[];
+  states: string[];
+  info: string;
+  duration: number;
+}): string {
+  return JSON.stringify({
+    markers: serverData.markers,
+    aStates: serverData.states,
+    info: serverData.info,
+    fileData: { duration: serverData.duration },
+  });
+}
 
 /**
  * Fetch a file from a remote URL and store it in the cache for offline playback.

@@ -267,7 +267,6 @@ describe('moveMarkers threshold', () => {
   });
 
   it('does not merge when the time difference is exactly 0.001 after moving', () => {
-    const input = [makeMarker('markerNr0', 5.0, 'A'), makeMarker('markerNr1', 5.001, 'B')];
     // Move markerNr1 by -0.0001, landing at 5.0009 (diff = 0.0009 < 0.001, will merge)
     // Let's use a diff that lands exactly at 0.001:
     // Move markerNr1 by -0.0005, landing at 5.0005, diff = 0.0005 < 0.001 → merges

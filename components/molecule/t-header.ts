@@ -19,6 +19,8 @@ export class Header extends LitElement {
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
       cursor: pointer;
       user-select: none;
+      overscroll-behavior: none;
+      touch-action: pan-x pan-y;
     }
 
     .header-container {
@@ -28,6 +30,8 @@ export class Header extends LitElement {
       max-width: 600px;
       margin: 0 auto;
       position: relative;
+      overscroll-behavior: none;
+      touch-action: pan-x pan-y;
     }
 
     .artwork-section {
@@ -177,6 +181,10 @@ export class Header extends LitElement {
   @property({ type: String }) bannerText = '';
   @property({ type: String }) versionNumber = '';
 
+  private _pullStartX = 0;
+  private _pullStartY = 0;
+  private _pullTracking = false;
+
   private _handleExpand() {
     this.expanded = !this.expanded;
     this.dispatchEvent(
@@ -186,6 +194,58 @@ export class Header extends LitElement {
         composed: true,
       })
     );
+  }
+
+  private _expandFromPull() {
+    if (this.expanded) return;
+    this.expanded = true;
+    this.dispatchEvent(
+      new CustomEvent('header-expand', {
+        detail: { expanded: true },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _pullPointFromEvent(event: Event): { clientX: number; clientY: number } | null {
+    const touchEvent = event as unknown as {
+      changedTouches?: Array<{ clientX: number; clientY: number }>;
+      touches?: Array<{ clientX: number; clientY: number }>;
+    };
+    const touch = touchEvent.changedTouches?.[0] ?? touchEvent.touches?.[0];
+    if (touch) return { clientX: touch.clientX, clientY: touch.clientY };
+    if (event instanceof PointerEvent || event instanceof MouseEvent) {
+      return { clientX: event.clientX, clientY: event.clientY };
+    }
+    return null;
+  }
+
+  private _handlePullStart(event: Event) {
+    const point = this._pullPointFromEvent(event);
+    if (!point) return;
+    this._pullStartX = point.clientX;
+    this._pullStartY = point.clientY;
+    this._pullTracking = true;
+  }
+
+  private _handlePullMove(event: Event) {
+    if (!this._pullTracking) return;
+    const point = this._pullPointFromEvent(event);
+    if (!point) return;
+    const dy = point.clientY - this._pullStartY;
+    const dx = point.clientX - this._pullStartX;
+    if (dy > 0) {
+      event.preventDefault();
+    }
+    if (dy >= 50 && Math.abs(dy) > Math.abs(dx)) {
+      this._pullTracking = false;
+      this._expandFromPull();
+    }
+  }
+
+  private _handlePullEnd() {
+    this._pullTracking = false;
   }
 
   private _handleInfoInput(event: CustomEvent) {
@@ -213,7 +273,18 @@ export class Header extends LitElement {
             <span>${this.bannerText}</span>
           </div>`
         : ''}
-      <div class="header-container" @click=${this._handleExpand}>
+      <div
+        class="header-container"
+        @click=${this._handleExpand}
+        @touchstart=${this._handlePullStart}
+        @touchmove=${this._handlePullMove}
+        @touchend=${this._handlePullEnd}
+        @touchcancel=${this._handlePullEnd}
+        @pointerdown=${this._handlePullStart}
+        @pointermove=${this._handlePullMove}
+        @pointerup=${this._handlePullEnd}
+        @pointercancel=${this._handlePullEnd}
+      >
         <div class="artwork-section">
           <div class="artwork">
             ${this.albumArt ? html`<img src="${this.albumArt}" alt="Album art" />` : html`♪`}

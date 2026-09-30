@@ -10,6 +10,7 @@ import './t-header-actions.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-input.js';
+import '../atom/t-loading.js';
 import type { TInput } from '../atom/t-input.js';
 import { LocalSongDataService } from '../../utils/local-song-data.js';
 import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.js';
@@ -26,6 +27,7 @@ import {
 } from '../../utils/media-search.js';
 import type { TrackLike } from '../../utils/media-search.js';
 import log from '../../utils/log.js';
+import { extractAlbumArt } from '../../utils/album-art.js';
 
 const ts = () => new Date().toLocaleTimeString();
 
@@ -256,6 +258,15 @@ export class MediaParent extends LitElement {
       margin: 0 0 8px 0;
     }
 
+    .empty-state-auth-busy {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      width: 100%;
+      font-size: 1rem;
+    }
+
     .empty-state-user-avatar {
       width: 48px;
       height: 48px;
@@ -327,9 +338,35 @@ export class MediaParent extends LitElement {
   @property({ type: Boolean }) signedIn = false;
   @property({ type: String }) userName = '';
   @property({ type: String }) userPhotoUrl = '';
+  /** True while a sign-in/sign-out request is in flight. */
+  @property({ type: Boolean }) authBusy = false;
 
   /** Per-song download progress (songKey → 0-100, or -1 for waiting in queue). */
   private _downloadProgress = new Map<string, number>();
+
+  /**
+   * Per-song upload progress (songKey → 0-100) while a share-upload is in
+   * flight. A percent of -1 is a clear sentinel: the entry is deleted, so a
+   * finished/failed upload drops back to "not tracked".
+   */
+  private _uploadProgress = new Map<string, number>();
+
+  /**
+   * Handle song-upload-progress events. Listens on `document` (registered in
+   * connectedCallback, removed in disconnectedCallback) because v2Script
+   * dispatches there — the originating element (e.g. t-group-list) can
+   * unmount mid-upload, and a detached target would swallow the final -1
+   * clear, leaving a stuck "Uploading X%" bar.
+   */
+  private readonly _handleSongUploadProgress = (e: Event) => {
+    const { songKey, percent } = (e as CustomEvent<{ songKey: string; percent: number }>).detail;
+    if (percent === -1) {
+      this._uploadProgress.delete(songKey);
+    } else {
+      this._uploadProgress.set(songKey, percent);
+    }
+    this.requestUpdate();
+  };
 
   /** The group key of the currently open group detail view (empty = not in a group). */
   @property({ type: String, state: true }) private _currentGroupKey = '';
@@ -346,6 +383,8 @@ export class MediaParent extends LitElement {
   private _pendingNavState: { tab: string; entity: string } | null = null;
   /** When set, the next file upload will also add songs to this group. */
   private _pendingGroupKey: string | null = null;
+  /** Pending scroll-to-active-song timeout — cleared on disconnect so it never fires after teardown. */
+  private _scrollActiveSongTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /** Persist the current navigation state (tab + selected entity) to nDB. */
   private _saveNavigationState() {
@@ -391,6 +430,10 @@ export class MediaParent extends LitElement {
     this.addEventListener('pending-song-clicked', (e: any) => {
       this._handlePendingSongClick(e.detail.songKey);
     });
+
+    // Per-row upload progress while sharing songs to a Firebase group
+    // (document-level so events dispatched on `document` are received).
+    document.addEventListener('song-upload-progress', this._handleSongUploadProgress);
 
     // Listen for group detail open/close to change header controls
     this.addEventListener('group-detail-opened', this._handleGroupDetailOpened);
@@ -465,8 +508,13 @@ export class MediaParent extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    if (this._scrollActiveSongTimeout !== null) {
+      clearTimeout(this._scrollActiveSongTimeout);
+      this._scrollActiveSongTimeout = null;
+    }
     window.removeEventListener('keydown', this._handleGlobalKeydown);
     window.removeEventListener('keydown', this._handleGlobalEsc);
+    document.removeEventListener('song-upload-progress', this._handleSongUploadProgress);
   }
 
   updated(changedProperties: PropertyValues) {
@@ -507,7 +555,15 @@ export class MediaParent extends LitElement {
   private _scrollActiveSongIntoView() {
     void this.updateComplete.then(() => {
       // Wait for the slide-in transition to finish and the sub-list to render.
-      setTimeout(() => {
+      // The timeout is tracked so it can be cancelled on disconnect, and the
+      // callback bails on a detached element — otherwise the timer outlives
+      // the component (and, in tests, the DOM environment itself).
+      if (this._scrollActiveSongTimeout !== null) {
+        clearTimeout(this._scrollActiveSongTimeout);
+      }
+      this._scrollActiveSongTimeout = setTimeout(() => {
+        this._scrollActiveSongTimeout = null;
+        if (!this.isConnected) return;
         const activeMedia = this._findActiveMediaElement();
         if (!activeMedia) return;
 
@@ -568,6 +624,7 @@ export class MediaParent extends LitElement {
   }
 
   private _isScrollable(el: HTMLElement): boolean {
+    if (typeof getComputedStyle === 'undefined') return false;
     const overflowY = getComputedStyle(el).overflowY;
     return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
   }
@@ -672,7 +729,9 @@ export class MediaParent extends LitElement {
           `${downloaded.length} downloaded, ${pending.length} pending download`
       );
       for (const s of pending) {
-        console.log(`${ts()} [t-media-parent]   ⏳ pending: "${(s as any).title || (s as any).songKey}" (fileUrl: ${(s as any).fileUrl ? 'yes' : 'no'})`);
+        console.log(
+          `${ts()} [t-media-parent]   ⏳ pending: "${(s as any).title || (s as any).songKey}" (fileUrl: ${(s as any).fileUrl ? 'yes' : 'no'})`
+        );
       }
 
       this.requestUpdate();
@@ -692,15 +751,15 @@ export class MediaParent extends LitElement {
    * Uses ReadableStream to track byte-level download progress per song.
    */
   private _downloadPendingSongs() {
-    const pending = this.songs.filter(
-      (s: any) => s.downloaded === false && s.fileUrl
-    );
+    const pending = this.songs.filter((s: any) => s.downloaded === false && s.fileUrl);
     if (pending.length === 0) {
       console.log(`${ts()} [t-media-parent] _downloadPendingSongs: nothing to download`);
       return;
     }
 
-    console.log(`${ts()} [t-media-parent] _downloadPendingSongs: starting download of ${pending.length} song(s)`);
+    console.log(
+      `${ts()} [t-media-parent] _downloadPendingSongs: starting download of ${pending.length} song(s)`
+    );
     const downloadNext = async (index: number): Promise<void> => {
       if (index >= pending.length) return;
       const song = pending[index] as any;
@@ -783,7 +842,9 @@ export class MediaParent extends LitElement {
         }
         response = retryResponse;
       } else if (!response.ok) {
-        console.warn(`${ts()} [t-media-parent] ❌ download failed (${response.status}): "${song.title || songKey}"`);
+        console.warn(
+          `${ts()} [t-media-parent] ❌ download failed (${response.status}): "${song.title || songKey}"`
+        );
         this._downloadProgress.delete(songKey);
         this.requestUpdate();
         return false;
@@ -821,6 +882,9 @@ export class MediaParent extends LitElement {
         const cache = await caches.open('songCache-v1.0');
         await cache.put(songKey, cacheResponse);
       }
+
+      // Extract album art from the freshly cached file's ID3 tags.
+      await extractAlbumArt(songKey);
 
       // Mark as downloaded
       song.downloaded = true;
@@ -883,9 +947,7 @@ export class MediaParent extends LitElement {
    * or -2 if not being tracked (already downloaded or not pending).
    */
   getDownloadProgress(songKey: string): number {
-    return this._downloadProgress.has(songKey)
-      ? (this._downloadProgress.get(songKey) ?? -1)
-      : -2;
+    return this._downloadProgress.has(songKey) ? (this._downloadProgress.get(songKey) ?? -1) : -2;
   }
 
   /**
@@ -894,6 +956,27 @@ export class MediaParent extends LitElement {
   private _getDownloadProgressMap(): Record<string, number> {
     const obj: Record<string, number> = {};
     this._downloadProgress.forEach((val, key) => {
+      obj[key] = val;
+    });
+    return obj;
+  }
+
+  /**
+   * Get the upload progress for a song (for passing to t-media).
+   * Returns 0-100 while uploading, or -2 if not tracked — a -1 clear
+   * removes the entry (upload finished/failed), so it reports -2 again
+   * (mirrors getDownloadProgress).
+   */
+  getUploadProgress(songKey: string): number {
+    return this._uploadProgress.has(songKey) ? (this._uploadProgress.get(songKey) ?? -1) : -2;
+  }
+
+  /**
+   * Convert the upload progress Map to a plain object for passing to child components.
+   */
+  private _getUploadProgressMap(): Record<string, number> {
+    const obj: Record<string, number> = {};
+    this._uploadProgress.forEach((val, key) => {
       obj[key] = val;
     });
     return obj;
@@ -983,6 +1066,10 @@ export class MediaParent extends LitElement {
     this._clearContext();
     this._saveNavigationState();
     this._dispatchHeaderColor();
+  }
+
+  private _handleFooterSwipeUp() {
+    if (this.visible) this.visible = false;
   }
 
   /** Close any open detail view in the mounted list components. */
@@ -1242,6 +1329,24 @@ export class MediaParent extends LitElement {
     // Refresh the song list to include the newly added songs
     await this._loadSongs();
 
+    if (addedKeys.length === 0) {
+      if (groupKey) {
+        this._pendingGroupKey = null;
+      }
+      return;
+    }
+
+    // Select the first added song so it loads in the player.
+    const selectedKey = addedKeys[0];
+    this.currentSongKey = selectedKey;
+    this.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey: selectedKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+
     // If we were inside a group, add the new songs to the group
     if (groupKey) {
       this._pendingGroupKey = null;
@@ -1253,6 +1358,45 @@ export class MediaParent extends LitElement {
             composed: true,
           })
         );
+      }
+      return;
+    }
+
+    // A group is selected but the add came from the generic "+" button —
+    // ask whether the new song(s) should be added to that group.
+    const activeGroupKey =
+      this._currentGroupKey || (this._contextType === 'group' ? this._contextKey : '');
+    if (activeGroupKey) {
+      this.dispatchEvent(
+        new CustomEvent('group-add-songs-prompt', {
+          detail: { groupKey: activeGroupKey, songKeys: addedKeys, songKey: selectedKey },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      const message =
+        addedKeys.length === 1
+          ? `Add "${addedKeys[0]}" to the selected group?`
+          : `Add ${addedKeys.length} songs (${addedKeys.join(', ')}) to the selected group?`;
+      let confirmed = false;
+      try {
+        confirmed =
+          typeof window !== 'undefined' && typeof window.confirm === 'function'
+            ? window.confirm(message)
+            : false;
+      } catch {
+        confirmed = false;
+      }
+      if (confirmed) {
+        for (const songKey of addedKeys) {
+          this.dispatchEvent(
+            new CustomEvent('group-song-added', {
+              detail: { groupKey: activeGroupKey, songKey, title: songKey },
+              bubbles: true,
+              composed: true,
+            })
+          );
+        }
       }
     }
   }
@@ -1405,7 +1549,9 @@ export class MediaParent extends LitElement {
    */
   private _getSearchInput(): TInput | null {
     const listHeader = this.shadowRoot?.querySelector('t-list-header');
-    const headerActions = (listHeader as HTMLElement | null)?.querySelector('t-header-actions') as HTMLElement | null;
+    const headerActions = (listHeader as HTMLElement | null)?.querySelector(
+      't-header-actions'
+    ) as HTMLElement | null;
     return headerActions?.shadowRoot?.querySelector<TInput>('t-input.search-input') ?? null;
   }
 
@@ -2022,10 +2168,15 @@ export class MediaParent extends LitElement {
                           <p class="empty-state-sign-in-note">
                             Sign in to get the songs shared in your groups
                           </p>
-                          <t-butt class="empty-action-btn" @click=${this._handleSignIn}>
-                            <t-icon name="user-plus"></t-icon>
-                            <span>Sign in</span>
-                          </t-butt>
+                          ${this.authBusy
+                            ? html`<div class="empty-state-auth-busy">
+                                <t-loading></t-loading>
+                                <span>Signing in…</span>
+                              </div>`
+                            : html`<t-butt class="empty-action-btn" @click=${this._handleSignIn}>
+                                <t-icon name="login"></t-icon>
+                                <span style="padding-left: 4px;">Sign in</span>
+                              </t-butt>`}
                         `
                       : ''}
                   </div>
@@ -2038,7 +2189,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No tracks match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2049,7 +2200,20 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       ></t-track-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleTracks.length} out of ${songs.length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
               ${this.currentFilter === 'artists'
@@ -2057,7 +2221,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No artists match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2069,6 +2233,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       >
                         ${this._contextType === 'artist'
                           ? html`<div slot="sort-controls">
@@ -2085,6 +2250,19 @@ export class MediaParent extends LitElement {
                             </div>`
                           : ''}
                       </t-artist-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleArtists.length} out of
+                                ${this._getUniqueArtists(songs).length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
               ${this.currentFilter === 'genre'
@@ -2092,7 +2270,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No genres match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2104,6 +2282,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       >
                         ${this._contextType === 'genre'
                           ? html`<div slot="sort-controls">
@@ -2120,6 +2299,19 @@ export class MediaParent extends LitElement {
                             </div>`
                           : ''}
                       </t-genre-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleGenres.length} out of
+                                ${this._getUniqueGenres(songs).length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
               ${this.currentFilter === 'groups'
@@ -2127,7 +2319,7 @@ export class MediaParent extends LitElement {
                   ? html`
                       <div class="no-results">
                         <div class="no-results-text">No groups match "${query.trim()}".</div>
-                        <t-butt class="no-results-clear" slim @click=${this._clearSearch}>
+                        <t-butt class="no-results-clear" @click=${this._clearSearch}>
                           Clear search
                         </t-butt>
                       </div>
@@ -2139,6 +2331,7 @@ export class MediaParent extends LitElement {
                         .highlightedIndex=${this.isSearchFocused ? this.highlightedIndex : -1}
                         .currentSongKey=${this.currentSongKey}
                         .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
                       >
                         ${this._currentGroupKey
                           ? html`<div slot="sort-controls">
@@ -2155,6 +2348,18 @@ export class MediaParent extends LitElement {
                             </div>`
                           : ''}
                       </t-group-list>
+                      ${query.trim() !== ''
+                        ? html`
+                            <div class="no-results">
+                              <div class="no-results-text">
+                                showing ${visibleGroups.length} out of ${this.groups.length}
+                              </div>
+                              <t-butt class="no-results-clear" @click=${this._clearSearch}>
+                                Show all
+                              </t-butt>
+                            </div>
+                          `
+                        : ''}
                     `
                 : ''}
             `}
@@ -2163,6 +2368,7 @@ export class MediaParent extends LitElement {
       <t-media-footer
         .selected=${this.currentFilter}
         @filter-changed=${this._handleFilterChanged}
+        @footer-swipe-up=${this._handleFooterSwipeUp}
       ></t-media-footer>
     `;
   }

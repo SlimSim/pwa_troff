@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CurrentSongControls } from './t-current-song-controls.js';
 import type { DetailsElement } from '../atom/t-details.js';
+import type { TButt } from '../atom/t-butt.js';
 
 function findTempoTapButton(el: CurrentSongControls): HTMLElement | null {
   const buttons = el.shadowRoot?.querySelectorAll('t-butt');
@@ -303,5 +304,95 @@ describe('t-current-song-controls advanced panels use t-details', () => {
     expect(advanced?.open).toBe(true);
     // Slotted content stays present after the re-render
     expect(advanced?.querySelector('.song-action-buttons')).toBeTruthy();
+  });
+});
+
+describe('t-current-song-controls "Play full song" is a one-shot action, not a toggle', () => {
+  let element: CurrentSongControls;
+
+  beforeEach(() => {
+    element = new CurrentSongControls();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  type SettingChangedDetail = { setting: string; value: unknown };
+
+  async function getPlayFullSongButton(): Promise<TButt> {
+    await element.updateComplete;
+    const button = findPlayFullSongButton(element) as TButt | null;
+    expect(button).toBeTruthy();
+    await button!.updateComplete;
+    return button!;
+  }
+
+  function collectPlayFullSongEvents(): CustomEvent<SettingChangedDetail>[] {
+    const events: CustomEvent<SettingChangedDetail>[] = [];
+    element.addEventListener('setting-changed', (e: Event) => {
+      const detail = (e as CustomEvent<SettingChangedDetail>).detail;
+      if (detail && detail.setting === 'playFullSong') {
+        events.push(e as CustomEvent<SettingChangedDetail>);
+      }
+    });
+    return events;
+  }
+
+  it('dispatches setting-changed with detail { setting: "playFullSong", value } when clicked', async () => {
+    const events = collectPlayFullSongEvents();
+    const button = await getPlayFullSongButton();
+
+    button.click();
+    await element.updateComplete;
+    await button.updateComplete;
+
+    expect(events.length).toBe(1);
+    expect(events[0].detail).toEqual({
+      setting: 'playFullSong',
+      value: expect.anything(),
+    });
+  });
+
+  it('keeps playFullSong false and the button without the active attribute after a click', async () => {
+    const button = await getPlayFullSongButton();
+    expect(button.hasAttribute('active')).toBe(false);
+
+    button.click();
+    await element.updateComplete;
+    await button.updateComplete;
+
+    expect(element.playFullSong).toBe(false);
+    expect(button.hasAttribute('active')).toBe(false);
+  });
+
+  it('never renders the button with the active attribute, even when playFullSong is true', async () => {
+    element.playFullSong = true;
+    await element.updateComplete;
+
+    const button = await getPlayFullSongButton();
+    await button.updateComplete;
+
+    expect(element.playFullSong).toBe(true);
+    expect(button.hasAttribute('active')).toBe(false);
+  });
+
+  it('dispatches setting-changed on every click (two clicks produce two events)', async () => {
+    const events = collectPlayFullSongEvents();
+    const button = await getPlayFullSongButton();
+
+    button.click();
+    await element.updateComplete;
+    await button.updateComplete;
+
+    button.click();
+    await element.updateComplete;
+    await button.updateComplete;
+
+    expect(events.length).toBe(2);
   });
 });

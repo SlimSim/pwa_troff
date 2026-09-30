@@ -21,6 +21,7 @@ export class TrackList extends LitElement {
   @property({ type: String }) currentSongKey = '';
   @property({ type: Number }) highlightedIndex = -1;
   @property({ type: Object }) downloadProgressMap: Record<string, number> = {};
+  @property({ type: Object }) uploadProgressMap: Record<string, number> = {};
 
   updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has('highlightedIndex')) {
@@ -69,6 +70,7 @@ export class TrackList extends LitElement {
               .songKey=${track.songKey}
               .downloaded=${track.downloaded !== false}
               .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
+              .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
             ></t-media>
           `
         )}

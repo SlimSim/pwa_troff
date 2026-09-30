@@ -78,6 +78,20 @@ describe('v2 share link: filename+hash must both match', () => {
 
     vi.spyOn(window, 'alert').mockImplementation(() => {});
 
+    // Silence duplicate custom element definitions that happen when
+    // multiple tests re-import modules that register components.
+    // Without this guard, the second import throws:
+    //   "the name "t-butt" has already been used with this registry"
+    const registry = customElements;
+    const originalDefine = registry.define.bind(registry);
+    const patched = Object.create(registry);
+    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+      if (!registry.get(name)) {
+        originalDefine(name, constructor, options);
+      }
+    };
+    vi.stubGlobal('customElements', patched);
+
     const mod = await import('../utils/hash-download.js');
     downloadSongFromHash = mod.downloadSongFromHash;
   });
@@ -173,6 +187,20 @@ describe('v2 share link: missing song must NOT use window.alert', () => {
     globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
     alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    // Silence duplicate custom element definitions that happen when
+    // multiple tests re-import modules that register components.
+    // Without this guard, the second import throws:
+    //   "the name "t-butt" has already been used with this registry"
+    const registry = customElements;
+    const originalDefine = registry.define.bind(registry);
+    const patched = Object.create(registry);
+    patched.define = (name: string, constructor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+      if (!registry.get(name)) {
+        originalDefine(name, constructor, options);
+      }
+    };
+    vi.stubGlobal('customElements', patched);
 
     const mod = await import('../utils/hash-download.js');
     downloadSongFromHash = mod.downloadSongFromHash;

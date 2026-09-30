@@ -130,7 +130,7 @@ function _formatArtist(raw: string): string {
   return raw.replace(/;/g, ', ').trim();
 }
 
-function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } {
+export function parseId3(bytes: Uint8Array): { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } {
   const m: { title: string; artist: string; album: string; genre: string; info: string; bpm?: string; albumArt?: string } = { title: '', artist: '', album: '', genre: '', info: '', bpm: '' };
   let albumArtist = '';
   if (bytes.length < 10 || bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) return m;
@@ -193,7 +193,7 @@ function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: s
         const tb = d.subarray(start);
         let l = tb.length;
         while (l > 0 && tb[l - 1] === 0) l--;
-        let t = Array.from(tb.subarray(0, l)).map((c) => String.fromCharCode(c)).join('');
+        const t = Array.from(tb.subarray(0, l)).map((c) => String.fromCharCode(c)).join('');
         m.info = t.replace(/\0/g, '').trim();
       } else if (enc === 1) {
         while (start + 1 < d.length && !(d[start] === 0 && d[start + 1] === 0)) start += 2;
@@ -204,7 +204,7 @@ function _parseId3(bytes: Uint8Array): { title: string; artist: string; album: s
           const textStart = hasBom ? start + 2 : start;
           try {
             const dec = new TextDecoder(le ? 'utf-16le' : 'utf-16be');
-            let t = dec.decode(d.subarray(textStart));
+            const t = dec.decode(d.subarray(textStart));
             m.info = t.replace(/\0/g, '').trim();
           } catch { /* ignore */ }
         }
@@ -251,7 +251,7 @@ async function _readId3FromFile(f: File | { name: string; lastModified: number; 
   if (!hasArrayBuffer) return { title: '', artist: '', album: '', genre: '', info: '' };
   try {
     const buf = await (f as File).arrayBuffer();
-    return _parseId3(new Uint8Array(buf));
+    return parseId3(new Uint8Array(buf));
   } catch {
     return { title: '', artist: '', album: '', genre: '', info: '' };
   }
