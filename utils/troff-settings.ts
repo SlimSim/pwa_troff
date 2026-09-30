@@ -193,7 +193,7 @@ export function parseId3(bytes: Uint8Array): { title: string; artist: string; al
         const tb = d.subarray(start);
         let l = tb.length;
         while (l > 0 && tb[l - 1] === 0) l--;
-        let t = Array.from(tb.subarray(0, l)).map((c) => String.fromCharCode(c)).join('');
+        const t = Array.from(tb.subarray(0, l)).map((c) => String.fromCharCode(c)).join('');
         m.info = t.replace(/\0/g, '').trim();
       } else if (enc === 1) {
         while (start + 1 < d.length && !(d[start] === 0 && d[start + 1] === 0)) start += 2;
@@ -204,7 +204,7 @@ export function parseId3(bytes: Uint8Array): { title: string; artist: string; al
           const textStart = hasBom ? start + 2 : start;
           try {
             const dec = new TextDecoder(le ? 'utf-16le' : 'utf-16be');
-            let t = dec.decode(d.subarray(textStart));
+            const t = dec.decode(d.subarray(textStart));
             m.info = t.replace(/\0/g, '').trim();
           } catch { /* ignore */ }
         }

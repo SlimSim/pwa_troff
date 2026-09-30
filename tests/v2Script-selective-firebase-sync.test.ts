@@ -87,7 +87,7 @@ describe('v2Script selective Firebase sync (saveSongData triggers)', () => {
           nDBStore[key] = value;
         }),
         setOnSong: vi.fn((key: string, path: string | string[], value: unknown) => {
-          let songData = nDBStore[key] ?? {};
+          const songData = nDBStore[key] ?? {};
           if (Array.isArray(path)) {
             let target: any = songData;
             for (let i = 0; i < path.length - 1; i++) {
