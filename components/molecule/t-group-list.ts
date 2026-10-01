@@ -525,6 +525,22 @@ export class GroupList extends LitElement {
         highlighted.scrollIntoView({ block: 'nearest' });
       }
     }
+    if (
+      changedProperties.has('_selectedGroupKey') ||
+      changedProperties.has('currentSongKey') ||
+      changedProperties.has('groups') ||
+      changedProperties.has('tracks')
+    ) {
+      if (this._selectedGroupKey !== '') {
+        const rows = Array.from(this.renderRoot.querySelectorAll('t-media')) as Array<
+          HTMLElement & { active?: boolean }
+        >;
+        const active = rows.find((row) => row.active === true);
+        if (active) {
+          active.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }
 
     const isManaging = this._selectedGroupKey !== '' && this._songManagementOpen;
     this.classList.toggle('managing', isManaging);
