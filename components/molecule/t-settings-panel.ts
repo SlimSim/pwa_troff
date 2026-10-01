@@ -138,7 +138,7 @@ export class SettingsPanel extends LitElement {
       flex-wrap: wrap;
       gap: 16px;
 
-      justify-content: space-between;
+      justify-content: space-around;
     }
 
     .settings-shell t-current-song-controls {
