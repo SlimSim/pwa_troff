@@ -24,6 +24,7 @@ export class TButt extends LitElement {
       display: flex;
       justify-content: center;
       align-items: center;
+      gap: 4px;
     }
 
     /* link-specific resets */
@@ -48,6 +49,12 @@ export class TButt extends LitElement {
       text-overflow: ellipsis;
       overflow: hidden;
       text-align: center;
+    }
+
+    /* replaces the flex gap, which doesn't apply in block mode */
+    .base.ellipsis ::slotted(t-icon) {
+      padding-right: 4px;
+      vertical-align: middle;
     }
 
     .base.round {
@@ -147,10 +154,6 @@ export class TButt extends LitElement {
       z-index: 1;
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
-
-    /* Confirming state */
-    .base.confirming {
-
 
     .confirm-text {
       white-space: nowrap;
