@@ -138,7 +138,7 @@ export class SettingsPanel extends LitElement {
       flex-wrap: wrap;
       gap: 16px;
 
-      justify-content: space-between;
+      justify-content: space-around;
     }
 
     .settings-shell t-current-song-controls {
@@ -591,7 +591,10 @@ export class SettingsPanel extends LitElement {
           <h2 class="panel-title">More</h2>
           <div style="display:flex; gap:8px; align-items:center;">
             ${this.installState === 'available'
-              ? html`<t-butt special @click=${this._handleInstallClick}>Install Troff</t-butt>`
+              ? html`<t-butt special @click=${this._handleInstallClick}>
+                <t-icon name="install"></t-icon>
+                Install Troff
+              </t-butt>`
               : ''}
             ${this.signedIn
               ? html`

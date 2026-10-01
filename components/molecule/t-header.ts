@@ -208,6 +208,18 @@ export class Header extends LitElement {
     );
   }
 
+  private _collapseFromPull() {
+    if (!this.expanded) return;
+    this.expanded = false;
+    this.dispatchEvent(
+      new CustomEvent('header-expand', {
+        detail: { expanded: false },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   private _pullPointFromEvent(event: Event): { clientX: number; clientY: number } | null {
     const touchEvent = event as unknown as {
       changedTouches?: Array<{ clientX: number; clientY: number }>;
@@ -235,12 +247,16 @@ export class Header extends LitElement {
     if (!point) return;
     const dy = point.clientY - this._pullStartY;
     const dx = point.clientX - this._pullStartX;
-    if (dy > 0) {
+    if (dy !== 0) {
       event.preventDefault();
     }
     if (dy >= 50 && Math.abs(dy) > Math.abs(dx)) {
       this._pullTracking = false;
       this._expandFromPull();
+    }
+    if (dy <= -50 && Math.abs(dy) > Math.abs(dx)) {
+      this._pullTracking = false;
+      this._collapseFromPull();
     }
   }
 
