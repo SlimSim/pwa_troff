@@ -21,7 +21,8 @@ type ToggleSetting =
   | 'extraExtendedMarkerColor'
   | 'keepScreenOn'
   | 'darkMode'
-  | 'bannerShow';
+  | 'bannerShow'
+  | 'onSelectMarkerGoToMarker';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -392,6 +393,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
   @property({ type: Boolean }) keepScreenOn = true;
+  @property({ type: Boolean }) onSelectMarkerGoToMarker = true;
   @property({ type: Boolean }) darkMode = false;
   @property({ type: Boolean }) bannerShow = false;
   @property({ type: Boolean }) preferVersion2 = false;
@@ -543,6 +545,9 @@ export class SettingsPanel extends LitElement {
         break;
       case 'bannerShow':
         this.bannerShow = nextValue;
+        break;
+      case 'onSelectMarkerGoToMarker':
+        this.onSelectMarkerGoToMarker = nextValue;
         break;
       default:
         return;
@@ -980,7 +985,16 @@ export class SettingsPanel extends LitElement {
               class="settings-width"
               text="Screen and version settings."
             >
-              <div class="settings-section">
+              <div class="settings-section" style="display: flex; flex-direction: column; gap: 8px;">
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.onSelectMarkerGoToMarker}
+                  @click=${() =>
+                    this._toggleSetting('onSelectMarkerGoToMarker', this.onSelectMarkerGoToMarker)}
+                >
+                  Go to marker on select
+                </t-butt>
                 <t-butt
                   toggle
                   ellipsis
@@ -996,7 +1010,7 @@ export class SettingsPanel extends LitElement {
                 ${!this.keepScreenSupported
                   ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                   : ''}
-                <div class="settings-section" style="margin: 0; margin-top: 8px;">
+                <div class="settings-section" style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
                   <t-butt
                     toggle
                     ellipsis
@@ -1008,7 +1022,7 @@ export class SettingsPanel extends LitElement {
                 </div>
                 <div
                   class="settings-section"
-                  style="margin: 0; margin-top: 8px; display: flex; gap: 8px;"
+                  style="margin: 0; display: flex; gap: 8px;"
                 >
                   <t-butt
                     toggle
@@ -1033,7 +1047,7 @@ export class SettingsPanel extends LitElement {
                   </t-butt>
                 </div>
 
-                <div class="settings-section settings-sub">
+                <div class="settings-section settings-sub" style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
                   <t-butt ellipsis title="Restart Troff!" @click=${this._handleReloadClick}>
                     <t-icon name="reload"></t-icon>
                     Restart Troff

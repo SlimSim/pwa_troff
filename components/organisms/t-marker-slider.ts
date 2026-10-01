@@ -1,6 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { TroffMarker } from '../../types/troff.js';
+import { nDB } from '../../assets/internal/db.js';
+import { TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER } from '../../constants/constants.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import { computeZoomScrollDelta } from '../../utils/zoom.js';
 import '../atom/t-butt.js';
@@ -244,7 +246,10 @@ export class MarkerSlider extends LitElement {
   private _handleMarkerClick(event: CustomEvent, marker: TroffMarker) {
     event.stopPropagation();
     this.startMarkerId = marker.id;
-    this.value = this.getPlaybackStart();
+    const goToMarker: boolean = nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
+    if (goToMarker) {
+      this.value = this.getPlaybackStart();
+    }
 
     // If the new start is at or after the current stop, reset stop to the
     // last marker so the playback region always has positive duration.
@@ -260,7 +265,9 @@ export class MarkerSlider extends LitElement {
       );
     }
 
-    this._dispatchValueChanged();
+    if (goToMarker) {
+      this._dispatchValueChanged();
+    }
     this.dispatchEvent(
       new CustomEvent('set-start-marker', {
         detail: { markerId: marker.id },
@@ -553,7 +560,10 @@ export class MarkerSlider extends LitElement {
 
     this.startMarkerId = nextMarker.id;
 
-    this._dispatchValueChanged();
+    const goToMarker: boolean = nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
+    if (goToMarker) {
+      this._dispatchValueChanged();
+    }
     this.dispatchEvent(
       new CustomEvent('set-start-marker', {
         detail: { markerId: nextMarker.id },
@@ -597,8 +607,11 @@ export class MarkerSlider extends LitElement {
 
     this.startMarkerId = prevMarker.id;
 
-    this.value = this.getPlaybackStart();
-    this._dispatchValueChanged();
+    const goToMarker: boolean = nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
+    if (goToMarker) {
+      this.value = this.getPlaybackStart();
+      this._dispatchValueChanged();
+    }
     this.dispatchEvent(
       new CustomEvent('set-start-marker', {
         detail: { markerId: prevMarker.id },
