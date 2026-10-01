@@ -194,12 +194,13 @@ $(() => {
           break;
         }
       } catch (err) {
-        lastError = err;
         response = undefined;
       }
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000;
-        log.d(`fetchAndSaveResponse retry ${attempt + 1}/${maxRetries} for ${songKey} in ${delay}ms`);
+        log.d(
+          `fetchAndSaveResponse retry ${attempt + 1}/${maxRetries} for ${songKey} in ${delay}ms`
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
@@ -211,7 +212,9 @@ $(() => {
         status,
         statusText,
       });
-      const error = new Error(`Fetch failed for ${songKey}: ${statusText}`) as Error & { status: number };
+      const error = new Error(`Fetch failed for ${songKey}: ${statusText}`) as Error & {
+        status: number;
+      };
       error.status = status;
       throw error;
     }
@@ -243,21 +246,21 @@ $(() => {
     return fileHandler.saveResponse(new Response(blob, v3Init), songKey);
   };
 
-   //private?
-   fileHandler.saveResponse = async (response, url) => {
-     const songKey = toSongKey(url);
-     return caches.open(nameOfCache).then((cache) => {
-       return cache.put(songKey, response);
-     });
-   };
+  //private?
+  fileHandler.saveResponse = async (response, url) => {
+    const songKey = toSongKey(url);
+    return caches.open(nameOfCache).then((cache) => {
+      return cache.put(songKey, response);
+    });
+  };
 
-   //private?
-   fileHandler.saveFile = async (file, callbackFunk) => {
-     const url = toSongKey(file.name);
-     return fileHandler.saveResponse(new Response(file, v3Init), url).then(() => {
-       callbackFunk(url, file);
-     });
-   };
+  //private?
+  fileHandler.saveFile = async (file, callbackFunk) => {
+    const url = toSongKey(file.name);
+    return fileHandler.saveResponse(new Response(file, v3Init), url).then(() => {
+      callbackFunk(url, file);
+    });
+  };
 
   //private?
   fileHandler.getObjectUrlFromResponse = async (response, songKey) => {
