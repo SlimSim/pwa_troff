@@ -81,6 +81,7 @@ import {
   TROFF_SETTING_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_KEEP_SCREEN_ON,
+  TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER,
   TROFF_SETTING_DARK_MODE,
   TROFF_SETTING_THEME,
   TROFF_SETTING_BANNER_SHOW,
@@ -1477,6 +1478,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
+    settingsPanel.onSelectMarkerGoToMarker =
+      nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
     void updateWakeLockForPlayback(false, false);
     settingsPanel.darkMode = nDB.get(TROFF_SETTING_DARK_MODE) ?? false;
     settingsPanel.theme = nDB.get(TROFF_SETTING_THEME) ?? 'col1';
@@ -2246,6 +2249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         extendedMarkerColor: TROFF_SETTING_EXTENDED_MARKER_COLOR,
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
         keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
+        onSelectMarkerGoToMarker: TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER,
         darkMode: TROFF_SETTING_DARK_MODE,
         theme: TROFF_SETTING_THEME,
         bannerShow: TROFF_SETTING_BANNER_SHOW,
@@ -2523,6 +2527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // This ensures both the UI and the behaviour start with the correct values.
     const defaultsIfUnset: [string, boolean][] = [
       [TROFF_SETTING_KEEP_SCREEN_ON, true],
+      [TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER, true],
       [TROFF_SETTING_DARK_MODE, false],
     ];
     for (const [key, defaultValue] of defaultsIfUnset) {
@@ -3045,7 +3050,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSongData) {
           currentSongData.currentStartMarker = markerId;
           nDB.set(songKey, currentSongData);
-          updateMarkerSlider(markerSlider);
+          const goToMarker: boolean =
+            nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
+          updateMarkerSlider(markerSlider, goToMarker);
         }
       }
     });
