@@ -19,6 +19,8 @@ export class MarkerSlider extends LitElement {
       user-select: none;
       height: 100%;
       width: 100%;
+      overscroll-behavior: none;
+      touch-action: none;
     }
 
     .slider-container {
@@ -117,28 +119,36 @@ export class MarkerSlider extends LitElement {
   private initialZoom = 1;
   private lastMidpointY = 0;
 
+  private _boundMouseMove = (event: MouseEvent): void => this._handleMouseMove(event);
+  private _boundMouseUp = (): void => this._handleMouseUp();
+  private _boundWheel = (event: WheelEvent): void => this._handleWheel(event);
+  private _boundTouchStart = (event: TouchEvent): void => this._handleTouchStart(event);
+  private _boundTouchMove = (event: TouchEvent): void => this._handleTouchMove(event);
+  private _boundTouchEnd = (event: TouchEvent): void => this._handleTouchEnd(event);
+
   private _getTrackElement(): HTMLElement | null {
     return this.shadowRoot?.querySelector('.slider-track-wrapper') ?? null;
   }
 
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener('mousemove', this._handleMouseMove.bind(this));
-    document.addEventListener('mouseup', this._handleMouseUp.bind(this));
-    this.addEventListener('wheel', this._handleWheel.bind(this));
-    this.addEventListener('touchstart', this._handleTouchStart.bind(this));
-    this.addEventListener('touchmove', this._handleTouchMove.bind(this));
-    this.addEventListener('touchend', this._handleTouchEnd.bind(this));
+    document.addEventListener('mousemove', this._boundMouseMove);
+    document.addEventListener('mouseup', this._boundMouseUp);
+    this.addEventListener('wheel', this._boundWheel);
+    // Non-passive so preventDefault() reliably suppresses pull-to-refresh.
+    this.addEventListener('touchstart', this._boundTouchStart, { passive: false });
+    this.addEventListener('touchmove', this._boundTouchMove, { passive: false });
+    this.addEventListener('touchend', this._boundTouchEnd);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener('mousemove', this._handleMouseMove.bind(this));
-    document.removeEventListener('mouseup', this._handleMouseUp.bind(this));
-    this.removeEventListener('wheel', this._handleWheel.bind(this));
-    this.removeEventListener('touchstart', this._handleTouchStart.bind(this));
-    this.removeEventListener('touchmove', this._handleTouchMove.bind(this));
-    this.removeEventListener('touchend', this._handleTouchEnd.bind(this));
+    document.removeEventListener('mousemove', this._boundMouseMove);
+    document.removeEventListener('mouseup', this._boundMouseUp);
+    this.removeEventListener('wheel', this._boundWheel);
+    this.removeEventListener('touchstart', this._boundTouchStart);
+    this.removeEventListener('touchmove', this._boundTouchMove);
+    this.removeEventListener('touchend', this._boundTouchEnd);
   }
 
   private _getPositionPercent(val: number): number {

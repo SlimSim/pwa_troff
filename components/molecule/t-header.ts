@@ -20,7 +20,7 @@ export class Header extends LitElement {
       cursor: pointer;
       user-select: none;
       overscroll-behavior: none;
-      touch-action: pan-x pan-y;
+      touch-action: pan-x;
     }
 
     .header-container {
@@ -31,7 +31,7 @@ export class Header extends LitElement {
       margin: 0 auto;
       position: relative;
       overscroll-behavior: none;
-      touch-action: pan-x pan-y;
+      touch-action: pan-x;
     }
 
     .artwork-section {

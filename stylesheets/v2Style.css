@@ -6,6 +6,15 @@ body {
   color: var(--on-secondary-color);
 }
 
+/* Disable browser pull-to-refresh (swipe-down reload) so vertical swipes
+   on the header / timeline belong to the app (songlist expand, slider).
+   Normal scrolling is preserved; only the overscroll chain that triggers
+   the reload spinner is suppressed. Supported in Chromium + WebKit. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 /* ===================================================================
    Cookie consent notification — v2 theme
    =================================================================== */
