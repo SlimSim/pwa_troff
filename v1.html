@@ -259,12 +259,12 @@
           fetch('/manifest.json')
             .then((res) => res.json())
             .then((manifest) => {
-              document.getElementById('loadScreenMessage')?.textContent =
-                'loading version ' + manifest.version;
+              const el = document.getElementById('loadScreenMessage');
+              if (el) el.textContent = 'loading version ' + manifest.version;
             })
             .catch((error) => {
-              document.getElementById('loadScreenMessage')?.textContent =
-                "loading... <can't get version number>";
+              const el = document.getElementById('loadScreenMessage');
+              if (el) el.textContent = "loading... <can't get version number>";
             });
           function updateApp() {
             import('./utils/pwa.js').then(({ updatePWA }) => {
@@ -275,8 +275,10 @@
             updateApp();
           });
           document.getElementById('loadScreenReset')?.addEventListener('click', () => {
-            document.getElementById('loadScreenConfirmReset')?.style.display = 'block';
-            document.getElementById('loadScreenReset')?.style.display = 'none';
+            const confirmReset = document.getElementById('loadScreenConfirmReset');
+            const resetBtn = document.getElementById('loadScreenReset');
+            if (confirmReset) confirmReset.style.display = 'block';
+            if (resetBtn) resetBtn.style.display = 'none';
           });
           async function hardReset() {
             try {
@@ -2936,7 +2938,9 @@
         <ul class="normal p-3">
           <li class="pb-3">- Your songs and settings are kept when switching versions.</li>
           <li class="pb-3">- Your songs are found in the header.</li>
-          <li class="pb-3">- Settings are found in the footer on mobile and to the left on desktop.</li>
+          <li class="pb-3">
+            - Settings are found in the footer on mobile and to the left on desktop.
+          </li>
           <li>- You can pinch the timeline to zoom.</li>
         </ul>
         <p class="small">You can switch back to the old version at any time.</p>
