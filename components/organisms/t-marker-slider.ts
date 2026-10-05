@@ -118,6 +118,8 @@ export class MarkerSlider extends LitElement {
   private initialPinchDistance = 0;
   private initialZoom = 1;
   private lastMidpointY = 0;
+  private isSingleFingerScrolling = false;
+  private lastSinglePanY = 0;
 
   private _boundMouseMove = (event: MouseEvent): void => this._handleMouseMove(event);
   private _boundMouseUp = (): void => this._handleMouseUp();
@@ -360,6 +362,7 @@ export class MarkerSlider extends LitElement {
     if (event.touches.length === 2) {
       this.isTouchDragging = false;
       this.isDragging = false;
+      this.isSingleFingerScrolling = false;
       this.isPinching = true;
       this.initialPinchDistance = this._getDistance(event.touches[0], event.touches[1]);
       this.initialZoom = this.zoomLevel;
@@ -385,6 +388,9 @@ export class MarkerSlider extends LitElement {
           this.isDragging = true;
           event.preventDefault();
           this._updatePositionFromTouch(touch);
+        } else {
+          this.isSingleFingerScrolling = true;
+          this.lastSinglePanY = touch.clientY;
         }
       }
     }
@@ -403,6 +409,17 @@ export class MarkerSlider extends LitElement {
     } else if (this.isTouchDragging && event.touches.length === 1) {
       event.preventDefault();
       this._updatePositionFromTouch(event.touches[0]);
+    } else if (this.isSingleFingerScrolling && event.touches.length === 1) {
+      const currentY = event.touches[0].clientY;
+      const delta = this.lastSinglePanY - currentY;
+      this.lastSinglePanY = currentY;
+      if (delta !== 0) {
+        const scrollContainer = this._getScrollContainer();
+        if (scrollContainer) {
+          scrollContainer.scrollTop += delta;
+        }
+        event.preventDefault();
+      }
     }
   }
 
@@ -413,6 +430,7 @@ export class MarkerSlider extends LitElement {
     if (event.touches.length === 0) {
       this.isTouchDragging = false;
       this.isDragging = false;
+      this.isSingleFingerScrolling = false;
     }
   }
 
