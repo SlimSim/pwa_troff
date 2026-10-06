@@ -11,6 +11,10 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "background_color": "#bccbde",
   "theme_color": "#003366",
   "icons": [
