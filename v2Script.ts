@@ -91,6 +91,7 @@ import {
 import log from './utils/log.js';
 import { showToast, showLoading } from './utils/notification.js';
 import { initPwa } from './utils/pwa.js';
+import { maybeShowMessengerBrowserNotice } from './utils/messengerBrowser.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import { toSongKey } from './utils/utils.js';
 import {
@@ -177,6 +178,7 @@ initPwa({
       }
     ),
 });
+maybeShowMessengerBrowserNotice();
 
 // The media element currently playing (audio singleton, or the #videoElement when
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.
