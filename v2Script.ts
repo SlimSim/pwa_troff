@@ -2568,6 +2568,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    footer.addEventListener('pause-requested', () => {
+      if (pendingPlaybackStart !== undefined) {
+        clearPendingPlaybackStart();
+        clearPlaybackCountdown();
+      }
+      if (!getActiveMedia().paused) {
+        getActiveMedia().pause();
+      }
+      updateHeaderCountdownDisplay();
+    });
+
     // Listen for speed and volume changes. Speed changes come from both the
     // footer dial and the video player's vertical-scroll gesture, so they share
     // one handler that applies the rate to every media element.

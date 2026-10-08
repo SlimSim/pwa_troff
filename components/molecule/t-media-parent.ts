@@ -680,8 +680,14 @@ export class MediaParent extends LitElement {
     if (event.key === 'Escape' && this.isSearchFocused) {
       log.d('Esc pressed in search input');
       event.preventDefault();
+      const hadQuery = this.searchQuery !== '';
       this.searchQuery = '';
       this._blurSearchInput();
+      if (hadQuery) {
+        // This press only clears the search — stop the global Esc handler
+        // from also closing the song list on the same press.
+        event.stopImmediatePropagation();
+      }
     }
   };
 
@@ -698,6 +704,12 @@ export class MediaParent extends LitElement {
     const activeElement = document.activeElement as HTMLElement | null;
     if (activeElement && activeElement !== document.body) {
       activeElement.blur();
+    }
+    // Esc closes the song list. When the search had a query, the keydown
+    // handler above already consumed this press (clear only) and stopped
+    // propagation, so reaching here means it is safe to close.
+    if (this.visible) {
+      this.visible = false;
     }
   };
 

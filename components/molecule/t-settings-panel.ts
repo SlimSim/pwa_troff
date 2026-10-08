@@ -354,6 +354,11 @@ export class SettingsPanel extends LitElement {
 
   @state() private installState: PwaInstallState = 'unavailable';
   private _unsubscribeInstallState?: () => void;
+  private _onEscKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape') return;
+    if (!this.visible) return;
+    this._handleClose();
+  };
   @state() private keepScreenSupported = (() => {
     const nav = navigator as unknown as { wakeLock?: { request?: unknown } };
     return !!(
@@ -405,6 +410,7 @@ export class SettingsPanel extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    document.addEventListener('keydown', this._onEscKeydown);
     this.zoomShow = nDB.get(TROFF_SETTING_UI_ZOOM_SHOW) !== false;
     this.playFullSongShow = nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
     this.loopButtonsShow = nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
@@ -431,6 +437,7 @@ export class SettingsPanel extends LitElement {
   }
 
   disconnectedCallback() {
+    document.removeEventListener('keydown', this._onEscKeydown);
     super.disconnectedCallback();
     this._unsubscribeInstallState?.();
     this._unsubscribeInstallState = undefined;
