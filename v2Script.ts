@@ -3146,8 +3146,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       // Corrupt-file MediaError: capture the code only — silently (no
       // toast/alert) and with no PII.
       try {
-        const target = (event as unknown as { target?: { error?: { code?: unknown } } })
-          .target;
+        const target = (event as unknown as { target?: { error?: { code?: unknown } } }).target;
         const code = Number(target?.error?.code);
         const safeCode = Number.isFinite(code) ? code : 0;
         console.error('Media element error:', safeCode);
@@ -3209,8 +3208,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         if (currentSongData) {
           currentSongData.currentStartMarker = markerId;
           nDB.set(songKey, currentSongData);
-          const goToMarker: boolean =
-            nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
+          const goToMarker: boolean = nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
           updateMarkerSlider(markerSlider, goToMarker);
         }
       }

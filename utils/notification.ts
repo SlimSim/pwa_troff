@@ -22,7 +22,7 @@ function getToastContainer(): HTMLDivElement {
     toastContainer = document.createElement('div');
     toastContainer.id = 'troff-toast-container';
     toastContainer.style.cssText =
-      'position:fixed;top:16px;right:16px;z-index:20000;' +
+      'position:fixed;top:0;right:0;padding:16px;z-index:20000;' +
       'display:flex;flex-direction:column;gap:8px;max-width:360px;';
     document.body.append(toastContainer);
   }
@@ -104,11 +104,7 @@ export function showLoading(message: string): {
   };
   toast.addEventListener('toast-dismissed', handleDismiss);
 
-  const finish = (
-    type: 'success' | 'error',
-    finishedMessage: string,
-    duration: number
-  ) => {
+  const finish = (type: 'success' | 'error', finishedMessage: string, duration: number) => {
     toast.loading = false;
     toast.type = type;
     toast.message = finishedMessage;
@@ -141,9 +137,10 @@ let progressBox: HTMLDivElement | null = null;
  *  - `update(percent)` — update the bar (0‑100)
  *  - `done()`           — fill to 100 %, then fade out after 400 ms
  */
-export function showDownloadProgress(
-  fileName: string
-): { update: (percent: number) => void; done: () => void } {
+export function showDownloadProgress(fileName: string): {
+  update: (percent: number) => void;
+  done: () => void;
+} {
   // Remove any existing progress notification
   if (progressBox) {
     progressBox.remove();
@@ -165,8 +162,7 @@ export function showDownloadProgress(
 
   const barOuter = document.createElement('div');
   barOuter.style.cssText =
-    'width:100%;height:8px;background:#e0e0e0;' +
-    'border-radius:4px;overflow:hidden;';
+    'width:100%;height:8px;background:#e0e0e0;' + 'border-radius:4px;overflow:hidden;';
 
   const barInner = document.createElement('div');
   barInner.style.cssText =

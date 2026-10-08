@@ -64,6 +64,7 @@ export class Toast extends LitElement {
 
     .message {
       flex: 1;
+      white-space: pre-line;
     }
 
     t-loading {
@@ -155,22 +156,16 @@ export class Toast extends LitElement {
     if (toastEl) {
       toastEl.classList.add('dismissing');
       setTimeout(() => {
-        this.dispatchEvent(
-          new CustomEvent('toast-dismissed', { bubbles: true, composed: true })
-        );
+        this.dispatchEvent(new CustomEvent('toast-dismissed', { bubbles: true, composed: true }));
       }, 300);
     } else {
-      this.dispatchEvent(
-        new CustomEvent('toast-dismissed', { bubbles: true, composed: true })
-      );
+      this.dispatchEvent(new CustomEvent('toast-dismissed', { bubbles: true, composed: true }));
     }
   }
 
   private _handleActionClick() {
     this._clearAutoDismiss();
-    this.dispatchEvent(
-      new CustomEvent('toast-action-clicked', { bubbles: true, composed: true })
-    );
+    this.dispatchEvent(new CustomEvent('toast-action-clicked', { bubbles: true, composed: true }));
     this._dismiss();
   }
 
@@ -185,9 +180,7 @@ export class Toast extends LitElement {
         ${this.loading ? html`<t-loading></t-loading>` : ''}
         <span class="message">${this.message}</span>
         ${this.actionLabel
-          ? html`<t-butt ghost @click=${this._handleActionClick}
-              >${this.actionLabel}</t-butt
-            >`
+          ? html`<t-butt ghost @click=${this._handleActionClick}>${this.actionLabel}</t-butt>`
           : ''}
       </div>
     `;
