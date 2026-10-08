@@ -39,10 +39,12 @@ export class BottomNav extends LitElement {
     super.connectedCallback();
     this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
     window.addEventListener('troff-visibility-changed', this._onVisibilityChanged);
+    document.addEventListener('keydown', this._onEscKeydown);
   }
 
   disconnectedCallback() {
     window.removeEventListener('troff-visibility-changed', this._onVisibilityChanged);
+    document.removeEventListener('keydown', this._onEscKeydown);
     super.disconnectedCallback();
   }
 
@@ -315,6 +317,31 @@ export class BottomNav extends LitElement {
     const customEvent = event as CustomEvent<{ setting: string; value: boolean }>;
     if (customEvent.detail?.setting === TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) {
       this.fullScreenCountdownShow = customEvent.detail.value;
+    }
+  };
+
+  private _onEscKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape') return;
+    this.showSpeedDropdown = false;
+    this.showTimeDropdown = false;
+    this.showMarkerDropdown = false;
+    if (this.settingsPanelVisible) {
+      this.settingsPanelVisible = false;
+      this.dispatchEvent(
+        new CustomEvent('settings-toggle', {
+          detail: { visible: false },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+    if (this.isPlaying === true || this.isStartingPlayback === true) {
+      this.dispatchEvent(
+        new CustomEvent('pause-requested', {
+          bubbles: true,
+          composed: true,
+        })
+      );
     }
   };
 

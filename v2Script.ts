@@ -91,6 +91,7 @@ import {
 import log from './utils/log.js';
 import { showToast, showLoading } from './utils/notification.js';
 import { initPwa } from './utils/pwa.js';
+import { maybeShowMessengerBrowserNotice } from './utils/messengerBrowser.js';
 import { syncFirebaseGroups } from './utils/firebase-sync.js';
 import { toSongKey } from './utils/utils.js';
 import {
@@ -106,7 +107,15 @@ import {
   setSentryVersion,
   setSentryApp,
   addAndStartSentry,
+  SentryCaptureException,
 } from './utils/sentry.js';
+import {
+  clampSeekTime,
+  isDiscontinuity,
+  shouldTreatEndedAsGap,
+  buildPlaybackErrorContext,
+  isBenignPlayError,
+} from './utils/playback-resilience.js';
 import { getManifest } from './utils/manifestHelper.js';
 import { updateWakeLockForPlayback } from './utils/phoneUtils.js';
 
@@ -177,11 +186,34 @@ initPwa({
       }
     ),
 });
+maybeShowMessengerBrowserNotice();
 
 // The media element currently playing (audio singleton, or the #videoElement when
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.
 let activeMedia: HTMLMediaElement = audio;
 const getActiveMedia = () => activeMedia;
+
+// Corrupt-MP3 resilience: the buffered seekable range can end early (iOS
+// WebKit skips corrupt frames), so every currentTime assignment is clamped to
+// what is actually seekable. Never throws when seekable is unavailable.
+const getSeekableEnd = (media: HTMLMediaElement): number => {
+  try {
+    const seekable = media.seekable;
+    if (seekable && seekable.length > 0) {
+      const end = seekable.end(seekable.length - 1);
+      if (Number.isFinite(end) && end > 0) {
+        return end;
+      }
+    }
+  } catch {
+    // TimeRanges unavailable (e.g. mocks) — fall through to duration.
+  }
+  const duration = Number(media.duration);
+  return Number.isFinite(duration) ? duration : 0;
+};
+
+const clampMediaTime = (media: HTMLMediaElement, requested: number): number =>
+  clampSeekTime(requested, Number(media.duration), getSeekableEnd(media));
 
 const tempoSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -291,7 +323,8 @@ const updateMarkerSlider = (markerSlider: MarkerSlider, setAudioTime: boolean = 
         console.log('markerSlider.startMarkerId', markerSlider.startMarkerId);
       }, 30);
 
-      getActiveMedia().currentTime = markerSlider.getPlaybackStart();
+      const media = getActiveMedia();
+      media.currentTime = clampMediaTime(media, markerSlider.getPlaybackStart());
     }
   } else if (markerSlider) {
     // No song selected, use default state
@@ -444,8 +477,7 @@ const handleArrowKeyDown = (event: KeyboardEvent) => {
 
     const media = getActiveMedia();
     const direction = event.key === 'ArrowRight' ? 1 : -1;
-    const duration = media.duration || 0;
-    media.currentTime = Math.min(duration, Math.max(0, media.currentTime + direction * increment));
+    media.currentTime = clampMediaTime(media, media.currentTime + direction * increment);
     return;
   }
 
@@ -496,7 +528,12 @@ document.addEventListener('keydown', handleArrowKeyDown, true);
 
 // Initialize components and set up event listeners
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function handleV2Boot() {
+  // DOMContentLoaded fires once per page load, but each module re-import
+  // (e.g. per-test setups using vi.resetModules) would stack another boot
+  // handler on the shared document, wiring stale media mocks to the new DOM.
+  // Self-remove so only the latest boot stays active.
+  document.removeEventListener('DOMContentLoaded', handleV2Boot);
   // Global handler for the iOS WebKit IndexedDB connection-lost bug
   // (WebKit Bug #273827 / #277615). When iOS kills the network process under
   // memory pressure, Firebase's internal IndexedDB operations fail with this
@@ -587,6 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingPlaybackStart: number | undefined;
   let playbackCountdownInterval: number | undefined;
   let isLoopTransitionPause = false;
+  let lastTimeUpdateTime = 0;
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
 
@@ -665,14 +703,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const getTimelineDuration = () => {
+    // Prefer the live media duration: markerSlider.max can be stale after a
+    // corrupt-tail skip revised the duration mid-file.
+    const liveDuration = withSafeNumber(getActiveMedia().duration, 0);
+    if (liveDuration > 0) {
+      return liveDuration;
+    }
+
     const durationFromSlider = withSafeNumber(markerSlider?.max, 0);
     if (durationFromSlider > 0) {
       return durationFromSlider;
-    }
-
-    const durationFromAudio = withSafeNumber(getActiveMedia().duration, 0);
-    if (durationFromAudio > 0) {
-      return durationFromAudio;
     }
 
     const metadataDuration = withSafeNumber(getCurrentSongMetadata()?.duration, 0);
@@ -1756,12 +1796,46 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.max(0, footer.waitBetween ?? 0) * 1000;
   };
 
+  // Numeric-only snapshot of the live playback state for silent Sentry
+  // capture (no song keys, names, URLs — no PII).
+  const buildLivePlaybackContext = (errorCode: number) =>
+    buildPlaybackErrorContext({
+      duration: Number(getActiveMedia().duration),
+      currentTime: Number(getActiveMedia().currentTime),
+      seekableEnd: getSeekableEnd(getActiveMedia()),
+      playbackStart: markerSlider ? Number(markerSlider.getPlaybackStart()) : 0,
+      playbackStop: markerSlider ? Number(markerSlider.getPlaybackStop()) : 0,
+      loopTimesLeft: Number(loopTimesLeft),
+      fileSize: 0,
+      readyState: Number(getActiveMedia().readyState),
+      networkState: Number(getActiveMedia().networkState),
+      errorCode,
+    });
+
+  // Silent playback-error reporting: real decode/network failures are captured
+  // to Sentry with numeric-only context (no toast/alert; cookie consent is
+  // enforced inside SentryCaptureException which no-ops when Sentry is absent).
+  // Benign AbortError/NotAllowedError interruptions stay local (console only).
+  const handlePlayRejection = (error: unknown): void => {
+    if (isBenignPlayError(error)) {
+      console.error(error);
+      return;
+    }
+    console.error(error);
+    try {
+      const playError = error instanceof Error ? error : new Error('Playback failed');
+      SentryCaptureException(playError, buildLivePlaybackContext(0));
+    } catch (captureError) {
+      console.error(captureError);
+    }
+  };
+
   const schedulePlaybackAfterDelay = (delay: number) => {
     clearPendingPlaybackStart();
 
     if (delay <= 0) {
       clearPlaybackCountdown();
-      getActiveMedia().play().catch(console.error);
+      getActiveMedia().play().catch(handlePlayRejection);
       return;
     }
 
@@ -1782,7 +1856,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .play()
         .catch((error) => {
           clearPendingPlaybackStart();
-          console.error(error);
+          handlePlayRejection(error);
         });
     }, delay);
   };
@@ -1790,7 +1864,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const seekToStartMarker = () => {
     const startTime = markerSlider.getPlaybackStart();
     if (Number.isFinite(startTime)) {
-      getActiveMedia().currentTime = startTime;
+      const media = getActiveMedia();
+      media.currentTime = clampMediaTime(media, startTime);
     }
   };
 
@@ -1823,7 +1898,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pendingPlaybackStart !== undefined) {
       clearPendingPlaybackStart();
       clearPlaybackCountdown();
-      getActiveMedia().play().catch(console.error);
+      getActiveMedia().play().catch(handlePlayRejection);
       updateHeaderCountdownDisplay();
       return;
     }
@@ -1836,7 +1911,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // If paused, play immediately (no delay)
-    getActiveMedia().play().catch(console.error);
+    getActiveMedia().play().catch(handlePlayRejection);
     updateHeaderCountdownDisplay();
   };
 
@@ -2566,6 +2641,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    footer.addEventListener('pause-requested', () => {
+      if (pendingPlaybackStart !== undefined) {
+        clearPendingPlaybackStart();
+        clearPlaybackCountdown();
+      }
+      if (!getActiveMedia().paused) {
+        getActiveMedia().pause();
+      }
+      updateHeaderCountdownDisplay();
+    });
+
     // Listen for speed and volume changes. Speed changes come from both the
     // footer dial and the video player's vertical-scroll gesture, so they share
     // one handler that applies the rate to every media element.
@@ -2698,7 +2784,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we have a playback start time defined in markerSlider
         const media = getActiveMedia();
         if (media) {
-          media.currentTime = markerSlider.getPlaybackStart();
+          media.currentTime = clampMediaTime(media, markerSlider.getPlaybackStart());
         }
       });
 
@@ -2711,7 +2797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!media || !Number.isFinite(time)) {
           return;
         }
-        media.currentTime = time;
+        media.currentTime = clampMediaTime(media, time);
         if (markerSlider) {
           markerSlider.value = time;
 
@@ -2915,6 +3001,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateMarkerSlider(markerSlider);
       selectFirstAndLastMarkers();
       void applySavedZoomWindowForCurrentSong();
+      syncSliderMaxToLiveDuration();
 
       // Save the media duration on the song if it isn't saved yet (issue #31)
       const duration = getActiveMedia().duration;
@@ -2933,53 +3020,74 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
     const onTimeUpdate = () => {
-      header.currentTime = formatDuration(getActiveMedia().currentTime);
-      markerSlider.value = getActiveMedia().currentTime;
-
-      // Check if playback reached the stop point
-      if (getActiveMedia().currentTime >= markerSlider.getPlaybackStop()) {
-        const playbackStart = markerSlider.getPlaybackStart();
-        if (Number.isFinite(loopTimesLeft)) {
-          if (loopTimesLeft <= 1) {
-            getActiveMedia().pause();
-            getActiveMedia().currentTime = playbackStart;
-            resetLoopTimesCounter();
-            return;
-          }
-
-          loopTimesLeft -= 1;
-          updateLoopTimesDisplay();
+      try {
+        const media = getActiveMedia();
+        const now = Number(media.currentTime);
+        // Always reflect the ACTUAL media time (even across decoder jumps) —
+        // never freeze the UI on a stale value.
+        if (header) {
+          header.currentTime = formatDuration(now);
+        }
+        if (markerSlider && Number.isFinite(now)) {
+          markerSlider.value = now;
+        }
+        if (Number.isFinite(now) && isDiscontinuity(lastTimeUpdateTime, now)) {
+          console.log('Playback discontinuity detected:', lastTimeUpdateTime, now);
+        }
+        if (Number.isFinite(now)) {
+          lastTimeUpdateTime = now;
+        }
+        if (!markerSlider) {
+          return;
         }
 
-        // Apply "increment until" speed change on each loop restart
-        if (!settingsPanel.incrementUntillDisabled) {
-          const targetSpeed = Number(settingsPanel.incrementUntillValue) || 0;
-          const currentSpeed = getActiveMedia().playbackRate * 100;
-          const newSpeed = calculateIncrementUntilSpeed(currentSpeed, targetSpeed, loopTimesLeft);
-          getActiveMedia().playbackRate = newSpeed / 100;
-          if (videoElement) {
-            videoElement.playbackRate = newSpeed / 100;
-          }
-          if (videoPlayer) {
-            (videoPlayer as { speed?: number }).speed = newSpeed;
-          }
-          if (footer) {
-            footer.speed = newSpeed;
-          }
-          const songKey = getCurrentSongKey();
-          if (songKey) {
-            nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', newSpeed);
-          }
-          syncCurrentSongControlsValues();
-        }
+        // Check if playback reached the stop point
+        if (now >= markerSlider.getPlaybackStop()) {
+          const playbackStart = markerSlider.getPlaybackStart();
+          if (Number.isFinite(loopTimesLeft)) {
+            if (loopTimesLeft <= 1) {
+              media.pause();
+              media.currentTime = clampMediaTime(media, playbackStart);
+              resetLoopTimesCounter();
+              return;
+            }
 
-        const waitBetweenDelay = getWaitBetweenDelay();
-        isLoopTransitionPause = true;
-        getActiveMedia().currentTime = playbackStart;
-        schedulePlaybackAfterDelay(waitBetweenDelay);
-        if (waitBetweenDelay > 0) {
-          getActiveMedia().pause();
+            loopTimesLeft -= 1;
+            updateLoopTimesDisplay();
+          }
+
+          // Apply "increment until" speed change on each loop restart
+          if (settingsPanel && !settingsPanel.incrementUntillDisabled) {
+            const targetSpeed = Number(settingsPanel.incrementUntillValue) || 0;
+            const currentSpeed = getActiveMedia().playbackRate * 100;
+            const newSpeed = calculateIncrementUntilSpeed(currentSpeed, targetSpeed, loopTimesLeft);
+            getActiveMedia().playbackRate = newSpeed / 100;
+            if (videoElement) {
+              videoElement.playbackRate = newSpeed / 100;
+            }
+            if (videoPlayer) {
+              (videoPlayer as { speed?: number }).speed = newSpeed;
+            }
+            if (footer) {
+              footer.speed = newSpeed;
+            }
+            const songKey = getCurrentSongKey();
+            if (songKey) {
+              nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', newSpeed);
+            }
+            syncCurrentSongControlsValues();
+          }
+
+          const waitBetweenDelay = getWaitBetweenDelay();
+          isLoopTransitionPause = true;
+          media.currentTime = clampMediaTime(media, playbackStart);
+          schedulePlaybackAfterDelay(waitBetweenDelay);
+          if (waitBetweenDelay > 0) {
+            media.pause();
+          }
         }
+      } catch (error) {
+        console.error(error);
       }
     };
     const onPlay = () => {
@@ -3014,20 +3122,66 @@ document.addEventListener('DOMContentLoaded', () => {
       if (footer) {
         footer.isPlaying = false;
       }
+      // Corrupt-tail recovery: ended fired while content remains and no loop
+      // restart is pending — nudge forward past the gap and resume, silently.
+      const media = getActiveMedia();
+      if (
+        pendingPlaybackStart === undefined &&
+        shouldTreatEndedAsGap(Number(media.currentTime), Number(media.duration))
+      ) {
+        try {
+          media.currentTime = clampMediaTime(media, Number(media.currentTime) + 2);
+          media.play().catch(handlePlayRejection);
+        } catch (error) {
+          console.error(error);
+        }
+      }
       updateHeaderCountdownDisplay();
+    };
+    const onMediaError = (event: Event): void => {
+      // Corrupt-file MediaError: capture the code only — silently (no
+      // toast/alert) and with no PII.
+      try {
+        const target = (event as unknown as { target?: { error?: { code?: unknown } } })
+          .target;
+        const code = Number(target?.error?.code);
+        const safeCode = Number.isFinite(code) ? code : 0;
+        console.error('Media element error:', safeCode);
+        SentryCaptureException(
+          new Error(`Media error code ${safeCode}`),
+          buildLivePlaybackContext(safeCode)
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    // Re-sync the slider range from the LIVE duration (loadedmetadata can
+    // revise it, and durationchange fires when iOS skips a corrupt tail).
+    const syncSliderMaxToLiveDuration = () => {
+      const liveDuration = getActiveMedia().duration;
+      if (markerSlider && Number.isFinite(liveDuration) && liveDuration > 0) {
+        markerSlider.max = liveDuration;
+      }
+    };
+    const onDurationChange = () => {
+      syncSliderMaxToLiveDuration();
     };
 
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('durationchange', onDurationChange);
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onMediaError);
     if (videoElement) {
       videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
+      videoElement.addEventListener('durationchange', onDurationChange);
       videoElement.addEventListener('timeupdate', onTimeUpdate);
       videoElement.addEventListener('play', onPlay);
       videoElement.addEventListener('pause', onPause);
       videoElement.addEventListener('ended', onEnded);
+      videoElement.addEventListener('error', onMediaError);
     }
   }
 
@@ -3038,7 +3192,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for slider value changes
     markerSlider.addEventListener('value-changed', (event: any) => {
-      getActiveMedia().currentTime = event.detail.value;
+      const media = getActiveMedia();
+      media.currentTime = clampMediaTime(media, Number(event.detail.value));
     });
 
     // Listen for start marker selection

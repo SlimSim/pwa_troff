@@ -136,6 +136,7 @@ export class THelpTip extends LitElement {
   private _portalRoot: ShadowRoot | null = null;
 
   private _boundHandleDocumentClick!: (event: MouseEvent) => void;
+  private _boundHandleKeydown!: (event: KeyboardEvent) => void;
   private _boundHandleReposition!: () => void;
   private _boundHandleVisualViewportChange!: () => void;
 
@@ -149,6 +150,8 @@ export class THelpTip extends LitElement {
     super.connectedCallback();
     this._boundHandleDocumentClick = this._handleDocumentClick.bind(this);
     document.addEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
+    this._boundHandleKeydown = this._handleKeydown.bind(this);
+    document.addEventListener('keydown', this._boundHandleKeydown);
     this._boundHandleReposition = this._reposition.bind(this);
     window.addEventListener('scroll', this._boundHandleReposition, { capture: true });
     window.addEventListener('resize', this._boundHandleReposition);
@@ -164,6 +167,7 @@ export class THelpTip extends LitElement {
     super.disconnectedCallback();
     this._destroyPortal();
     document.removeEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
+    document.removeEventListener('keydown', this._boundHandleKeydown);
     window.removeEventListener('scroll', this._boundHandleReposition, { capture: true });
     window.removeEventListener('resize', this._boundHandleReposition);
     if (window.visualViewport) {
@@ -296,6 +300,12 @@ export class THelpTip extends LitElement {
     if (!isInside && this.open) {
       this.open = false;
     }
+  }
+
+  private _handleKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    if (!this.open) return;
+    this.open = false;
   }
 
   private _handleSummaryClick = () => {

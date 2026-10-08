@@ -1,4 +1,5 @@
 import log from './log.js';
+import type { PlaybackErrorContext } from './playback-resilience.js';
 
 interface SentryExceptionValue {
   type?: string;
@@ -51,8 +52,11 @@ document.addEventListener('cookieConsentGiven', () => {
   addAndStartSentry();
 });
 
-export function SentryCaptureException(error: Error) {
+export function SentryCaptureException(error: Error, context?: PlaybackErrorContext) {
   if (typeof Sentry !== 'undefined') {
+    if (context !== undefined) {
+      (error as Error & { errorContext?: PlaybackErrorContext }).errorContext = context;
+    }
     Sentry.captureException(error);
   }
 }

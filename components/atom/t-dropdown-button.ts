@@ -50,6 +50,7 @@ export class DropdownButton extends LitElement {
   @property({ type: String }) mobilePosition = 'auto';
 
   private _boundHandleDocumentClick!: (event: MouseEvent) => void;
+  private _boundHandleKeydown!: (event: KeyboardEvent) => void;
   private _boundHandleReposition!: () => void;
   private _boundHandleVisualViewportChange!: () => void;
 
@@ -57,6 +58,8 @@ export class DropdownButton extends LitElement {
     super.connectedCallback();
     this._boundHandleDocumentClick = this._handleDocumentClick.bind(this);
     document.addEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
+    this._boundHandleKeydown = this._handleKeydown.bind(this);
+    document.addEventListener('keydown', this._boundHandleKeydown);
     this._boundHandleReposition = this._reposition.bind(this);
     window.addEventListener('scroll', this._boundHandleReposition, { capture: true });
     window.addEventListener('resize', this._boundHandleReposition);
@@ -71,6 +74,7 @@ export class DropdownButton extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
+    document.removeEventListener('keydown', this._boundHandleKeydown);
     window.removeEventListener('scroll', this._boundHandleReposition, { capture: true });
     window.removeEventListener('resize', this._boundHandleReposition);
     if (window.visualViewport) {
@@ -144,6 +148,12 @@ export class DropdownButton extends LitElement {
     if (!isInside && this.open) {
       this.open = false;
     }
+  }
+
+  private _handleKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    if (!this.open) return;
+    this.open = false;
   }
 
   private _handleButtonClick(event: Event) {
