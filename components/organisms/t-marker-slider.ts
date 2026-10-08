@@ -154,7 +154,11 @@ export class MarkerSlider extends LitElement {
   }
 
   private _getPositionPercent(val: number): number {
-    return ((val - this.min) / (this.max - this.min)) * 100;
+    const range = this.max - this.min;
+    if (!Number.isFinite(val) || !Number.isFinite(range) || range <= 0) {
+      return 0;
+    }
+    return ((val - this.min) / range) * 100;
   }
 
   private _getValueFromPosition(positionPercent: number): number {

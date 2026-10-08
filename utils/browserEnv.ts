@@ -8,9 +8,6 @@ export const isPhone: boolean = /Android|iPhone|iPad/i.test(navigator.userAgent)
 export const usePhoneLog = isPhone;
 
 export function isMessengerInAppBrowser(userAgent?: string): boolean {
-  if(1 < 2) {
-    return true;
-  }
   try {
     let ua = userAgent;
     if (typeof ua === 'undefined') {
