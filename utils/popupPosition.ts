@@ -14,8 +14,9 @@ export interface PopupPositionInput {
   boundaryRect?: { top: number; bottom: number } | null;
   margin?: number;
   gap?: number;
-  /** Popover: prefer the popup fully to the right of the trigger (default centers it). */
-  preferPosition?: 'center' | 'right';
+  /** Popover: prefer the popup fully to the right of the trigger, optionally
+   *  above it ('top-right') (default centers it). */
+  preferPosition?: 'center' | 'right' | 'top-right';
   /** Dropdown: prefer opening down or up (default 'down'). Falls back to the side
    *  with more room, then clamps inside the bounds so the popup never goes off-screen. */
   preferSide?: 'down' | 'up';
@@ -36,7 +37,9 @@ export function computePopupPosition(input: PopupPositionInput): { top: number; 
   const spaceBelow = boundsBottom - triggerRect.bottom - GAP;
   const spaceAbove = triggerRect.top - boundsTop - GAP;
 
-  const preferDown = (input.preferSide ?? 'down') !== 'up';
+  // 'top-right' (popover) prefers opening above, like preferSide: 'up'.
+  const preferDown =
+    (input.preferSide ?? 'down') !== 'up' && input.preferPosition !== 'top-right';
 
   // Prefer the requested side; fall back to the side with more room; then
   // clamp inside the bounds so the popup never goes off-screen.
@@ -71,7 +74,7 @@ export function computePopupPosition(input: PopupPositionInput): { top: number; 
     left = triggerRect.right - popupWidth;
   } else if (input.horizontalAlign === 'left') {
     left = triggerRect.left;
-  } else if (input.preferPosition === 'right') {
+  } else if (input.preferPosition === 'right' || input.preferPosition === 'top-right') {
     left = triggerRect.right + GAP;
   } else {
     left = triggerRect.left + triggerRect.width / 2 - popupWidth / 2;

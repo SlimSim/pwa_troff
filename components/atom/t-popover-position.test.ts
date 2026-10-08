@@ -388,4 +388,146 @@ describe('computePopupPosition', () => {
       }).left
     ).toBe(260 + 4);
   });
+
+  describe("preferPosition: 'top-right'", () => {
+    it('places the popup ABOVE and to the RIGHT of the trigger when there is room above', () => {
+      const popupWidth = 200;
+      const popupHeight = 100;
+      const pos = computePopupPosition({
+        triggerRect: makeRect(300, 335, 200, 260),
+        popupWidth,
+        popupHeight,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferPosition: 'top-right',
+      });
+
+      // Vertical: prefers ABOVE → triggerRect.top - popupHeight - gap(4)
+      expect(pos.top).toBe(300 - popupHeight - 4);
+      expect(pos.top).toBeLessThan(300);
+      // Horizontal: like 'right' → triggerRect.right + gap(4)
+      expect(pos.left).toBe(260 + 4);
+      // Stays fully inside the viewport (margin=8 on all sides)
+      expect(pos.top).toBeGreaterThanOrEqual(8);
+      expect(pos.top + popupHeight).toBeLessThanOrEqual(VIEWPORT_H - 8);
+      expect(pos.left).toBeGreaterThanOrEqual(8);
+      expect(pos.left + popupWidth).toBeLessThanOrEqual(VIEWPORT_W - 8);
+    });
+
+    it('picks ABOVE even when both sides fit (the default picks below)', () => {
+      const popupHeight = 100;
+      const pos = computePopupPosition({
+        triggerRect: makeRect(200, 235, 200, 260),
+        popupWidth: 200,
+        popupHeight,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferPosition: 'top-right',
+      });
+
+      // spaceAbove = 200 - 4 = 196 and spaceBelow = 800 - 235 - 4 = 561,
+      // so BOTH sides fit → must pick above (the down-default picks below).
+      expect(pos.top).toBe(200 - popupHeight - 4);
+      expect(pos.top).not.toBe(235 + 4);
+      // Horizontal part of 'top-right' is the 'right' behavior
+      expect(pos.left).toBe(260 + 4);
+    });
+
+    it('falls back BELOW the trigger when there is no room above', () => {
+      const popupHeight = 100;
+      const pos = computePopupPosition({
+        triggerRect: makeRect(5, 40, 200, 260),
+        popupWidth: 200,
+        popupHeight,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferPosition: 'top-right',
+      });
+
+      // No room above (top=5 → only 1px of space with gap) → fall back below:
+      // triggerRect.bottom + gap(4)
+      expect(pos.top).toBe(40 + 4);
+      expect(pos.top).toBeGreaterThan(40);
+      // The horizontal part still applies: right of the trigger
+      expect(pos.left).toBe(260 + 4);
+      expect(pos.top).toBeGreaterThanOrEqual(8);
+      expect(pos.top + popupHeight).toBeLessThanOrEqual(VIEWPORT_H - 8);
+    });
+
+    it('clamps horizontally to the right viewport edge when the popup would overflow', () => {
+      const popupWidth = 200;
+      const pos = computePopupPosition({
+        triggerRect: makeRect(100, 130, 850, 910),
+        popupWidth,
+        popupHeight: 150,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferPosition: 'top-right',
+      });
+
+      // Unclamped right-side placement would be 910 + 4 = 914 → popup right
+      // edge 1114 exceeds the viewport → clamp so the right edge stays at
+      // viewportWidth - margin(8).
+      expect(pos.left).toBe(VIEWPORT_W - popupWidth - 8);
+      expect(pos.left).toBeGreaterThanOrEqual(8);
+      expect(pos.left + popupWidth).toBeLessThanOrEqual(VIEWPORT_W - 8);
+      // Vertical fallback with no room above → below the trigger
+      expect(pos.top).toBe(130 + 4);
+    });
+
+    it('still respects a supplied boundaryRect vertically', () => {
+      // The above placement (306 - 200 - 4 = 102) would sit 2px above
+      // boundaryTop + margin → clamped down to 108.
+      const aboveClamped = computePopupPosition({
+        triggerRect: makeRect(306, 336, 200, 260),
+        popupWidth: 200,
+        popupHeight: 200,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        boundaryRect: { top: 100, bottom: 700 },
+        preferPosition: 'top-right',
+      });
+
+      // Never above boundaryTop + margin(8)
+      expect(aboveClamped.top).toBe(100 + 8);
+      expect(aboveClamped.top).toBeGreaterThanOrEqual(100 + 8);
+      expect(aboveClamped.top + 200).toBeLessThanOrEqual(700);
+
+      // Near the boundary bottom the popup must never poke below it.
+      const nearBottom = computePopupPosition({
+        triggerRect: makeRect(660, 690, 200, 260),
+        popupWidth: 200,
+        popupHeight: 200,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        boundaryRect: { top: 100, bottom: 700 },
+        preferPosition: 'top-right',
+      });
+
+      // Room above (660 - 100 - 4 = 556) → above the trigger
+      expect(nearBottom.top).toBe(660 - 200 - 4);
+      expect(nearBottom.top).toBeGreaterThanOrEqual(100 + 8);
+      expect(nearBottom.top + 200).toBeLessThanOrEqual(700);
+    });
+
+    it('horizontal part is still overridden by horizontalAlign', () => {
+      const popupHeight = 100;
+      const pos = computePopupPosition({
+        triggerRect: makeRect(300, 335, 200, 260),
+        popupWidth: 200,
+        popupHeight,
+        viewportWidth: VIEWPORT_W,
+        viewportHeight: VIEWPORT_H,
+        preferPosition: 'top-right',
+        horizontalAlign: 'left',
+      });
+
+      // horizontalAlign wins for the horizontal axis: popup left edge =
+      // trigger left edge (NOT trigger.right + gap).
+      expect(pos.left).toBe(200);
+      expect(pos.left).not.toBe(260 + 4);
+      // Vertical axis still prefers ABOVE
+      expect(pos.top).toBe(300 - popupHeight - 4);
+    });
+  });
 });

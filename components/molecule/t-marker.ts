@@ -168,7 +168,7 @@ export class Marker extends LitElement {
               <t-popover
                 .body=${this.marker.info?.trim()}
                 .boundary=${this._boundary}
-                prefer-position="right"
+                prefer-position="top-right"
                 @popover-opened=${this._handlePopoverOpened}
               >
                 <t-butt

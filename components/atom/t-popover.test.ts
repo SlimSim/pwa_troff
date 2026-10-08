@@ -253,4 +253,10 @@ describe('t-popover', () => {
     await element.updateComplete;
     expect(element.preferPosition).toBe('right');
   });
+
+  it("prefer-position attribute 'top-right' maps to the preferPosition property", async () => {
+    element.setAttribute('prefer-position', 'top-right');
+    await element.updateComplete;
+    expect(element.preferPosition).toBe('top-right');
+  });
 });

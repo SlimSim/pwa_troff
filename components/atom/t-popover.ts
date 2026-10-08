@@ -63,7 +63,7 @@ export class Popover extends LitElement {
   @property({ type: String }) body = '';
   @property({ type: Object }) boundary: Element | null = null;
   @property({ type: String, attribute: 'prefer-position' })
-  preferPosition: 'center' | 'right' = 'center';
+  preferPosition: 'center' | 'right' | 'top-right' = 'center';
 
   private _portalHost: HTMLDivElement | null = null;
   private _portalRoot: ShadowRoot | null = null;
