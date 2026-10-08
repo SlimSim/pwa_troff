@@ -1,6 +1,13 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, render } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getManifest } from '../../utils/manifestHelper.js';
+import {
+  hasCookieConsent,
+  setCookieConsent,
+  COOKIE_CONSENT_KEY,
+} from '../../utils/cookie-consent.js';
+import { clearConsoleBuffer, copyConsoleBuffer } from '../../utils/console-buffer.js';
+import { showToast } from '../../utils/notification.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import { nDB } from '../../assets/internal/db.js';
 import {
@@ -132,6 +139,16 @@ export class SettingsPanel extends LitElement {
       margin-top: 8px;
     }
 
+    .logs-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .logs-row t-butt {
+      flex: 1;
+      min-width: 0;
+    }
+
     .settings-shell {
       display: grid;
       display: flex;
@@ -218,6 +235,27 @@ export class SettingsPanel extends LitElement {
       opacity: 0.7;
       display: block;
       margin-top: 2px;
+    }
+
+    .overlay.open {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .revoke-popup {
+      background-color: var(--secondary-color);
+      color: var(--on-secondary-color);
+      border-radius: 8px;
+      padding: 16px;
+      max-width: min(340px, 90vw);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .settings-section h3 {
@@ -359,6 +397,13 @@ export class SettingsPanel extends LitElement {
     if (!this.visible) return;
     this._handleClose();
   };
+  private _onConsentGiven = (): void => {
+    this.cookieConsentAccepted = hasCookieConsent();
+  };
+  private _onConsentStorage = (event: StorageEvent): void => {
+    if (event.key !== null && event.key !== COOKIE_CONSENT_KEY) return;
+    this.cookieConsentAccepted = hasCookieConsent();
+  };
   @state() private keepScreenSupported = (() => {
     const nav = navigator as unknown as { wakeLock?: { request?: unknown } };
     return !!(
@@ -407,14 +452,20 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) playFullSongShow = true;
   @property({ type: Boolean }) loopButtonsShow = true;
   @property({ type: Boolean }) fullScreenCountdownShow = true;
+  @property({ type: Boolean }) cookieConsentAccepted = false;
+  @state() private showCookieRevokeConfirm = false;
+  private _revokePortalHost: HTMLDivElement | null = null;
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener('keydown', this._onEscKeydown);
+    document.addEventListener('cookieConsentGiven', this._onConsentGiven);
+    window.addEventListener('storage', this._onConsentStorage);
     this.zoomShow = nDB.get(TROFF_SETTING_UI_ZOOM_SHOW) !== false;
     this.playFullSongShow = nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
     this.loopButtonsShow = nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
     this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
+    this.cookieConsentAccepted = hasCookieConsent();
     // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
     import('../../utils/pwa.js')
       .then(({ getInstallState, subscribeToInstallState }) => {
@@ -438,6 +489,9 @@ export class SettingsPanel extends LitElement {
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onEscKeydown);
+    document.removeEventListener('cookieConsentGiven', this._onConsentGiven);
+    window.removeEventListener('storage', this._onConsentStorage);
+    this._destroyRevokePortal();
     super.disconnectedCallback();
     this._unsubscribeInstallState?.();
     this._unsubscribeInstallState = undefined;
@@ -481,6 +535,100 @@ export class SettingsPanel extends LitElement {
 
   private _handleReloadClick() {
     import('../../utils/pwa.js').then(({ updatePWA }) => updatePWA?.());
+  }
+
+  private _handleCookieConsentClick() {
+    if (this.cookieConsentAccepted) {
+      this.showCookieRevokeConfirm = true;
+      return;
+    }
+    setCookieConsent(true);
+    this.cookieConsentAccepted = true;
+  }
+
+  private _handleRevokeConfirm() {
+    setCookieConsent(false);
+    this.cookieConsentAccepted = false;
+    this.showCookieRevokeConfirm = false;
+    window.location.reload();
+  }
+
+  private _handleRevokeCancel() {
+    this.showCookieRevokeConfirm = false;
+  }
+
+  protected override updated(changedProperties: Map<string, unknown>): void {
+    if (changedProperties.has('showCookieRevokeConfirm')) {
+      this._renderRevokePortal();
+    }
+  }
+
+  private _renderRevokePortal(): void {
+    if (!this.showCookieRevokeConfirm) {
+      this._destroyRevokePortal();
+      return;
+    }
+    if (this._revokePortalHost === null) {
+      this._revokePortalHost = document.createElement('div');
+      document.body.appendChild(this._revokePortalHost);
+    }
+    render(
+      html`
+        <style>
+          .overlay.open {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+          }
+          .revoke-popup {
+            background-color: var(--secondary-color);
+            color: var(--on-secondary-color);
+            border-radius: 8px;
+            padding: 16px;
+            max-width: min(340px, 90vw);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+        </style>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Revoke cookie consent confirm"
+          class="overlay open"
+        >
+          <div class="revoke-popup">
+            <p>Revoking cookie consent requires a reload. Do you want to continue?</p>
+            <t-butt @click=${(): void => this._handleRevokeConfirm()}>
+              Revoke cookie consent and reload
+            </t-butt>
+            <t-butt @click=${(): void => this._handleRevokeCancel()}> Keep cookie consent </t-butt>
+          </div>
+        </div>
+      `,
+      this._revokePortalHost
+    );
+  }
+
+  private _destroyRevokePortal(): void {
+    if (this._revokePortalHost !== null) {
+      render(html``, this._revokePortalHost);
+      this._revokePortalHost.remove();
+      this._revokePortalHost = null;
+    }
+  }
+
+  private _handleCopyLogsClick() {
+    void copyConsoleBuffer();
+  }
+
+  private _handleClearLogsClick() {
+    clearConsoleBuffer();
+    showToast('Logs cleared', 'success');
   }
 
   private _handleClose() {
@@ -599,9 +747,9 @@ export class SettingsPanel extends LitElement {
           <div style="display:flex; gap:8px; align-items:center;">
             ${this.installState === 'available'
               ? html`<t-butt special @click=${this._handleInstallClick}>
-                <t-icon name="install"></t-icon>
-                Install Troff
-              </t-butt>`
+                  <t-icon name="install"></t-icon>
+                  Install Troff
+                </t-butt>`
               : ''}
             ${this.signedIn
               ? html`
@@ -995,7 +1143,10 @@ export class SettingsPanel extends LitElement {
               class="settings-width"
               text="Screen and version settings."
             >
-              <div class="settings-section" style="display: flex; flex-direction: column; gap: 8px;">
+              <div
+                class="settings-section"
+                style="display: flex; flex-direction: column; gap: 8px;"
+              >
                 <t-butt
                   toggle
                   ellipsis
@@ -1020,20 +1171,17 @@ export class SettingsPanel extends LitElement {
                 ${!this.keepScreenSupported
                   ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                   : ''}
-                <div class="settings-section" style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
-                  <t-butt
-                    toggle
-                    ellipsis
-                    .active=${this.bannerShow}
-                    @click=${() => this._toggleSetting('bannerShow', this.bannerShow)}
-                  >
-                    Show dev banner
-                  </t-butt>
-                </div>
-                <div
-                  class="settings-section"
-                  style="margin: 0; display: flex; gap: 8px;"
+
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.cookieConsentAccepted}
+                  @click=${this._handleCookieConsentClick}
                 >
+                  Accept cookies
+                </t-butt>
+
+                <div class="settings-section" style="margin: 0; display: flex; gap: 8px;">
                   <t-butt
                     toggle
                     ellipsis
@@ -1057,10 +1205,33 @@ export class SettingsPanel extends LitElement {
                   </t-butt>
                 </div>
 
-                <div class="settings-section settings-sub" style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
-                  <t-butt ellipsis title="Restart Troff!" @click=${this._handleReloadClick}>
-                    <t-icon name="reload"></t-icon>
-                    Restart Troff
+                <t-butt ellipsis title="Restart Troff!" @click=${this._handleReloadClick}>
+                  <t-icon name="reload"></t-icon>
+                  Restart Troff
+                </t-butt>
+
+                <div
+                  class="settings-section settings-sub logs-row"
+                  style="margin: 0; display: flex; gap: 8px;"
+                >
+                  <t-butt ellipsis class="flex-grow" @click=${this._handleCopyLogsClick}>
+                    Copy logs
+                  </t-butt>
+                  <t-butt ellipsis class="flex-grow" @click=${this._handleClearLogsClick}>
+                    Clear logs
+                  </t-butt>
+                </div>
+                <div
+                  class="settings-section"
+                  style="margin: 0; display: flex; flex-direction: column; gap: 8px;"
+                >
+                  <t-butt
+                    toggle
+                    ellipsis
+                    .active=${this.bannerShow}
+                    @click=${() => this._toggleSetting('bannerShow', this.bannerShow)}
+                  >
+                    Show dev banner
                   </t-butt>
                 </div>
 
@@ -1072,6 +1243,24 @@ export class SettingsPanel extends LitElement {
           </div>
         </div>
       </div>
+      ${this.showCookieRevokeConfirm
+        ? html`
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Revoke cookie consent confirm"
+              class="overlay open"
+            >
+              <div class="revoke-popup">
+                <p>Revoking cookie consent requires a reload. Do you want to continue?</p>
+                <t-butt @click=${this._handleRevokeConfirm}>
+                  Revoke cookie consent and reload
+                </t-butt>
+                <t-butt @click=${this._handleRevokeCancel}> Keep cookie consent </t-butt>
+              </div>
+            </div>
+          `
+        : ''}
     `;
   }
 }

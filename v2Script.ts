@@ -89,6 +89,11 @@ import {
   TROFF_TROFF_DATA_ID_AND_FILE_NAME,
 } from './constants/constants.js';
 import log from './utils/log.js';
+import { installConsoleBuffer } from './utils/console-buffer.js';
+import { hasCookieConsent } from './utils/cookie-consent.js';
+
+// Capture console output from boot so Advanced Settings can copy it.
+installConsoleBuffer();
 import { showToast, showLoading } from './utils/notification.js';
 import { initPwa } from './utils/pwa.js';
 import { maybeShowMessengerBrowserNotice } from './utils/messengerBrowser.js';
@@ -594,9 +599,8 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
   void getManifest()
     .then((manifest) => {
       setSentryVersion(manifest.version);
-      // Consent key is defined in assets/internal/cookie_consent.ts (legacy);
-      // checked directly so v2 doesn't import that file.
-      if (localStorage.getItem('TROFF_COOKIE_CONSENT_ACCEPTED') === 'true') {
+      // Consent key lives in utils/cookie-consent.ts (single source of truth).
+      if (hasCookieConsent()) {
         addAndStartSentry();
       }
       // Set up dev banner on header
