@@ -128,6 +128,12 @@ export class TButt extends LitElement {
       box-shadow: 0px 0px 0px 4px var(--important-button, #dd2c00);
     }
 
+    /* Style for the DANGER button (e.g. volume boost > 100%) */
+    :host([danger]) .base {
+      background-color: var(--danger-color, #d42626);
+      color: var(--on-danger-color, #fff);
+    }
+
     .base.full-width {
       width: 100%;
     }
@@ -178,6 +184,7 @@ export class TButt extends LitElement {
   @property({ type: Boolean }) ghost = false;
   @property({ type: Boolean }) ellipsis = false;
   @property({ type: Boolean }) important = false;
+  @property({ type: Boolean, reflect: true }) danger = false;
   @property({ type: Boolean }) special = false;
   @property({ type: Boolean }) fullWidth = false;
   @property({ type: Boolean }) toggle = false;

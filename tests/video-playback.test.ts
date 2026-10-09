@@ -220,6 +220,11 @@ describe('v2Script video playback integration', () => {
     videoPlayer.hidden = true;
     videoElement = document.createElement('video');
     videoElement.id = 'videoElement';
+    // happy-dom never loads real media, so <video>.duration stays NaN. v2Script
+    // clamps every seek through clampSeekTime(requested, duration, seekableEnd),
+    // which returns 0 for a non-finite duration — stub the metadata the same way
+    // the other seek tests stub `audio.duration` (e.g. keyboard-arrow-seek-marker).
+    Object.defineProperty(videoElement, 'duration', { value: 120, configurable: true });
     videoPlayer.appendChild(videoElement);
     document.body.appendChild(videoPlayer);
   });

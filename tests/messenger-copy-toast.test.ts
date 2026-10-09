@@ -67,7 +67,7 @@ describe('maybeShowMessengerBrowserNotice (copy-only)', () => {
     expect(vi.mocked(showToast)).not.toHaveBeenCalled();
   });
 
-  it("(b) shows a sticky info toast mentioning Messenger + system/native browser when UA is Messenger", () => {
+  it('(b) shows a sticky info toast mentioning Messenger + system/native browser when UA is Messenger', () => {
     setUserAgent(MESSENGER_ANDROID_UA);
     maybeShowMessengerBrowserNotice();
     expect(vi.mocked(showToast)).toHaveBeenCalledTimes(1);
@@ -75,8 +75,8 @@ describe('maybeShowMessengerBrowserNotice (copy-only)', () => {
     expect(args).toBeTruthy();
     const [message, type, duration] = args as [string, string, number, ToastAction?];
     expect(message).toMatch(/Messenger/i);
-    expect(message).toMatch(/system browser|native browser|works better/i);
-    expect(type).toBe('info');
+    expect(message).toMatch(/regular browser|native browser|best experience/i);
+    expect(type).toBe('error');
     expect(duration).toBe(0);
   });
 

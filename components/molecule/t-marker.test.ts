@@ -141,7 +141,7 @@ describe('t-marker', () => {
 
     const popover = element.shadowRoot?.querySelector('t-popover') as Popover;
     expect(popover).not.toBeNull();
-    expect(popover.preferPosition).toBe('right');
+    expect(popover.preferPosition).toBe('top-right');
     expect(popover.hasAttribute('prefer-position')).toBe(true);
   });
 

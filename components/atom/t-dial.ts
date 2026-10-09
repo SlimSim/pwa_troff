@@ -95,6 +95,25 @@ export class Dial extends LitElement {
       transform-origin: center;
     }
 
+    /* Danger states use the dedicated --danger-color / --on-danger-color vars
+       (accent-color-2 is not red in every theme, so it can't be used here) */
+    .value-display.danger {
+      color: var(--danger-color, #dd2c00);
+    }
+
+    .dial-knob.danger {
+      background-color: var(--danger-color, #dd2c00);
+      color: var(--on-danger-color, #fff);
+    }
+
+    .dial-knob.danger:hover {
+      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--danger-color, #dd2c00);
+    }
+
+    .dial-knob.danger:active {
+      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--danger-color, #dd2c00);
+    }
+
     .value-controls {
       display: flex;
       align-items: center;
@@ -209,6 +228,13 @@ export class Dial extends LitElement {
   @property({ type: Number }) min: number | undefined;
   @property({ type: Number }) max: number | undefined;
   @property({ type: Boolean, attribute: 'show-disable-button' }) showDisableButton = false;
+  @property({ type: Number }) dangerWhenOver: number | undefined;
+
+  get isDanger(): boolean {
+    if (this.dangerWhenOver === undefined || this.dangerWhenOver === null) return false;
+    if (Number.isNaN(this.dangerWhenOver) || Number.isNaN(this._value)) return false;
+    return this._value > this.dangerWhenOver;
+  }
 
   private isDragging = false;
   private initialValue = 1;
@@ -296,6 +322,9 @@ export class Dial extends LitElement {
           .t-dial-portal-value.disabled {
             color: var(--on-gray-out);
           }
+          .t-dial-portal-value.danger {
+            color: var(--danger-color, #dd2c00);
+          }
           .t-dial-portal-knob {
             width: 120px;
             height: 120px;
@@ -314,6 +343,10 @@ export class Dial extends LitElement {
           .t-dial-portal-knob.disabled {
             background-color: var(--on-gray-out);
           }
+          .t-dial-portal-knob.danger {
+            background-color: var(--danger-color, #dd2c00);
+            color: var(--on-danger-color, #fff);
+          }
           .t-dial-portal-container {
             position: relative;
             width: 140px;
@@ -325,14 +358,20 @@ export class Dial extends LitElement {
         </style>
         <div class="t-dial-portal">
           <div class="t-dial-portal-badge">
-            <div class="t-dial-portal-value ${this.disabled ? 'disabled' : ''}">
+            <div
+              class="t-dial-portal-value ${this.disabled ? 'disabled' : ''} ${this.isDanger
+                ? 'danger'
+                : ''}"
+            >
               ${this._formatDisplayValue()}${this.unit}
             </div>
             <t-icon class="floating-dial-icon" name="rotate-flat" large></t-icon>
           </div>
           <div class="t-dial-portal-container">
             <div
-              class="t-dial-portal-knob ${this.disabled ? 'disabled' : ''}"
+              class="t-dial-portal-knob ${this.disabled ? 'disabled' : ''} ${this.isDanger
+                ? 'danger'
+                : ''}"
               style="transform: rotate(${this.currentRotation}deg);"
               @mousedown=${this._handleMouseDown}
               @touchstart=${this._handleTouchStart}
@@ -651,6 +690,7 @@ export class Dial extends LitElement {
           </t-butt>
           <t-butt
             class="value-display ${this.disabled ? 'disabled' : ''}"
+            ?danger=${this.isDanger}
             @mousedown=${this._handleValueMouseDown}
             @touchstart=${this._handleValueTouchStart}
             title="Press and hold to use dial"

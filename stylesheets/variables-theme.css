@@ -8,6 +8,8 @@
   --accent-color-1: #431c5d;
   --accent-color-2: #dd2c00;
   --accent-color-3: #787b1e;
+  --danger-color: #d42626;
+  --on-danger-color: #fff;
 
   --on-primary-color: black;
   --on-primary-color-link: #0051a8;
@@ -72,6 +74,8 @@
   --accent-color-1: #25d200;
   --accent-color-2: #d42626;
   --accent-color-3: #ffcf53;
+  --danger-color: #d42626;
+  --on-danger-color: #fff;
 
   --on-primary-color: black;
   --on-primary-color-link: #0051a8;
@@ -137,6 +141,8 @@
   --accent-color-1: #ffeb3b;
   --accent-color-2: #000;
   --accent-color-3: #f5f5f5;
+  --danger-color: #d42626;
+  --on-danger-color: #fff;
 
   --on-primary-color: black;
   --on-primary-color-link: white;
@@ -204,6 +210,8 @@
   --accent-color-1: #ad974f;
   --accent-color-2: #231f20;
   --accent-color-3: #8e793e;
+  --danger-color: #d42626;
+  --on-danger-color: #fff;
 
   --on-primary-color: #545454;
   --on-primary-color-link: #0051a8;
@@ -268,6 +276,8 @@
   --accent-color-1: #ffff00; /* Bright yellow for highlights */
   --accent-color-2: #00ff00; /* Neon green for play/groups */
   --accent-color-3: #0000ff; /* Electric blue for variety */
+  --danger-color: #d42626;
+  --on-danger-color: #fff;
 
   --on-primary-color: #ffffff; /* White text on red */
   --on-primary-color-link: #00ffff; /* Cyan links on red */
@@ -333,6 +343,8 @@
   --accent-color-1: #00897b;
   --accent-color-2: #e65100;
   --accent-color-3: #0277bd;
+  --danger-color: #d42626;
+  --on-danger-color: #fff;
 
   --on-primary-color: black;
   --on-primary-color-link: #004d40;
@@ -784,6 +796,7 @@ body[data-mode='dark'] {
   --accent-color-1: #c8b800;
   --accent-color-2: #009900;
   --accent-color-3: #0000cc;
+  --danger-color: #8b0000;
 
   --slider-color: var(--theme-color);
   --countdown-overlay-color: var(--theme-color);

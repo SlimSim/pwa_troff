@@ -147,6 +147,27 @@ export class BottomNav extends LitElement {
       z-index: 1;
     }
 
+    .speed-volume-wrapper {
+      position: relative;
+    }
+
+    .volume-boost-badge {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.1rem;
+      height: 1.1rem;
+      font-size: 1.1rem;
+      border-radius: 50%;
+      background-color: var(--danger-color, #d42626);
+      color: var(--on-danger-color, #fff);
+      cursor: pointer;
+    }
+
     @media (min-width: 768px) {
       .hide-on-wide {
         display: none;
@@ -179,6 +200,10 @@ export class BottomNav extends LitElement {
 
   private _handleSpeedDropdownToggled(event: CustomEvent) {
     this.showSpeedDropdown = event.detail.open;
+  }
+
+  private _handleVolumeBoostBadgeClick() {
+    this.showSpeedDropdown = !this.showSpeedDropdown;
   }
 
   private _handleTimeDropdownToggled(event: CustomEvent) {
@@ -358,7 +383,17 @@ export class BottomNav extends LitElement {
           </t-butt>
         </div>
 
-        <div class="nav-item hide-on-wide">
+        <div class="nav-item hide-on-wide speed-volume-wrapper">
+          ${this.volume > 100
+            ? html`<div
+                class="volume-boost-badge danger"
+                data-testid="volume-boost-badge"
+                title="Volume is boosted above 100%"
+                @click=${this._handleVolumeBoostBadgeClick}
+              >
+                <t-icon name="volume" slim></t-icon>
+              </div>`
+            : ''}
           <t-dropdown-button
             position="up"
             align="left"
@@ -381,9 +416,10 @@ export class BottomNav extends LitElement {
               </t-help-tip>
               <t-dial
                 min="0"
-                max="100"
+                max="420"
                 step="5"
                 label="Volume"
+                dangerWhenOver="100"
                 iconName="volume"
                 defaultValue="75"
                 .value=${this.volume}

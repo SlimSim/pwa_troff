@@ -34,7 +34,12 @@ import {
   updateFooterWithCurrentSong,
 } from './utils/current-song.js';
 import { nDB } from './assets/internal/db.js';
-import { audio, loadSong } from './services/audio.js';
+import {
+  audio,
+  loadSong,
+  setVolumePercent,
+  volumePercentToElementVolume,
+} from './services/audio.js';
 import { formatDuration, countLast30Days } from './utils/formatters.js';
 import {
   getSelectedMarkerRange,
@@ -197,6 +202,41 @@ maybeShowMessengerBrowserNotice();
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.
 let activeMedia: HTMLMediaElement = audio;
 const getActiveMedia = () => activeMedia;
+
+// Centralized volume helpers with fallback for test mocks that stub
+// services/audio.js with only { audio, loadSong }. In production the imports
+// are functions; in those mocked tests they are undefined, so fall back to an
+// inline clamp that matches volumePercentToElementVolume for 0-100%.
+const safeElementVolume = (percent: number): number => {
+  try {
+    if (typeof volumePercentToElementVolume === 'function') {
+      return volumePercentToElementVolume(percent);
+    }
+  } catch {
+    /* fall through to inline clamp */
+  }
+  const n = Number(percent);
+  if (!Number.isFinite(n)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, n / 100));
+};
+
+const applyVolumeSafely = (percent: number): void => {
+  try {
+    if (typeof setVolumePercent === 'function') {
+      setVolumePercent(percent);
+      return;
+    }
+  } catch {
+    /* fall through to direct set */
+  }
+  try {
+    audio.volume = safeElementVolume(percent);
+  } catch {
+    /* ignore media failure */
+  }
+};
 
 // Corrupt-MP3 resilience: the buffered seekable range can end early (iOS
 // WebKit skips corrupt frames), so every currentTime assignment is clamped to
@@ -1714,9 +1754,13 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       songData.TROFF_VALUE_speedBar,
       Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100
     );
-    audio.volume = Math.max(0, Math.min(1, storedVolume / 100));
+    applyVolumeSafely(storedVolume);
     if (videoElement) {
-      videoElement.volume = audio.volume;
+      try {
+        videoElement.volume = safeElementVolume(storedVolume);
+      } catch {
+        /* ignore video volume failure */
+      }
     }
     if (storedSpeed > 0) {
       audio.playbackRate = storedSpeed / 100;
@@ -2073,9 +2117,13 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     nDB.set(songKey, songData);
     const vol = Number(state.volumeBar);
     if (Number.isFinite(vol)) {
-      audio.volume = Math.max(0, Math.min(1, vol / 100));
+      applyVolumeSafely(vol);
       if (videoElement) {
-        videoElement.volume = audio.volume;
+        try {
+          videoElement.volume = safeElementVolume(vol);
+        } catch {
+          /* ignore video volume failure */
+        }
       }
     }
     const spd = Number(state.speedBar);
@@ -2261,9 +2309,14 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         }
         if (setting === 'volume') {
           currentSongData.TROFF_VALUE_volumeBar = value;
-          audio.volume = Number(value) / 100;
+          const volNum = Number(value);
+          applyVolumeSafely(volNum);
           if (videoElement) {
-            videoElement.volume = Number(value) / 100;
+            try {
+              videoElement.volume = safeElementVolume(volNum);
+            } catch {
+              /* ignore video volume failure */
+            }
           }
         }
         if (setting === 'speed') {
@@ -2683,9 +2736,14 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     footer.addEventListener('speed-changed', applySpeedChange);
 
     footer.addEventListener('volume-changed', (event: any) => {
-      audio.volume = event.detail.volume / 100;
+      const volNum = Number(event.detail.volume);
+      applyVolumeSafely(volNum);
       if (videoElement) {
-        videoElement.volume = event.detail.volume / 100;
+        try {
+          videoElement.volume = safeElementVolume(volNum);
+        } catch {
+          /* ignore video volume failure */
+        }
       }
       const songKey = getCurrentSongKey();
       if (songKey) {

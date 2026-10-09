@@ -652,9 +652,10 @@ export class CurrentSongControls extends LitElement {
                   <t-dial
                     .key=${this.noKeyboard ? '' : 'v'}
                     min="0"
-                    max="100"
+                    max="420"
                     step="5"
                     label="Volume"
+                    dangerWhenOver="100"
                     iconName="volume"
                     unit=""
                     defaultValue="75"
