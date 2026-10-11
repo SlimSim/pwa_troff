@@ -24,6 +24,7 @@ import { toSongKey } from './utils.js';
 import type { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../types/troff.d.js';
 import log from './log.js';
 import { mergeSyncedSongData } from './merge-synced-song-data.js';
+import { normalizeGroupSongStatus } from './group-song-status.js';
 
 const ts = () => new Date().toLocaleTimeString();
 
@@ -154,6 +155,7 @@ async function doSyncFirebaseGroups(firebaseUserEmail: string): Promise<void> {
             fullPath: songKey,
             galleryId: 'pwa-galleryId',
             fileUrl,
+            status: normalizeGroupSongStatus(songData.status),
           });
       }
 

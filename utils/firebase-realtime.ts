@@ -12,10 +12,11 @@
 
 import { nDB } from '../assets/internal/db.js';
 import { toSongKey } from './utils.js';
-import type { TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
+import type { GroupSongStatus, TroffFirebaseGroupIdentifyer, TroffObjectLocal } from '../types/troff.d.js';
 import log from './log.js';
 import { mergeSyncedSongData, SHARED_FILE_DATA_FIELDS } from './merge-synced-song-data.js';
 import { extractAlbumArt } from './album-art.js';
+import { normalizeGroupSongStatus } from './group-song-status.js';
 
 const CACHE_NAME = 'songCache-v1.0';
 
@@ -301,6 +302,7 @@ type ServerSongDoc = {
   galleryId: string;
   fileUrl: string;
   jsonDataInfo?: string;
+  status: GroupSongStatus;
 };
 
 type GroupSongsSnapshot = {
@@ -332,6 +334,7 @@ async function handleGroupSongsSnapshot(groupId: string, snapshot: GroupSongsSna
       galleryId: 'pwa-galleryId',
       fileUrl,
       jsonDataInfo: data.jsonDataInfo as string | undefined,
+      status: normalizeGroupSongStatus(data.status),
     });
   }
 
@@ -382,6 +385,7 @@ async function handleGroupSongsSnapshot(groupId: string, snapshot: GroupSongsSna
       fullPath: serverDoc.fullPath,
       galleryId: serverDoc.galleryId,
       fileUrl: serverDoc.fileUrl,
+      status: serverDoc.status,
     });
     changed = true;
   }

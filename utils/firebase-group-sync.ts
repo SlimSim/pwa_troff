@@ -7,6 +7,7 @@
 import { nDB } from '../assets/internal/db.js';
 import type { TroffFirebaseGroupIdentifyer, TroffFirebaseSongIdentifyer } from '../types/troff.d.js';
 import log from './log.js';
+import { normalizeGroupSongStatus } from './group-song-status.js';
 import { fileUrlToStorageFileName, removeLocalInfo, toSongKey } from './utils.js';
 
 const CACHE_NAME = 'songCache-v1.0';
@@ -137,6 +138,7 @@ export async function shareSongToFirebaseGroup(
       songKey: cleanSongKey,
       fileUrl,
       jsonDataInfo: JSON.stringify(publicData),
+      status: normalizeGroupSongStatus(group.songs.find((s) => s.fullPath === cleanSongKey)?.status),
     };
 
     const docRef = await addDoc(collection(db, 'Groups', group.firebaseGroupDocId, 'Songs'), payload);

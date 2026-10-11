@@ -68,6 +68,8 @@ import type {
   TroffManualImportExport,
   TroffFileData,
   TroffHistoryList,
+  TroffFirebaseGroupIdentifyer,
+  TroffFirebaseSongIdentifyer,
 } from './types/troff.d.js';
 import {
   TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE,
@@ -4159,6 +4161,50 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       }
     } catch (error) {
       log.e('Error adding song to group:', error);
+    }
+  });
+
+  // Listen for group song status changes from the group detail view
+  document.addEventListener('group-song-status-changed', async (event: Event) => {
+    const customEvent = event as CustomEvent<{
+      groupKey: string;
+      songKey: string;
+      status: unknown;
+    }>;
+    const { groupKey, songKey, status } = customEvent.detail || {};
+    if (!groupKey || !songKey) return;
+
+    try {
+      const { normalizeGroupSongStatus } = await import('./utils/group-song-status.js');
+      const { applyGroupSongStatusChange } = await import('./utils/group-song-status-ui.js');
+      const normalized = normalizeGroupSongStatus(status);
+
+      await _updateGroupSongs(groupKey, (songs) =>
+        applyGroupSongStatusChange(songs, songKey, normalized)
+      );
+
+      // Persist the status to the Firestore Songs doc when the entry is synced
+      const songListsAfter = (nDB.get('aoSongLists') as TroffFirebaseGroupIdentifyer[] | undefined) || [];
+      const updatedGroup = songListsAfter.find((sl: TroffFirebaseGroupIdentifyer) => {
+        const slKey = sl.firebaseGroupDocId || sl.id;
+        return slKey != null && String(slKey) === String(groupKey);
+      });
+      const entry = updatedGroup?.songs?.find((s: TroffFirebaseSongIdentifyer) => s.fullPath === songKey);
+      if (updatedGroup?.firebaseGroupDocId && entry?.firebaseSongDocId) {
+        try {
+          const firebaseClient = await import('./services/firebaseClient.js');
+          const { db, doc, setDoc } = firebaseClient;
+          await setDoc(
+            doc(db, 'Groups', updatedGroup.firebaseGroupDocId, 'Songs', entry.firebaseSongDocId),
+            { status: normalized },
+            { merge: true }
+          );
+        } catch (err) {
+          log.e('Error saving group song status to Firebase:', err);
+        }
+      }
+    } catch (error) {
+      log.e('Error changing group song status:', error);
     }
   });
 

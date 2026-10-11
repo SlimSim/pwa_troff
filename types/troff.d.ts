@@ -135,11 +135,14 @@ export type TroffFirebaseGroupIdentifyer = {
   songs: TroffFirebaseSongIdentifyer[];
 };
 
+export type GroupSongStatus = 'prio' | 'active' | 'standard' | 'archived';
+
 export type TroffFirebaseSongIdentifyer = {
   firebaseSongDocId?: string;
   fileUrl?: string;
   fullPath: string;
   galleryId: string;
+  status?: GroupSongStatus;
 };
 
 export type SonglistSongInfo = {

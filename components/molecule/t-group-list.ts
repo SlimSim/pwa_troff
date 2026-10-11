@@ -8,7 +8,18 @@ import './t-detail-header.js';
 import './t-header-actions.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import { filterTracks } from '../../utils/media-search.js';
-import type { TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
+import {
+  getGroupSongStatusCountText,
+  normalizeGroupSongStatus,
+} from '../../utils/group-song-status.js';
+import {
+  buildGroupSongStatusChangedEvent,
+  getGroupSongStatusSections,
+} from '../../utils/group-song-status-ui.js';
+import type {
+  GroupSongStatus,
+  TroffFirebaseGroupIdentifyer,
+} from '../../types/troff.d.js';
 
 // Re-export so group-list can double as barrel if needed
 export type { TroffFirebaseGroupIdentifyer };
@@ -224,6 +235,18 @@ export class GroupList extends LitElement {
       max-height: none;
     }
 
+    /* Group song status sections */
+    .status-section-header {
+      padding: 10px 16px 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+
+    .status-expander {
+      margin: 8px 16px;
+    }
+
     /* Mobile responsive adjustments */
     @media (min-width: 576px) {
       .group-item {
@@ -281,6 +304,9 @@ export class GroupList extends LitElement {
   /** Whether a group save/sync is in progress (forwards to the detail header badge). */
   @state() private _groupSyncing = false;
 
+  /** Whether the archived status section is expanded (local state only, not synced). */
+  @state() private _archivedExpanded = false;
+
   private _boundSyncStatusHandler?: (event: Event) => void;
 
   connectedCallback() {
@@ -337,6 +363,7 @@ export class GroupList extends LitElement {
     this._groupTrackSearch = '';
     this._infoExpanded = false;
     this._songManagementOpen = false;
+    this._archivedExpanded = false;
     this._highlightedIndex = -1;
     this.dispatchEvent(
       new CustomEvent('group-detail-opened', {
@@ -410,6 +437,96 @@ export class GroupList extends LitElement {
         composed: true,
       })
     );
+  }
+
+  /** Toggle the archived status section (local state only, not synced). */
+  private _toggleArchived() {
+    this._archivedExpanded = !this._archivedExpanded;
+  }
+
+  /** Forward a t-media status change as the group status-changed event. */
+  private _handleMediaStatusChange(
+    e: CustomEvent<{ songKey: string; status: GroupSongStatus }>
+  ): void {
+    e.stopPropagation();
+    this.dispatchEvent(
+      buildGroupSongStatusChangedEvent(e.detail.songKey, e.detail.status, this._selectedGroupKey)
+    );
+  }
+
+  /** Forward a t-media remove request as the group song-removed event. */
+  private _handleMediaRemoveSong(e: CustomEvent<{ songKey: string }>): void {
+    e.stopPropagation();
+    this._handleRemoveSong(e.detail.songKey);
+  }
+
+  /** Render one group-detail track row with its status accent and status control. */
+  private _renderGroupTrack(
+    track: {
+      songKey: string;
+      title: string;
+      artist: string;
+      album: string;
+      genre: string;
+      year: string;
+      comment: string;
+      duration: string;
+      rating: number;
+      tempo: string;
+      albumArt: string;
+      isVideo: boolean;
+      playsMonth: number;
+      playsTotal: number;
+      downloaded?: boolean;
+    },
+    status: GroupSongStatus,
+    highlighted: boolean
+  ) {
+    return html`
+      <div class="track-row">
+        <t-media
+          .active=${track.songKey === this.currentSongKey}
+          ?highlighted=${highlighted}
+          title=${track.title}
+          artist=${track.artist}
+          album=${track.album}
+          genre=${track.genre}
+          year=${track.year}
+          comment=${track.comment}
+          duration=${track.duration}
+          .rating=${track.rating}
+          tempo=${track.tempo}
+          albumArt=${track.albumArt}
+          .isVideo=${track.isVideo}
+          .playsMonth=${track.playsMonth}
+          .playsTotal=${track.playsTotal}
+          .songKey=${track.songKey}
+          .status=${status}
+          .hideEditButton=${this._songManagementOpen}
+          .showStatusButton=${true}
+          .downloaded=${track.downloaded !== false}
+          .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
+          .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
+          @song-status-changed=${this._handleMediaStatusChange}
+          @song-remove-requested=${this._handleMediaRemoveSong}
+        ></t-media>
+        ${this._songManagementOpen
+          ? html`
+              <div class="track-remove-overlay">
+                <t-butt
+                  icon
+                  confirm
+                  confirmText="Remove?"
+                  @click=${() => this._handleRemoveSong(track.songKey)}
+                  title="Remove from group"
+                >
+                  <t-icon name="delete"></t-icon>
+                </t-butt>
+              </div>
+            `
+          : ''}
+      </div>
+    `;
   }
 
   /** Handle click on "Add song to group" button in the detail header. */
@@ -572,51 +689,52 @@ export class GroupList extends LitElement {
             (t.title || '').toLowerCase().includes(trackQuery)
           )
         : selectedGroup.tracks;
+      const statusByKey: Record<string, unknown> = {};
+      for (const s of selectedGroup.songs || []) {
+        statusByKey[s.fullPath] = s.status;
+      }
+      const sections = getGroupSongStatusSections(filteredTracks, statusByKey);
+      const highlightedKey =
+        this._highlightedIndex >= 0 ? filteredTracks[this._highlightedIndex]?.songKey : '';
+      const archivedSection = sections.find((s) => s.status === 'archived');
 
       const inGroupContent = html`
-        ${filteredTracks.map(
-          (track, index) => html`
-            <div class="track-row">
-              <t-media
-                .active=${track.songKey === this.currentSongKey}
-                ?highlighted=${index === this._highlightedIndex}
-                title=${track.title}
-                artist=${track.artist}
-                album=${track.album}
-                genre=${track.genre}
-                year=${track.year}
-                comment=${track.comment}
-                duration=${track.duration}
-                .rating=${track.rating}
-                tempo=${track.tempo}
-                albumArt=${track.albumArt}
-                .isVideo=${track.isVideo}
-                .playsMonth=${track.playsMonth}
-                .playsTotal=${track.playsTotal}
-                .songKey=${track.songKey}
-                .hideEditButton=${this._songManagementOpen}
-                .downloaded=${track.downloaded !== false}
-                .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
-                .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}
-              ></t-media>
-              ${this._songManagementOpen
-                ? html`
-                    <div class="track-remove-overlay">
-                      <t-butt
-                        icon
-                        confirm
-                        confirmText="Remove?"
-                        @click=${() => this._handleRemoveSong(track.songKey)}
-                        title="Remove from group"
-                      >
-                        <t-icon name="delete"></t-icon>
-                      </t-butt>
-                    </div>
-                  `
-                : ''}
-            </div>
-          `
-        )}
+        ${sections
+          .filter((s) => s.status !== 'archived' && s.tracks.length > 0)
+          .map(
+            (section) => html`
+              <div class="status-section">
+                <div class="status-section-header">
+                  ${getGroupSongStatusCountText(section.status, section.tracks.length)}
+                </div>
+                ${section.tracks.map((track) =>
+                  this._renderGroupTrack(
+                    track,
+                    normalizeGroupSongStatus(statusByKey[track.songKey]),
+                    track.songKey === highlightedKey
+                  )
+                )}
+              </div>
+            `
+          )}
+        ${archivedSection && archivedSection.tracks.length > 0
+          ? html`
+              <div class="status-section">
+                <t-butt class="status-expander" @click=${this._toggleArchived}>
+                  ${this._archivedExpanded ? 'Hide archived songs' : archivedSection.expanderText}
+                </t-butt>
+                ${this._archivedExpanded
+                  ? archivedSection.tracks.map((track) =>
+                      this._renderGroupTrack(
+                        track,
+                        normalizeGroupSongStatus(statusByKey[track.songKey]),
+                        track.songKey === highlightedKey
+                      )
+                    )
+                  : ''}
+              </div>
+            `
+          : ''}
         ${filteredTracks.length === 0 && !trackQuery && !this._songManagementOpen
           ? html`<div class="empty-text" style="padding: 16px;">No songs in this group.</div>`
           : ''}

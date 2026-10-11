@@ -3,6 +3,16 @@ import { customElement, property } from 'lit/decorators.js';
 import './t-number-label.js';
 import './t-icon.js';
 import './t-loading.js';
+import './t-butt.js';
+import './t-help-tip.js';
+import './t-dropdown-button.js';
+import type { DropdownButton } from './t-dropdown-button.js';
+import {
+  GROUP_SONG_STATUS_LABELS,
+  GROUP_SONG_STATUS_ORDER,
+  normalizeGroupSongStatus,
+} from '../../utils/group-song-status.js';
+import type { GroupSongStatus } from '../../types/troff.d.js';
 
 @customElement('t-media')
 export class MediaItem extends LitElement {
@@ -17,14 +27,12 @@ export class MediaItem extends LitElement {
       align-items: flex-start;
       gap: 8px;
       padding: 8px 12px;
-      border-left: 4px solid transparent;
       border-bottom: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.1));
       cursor: pointer;
       position: relative;
       transition:
         background-color 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
+        box-shadow 0.2s ease;
     }
 
     .media-container:hover {
@@ -85,7 +93,6 @@ export class MediaItem extends LitElement {
     }
 
     .media-container.highlighted {
-      border-left-color: var(--accent-color-1, #431c5d);
       background-color: color-mix(in srgb, var(--accent-color-1, #431c5d) 18%, transparent);
       box-shadow: inset 0 0 0 1px
         color-mix(in srgb, var(--accent-color-1, #431c5d) 45%, transparent);
@@ -236,6 +243,24 @@ export class MediaItem extends LitElement {
       display: flex;
     }
 
+    /* Status popover trigger */
+    .status-box {
+      display: flex;
+      flex-direction: column;
+      padding: var(--spacing-md, 12px);
+      gap: var(--spacing-sm, 8px);
+    }
+
+    .status-box t-butt {
+      width: 100%;
+      padding-bottom: var(--spacing-sm, 8px);
+    }
+
+    .status-remove-row {
+      padding-top: var(--spacing-sm, 8px);
+      border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.15));
+    }
+
     /* Slim mode — compact rows for management lists */
     :host([slim]) .media-container {
       padding: 6px 8px 4px;
@@ -302,6 +327,8 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean }) expanded = false;
   @property({ type: Boolean }) hideEditButton = false;
+  /** Render the status popover trigger (t-help-tip) next to the edit button. */
+  @property({ type: Boolean }) showStatusButton = false;
   @property({ type: Boolean, reflect: true }) slim = false;
   @property({ type: Boolean }) downloaded = true;
   /** 0-100 = downloading with progress, -1 = waiting in queue, undefined/missing = done */
@@ -315,6 +342,8 @@ export class MediaItem extends LitElement {
   @property({ type: Number }) uploadProgress = -2;
   /** Whether a Firebase metadata sync for this song is in progress (badge). */
   @property({ type: Boolean }) syncing = false;
+  /** Group song status accent (prio/active/standard/archived). */
+  @property({ type: String, reflect: true }) status: GroupSongStatus = 'standard';
 
   private _boundSyncStatusHandler?: (event: Event) => void;
 
@@ -341,6 +370,33 @@ export class MediaItem extends LitElement {
     event.stopPropagation();
     this.dispatchEvent(
       new CustomEvent('song-edit-requested', {
+        detail: { songKey: this.songKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleStatusSelect(status: GroupSongStatus) {
+    const dropdown = this.shadowRoot?.querySelector('t-dropdown-button') as DropdownButton | null;
+    if (dropdown) {
+      dropdown.open = false;
+    }
+    this.dispatchEvent(
+      new CustomEvent('song-status-changed', {
+        detail: {
+          songKey: this.songKey,
+          status: normalizeGroupSongStatus(status),
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _handleRemoveSongClick() {
+    this.dispatchEvent(
+      new CustomEvent('song-remove-requested', {
         detail: { songKey: this.songKey },
         bubbles: true,
         composed: true,
@@ -513,6 +569,49 @@ export class MediaItem extends LitElement {
           </div>
         </div>
 
+        ${this.showStatusButton && this.songKey && !this.hideEditButton
+          ? html`<t-dropdown-button
+              class="edit-btn"
+              position="up"
+              @click=${(e: Event) => e.stopPropagation()}
+            >
+              <t-butt icon ghost slot="button" title="Set Status">
+                <t-icon name="more-vertical"></t-icon>
+              </t-butt>
+              <div slot="dropdown" class="status-box">
+                <t-help-tip h3="Status" position="up">
+                  Set the status for this song inside the group: 
+                  they are grouped togheter and the higher priority status
+                  are shown higher.<br />
+                  This only affects the display order within the group.
+                </t-help-tip>
+                <div>
+                ${GROUP_SONG_STATUS_ORDER.map(
+                  (status) => html`
+                    <t-butt
+                      full-width
+                      .fullWidth=${true}
+                      value=${status}
+                      ?active=${status === normalizeGroupSongStatus(this.status)}
+                      @click=${() => this._handleStatusSelect(status)}
+                    >
+                      ${GROUP_SONG_STATUS_LABELS[status]}
+                    </t-butt>
+                  `
+                )}
+                </div>
+                <div class="status-remove-row">
+                  <t-butt
+                    confirm
+                    confirmText="Are you sure?"
+                    @click=${this._handleRemoveSongClick}
+                  >
+                    Remove from group
+                  </t-butt>
+                </div>
+              </div>
+            </t-dropdown-button>`
+          : ''}
         ${this.songKey && !this.hideEditButton
           ? html`<t-butt
               class="edit-btn"

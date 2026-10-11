@@ -7,6 +7,7 @@
  *   - aStates (remembered states add/remove)
  *   - TROFF_VALUE_tapTempo (tap tempo)
  *   - info (the song note)
+ *   - status (the group song status tag)
  *   - the 8 shared fileData metadata fields (field-wise, see
  *     SHARED_FILE_DATA_FIELDS); every other fileData key stays local
  *
@@ -47,6 +48,10 @@ export function mergeSyncedSongData(
 
   if ('info' in remoteData) {
     result.info = remoteData.info;
+  }
+
+  if ('status' in remoteData) {
+    result.status = remoteData.status;
   }
 
   if ('fileData' in remoteData) {

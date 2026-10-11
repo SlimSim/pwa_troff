@@ -25,6 +25,10 @@ export class DropdownButton extends LitElement {
       z-index: 20000;
       min-width: 180px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      /* Neutralize UA popover defaults (padding: 0.25em; overflow: auto) so the
+         panel keeps its pre-popover plain-div appearance. */
+      padding: 0;
+      overflow: visible;
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.2s ease;
@@ -53,6 +57,7 @@ export class DropdownButton extends LitElement {
   private _boundHandleKeydown!: (event: KeyboardEvent) => void;
   private _boundHandleReposition!: () => void;
   private _boundHandleVisualViewportChange!: () => void;
+  private _popoverShown = false;
 
   connectedCallback() {
     super.connectedCallback();
@@ -72,6 +77,9 @@ export class DropdownButton extends LitElement {
   }
 
   disconnectedCallback() {
+    // Mirror the open-state cleanup: hidePopover() throws InvalidStateError on
+    // a popover that was never shown, so only hide if we showed it ourselves.
+    this._hidePopoverIfShown();
     super.disconnectedCallback();
     document.removeEventListener('mousedown', this._boundHandleDocumentClick, { capture: true });
     document.removeEventListener('keydown', this._boundHandleKeydown);
@@ -135,10 +143,34 @@ export class DropdownButton extends LitElement {
     dropdown.style.right = 'auto';
   }
 
+  /** Hide the top-layer popover, but only if we showed it ourselves
+   * (hidePopover() throws InvalidStateError on a never-shown popover), and
+   * only when the browser actually implements the Popover API. */
+  private _hidePopoverIfShown() {
+    if (!this._popoverShown) return;
+    this._popoverShown = false;
+    const dropdown = this.shadowRoot?.querySelector('.dropdown') as HTMLElement | null;
+    if (dropdown && typeof dropdown.hidePopover === 'function') {
+      dropdown.hidePopover();
+    }
+  }
+
   updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.has('open') && this.open) {
-      // Position immediately after render (works in tests and production)
-      this._positionDropdown();
+    if (changedProperties.has('open')) {
+      if (this.open) {
+        // Escape the surrounding stacking context via the top layer, BEFORE
+        // positioning. Feature-detected: old browsers / happy-dom fall back to
+        // the inert `popover` attribute.
+        const dropdown = this.shadowRoot?.querySelector('.dropdown') as HTMLElement | null;
+        if (dropdown && typeof dropdown.showPopover === 'function') {
+          dropdown.showPopover();
+          this._popoverShown = true;
+        }
+        // Position immediately after render (works in tests and production)
+        this._positionDropdown();
+      } else {
+        this._hidePopoverIfShown();
+      }
     }
   }
 
@@ -178,6 +210,7 @@ export class DropdownButton extends LitElement {
         <slot name="button"></slot>
         <div
           class="dropdown"
+          popover="manual"
           position=${this.position}
           align=${this.align}
           ?open=${this.open}

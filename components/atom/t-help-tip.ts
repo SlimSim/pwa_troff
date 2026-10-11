@@ -10,6 +10,12 @@ import type { PopupPositionInput } from '../../utils/popupPosition.js';
 export const popupStyles = css`
   .detail-content {
     position: fixed;
+    /* Neutralize UA popover defaults (overflow: auto; inset: 0) so the popup
+       keeps its pre-popover plain-div appearance. inset must be reset because
+       the popup is positioned via inline top/left only (inset: 0 would
+       stretch it). */
+    overflow: visible;
+    inset: auto;
     padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
     background-color: var(--help-tip-background);
     color: var(--on-help-tip-background);
@@ -124,6 +130,7 @@ export class THelpTip extends LitElement {
   `;
 
   @property({ type: Boolean, reflect: true }) open = false;
+  @property({ type: String }) icon = 'help';
   @property({ type: String }) h3 = '';
   @property({ type: String }) p = '';
   @property({ type: String }) position = 'down';
@@ -134,6 +141,7 @@ export class THelpTip extends LitElement {
 
   private _portalHost: HTMLDivElement | null = null;
   private _portalRoot: ShadowRoot | null = null;
+  private _popoverShown = false;
 
   private _boundHandleDocumentClick!: (event: MouseEvent) => void;
   private _boundHandleKeydown!: (event: KeyboardEvent) => void;
@@ -186,9 +194,17 @@ export class THelpTip extends LitElement {
 
   private _destroyPortal() {
     if (!this._portalHost) return;
+    const popup = this.popupElement;
+    // Mirror t-dropdown-button's _hidePopoverIfShown: hide the top-layer
+    // popover, but only if we showed it ourselves (hidePopover() throws
+    // InvalidStateError on a never-shown popover), and only when the browser
+    // actually implements the Popover API.
+    if (this._popoverShown && popup && typeof popup.hidePopover === 'function') {
+      popup.hidePopover();
+    }
+    this._popoverShown = false;
     // Move the slotted detail nodes back into the host's light DOM so they
     // stay assigned to the hidden slot (and aren't lost with the portal).
-    const popup = this.popupElement;
     if (popup) {
       for (const node of Array.from(popup.childNodes)) {
         this.appendChild(node);
@@ -219,6 +235,7 @@ export class THelpTip extends LitElement {
         <div
           id="${this._summaryId}-content"
           class="detail-content"
+          popover="manual"
           role="region"
           aria-labelledby=${this._summaryId}
         >
@@ -227,6 +244,16 @@ export class THelpTip extends LitElement {
       root,
       { host: this }
     );
+    // Escape the surrounding stacking context via the top layer BEFORE
+    // measuring/positioning. Feature-detected: old browsers / happy-dom fall
+    // back to the inert `popover` attribute. Only show once per portal
+    // instance — a slotchange re-render of the same open popup must not call
+    // showPopover again (InvalidStateError).
+    const popup = this.popupElement;
+    if (popup && !this._popoverShown && typeof popup.showPopover === 'function') {
+      popup.showPopover();
+      this._popoverShown = true;
+    }
     this._syncContentToPopup();
     this._positionPopup();
   }
@@ -343,7 +370,7 @@ export class THelpTip extends LitElement {
           ${this.h3 ? html`<h3 class="summary-h3">${this.h3}</h3>` : ''}
           ${this.p ? html`<p class="summary-p">${this.p}</p>` : ''}
         </span>
-        <t-icon class="help-icon" name=${this.open ? 'close' : 'help'} slim></t-icon>
+        <t-icon class="help-icon" name=${this.open ? 'close' : this.icon} slim></t-icon>
         <slot name="summary"></slot>
       </t-butt>
       <div class="detail-slot" aria-hidden="true">
