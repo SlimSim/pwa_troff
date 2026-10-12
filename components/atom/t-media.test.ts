@@ -88,7 +88,7 @@ describe('t-media song edit button', () => {
     expect(el.shadowRoot?.querySelector('.edit-btn')).toBeNull();
   });
 
-  it('clicking the edit button dispatches song-edit-requested with the songKey and not media-selected', async () => {
+  it('clicking the edit button inside the dropdown dispatches song-edit-requested with the songKey and not media-selected', async () => {
     const editSpy = vi.fn();
     const selectedSpy = vi.fn();
     el.addEventListener('song-edit-requested', editSpy);
@@ -97,7 +97,9 @@ describe('t-media song edit button', () => {
     el.songKey = 'my-song.mp3';
     await el.updateComplete;
 
-    const editBtn = el.shadowRoot?.querySelector('.edit-btn') as HTMLElement | null;
+    const editBtn = el.shadowRoot?.querySelector(
+      '.status-box t-butt[title="Edit song"]'
+    ) as HTMLElement | null;
     expect(editBtn).toBeTruthy();
     editBtn?.click();
     await el.updateComplete;

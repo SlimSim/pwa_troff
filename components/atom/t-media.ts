@@ -368,6 +368,10 @@ export class MediaItem extends LitElement {
 
   private _handleEditClick(event: Event) {
     event.stopPropagation();
+    const dropdown = this.shadowRoot?.querySelector('t-dropdown-button') as DropdownButton | null;
+    if (dropdown) {
+      dropdown.open = false;
+    }
     this.dispatchEvent(
       new CustomEvent('song-edit-requested', {
         detail: { songKey: this.songKey },
@@ -555,7 +559,9 @@ export class MediaItem extends LitElement {
         </div>
 
         <div class="details-column">
-          <div class="media-title"><span class="title-text">${this.title}</span>${syncingBadge}</div>
+          <div class="media-title">
+            <span class="title-text">${this.title}</span>${syncingBadge}
+          </div>
           <div class="media-details">
             ${text}
             ${hasMoreToShow && !this.expanded
@@ -569,7 +575,7 @@ export class MediaItem extends LitElement {
           </div>
         </div>
 
-        ${this.showStatusButton && this.songKey && !this.hideEditButton
+        ${this.songKey && !this.hideEditButton
           ? html`<t-dropdown-button
               class="edit-btn"
               position="up"
@@ -579,49 +585,43 @@ export class MediaItem extends LitElement {
                 <t-icon name="more-vertical"></t-icon>
               </t-butt>
               <div slot="dropdown" class="status-box">
-                <t-help-tip h3="Status" position="up">
-                  Set the status for this song inside the group: 
-                  they are grouped togheter and the higher priority status
-                  are shown higher.<br />
-                  This only affects the display order within the group.
-                </t-help-tip>
-                <div>
-                ${GROUP_SONG_STATUS_ORDER.map(
-                  (status) => html`
-                    <t-butt
-                      full-width
-                      .fullWidth=${true}
-                      value=${status}
-                      ?active=${status === normalizeGroupSongStatus(this.status)}
-                      @click=${() => this._handleStatusSelect(status)}
-                    >
-                      ${GROUP_SONG_STATUS_LABELS[status]}
-                    </t-butt>
-                  `
-                )}
-                </div>
-                <div class="status-remove-row">
-                  <t-butt
-                    confirm
-                    confirmText="Are you sure?"
-                    @click=${this._handleRemoveSongClick}
-                  >
-                    Remove from group
-                  </t-butt>
-                </div>
+                ${this.showStatusButton
+                  ? html`<t-help-tip h3="Status" position="up">
+                        Set the status for this song inside the group: they are grouped togheter and
+                        the higher priority status are shown higher.<br />
+                        This only affects the display order within the group.
+                      </t-help-tip>
+                      <div>
+                        ${GROUP_SONG_STATUS_ORDER.map(
+                          (status) => html`
+                            <t-butt
+                              full-width
+                              .fullWidth=${true}
+                              value=${status}
+                              ?active=${status === normalizeGroupSongStatus(this.status)}
+                              @click=${() => this._handleStatusSelect(status)}
+                            >
+                              ${GROUP_SONG_STATUS_LABELS[status]}
+                            </t-butt>
+                          `
+                        )}
+                      </div>
+                      <div class="status-remove-row">
+                        <t-butt
+                          confirm
+                          confirmText="Remove from group?"
+                          @click=${this._handleRemoveSongClick}
+                        >
+                          <t-icon name="remove"></t-icon> Remove
+                        </t-butt>
+                      </div>`
+                  : ''}
+                <t-butt title="Edit song" aria-label="Edit song" @click=${this._handleEditClick}>
+                  <t-icon name="edit"></t-icon>
+                  Edit
+                </t-butt>
               </div>
             </t-dropdown-button>`
-          : ''}
-        ${this.songKey && !this.hideEditButton
-          ? html`<t-butt
-              class="edit-btn"
-              ghost
-              title="Edit song"
-              aria-label="Edit song"
-              @click=${this._handleEditClick}
-            >
-              <t-icon name="edit"></t-icon>
-            </t-butt>`
           : ''}
         ${this.uploadProgress >= -1
           ? html`<div class="download-progress-bar">
@@ -630,9 +630,7 @@ export class MediaItem extends LitElement {
                 style="width: ${this.uploadProgress > 0 ? this.uploadProgress : 0}%"
               ></div>
               <span class="progress-label">
-                ${this.uploadProgress >= 0
-                  ? `Uploading ${this.uploadProgress}%`
-                  : 'Pending upload'}
+                ${this.uploadProgress >= 0 ? `Uploading ${this.uploadProgress}%` : 'Pending upload'}
               </span>
             </div>`
           : !this.downloaded

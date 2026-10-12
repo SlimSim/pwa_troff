@@ -164,7 +164,7 @@ describe('t-media remove-from-group row', () => {
     withStatusButton(el).showStatusButton = false;
     await el.updateComplete;
 
-    expect(el.shadowRoot?.querySelector('.status-box')).toBeNull();
+    expect(el.shadowRoot?.querySelector('.status-box')).toBeTruthy();
     expect(removeRow()).toBeNull();
   });
 

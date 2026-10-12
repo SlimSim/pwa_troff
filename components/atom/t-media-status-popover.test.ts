@@ -16,9 +16,9 @@ import { fileURLToPath } from 'node:url';
  * FEATURE SPEC (dropdown polish): t-media status dropdown.
  *
  * - Boolean property `showStatusButton = false`. When
- *   `showStatusButton && songKey && !hideEditButton` a `t-dropdown-button`
- *   (class="edit-btn", position="up") renders to the LEFT of the plain edit
- *   `t-butt`, so the three-dot trigger sits left of the edit icon.
+ *   `songKey && !hideEditButton` a `t-dropdown-button`
+ *   (class="edit-btn", position="up") renders with the edit `t-butt` INSIDE
+ *   it, so there is no separate plain edit `t-butt` outside the dropdown.
  * - Trigger: `<t-butt icon ghost slot="button" title="Set Status">` with a
  *   `t-icon name="more-vertical"` inside. A click on the trigger must
  *   stopPropagation so the row's `media-selected` never fires.
@@ -31,7 +31,8 @@ import { fileURLToPath } from 'node:url';
  *   (detail `{ songKey, status }`, status normalized via
  *   normalizeGroupSongStatus, bubbles + composed) and CLOSES the
  *   `t-dropdown-button` (`.open = false`).
- * - Default (showStatusButton === false) renders no t-dropdown-button at all.
+ * - Default (showStatusButton === false) renders the dropdown with the
+ *   edit button inside but no status help-tip, status buttons or remove row.
  *
  * These tests import the ACTUAL component/helpers (never re-implementations).
  * The close-on-select tests FAIL (RED) until `_handleStatusSelect` closes the
@@ -126,12 +127,12 @@ describe('t-media status popover', () => {
   }
 
   describe('showStatusButton gating', () => {
-    it('defaults showStatusButton to false and renders no status dropdown', async () => {
+    it('defaults showStatusButton to false and renders dropdown with edit inside but no status UI', async () => {
       expect(withStatusButton(el).showStatusButton).toBe(false);
-      expect(getDropdown()).toBeNull();
-      expect(getStatusBox()).toBeNull();
+      expect(getDropdown()).toBeTruthy();
+      expect(getStatusBox()).toBeTruthy();
       expect(getHelpTip()).toBeNull();
-      expect(el.shadowRoot?.querySelector('.edit-btn')).toBeTruthy();
+      expect(el.shadowRoot?.querySelector('t-butt.edit-btn')).toBeNull();
     });
 
     it('renders a t-dropdown-button trigger configured for the status popover when showStatusButton is true', async () => {
@@ -174,21 +175,21 @@ describe('t-media status popover', () => {
   });
 
   describe('DOM order and click isolation', () => {
-    it('renders the status dropdown trigger BEFORE the plain edit button (dots left of edit)', async () => {
+    it('renders only the dropdown edit-btn with the edit button inside (no separate outside button)', async () => {
       withStatusButton(el).showStatusButton = true;
       await el.updateComplete;
 
       const editControls = Array.from(el.shadowRoot?.querySelectorAll('.edit-btn') ?? []);
-      expect(editControls.length).toBeGreaterThanOrEqual(2);
+      expect(editControls).toHaveLength(1);
       expect(editControls[0].tagName).toBe('T-DROPDOWN-BUTTON');
-      expect(editControls[1].tagName).toBe('T-BUTT');
+      expect(getStatusBox()?.querySelector('t-butt[title="Edit song"]')).toBeTruthy();
     });
 
-    it('keeps the plain .edit-btn t-butt rendered after enabling the status dropdown', async () => {
+    it('keeps no separate outside t-butt.edit-btn after enabling the status dropdown', async () => {
       withStatusButton(el).showStatusButton = true;
       await el.updateComplete;
 
-      expect(el.shadowRoot?.querySelector('t-butt.edit-btn')).toBeTruthy();
+      expect(el.shadowRoot?.querySelector('t-butt.edit-btn')).toBeNull();
     });
 
     it('clicking the help-tip header does not dispatch media-selected (stopPropagation)', async () => {
