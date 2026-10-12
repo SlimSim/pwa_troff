@@ -73,5 +73,6 @@ export function formatSongForUI(songKey: string, songData: TroffObjectLocal): an
     isVideo: isVideoFile(songKey),
     playsTotal: songData.localInformation?.nrTimesLoaded || 0,
     playsMonth: countLast30Days(songData.localInformation?.songStartsLastMonth),
+    nrMarkers: Array.isArray(songData.markers) ? songData.markers.length : 0,
   };
 }

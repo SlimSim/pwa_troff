@@ -501,6 +501,8 @@ export class GroupList extends LitElement {
           .playsMonth=${track.playsMonth}
           .playsTotal=${track.playsTotal}
           .songKey=${track.songKey}
+          .songInfo=${(track as unknown as { info?: string }).info ?? ''}
+          .markerCount=${(track as unknown as { nrMarkers?: number }).nrMarkers ?? 0}
           .status=${status}
           .hideEditButton=${this._songManagementOpen}
           .showStatusButton=${true}
@@ -871,6 +873,8 @@ export class GroupList extends LitElement {
                                   .playsMonth=${s.playsMonth}
                                   .playsTotal=${s.playsTotal}
                                   .songKey=${s.songKey}
+                                  .songInfo=${s.info ?? ''}
+                                  .markerCount=${s.nrMarkers ?? 0}
                                   .hideEditButton=${true}
                                   .downloaded=${s.downloaded !== false}
                                   .downloadProgress=${this.downloadProgressMap[s.songKey] ?? -2}

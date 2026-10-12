@@ -68,6 +68,8 @@ export class TrackList extends LitElement {
               .playsMonth=${track.playsMonth}
               .playsTotal=${track.playsTotal}
               .songKey=${track.songKey}
+              .songInfo=${track.info ?? ''}
+              .markerCount=${track.nrMarkers ?? 0}
               .downloaded=${track.downloaded !== false}
               .downloadProgress=${this.downloadProgressMap[track.songKey] ?? -2}
               .uploadProgress=${this.uploadProgressMap[track.songKey] ?? -2}

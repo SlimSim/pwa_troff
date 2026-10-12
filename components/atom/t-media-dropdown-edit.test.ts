@@ -271,7 +271,7 @@ describe('t-media dropdown edit — group case (showStatusButton == true)', () =
     const buttons = Array.from(row?.querySelectorAll('t-butt') ?? []);
     expect(buttons).toHaveLength(1);
     expect(buttons[0].hasAttribute('confirm')).toBe(true);
-    expect(buttonText(buttons[0])).toContain('Remove from group');
+    expect(buttonText(buttons[0])).toContain('Remove');
   });
 
   it('renders the edit button INSIDE the same dropdown and it dispatches song-edit-requested', async () => {

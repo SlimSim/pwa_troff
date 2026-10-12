@@ -249,6 +249,8 @@ export class MediaItem extends LitElement {
       flex-direction: column;
       padding: var(--spacing-md, 12px);
       gap: var(--spacing-sm, 8px);
+      max-width: min(300px, calc(100vw - 32px));
+      overflow: hidden;
     }
 
     .status-box t-butt {
@@ -259,6 +261,39 @@ export class MediaItem extends LitElement {
     .status-remove-row {
       padding-top: var(--spacing-sm, 8px);
       border-top: 1px solid var(--list-border-color, rgba(255, 255, 255, 0.15));
+    }
+
+    .dropdown-header {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .dropdown-info-text {
+      font-size: 0.7rem;
+      opacity: 0.6;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      line-height: 1.3;
+      max-width: 100%;
+    }
+
+    .dropdown-info-text:hover {
+      opacity: 0.9;
+    }
+
+    .dropdown-info-text.expanded {
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
+    }
+
+    .marker-count {
+      font-size: 0.75rem;
+      opacity: 0.8;
     }
 
     /* Slim mode — compact rows for management lists */
@@ -329,6 +364,8 @@ export class MediaItem extends LitElement {
   @property({ type: Boolean }) hideEditButton = false;
   /** Render the status popover trigger (t-help-tip) next to the edit button. */
   @property({ type: Boolean }) showStatusButton = false;
+  @property({ type: String }) songInfo = '';
+  @property({ type: Number }) markerCount = 0;
   @property({ type: Boolean, reflect: true }) slim = false;
   @property({ type: Boolean }) downloaded = true;
   /** 0-100 = downloading with progress, -1 = waiting in queue, undefined/missing = done */
@@ -522,6 +559,13 @@ export class MediaItem extends LitElement {
     this.expanded = false;
   }
 
+  private _moreInfoExpanded = false;
+
+  private _handleMoreInfoToggle() {
+    this._moreInfoExpanded = !this._moreInfoExpanded;
+    this.requestUpdate();
+  }
+
   render() {
     const starData = this._generateStar(this.rating);
     const { text, hasMoreToShow } = this._getFormattedDetailsWithComment();
@@ -585,6 +629,21 @@ export class MediaItem extends LitElement {
                 <t-icon name="more-vertical"></t-icon>
               </t-butt>
               <div slot="dropdown" class="status-box">
+                <h3 class="dropdown-header">More</h3>
+                ${this.songInfo.trim()
+                  ? html`<span
+                      class="dropdown-info-text ${this._moreInfoExpanded ? 'expanded' : ''}"
+                      data-song-info
+                      @click=${(e: Event) => {
+                        e.stopPropagation();
+                        this._handleMoreInfoToggle();
+                      }}
+                      >${this.songInfo}</span
+                    >`
+                  : ''}
+                <span class="marker-count" data-marker-count>
+                  ${this.markerCount} ${this.markerCount === 1 ? 'marker' : 'markers'}</span
+                >
                 ${this.showStatusButton
                   ? html`<t-help-tip h3="Status" position="up">
                         Set the status for this song inside the group: they are grouped togheter and

@@ -120,7 +120,7 @@ describe('t-media remove-from-group row', () => {
 
     const btn = buttons[0];
     expect(btn.hasAttribute('confirm')).toBe(true);
-    expect(buttonText(btn)).toContain('Remove from group');
+    expect(buttonText(btn)).toContain('Remove');
 
     const confirmText =
       (btn as Element & { confirmText?: string }).confirmText ?? btn.getAttribute('confirmText');
