@@ -1,5 +1,6 @@
 import { nDB } from '../assets/internal/db.js';
 import { getSongMetadata } from './song.js';
+import { updateHeaderGroupsWithCurrentSong } from './song-groups.js';
 
 /**
  * Update the header with current song information
@@ -31,6 +32,8 @@ export function updateHeaderWithCurrentSong() {
     header.albumArt = '';
     header.songInfo = '';
   }
+
+  updateHeaderGroupsWithCurrentSong();
 }
 
 export function updateFooterWithCurrentSong() {

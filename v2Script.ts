@@ -33,6 +33,7 @@ import {
   getCurrentSongKey,
   updateFooterWithCurrentSong,
 } from './utils/current-song.js';
+import { updateHeaderGroupsWithCurrentSong } from './utils/song-groups.js';
 import { nDB } from './assets/internal/db.js';
 import {
   audio,
@@ -2639,12 +2640,14 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
               if (songList && typeof (songList as any).reloadSongs === 'function') {
                 (songList as any).reloadSongs();
               }
+              updateHeaderGroupsWithCurrentSong();
             });
 
             // A song that was already open (auto-restored) at boot may have had
             // its markers drawn from stale nDB before this sync completed. Re-render
             // it deterministically so synced markers/settings appear immediately.
             refreshCurrentSongUI();
+            updateHeaderGroupsWithCurrentSong();
           }
         } catch (error) {
           log.e('onAuthStateChanged callback failed:', error);
@@ -3830,6 +3833,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         songLists.push({ ...group });
       }
       nDB.set('aoSongLists', songLists);
+      updateHeaderGroupsWithCurrentSong();
 
       // Reload the song list to reflect changes
       if (songList && typeof songList.reloadSongs === 'function') {
@@ -3874,6 +3878,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         return slKey != null && String(slKey) !== String(groupId);
       });
       nDB.set('aoSongLists', updatedLists);
+      updateHeaderGroupsWithCurrentSong();
 
       // Delete from Firebase if it's a Firebase group
       if (group?.firebaseGroupDocId) {
@@ -4067,6 +4072,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     }
     if (!found) return;
     nDB.set('aoSongLists', songLists);
+    updateHeaderGroupsWithCurrentSong();
 
     // Save to Firebase if it's a Firebase group
     const updated = songLists.find((sl: any) => {

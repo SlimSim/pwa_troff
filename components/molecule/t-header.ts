@@ -4,6 +4,7 @@ import '../atom/t-dropdown-button.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-textarea.js';
+import '../atom/t-popover.js';
 
 @customElement('t-header')
 export class Header extends LitElement {
@@ -123,6 +124,13 @@ export class Header extends LitElement {
       pointer-events: none;
     }
 
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
     .info-dropdown-content {
       padding: 16px 8px;
       display: flex;
@@ -177,6 +185,7 @@ export class Header extends LitElement {
   @property({ type: String }) statusLoopsLeft = '';
   @property({ type: Boolean, reflect: true }) expanded = false;
   @property({ type: String }) songInfo = '';
+  @property({ type: Array }) groupNames: string[] = [];
   @property({ type: Boolean, reflect: true }) showBanner = false;
   @property({ type: String }) bannerText = '';
   @property({ type: String }) versionNumber = '';
@@ -281,6 +290,17 @@ export class Header extends LitElement {
     );
   }
 
+  private get _groupsTitle(): string {
+    const n = this.groupNames.length;
+    return `Shared in ${n} songlist${n === 1 ? '' : 's'}`;
+  }
+
+  private get _groupsBody(): string {
+    const n = this.groupNames.length;
+    const plural = n === 1 ? 'songlist' : 'songlists';
+    return `This song belongs to ${n} shared ${plural}:\n${this.groupNames.join('\n')}`;
+  }
+
   render() {
     return html`
       ${this.showBanner
@@ -313,24 +333,42 @@ export class Header extends LitElement {
           <div class="time-info">${this.currentTime} / ${this.totalTime}</div>
         </div>
 
-        <t-dropdown-button
-          position="down"
-          align="right"
-          class="info-dropdown${this.songInfo.trim() ? ' has-info' : ''}"
-        >
-          <t-butt ghost slot="button" title="Song info">
-            <t-icon name="info"></t-icon>
-          </t-butt>
-          <div slot="dropdown" class="info-dropdown-content">
-            <t-textarea
-              label="Song info"
-              placeholder="Song specific info here!"
-              rows="12"
-              .value=${this.songInfo}
-              @input=${this._handleInfoInput}
-            ></t-textarea>
-          </div>
-        </t-dropdown-button>
+        <div class="info-section">
+          ${this.groupNames.length > 0
+            ? html`
+                <t-popover class="groups-popover" .body=${this._groupsBody}>
+                  <t-butt
+                    slot="trigger"
+                    slim
+                    ghost
+                    class="groups-indicator"
+                    title=${this._groupsTitle}
+                  >
+                    <span class="groups-count">${this.groupNames.length}</span>
+                    <t-icon slim name="users"></t-icon>
+                  </t-butt>
+                </t-popover>
+              `
+            : ''}
+          <t-dropdown-button
+            position="down"
+            align="right"
+            class="info-dropdown${this.songInfo.trim() ? ' has-info' : ''}"
+          >
+            <t-butt ghost slot="button" title="Song info">
+              <t-icon name="info"></t-icon>
+            </t-butt>
+            <div slot="dropdown" class="info-dropdown-content">
+              <t-textarea
+                label="Song info"
+                placeholder="Song specific info here!"
+                rows="12"
+                .value=${this.songInfo}
+                @input=${this._handleInfoInput}
+              ></t-textarea>
+            </div>
+          </t-dropdown-button>
+        </div>
         <div class="status-stack">
           <div class="status-countdown">${this.statusCountdown}</div>
           <div class="status-loops">${this.statusLoopsLeft}</div>
