@@ -2164,7 +2164,7 @@ export class MediaParent extends LitElement {
                   <p class="empty-state-subtitle">Get started by adding your first song</p>
                   <div class="empty-state-actions">
                     <t-butt class="empty-action-btn" href="#2582986745&demo.mp4">
-                      <t-icon name="note"></t-icon>
+                      <t-icon name="download-song"></t-icon>
                       <span>Download the demo song</span>
                     </t-butt>
                     <t-butt class="empty-action-btn" @click=${this._handleAddSong}>
