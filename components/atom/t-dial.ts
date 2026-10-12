@@ -246,6 +246,7 @@ export class Dial extends LitElement {
   private _dialCenterX = 0;
   private _dialCenterY = 0;
   private _portalContainer: HTMLDivElement | null = null;
+  private _popoverShown = false;
 
   private readonly _boundMouseMove = (event: MouseEvent) => this._handleMouseMove(event);
   private readonly _boundMouseUp = (event: MouseEvent) => this._handleMouseUp(event);
@@ -290,11 +291,21 @@ export class Dial extends LitElement {
         <style>
           .t-dial-portal {
             position: fixed;
+            /* Neutralize UA popover defaults (overflow: auto; inset: 0;
+               background: Canvas; border: solid; ...) so the wheel keeps its
+               pre-popover plain-div appearance. inset:auto must come BEFORE
+               left/top: the shorthand resets them when it comes after. */
+            inset: auto;
             left: ${this._dialCenterX}px;
             top: ${this._dialCenterY}px;
             transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 20000;
+            overflow: visible;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
           }
           .t-dial-portal-badge {
             position: absolute;
@@ -356,7 +367,7 @@ export class Dial extends LitElement {
             justify-content: center;
           }
         </style>
-        <div class="t-dial-portal">
+        <div class="t-dial-portal" popover="manual">
           <div class="t-dial-portal-badge">
             <div
               class="t-dial-portal-value ${this.disabled ? 'disabled' : ''} ${this.isDanger
@@ -383,10 +394,34 @@ export class Dial extends LitElement {
       `,
       this._portalContainer
     );
+    // Escape the surrounding stacking context via the top layer BEFORE
+    // positioning. Feature-detected: old browsers / happy-dom fall back to
+    // the inert `popover` attribute. Only show once per portal instance —
+    // updated() -> _renderPortal re-renders the same open wheel and must not
+    // call showPopover again (InvalidStateError). Positioning lives in the
+    // portal <style> (left/top), so the wheel's inline style is still empty
+    // at show time.
+    const wheel = this._portalContainer.querySelector('.t-dial-portal') as HTMLElement | null;
+    if (wheel && !this._popoverShown && typeof wheel.showPopover === 'function') {
+      wheel.showPopover();
+      this._popoverShown = true;
+    }
   }
 
   private _removePortal() {
     if (this._portalContainer) {
+      // Only hide if we showed it ourselves (hidePopover() throws
+      // InvalidStateError on a never-shown popover), and only when the
+      // browser actually implements the Popover API.
+      if (this._popoverShown) {
+        const wheel = this._portalContainer.querySelector(
+          '.t-dial-portal'
+        ) as HTMLElement | null;
+        this._popoverShown = false;
+        if (wheel && typeof wheel.hidePopover === 'function') {
+          wheel.hidePopover();
+        }
+      }
       render(html``, this._portalContainer);
       this._portalContainer.remove();
       this._portalContainer = null;
