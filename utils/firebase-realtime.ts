@@ -359,7 +359,14 @@ async function handleGroupSongsSnapshot(groupId: string, snapshot: GroupSongsSna
   // New songs: download the file first (mirroring firebase-sync.ts), then save
   // metadata and append locally. Songs whose file cannot be fetched are skipped.
   for (const serverDoc of serverDocs) {
-    if (kept.some((s) => s.firebaseSongDocId === serverDoc.firebaseSongDocId)) continue;
+    const existing = kept.find((s) => s.firebaseSongDocId === serverDoc.firebaseSongDocId);
+    if (existing) {
+      if (normalizeGroupSongStatus(existing.status) !== serverDoc.status) {
+        existing.status = serverDoc.status;
+        changed = true;
+      }
+      continue;
+    }
 
     const downloaded = await downloadAndCacheFile(serverDoc);
     if (!downloaded) continue;

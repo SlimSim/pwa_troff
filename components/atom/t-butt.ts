@@ -11,6 +11,8 @@ export class TButt extends LitElement {
 
     /* base styles for both <button> and link-mode <a> */
     .base {
+      width: 100%;
+      box-sizing: border-box;
       min-width: 42px;
       min-height: 35px;
       font-size: inherit;
@@ -202,11 +204,30 @@ export class TButt extends LitElement {
   private _confirmTimerId?: number;
 
   private _boundKeyDownHandler?: (event: KeyboardEvent) => void;
+  private _boundHostClickHandler: (event: Event) => void;
+  private _hostClickGateAdded = false;
+
+  constructor() {
+    super();
+    // Register host confirm-gate BEFORE any parent @click added by Lit
+    // templates (createElement -> Lit attaches @click -> insert triggers
+    // connectedCallback). Constructor order keeps the gate first so
+    // stopImmediatePropagation blocks the parent handler on first click.
+    this._boundHostClickHandler = (event: Event) => this._handleHostClick(event);
+    this.addEventListener('click', this._boundHostClickHandler);
+    this._hostClickGateAdded = true;
+  }
 
   connectedCallback() {
     super.connectedCallback();
     this._boundKeyDownHandler = (event: KeyboardEvent) => this._handleKeyDown(event);
     document.addEventListener('keydown', this._boundKeyDownHandler);
+    // Re-add gate only if missing (e.g. never added); do NOT remove+re-add
+    // here — that would move the gate after the parent @click listener.
+    if (!this._hostClickGateAdded) {
+      this.addEventListener('click', this._boundHostClickHandler);
+      this._hostClickGateAdded = true;
+    }
   }
   disconnectedCallback() {
     super.disconnectedCallback();
@@ -214,6 +235,9 @@ export class TButt extends LitElement {
       document.removeEventListener('keydown', this._boundKeyDownHandler);
       this._boundKeyDownHandler = undefined;
     }
+    // Intentionally keep the host click gate attached so it stays first in
+    // listener order across reconnects; it is owned by the element itself
+    // and is GC'd with it.
     this._cancelConfirmTimer();
   }
 
@@ -317,6 +341,29 @@ export class TButt extends LitElement {
     // First click with confirm enabled — enter confirming state
     event.preventDefault();
     event.stopPropagation();
+    this._confirming = true;
+    this._startConfirmTimer();
+  }
+
+  private _handleHostClick(event: Event) {
+    if (!this.confirm || this.disabled) return;
+    if (event.defaultPrevented) return;
+    // Clicks bubbling up from the inner .base are already handled by
+    // _handleClick — only gate clicks targeting the host itself.
+    const inner = this.shadowRoot?.querySelector('.base');
+    if (inner && event.composedPath().includes(inner)) return;
+
+    if (this._confirming) {
+      // Second host click — confirmed, let event bubble to parent handler
+      this._cancelConfirmTimer();
+      this._confirming = false;
+      return;
+    }
+
+    // First host click — enter confirming state, block parent handler on
+    // the same node (stopImmediatePropagation also stops further bubbling)
+    event.preventDefault();
+    event.stopImmediatePropagation();
     this._confirming = true;
     this._startConfirmTimer();
   }

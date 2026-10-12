@@ -17,6 +17,7 @@ export class DropdownButton extends LitElement {
 
     .dropdown {
       display: none;
+      cursor: auto;
       position: fixed;
       background-color: var(--secondary-color);
       color: var(--on-secondary-color);
