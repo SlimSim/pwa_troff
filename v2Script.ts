@@ -3083,6 +3083,54 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         }
       }
     };
+    const handlePlaybackStopReached = () => {
+      const media = getActiveMedia();
+      if (!markerSlider) {
+        return;
+      }
+      const playbackStart = markerSlider.getPlaybackStart();
+      if (Number.isFinite(loopTimesLeft)) {
+        if (loopTimesLeft <= 1) {
+          media.pause();
+          media.currentTime = clampMediaTime(media, playbackStart);
+          resetLoopTimesCounter();
+          return;
+        }
+
+        loopTimesLeft -= 1;
+        updateLoopTimesDisplay();
+      }
+
+      // Apply "increment until" speed change on each loop restart
+      if (settingsPanel && !settingsPanel.incrementUntillDisabled) {
+        const targetSpeed = Number(settingsPanel.incrementUntillValue) || 0;
+        const currentSpeed = getActiveMedia().playbackRate * 100;
+        const newSpeed = calculateIncrementUntilSpeed(currentSpeed, targetSpeed, loopTimesLeft);
+        getActiveMedia().playbackRate = newSpeed / 100;
+        if (videoElement) {
+          videoElement.playbackRate = newSpeed / 100;
+        }
+        if (videoPlayer) {
+          (videoPlayer as { speed?: number }).speed = newSpeed;
+        }
+        if (footer) {
+          footer.speed = newSpeed;
+        }
+        const songKey = getCurrentSongKey();
+        if (songKey) {
+          nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', newSpeed);
+        }
+        syncCurrentSongControlsValues();
+      }
+
+      const waitBetweenDelay = getWaitBetweenDelay();
+      isLoopTransitionPause = true;
+      media.currentTime = clampMediaTime(media, playbackStart);
+      schedulePlaybackAfterDelay(waitBetweenDelay);
+      if (waitBetweenDelay > 0) {
+        media.pause();
+      }
+    };
     const onTimeUpdate = () => {
       try {
         const media = getActiveMedia();
@@ -3107,48 +3155,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
 
         // Check if playback reached the stop point
         if (now >= markerSlider.getPlaybackStop()) {
-          const playbackStart = markerSlider.getPlaybackStart();
-          if (Number.isFinite(loopTimesLeft)) {
-            if (loopTimesLeft <= 1) {
-              media.pause();
-              media.currentTime = clampMediaTime(media, playbackStart);
-              resetLoopTimesCounter();
-              return;
-            }
-
-            loopTimesLeft -= 1;
-            updateLoopTimesDisplay();
-          }
-
-          // Apply "increment until" speed change on each loop restart
-          if (settingsPanel && !settingsPanel.incrementUntillDisabled) {
-            const targetSpeed = Number(settingsPanel.incrementUntillValue) || 0;
-            const currentSpeed = getActiveMedia().playbackRate * 100;
-            const newSpeed = calculateIncrementUntilSpeed(currentSpeed, targetSpeed, loopTimesLeft);
-            getActiveMedia().playbackRate = newSpeed / 100;
-            if (videoElement) {
-              videoElement.playbackRate = newSpeed / 100;
-            }
-            if (videoPlayer) {
-              (videoPlayer as { speed?: number }).speed = newSpeed;
-            }
-            if (footer) {
-              footer.speed = newSpeed;
-            }
-            const songKey = getCurrentSongKey();
-            if (songKey) {
-              nDB.setOnSong(songKey, 'TROFF_VALUE_speedBar', newSpeed);
-            }
-            syncCurrentSongControlsValues();
-          }
-
-          const waitBetweenDelay = getWaitBetweenDelay();
-          isLoopTransitionPause = true;
-          media.currentTime = clampMediaTime(media, playbackStart);
-          schedulePlaybackAfterDelay(waitBetweenDelay);
-          if (waitBetweenDelay > 0) {
-            media.pause();
-          }
+          handlePlaybackStopReached();
         }
       } catch (error) {
         console.error(error);
@@ -3178,6 +3185,22 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       updateHeaderCountdownDisplay();
     };
     const onEnded = () => {
+      // End-marker at duration: native `ended` must behave identically to
+      // timeupdate reaching the stop marker (same loop count / wait-between
+      // / seek-to-start logic). Same condition as onTimeUpdate.
+      const endedMedia = getActiveMedia();
+      const playbackStop = markerSlider ? markerSlider.getPlaybackStop() : NaN;
+      const endedTime = Number(endedMedia.currentTime);
+      if (
+        markerSlider &&
+        Number.isFinite(playbackStop) &&
+        Number.isFinite(endedTime) &&
+        endedTime >= playbackStop
+      ) {
+        handlePlaybackStopReached();
+        updateHeaderCountdownDisplay();
+        return;
+      }
       if (isLoopTransitionPause) {
         isLoopTransitionPause = false;
       } else {
