@@ -186,6 +186,7 @@ export class Header extends LitElement {
   @property({ type: Boolean, reflect: true }) expanded = false;
   @property({ type: String }) songInfo = '';
   @property({ type: Array }) groupNames: string[] = [];
+  @property({ type: String }) selectedGroupName = '';
   @property({ type: Boolean, reflect: true }) showBanner = false;
   @property({ type: String }) bannerText = '';
   @property({ type: String }) versionNumber = '';
@@ -301,6 +302,15 @@ export class Header extends LitElement {
     return `This song belongs to ${n} shared ${plural}:\n${this.groupNames.join('\n')}`;
   }
 
+  // Show the indicator when the song is shared in 2+ songlists, or in exactly
+  // one songlist that is NOT the one currently selected in the song list.
+  private get _showGroupsPopover(): boolean {
+    return (
+      this.groupNames.length > 1 ||
+      (this.groupNames.length === 1 && this.groupNames[0] !== this.selectedGroupName)
+    );
+  }
+
   render() {
     return html`
       ${this.showBanner
@@ -334,7 +344,7 @@ export class Header extends LitElement {
         </div>
 
         <div class="info-section">
-          ${this.groupNames.length > 0
+          ${this._showGroupsPopover
             ? html`
                 <t-popover class="groups-popover" .body=${this._groupsBody}>
                   <t-butt

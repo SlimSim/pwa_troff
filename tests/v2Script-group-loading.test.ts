@@ -386,4 +386,45 @@ describe('v2Script group save/delete background sync toasts', () => {
     await flush();
     expect(header.groupNames).toEqual([]);
   }, 30000);
+
+  it('group-header-color refreshes header.groupNames AND header.selectedGroupName from nDB', async () => {
+    appendRequiredDom();
+    await bootV2Script();
+
+    // The current song lives in group "Band" (docId d1), and that group is the
+    // one selected in the song-list navigation state.
+    nDBStore['stroCurrentSongPathAndGalleryId'] = { strPath: 'song.mp3' };
+    nDBStore['aoSongLists'] = [
+      {
+        id: 7,
+        firebaseGroupDocId: 'd1',
+        name: 'Band',
+        songs: [{ fullPath: 'song.mp3', galleryId: 'gallery-1' }],
+      },
+    ];
+    nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = { tab: 'groups', selected_entity: 'd1' };
+
+    const header = document.getElementById('header') as HTMLElement & {
+      groupNames?: string[];
+      selectedGroupName?: string;
+    };
+    const songList = document.getElementById('songList') as HTMLElement;
+
+    // Same event t-media-parent dispatches (bubbles + composed) after a group
+    // detail is opened/closed.
+    songList.dispatchEvent(
+      new CustomEvent('group-header-color', {
+        detail: { color: '#fff' },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    await flush();
+
+    // The header tint still applies…
+    expect(header.style.getPropertyValue('--theme-color')).toBe('#fff');
+    // …and the header group info is refreshed from nDB.
+    expect(header.groupNames).toEqual(['Band']);
+    expect(header.selectedGroupName).toBe('Band');
+  }, 30000);
 });

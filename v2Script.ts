@@ -2972,6 +2972,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         } else {
           header.style.removeProperty('--theme-color');
         }
+        updateHeaderGroupsWithCurrentSong();
       });
 
       songList.addEventListener('song-list-closed', () => {

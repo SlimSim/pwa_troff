@@ -25,6 +25,25 @@ export function getGroupNamesForSong(songKey: string): string[] {
 }
 
 /**
+ * Returns the name of the group currently selected in the song-list
+ * navigation, or '' when no group tab / no group is selected.
+ */
+export function getSelectedGroupName(): string {
+  const navState = nDB.get('TROFF_SONG_LIST_NAVIGATION_STATE') as
+    | { tab?: string; selected_entity?: string }
+    | null
+    | undefined;
+  const selectedEntity = navState?.tab === 'groups' ? navState.selected_entity : '';
+  if (!selectedEntity) return '';
+
+  const songLists = nDB.get('aoSongLists') as TroffFirebaseGroupIdentifyer[] | undefined;
+  const group = songLists?.find(
+    (g) => (g.firebaseGroupDocId || String(g.id)) === selectedEntity
+  );
+  return group?.name || '';
+}
+
+/**
  * Updates the current <t-header id="header"> with the list of groups
  * the current song belongs to (for the shared-songlist indicator).
  */
@@ -35,4 +54,6 @@ export function updateHeaderGroupsWithCurrentSong(): void {
   const currentSongData = nDB.get('stroCurrentSongPathAndGalleryId');
   const songKey = currentSongData?.strPath;
   (header as any).groupNames = songKey ? getGroupNamesForSong(songKey) : [];
+  (header as HTMLElement & { selectedGroupName: string }).selectedGroupName =
+    getSelectedGroupName();
 }

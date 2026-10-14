@@ -14,6 +14,10 @@ const setSongInfo = (el: Header, value: string): void => {
 // `groupNames` does not exist on Header yet — same trick as songInfo above.
 type HeaderWithGroups = Header & { groupNames: string[] };
 
+// Cast for typed test access to `selectedGroupName` (declared on Header at
+// t-header.ts:189 via `@property({ type: String })`).
+type HeaderWithSelectedGroup = Header & { selectedGroupName: string };
+
 type DropdownButtonEl = HTMLElement & { open?: boolean };
 type TTextareaEl = HTMLElement & { value?: string };
 
@@ -271,6 +275,16 @@ describe('t-header shared songlist indicator', () => {
   const getInfoSection = (): HTMLElement | null =>
     element.shadowRoot?.querySelector('.info-section') ?? null;
 
+  const getSelectedGroupName = (): string =>
+    (element as HeaderWithSelectedGroup).selectedGroupName;
+
+  // Assigned as a plain property, exactly as updateHeaderGroupsWithCurrentSong
+  // does in production (and it must be reactive, because that function sets it
+  // from outside the component).
+  const setSelectedGroupName = (value: string): void => {
+    (element as HeaderWithSelectedGroup).selectedGroupName = value;
+  };
+
   it('groupNames property defaults to an empty array', async () => {
     await element.updateComplete;
     expect((element as HeaderWithGroups).groupNames).toEqual([]);
@@ -286,6 +300,68 @@ describe('t-header shared songlist indicator', () => {
     const infoSection = getInfoSection();
     expect(infoSection, '.info-section wrapper must exist').toBeTruthy();
     expect(infoSection!.querySelector('t-dropdown-button.info-dropdown')).toBeTruthy();
+  });
+
+  it('selectedGroupName property defaults to an empty string', async () => {
+    await element.updateComplete;
+    expect(getSelectedGroupName()).toBe('');
+  });
+
+  it('renders the popover for ONE group when no group is selected (selectedGroupName stays empty)', async () => {
+    setGroupNames(['Band']);
+    setSelectedGroupName('');
+    await element.updateComplete;
+
+    expect(getPopover(), 'popover must render while no group is selected').toBeTruthy();
+  });
+
+  it('renders NO popover when there is exactly ONE group and it IS the selected group', async () => {
+    setGroupNames(['Band']);
+    setSelectedGroupName('Band');
+    await element.updateComplete;
+
+    expect(getPopover(), 'the selected group must not be advertised as "shared"').toBeNull();
+    expect(element.shadowRoot?.querySelector('.groups-indicator')).toBeNull();
+
+    // …but the info-dropdown still renders inside .info-section.
+    const infoSection = getInfoSection();
+    expect(infoSection, '.info-section wrapper must exist').toBeTruthy();
+    expect(infoSection!.querySelector('t-dropdown-button.info-dropdown')).toBeTruthy();
+  });
+
+  it('renders the popover for ONE group when a DIFFERENT group is selected', async () => {
+    setGroupNames(['Band']);
+    setSelectedGroupName('Other Group');
+    await element.updateComplete;
+
+    expect(getSelectedGroupName()).toBe('Other Group');
+    expect(getPopover(), 'popover must render when the selected group differs').toBeTruthy();
+    expect(element.shadowRoot?.querySelector('.groups-indicator')).toBeTruthy();
+  });
+
+  it('renders the popover when TWO groups include the selected group (count stays 2)', async () => {
+    setGroupNames(['Group A', 'Group B']);
+    setSelectedGroupName('Group A');
+    await element.updateComplete;
+
+    expect(getSelectedGroupName()).toBe('Group A');
+    const popover = getPopover();
+    expect(popover, 'two or more groups always show the indicator').toBeTruthy();
+    expect(popover!.querySelector('.groups-count')?.textContent).toBe('2');
+  });
+
+  it('hides the popover when selectedGroupName changes to the group name after it was rendered', async () => {
+    setGroupNames(['Band']);
+    await element.updateComplete;
+    expect(getPopover(), 'starts rendered while nothing is selected').toBeTruthy();
+
+    setSelectedGroupName('Band');
+    await element.updateComplete;
+
+    expect(getPopover(), 'popover must disappear once its only group is selected').toBeNull();
+    expect(element.shadowRoot?.querySelector('.groups-indicator')).toBeNull();
+    // …and the info-dropdown still renders inside .info-section.
+    expect(getInfoSection()!.querySelector('t-dropdown-button.info-dropdown')).toBeTruthy();
   });
 
   it('renders the indicator with count, users icon, exact title and exact body for ONE group', async () => {

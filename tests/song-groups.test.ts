@@ -26,6 +26,9 @@ vi.mock('../assets/internal/db.js', () => ({
 // production property lands.
 type HeaderWithGroups = Header & { groupNames: string[] };
 
+// `selectedGroupName` does not exist on Header yet either — same cast trick.
+type HeaderWithSelectedGroup = Header & { groupNames: string[]; selectedGroupName: string };
+
 const song = (fullPath: string): TroffFirebaseSongIdentifyer => ({
   fullPath,
   galleryId: 'gallery-1',
@@ -40,6 +43,7 @@ const group = (overrides: Partial<TroffFirebaseGroupIdentifyer>): TroffFirebaseG
 
 let getGroupNamesForSong: (songKey: string) => string[];
 let updateHeaderGroupsWithCurrentSong: () => void;
+let getSelectedGroupName: () => string;
 
 const mountHeader = (): Header => {
   const header = new Header();
@@ -55,6 +59,7 @@ describe('song-groups', () => {
     const songGroups = await import('../utils/song-groups.js');
     getGroupNamesForSong = songGroups.getGroupNamesForSong;
     updateHeaderGroupsWithCurrentSong = songGroups.updateHeaderGroupsWithCurrentSong;
+    getSelectedGroupName = songGroups.getSelectedGroupName;
   });
 
   afterEach(() => {
@@ -127,6 +132,52 @@ describe('song-groups', () => {
     });
   });
 
+  describe('getSelectedGroupName', () => {
+    it('returns "" when TROFF_SONG_LIST_NAVIGATION_STATE is missing', () => {
+      expect(getSelectedGroupName()).toBe('');
+    });
+
+    it('returns "" when the navigation state tab is not "groups"', () => {
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = {
+        tab: 'artists',
+        selected_entity: 'Band',
+      };
+      expect(getSelectedGroupName()).toBe('');
+    });
+
+    it('returns "" when selected_entity is empty', () => {
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = { tab: 'groups', selected_entity: '' };
+      expect(getSelectedGroupName()).toBe('');
+    });
+
+    it("returns the group name when selected_entity matches the group's firebaseGroupDocId", () => {
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = { tab: 'groups', selected_entity: 'd1' };
+      nDBStore['aoSongLists'] = [
+        group({ name: 'Band', firebaseGroupDocId: 'd1', songs: [] }),
+      ];
+      expect(getSelectedGroupName()).toBe('Band');
+    });
+
+    it('matches by String(id) when the group has no firebaseGroupDocId', () => {
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = { tab: 'groups', selected_entity: '7' };
+      nDBStore['aoSongLists'] = [
+        group({ name: 'Local', firebaseGroupDocId: undefined, id: 7, songs: [] }),
+      ];
+      expect(getSelectedGroupName()).toBe('Local');
+    });
+
+    it('returns "" when selected_entity matches no group', () => {
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = {
+        tab: 'groups',
+        selected_entity: 'nope',
+      };
+      nDBStore['aoSongLists'] = [
+        group({ name: 'Band', firebaseGroupDocId: 'd1', songs: [] }),
+      ];
+      expect(getSelectedGroupName()).toBe('');
+    });
+  });
+
   describe('updateHeaderGroupsWithCurrentSong', () => {
     it('sets header.groupNames on <t-header id="header"> from the current song', () => {
       const header = mountHeader();
@@ -156,6 +207,34 @@ describe('song-groups', () => {
       updateHeaderGroupsWithCurrentSong();
 
       expect((header as HeaderWithGroups).groupNames).toEqual([]);
+    });
+
+    it('sets header.selectedGroupName from the navigation state alongside groupNames', () => {
+      const header = mountHeader();
+      nDBStore['stroCurrentSongPathAndGalleryId'] = { strPath: 'song.mp3' };
+      nDBStore['aoSongLists'] = [
+        group({ name: 'Band', firebaseGroupDocId: 'd1', songs: [song('song.mp3')] }),
+      ];
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = { tab: 'groups', selected_entity: 'd1' };
+
+      updateHeaderGroupsWithCurrentSong();
+
+      expect((header as HeaderWithSelectedGroup).selectedGroupName).toBe('Band');
+      expect((header as HeaderWithGroups).groupNames).toEqual(['Band']);
+    });
+
+    it('clears a stale header.selectedGroupName when the navigation state points at a non-group tab', () => {
+      const header = mountHeader();
+      (header as HeaderWithSelectedGroup).selectedGroupName = 'Band';
+      nDBStore['stroCurrentSongPathAndGalleryId'] = { strPath: 'song.mp3' };
+      nDBStore['aoSongLists'] = [
+        group({ name: 'Band', firebaseGroupDocId: 'd1', songs: [song('song.mp3')] }),
+      ];
+      nDBStore['TROFF_SONG_LIST_NAVIGATION_STATE'] = { tab: 'tracks', selected_entity: '' };
+
+      updateHeaderGroupsWithCurrentSong();
+
+      expect((header as HeaderWithSelectedGroup).selectedGroupName).toBe('');
     });
 
     it('is a no-op (no throw) when there is no #header element', () => {
