@@ -21,7 +21,37 @@ function detectElementVolumeWorks(): boolean {
   }
 }
 
-export const elementVolumeWorks = detectElementVolumeWorks();
+/**
+ * iOS-family UA check: the read-back probe sticks on newer iOS while changing
+ * nothing audible, so the probe alone cannot detect broken element volume.
+ */
+function isIOSFamily(): boolean {
+  try {
+    const scope = globalThis as unknown as {
+      navigator?: { userAgent?: unknown; maxTouchPoints?: unknown };
+    };
+    const nav = scope.navigator;
+    if (!nav || typeof nav.userAgent !== 'string') {
+      return false;
+    }
+    const ua = nav.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua)) {
+      return true;
+    }
+    if (
+      /Macintosh/.test(ua) &&
+      typeof nav.maxTouchPoints === 'number' &&
+      nav.maxTouchPoints > 1
+    ) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export const elementVolumeWorks = detectElementVolumeWorks() && !isIOSFamily();
 
 export function volumePercentToElementVolume(percent: number): number {
   const n = Number(percent);
@@ -140,7 +170,10 @@ function getBoostGain(): GainNode | null {
 
 export function setVolumePercent(percent: number, targets?: VolumeTargets): void {
   try {
-    const elementVolume = volumePercentToElementVolume(percent);
+    /* Broken mode: pin element to unity — WebKit plumbs element.volume into
+       MediaElementAudioSource input, so the gain node is the single source
+       of truth (avoids double-attenuation). */
+    const elementVolume = elementVolumeWorks ? volumePercentToElementVolume(percent) : 1;
     const gainValue = volumePercentToGain(percent);
     if (targets !== undefined && targets !== null && typeof targets === 'object') {
       const maybe = targets as Partial<VolumeTargets>;
