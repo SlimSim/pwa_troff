@@ -39,40 +39,29 @@ function readHashDownloadRaw(): string {
   return readFileSync(join(ROOT, 'utils/hash-download.ts'), 'utf-8');
 }
 
-/** Parse <body> of v2.html (for tag presence, order). */
-function readV2HtmlBody(): HTMLElement {
-  const html = readV2HtmlRaw();
-  const match = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = match ? match[1] : '';
-  return wrapper;
-}
-
 describe('v2 rollout to default (early redirect + welcome + v1 promote)', () => {
   // -------------------------------------------------------------------------
   // Static source assertions (must be in both v2.html and the future index.html copy)
   // -------------------------------------------------------------------------
   describe('early redirect script in v2 shell', () => {
-    it('v2.html contains the early <script> (right before </head>) with exact ==1 redirect to /v1.html + hash', () => {
+    it('v2.html is now a redirect shim (sets pref 2 + replace to / + hash) — see tests/v2-redirect-shim.test.ts', () => {
       const html = readV2HtmlRaw();
       // Must appear before </head>
       const headCloseIdx = html.indexOf('</head>');
       expect(headCloseIdx, 'v2.html must have </head>').toBeGreaterThan(-1);
 
-      const scriptMatch = html.match(
-        /<script[^>]*>[\s\S]*?localStorage\.getItem\('TROFF_SETTING_PREFER_VERSION'\)[\s\S]*?if \(pref == 1\)[\s\S]*?\/v1\.html[\s\S]*?<\/script>/
+      expect(html).toMatch(/localStorage\.setItem\(\s*['"]TROFF_SETTING_PREFER_VERSION['"]\s*,\s*JSON\.stringify\(2\)\s*\)/);
+      expect(html).toMatch(/try\s*\{[\s\S]*?setItem[\s\S]*?\}\s*catch/);
+      const redirectMatch = html.match(
+        /window\.location\.replace\(\s*['"]\/['"]\s*\+\s*window\.location\.hash\s*\)/
       );
       expect(
-        scriptMatch,
-        'v2.html must contain early redirect script using raw != null, pref==1 -> /v1.html + hash (using direct localStorage, before any body)'
+        redirectMatch,
+        "v2.html shim must redirect with window.location.replace('/' + window.location.hash)"
       ).not.toBeNull();
-      expect(scriptMatch!.index!, 'redirect script must be before </head>').toBeLessThan(headCloseIdx);
-
-      // Exact condition and preserve hash, no body run
-      expect(html).toMatch(/const raw = localStorage\.getItem\('TROFF_SETTING_PREFER_VERSION'\);/);
-      expect(html).toMatch(/const pref = raw != null \? JSON\.parse\(raw\) : null;/);
-      expect(html).toMatch(/if \(pref == 1\) \{/);
-      expect(html).toMatch(/window\.location\.replace\('\/v1\.html' \+ window\.location\.hash\);/);
+      expect(redirectMatch!.index!, 'redirect script must be before </head>').toBeLessThan(headCloseIdx);
+      expect(html).not.toMatch(/pref == 1/);
+      expect(html).not.toMatch(/\/v1\.html/);
     });
 
     it('index.html (will be copy of v2) also contains the same early v2 redirect script for ==1 -> /v1', () => {
@@ -90,13 +79,18 @@ describe('v2 rollout to default (early redirect + welcome + v1 promote)', () => 
   });
 
   describe('v2.html contains the welcome dialog tag statically', () => {
-    it('has <t-v2-welcome-dialog id="v2WelcomeDialog"> after the zoom dialog', () => {
-      const body = readV2HtmlBody();
-      const zoom = body.querySelector('#zoomInfoDialog');
-      const welcome = body.querySelector('#v2WelcomeDialog');
+    it('v2.html shim has no welcome dialog; index.html still has <t-v2-welcome-dialog id="v2WelcomeDialog"> after the zoom dialog', () => {
+      // v2.html is now a redirect shim (see tests/v2-redirect-shim.test.ts).
+      expect(readV2HtmlRaw()).not.toContain('t-v2-welcome-dialog');
+      const indexHtml = readIndexHtmlRaw();
+      const match = indexHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = match ? match[1] : '';
+      const zoom = wrapper.querySelector('#zoomInfoDialog');
+      const welcome = wrapper.querySelector('#v2WelcomeDialog');
       expect(
         welcome,
-        'v2.html must include <t-v2-welcome-dialog id="v2WelcomeDialog"></t-v2-welcome-dialog> (statically, after zoom)'
+        'index.html must include <t-v2-welcome-dialog id="v2WelcomeDialog"></t-v2-welcome-dialog> (statically, after zoom)'
       ).not.toBeNull();
       expect(welcome?.tagName.toLowerCase()).toBe('t-v2-welcome-dialog');
       // order: after zoom

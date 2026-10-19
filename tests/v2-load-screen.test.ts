@@ -5,47 +5,42 @@ import { join } from 'path';
 /**
  * Feature spec — option D: early t-loading import on v2 boot splash.
  *
- * Current state of v2.html (pre-implementation):
- *   - #loadScreen exists with branding, but the spinner is an inlined copy
- *     of t-loading's SVG+CSS (~lines 235-549); <t-loading> is commented out.
- *   - The spoon keyframes / .loadParent duplicate CSS lives in
- *     #loadScreenStyle, and #loadScreen contains an <svg> descendant.
- *   - There is no early module import of t-loading before /v2Script.js.
- *   - v2Script.ts has `// document.getElementById('loadScreen')?.remove();`
- *     commented out, so #loadScreen survives DOMContentLoaded.
+ * NOTE (redirect-shim architecture): v2.html is now ONLY a minimal redirect
+ * shim (see tests/v2-redirect-shim.test.ts as source of truth) and must NOT
+ * contain #loadScreen, <t-loading>, or /v2Script.js. index.html IS the live
+ * v2 app now, so all boot-splash markup assertions below read index.html.
  *
- * Planned implementation under test (must be RED before the coder implements):
- *   1. v2.html #loadScreen contains a LIVE <t-loading> (not commented).
- *   2. v2.html #loadScreen no longer contains the inlined spoon SVG copy:
- *      no <svg> descendant inside #loadScreen, no .loadParent and no
- *      `@keyframes spoon-tilt` left in v2.html (they live in t-loading's
- *      shadow CSS).
- *   3. v2.html has an EARLY module import of t-loading (a
- *      <script type="module"> that references t-loading) occurring BEFORE
- *      src="/v2Script.js".
- *   4. v2Script.ts re-enables the null-safe #loadScreen removal after its
- *      DOMContentLoaded init.
- *   5. v2Script.ts keeps importing ./components/atom/t-loading.js so the
- *      custom element registers.
- *   6. Branding text ("Troff"/"loading") still present inside #loadScreen.
+ * Current state of index.html (live v2 app):
+ *   - #loadScreen exists with branding and a LIVE <t-loading> spinner.
+ *   - No inlined spoon SVG copy; no .loadParent / @keyframes spoon-tilt
+ *     (they live in t-loading's shadow CSS).
+ *   - An early module import of t-loading occurs BEFORE src="/v2Script.js".
+ *   - v2Script.ts removes #loadScreen after its DOMContentLoaded init
+ *     (null-safe) and imports ./components/atom/t-loading.js.
+ *   - Branding text ("Troff"/"loading") present inside #loadScreen.
  *
  * Harness mirrors tests/v2Script-volume-speed-boot.test.ts: DOM skeleton for
  * the ids v2Script queries, duplicate custom-element define guard, rAF stub,
  * and Firebase/nDB/audio/current-song mocks — Firebase and nDB are never real.
- * HTML content is asserted by reading v2.html directly, the same pattern as
+ * HTML content is asserted by reading index.html directly, the same pattern as
  * tests/es-module-shims-guard.test.ts.
  */
 
 const ROOT = join(__dirname, '..');
 
-/** Raw contents of v2.html (for style/script-order assertions). */
+/** Raw contents of v2.html (redirect shim — must stay splash-free). */
 function readV2HtmlRaw(): string {
   return readFileSync(join(ROOT, 'v2.html'), 'utf-8');
 }
 
-/** Parse the <body> content of v2.html into a detached container. */
+/** Raw contents of index.html (the live v2 app with the boot splash). */
+function readAppHtmlRaw(): string {
+  return readFileSync(join(ROOT, 'index.html'), 'utf-8');
+}
+
+/** Parse the <body> content of index.html into a detached container. */
 function readV2HtmlBody(): HTMLElement {
-  const html = readV2HtmlRaw();
+  const html = readAppHtmlRaw();
   const match = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   const wrapper = document.createElement('div');
   wrapper.innerHTML = match ? match[1] : '';
@@ -54,15 +49,15 @@ function readV2HtmlBody(): HTMLElement {
 
 describe('v2 boot splash (loadScreen + t-loading)', () => {
   // -------------------------------------------------------------------------
-  // Static content checks on v2.html
+  // Static content checks on index.html (the live v2 app)
   // -------------------------------------------------------------------------
-  describe('v2.html boot splash markup', () => {
+  describe('index.html boot splash markup', () => {
     it('contains #loadScreen as a direct child of <body>', () => {
       const body = readV2HtmlBody();
       const loadScreen = body.querySelector('#loadScreen');
       expect(
         loadScreen,
-        'v2.html is missing <div id="loadScreen"> inside <body>'
+        'index.html is missing <div id="loadScreen"> inside <body>'
       ).not.toBeNull();
       expect(loadScreen?.parentElement).toBe(body);
     });
@@ -71,10 +66,10 @@ describe('v2 boot splash (loadScreen + t-loading)', () => {
       const loadScreen = readV2HtmlBody().querySelector('#loadScreen');
       expect(
         loadScreen,
-        'v2.html is missing <div id="loadScreen"> inside <body>'
+        'index.html is missing <div id="loadScreen"> inside <body>'
       ).not.toBeNull();
       // A commented-out <!-- <t-loading> --> parses as a comment node, so
-      // querySelector correctly returns null for the current state.
+      // querySelector correctly returns null for the old state.
       expect(
         loadScreen?.querySelector('t-loading'),
         '#loadScreen must contain a live <t-loading> spinner (not commented out)'
@@ -85,7 +80,7 @@ describe('v2 boot splash (loadScreen + t-loading)', () => {
       const loadScreen = readV2HtmlBody().querySelector('#loadScreen');
       expect(
         loadScreen,
-        'v2.html is missing <div id="loadScreen"> inside <body>'
+        'index.html is missing <div id="loadScreen"> inside <body>'
       ).not.toBeNull();
       expect(
         loadScreen?.querySelector('svg'),
@@ -93,24 +88,24 @@ describe('v2 boot splash (loadScreen + t-loading)', () => {
       ).toBeNull();
     });
 
-    it('does not keep the duplicated spinner CSS (.loadParent / spoon keyframes) in v2.html', () => {
-      const html = readV2HtmlRaw();
+    it('does not keep the duplicated spinner CSS (.loadParent / spoon keyframes) in index.html', () => {
+      const html = readAppHtmlRaw();
       expect(
         html.includes('.loadParent'),
-        'v2.html must not contain the duplicated .loadParent spinner CSS'
+        'index.html must not contain the duplicated .loadParent spinner CSS'
       ).toBe(false);
       expect(
         html.includes('@keyframes spoon-tilt'),
-        'v2.html must not contain @keyframes spoon-tilt (lives in t-loading shadow CSS)'
+        'index.html must not contain @keyframes spoon-tilt (lives in t-loading shadow CSS)'
       ).toBe(false);
     });
 
     it('imports t-loading in an early module script before /v2Script.js', () => {
-      const html = readV2HtmlRaw();
+      const html = readAppHtmlRaw();
       const v2ScriptIdx = html.indexOf('src="/v2Script.js"');
       expect(
         v2ScriptIdx,
-        'v2.html is missing <script src="/v2Script.js">'
+        'index.html is missing <script src="/v2Script.js">'
       ).toBeGreaterThan(-1);
 
       const earlyImport = html.match(
@@ -118,7 +113,7 @@ describe('v2 boot splash (loadScreen + t-loading)', () => {
       );
       expect(
         earlyImport,
-        'v2.html needs an early <script type="module"> importing t-loading before the main bundle'
+        'index.html needs an early <script type="module"> importing t-loading before the main bundle'
       ).not.toBeNull();
       expect(
         earlyImport!.index!,
@@ -130,9 +125,35 @@ describe('v2 boot splash (loadScreen + t-loading)', () => {
       const loadScreen = readV2HtmlBody().querySelector('#loadScreen');
       expect(
         loadScreen,
-        'v2.html is missing <div id="loadScreen"> inside <body>'
+        'index.html is missing <div id="loadScreen"> inside <body>'
       ).not.toBeNull();
       expect(loadScreen?.textContent ?? '').toMatch(/troff|loading/i);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // v2.html is a redirect shim — asserts NO boot splash here.
+  // Source of truth: tests/v2-redirect-shim.test.ts.
+  // -------------------------------------------------------------------------
+  describe('v2.html redirect shim has no boot splash', () => {
+    it('contains no #loadScreen or <t-loading> (lives in index.html now)', () => {
+      const html = readV2HtmlRaw();
+      expect(
+        html,
+        'v2.html shim must NOT contain #loadScreen (see tests/v2-redirect-shim.test.ts)'
+      ).not.toContain('loadScreen');
+      expect(
+        html,
+        'v2.html shim must NOT contain <t-loading> (see tests/v2-redirect-shim.test.ts)'
+      ).not.toContain('t-loading');
+    });
+
+    it('loads no /v2Script.js (lives in index.html now)', () => {
+      const html = readV2HtmlRaw();
+      expect(
+        html,
+        'v2.html shim must NOT load v2Script.js (see tests/v2-redirect-shim.test.ts)'
+      ).not.toContain('v2Script.js');
     });
   });
 
