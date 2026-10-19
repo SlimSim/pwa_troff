@@ -1447,7 +1447,7 @@ describe('empty state (no songs, no groups)', () => {
     await element.updateComplete;
 
     const buttons = getActionButtons();
-    expect(buttons.length).toBe(4);
+    expect(buttons.length).toBe(3);
   });
 
   it('first action button links to the demo song hash URL', async () => {
@@ -1475,24 +1475,42 @@ describe('empty state (no songs, no groups)', () => {
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('third action button links to find.html with target _blank', async () => {
+  // The old "Find songs online" button (href /find.html, target _blank) is
+  // removed: song search is now merged into the song list itself (server
+  // results via t-server-song-list — see t-media-parent-server-search.test.ts).
+  it('has no find.html links left in the empty state or elsewhere in the shadow DOM', async () => {
     await element.updateComplete;
 
-    const buttons = getActionButtons();
-    expect(buttons.length).toBeGreaterThanOrEqual(3);
+    const findHref = element.shadowRoot?.querySelector('[href*="find.html"]') ?? null;
+    expect(findHref).toBeNull();
+  });
 
-    const findBtn = buttons[2] as any;
-    expect(findBtn.href).toBe('/find.html');
-    expect(findBtn.target).toBe('_blank');
+  it('header-actions no longer has the showFind property/find button', async () => {
+    await element.updateComplete;
+
+    const headerActions = element.shadowRoot
+      ?.querySelector('t-list-header')
+      ?.querySelector('t-header-actions') as any;
+    expect(headerActions).toBeTruthy();
+
+    // The property itself is gone (not just set to false).
+    expect('showFind' in headerActions).toBe(false);
+    expect(headerActions.showFind).toBeUndefined();
+  });
+
+  it('the old _handleSearchSongs placeholder handler is gone', async () => {
+    await element.updateComplete;
+
+    expect((element as any)._handleSearchSongs).toBeUndefined();
   });
 
   it('renders a 4th action button with "Sign in" and the sign-in note', async () => {
     await element.updateComplete;
 
     const buttons = getActionButtons();
-    expect(buttons.length).toBe(4);
+    expect(buttons.length).toBe(3);
 
-    const signInBtn = buttons[3];
+    const signInBtn = buttons[2];
     expect(signInBtn.textContent?.trim()).toContain('Sign in');
 
     const signInIcon = signInBtn.querySelector('t-icon');

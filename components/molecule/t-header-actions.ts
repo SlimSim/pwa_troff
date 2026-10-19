@@ -6,7 +6,7 @@ import '../atom/t-input.js';
 import '../atom/t-dropdown-button.js';
 
 /**
- * Reusable action buttons for headers: add, sort, find, search, edit.
+ * Reusable action buttons for headers: add, sort, search, edit.
  *
  * Parent manages all state and event handlers.
  * The `isSearchFocused` prop drives CSS classes for mobile collapse.
@@ -164,9 +164,6 @@ export class HeaderActions extends LitElement {
   /** Title/tooltip for the add button. */
   @property({ type: String }) addTitle = 'Add';
 
-  /** Show the "find songs" button. */
-  @property({ type: Boolean }) showFind = false;
-
   /** Show the edit button. */
   @property({ type: Boolean }) showEdit = false;
 
@@ -209,25 +206,6 @@ export class HeaderActions extends LitElement {
 
         <!-- Sort (slot) -->
         <slot name="sort"></slot>
-
-        <!-- Find button -->
-        ${this.showFind
-          ? html`
-              <t-butt
-                class="action-btn ${cls}"
-                icon
-                href="/find.html"
-                target="_blank"
-                @click=${() =>
-                  this.dispatchEvent(
-                    new CustomEvent('find-click', { bubbles: true, composed: true })
-                  )}
-                title="Find new songs!"
-              >
-                <t-icon name="note-search"></t-icon>
-              </t-butt>
-            `
-          : ''}
 
         <!-- Search input -->
         <div class="search-compact-wrap ${cls}">

@@ -7,6 +7,7 @@ import './t-group-list.js';
 import './t-media-footer.js';
 import './t-list-header.js';
 import './t-header-actions.js';
+import './t-server-song-list.js';
 import '../atom/t-butt.js';
 import '../atom/t-dropdown-button.js';
 import '../atom/t-input.js';
@@ -26,6 +27,12 @@ import {
   filterGroups,
 } from '../../utils/media-search.js';
 import type { TrackLike } from '../../utils/media-search.js';
+import {
+  filterServerSongs,
+  getCachedServerSongList,
+  refreshServerSongList,
+} from '../../utils/server-song-list.js';
+import type { ServerSongTab } from '../../utils/server-song-list.js';
 import log from '../../utils/log.js';
 import { extractAlbumArt } from '../../utils/album-art.js';
 
@@ -309,6 +316,21 @@ export class MediaParent extends LitElement {
       margin-bottom: 12px;
       font-size: 0.9rem;
     }
+
+    /* ── "Not finding it? Add song from device" (active search) ── */
+    .add-song-from-device-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px var(--container-padding-x);
+      cursor: pointer;
+      border-top: 1px solid var(--list-border-color);
+      color: var(--on-primary-color);
+    }
+
+    .add-song-from-device-row:hover {
+      background-color: var(--list-hover-bg);
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
@@ -385,6 +407,10 @@ export class MediaParent extends LitElement {
   private _pendingGroupKey: string | null = null;
   /** Pending scroll-to-active-song timeout — cleared on disconnect so it never fires after teardown. */
   private _scrollActiveSongTimeout: ReturnType<typeof setTimeout> | null = null;
+  /** Set once this instance has kicked off the lazy server-song refresh. */
+  private _serverSongsRequested = false;
+  /** True while the lazy server-song list fetch is in flight. */
+  private _serverSongsLoading = false;
 
   /** Persist the current navigation state (tab + selected entity) to nDB. */
   private _saveNavigationState() {
@@ -540,6 +566,7 @@ export class MediaParent extends LitElement {
     if (changedProperties.has('searchQuery')) {
       const items = this._getVisibleItems();
       this.highlightedIndex = items.length > 0 ? 0 : -1;
+      this._maybeRefreshServerSongs();
     }
   }
 
@@ -1472,9 +1499,25 @@ export class MediaParent extends LitElement {
     }
   }
 
-  private _handleSearchSongs() {
-    // Logic to be implemented later
-    console.log('Search songs button clicked');
+  /**
+   * Fetch the server song list lazily: on the first non-empty search query,
+   * and only once per session (refreshServerSongList has its own module-level
+   * guard, so later calls — including other MediaParent instances — reuse the
+   * fetched list instead of hitting Firebase again).
+   */
+  private _maybeRefreshServerSongs() {
+    if (this._serverSongsRequested || this.searchQuery.trim() === '') return;
+    this._serverSongsRequested = true;
+    this._serverSongsLoading = true;
+    this.requestUpdate();
+    refreshServerSongList()
+      .catch((error: unknown) => {
+        log.w('Could not refresh the server song list', error);
+      })
+      .finally(() => {
+        this._serverSongsLoading = false;
+        this.requestUpdate();
+      });
   }
 
   private _handleSearchInput(event: Event) {
@@ -1922,7 +1965,11 @@ export class MediaParent extends LitElement {
   render() {
     const songs = this.songs;
     const query = this.searchQuery;
-    const isEmpty = songs.length === 0 && this.groups.length === 0;
+    const hasActiveQuery = query.trim() !== '';
+    // While a search query is active the search results take over: the
+    // welcome empty state must not be shown.
+    const isEmpty = songs.length === 0 && this.groups.length === 0 && !hasActiveQuery;
+    const serverTab = this.currentFilter as ServerSongTab;
 
     // Tracks: filter by title, then sort.
     const visibleTracks = this._getVisibleTracks();
@@ -2018,12 +2065,10 @@ export class MediaParent extends LitElement {
                       slot="actions"
                       addIcon="note-plus"
                       addTitle="Add songs"
-                      ?showFind=${true}
                       searchPlaceholder="Search tracks…"
                       searchValue=${this.searchQuery}
                       ?isSearchFocused=${this.isSearchFocused}
                       @add-click=${this._handleAddSong}
-                      @find-click=${this._handleSearchSongs}
                       @search-input=${this._handleSearchInput}
                       @search-keydown=${this._handleSearchKeydown}
                       @search-focus=${this._handleSearchFocus}
@@ -2170,10 +2215,6 @@ export class MediaParent extends LitElement {
                     <t-butt class="empty-action-btn" @click=${this._handleAddSong}>
                       <t-icon name="note-plus"></t-icon>
                       <span>Add songs from device</span>
-                    </t-butt>
-                    <t-butt class="empty-action-btn" href="/find.html" target="_blank">
-                      <t-icon name="note-search"></t-icon>
-                      <span>Find songs online</span>
                     </t-butt>
                     ${!this.signedIn
                       ? html`
@@ -2373,6 +2414,20 @@ export class MediaParent extends LitElement {
                           `
                         : ''}
                     `
+                : ''}
+              ${hasActiveQuery
+                ? html`
+                    <t-server-song-list
+                      .songs=${filterServerSongs(getCachedServerSongList(), query, serverTab)}
+                      .query=${query}
+                      .tab=${serverTab}
+                      .loading=${this._serverSongsLoading}
+                    ></t-server-song-list>
+                    <div class="add-song-from-device-row" @click=${this._handleAddSong}>
+                      <t-icon name="note-plus"></t-icon>
+                      <span>Not finding it? Add song from device</span>
+                    </div>
+                  `
                 : ''}
             `}
       </div>
