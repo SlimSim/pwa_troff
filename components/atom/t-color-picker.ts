@@ -348,7 +348,7 @@ export class TColorPicker extends LitElement {
           ${this.label ? html` <label>${this.label}</label> ` : ''}
 
           <t-dropdown-button position="up">
-            <t-butt class="trigger-button" slot="button" ellipsis>
+            <t-butt class="trigger-button" slot="button" ghost ellipsis>
               <span class="trigger-content">
                 <span
                   class="color-preview ${!selectedColor?.color ? 'no-color' : ''}"

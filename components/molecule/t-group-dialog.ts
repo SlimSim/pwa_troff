@@ -488,7 +488,7 @@ export class GroupDialog extends LitElement {
                 slim
                 @input=${(e: CustomEvent) => this._handleOwnerInput(i, e)}
               ></t-input>
-              <t-butt icon @click=${() => this._removeOwner(i)} title="Remove owner">
+              <t-butt icon @click=${() => this._removeOwner(i)} ghost title="Remove owner">
                 <t-icon name="delete"></t-icon>
               </t-butt>
             </div>

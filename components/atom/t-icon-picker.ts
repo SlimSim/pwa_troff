@@ -285,7 +285,7 @@ export class TIconPicker extends LitElement {
         ${this.label ? html` <label>${this.label}</label> ` : ''}
 
         <t-dropdown-button position="up">
-          <t-butt class="trigger-button" slot="button" ellipsis>
+          <t-butt class="trigger-button" slot="button" ellipsis ghost>
             <span class="trigger-content">
               <span class="icon-preview ${!selectedIcon ? 'no-icon' : ''}">
                 ${selectedIcon
