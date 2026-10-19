@@ -22,11 +22,11 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="11.313709"
-     inkscape:cx="8.2201163"
-     inkscape:cy="23.997436"
+     inkscape:cx="8.220116"
+     inkscape:cy="24.085824"
      inkscape:window-width="1920"
-     inkscape:window-height="1129"
-     inkscape:window-x="1912"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg1" />
@@ -36,7 +36,7 @@
      style="stroke-width:0.0255231" />
   <g
      id="g1"
-     transform="translate(0.3006341,-0.70503199)">
+     transform="matrix(0.86023337,0,0,0.86023337,1.2457173,-0.60649205)">
     <polyline
        points="7 10 12 15 17 10"
        id="polyline1-9"

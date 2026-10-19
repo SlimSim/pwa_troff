@@ -255,7 +255,7 @@ export class MediaParent extends LitElement {
       opacity: 0.65;
       color: var(--on-primary-color);
       line-height: 1.5;
-      margin: 0 0 8px 0;
+      margin: 0;
     }
 
     .empty-state-auth-busy {

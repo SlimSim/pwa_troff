@@ -216,7 +216,9 @@ export class CurrentSongControls extends LitElement {
       }
 
       .settings-group {
-        padding: 14px;
+        padding-top: 14px;
+        padding-bottom: 8px;
+        margin: auto;
       }
     }
 
@@ -396,9 +398,10 @@ export class CurrentSongControls extends LitElement {
     return html`
       <t-butt
         ellipsis
-        .key=${this.noKeyboard ? '' : key ?? ''}
+        .key=${this.noKeyboard ? '' : (key ?? '')}
         @click=${() => this._handleSongAction(action)}
-      >${label}</t-butt>
+        >${label}</t-butt
+      >
     `;
   }
 
@@ -625,23 +628,23 @@ export class CurrentSongControls extends LitElement {
                   <div class="settings-grid">
                     <div class="setting-item">
                       <div class="loop-buttons">
-                  ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
-                    (loopTimes) => html`
-                      <t-butt
-                        toggle
-                        .key=${this.noKeyboard ? '' : loopTimes === 'Inf' ? '0' : loopTimes}
-                        .active=${this._isLoopButtonActive(loopTimes)}
-                        @click=${() => this._setLoopTimes(loopTimes)}
-                      >
-                        ${loopTimes === 'Inf' ? '∞' : loopTimes}
-                      </t-butt>
-                    `
-                  )}
-                        </div>
+                        ${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Inf'].map(
+                          (loopTimes) => html`
+                            <t-butt
+                              toggle
+                              .key=${this.noKeyboard ? '' : loopTimes === 'Inf' ? '0' : loopTimes}
+                              .active=${this._isLoopButtonActive(loopTimes)}
+                              @click=${() => this._setLoopTimes(loopTimes)}
+                            >
+                              ${loopTimes === 'Inf' ? '∞' : loopTimes}
+                            </t-butt>
+                          `
+                        )}
                       </div>
                     </div>
                   </div>
-                `
+                </div>
+              `
             : ''}
 
           <!-- 11. Volume -->
