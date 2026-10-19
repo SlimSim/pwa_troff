@@ -142,11 +142,16 @@ describe('CurrentSongControls — song States live inside the Advanced panel', (
     const advanced = getAdvancedDetails();
     const firstRow = advanced!.querySelectorAll('.state-item')[0];
     expect(firstRow, 'Expected a .state-item row to exist for removeState').toBeTruthy();
-    const removeButt = firstRow.querySelectorAll('t-butt')[1];
+    const removeButt = firstRow.querySelectorAll('t-butt')[1] as HTMLElement;
 
     const handler = vi.fn();
     element.addEventListener('song-action-requested', handler);
 
+    // First click enters confirming state (swallowed by t-butt internals).
+    removeButt.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+    await element.updateComplete;
+
+    // Second click confirms → event bypasses gate and reaches _handleRemoveState.
     removeButt.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
 
     expect(handler).toHaveBeenCalledWith(

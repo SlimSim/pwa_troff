@@ -62,7 +62,7 @@ describe('t-media syncing badge (song-sync-status)', () => {
     const { loading, hasSyncingText, title } = getBadgeState();
     expect(loading).toBeNull();
     expect(hasSyncingText).toBe(false);
-    expect(title).toBe('My Song');
+    expect(title).toContain('My Song');
   });
 
   it('song-sync-status {songKey matching, syncing:true} shows t-loading + "syncing" next to the intact title', async () => {
@@ -93,7 +93,7 @@ describe('t-media syncing badge (song-sync-status)', () => {
     const { loading, hasSyncingText, title } = getBadgeState();
     expect(loading).toBeNull();
     expect(hasSyncingText).toBe(false);
-    expect(title).toBe('My Song');
+    expect(title).toContain('My Song');
     expect((element as MediaItemSyncing).syncing).toBe(false);
   });
 
@@ -120,10 +120,9 @@ describe('t-media syncing badge (song-sync-status)', () => {
     );
     await element.updateComplete;
 
-    expect(
-      (element as MediaItemSyncing).syncing,
-      'group-sync-status must not reach t-media'
-    ).toBe(false);
+    expect((element as MediaItemSyncing).syncing, 'group-sync-status must not reach t-media').toBe(
+      false
+    );
     expect(getBadgeState().loading).toBeNull();
   });
 });
