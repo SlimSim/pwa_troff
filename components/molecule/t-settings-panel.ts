@@ -805,6 +805,13 @@ export class SettingsPanel extends LitElement {
             .incrementUntillValue=${this.incrementUntillValue}
             .incrementUntillDisabled=${this.incrementUntillDisabled}
             .tempo=${this.tempo}
+            .defaultStartBeforeValue=${this.defaultStartBeforeValue}
+            .defaultStopAfterValue=${this.defaultStopAfterValue}
+            .defaultPauseBeforeValue=${this.defaultPauseBeforeValue}
+            .defaultWaitBetweenValue=${this.defaultWaitBetweenValue}
+            .defaultIncrementUntilValue=${this.defaultIncrementUntilValue}
+            .defaultVolumeValue=${this.defaultVolumeValue}
+            .defaultSpeedValue=${this.defaultSpeedValue}
           ></t-current-song-controls>
 
           <div class="global-settings">

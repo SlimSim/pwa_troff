@@ -247,17 +247,24 @@ export class CurrentSongControls extends LitElement {
   @property({ type: String }) loopTimesValue = '1';
   @property({ type: Boolean }) playFullSong = false;
   @property({ type: Number }) startBeforeValue = 0;
+  @property({ type: Number }) defaultStartBeforeValue = 4;
   @property({ type: Boolean }) startBeforeDisabled = false;
   @property({ type: Number }) stopAfterValue = 0;
+  @property({ type: Number }) defaultStopAfterValue = 2;
   @property({ type: Boolean }) stopAfterDisabled = false;
   @property({ type: Number }) incrementUntillValue = 0;
+  @property({ type: Number }) defaultIncrementUntilValue = 100;
   @property({ type: Boolean }) incrementUntillDisabled = false;
   @property({ type: Number }) pauseBefore = 3;
+  @property({ type: Number }) defaultPauseBeforeValue = 3;
   @property({ type: Number }) waitBetween = 1;
+  @property({ type: Number }) defaultWaitBetweenValue = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
   @property({ type: Boolean }) disableWaitBetween = false;
   @property({ type: Number }) volume = 75;
+  @property({ type: Number }) defaultVolumeValue = 75;
   @property({ type: Number }) speed = 100;
+  @property({ type: Number }) defaultSpeedValue = 100;
   @property({ type: Number }) tempo = 0;
   @property({ type: Array }) songStates: string[] = [];
   @property({ type: Number }) numberOfVersions = 0;
@@ -489,7 +496,7 @@ export class CurrentSongControls extends LitElement {
                     .key=${this.noKeyboard ? '' : 'b'}
                     label="Start before"
                     show-disable-button
-                    defaultValue="4"
+                    .defaultValue=${this.defaultStartBeforeValue}
                     .value=${this.startBeforeValue}
                     .disabled=${this.startBeforeDisabled}
                     .min=${0}
@@ -517,7 +524,7 @@ export class CurrentSongControls extends LitElement {
                     .key=${this.noKeyboard ? '' : 'a'}
                     show-disable-button
                     unit="s"
-                    defaultValue="2"
+                    .defaultValue=${this.defaultStopAfterValue}
                     .value=${this.stopAfterValue}
                     .disabled=${this.stopAfterDisabled}
                     .min=${0}
@@ -571,7 +578,7 @@ export class CurrentSongControls extends LitElement {
                     label="Pause before"
                     iconName="pause-before"
                     unit="s"
-                    defaultValue="3"
+                    .defaultValue=${this.defaultPauseBeforeValue}
                     show-disable-button
                     .value=${this.pauseBefore}
                     .disabled=${this.disablePauseBefore}
@@ -601,7 +608,7 @@ export class CurrentSongControls extends LitElement {
                     label="Wait between"
                     iconName="wait-between"
                     unit="s"
-                    defaultValue="1"
+                    .defaultValue=${this.defaultWaitBetweenValue}
                     show-disable-button
                     .value=${this.waitBetween}
                     .disabled=${this.disableWaitBetween}
@@ -661,7 +668,7 @@ export class CurrentSongControls extends LitElement {
                     dangerWhenOver="100"
                     iconName="volume"
                     unit=""
-                    defaultValue="75"
+                    .defaultValue=${this.defaultVolumeValue}
                     .value=${this.volume}
                     @value-changed=${(event: CustomEvent<{ value: number }>) => {
                       this.volume = event.detail.value;
@@ -686,7 +693,7 @@ export class CurrentSongControls extends LitElement {
                     label="Speed"
                     iconName="speed"
                     unit="%"
-                    defaultValue="100"
+                    .defaultValue=${this.defaultSpeedValue}
                     .value=${this.speed}
                     @value-changed=${(event: CustomEvent<{ value: number }>) => {
                       this.speed = event.detail.value;
@@ -707,7 +714,7 @@ export class CurrentSongControls extends LitElement {
                     label="Increment until"
                     unit="%"
                     show-disable-button
-                    defaultValue="100"
+                    .defaultValue=${this.defaultIncrementUntilValue}
                     .value=${this.incrementUntillValue}
                     .disabled=${this.incrementUntillDisabled}
                     .min=${50}

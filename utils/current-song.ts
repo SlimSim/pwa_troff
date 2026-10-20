@@ -52,6 +52,16 @@ export function updateFooterWithCurrentSong() {
   if (songPath) {
     const songData = nDB.get(songPath);
     if (songData) {
+      footer.defaultSpeedValue =
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100;
+      footer.defaultVolumeValue =
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE')) || 75;
+      footer.defaultPauseBeforeValue =
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE')) || 3;
+      footer.defaultWaitBetweenValue =
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE')) || 1;
+      footer.defaultIncrementUntilValue =
+        Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE')) || 100;
       footer.speed = parseStoredNumber(
         songData.TROFF_VALUE_speedBar,
         Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE')) || 100

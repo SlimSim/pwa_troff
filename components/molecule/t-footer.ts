@@ -13,6 +13,9 @@ export class BottomNav extends LitElement {
   @property({ type: Boolean }) settingsPanelVisible = false;
   @property({ type: Number }) speed = 100;
   @property({ type: Number }) volume = 75;
+  @property({ type: Number }) defaultSpeedValue = 100;
+  @property({ type: Number }) defaultVolumeValue = 75;
+  @property({ type: Number }) defaultIncrementUntilValue = 100;
   @property({ type: Number }) incrementUntillValue = 0;
   @property({ type: Boolean }) incrementUntillDisabled = false;
   @property({ type: Boolean }) showSpeedDropdown = false;
@@ -31,6 +34,8 @@ export class BottomNav extends LitElement {
   @property({ type: String }) loopTimesLeftLabel = '';
   @property({ type: Number }) pauseBefore = 3;
   @property({ type: Number }) waitBetween = 1;
+  @property({ type: Number }) defaultPauseBeforeValue = 3;
+  @property({ type: Number }) defaultWaitBetweenValue = 1;
   @property({ type: Boolean }) disablePauseBefore = false;
   @property({ type: Boolean }) disableWaitBetween = false;
   @property({ type: Number }) songDuration = 0;
@@ -421,7 +426,7 @@ export class BottomNav extends LitElement {
                 label="Volume"
                 dangerWhenOver="100"
                 iconName="volume"
-                defaultValue="75"
+                .defaultValue=${this.defaultVolumeValue}
                 .value=${this.volume}
                 unit=""
                 @value-changed=${this._handleVolumeChanged}
@@ -432,7 +437,7 @@ export class BottomNav extends LitElement {
                 step="5"
                 label="Speed"
                 iconName="speed"
-                defaultValue="100"
+                .defaultValue=${this.defaultSpeedValue}
                 .value=${this.speed}
                 unit="%"
                 @value-changed=${this._handleSpeedChanged}
@@ -441,7 +446,7 @@ export class BottomNav extends LitElement {
                 label="Increment until"
                 unit="%"
                 show-disable-button
-                defaultValue="100"
+                .defaultValue=${this.defaultIncrementUntilValue}
                 .value=${this.incrementUntillValue}
                 .disabled=${this.incrementUntillDisabled}
                 .min=${50}
@@ -553,7 +558,7 @@ export class BottomNav extends LitElement {
                 label="Pause before"
                 iconName="pause-before"
                 unit="s"
-                defaultValue="3"
+                .defaultValue=${this.defaultPauseBeforeValue}
                 show-disable-button
                 .value=${this.pauseBefore}
                 .disabled=${this.disablePauseBefore}
@@ -563,7 +568,7 @@ export class BottomNav extends LitElement {
                 label="Wait between"
                 iconName="wait-between"
                 unit="s"
-                defaultValue="1"
+                .defaultValue=${this.defaultWaitBetweenValue}
                 show-disable-button
                 .value=${this.waitBetween}
                 .disabled=${this.disableWaitBetween}
