@@ -61,6 +61,7 @@ import {
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
 import { extractAlbumArt } from './utils/album-art.js';
+import { generateWaveformPeaks } from './utils/waveform.js';
 import { calculateIncrementUntilSpeed } from './utils/increment-until.js';
 import type {
   TroffMarker,
@@ -674,6 +675,9 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
   let lastTimeUpdateTime = 0;
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
+  // Bumped for every waveform request so a slow (stale) song's peaks can
+  // never overwrite the peaks of a song that loaded after it.
+  let waveformRequestId = 0;
 
   // Current auth state, kept in sync by the onAuthStateChanged callback below
   let currentUserSignedIn = false;
@@ -704,6 +708,15 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       if (videoPlayer) videoPlayer.hidden = true;
       if (videoElement) videoElement.pause();
     }
+
+    const requestId = ++waveformRequestId;
+    void generateWaveformPeaks(result.url).then((peaks) => {
+      if (requestId !== waveformRequestId || !peaks) return;
+      // Float32Array -> number[]; toFixed strips the float32 representation
+      // noise so the component gets clean values (0.2 instead of 0.200000003).
+      markerSlider.waveformPeaks = Array.from(peaks, (peak) => Number(peak.toFixed(6)));
+    });
+
     applyStoredVolumeAndSpeedToMedia();
   };
 

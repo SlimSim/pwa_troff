@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { MarkerSlider } from './t-marker-slider.js';
 import type { TroffMarker } from '../../types/troff.js';
+
+/** Repository root (this file lives in components/organisms/). */
+const repoRoot = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 
 /**
  * Builds a valid TroffMarker-shaped fixture for the slider's `markers`
@@ -772,5 +778,604 @@ describe('t-marker-slider gesture persistence notification', () => {
 
     expect(element.zoomLevel).toBe(4);
     expect(events.length).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Feature: vertical audio waveform display in t-marker-slider
+//
+// The component gains a `waveformPeaks: number[]` property (default []) and a
+// <canvas class="waveform-canvas"> rendered in the shadow DOM INSIDE
+// .slider-track-wrapper AFTER the .playback-region (the region is the
+// wrapper's FIRST child so the solid region paints BEHIND the waveform;
+// time flows top→bottom, so the waveform sits under the vertical timeline
+// track — the merged track + waveform column). The canvas is styled
+// `.waveform-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; }`
+// (explicit width/height — a <canvas> is a REPLACED element, so `inset: 0`
+// alone does NOT stretch it), seeks
+// on mousedown exactly like the track, and is included in the single-finger
+// touch-drag hit area (expandedRight extends past the waveform's right edge,
+// not just the track wrapper's right edge + 15px).
+// ---------------------------------------------------------------------------
+describe('t-marker-slider waveform display', () => {
+  let element: MarkerSlider;
+
+  beforeEach(() => {
+    element = new MarkerSlider();
+    document.body.appendChild(element);
+
+    // happy-dom's canvas support is incomplete — the component draws the
+    // waveform through a 2d context, so stub getContext('2d') with a no-op.
+    const ctxStub = new Proxy({} as object, { get: () => vi.fn() });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      ctxStub as unknown as CanvasRenderingContext2D
+    );
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  function getWaveformCanvas(): HTMLCanvasElement | null {
+    return element.shadowRoot?.querySelector('canvas.waveform-canvas') ?? null;
+  }
+
+  function getTrackWrapper(): HTMLElement {
+    const trackWrapper = element.shadowRoot?.querySelector('.slider-track-wrapper');
+    expect(trackWrapper).not.toBeNull();
+    return trackWrapper as HTMLElement;
+  }
+
+  function getPresetsContainer(): HTMLElement {
+    const presets = element.shadowRoot?.querySelector('.presets-container');
+    expect(presets).not.toBeNull();
+    return presets as HTMLElement;
+  }
+
+  it('exposes waveformPeaks, defaulting to an empty array', async () => {
+    await element.updateComplete;
+
+    expect(element.waveformPeaks).toEqual([]);
+  });
+
+  it('declares waveformPeaks as a reactive property and keeps an assigned value across re-render', async () => {
+    // Declared with @property so external wiring (v2Script setting
+    // markerSlider.waveformPeaks) triggers a re-render.
+    expect(MarkerSlider.elementProperties.has('waveformPeaks')).toBe(true);
+
+    element.waveformPeaks = [0.1, 0.5, 1];
+    await element.updateComplete;
+
+    expect(element.waveformPeaks).toEqual([0.1, 0.5, 1]);
+  });
+
+  it('renders the canvas inside the track wrapper, AFTER the playback region (region paints behind)', async () => {
+    await element.updateComplete;
+
+    const canvas = getWaveformCanvas();
+    expect(canvas).not.toBeNull();
+
+    // Merged column: the canvas lives INSIDE .slider-track-wrapper, but the
+    // .playback-region is the FIRST child (paint order = DOM order), so the
+    // solid region paints BEHIND the waveform.
+    const wrapper = getTrackWrapper();
+    const region = wrapper.firstElementChild;
+    expect(region?.classList.contains('playback-region')).toBe(true);
+    expect(canvas?.previousElementSibling).toBe(region);
+    // The separate sibling canvas column is gone: the wrapper is directly
+    // followed by the presets container.
+    expect(wrapper.nextElementSibling).toBe(getPresetsContainer());
+  });
+
+  it('styles .waveform-canvas with explicit sizing to absolutely fill the track wrapper (position: absolute; width/height: 100%)', async () => {
+    const cssText = String(MarkerSlider.styles);
+    const ruleMatch = /\.waveform-canvas\s*\{([^}]*)\}/.exec(cssText);
+
+    expect(ruleMatch).not.toBeNull();
+    const ruleBody = ruleMatch?.[1] ?? '';
+    expect(ruleBody).toMatch(/position:\s*absolute/);
+    // Explicit sizing: <canvas> is a replaced element, so only an explicit
+    // width/height (not `inset: 0`) makes it stretch to the wrapper.
+    expect(ruleBody).toMatch(/width:\s*100%/);
+    expect(ruleBody).toMatch(/height:\s*100%/);
+    expect(ruleBody).toMatch(/cursor:\s*pointer/);
+  });
+
+  /**
+   * Regression: canvas-sizing feedback loop (white canvas + sad face).
+   *
+   * `<canvas>` is a REPLACED element (like `<img>`): for an absolutely
+   * positioned replaced element, `width: auto`/`height: auto` resolve to the
+   * INTRINSIC size (the width/height attributes, default 300×150) — `inset: 0`
+   * does NOT stretch it. The old rule
+   * `.waveform-canvas { position: absolute; inset: 0; cursor: pointer; }`
+   * therefore fed `_drawWaveform()` the intrinsic 300×150 rect instead of the
+   * real column size, and each redraw did
+   * `canvas.width = rect.width × devicePixelRatio` (300 → 450 → 675 → …),
+   * growing the intrinsic size exponentially until the browser cap
+   * (`width="33554433"` = last step before 2^25 at dpr 1.5) → allocation
+   * failure → white canvas with the sad-face icon.
+   *
+   * The fix is an explicit `width` AND `height` in the rule (CSS then wins
+   * over the intrinsic size). This test pins BOTH declarations so neither can
+   * ever be silently dropped again — dropping either one is exactly how the
+   * bug shipped.
+   */
+  it('regression: .waveform-canvas declares BOTH explicit width and height so intrinsic-size feedback cannot grow canvas.width', async () => {
+    const cssText = String(MarkerSlider.styles);
+    const ruleMatch = /\.waveform-canvas\s*\{([^}]*)\}/.exec(cssText);
+
+    expect(ruleMatch).not.toBeNull();
+    const ruleBody = ruleMatch?.[1] ?? '';
+    // Both explicit — `inset: 0` alone does not size a replaced element.
+    expect(ruleBody).toMatch(/width:\s*100%/);
+    expect(ruleBody).toMatch(/height:\s*100%/);
+  });
+
+  it('mousedown on the waveform canvas seeks like the track (value + value-changed)', async () => {
+    await element.updateComplete;
+
+    const canvas = getWaveformCanvas();
+    expect(canvas).not.toBeNull();
+
+    // Track and canvas share the same vertical extent: a 100px-tall slider.
+    // The seek math maps clientY to value as value = (clientY / height) * 100
+    // (min 0, max 100), so clientY 80 -> value 80.
+    vi.spyOn(getTrackWrapper(), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 100, 100)
+    );
+    vi.spyOn(canvas as HTMLCanvasElement, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 100, 100)
+    );
+
+    const valueChanged: number[] = [];
+    element.addEventListener('value-changed', ((e: CustomEvent) => {
+      valueChanged.push(e.detail.value);
+    }) as EventListener);
+
+    (canvas as HTMLCanvasElement).dispatchEvent(
+      new MouseEvent('mousedown', { clientY: 80, bubbles: true, cancelable: true })
+    );
+
+    expect(element.value).toBe(80);
+    expect(valueChanged).toEqual([80]);
+  });
+
+  /**
+   * Layout used by the touch-drag hit-area tests:
+   *  - track wrapper occupies x 0..50, y 0..800
+   *  - waveform canvas occupies x 50..100, y 0..800
+   *
+   * The legacy hit area only covered trackRect.right + 15 = x 65. A touch on
+   * the waveform canvas at x 80 must count as a drag-seek, not a scroll.
+   */
+  function mockTrackAndWaveformGeometry(): void {
+    vi.spyOn(getTrackWrapper(), 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 50, 800)
+    );
+    const canvas = getWaveformCanvas();
+    if (canvas) {
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(new DOMRect(50, 0, 50, 800));
+    }
+  }
+
+  function dispatchSingleTouchStart(clientX: number, clientY: number): void {
+    const touch = { clientX, clientY } as Touch;
+    const event = new Event('touchstart') as TouchEvent;
+    Object.assign(event, { touches: [touch], changedTouches: [touch], targetTouches: [touch] });
+    element.dispatchEvent(event);
+  }
+
+  it('a single-finger touchstart over the waveform canvas (beyond track right + 15) drag-seeks', async () => {
+    await element.updateComplete;
+    mockTrackAndWaveformGeometry();
+
+    // x 80 is inside the waveform canvas (50..100) but beyond the legacy
+    // expandedRight of 65. Seek math: value = (clientY / height) * 100, so
+    // y 600 on the 800px track -> value 75.
+    dispatchSingleTouchStart(80, 600);
+
+    expect(element.value).toBe(75);
+  });
+
+  it('a single-finger touchstart within the legacy track hit area still drag-seeks (regression)', async () => {
+    await element.updateComplete;
+    mockTrackAndWaveformGeometry();
+
+    // x 30 was already inside the old expanded area (0 - 15 .. 50 + 15).
+    // y 600 on the 800px track -> value 75.
+    dispatchSingleTouchStart(30, 600);
+
+    expect(element.value).toBe(75);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Feature: merge the slider track column with the waveform column (one column)
+//
+// Approved design: the <canvas class="waveform-canvas"> lives INSIDE
+// .slider-track-wrapper AFTER the .playback-region — the region is the
+// wrapper's FIRST child (paint order = DOM order), so the SOLID, full-width
+// region (left: 0; right: 0; NO opacity) paints BEHIND the waveform while the
+// thumb (z-index: 10) stays on top. The 5px center .slider-track line is gone
+// (CSS rule and element removed). The wrapper widens to
+// `width: var(--waveform-width)` (31px mobile / 42px ≥576px, declared in
+// stylesheets/variables.css)
+// with no horizontal padding, and the separate sibling canvas column is
+// removed — the wrapper's next sibling is now .presets-container. The thumb
+// gains a full-width .thumb-line
+// (`width: var(--waveform-width)`) nested inside .slider-thumb so it travels
+// with the thumb.
+//
+// The visual tweaks (no center track line, solid full-width region behind the
+// waveform) are locked by the tests below.
+// ---------------------------------------------------------------------------
+describe('t-marker-slider merged track + waveform column', () => {
+  let element: MarkerSlider;
+
+  beforeEach(() => {
+    element = new MarkerSlider();
+    document.body.appendChild(element);
+
+    // happy-dom's canvas support is incomplete — the component draws the
+    // waveform through a 2d context, so stub getContext('2d') with a no-op
+    // (same pattern as the waveform display suite above).
+    const ctxStub = new Proxy({} as object, { get: () => vi.fn() });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      ctxStub as unknown as CanvasRenderingContext2D
+    );
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  function getWrapper(): HTMLElement {
+    const wrapper = element.shadowRoot?.querySelector('.slider-track-wrapper');
+    expect(wrapper).not.toBeNull();
+    return wrapper as HTMLElement;
+  }
+
+  function getPresetsContainer(): HTMLElement {
+    const presets = element.shadowRoot?.querySelector('.presets-container');
+    expect(presets).not.toBeNull();
+    return presets as HTMLElement;
+  }
+
+  /** Body of the first rule matching `pattern` in the component's static CSS. */
+  function getStyleRuleBody(pattern: RegExp): string {
+    const match = pattern.exec(String(MarkerSlider.styles));
+    expect(
+      match,
+      `expected MarkerSlider.styles to contain a rule matching ${pattern}`
+    ).not.toBeNull();
+    return match?.[1] ?? '';
+  }
+
+  it('renders the waveform canvas INSIDE .slider-track-wrapper (sibling column removed)', async () => {
+    await element.updateComplete;
+
+    const wrapper = getWrapper();
+    expect(wrapper.querySelector('canvas.waveform-canvas')).not.toBeNull();
+    // The old sibling canvas between wrapper and presets is gone: the
+    // wrapper is directly followed by the presets container.
+    expect(wrapper.nextElementSibling).toBe(getPresetsContainer());
+  });
+
+  it('widens .slider-track-wrapper to var(--waveform-width)', () => {
+    const ruleBody = getStyleRuleBody(/\.slider-track-wrapper\s*\{([^}]*)\}/);
+    expect(ruleBody).toMatch(/width:\s*var\(--waveform-width\)/);
+  });
+
+  // --waveform-width is mobile-first responsive in stylesheets/variables.css:
+  // 31px at the base :root (mobile), 42px inside @media (min-width: 576px)
+  // (larger screens). The consumers (.slider-track-wrapper and .thumb-line)
+  // both just use width: var(--waveform-width) and need no change.
+  it('declares a mobile-first base --waveform-width: 31px in stylesheets/variables.css', () => {
+    const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
+    expect(/--waveform-width:\s*31px\s*;/.exec(css)).not.toBeNull();
+  });
+
+  it('declares a @media (min-width: 576px) block in stylesheets/variables.css', () => {
+    const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
+    expect(/@media\s*\(min-width:\s*576px\)/.exec(css)).not.toBeNull();
+  });
+
+  it('sets --waveform-width: 42px inside the @media (min-width: 576px) block', () => {
+    const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
+    expect(
+      /@media\s*\(min-width:\s*576px\)\s*\{[\s\S]*?--waveform-width:\s*42px\s*;/.exec(css)
+    ).not.toBeNull();
+  });
+
+  it('renders .playback-region solid and full width (no opacity, no --slider-playback-region-width)', () => {
+    const ruleBody = getStyleRuleBody(/\.playback-region\s*\{([^}]*)\}/);
+    // Solid: no opacity declaration at all (the waveform shows through only
+    // where the canvas itself is transparent, not via a faded region).
+    expect(ruleBody).not.toMatch(/opacity:/);
+    // Full width: anchored to BOTH edges instead of the old centered
+    // --slider-playback-region-width band.
+    expect(ruleBody).toMatch(/left:\s*0(?![-\w.])/);
+    expect(ruleBody).toMatch(/right:\s*0(?![-\w.])/);
+    expect(ruleBody).not.toMatch(/--slider-playback-region-width/);
+  });
+
+  it('renders a .thumb-line element inside .slider-thumb', async () => {
+    await element.updateComplete;
+
+    expect(element.shadowRoot?.querySelector('.slider-thumb .thumb-line')).not.toBeNull();
+  });
+
+  it('spans .thumb-line across the full waveform column width', () => {
+    const ruleBody = getStyleRuleBody(/\.thumb-line\s*\{([^}]*)\}/);
+    expect(ruleBody).toMatch(/width:\s*var\(--waveform-width\)/);
+  });
+
+  it('keeps .thumb-line inside the thumb so it follows the thumb position', async () => {
+    element.value = 30;
+    await element.updateComplete;
+
+    const thumb = element.shadowRoot?.querySelector('.slider-thumb');
+    expect(thumb).not.toBeNull();
+
+    let thumbLine = element.shadowRoot?.querySelector('.slider-thumb .thumb-line');
+    expect(thumbLine).not.toBeNull();
+    // The line has no position of its own — it rides along with the thumb,
+    // which IS positioned inline from `value`.
+    expect(thumbLine?.parentElement).toBe(thumb);
+    expect(thumb?.getAttribute('style') ?? '').toContain('top: calc(30%)');
+
+    // Moving the value re-positions the thumb; the line stays nested inside,
+    // so it inherits the movement.
+    element.value = 70;
+    await element.updateComplete;
+    expect(thumb?.getAttribute('style') ?? '').toContain('top: calc(70%)');
+    thumbLine = element.shadowRoot?.querySelector('.slider-thumb .thumb-line');
+    expect(thumbLine?.parentElement).toBe(thumb);
+  });
+
+  it('still seeks (value-changed) from mousedown on the canvas in its new home inside the wrapper', async () => {
+    await element.updateComplete;
+
+    const wrapper = getWrapper();
+    const canvas = wrapper.querySelector('canvas.waveform-canvas') as HTMLCanvasElement | null;
+    expect(canvas).not.toBeNull();
+
+    // Seek math reads the wrapper rect: a 100px-tall track means
+    // value = (1 - clientY / 100) * 100, so clientY 80 -> value 80.
+    vi.spyOn(wrapper, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 100, 100));
+
+    const valueChanged: number[] = [];
+    element.addEventListener('value-changed', ((e: CustomEvent) => {
+      valueChanged.push(e.detail.value);
+    }) as EventListener);
+
+    canvas?.dispatchEvent(
+      new MouseEvent('mousedown', { clientY: 80, bubbles: true, cancelable: true })
+    );
+
+    expect(element.value).toBe(80);
+    // Exactly one seek per click — the wrapper's own mousedown handler must
+    // not fire a second time now that the canvas is its child.
+    expect(valueChanged).toEqual([80]);
+  });
+
+  it('still draws waveformPeaks onto the canvas inside the wrapper', async () => {
+    await element.updateComplete;
+
+    const wrapper = getWrapper();
+    const canvas = wrapper.querySelector('canvas.waveform-canvas') as HTMLCanvasElement | null;
+    expect(canvas).not.toBeNull();
+
+    // _drawWaveform bails out on a zero-sized rect, so give the canvas a real
+    // size and hand it some peaks. A successful draw resizes the backing
+    // store (happy-dom's default canvas width is 300), which is observable
+    // without a real 2d context.
+    vi.spyOn(canvas as HTMLCanvasElement, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 42, 800)
+    );
+    element.waveformPeaks = [0.1, 0.5, 1];
+    await element.updateComplete;
+
+    expect((canvas as HTMLCanvasElement).width).toBe(
+      Math.round(42 * (window.devicePixelRatio || 1))
+    );
+  });
+
+  /**
+   * Mocks the waveform canvas geometry (same 42×800 rect as the draw test
+   * above) and swaps in a STABLE 2d context so fillRect/clearRect call
+   * history is observable — the shared beforeEach stub hands out a fresh
+   * `vi.fn()` on every property access, which cannot be asserted on.
+   */
+  function mockWaveformCanvasDrawContext(): {
+    fillRect: ReturnType<typeof vi.fn>;
+    clearRect: ReturnType<typeof vi.fn>;
+  } {
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement | null;
+    expect(canvas).not.toBeNull();
+    vi.spyOn(canvas as HTMLCanvasElement, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 42, 800)
+    );
+    const fillRect = vi.fn();
+    const clearRect = vi.fn();
+    vi.spyOn(canvas as HTMLCanvasElement, 'getContext').mockReturnValue({
+      fillRect,
+      clearRect,
+      setTransform: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    return { fillRect, clearRect };
+  }
+
+  /**
+   * Regression (song switch): the OLD waveform stays visible for a moment
+   * because, while the next song's peaks generate, `waveformPeaks` is
+   * cleared to [] — but `_drawWaveform()` early-returns on empty peaks
+   * WITHOUT clearing the canvas, leaving the previous song's bars painted.
+   * Empty peaks must wipe the canvas instead of bailing out.
+   */
+  it('wipes the canvas when waveformPeaks becomes empty (song switch clears the old waveform)', async () => {
+    await element.updateComplete;
+
+    const { fillRect, clearRect } = mockWaveformCanvasDrawContext();
+
+    // Draw first so the canvas is NOT blank (a successful draw paints one
+    // bar per peak via fillRect, same path as the existing draw test).
+    element.waveformPeaks = [0.1, 0.5, 1];
+    await element.updateComplete;
+    expect(fillRect).toHaveBeenCalled();
+
+    // Snapshot the counters, then simulate the song switch: the peaks are
+    // cleared while the next song's peaks are still generating.
+    const fillRectCallsAfterDraw = fillRect.mock.calls.length;
+    const clearRectCallsAfterDraw = clearRect.mock.calls.length;
+    element.waveformPeaks = [];
+    await element.updateComplete;
+
+    expect(
+      clearRect,
+      'empty peaks must clear the old waveform off the canvas'
+    ).toHaveBeenCalledTimes(clearRectCallsAfterDraw + 1);
+    expect(fillRect, 'no new bars may be drawn for empty peaks').toHaveBeenCalledTimes(
+      fillRectCallsAfterDraw
+    );
+  });
+
+  /** Companion redraw guard: after an empty-peaks wipe, fresh peaks must draw again. */
+  it('draws again after a clear when new peaks arrive', async () => {
+    await element.updateComplete;
+
+    const { fillRect } = mockWaveformCanvasDrawContext();
+
+    element.waveformPeaks = [0.1, 0.5, 1];
+    await element.updateComplete;
+    const fillRectCallsAfterFirstDraw = fillRect.mock.calls.length;
+    expect(fillRectCallsAfterFirstDraw).toBeGreaterThan(0);
+
+    // Song switch clears the peaks mid-load…
+    element.waveformPeaks = [];
+    await element.updateComplete;
+
+    // …then the next song's peaks arrive — the new waveform must be drawn.
+    element.waveformPeaks = [0.2, 0.4];
+    await element.updateComplete;
+
+    expect(fillRect.mock.calls.length).toBeGreaterThan(fillRectCallsAfterFirstDraw);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Feature: visual tweaks — remove the 5px center track line; make the
+// playback region solid, full width and BEHIND the waveform.
+//
+// Tweak 1: the `.slider-track` CSS rule and the `<div class="slider-track">`
+// element are gone. The column keeps its `.slider-track-wrapper` container and
+// `--slider-track-width` stays in stylesheets/variables.css (still used by
+// components/atom/t-vertical-slider.ts).
+//
+// Tweak 2: `.playback-region` is solid (NO opacity declaration), full width
+// (`left: 0; right: 0` — no `--slider-playback-region-width` reference; that
+// variable is removed from stylesheets/variables.css) and is the FIRST child
+// of .slider-track-wrapper, so paint order (= DOM order) puts it BEHIND the
+// canvas while the thumb (z-index: 10) still rides on top.
+//
+// All tests here are RED until the tweaks are implemented.
+// ---------------------------------------------------------------------------
+describe('t-marker-slider visual tweaks: no center track line, solid full-width region behind waveform', () => {
+  let element: MarkerSlider;
+
+  beforeEach(() => {
+    element = new MarkerSlider();
+    document.body.appendChild(element);
+
+    // Same happy-dom canvas stub as the suites above — the component draws the
+    // waveform through a 2d context on every update.
+    const ctxStub = new Proxy({} as object, { get: () => vi.fn() });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      ctxStub as unknown as CanvasRenderingContext2D
+    );
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  function getWrapper(): HTMLElement {
+    const wrapper = element.shadowRoot?.querySelector('.slider-track-wrapper');
+    expect(wrapper).not.toBeNull();
+    return wrapper as HTMLElement;
+  }
+
+  /**
+   * First rule body matching `pattern` in the component's static CSS, or null
+   * when no such rule exists (the presence-asserting variant used by the
+   * suite above cannot express "rule must be absent").
+   */
+  function findStyleRuleBody(pattern: RegExp): string | null {
+    return pattern.exec(String(MarkerSlider.styles))?.[1] ?? null;
+  }
+
+  it('has no .slider-track rule in MarkerSlider.styles', () => {
+    // Class-selector semantics: /\.slider-track\s*\{/ does NOT match
+    // `.slider-track-wrapper {` (the -wrapper suffix keeps it from matching),
+    // so a null result means the center-track rule is truly gone while the
+    // wrapper rule survives untouched.
+    const ruleBody = findStyleRuleBody(/\.slider-track\s*\{([^}]*)\}/);
+    expect(ruleBody, 'expected the .slider-track CSS rule to be removed').toBeNull();
+  });
+
+  it('renders no .slider-track element', async () => {
+    await element.updateComplete;
+
+    // querySelector('.slider-track') matches ONLY that exact class, so a
+    // .slider-track-wrapper element does not satisfy it.
+    expect(element.shadowRoot?.querySelector('.slider-track')).toBeNull();
+  });
+
+  it('paints the playback region FIRST (behind) and the canvas after it', async () => {
+    await element.updateComplete;
+
+    const wrapper = getWrapper();
+    const region = wrapper.firstElementChild;
+    expect(region?.classList.contains('playback-region')).toBe(true);
+
+    const canvas = wrapper.querySelector('canvas.waveform-canvas');
+    expect(canvas).not.toBeNull();
+    expect(region?.nextElementSibling).toBe(canvas);
+    expect(canvas?.previousElementSibling).toBe(region);
+  });
+
+  it('makes .playback-region solid and full width with no --slider-playback-region-width reference', () => {
+    const cssText = String(MarkerSlider.styles);
+    expect(cssText, 'MarkerSlider styles must not reference the removed variable').not.toMatch(
+      /--slider-playback-region-width/
+    );
+
+    const ruleBody = findStyleRuleBody(/\.playback-region\s*\{([^}]*)\}/);
+    expect(ruleBody, 'expected a .playback-region rule in MarkerSlider static styles').not.toBeNull();
+    // Solid (no opacity), full width (both edges) instead of the old
+    // centered, translucent --slider-playback-region-width band.
+    expect(ruleBody ?? '').not.toMatch(/opacity:/);
+    expect(ruleBody ?? '').toMatch(/left:\s*0(?![-\w.])/);
+    expect(ruleBody ?? '').toMatch(/right:\s*0(?![-\w.])/);
+  });
+
+  it('no longer declares --slider-playback-region-width in stylesheets/variables.css', () => {
+    // Same file + path logic as the --waveform-width test in the suite above;
+    // `--slider-track-width` must remain (t-vertical-slider still uses it).
+    const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
+    expect(
+      /--slider-playback-region-width\s*:/.exec(css),
+      'expected --slider-playback-region-width to be removed from stylesheets/variables.css'
+    ).toBeNull();
   });
 });

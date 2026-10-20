@@ -34,28 +34,17 @@ export class MarkerSlider extends LitElement {
     }
 
     .slider-track-wrapper {
-      padding: 0 var(--slider-horizontal-padding);
+      padding: 0;
       position: relative;
       height: 100%;
-      width: max(var(--slider-thumb-size), var(--slider-track-width));
+      width: var(--waveform-width);
       flex-shrink: 0;
-    }
-
-    .slider-track {
-      position: absolute;
-      left: calc(50% - var(--slider-track-width) / 2);
-      top: 0;
-      bottom: 0;
-      width: var(--slider-track-width);
-      background-color: var(--slider-color);
-      border-radius: 2px;
-      cursor: pointer;
     }
 
     .playback-region {
       position: absolute;
-      left: calc(50% - var(--slider-playback-region-width) / 2);
-      width: var(--slider-playback-region-width);
+      left: 0;
+      right: 0;
       background-color: var(--slider-playback-region-color);
       top: var(--min-percent, 0);
       height: var(--height-percent, 100%);
@@ -81,6 +70,30 @@ export class MarkerSlider extends LitElement {
       cursor: grabbing;
 
       box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--slider-color);
+    }
+
+    .thumb-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: var(--waveform-width);
+      height: 3px;
+      background-color: var(--slider-color);
+      border-radius: 2px;
+    }
+
+    /* canvas is a replaced element: inset:0 alone does NOT size it — the
+       intrinsic width/height attributes win (300x150 default), which made
+       _drawWaveform's rect.width x devicePixelRatio sizing feed back into
+       the intrinsic size and blow the canvas up to the browser's max. */
+    .waveform-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
     }
 
     .presets-container {
@@ -111,6 +124,8 @@ export class MarkerSlider extends LitElement {
   @property({ type: Number }) zoomLevel = 1;
   @property({ type: Number }) minZoom = 1;
   @property({ type: String, attribute: 'fill-color' }) fillColor = '';
+  /** Normalized peak amplitudes (0..1) drawn as the vertical waveform. */
+  @property({ type: Array }) waveformPeaks: number[] = [];
 
   private isDragging = false;
   private isTouchDragging = false;
@@ -128,8 +143,70 @@ export class MarkerSlider extends LitElement {
   private _boundTouchMove = (event: TouchEvent): void => this._handleTouchMove(event);
   private _boundTouchEnd = (event: TouchEvent): void => this._handleTouchEnd(event);
 
+  private _lastDrawnPeaks: number[] | null = null;
+  private _lastDrawnWidth = 0;
+  private _lastDrawnHeight = 0;
+
   private _getTrackElement(): HTMLElement | null {
     return this.shadowRoot?.querySelector('.slider-track-wrapper') ?? null;
+  }
+
+  private _getWaveformCanvas(): HTMLCanvasElement | null {
+    return this.shadowRoot?.querySelector('canvas.waveform-canvas') ?? null;
+  }
+
+  updated(): void {
+    this._drawWaveform();
+  }
+
+  /** Draws waveformPeaks as centered horizontal bars down the waveform canvas. */
+  private _drawWaveform(): void {
+    const canvas = this._getWaveformCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    if (width <= 0 || height <= 0) return;
+
+    const peaks = this.waveformPeaks;
+    if (
+      peaks.length === 0 ||
+      (peaks === this._lastDrawnPeaks &&
+        width === this._lastDrawnWidth &&
+        height === this._lastDrawnHeight)
+    ) {
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const numPeaks = peaks.length;
+    const halfWidth = width / 2;
+    const barHeight = Math.max(height / numPeaks, 1);
+    const color = getComputedStyle(canvas).getPropertyValue('--slider-color').trim() || '#888888';
+
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = Math.round(width * pixelRatio);
+    canvas.height = Math.round(height * pixelRatio);
+
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.6;
+
+    for (let i = 0; i < numPeaks; i++) {
+      const barWidth = Math.abs(peaks[i]) * halfWidth;
+      const top = (i / numPeaks) * height;
+      ctx.fillRect(halfWidth - barWidth, top, barWidth * 2, barHeight);
+    }
+
+    ctx.globalAlpha = 1;
+
+    this._lastDrawnPeaks = peaks;
+    this._lastDrawnWidth = width;
+    this._lastDrawnHeight = height;
   }
 
   connectedCallback() {
@@ -376,9 +453,11 @@ export class MarkerSlider extends LitElement {
       const trackWrapper = this._getTrackElement();
       if (trackWrapper) {
         const rect = trackWrapper.getBoundingClientRect();
-        // Expand hit area for easier targeting on mobile
+        const canvasRect = this._getWaveformCanvas()?.getBoundingClientRect();
+        // Expand hit area for easier targeting on mobile, including the
+        // waveform canvas that sits to the right of the track.
         const expandedLeft = rect.left - 15;
-        const expandedRight = rect.right + 15;
+        const expandedRight = Math.max(rect.right, canvasRect?.right ?? 0) + 15;
         const expandedTop = rect.top - 20;
         const expandedBottom = rect.bottom + 20;
 
@@ -807,14 +886,16 @@ export class MarkerSlider extends LitElement {
             class="playback-region"
             style="--min-percent: ${startPercent}%; --height-percent: ${heightPercent}%;"
           ></div>
-          <div class="slider-track"></div>
+          <canvas class="waveform-canvas" @mousedown=${this._handleTrackMouseDown}></canvas>
 
           <!-- Slider thumb -->
           <div
             class="slider-thumb"
             style="top: calc(${currentPositionPercent}%); transform: translateX(-50%) translateY(-50%);"
             @mousedown=${this._handleThumbMouseDown}
-          ></div>
+          >
+            <div class="thumb-line"></div>
+          </div>
         </div>
 
         <!-- Marker buttons on the right -->
