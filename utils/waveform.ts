@@ -74,9 +74,16 @@ const extractPeaks = (audioBuffer: AudioBuffer, numPeaks: number): Float32Array 
   return peaks;
 };
 
+/**
+ * Shapes a normalized 0..1 peak amplitude for display using an x² curve, so
+ * differences among loud values are more visible on the waveform bars.
+ * Stored peaks stay linear; this is applied at draw time only.
+ */
+export const displayAmplitude = (peak: number): number => peak * peak;
+
 export async function generateWaveformPeaks(
   audioUrl: string,
-  numPeaks: number = 300
+  numPeaks: number = 10000
 ): Promise<Float32Array | null> {
   try {
     const response = await fetch(audioUrl);

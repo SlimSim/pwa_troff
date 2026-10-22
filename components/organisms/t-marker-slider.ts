@@ -5,6 +5,7 @@ import { nDB } from '../../assets/internal/db.js';
 import { TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER } from '../../constants/constants.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import { computeZoomScrollDelta } from '../../utils/zoom.js';
+import { displayAmplitude } from '../../utils/waveform.js';
 import '../atom/t-butt.js';
 import '../molecule/t-marker.js';
 
@@ -55,7 +56,7 @@ export class MarkerSlider extends LitElement {
       left: 50%;
       width: var(--slider-thumb-size);
       height: var(--slider-thumb-size);
-      background-color: var(--slider-color);
+      background-color: var(--slider-thumb-color);
       border-radius: 50%;
       cursor: grab;
       transition: box-shadow 0.2s ease;
@@ -63,13 +64,13 @@ export class MarkerSlider extends LitElement {
     }
 
     .slider-thumb:hover {
-      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--slider-color);
+      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--slider-thumb-color);
     }
 
     .slider-thumb:active {
       cursor: grabbing;
 
-      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--slider-color);
+      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--slider-thumb-color);
     }
 
     .thumb-line {
@@ -78,8 +79,8 @@ export class MarkerSlider extends LitElement {
       left: 50%;
       transform: translate(-50%, -50%);
       width: var(--waveform-width);
-      height: 3px;
-      background-color: var(--slider-color);
+      height: 2px;
+      background-color: var(--slider-thumb-color);
       border-radius: 2px;
     }
 
@@ -170,17 +171,28 @@ export class MarkerSlider extends LitElement {
     if (width <= 0 || height <= 0) return;
 
     const peaks = this.waveformPeaks;
-    if (
-      peaks.length === 0 ||
-      (peaks === this._lastDrawnPeaks &&
-        width === this._lastDrawnWidth &&
-        height === this._lastDrawnHeight)
-    ) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (peaks.length === 0) {
+      // Wipe any previously drawn waveform (e.g. the previous song's peaks
+      // are cleared when a new song starts loading). Reset to the identity
+      // transform first so the clear always covers the full backing store
+      // (device pixels) at any devicePixelRatio — the next draw sets the
+      // dpr transform again.
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this._lastDrawnPeaks = null;
       return;
     }
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (
+      peaks === this._lastDrawnPeaks &&
+      width === this._lastDrawnWidth &&
+      height === this._lastDrawnHeight
+    ) {
+      return;
+    }
 
     const numPeaks = peaks.length;
     const halfWidth = width / 2;
@@ -194,13 +206,18 @@ export class MarkerSlider extends LitElement {
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 1;
 
+    // One path + one fill(): the whole waveform is composited in a single
+    // paint — per-bar fills used to overpaint each other (~12 bars per pixel
+    // at numPeaks 10000), which stacked the old 0.6 alpha to effective opacity.
+    ctx.beginPath();
     for (let i = 0; i < numPeaks; i++) {
-      const barWidth = Math.abs(peaks[i]) * halfWidth;
+      const barWidth = displayAmplitude(Math.abs(peaks[i])) * halfWidth;
       const top = (i / numPeaks) * height;
-      ctx.fillRect(halfWidth - barWidth, top, barWidth * 2, barHeight);
+      ctx.rect(halfWidth - barWidth, top, barWidth * 2, barHeight);
     }
+    ctx.fill();
 
     ctx.globalAlpha = 1;
 

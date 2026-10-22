@@ -248,6 +248,17 @@ describe('v2Script wires generateWaveformPeaks into markerSlider (waveform featu
     };
   }
 
+  /** Dispatches a media-selected event on the song list (song-switch path). */
+  function selectSong(songList: HTMLElement, songKey: string): void {
+    songList.dispatchEvent(
+      new CustomEvent('media-selected', {
+        detail: { songKey },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   it('sets markerSlider.waveformPeaks from generateWaveformPeaks after loading the boot song', async () => {
     buildDom();
     hooks.currentSongEntry = { strPath: 'track.mp3' };
@@ -324,5 +335,94 @@ describe('v2Script wires generateWaveformPeaks into markerSlider (waveform featu
     await flush();
     await flush();
     expect(getMarkerSlider().waveformPeaks).toEqual([0.5, 1]);
+  }, 30000);
+
+  /**
+   * Regression (song switch): while the next song's peaks generate, the
+   * PREVIOUS song's waveform peaks stay on markerSlider (and thus stay
+   * visible on the timeline). `loadSongIntoPlayer` must synchronously clear
+   * `waveformPeaks` to [] the moment a new song's peaks start generating.
+   */
+  it('clears markerSlider.waveformPeaks while the next song’s peaks are still generating', async () => {
+    const { songList } = buildDom();
+    // No current song at boot — both songs are selected via media-selected.
+    hooks.currentSongEntry = null;
+    hooks.currentSongKey = null;
+    hooks.songData = {};
+    hooks.audio = makeAudioMock();
+    hooks.loadSongResults['songA.mp3'] = { url: 'blob:A', isVideo: false };
+    hooks.loadSongResults['songB.mp3'] = { url: 'blob:B', isVideo: false };
+    const peaksA = deferred<Float32Array | null>();
+    const peaksB = deferred<Float32Array | null>();
+    hooks.peakDeferreds['blob:A'] = peaksA;
+    hooks.peakDeferreds['blob:B'] = peaksB;
+
+    await import('../v2Script.js');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await flush();
+
+    // Load song A and let its peaks arrive.
+    selectSong(songList, 'songA.mp3');
+    await flush();
+    await flush();
+    peaksA.resolve(new Float32Array([0.2, 0.6, 1]));
+    await flush();
+    await flush();
+    expect(getMarkerSlider().waveformPeaks).toEqual([0.2, 0.6, 1]);
+
+    // Switch to song B — its peaks stay pending, so the OLD peaks must be
+    // gone (cleared) the moment the new song starts loading.
+    selectSong(songList, 'songB.mp3');
+    await flush();
+    await flush();
+
+    expect(getMarkerSlider().waveformPeaks).toEqual([]);
+
+    // The new song's peaks appear when they are ready.
+    peaksB.resolve(new Float32Array([0.5, 1]));
+    await flush();
+    await flush();
+    expect(getMarkerSlider().waveformPeaks).toEqual([0.5, 1]);
+  }, 30000);
+
+  /**
+   * Same song-switch flow, but the next song's peaks FAIL to generate
+   * (generateWaveformPeaks resolves null). The peaks must STAY cleared —
+   * never fall back to the previous song's waveform.
+   */
+  it('keeps waveformPeaks empty when the next song’s peaks fail to generate', async () => {
+    const { songList } = buildDom();
+    hooks.currentSongEntry = null;
+    hooks.currentSongKey = null;
+    hooks.songData = {};
+    hooks.audio = makeAudioMock();
+    hooks.loadSongResults['songA.mp3'] = { url: 'blob:A', isVideo: false };
+    hooks.loadSongResults['songB.mp3'] = { url: 'blob:B', isVideo: false };
+    const peaksA = deferred<Float32Array | null>();
+    const peaksB = deferred<Float32Array | null>();
+    hooks.peakDeferreds['blob:A'] = peaksA;
+    hooks.peakDeferreds['blob:B'] = peaksB;
+
+    await import('../v2Script.js');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await flush();
+
+    selectSong(songList, 'songA.mp3');
+    await flush();
+    await flush();
+    peaksA.resolve(new Float32Array([0.2, 0.6, 1]));
+    await flush();
+    await flush();
+    expect(getMarkerSlider().waveformPeaks).toEqual([0.2, 0.6, 1]);
+
+    // Switch to song B; its peaks generation FAILS (resolves null).
+    selectSong(songList, 'songB.mp3');
+    await flush();
+    await flush();
+    peaksB.resolve(null);
+    await flush();
+    await flush();
+
+    expect(getMarkerSlider().waveformPeaks).toEqual([]);
   }, 30000);
 });

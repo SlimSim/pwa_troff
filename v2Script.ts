@@ -710,6 +710,9 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     }
 
     const requestId = ++waveformRequestId;
+    // Clear the previous song's waveform right away so it doesn't linger
+    // while the new song's peaks are generated (async audio decode).
+    markerSlider.waveformPeaks = [];
     void generateWaveformPeaks(result.url).then((peaks) => {
       if (requestId !== waveformRequestId || !peaks) return;
       // Float32Array -> number[]; toFixed strips the float32 representation

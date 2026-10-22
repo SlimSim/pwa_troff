@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { generateWaveformPeaks } from '../utils/waveform.js';
+import { generateWaveformPeaks, displayAmplitude } from '../utils/waveform.js';
 
 /**
  * Feature: vertical waveform display — `utils/waveform.ts`.
  *
- * `generateWaveformPeaks(audioUrl, numPeaks = 300)` must:
+ * `generateWaveformPeaks(audioUrl, numPeaks = 10000)` must:
  *  - fetch the URL to get an ArrayBuffer,
  *  - decode it via AudioContext.decodeAudioData(),
  *  - extract the peak absolute amplitude of channel 0 in numPeaks equal
@@ -111,7 +111,7 @@ describe('generateWaveformPeaks', () => {
     vi.restoreAllMocks();
   });
 
-  it('resolves to a Float32Array of length 300 (the default numPeaks)', async () => {
+  it('resolves to a Float32Array of length 10000 (the default numPeaks)', async () => {
     const samples = new Float32Array(300);
     for (let i = 0; i < samples.length; i++) {
       samples[i] = i / samples.length;
@@ -122,7 +122,7 @@ describe('generateWaveformPeaks', () => {
     const peaks = await generateWaveformPeaks('song.mp3');
 
     expect(peaks).toBeInstanceOf(Float32Array);
-    expect(peaks?.length).toBe(300);
+    expect(peaks?.length).toBe(10000);
   });
 
   it('resolves to a Float32Array of length numPeaks when numPeaks is provided', async () => {
@@ -214,5 +214,41 @@ describe('generateWaveformPeaks', () => {
     stubAudioContextDecode(null, { throwOnConstruct: true });
 
     await expect(generateWaveformPeaks('song.mp3')).resolves.toBeNull();
+  });
+});
+
+/**
+ * Feature: x² display curve for the vertical waveform bars in t-marker-slider.
+ *
+ * `displayAmplitude(peak)` shapes a normalized 0..1 peak amplitude for
+ * DISPLAY only (applied at draw time), so the loud range (e.g. 0.9 vs 1.0)
+ * gets more visual contrast than a linear mapping. Stored peaks stay raw
+ * linear 0..1 — only the drawn bar width is transformed. Simple x², no
+ * exponent parameter, nothing configurable.
+ */
+describe('displayAmplitude (x² display curve)', () => {
+  it('maps 0 → 0 (silence draws no bar)', () => {
+    expect(displayAmplitude(0)).toBe(0);
+  });
+
+  it('maps 1 → 1 (full scale keeps full width)', () => {
+    expect(displayAmplitude(1)).toBe(1);
+  });
+
+  it('maps 0.5 → 0.25', () => {
+    expect(displayAmplitude(0.5)).toBe(0.25);
+  });
+
+  it('maps 0.9 → 0.81 (a loud-but-not-max value sits well below 1 → contrast)', () => {
+    expect(displayAmplitude(0.9)).toBe(0.81);
+  });
+
+  it('maps 0.3 → 0.09', () => {
+    expect(displayAmplitude(0.3)).toBe(0.09);
+  });
+
+  it('is monotonically increasing on [0,1]', () => {
+    expect(displayAmplitude(0.2)).toBeLessThan(displayAmplitude(0.5));
+    expect(displayAmplitude(0.5)).toBeLessThan(displayAmplitude(0.9));
   });
 });

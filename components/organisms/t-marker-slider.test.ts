@@ -1117,6 +1117,49 @@ describe('t-marker-slider merged track + waveform column', () => {
     expect(ruleBody).toMatch(/width:\s*var\(--waveform-width\)/);
   });
 
+  // ---------------------------------------------------------------------------
+  // Knob color (per-theme): the thumb knob + its full-width line use the
+  // per-theme var(--slider-thumb-color) (declared per theme in
+  // stylesheets/variables-theme.css; col1 defines it as var(--accent-color-2)),
+  // so the knob is visually distinct from the waveform behind it (which KEEPS
+  // --slider-color).
+  // ---------------------------------------------------------------------------
+  it('colors the knob .slider-thumb background with var(--slider-thumb-color)', () => {
+    const ruleBody = getStyleRuleBody(/\.slider-thumb\s*\{([^}]*)\}/);
+    expect(
+      ruleBody,
+      `.slider-thumb background must be var(--slider-thumb-color); rule body was:\n${ruleBody}`
+    ).toMatch(/background-color:\s*var\(--slider-thumb-color\)/);
+    expect(ruleBody).not.toMatch(/var\(--slider-color\)/);
+  });
+
+  it('colors the .thumb-line background with var(--slider-thumb-color)', () => {
+    const ruleBody = getStyleRuleBody(/\.thumb-line\s*\{([^}]*)\}/);
+    expect(
+      ruleBody,
+      `.thumb-line background must be var(--slider-thumb-color); rule body was:\n${ruleBody}`
+    ).toMatch(/background-color:\s*var\(--slider-thumb-color\)/);
+    expect(ruleBody).not.toMatch(/var\(--slider-color\)/);
+  });
+
+  it('glows .slider-thumb:hover with var(--slider-thumb-color) (glow follows the knob)', () => {
+    const ruleBody = getStyleRuleBody(/\.slider-thumb:hover\s*\{([^}]*)\}/);
+    expect(
+      ruleBody,
+      `.slider-thumb:hover box-shadow must use var(--slider-thumb-color); rule body was:\n${ruleBody}`
+    ).toMatch(/box-shadow:[^;}]*var\(--slider-thumb-color\)/);
+    expect(ruleBody).not.toMatch(/var\(--slider-color\)/);
+  });
+
+  it('glows .slider-thumb:active with var(--slider-thumb-color) (glow follows the knob)', () => {
+    const ruleBody = getStyleRuleBody(/\.slider-thumb:active\s*\{([^}]*)\}/);
+    expect(
+      ruleBody,
+      `.slider-thumb:active box-shadow must use var(--slider-thumb-color); rule body was:\n${ruleBody}`
+    ).toMatch(/box-shadow:[^;}]*var\(--slider-thumb-color\)/);
+    expect(ruleBody).not.toMatch(/var\(--slider-color\)/);
+  });
+
   it('keeps .thumb-line inside the thumb so it follows the thumb position', async () => {
     element.value = 30;
     await element.updateComplete;
@@ -1174,29 +1217,89 @@ describe('t-marker-slider merged track + waveform column', () => {
     expect(canvas).not.toBeNull();
 
     // _drawWaveform bails out on a zero-sized rect, so give the canvas a real
-    // size and hand it some peaks. A successful draw resizes the backing
-    // store (happy-dom's default canvas width is 300), which is observable
-    // without a real 2d context.
-    vi.spyOn(canvas as HTMLCanvasElement, 'getBoundingClientRect').mockReturnValue(
-      new DOMRect(0, 0, 42, 800)
-    );
+    // size and hand it some peaks. A stable 2d context (same 42×800 rect as
+    // mockWaveformCanvasDrawContext) makes the rect args observable —
+    // the shared beforeEach stub hands out a fresh vi.fn() on every property
+    // access, which cannot be asserted on.
+    const { fillRect, beginPath, rect, fill, fillAlphaAtCall } =
+      mockWaveformCanvasDrawContext();
     element.waveformPeaks = [0.1, 0.5, 1];
     await element.updateComplete;
 
     expect((canvas as HTMLCanvasElement).width).toBe(
       Math.round(42 * (window.devicePixelRatio || 1))
     );
+
+    // x² display curve (draw-time only): barWidth = peak² × halfWidth, and
+    // rect(halfWidth − barWidth, top, barWidth × 2, barHeight).
+    // width 42 → halfWidth 21; 3 peaks over 800px → barHeight = 800 / 3 and
+    // top = (i / 3) × 800 — tops/heights are unchanged by the curve.
+    // Linear widths (peak × 21) would be 2.1 / 10.5 / 21 instead.
+    const halfWidth = 21;
+    const barHeight = 800 / 3;
+    expect(rect.mock.calls).toEqual([
+      [halfWidth - 0.1 * 0.1 * halfWidth, 0, 2 * (0.1 * 0.1 * halfWidth), barHeight],
+      [
+        halfWidth - 0.5 * 0.5 * halfWidth,
+        (1 / 3) * 800,
+        2 * (0.5 * 0.5 * halfWidth),
+        barHeight,
+      ],
+      [halfWidth - 1 * 1 * halfWidth, (2 / 3) * 800, 2 * (1 * 1 * halfWidth), barHeight],
+    ]);
+
+    // Anti-stacking: ONE beginPath + ONE fill for all bars, so the fill
+    // alpha (1) is applied once (overlapping bars must not compound toward
+    // opaque).
+    expect(beginPath, 'bars must be added to a single path').toHaveBeenCalled();
+    expect(fill, 'all bars must be painted with EXACTLY ONE fill()').toHaveBeenCalledTimes(1);
+    expect(fillAlphaAtCall, 'the single fill must happen at alpha 1').toEqual([1]);
+    expect(fillRect, 'bars are no longer painted one fillRect at a time').not.toHaveBeenCalled();
+  });
+
+  /**
+   * Loud-range contrast: bar width is peak² × halfWidth at draw time, so a
+   * 0.5 peak is drawn HALF as wide as a linear mapping (10.5, not 21).
+   * Stored peaks stay raw linear 0..1 — only the drawn width is transformed.
+   */
+  it('draws bar width as the squared amplitude (x² display curve for loud-range contrast)', async () => {
+    await element.updateComplete;
+
+    const { fillRect, beginPath, rect, fill, fillAlphaAtCall } =
+      mockWaveformCanvasDrawContext();
+
+    element.waveformPeaks = [0.5];
+    await element.updateComplete;
+
+    // width 42 → halfWidth 21; squared barWidth = 0.5² × 21 = 5.25 →
+    // rect x = 21 − 5.25 = 15.75, w = 2 × 5.25 = 10.5, top = 0,
+    // barHeight = 800 / 1. A linear draw would give w = 21 (the regression
+    // this pins).
+    expect(rect).toHaveBeenCalledTimes(1);
+    expect(rect.mock.calls[0]).toEqual([15.75, 0, 10.5, 800]);
+    // Same path as the draw test: one path, one fill at alpha 1, no
+    // per-bar fillRect (whose overlapping alphas used to compound).
+    expect(beginPath).toHaveBeenCalled();
+    expect(fill).toHaveBeenCalledTimes(1);
+    expect(fillAlphaAtCall).toEqual([1]);
+    expect(fillRect).not.toHaveBeenCalled();
   });
 
   /**
    * Mocks the waveform canvas geometry (same 42×800 rect as the draw test
-   * above) and swaps in a STABLE 2d context so fillRect/clearRect call
-   * history is observable — the shared beforeEach stub hands out a fresh
-   * `vi.fn()` on every property access, which cannot be asserted on.
+   * above) and swaps in a STABLE 2d context so fillRect/clearRect/beginPath/
+   * rect/fill call history is observable — the shared beforeEach stub hands
+   * out a fresh `vi.fn()` on every property access, which cannot be asserted
+   * on. `fillAlphaAtCall` records ctx.globalAlpha at each fill() call, so a
+   * test can pin the alpha the bars are painted with (1, applied ONCE).
    */
   function mockWaveformCanvasDrawContext(): {
     fillRect: ReturnType<typeof vi.fn>;
     clearRect: ReturnType<typeof vi.fn>;
+    beginPath: ReturnType<typeof vi.fn>;
+    rect: ReturnType<typeof vi.fn>;
+    fill: ReturnType<typeof vi.fn>;
+    fillAlphaAtCall: number[];
   } {
     const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement | null;
     expect(canvas).not.toBeNull();
@@ -1205,12 +1308,37 @@ describe('t-marker-slider merged track + waveform column', () => {
     );
     const fillRect = vi.fn();
     const clearRect = vi.fn();
-    vi.spyOn(canvas as HTMLCanvasElement, 'getContext').mockReturnValue({
+    const beginPath = vi.fn();
+    const rect = vi.fn();
+    const fillAlphaAtCall: number[] = [];
+    type StableWaveformCtx = {
+      fillRect: ReturnType<typeof vi.fn>;
+      clearRect: ReturnType<typeof vi.fn>;
+      beginPath: ReturnType<typeof vi.fn>;
+      rect: ReturnType<typeof vi.fn>;
+      setTransform: ReturnType<typeof vi.fn>;
+      fillStyle: string;
+      globalAlpha: number;
+      fill: ReturnType<typeof vi.fn>;
+    };
+    // Explicit annotation: `fill` reads ctx.globalAlpha, so ctx cannot be
+    // inferred from its own initializer.
+    const ctx: StableWaveformCtx = {
       fillRect,
       clearRect,
+      beginPath,
+      rect,
       setTransform: vi.fn(),
-    } as unknown as CanvasRenderingContext2D);
-    return { fillRect, clearRect };
+      fillStyle: '',
+      globalAlpha: 1,
+      fill: vi.fn(() => {
+        fillAlphaAtCall.push(ctx.globalAlpha);
+      }),
+    };
+    vi.spyOn(canvas as HTMLCanvasElement, 'getContext').mockReturnValue(
+      ctx as unknown as CanvasRenderingContext2D
+    );
+    return { fillRect, clearRect, beginPath, rect, fill: ctx.fill, fillAlphaAtCall };
   }
 
   /**
@@ -1223,17 +1351,19 @@ describe('t-marker-slider merged track + waveform column', () => {
   it('wipes the canvas when waveformPeaks becomes empty (song switch clears the old waveform)', async () => {
     await element.updateComplete;
 
-    const { fillRect, clearRect } = mockWaveformCanvasDrawContext();
+    const { fillRect, rect, fill, clearRect } = mockWaveformCanvasDrawContext();
 
     // Draw first so the canvas is NOT blank (a successful draw paints one
-    // bar per peak via fillRect, same path as the existing draw test).
+    // bar per peak via rect+fill, same path as the existing draw test).
     element.waveformPeaks = [0.1, 0.5, 1];
     await element.updateComplete;
-    expect(fillRect).toHaveBeenCalled();
+    expect(rect).toHaveBeenCalled();
+    expect(fill).toHaveBeenCalled();
 
     // Snapshot the counters, then simulate the song switch: the peaks are
     // cleared while the next song's peaks are still generating.
-    const fillRectCallsAfterDraw = fillRect.mock.calls.length;
+    const rectCallsAfterDraw = rect.mock.calls.length;
+    const fillCallsAfterDraw = fill.mock.calls.length;
     const clearRectCallsAfterDraw = clearRect.mock.calls.length;
     element.waveformPeaks = [];
     await element.updateComplete;
@@ -1242,21 +1372,25 @@ describe('t-marker-slider merged track + waveform column', () => {
       clearRect,
       'empty peaks must clear the old waveform off the canvas'
     ).toHaveBeenCalledTimes(clearRectCallsAfterDraw + 1);
-    expect(fillRect, 'no new bars may be drawn for empty peaks').toHaveBeenCalledTimes(
-      fillRectCallsAfterDraw
+    expect(rect, 'no new bars may be built for empty peaks').toHaveBeenCalledTimes(
+      rectCallsAfterDraw
     );
+    expect(fill, 'the empty-peaks wipe branch must not paint anything').toHaveBeenCalledTimes(
+      fillCallsAfterDraw
+    );
+    expect(fillRect, 'bars are never painted via fillRect').not.toHaveBeenCalled();
   });
 
   /** Companion redraw guard: after an empty-peaks wipe, fresh peaks must draw again. */
   it('draws again after a clear when new peaks arrive', async () => {
     await element.updateComplete;
 
-    const { fillRect } = mockWaveformCanvasDrawContext();
+    const { rect, fill } = mockWaveformCanvasDrawContext();
 
     element.waveformPeaks = [0.1, 0.5, 1];
     await element.updateComplete;
-    const fillRectCallsAfterFirstDraw = fillRect.mock.calls.length;
-    expect(fillRectCallsAfterFirstDraw).toBeGreaterThan(0);
+    const rectCallsAfterFirstDraw = rect.mock.calls.length;
+    expect(rectCallsAfterFirstDraw).toBeGreaterThan(0);
 
     // Song switch clears the peaks mid-load…
     element.waveformPeaks = [];
@@ -1266,7 +1400,35 @@ describe('t-marker-slider merged track + waveform column', () => {
     element.waveformPeaks = [0.2, 0.4];
     await element.updateComplete;
 
-    expect(fillRect.mock.calls.length).toBeGreaterThan(fillRectCallsAfterFirstDraw);
+    expect(rect.mock.calls.length).toBeGreaterThan(rectCallsAfterFirstDraw);
+    expect(fill).toHaveBeenCalled();
+  });
+
+  /**
+   * Alpha non-compounding: with many peaks, per-rect fillRect(...) with a
+   * translucent globalAlpha (the old 0.6) overlaps several times per pixel
+   * and the alpha stacks toward opaque. The draw now paints at alpha 1, and
+   * ONE beginPath + N rect() + EXACTLY ONE fill() keeps that alpha uniform,
+   * no matter how dense the peaks are.
+   */
+  it('paints all bars in one fill() so the fill alpha never compounds at high numPeaks', async () => {
+    await element.updateComplete;
+
+    const { fillRect, beginPath, rect, fill, fillAlphaAtCall } =
+      mockWaveformCanvasDrawContext();
+
+    // Any peak count must land on ONE path with ONE fill — with real-world
+    // densities (numPeaks 10000 over ~800px) the per-pixel bar overlap is
+    // ~12x, so per-bar fills would compound the alpha toward opaque.
+    const peaks = Array.from({ length: 24 }, (_, i) => [0.1, 0.5, 1][i % 3] ?? 0.1);
+    element.waveformPeaks = peaks;
+    await element.updateComplete;
+
+    expect(rect, 'one rect() per peak').toHaveBeenCalledTimes(peaks.length);
+    expect(beginPath, 'all bars live on one path').toHaveBeenCalled();
+    expect(fill, 'EXACTLY ONE fill() regardless of peak count').toHaveBeenCalledTimes(1);
+    expect(fillAlphaAtCall, 'the single fill is painted at alpha 1').toEqual([1]);
+    expect(fillRect, 'no per-bar fillRect — its alphas would compound').not.toHaveBeenCalled();
   });
 });
 
