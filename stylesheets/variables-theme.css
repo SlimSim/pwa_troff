@@ -432,13 +432,12 @@ body[data-mode='dark'] {
   --theme-color: #0d1b2a;
   --on-theme-color: #d8d8e8;
   --accent-color-1: #431c5d;
-  /* --accent-color-1: #003366; */
 
   --primary-color: #1b2838;
   --on-primary-color: #d8d8e8;
   --on-primary-color-link: #7eb8ff;
 
-  --secondary-color: #162030;
+  --secondary-color: #354864;
   --on-secondary-color: #d0d0e0;
 
   --tertiary-color: #1a2535;
@@ -477,7 +476,7 @@ body[data-mode='dark'] {
   --list-border-color: rgba(255, 255, 255, 0.1);
   --list-hover-bg: rgba(255, 255, 255, 0.08);
 
-  --slider-color: #4a6078;
+  --slider-color: var(--on-gray-out);
   --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 }
