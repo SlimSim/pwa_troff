@@ -5,7 +5,7 @@
   /* sliders */
   --slider-track-width: 5px;
   --slider-thumb-size: 15px;
-  --slider-playback-region-width: 19px;
+  --waveform-width: 31px;
 
   /* buttons */
   --button-border-radius: 0;
@@ -22,4 +22,11 @@
 
   /* settings panel */
   --settings-column-width: 240.591px; /* this is exactly this because thats how wide the t-dial is! */
+}
+
+/* larger screens: waveform column widens (mobile-first) */
+@media (min-width: 576px) {
+  :root {
+    --waveform-width: 42px;
+  }
 }

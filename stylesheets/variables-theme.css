@@ -6,6 +6,8 @@
   --secondary-color: #e6e9f0;
   --tertiary-color: #ced8e8;
   --accent-color-1: #431c5d;
+  /* --accent-color-1: var(--theme-color); */
+  /* --accent-color-1: #003366; */
   --accent-color-2: #dd2c00;
   --accent-color-3: #787b1e;
   --danger-color: #d42626;
@@ -54,6 +56,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-1);
 
   --slider-color: var(--regular-button-color);
+  --slider-thumb-color: var(--accent-color-2);
   --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 
@@ -120,6 +123,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-1);
 
   --slider-color: var(--theme-color);
+  --slider-thumb-color: var(--accent-color-2);
   --countdown-overlay-color: var(--on-theme-color);
   --slider-playback-region-color: var(--accent-color-1);
 
@@ -187,6 +191,7 @@
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --slider-color: var(--accent-color-2);
+  --slider-thumb-color: var(--accent-color-3);
   --countdown-overlay-color: var(--on-accent-color-2);
   --slider-playback-region-color: var(--accent-color-1);
 
@@ -255,7 +260,8 @@
   --toggle-button-active-color: var(--accent-color-3);
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
-  --slider-color: var(--regular-button-color);
+  --slider-color: var(--on-secondary-color);
+  --slider-thumb-color: var(--accent-color-2);
   --countdown-overlay-color: var(--on-regular-buton-color);
   --slider-playback-region-color: var(--accent-color-1);
 
@@ -322,7 +328,8 @@
   --toggle-button-active-color: var(--accent-color-3);
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
-  --slider-color: var(--theme-color);
+  --slider-color: var(--on-gray-out);
+  --slider-thumb-color: var(--accent-color-2);
   --countdown-overlay-color: var(--theme-color);
   --slider-playback-region-color: var(--accent-color-1);
 
@@ -387,7 +394,8 @@
   --toggle-button-active-color: var(--accent-color-1);
   --on-toggle-button-active-color: var(--on-accent-color-1);
 
-  --slider-color: var(--regular-button-color);
+  --slider-color: var(--on-gray-out);
+  --slider-thumb-color: var(--accent-color-2);
   --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 
@@ -423,12 +431,13 @@ body[data-mode='dark'] {
 [data-theme='col1'][data-mode='dark'] {
   --theme-color: #0d1b2a;
   --on-theme-color: #d8d8e8;
+  --accent-color-1: #431c5d;
 
   --primary-color: #1b2838;
   --on-primary-color: #d8d8e8;
   --on-primary-color-link: #7eb8ff;
 
-  --secondary-color: #162030;
+  --secondary-color: #354864;
   --on-secondary-color: #d0d0e0;
 
   --tertiary-color: #1a2535;
@@ -467,7 +476,7 @@ body[data-mode='dark'] {
   --list-border-color: rgba(255, 255, 255, 0.1);
   --list-hover-bg: rgba(255, 255, 255, 0.08);
 
-  --slider-color: #4a6078;
+  --slider-color: var(--on-gray-out);
   --countdown-overlay-color: var(--accent-color-1);
   --slider-playback-region-color: var(--accent-color-1);
 }
@@ -626,7 +635,8 @@ body[data-mode='dark'] {
 
   --info-indicator-color: var(--accent-color-3);
 
-  --slider-color: var(--regular-button-color);
+  --slider-color: var(--on-gray-out);
+  --slider-thumb-color: var(--on-secondary-color);
   --countdown-overlay-color: var(--accent-color-1);
 }
 
@@ -674,7 +684,7 @@ body[data-mode='dark'] {
   --item-background: rgba(255, 255, 255, 0.06);
   --border-color: #333333;
 
-  --slider-color: var(--theme-color);
+  --slider-color: var(--on-gray-out);
   --countdown-overlay-color: var(--theme-color);
 }
 
@@ -743,6 +753,7 @@ body[data-mode='dark'] {
   --on-toggle-button-active-color: var(--on-accent-color-3);
 
   --slider-color: var(--accent-color-2);
+  --slider-thumb-color: var(--on-gray-out);
   --countdown-overlay-color: var(--on-theme-color);
 }
 

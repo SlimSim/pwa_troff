@@ -61,6 +61,7 @@ import {
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
 import { extractAlbumArt } from './utils/album-art.js';
+import { generateWaveformPeaks } from './utils/waveform.js';
 import { calculateIncrementUntilSpeed } from './utils/increment-until.js';
 import type {
   TroffMarker,
@@ -674,6 +675,9 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
   let lastTimeUpdateTime = 0;
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
+  // Bumped for every waveform request so a slow (stale) song's peaks can
+  // never overwrite the peaks of a song that loaded after it.
+  let waveformRequestId = 0;
 
   // Current auth state, kept in sync by the onAuthStateChanged callback below
   let currentUserSignedIn = false;
@@ -704,6 +708,18 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       if (videoPlayer) videoPlayer.hidden = true;
       if (videoElement) videoElement.pause();
     }
+
+    const requestId = ++waveformRequestId;
+    // Clear the previous song's waveform right away so it doesn't linger
+    // while the new song's peaks are generated (async audio decode).
+    markerSlider.waveformPeaks = [];
+    void generateWaveformPeaks(result.url).then((peaks) => {
+      if (requestId !== waveformRequestId || !peaks) return;
+      // Float32Array -> number[]; toFixed strips the float32 representation
+      // noise so the component gets clean values (0.2 instead of 0.200000003).
+      markerSlider.waveformPeaks = Array.from(peaks, (peak) => Number(peak.toFixed(6)));
+    });
+
     applyStoredVolumeAndSpeedToMedia();
   };
 
@@ -1626,6 +1642,22 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       ? String(configuredLoops)
       : 'Inf';
 
+    // Load global default song values (the t-dial reset targets) from nDB
+    currentSongControls.defaultStartBeforeValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_START_BEFORE_VALUE)) || 4;
+    currentSongControls.defaultStopAfterValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_STOP_AFTER_VALUE)) || 2;
+    currentSongControls.defaultPauseBeforeValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_PAUSE_BEFORE_VALUE)) || 3;
+    currentSongControls.defaultWaitBetweenValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_WAIT_BETWEEN_VALUE)) || 1;
+    currentSongControls.defaultIncrementUntilValue =
+      Number(nDB.get('TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_INCREMENT_UNTIL_VALUE')) || 100;
+    currentSongControls.defaultVolumeValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_VOLUME_VALUE)) || 75;
+    currentSongControls.defaultSpeedValue =
+      Number(nDB.get(TROFF_SAVE_VALUE_TROFF_SETTING_SONG_DEFAULT_SPEED_VALUE)) || 100;
+
     // Version link info
     const versionInfo = songKey ? getVersionInfo(songKey) : { numberOfVersions: 0, findUrl: '' };
     currentSongControls.numberOfVersions = versionInfo.numberOfVersions;
@@ -1732,6 +1764,13 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       settingsControls.disableWaitBetween = currentSongControls.disableWaitBetween;
       settingsControls.numberOfVersions = currentSongControls.numberOfVersions;
       settingsControls.findUrl = currentSongControls.findUrl;
+      settingsControls.defaultStartBeforeValue = currentSongControls.defaultStartBeforeValue;
+      settingsControls.defaultStopAfterValue = currentSongControls.defaultStopAfterValue;
+      settingsControls.defaultPauseBeforeValue = currentSongControls.defaultPauseBeforeValue;
+      settingsControls.defaultWaitBetweenValue = currentSongControls.defaultWaitBetweenValue;
+      settingsControls.defaultIncrementUntilValue = currentSongControls.defaultIncrementUntilValue;
+      settingsControls.defaultVolumeValue = currentSongControls.defaultVolumeValue;
+      settingsControls.defaultSpeedValue = currentSongControls.defaultSpeedValue;
     }
 
     // Also push tempo onto the settings panel host so the template binding
@@ -2371,6 +2410,8 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       const numericKey = defaultNumericKeyBySetting[setting];
       if (numericKey) {
         nDB.set(numericKey, value);
+        syncCurrentSongControlsValues();
+        updateFooterWithCurrentSong();
         return;
       }
 

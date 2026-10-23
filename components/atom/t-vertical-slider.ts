@@ -38,12 +38,14 @@ export class VerticalSlider extends LitElement {
       cursor: pointer;
     }
 
+
+    /* deprecated file???? */
     .slider-thumb {
       position: absolute;
       left: 50%;
       width: var(--slider-thumb-size);
       height: var(--slider-thumb-size);
-      background-color: var(--theme-color);
+      background-color: var(--slider-thumb-color);
       border-radius: 50%;
       cursor: grab;
       transition: box-shadow 0.2s ease;
@@ -51,13 +53,13 @@ export class VerticalSlider extends LitElement {
     }
 
     .slider-thumb:hover {
-      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--theme-color);
+      box-shadow: 0 0 var(--hover-fuzzy) var(--hover-size) var(--slider-thumb-color);
     }
 
     .slider-thumb:active {
       cursor: grabbing;
 
-      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--theme-color);
+      box-shadow: 0 0 var(--active-fuzzy) var(--active-size) var(--slider-thumb-color);
     }
 
     .label {

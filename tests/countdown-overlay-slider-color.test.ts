@@ -9,9 +9,16 @@ import { MarkerSlider } from '../components/organisms/t-marker-slider.js';
  * that color?"
  *
  * Finding (locked by the first test below, using the ACTUAL MarkerSlider):
- * t-marker-slider's track + thumb background is `var(--slider-color)`
- * (components/organisms/t-marker-slider.ts: `.slider-track` and
- * `.slider-thumb` both declare `background-color: var(--slider-color)`).
+ * t-marker-slider's thumb-line + thumb background is `var(--slider-thumb-color)`
+ * (components/organisms/t-marker-slider.ts: `.thumb-line` — the full-width
+ * line inside the thumb — and `.slider-thumb` both declare
+ * `background-color: var(--slider-thumb-color)`): the knob + line use the
+ * per-theme `--slider-thumb-color` (declared per theme in
+ * stylesheets/variables-theme.css; col1 → `var(--accent-color-2)`) so the
+ * knob is visually distinct from the waveform, which KEEPS `--slider-color`
+ * (the waveform is the only --slider-color surface
+ * left). The 5px center track line was removed, so the thumb-line now
+ * carries the per-theme thumb color across the waveform column.
  * There is deliberately NO `--countdown-overlay-color` variable anywhere in
  * stylesheets/variables-theme.css (light themes col1–col6, dark-mode
  * overrides, col3/col5 light-mode overrides) — so the slider background
@@ -63,20 +70,24 @@ describe('countdown overlay uses t-marker-slider background on-color', () => {
     }
   });
 
-  it('locks the finding: t-marker-slider track/thumb background is var(--slider-color)', () => {
+  it('locks the finding: t-marker-slider thumb-line/thumb background is var(--slider-thumb-color)', () => {
     const sliderCss = rawStaticCss(MarkerSlider as unknown as StyledClass);
-    const trackRule = rawRuleBlocks(sliderCss, '.slider-track');
+    const thumbLineRule = rawRuleBlocks(sliderCss, '.thumb-line');
     const thumbRule = rawRuleBlocks(sliderCss, '.slider-thumb');
 
-    expect(trackRule, 'expected a .slider-track rule in MarkerSlider static styles').not.toBe('');
+    expect(thumbLineRule, 'expected a .thumb-line rule in MarkerSlider static styles').not.toBe('');
     expect(thumbRule, 'expected a .slider-thumb rule in MarkerSlider static styles').not.toBe('');
     expect(
-      /background-color\s*:\s*var\(--slider-color/.test(trackRule),
-      `slider track background must be var(--slider-color); rule was:\n${trackRule}`
+      /background-color\s*:\s*var\(--slider-thumb-color/.test(thumbLineRule),
+      `slider thumb-line background must be var(--slider-thumb-color) (knob visually ` +
+        `distinct from the waveform, which keeps --slider-color); ` +
+        `rule was:\n${thumbLineRule}`
     ).toBe(true);
     expect(
-      /background-color\s*:\s*var\(--slider-color/.test(thumbRule),
-      `slider thumb background must be var(--slider-color); rule was:\n${thumbRule}`
+      /background-color\s*:\s*var\(--slider-thumb-color/.test(thumbRule),
+      `slider thumb background must be var(--slider-thumb-color) (knob visually ` +
+        `distinct from the waveform, which keeps --slider-color); ` +
+        `rule was:\n${thumbRule}`
     ).toBe(true);
   });
 
