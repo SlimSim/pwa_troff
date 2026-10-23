@@ -176,12 +176,20 @@ export class MarkerSlider extends LitElement {
 
     if (peaks.length === 0) {
       // Wipe any previously drawn waveform (e.g. the previous song's peaks
-      // are cleared when a new song starts loading). Reset to the identity
-      // transform first so the clear always covers the full backing store
-      // (device pixels) at any devicePixelRatio — the next draw sets the
-      // dpr transform again.
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // are cleared when a new song starts loading) AND paint a narrow
+      // placeholder bar while the next song's peaks generate. This doubles
+      // as the permanent fallback when waveform generation fails
+      // (generateWaveformPeaks resolves null → peaks stay empty).
+      const pixelRatio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(width * pixelRatio);
+      canvas.height = Math.round(height * pixelRatio);
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      const halfWidth = width / 2;
+      const color =
+        getComputedStyle(canvas).getPropertyValue('--slider-color').trim() || '#888888';
+      ctx.fillStyle = color;
+      ctx.fillRect(halfWidth - 2, 0, 4, height); // narrow centered placeholder
       this._lastDrawnPeaks = null;
       return;
     }

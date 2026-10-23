@@ -1292,6 +1292,9 @@ describe('t-marker-slider merged track + waveform column', () => {
    * out a fresh `vi.fn()` on every property access, which cannot be asserted
    * on. `fillAlphaAtCall` records ctx.globalAlpha at each fill() call, so a
    * test can pin the alpha the bars are painted with (1, applied ONCE).
+   * `setTransform` is returned so a test can pin the devicePixelRatio
+   * transform, and `fillStyleAtFillRect` records ctx.fillStyle at each
+   * fillRect() call (the empty-peaks placeholder bar paints via fillRect).
    */
   function mockWaveformCanvasDrawContext(): {
     fillRect: ReturnType<typeof vi.fn>;
@@ -1300,6 +1303,8 @@ describe('t-marker-slider merged track + waveform column', () => {
     rect: ReturnType<typeof vi.fn>;
     fill: ReturnType<typeof vi.fn>;
     fillAlphaAtCall: number[];
+    setTransform: ReturnType<typeof vi.fn>;
+    fillStyleAtFillRect: string[];
   } {
     const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement | null;
     expect(canvas).not.toBeNull();
@@ -1310,7 +1315,9 @@ describe('t-marker-slider merged track + waveform column', () => {
     const clearRect = vi.fn();
     const beginPath = vi.fn();
     const rect = vi.fn();
+    const setTransform = vi.fn();
     const fillAlphaAtCall: number[] = [];
+    const fillStyleAtFillRect: string[] = [];
     type StableWaveformCtx = {
       fillRect: ReturnType<typeof vi.fn>;
       clearRect: ReturnType<typeof vi.fn>;
@@ -1328,17 +1335,31 @@ describe('t-marker-slider merged track + waveform column', () => {
       clearRect,
       beginPath,
       rect,
-      setTransform: vi.fn(),
+      setTransform,
       fillStyle: '',
       globalAlpha: 1,
       fill: vi.fn(() => {
         fillAlphaAtCall.push(ctx.globalAlpha);
       }),
     };
+    // Capture ctx.fillStyle at each fillRect call so a test can pin the
+    // placeholder bar's paint color at draw time (closure reads ctx later).
+    fillRect.mockImplementation(() => {
+      fillStyleAtFillRect.push(ctx.fillStyle);
+    });
     vi.spyOn(canvas as HTMLCanvasElement, 'getContext').mockReturnValue(
       ctx as unknown as CanvasRenderingContext2D
     );
-    return { fillRect, clearRect, beginPath, rect, fill: ctx.fill, fillAlphaAtCall };
+    return {
+      fillRect,
+      clearRect,
+      beginPath,
+      rect,
+      fill: ctx.fill,
+      fillAlphaAtCall,
+      setTransform,
+      fillStyleAtFillRect,
+    };
   }
 
   /**
@@ -1346,7 +1367,11 @@ describe('t-marker-slider merged track + waveform column', () => {
    * because, while the next song's peaks generate, `waveformPeaks` is
    * cleared to [] — but `_drawWaveform()` early-returns on empty peaks
    * WITHOUT clearing the canvas, leaving the previous song's bars painted.
-   * Empty peaks must wipe the canvas instead of bailing out.
+   * Empty peaks must wipe the old waveform off the canvas (clearRect)
+   * instead of bailing out — and then paint the narrow centered placeholder
+   * bar via fillRect (halfWidth 21 − 2 = 19, width 4, full height 800).
+   * The path-based waveform drawing (beginPath/rect/fill) must still NOT
+   * run on empty peaks.
    */
   it('wipes the canvas when waveformPeaks becomes empty (song switch clears the old waveform)', async () => {
     await element.updateComplete;
@@ -1375,10 +1400,109 @@ describe('t-marker-slider merged track + waveform column', () => {
     expect(rect, 'no new bars may be built for empty peaks').toHaveBeenCalledTimes(
       rectCallsAfterDraw
     );
-    expect(fill, 'the empty-peaks wipe branch must not paint anything').toHaveBeenCalledTimes(
-      fillCallsAfterDraw
+    expect(
+      fill,
+      'the empty-peaks branch must not run the path-based waveform fill'
+    ).toHaveBeenCalledTimes(fillCallsAfterDraw);
+    // The wipe branch paints the narrow centered placeholder bar (the first
+    // draw above is path-based, so fillRect was idle until now).
+    expect(fillRect, 'the placeholder bar replaces the wiped waveform').toHaveBeenCalledTimes(1);
+    expect(fillRect.mock.calls[0]).toEqual([19, 0, 4, 800]);
+  });
+
+  /**
+   * Placeholder bar (narrow fallback): while a song's waveformPeaks are
+   * empty — peaks still generating, OR generateWaveformPeaks failed and
+   * v2Script left them [] — the canvas must show ONE narrow centered bar
+   * (4px wide, full height) instead of nothing, painted with the SAME color
+   * expression the waveform branch uses:
+   * getComputedStyle(canvas).getPropertyValue('--slider-color').trim()
+   *   || '#888888'.
+   */
+  it('empty waveformPeaks draws a narrow centered placeholder bar instead of nothing', async () => {
+    await element.updateComplete;
+
+    const { fillRect, beginPath, rect, fill } = mockWaveformCanvasDrawContext();
+
+    // A fresh [] (new array reference) triggers the empty-peaks branch —
+    // the loading/failure state v2Script leaves markerSlider in.
+    element.waveformPeaks = [];
+    await element.updateComplete;
+
+    // halfWidth 21 − 2 = 19, bar width 4 (constant), full rect height 800.
+    expect(fillRect, 'the empty-peaks branch must paint the placeholder bar').toHaveBeenCalledTimes(
+      1
     );
-    expect(fillRect, 'bars are never painted via fillRect').not.toHaveBeenCalled();
+    expect(fillRect.mock.calls[0]).toEqual([19, 0, 4, 800]);
+    // The path-based waveform drawing must still NOT run on empty peaks.
+    expect(beginPath, 'no waveform path on empty peaks').not.toHaveBeenCalled();
+    expect(rect, 'no waveform bars on empty peaks').not.toHaveBeenCalled();
+    expect(fill, 'no waveform fill on empty peaks').not.toHaveBeenCalled();
+  });
+
+  it('the placeholder bar paints with --slider-color (same source as the waveform)', async () => {
+    await element.updateComplete;
+
+    const { fillStyleAtFillRect } = mockWaveformCanvasDrawContext();
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement;
+
+    // Empirical happy-dom harness check: a BARE canvas resolves the custom
+    // property to '' (the theme CSS that normally defines --slider-color is
+    // not loaded in tests), so the bar must fall back to '#888888' — the
+    // exact fallback of the waveform branch's color expression.
+    expect(getComputedStyle(canvas).getPropertyValue('--slider-color').trim()).toBe('');
+
+    element.waveformPeaks = [];
+    await element.updateComplete;
+
+    expect(fillStyleAtFillRect, 'placeholder bar fillStyle at draw time').toEqual(['#888888']);
+
+    // The bar shares the waveform's color EXPRESSION, not a hardcoded hex:
+    // when the harness CAN resolve --slider-color (inline style), the bar
+    // must pick up the resolved value on the next empty-peaks draw.
+    canvas.style.setProperty('--slider-color', 'red');
+    element.waveformPeaks = [0.5]; // force a redraw cycle past the empty branch
+    await element.updateComplete;
+    element.waveformPeaks = []; // empty again → placeholder bar redraw
+    await element.updateComplete;
+
+    expect(
+      getComputedStyle(canvas).getPropertyValue('--slider-color').trim(),
+      'harness must resolve the inline custom property'
+    ).toBe('red');
+    expect(fillStyleAtFillRect).toEqual(['#888888', 'red']);
+  });
+
+  it('the empty-peaks branch sizes the canvas from its rect × devicePixelRatio (bar renders in CSS pixels)', async () => {
+    await element.updateComplete;
+
+    // Pin a non-1 dpr so the legacy identity transform (1, 0, 0, 1, 0, 0)
+    // cannot masquerade as the required pixel-ratio transform.
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(2);
+
+    const { setTransform, fillRect } = mockWaveformCanvasDrawContext();
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement;
+    // Intrinsic default before any sizing (happy-dom, like real browsers).
+    expect(canvas.width).toBe(300);
+    expect(canvas.height).toBe(150);
+
+    element.waveformPeaks = [];
+    await element.updateComplete;
+
+    expect(canvas.width, 'backing store width = rect.width × dpr').toBe(Math.round(42 * 2));
+    expect(canvas.height, 'backing store height = rect.height × dpr').toBe(Math.round(800 * 2));
+    expect(setTransform, 'dpr transform so the bar renders in CSS pixels').toHaveBeenCalledWith(
+      2,
+      0,
+      0,
+      2,
+      0,
+      0
+    );
+    // The bar must be painted AFTER the dpr transform is applied.
+    expect(setTransform.mock.invocationCallOrder[0]).toBeLessThan(
+      fillRect.mock.invocationCallOrder[0]
+    );
   });
 
   /** Companion redraw guard: after an empty-peaks wipe, fresh peaks must draw again. */
