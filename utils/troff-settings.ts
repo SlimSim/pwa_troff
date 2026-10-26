@@ -62,12 +62,7 @@ function isStopAfterDisabled(songData: any): boolean {
   return songData.TROFF_CLASS_TO_TOGGLE_buttStopAfter === false;
 }
 
-export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any) {
-  markerSlider.startMarkerId = songData?.currentStartMarker || '';
-  markerSlider.stopMarkerId = songData?.currentStopMarker || '';
-  markerSlider.startBefore = isStartBeforeDisabled(songData) ? 0 : getStartBefore(songData);
-  markerSlider.stopAfter = isStopAfterDisabled(songData) ? 0 : getStopAfter(songData);
-
+export function getMarkerFillColor(): string {
   const extraExtendedSetting = nDB.get(TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR);
   const extendedSetting = nDB.get(TROFF_SETTING_EXTENDED_MARKER_COLOR);
   const bothUnset = extraExtendedSetting === null && extendedSetting === null;
@@ -75,12 +70,21 @@ export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any)
   const isExtended = extendedSetting === true;
 
   if (isExtraExtended) {
-    markerSlider.fillColor = 'through';
+    return 'through';
   } else if (isExtended) {
-    markerSlider.fillColor = 'marker';
+    return 'marker';
   } else {
-    markerSlider.fillColor = '';
+    return '';
   }
+}
+
+export function configureMarkerSlider(markerSlider: MarkerSlider, songData: any) {
+  markerSlider.startMarkerId = songData?.currentStartMarker || '';
+  markerSlider.stopMarkerId = songData?.currentStopMarker || '';
+  markerSlider.startBefore = isStartBeforeDisabled(songData) ? 0 : getStartBefore(songData);
+  markerSlider.stopAfter = isStopAfterDisabled(songData) ? 0 : getStopAfter(songData);
+
+  markerSlider.fillColor = getMarkerFillColor();
 }
 
 /**

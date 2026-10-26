@@ -15,6 +15,12 @@
 //     A module-level session guard means concurrent or later refresh calls
 //     do NOT hit Firebase again until resetServerSongListForTests() runs.
 //   getCachedServerSongList(): ServerSong[]  ([] when nothing is cached)
+//   getCachedVersionInfo(troffDataId): { markers: TroffMarker[]; duration: number } | null
+//     (session-memory per-version cache filled during refreshServerSongList
+//     for every kept TroffData doc — the parsed markers plus the song
+//     duration from markerJsonString → fileData.duration (Number(...) || 0)
+//     — null before a refresh and for unknown ids; cleared by
+//     resetServerSongListForTests(); never persisted to nDB)
 //   troffDataListToServerSongList(troffDataList): ServerSong[]
 //     (one ServerSong per fileNameUri, versions grouped in first-appearance
 //     order; Firestore docs arrive as TroffData with markerJsonString)
@@ -91,6 +97,7 @@ vi.mock('../services/firebaseClient.js', () => ({
 interface ServerSongListApi {
   refreshServerSongList(): Promise<ServerSong[]>;
   getCachedServerSongList(): ServerSong[];
+  getCachedVersionInfo(troffDataId: number): { markers: TroffMarker[]; duration: number } | null;
   troffDataListToServerSongList(troffDataList: TroffData[]): ServerSong[];
   troffDataToTroffDataIdObject(troffData: TroffData): TroffDataIdObject;
   mergeServerSongListWithHistory(
@@ -387,6 +394,113 @@ describe('getCachedServerSongList', () => {
     const refreshed = await mod.refreshServerSongList();
 
     expect(mod.getCachedServerSongList()).toEqual(refreshed);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getCachedVersionInfo — the session-memory marker + duration cache that
+// serves the "More about version" dialog without a per-click Firestore fetch
+// ---------------------------------------------------------------------------
+
+describe('getCachedVersionInfo', () => {
+  it('returns null before any refresh and for an unknown id after a refresh', async () => {
+    expect(mod.getCachedVersionInfo(11)).toBeNull();
+
+    mockGetDocs.mockResolvedValue({
+      docs: [doc(makeTroffData(11, 'minor-swing.mp3', makeSongJson()))],
+    });
+    await mod.refreshServerSongList();
+
+    expect(mod.getCachedVersionInfo(999)).toBeNull();
+  });
+
+  it('after a refresh, returns the parsed markers and duration of a fetched public version', async () => {
+    const markers = [makeMarker('m1', 10, 'Intro'), makeMarker('m2', 42.5, 'Chorus')];
+    mockGetDocs.mockResolvedValue({
+      docs: [
+        doc(
+          makeTroffData(
+            11,
+            'minor-swing.mp3',
+            makeSongJson({ markers, fileData: makeFileData({ duration: 180 }) })
+          )
+        ),
+      ],
+    });
+
+    await mod.refreshServerSongList();
+
+    const cached = mod.getCachedVersionInfo(11);
+    expect(cached).not.toBeNull();
+    expect(cached).toEqual({ markers, duration: 180 });
+    expect(cached!.markers.map((marker) => marker.name)).toEqual(['Intro', 'Chorus']);
+    expect(cached!.markers.map((marker) => marker.time)).toEqual([10, 42.5]);
+  });
+
+  it('falls back to duration 0 when the song JSON has no fileData', async () => {
+    // makeSongJson() default: no fileData key at all → Number(undefined) || 0.
+    mockGetDocs.mockResolvedValue({
+      docs: [doc(makeTroffData(11, 'minor-swing.mp3', makeSongJson()))],
+    });
+
+    await mod.refreshServerSongList();
+
+    const cached = mod.getCachedVersionInfo(11);
+    expect(cached).not.toBeNull();
+    expect(cached).toEqual({
+      markers: [makeMarker('m1', 10, 'Intro')],
+      duration: 0,
+    });
+  });
+
+  it('does not populate the cache for non-public docs that are not in the local history', async () => {
+    nDBStore.set(TROFF_TROFF_DATA_ID_AND_FILE_NAME, [
+      makeHistory('secret-song.mp3', [makeVersion(77)]),
+    ]);
+
+    mockGetDocs.mockResolvedValue({
+      docs: [
+        // In local history, not public → kept (and therefore cached)
+        doc(
+          makeTroffData(77, 'secret-song.mp3', makeSongJson(), {
+            troffDataPublic: false,
+          })
+        ),
+        // Same file, id NOT in history, not public → dropped (no cache entry)
+        doc(
+          makeTroffData(78, 'secret-song.mp3', makeSongJson(), {
+            troffDataPublic: false,
+          })
+        ),
+        // File not in history at all, not public → dropped (no cache entry)
+        doc(
+          makeTroffData(79, 'other-song.mp3', makeSongJson(), {
+            troffDataPublic: false,
+          })
+        ),
+        // Public → kept (and therefore cached)
+        doc(makeTroffData(80, 'public-song.mp3', makeSongJson())),
+      ],
+    });
+
+    await mod.refreshServerSongList();
+
+    expect(mod.getCachedVersionInfo(78)).toBeNull();
+    expect(mod.getCachedVersionInfo(79)).toBeNull();
+    expect(mod.getCachedVersionInfo(77)).not.toBeNull();
+    expect(mod.getCachedVersionInfo(80)).not.toBeNull();
+  });
+
+  it('resetServerSongListForTests clears the cached version info', async () => {
+    mockGetDocs.mockResolvedValue({
+      docs: [doc(makeTroffData(11, 'minor-swing.mp3', makeSongJson()))],
+    });
+    await mod.refreshServerSongList();
+    expect(mod.getCachedVersionInfo(11)).not.toBeNull();
+
+    mod.resetServerSongListForTests();
+
+    expect(mod.getCachedVersionInfo(11)).toBeNull();
   });
 });
 

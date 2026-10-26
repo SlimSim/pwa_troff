@@ -7,6 +7,10 @@
  *   session guard means it only ever hits Firebase once per session.
  * - `getCachedServerSongList()` reads that cache (always merged with the
  *   local history, so history-only songs/versions survive).
+ * - `getCachedVersionInfo()` reads a module-level session cache of the
+ *   full marker payloads + duration kept during the refresh (keyed by
+ *   troffDataId, never persisted to nDB), so the "More about version" dialog
+ *   needs no per-click Firestore fetch.
  * - The remaining exports are pure helpers (mirroring the historical find.ts
  *   behaviour, but implemented fresh — find.ts is legacy and never imported).
  *
@@ -38,8 +42,18 @@ const UPLOAD_MILLIS_MIN = 162431283500;
 /** Session guard: the one in-flight/resolved refresh shared by every caller. */
 let refreshPromise: Promise<ServerSong[]> | null = null;
 
+/** Session-memory version info cache (keyed by troffDataId) — never persisted to nDB. */
+const versionInfoById = new Map<number, { markers: TroffMarker[]; duration: number; info: string }>();
+
 export function resetServerSongListForTests(): void {
   refreshPromise = null;
+  versionInfoById.clear();
+}
+
+export function getCachedVersionInfo(
+  troffDataId: number
+): { markers: TroffMarker[]; duration: number; info?: string } | null {
+  return versionInfoById.get(troffDataId) ?? null;
 }
 
 export function refreshServerSongList(): Promise<ServerSong[]> {
@@ -62,6 +76,12 @@ async function fetchAndCacheServerSongList(): Promise<ServerSong[]> {
     const troffData = doc.data() as TroffData;
     if (troffData.troffDataPublic === true || isInLocalHistory(troffData, history)) {
       troffDataList.push(troffData);
+      const songJson = parseSongJson(troffData.markerJsonString);
+      versionInfoById.set(troffData.id, {
+        markers: songJson.markers,
+        duration: Number(songJson.fileData?.duration) || 0,
+        info: songJson.info || '',
+      });
     }
   }
 

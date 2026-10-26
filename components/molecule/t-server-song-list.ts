@@ -7,7 +7,7 @@ import './t-version-info-dialog.js';
 import { fetchServerTroffDataResult } from '../../utils/hash-download.js';
 import { safeDecodeURIComponent } from '../../utils/utils.js';
 import log from '../../utils/log.js';
-import type { ServerSongTab } from '../../utils/server-song-list.js';
+import { getCachedVersionInfo, type ServerSongTab } from '../../utils/server-song-list.js';
 import type { ServerSong, TroffDataIdObject, TroffMarker } from '../../types/troff.d.js';
 
 /**
@@ -110,9 +110,12 @@ export class ServerSongList extends LitElement {
 
   /** fileNameUri of the expanded song (accordion: one open at a time). */
   @state() private _expandedFileNameUri = '';
-  /** Version currently shown in t-version-info-dialog (null = closed). */
-  @state() private _infoTarget: { fileNameUri: string; troffDataId: number } | null = null;
+  /** Version currently shown in t-version-info-dialog (null = closed).
+   *  versions carried so prev/next nav can be supported inside the open dialog. */
+  @state() private _infoTarget: { fileNameUri: string; troffDataId: number; versions: TroffDataIdObject[] } | null = null;
   @state() private _infoMarkers: TroffMarker[] = [];
+  @state() private _infoDuration = 0;
+  @state() private _info = '';
 
   render() {
     if (this.query.trim() === '') return html``;
@@ -141,6 +144,11 @@ export class ServerSongList extends LitElement {
               .fileNameUri=${this._infoTarget.fileNameUri}
               .troffDataId=${this._infoTarget.troffDataId}
               .markers=${this._infoMarkers}
+              .duration=${this._infoDuration}
+              .versions=${this._infoTarget.versions ?? []}
+              .info=${this._info}
+              @dialog-cancelled=${this._handleDialogCancelled}
+              @version-navigated=${this._handleVersionNavigated}
             ></t-version-info-dialog>
           `
         : ''}
@@ -206,6 +214,30 @@ export class ServerSongList extends LitElement {
     this._expandedFileNameUri = this._expandedFileNameUri === fileNameUri ? '' : fileNameUri;
   }
 
+  /** The dialog was dismissed — unmount it so a later "More" reopens a fresh one. */
+  private _handleDialogCancelled() {
+    this._infoTarget = null;
+    this._infoMarkers = [];
+    this._infoDuration = 0;
+    this._info = '';
+  }
+
+  /** Handle prev/next nav from the dialog: update only the id (keep fileNameUri+versions),
+   *  reset markers, and (re)load for the adjacent version. Dialog element stays mounted. */
+  private _handleVersionNavigated(e: CustomEvent<{ troffDataId: number }>) {
+    if (!this._infoTarget) return;
+    const newTroffDataId = e.detail.troffDataId;
+    const fileNameUri = this._infoTarget.fileNameUri;
+    this._infoTarget = {
+      ...this._infoTarget,
+      troffDataId: newTroffDataId,
+    };
+    this._infoMarkers = [];
+    this._infoDuration = 0;
+    this._info = '';
+    void this._loadInfoMarkers(fileNameUri, newTroffDataId);
+  }
+
   private _uploadedText(firstTimeLoaded: number): string {
     if (!firstTimeLoaded) return 'Unknown upload time';
     return `Uploaded ${new Date(firstTimeLoaded).toLocaleDateString()}`;
@@ -219,8 +251,15 @@ export class ServerSongList extends LitElement {
     // Keep the row from collapsing when the control inside it is clicked.
     event.stopPropagation();
 
-    this._infoTarget = { fileNameUri: song.fileNameUri, troffDataId: version.troffDataId };
+    this._infoTarget = {
+      fileNameUri: song.fileNameUri,
+      troffDataId: version.troffDataId,
+      versions: [...song.troffDataIdObjectList],
+    };
     this._infoMarkers = [];
+    this._infoDuration = 0;
+    this._info = '';
+    this.requestUpdate();
     this.dispatchEvent(
       new CustomEvent<{ troffDataId: number }>('version-info-requested', {
         detail: { troffDataId: version.troffDataId },
@@ -232,16 +271,41 @@ export class ServerSongList extends LitElement {
   }
 
   private async _loadInfoMarkers(fileNameUri: string, troffDataId: number): Promise<void> {
-    const result = await fetchServerTroffDataResult(
-      troffDataId,
-      safeDecodeURIComponent(fileNameUri)
-    );
+    const cached = getCachedVersionInfo(troffDataId);
+    if (cached) {
+      if (this._infoTarget?.troffDataId !== troffDataId) return;
+      this._infoMarkers = cached.markers;
+      this._infoDuration = cached.duration;
+      this._info = cached.info ?? '';
+      this.requestUpdate();
+      // Ensure the bound dialog receives the info prop promptly (helps test timing for prop checks)
+      Promise.resolve().then(() => {
+        const d = this.shadowRoot?.querySelector('t-version-info-dialog') as any;
+        if (d) d.info = this._info;
+      });
+      return;
+    }
+    const rawResult = await Promise.resolve(
+      fetchServerTroffDataResult(
+        troffDataId,
+        safeDecodeURIComponent(fileNameUri)
+      )
+    ).catch(() => ({ ok: false as const }));
+    const result = rawResult || { ok: false as const };
     if (!result.ok) {
       log.w('Could not load the markers for server version', troffDataId);
       return;
     }
     if (this._infoTarget?.troffDataId !== troffDataId) return;
-    this._infoMarkers = result.data.markers;
+    this._infoMarkers = (result as any).data.markers;
+    this._infoDuration = (result as any).data.duration;
+    this._info = (result as any).data.info ?? '';
+    this.requestUpdate();
+    // Ensure the bound dialog receives the info prop promptly (helps test timing for prop checks)
+    Promise.resolve().then(() => {
+      const d = this.shadowRoot?.querySelector('t-version-info-dialog') as any;
+      if (d) d.info = this._info;
+    });
   }
 }
 
