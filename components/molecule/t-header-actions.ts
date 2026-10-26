@@ -113,6 +113,10 @@ export class HeaderActions extends LitElement {
       display: none;
     }
 
+    .header-actions.search-expanded > .header-more-dropdown {
+      display: none;
+    }
+
     /* Desktop: search always expanded, buttons always visible */
     @media (min-width: 576px) {
       .header-actions:not(.search-expanded),
@@ -153,6 +157,10 @@ export class HeaderActions extends LitElement {
       }
 
       .header-actions.search-expanded > slot[name='sort'] {
+        display: contents;
+      }
+
+      .header-actions.search-expanded > .header-more-dropdown {
         display: contents;
       }
     }
@@ -231,7 +239,7 @@ export class HeaderActions extends LitElement {
         </div>
 
         <!-- All other header buttons (add, sort, edit, add-from-online etc) are now in ONE combined dropdown -->
-        <t-dropdown-button>
+        <t-dropdown-button class="header-more-dropdown">
           <t-butt icon slot="button" title="More actions">
             <t-icon name="more-vertical"></t-icon>
           </t-butt>
