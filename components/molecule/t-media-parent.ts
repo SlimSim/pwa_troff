@@ -369,6 +369,18 @@ export class MediaParent extends LitElement {
       justify-content: flex-start;
       text-align: left;
     }
+
+    .more-content .header-sort-btn,
+    .header-sort-btn {
+      width: 100%;
+    }
+
+    .more-content .header-sort-btn t-butt,
+    .header-sort-btn t-butt {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
+    }
   `;
 
   @property({ type: Boolean, reflect: true }) visible = false;
