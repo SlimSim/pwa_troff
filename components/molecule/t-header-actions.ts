@@ -9,7 +9,7 @@ import '../atom/t-dropdown-button.js';
  * Reusable action buttons for headers: add, sort, search, edit.
  *
  * Parent manages all state and event handlers.
- * The `isSearchFocused` prop drives CSS classes for mobile collapse.
+ * The `isSearchFocused` prop (or non-empty searchValue) drives CSS classes for mobile collapse/expansion.
  *
  * @slot sort – Place a `t-dropdown-button` here for sort controls.
  */
@@ -38,7 +38,7 @@ export class HeaderActions extends LitElement {
     }
 
     .header-actions.search-expanded {
-      max-width: 120px;
+      max-width: 180px;
     }
 
     .header-actions.search-expanded {
@@ -58,7 +58,7 @@ export class HeaderActions extends LitElement {
 
     .search-compact-wrap.search-expanded {
       transition: width 0.3s ease;
-      width: 120px;
+      width: 180px;
       flex-shrink: 1;
     }
 
@@ -182,8 +182,10 @@ export class HeaderActions extends LitElement {
   @property({ type: Boolean }) narrow = false;
 
   render() {
+    const hasSearchValue = !!(this.searchValue && this.searchValue.trim());
+    const isExpanded = this.isSearchFocused || hasSearchValue;
     const cls =
-      `${this.isSearchFocused ? 'search-expanded' : ''} ${this.narrow ? 'narrow' : ''}`.trim();
+      `${isExpanded ? 'search-expanded' : ''} ${this.narrow ? 'narrow' : ''}`.trim();
 
     return html`
       <div class="header-actions ${cls}">

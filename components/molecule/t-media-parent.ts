@@ -2423,10 +2423,10 @@ export class MediaParent extends LitElement {
                       .tab=${serverTab}
                       .loading=${this._serverSongsLoading}
                     ></t-server-song-list>
-                    <div class="add-song-from-device-row" @click=${this._handleAddSong}>
+                    <t-butt ghost class="add-song-from-device-row" @click=${this._handleAddSong}>
                       <t-icon name="note-plus"></t-icon>
                       <span>Not finding it? Add song from device</span>
-                    </div>
+                    </t-butt>
                   `
                 : ''}
             `}
