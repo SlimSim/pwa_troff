@@ -314,8 +314,6 @@ export class VersionInfoDialog extends LitElement {
     const prev = this._prevVersion();
     const next = this._nextVersion();
     const fileName = safeDecodeURIComponent(this.fileNameUri);
-    const prevText = prev ? `Previous version (${prev.nrMarkers} markers)` : 'Previous version';
-    const nextText = next ? `Next version (${next.nrMarkers} markers)` : 'Next version';
 
     return html`
       <div
@@ -333,8 +331,12 @@ export class VersionInfoDialog extends LitElement {
                     <div class="header-meta">
                       ${current.artist ? html`<div>Artist: ${current.artist}</div>` : ''}
                       ${current.title ? html`<div>Title: ${current.title}</div>` : ''}
-                      ${current.choreography ? html`<div>Choreography: ${current.choreography}</div>` : ''}
-                      ${current.choreographer ? html`<div>Choreographer: ${current.choreographer}</div>` : ''}
+                      ${current.choreography
+                        ? html`<div>Choreography: ${current.choreography}</div>`
+                        : ''}
+                      ${current.choreographer
+                        ? html`<div>Choreographer: ${current.choreographer}</div>`
+                        : ''}
                     </div>
                   `
                 : ''}
@@ -367,12 +369,16 @@ export class VersionInfoDialog extends LitElement {
 
           <div class="dialog-footer">
             <t-butt class="cancel-btn" @click=${this._cancel}>Cancel</t-butt>
-            <t-butt class="prev-version" .disabled=${!this._canGoPrev()} @click=${this._goPrev}>${prevText}</t-butt>
+            <t-butt class="prev-version" .disabled=${!this._canGoPrev()} @click=${this._goPrev}
+              >${prev ? html`<span>Previous<br /><t-icon slim name="marker"></t-icon> ${prev.nrMarkers}</span>` : 'Previous'}</t-butt
+            >
             <t-butt class="version-info-download" href="#${this.troffDataId}&${this.fileNameUri}">
               <t-icon name="download-song"></t-icon>
-              <span>Download this version</span>
+              <span>Download</span>
             </t-butt>
-            <t-butt class="next-version" .disabled=${!this._canGoNext()} @click=${this._goNext}>${nextText}</t-butt>
+            <t-butt class="next-version" .disabled=${!this._canGoNext()} @click=${this._goNext}
+              >${next ? html`<span>Next<br /><t-icon slim name="marker"></t-icon> ${next.nrMarkers}</span>` : 'Next'}</t-butt
+            >
           </div>
         </div>
       </div>

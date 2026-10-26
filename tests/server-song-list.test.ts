@@ -432,7 +432,7 @@ describe('getCachedVersionInfo', () => {
 
     const cached = mod.getCachedVersionInfo(11);
     expect(cached).not.toBeNull();
-    expect(cached).toEqual({ markers, duration: 180 });
+    expect(cached).toEqual({ markers, duration: 180, info: '' });
     expect(cached!.markers.map((marker) => marker.name)).toEqual(['Intro', 'Chorus']);
     expect(cached!.markers.map((marker) => marker.time)).toEqual([10, 42.5]);
   });
@@ -450,6 +450,7 @@ describe('getCachedVersionInfo', () => {
     expect(cached).toEqual({
       markers: [makeMarker('m1', 10, 'Intro')],
       duration: 0,
+      info: '',
     });
   });
 

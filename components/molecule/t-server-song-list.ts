@@ -112,7 +112,11 @@ export class ServerSongList extends LitElement {
   @state() private _expandedFileNameUri = '';
   /** Version currently shown in t-version-info-dialog (null = closed).
    *  versions carried so prev/next nav can be supported inside the open dialog. */
-  @state() private _infoTarget: { fileNameUri: string; troffDataId: number; versions: TroffDataIdObject[] } | null = null;
+  @state() private _infoTarget: {
+    fileNameUri: string;
+    troffDataId: number;
+    versions: TroffDataIdObject[];
+  } | null = null;
   @state() private _infoMarkers: TroffMarker[] = [];
   @state() private _infoDuration = 0;
   @state() private _info = '';
@@ -133,9 +137,7 @@ export class ServerSongList extends LitElement {
       <div class="server-song-section">
         <div class="server-song-section-header">${this._headerText()}</div>
         ${this.songs.length === 0
-          ? html`<div class="server-song-empty">
-              No songs on Troff's server match "${this.query.trim()}".
-            </div>`
+          ? html`<div class="server-song-empty">No songs online match "${this.query.trim()}".</div>`
           : this.songs.map((song) => this._renderSong(song))}
       </div>
       ${this._infoTarget
@@ -157,9 +159,9 @@ export class ServerSongList extends LitElement {
 
   private _headerText(): string {
     const query = this.query.trim();
-    if (this.tab === 'artists') return `Songs by ${query} on Troff's server`;
-    if (this.tab === 'genre') return `${query} songs on Troff's server`;
-    return "On Troff's server";
+    if (this.tab === 'artists') return `Songs by ${query} to download`;
+    if (this.tab === 'genre') return `${query} songs to download`;
+    return 'Download:';
   }
 
   private _renderSong(song: ServerSong) {
@@ -243,11 +245,7 @@ export class ServerSongList extends LitElement {
     return `Uploaded ${new Date(firstTimeLoaded).toLocaleDateString()}`;
   }
 
-  private _handleVersionInfoRequest(
-    event: Event,
-    song: ServerSong,
-    version: TroffDataIdObject
-  ) {
+  private _handleVersionInfoRequest(event: Event, song: ServerSong, version: TroffDataIdObject) {
     // Keep the row from collapsing when the control inside it is clicked.
     event.stopPropagation();
 
@@ -286,10 +284,7 @@ export class ServerSongList extends LitElement {
       return;
     }
     const rawResult = await Promise.resolve(
-      fetchServerTroffDataResult(
-        troffDataId,
-        safeDecodeURIComponent(fileNameUri)
-      )
+      fetchServerTroffDataResult(troffDataId, safeDecodeURIComponent(fileNameUri))
     ).catch(() => ({ ok: false as const }));
     const result = rawResult || { ok: false as const };
     if (!result.ok) {
