@@ -16,10 +16,7 @@ import {
   buildGroupSongStatusChangedEvent,
   getGroupSongStatusSections,
 } from '../../utils/group-song-status-ui.js';
-import type {
-  GroupSongStatus,
-  TroffFirebaseGroupIdentifyer,
-} from '../../types/troff.d.js';
+import type { GroupSongStatus, TroffFirebaseGroupIdentifyer } from '../../types/troff.d.js';
 
 // Re-export so group-list can double as barrel if needed
 export type { TroffFirebaseGroupIdentifyer };
@@ -245,6 +242,21 @@ export class GroupList extends LitElement {
 
     .status-expander {
       margin: 8px 16px;
+    }
+
+    /* Vertical stack wrapper that the callers provide.
+       We put the real flex column here so it works across shadow DOM. */
+    .more-content {
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 4px;
+    }
+
+    .more-content t-butt {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
     }
 
     /* Mobile responsive adjustments */
@@ -748,7 +760,9 @@ export class GroupList extends LitElement {
         ${filteredTracks.length === 0 && trackQuery
           ? html`
               <div class="no-results">
-                <div class="no-results-text">No songs match "${this._groupTrackSearch.trim()}".</div>
+                <div class="no-results-text">
+                  No songs match "${this._groupTrackSearch.trim()}".
+                </div>
                 <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
                   Clear search
                 </t-butt>
@@ -783,31 +797,59 @@ export class GroupList extends LitElement {
             count=${selectedGroup.tracks.length}
             headerColor=${selectedGroup.color ? this._cssColor(selectedGroup.color) : ''}
             headerTextColor=${selectedGroup.color ? this._contrastColor(selectedGroup.color) : ''}
-            headerBorderColor=${selectedGroup.color ? `color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent)` : ''}
+            headerBorderColor=${selectedGroup.color
+              ? `color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent)`
+              : ''}
             ?isSearchFocused=${this._isGroupSearchFocused}
             @back=${this._handleBack}
           >
             <t-header-actions
               slot="actions"
-              addIcon=${this._songManagementOpen ? '' : 'note-plus'}
-              addTitle="Add song to group"
               searchPlaceholder="Search songs…"
-               searchValue=${this._groupTrackSearch}
-               ?isSearchFocused=${this._isGroupSearchFocused}
-               ?narrow=${true}
-               ?showEdit=${!this._songManagementOpen}
-              editTitle="Edit group"
-              @add-click=${this._handleAddSongToGroup}
+              searchValue=${this._groupTrackSearch}
+              ?isSearchFocused=${this._isGroupSearchFocused}
+              ?narrow=${true}
               @search-input=${this._handleGroupSearchInput}
               @search-keydown=${this._handleGroupSearchKeydown}
               @search-focus=${this._handleGroupSearchFocus}
               @search-blur=${this._handleGroupSearchBlur}
               @edit-click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}
             >
-              <!-- re-project sort from parent into the single actions element -->
-              ${this._songManagementOpen
-                ? ''
-                : html`<slot slot="sort" name="sort-controls"></slot>`}
+              <div slot="more">
+                ${!this._songManagementOpen
+                  ? html`
+                      <div class="more-content">
+                        <t-butt
+                          @click=${() =>
+                            this.dispatchEvent(
+                              new CustomEvent('add-click', { bubbles: true, composed: true })
+                            )}
+                        >
+                          <t-icon name="note-plus"></t-icon>
+                          <span>Add song from device</span>
+                        </t-butt>
+                        <t-butt
+                          @click=${() =>
+                            this.dispatchEvent(
+                              new CustomEvent('add-online-requested', {
+                                bubbles: true,
+                                composed: true,
+                              })
+                            )}
+                        >
+                          <t-icon name="note-search"></t-icon>
+                          <span>Download songs online</span>
+                        </t-butt>
+                        <t-butt @click=${(e: Event) => this._handleEditGroup(e, selectedGroup)}>
+                          <t-icon name="edit"></t-icon>
+                          <span>Edit group</span>
+                        </t-butt>
+                        <!-- full sort dropdown -->
+                        <slot name="sort-controls"></slot>
+                      </div>
+                    `
+                  : ''}
+              </div>
             </t-header-actions>
           </t-detail-header>
 

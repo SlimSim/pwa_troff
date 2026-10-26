@@ -85,6 +85,19 @@ export class GenreList extends LitElement {
         font-size: 1rem;
       }
     }
+
+    .more-content {
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 4px;
+    }
+
+    .more-content t-butt {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
+    }
   `;
 
   @property({ type: Array }) tracks: any[] = [];
@@ -299,19 +312,36 @@ export class GenreList extends LitElement {
           >
             <t-header-actions
               slot="actions"
-              addIcon="note-plus"
-              addTitle="Add songs"
               searchPlaceholder="Search tracks…"
               searchValue=${this._genreTrackSearch}
               ?isSearchFocused=${this._isSearchFocused}
-              @add-click=${this._handleAddSong}
               @search-input=${this._handleSearchInput}
               @search-keydown=${this._handleSearchKeydown}
               @search-focus=${this._handleSearchFocus}
               @search-blur=${this._handleSearchBlur}
             >
-              <!-- re-project sort from parent into the single actions element -->
-              <slot slot="sort" name="sort-controls"></slot>
+              <div slot="more" class="more-content">
+                <t-butt
+                  @click=${() =>
+                    this.dispatchEvent(
+                      new CustomEvent('add-click', { bubbles: true, composed: true })
+                    )}
+                >
+                  <t-icon name="note-plus"></t-icon>
+                  <span>Add song from device</span>
+                </t-butt>
+                <t-butt
+                  @click=${() =>
+                    this.dispatchEvent(
+                      new CustomEvent('add-online-requested', { bubbles: true, composed: true })
+                    )}
+                >
+                  <t-icon name="note-search"></t-icon>
+                  <span>Download songs online</span>
+                </t-butt>
+                <!-- full sort dropdown projected here (nested is OK) -->
+                <slot name="sort-controls"></slot>
+              </div>
             </t-header-actions>
           </t-detail-header>
           ${filteredTracks.length === 0 && trackQuery

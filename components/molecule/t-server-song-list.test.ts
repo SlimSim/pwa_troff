@@ -257,11 +257,23 @@ describe('t-server-song-list', () => {
     expect(rows[1].querySelector('t-icon[name^="chevron"]')).toBeTruthy();
   });
 
-  it('renders nothing (no section) when the query is empty', async () => {
+  it('renders nothing (no section) only when query is empty AND no songs provided (not loading)', async () => {
     (element as unknown as { query: string }).query = '';
+    (element as unknown as { songs: ServerSong[] }).songs = [];
     await element.updateComplete;
 
     expect(shadowOf(element).querySelector('.server-song-section')).toBeNull();
+  });
+
+  it('renders the full list (header "Songs available online") even when query is empty, as long as songs are provided', async () => {
+    (element as unknown as { query: string }).query = '';
+    // songs are pre-seeded by beforeEach
+    await element.updateComplete;
+
+    const shadow = shadowOf(element);
+    expect(shadow.querySelector('.server-song-section')).toBeTruthy();
+    const header = shadow.querySelector('.server-song-section-header');
+    expect(header?.textContent).toContain('Songs available online');
   });
 
   it('shows a loading indicator while loading is true', async () => {

@@ -17,7 +17,10 @@ import type { ServerSong, TroffDataIdObject, TroffMarker } from '../../types/tro
  * this component only renders the section: one collapsible row per song,
  * version cards (download + "more about version") while expanded, a loading
  * state while the fetch is in flight, and an empty state when nothing on the
- * server matches. Nothing renders while the query is empty/whitespace.
+ * server matches.
+ *
+ * Empty query is now supported (for "Download songs online") and shows
+ * the full unfiltered public list instead of rendering nothing.
  */
 @customElement('t-server-song-list')
 export class ServerSongList extends LitElement {
@@ -122,7 +125,10 @@ export class ServerSongList extends LitElement {
   @state() private _info = '';
 
   render() {
-    if (this.query.trim() === '') return html``;
+    const q = this.query.trim();
+    // Support "Download songs online" (empty query) — show the full list of public songs.
+    // Previously nothing rendered on empty query (only used during active search).
+    if (q === '' && this.songs.length === 0 && !this.loading) return html``;
 
     if (this.loading) {
       return html`
@@ -137,7 +143,7 @@ export class ServerSongList extends LitElement {
       <div class="server-song-section">
         <div class="server-song-section-header">${this._headerText()}</div>
         ${this.songs.length === 0
-          ? html`<div class="server-song-empty">No songs online match "${this.query.trim()}".</div>`
+          ? html`<div class="server-song-empty">No songs online${q ? ` match "${q}"` : ''}.</div>`
           : this.songs.map((song) => this._renderSong(song))}
       </div>
       ${this._infoTarget
@@ -159,6 +165,9 @@ export class ServerSongList extends LitElement {
 
   private _headerText(): string {
     const query = this.query.trim();
+    if (!query) {
+      return 'Songs available online';
+    }
     if (this.tab === 'artists') return `Songs by ${query} to download`;
     if (this.tab === 'genre') return `${query} songs to download`;
     return 'Download:';

@@ -862,7 +862,7 @@ describe('Search focus state and visual indication', () => {
     const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
     const listHeaderEl = listHeader?.shadowRoot?.querySelector(selector);
     if (listHeaderEl) return listHeaderEl;
-    // Then check t-header-actions shadow root (for .header-actions, .action-btn etc.)
+    // Then check t-header-actions shadow root (for .header-actions etc.)
     const headerActions = listHeader?.querySelector('t-header-actions') as any;
     const el = headerActions?.shadowRoot?.querySelector(selector);
     if (!el) {
@@ -1121,14 +1121,14 @@ describe('Search focus state and visual indication', () => {
 
   // ---- header controls get the search-expanded class while focused ----
   //
-  // Mirrors the detail-view pattern in t-artist-list.ts (lines 462-463):
-  // every header control next to the collapsed search input must receive
-  // `search-expanded` while the input is focused (the CSS hides them on
-  // small screens; a wide-screen media query restores them). In the
-  // current code none of the class bindings exist, so all of these tests
-  // fail (RED).
+  // The t-header-actions container and the .song-count (in t-list-header)
+  // receive `search-expanded` when the search is focused. This drives the
+  // mobile collapse/expansion styles (max-width narrowing + hiding count).
+  // Individual action buttons no longer live directly in the header row
+  // (they are inside the "more" dropdown), so we only assert on the
+  // container and the count.
 
-  it('focused search adds search-expanded class to all tracks-header controls (add btn, count, sort, find btn)', async () => {
+  it('focused search adds search-expanded class to header container and song-count (tracks)', async () => {
     await element.updateComplete;
 
     const tInput = getSearchInput();
@@ -1142,14 +1142,11 @@ describe('Search focus state and visual indication', () => {
     const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.action-btn');
-    expect(addBtn.classList.contains('search-expanded')).toBe(true);
-
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
   });
 
-  it('focused search adds search-expanded class to artists-header controls', async () => {
+  it('focused search adds search-expanded class to header container and song-count (artists)', async () => {
     (element as any).currentFilter = 'artists';
     await element.updateComplete;
 
@@ -1164,14 +1161,11 @@ describe('Search focus state and visual indication', () => {
     const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.action-btn');
-    expect(addBtn.classList.contains('search-expanded')).toBe(true);
-
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
   });
 
-  it('focused search adds search-expanded class to genre-header controls', async () => {
+  it('focused search adds search-expanded class to header container and song-count (genre)', async () => {
     (element as any).currentFilter = 'genre';
     await element.updateComplete;
 
@@ -1186,14 +1180,11 @@ describe('Search focus state and visual indication', () => {
     const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.action-btn');
-    expect(addBtn.classList.contains('search-expanded')).toBe(true);
-
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
   });
 
-  it('focused search adds search-expanded class to groups-header controls', async () => {
+  it('focused search adds search-expanded class to header container and song-count (groups)', async () => {
     (element as any).currentFilter = 'groups';
     await element.updateComplete;
 
@@ -1207,9 +1198,6 @@ describe('Search focus state and visual indication', () => {
 
     const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
-
-    const addBtn = getHeaderControl('t-butt.action-btn');
-    expect(addBtn.classList.contains('search-expanded')).toBe(true);
 
     const songCount = getHeaderControl('.song-count');
     expect(songCount.classList.contains('search-expanded')).toBe(true);
@@ -1229,12 +1217,12 @@ describe('Search focus state and visual indication', () => {
     await element.updateComplete;
     await new Promise((r) => setTimeout(r, 0));
 
-    // Focused: the class must be present on the controls.
+    // Focused: the class must be present on the container and count.
     const container = getHeaderControl('.header-actions');
     expect(container.classList.contains('search-expanded')).toBe(true);
 
-    const addBtn = getHeaderControl('t-butt.action-btn');
-    expect(addBtn.classList.contains('search-expanded')).toBe(true);
+    const songCount = getHeaderControl('.song-count');
+    expect(songCount.classList.contains('search-expanded')).toBe(true);
 
     // Blur: the class must disappear from the header controls.
     tInput.blur();
@@ -1242,7 +1230,7 @@ describe('Search focus state and visual indication', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(container.classList.contains('search-expanded')).toBe(false);
-    expect(addBtn.classList.contains('search-expanded')).toBe(false);
+    expect(songCount.classList.contains('search-expanded')).toBe(false);
   });
 });
 
@@ -2146,10 +2134,11 @@ describe('search input and header button size consistency', () => {
   it('search input min-height matches the header button min-height', async () => {
     await element.updateComplete;
 
-    // The header "add songs" button — a t-butt inside t-header-actions shadow DOM.
+    // The visible header control button (more actions dropdown trigger)
+    // — a t-butt inside t-header-actions shadow DOM.
     const listHeader = element.shadowRoot?.querySelector('t-list-header') as any;
     const headerActions = listHeader?.querySelector('t-header-actions') as any;
-    const headerBtn = headerActions?.shadowRoot?.querySelector('t-butt.action-btn');
+    const headerBtn = headerActions?.shadowRoot?.querySelector('t-butt');
     expect(headerBtn).toBeTruthy();
     const btnBase = getButtBase(headerBtn!);
 
@@ -2168,10 +2157,11 @@ describe('search input and header button size consistency', () => {
   it('collapsed search-compact-wrap CSS width matches the header button min-width', async () => {
     await element.updateComplete;
 
-    // The header "add songs" button inside t-header-actions shadow DOM.
+    // The visible header control button (more actions dropdown trigger)
+    // inside t-header-actions shadow DOM.
     const listHeader = element.shadowRoot?.querySelector('t-list-header');
     const headerActions = listHeader?.querySelector('t-header-actions') as HTMLElement | null;
-    const headerBtn = headerActions?.shadowRoot?.querySelector('t-butt.action-btn');
+    const headerBtn = headerActions?.shadowRoot?.querySelector('t-butt');
     expect(headerBtn).toBeTruthy();
     const btnBase = getButtBase(headerBtn!);
 
