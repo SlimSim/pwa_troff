@@ -467,7 +467,10 @@ export class SettingsPanel extends LitElement {
     this.playFullSongShow = nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
     this.loopButtonsShow = nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
     this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
-    document.documentElement.style.setProperty('--play-button-size', this.largerPlayButtonMobile ? '4rem' : '3.2rem');
+    document.documentElement.style.setProperty(
+      '--play-button-size',
+      this.largerPlayButtonMobile ? '4.5rem' : '3.2rem'
+    );
     this.cookieConsentAccepted = hasCookieConsent();
     // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
     import('../../utils/pwa.js')
@@ -565,7 +568,10 @@ export class SettingsPanel extends LitElement {
       this._renderRevokePortal();
     }
     if (changedProperties.has('largerPlayButtonMobile')) {
-      document.documentElement.style.setProperty('--play-button-size', this.largerPlayButtonMobile ? '4rem' : '3.2rem');
+      document.documentElement.style.setProperty(
+        '--play-button-size',
+        this.largerPlayButtonMobile ? '4.5rem' : '3.2rem'
+      );
     }
   }
 
@@ -1192,7 +1198,8 @@ export class SettingsPanel extends LitElement {
                   toggle
                   ellipsis
                   .active=${this.largerPlayButtonMobile}
-                  @click=${() => this._toggleSetting('largerPlayButtonMobile', this.largerPlayButtonMobile)}
+                  @click=${() =>
+                    this._toggleSetting('largerPlayButtonMobile', this.largerPlayButtonMobile)}
                 >
                   Larger play button on mobile
                 </t-butt>

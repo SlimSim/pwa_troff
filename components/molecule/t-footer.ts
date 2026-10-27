@@ -64,6 +64,12 @@ export class BottomNav extends LitElement {
       /* todo: have box-shadow ONLY when the body is scrollable, not the host */
     }
 
+    @media (min-width: 768px) {
+      .play-button-wrapper {
+        --play-button-size: 3.2rem;
+      }
+    }
+
     .nav-container {
       display: flex;
       align-items: center;
@@ -163,7 +169,6 @@ export class BottomNav extends LitElement {
       top: var(--d);
       right: var(--d);
       z-index: 1;
-      /* font-size: calc(var(--play-button-size, 3.2rem) * 0.234);*/
       --size: calc(var(--play-button-size, 3.2rem) * 0.5625);
       width: var(--size);
       height: var(--size);
@@ -195,6 +200,9 @@ export class BottomNav extends LitElement {
     }
 
     @media (min-width: 768px) {
+      body {
+        --play-button-size: 10rem;
+      }
       .hide-on-wide {
         display: none;
       }
