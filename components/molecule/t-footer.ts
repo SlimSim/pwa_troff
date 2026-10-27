@@ -109,6 +109,8 @@ export class BottomNav extends LitElement {
       position: relative;
       width: 3.2rem;
       height: 3.2rem;
+      --lift: calc((var(--play-button-size, 3.2rem) - 3.2rem) * 0.5);
+      bottom: var(--lift);
     }
 
     t-butt.main-play-button {
@@ -166,8 +168,8 @@ export class BottomNav extends LitElement {
     .quick-play-button {
       position: absolute;
       --d: calc(-0.77 * var(--play-button-size) + 1.7rem);
-      top: var(--d);
-      right: var(--d);
+      top: calc(var(--d) + var(--lift));
+      right: calc(var(--d) - var(--lift));
       z-index: 1;
       --size: calc(var(--play-button-size, 3.2rem) * 0.5625);
       width: var(--size);
@@ -200,9 +202,6 @@ export class BottomNav extends LitElement {
     }
 
     @media (min-width: 768px) {
-      body {
-        --play-button-size: 10rem;
-      }
       .hide-on-wide {
         display: none;
       }
