@@ -6,7 +6,6 @@ export class TButt extends LitElement {
   static styles = css`
     :host {
       display: inline-block;
-      font-size: 14px;
     }
 
     /* base styles for both <button> and link-mode <a> */
@@ -15,7 +14,7 @@ export class TButt extends LitElement {
       box-sizing: border-box;
       min-width: 42px;
       min-height: 35px;
-      font-size: inherit;
+      font-size: 14px;
       margin: 0;
       border-width: 0;
       border-radius: var(--button-border-radius);
@@ -78,17 +77,16 @@ export class TButt extends LitElement {
     /* Style for ROUND button */
     .base.round {
       border-radius: 50%;
-      width: 3.2rem;
-      height: 3.2rem;
+      width: var(--play-button-size, 3.2rem);
+      height: var(--play-button-size, 3.2rem);
     }
 
     /* Style for SLIM + ROUND button (smaller circle) */
     .base.slim.round {
-      width: 1.8rem;
-      height: 1.8rem;
-      min-width: 1.8rem;
-      min-height: 1.8rem;
-      font-size: 0.75rem;
+      width: calc(var(--play-button-size, 3.2rem) * 0.5625);
+      height: calc(var(--play-button-size, 3.2rem) * 0.5625);
+      min-width: calc(var(--play-button-size, 3.2rem) * 0.5625);
+      min-height: calc(var(--play-button-size, 3.2rem) * 0.5625);
     }
 
     /* STYLE for the TOGGLE button */

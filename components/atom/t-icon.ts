@@ -20,8 +20,16 @@ export class TIcon extends LitElement {
       min-height: 1.5em;
     }
 
-    .icon-wrapper {
+    :host {
       font-size: 1.125rem;
+    }
+
+    :host([fullSize]) {
+      font-size: inherit;
+    }
+
+    .icon-wrapper {
+      font-size: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -33,11 +41,11 @@ export class TIcon extends LitElement {
       font-size: 100%;
     }
 
-    .slim {
+    :host([slim]) {
       font-size: 0.8rem;
     }
 
-    .large {
+    :host([large]) {
       font-size: 1.5rem;
     }
 

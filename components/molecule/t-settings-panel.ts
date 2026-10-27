@@ -29,7 +29,8 @@ type ToggleSetting =
   | 'keepScreenOn'
   | 'darkMode'
   | 'bannerShow'
-  | 'onSelectMarkerGoToMarker';
+  | 'onSelectMarkerGoToMarker'
+  | 'largerPlayButtonMobile';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
 
@@ -443,6 +444,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) extendedMarkerColor = false;
   @property({ type: Boolean }) extraExtendedMarkerColor = false;
   @property({ type: Boolean }) keepScreenOn = true;
+  @property({ type: Boolean }) largerPlayButtonMobile = true;
   @property({ type: Boolean }) onSelectMarkerGoToMarker = true;
   @property({ type: Boolean }) darkMode = false;
   @property({ type: Boolean }) bannerShow = false;
@@ -465,6 +467,7 @@ export class SettingsPanel extends LitElement {
     this.playFullSongShow = nDB.get(TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW) !== false;
     this.loopButtonsShow = nDB.get(TROFF_SETTING_UI_LOOP_BUTTONS_SHOW) !== false;
     this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
+    document.documentElement.style.setProperty('--play-button-size', this.largerPlayButtonMobile ? '4rem' : '3.2rem');
     this.cookieConsentAccepted = hasCookieConsent();
     // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
     import('../../utils/pwa.js')
@@ -560,6 +563,9 @@ export class SettingsPanel extends LitElement {
   protected override updated(changedProperties: Map<string, unknown>): void {
     if (changedProperties.has('showCookieRevokeConfirm')) {
       this._renderRevokePortal();
+    }
+    if (changedProperties.has('largerPlayButtonMobile')) {
+      document.documentElement.style.setProperty('--play-button-size', this.largerPlayButtonMobile ? '4rem' : '3.2rem');
     }
   }
 
@@ -694,6 +700,9 @@ export class SettingsPanel extends LitElement {
         break;
       case 'keepScreenOn':
         this.keepScreenOn = nextValue;
+        break;
+      case 'largerPlayButtonMobile':
+        this.largerPlayButtonMobile = nextValue;
         break;
       case 'darkMode':
         this.darkMode = nextValue;
@@ -1179,6 +1188,14 @@ export class SettingsPanel extends LitElement {
                   ? html`<span class="unsupported-note">(not supported on this browser)</span>`
                   : ''}
 
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.largerPlayButtonMobile}
+                  @click=${() => this._toggleSetting('largerPlayButtonMobile', this.largerPlayButtonMobile)}
+                >
+                  Larger play button on mobile
+                </t-butt>
                 <t-butt
                   toggle
                   ellipsis

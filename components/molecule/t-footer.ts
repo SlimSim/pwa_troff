@@ -101,6 +101,18 @@ export class BottomNav extends LitElement {
 
     .play-button-wrapper {
       position: relative;
+      width: 3.2rem;
+      height: 3.2rem;
+    }
+
+    t-butt.main-play-button {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      width: var(--play-button-size, 3.2rem);
+      height: var(--play-button-size, 3.2rem);
     }
 
     .play-button-content {
@@ -109,18 +121,18 @@ export class BottomNav extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 3.2rem;
-      height: 3.2rem;
+      width: var(--play-button-size, 3.2rem);
+      height: var(--play-button-size, 3.2rem);
       line-height: 0.9;
-      font-size: 1.4rem;
+      font-size: calc(var(--play-button-size, 3.2rem) * 0.44);
     }
 
     .reset-icon-overlay {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      bottom: 2.75px;
-      font-size: 42px;
+      bottom: calc(var(--play-button-size, 3.2rem) * 0.05);
+      font-size: calc(var(--play-button-size, 3.2rem) * 0.82);
     }
 
     .reset-icon-overlay t-icon {
@@ -147,9 +159,18 @@ export class BottomNav extends LitElement {
 
     .quick-play-button {
       position: absolute;
-      top: -12px;
-      right: -12px;
+      --d: calc(-0.77 * var(--play-button-size) + 1.7rem);
+      top: var(--d);
+      right: var(--d);
       z-index: 1;
+      /* font-size: calc(var(--play-button-size, 3.2rem) * 0.234);*/
+      --size: calc(var(--play-button-size, 3.2rem) * 0.5625);
+      width: var(--size);
+      height: var(--size);
+    }
+
+    .quick-play-icon {
+      font-size: calc(var(--play-button-size, 3.2rem) * 0.234);
     }
 
     .speed-volume-wrapper {
@@ -474,7 +495,11 @@ export class BottomNav extends LitElement {
               this._handleNavClick(e, 'quick-play');
             }}
           >
-            <t-icon name="${this.isPlaying ? 'pause' : 'play'}" fullsize></t-icon>
+            <t-icon
+              class="quick-play-icon"
+              name="${this.isPlaying ? 'pause' : 'play'}"
+              fullSize
+            ></t-icon>
           </t-butt>
           <t-butt class="main-play-button" title="Play song" round important key="Enter">
             <div class="play-button-content">
@@ -488,14 +513,7 @@ export class BottomNav extends LitElement {
                   : ''}
               <t-icon
                 name="${this.isPlaying || this.isStartingPlayback ? 'pause' : 'play'}"
-                ?fullSize=${!!(
-                  this.isStartingPlayback ||
-                  (this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore)
-                )}
-                ?large=${!(
-                  this.isStartingPlayback ||
-                  (this.pauseBefore > 0 && !this.isPlaying && !this.disablePauseBefore)
-                )}
+                fullSize
               ></t-icon>
             </div>
           </t-butt>
