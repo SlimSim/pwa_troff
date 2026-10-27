@@ -469,7 +469,7 @@ export class SettingsPanel extends LitElement {
     this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
     document.documentElement.style.setProperty(
       '--play-button-size',
-      this.largerPlayButtonMobile ? '4.5rem' : '3.2rem'
+      this.largerPlayButtonMobile ? '4.2rem' : '3.2rem'
     );
     this.cookieConsentAccepted = hasCookieConsent();
     // Dynamic import for pwa to avoid requiring getInstallState etc in tests with minimal pwa mock (only initPwa)
