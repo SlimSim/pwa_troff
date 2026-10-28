@@ -6,6 +6,7 @@
   --slider-track-width: 5px;
   --slider-thumb-size: 15px;
   --waveform-width: 31px;
+  --waveform-padding: 2px;
 
   /* buttons */
   --button-border-radius: 0;

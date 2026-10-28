@@ -186,10 +186,12 @@ export class MarkerSlider extends LitElement {
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       ctx.clearRect(0, 0, width, height);
       const halfWidth = width / 2;
+      const padding = parseFloat(getComputedStyle(canvas).getPropertyValue('--waveform-padding').trim() || '0') || 0;
       const color =
         getComputedStyle(canvas).getPropertyValue('--slider-color').trim() || '#888888';
       ctx.fillStyle = color;
-      ctx.fillRect(halfWidth - 2, 0, 4, height); // narrow centered placeholder
+      const innerHalfWidth = halfWidth - padding;
+      ctx.fillRect(padding + (innerHalfWidth - 2), 0, 4, height); // narrow centered placeholder
       this._lastDrawnPeaks = null;
       return;
     }
@@ -205,6 +207,8 @@ export class MarkerSlider extends LitElement {
     const numPeaks = peaks.length;
     const halfWidth = width / 2;
     const barHeight = Math.max(height / numPeaks, 1);
+    const padding = parseFloat(getComputedStyle(canvas).getPropertyValue('--waveform-padding').trim() || '0') || 0;
+    const innerHalfWidth = halfWidth - padding;
     const color = getComputedStyle(canvas).getPropertyValue('--slider-color').trim() || '#888888';
 
     const pixelRatio = window.devicePixelRatio || 1;
@@ -221,7 +225,7 @@ export class MarkerSlider extends LitElement {
     // at numPeaks 10000), which stacked the old 0.6 alpha to effective opacity.
     ctx.beginPath();
     for (let i = 0; i < numPeaks; i++) {
-      const barWidth = displayAmplitude(Math.abs(peaks[i])) * halfWidth;
+      const barWidth = displayAmplitude(Math.abs(peaks[i])) * innerHalfWidth;
       const top = (i / numPeaks) * height;
       ctx.rect(halfWidth - barWidth, top, barWidth * 2, barHeight);
     }

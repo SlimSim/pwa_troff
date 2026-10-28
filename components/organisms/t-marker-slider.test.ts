@@ -1554,6 +1554,137 @@ describe('t-marker-slider merged track + waveform column', () => {
     expect(fillAlphaAtCall, 'the single fill is painted at alpha 1').toEqual([1]);
     expect(fillRect, 'no per-bar fillRect — its alphas would compound').not.toHaveBeenCalled();
   });
+
+  // ---------------------------------------------------------------------------
+  // Feature: left and right padding on the waveform (drawn bars + placeholder)
+  // inside .slider-track-wrapper / .waveform-canvas so that the bars do not
+  // reach the edges of the .playback-region background. This leaves a visible
+  // strip of the region bg on left and right within the active playing area.
+  //
+  // - 4px each side (mobile, base styles)
+  // - 8px each side (desktop, @media (min-width: 576px))
+  //
+  // Canvas itself stays full-width (100%) for hit-testing/clicks; only the
+  // drawn rects / fillRect are inset. The padding value comes from the
+  // --waveform-padding CSS var (to be declared in variables.css).
+  // ---------------------------------------------------------------------------
+
+  it('declares a mobile-first base --waveform-padding: 4px in stylesheets/variables.css', () => {
+    const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
+    expect(/--waveform-padding:\s*4px\s*;/.exec(css)).not.toBeNull();
+  });
+
+  it('sets --waveform-padding: 8px inside the @media (min-width: 576px) block in stylesheets/variables.css', () => {
+    const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
+    expect(
+      /@media\s*\(min-width:\s*576px\)\s*\{[\s\S]*?--waveform-padding:\s*8px\s*;/.exec(css)
+    ).not.toBeNull();
+  });
+
+  it('draws waveform bars inset by the desktop padding (8px on each side) for the 42px rect', async () => {
+    await element.updateComplete;
+
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement;
+    // simulate the var value that the desktop media query will provide
+    canvas.style.setProperty('--waveform-padding', '8px');
+
+    const { fillRect, rect, beginPath, fill, fillAlphaAtCall } =
+      mockWaveformCanvasDrawContext();
+
+    element.waveformPeaks = [0.1, 0.5, 1];
+    await element.updateComplete;
+
+    // desktop padded: full w=42 -> draw area 42-16=26, inner halfWidth=13 for scaling the amplitude
+    // rect x = 8 + (13 - (peak^2 * 13)), totalWidthArg = 2 * (peak^2 * 13)
+    const halfWidth = 13;
+    const barHeight = 800 / 3;
+    expect(rect.mock.calls).toEqual([
+      [8 + halfWidth - 0.1 * 0.1 * halfWidth, 0, 2 * (0.1 * 0.1 * halfWidth), barHeight],
+      [
+        8 + halfWidth - 0.5 * 0.5 * halfWidth,
+        (1 / 3) * 800,
+        2 * (0.5 * 0.5 * halfWidth),
+        barHeight,
+      ],
+      [8 + halfWidth - 1 * 1 * halfWidth, (2 / 3) * 800, 2 * (1 * 1 * halfWidth), barHeight],
+    ]);
+
+    // Anti-stacking etc still hold
+    expect(beginPath, 'bars must be added to a single path').toHaveBeenCalled();
+    expect(fill, 'all bars must be painted with EXACTLY ONE fill()').toHaveBeenCalledTimes(1);
+    expect(fillAlphaAtCall, 'the single fill must happen at alpha 1').toEqual([1]);
+    expect(fillRect, 'bars are no longer painted one fillRect at a time').not.toHaveBeenCalled();
+  });
+
+  it('draws bar width using squared amplitude against the padded inner halfWidth (desktop)', async () => {
+    await element.updateComplete;
+
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement;
+    canvas.style.setProperty('--waveform-padding', '8px');
+
+    const { rect } = mockWaveformCanvasDrawContext();
+
+    element.waveformPeaks = [0.5];
+    await element.updateComplete;
+
+    // padded inner half=13; 0.25*13=3.25 -> x=8 + (13-3.25)=17.75, w=6.5 (vs old 15.75/10.5)
+    expect(rect).toHaveBeenCalledTimes(1);
+    expect(rect.mock.calls[0]).toEqual([17.75, 0, 6.5, 800]);
+  });
+
+  it('draws waveform bars inset by mobile padding (4px each side) when using 31px rect', async () => {
+    await element.updateComplete;
+
+    const { rect } = mockWaveformCanvasDrawContext();
+
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement;
+    canvas.style.setProperty('--waveform-padding', '4px');
+    // Force mobile width in this test (the mock hardcodes the desktop 42); _drawWaveform
+    // will read the latest getBoundingClientRect for its width calc.
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 31, 800));
+
+    element.waveformPeaks = [0.5];
+    await element.updateComplete;
+
+    // mobile: w=31 p=4 -> inner=23, half=11.5; a=0.25 bw=2.875; x=4+(11.5-2.875)=12.625; w=5.75
+    // (current unpadded code on 31px would give x=11.625)
+    expect(rect).toHaveBeenCalledTimes(1);
+    expect(rect.mock.calls[0]).toEqual([12.625, 0, 5.75, 800]);
+  });
+
+  it('reads the --waveform-padding var when drawing the placeholder bar (applies padding logic to placeholder)', async () => {
+    await element.updateComplete;
+
+    const canvas = getWrapper().querySelector('canvas.waveform-canvas') as HTMLCanvasElement;
+
+    // Wrap getComputedStyle so we can assert that the padding var (in addition to --slider-color)
+    // is read during the empty-peaks placeholder draw. This drives that padding is applied to
+    // the placeholder bar path too.
+    const getPropSpy = vi.fn((prop: string) => {
+      if (prop === '--slider-color') return '';
+      return '';
+    });
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+      getPropertyValue: getPropSpy,
+    } as any);
+
+    const { fillRect, beginPath, rect, fill } = mockWaveformCanvasDrawContext();
+
+    element.waveformPeaks = [];
+    await element.updateComplete;
+
+    expect(
+      getPropSpy,
+      'the placeholder branch must also read --waveform-padding to apply inset'
+    ).toHaveBeenCalledWith('--waveform-padding');
+
+    // position of placeholder is geometrically invariant (always w/2-2) but the var read is asserted
+    expect(fillRect).toHaveBeenCalledTimes(1);
+    expect(fillRect.mock.calls[0]).toEqual([19, 0, 4, 800]);
+    expect(beginPath).not.toHaveBeenCalled();
+    expect(rect).not.toHaveBeenCalled();
+    expect(fill).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
