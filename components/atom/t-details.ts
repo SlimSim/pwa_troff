@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { computeRevealScrollDelta } from '../../utils/scroll-utils.js';
+import type { ViewportRect } from '../../utils/scroll-utils.js';
 import './t-icon.js';
 
 @customElement('t-details')
@@ -89,7 +91,48 @@ export class DetailsElement extends LitElement {
           composed: true,
         })
       );
+      if (isOpen) {
+        this._scrollContentIntoView();
+      }
     }
+  }
+
+  /** Find the nearest scrollable ancestor, climbing across shadow-root boundaries. */
+  private _findScrollContainer(): Element | null {
+    let current: Element | null = this;
+    while (current) {
+      const overflowY = window.getComputedStyle(current).overflowY;
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        return current;
+      }
+      const parent: HTMLElement | null = current.parentElement;
+      if (parent) {
+        current = parent;
+        continue;
+      }
+      const root = current.getRootNode();
+      current = root instanceof ShadowRoot ? root.host : null;
+    }
+    return document.scrollingElement;
+  }
+
+  /** Smooth-scroll the container so the bottom of this element comes into view. */
+  private _scrollContentIntoView(): void {
+    const container = this._findScrollContainer();
+    if (!container) {
+      return;
+    }
+    // The document scrolling element's rect spans the whole document, so the
+    // fallback bounds are the viewport; a real container bounds itself.
+    const bounds: ViewportRect =
+      container === document.scrollingElement
+        ? { top: 0, bottom: window.innerHeight }
+        : container.getBoundingClientRect();
+    const delta = computeRevealScrollDelta(this.getBoundingClientRect(), bounds);
+    if (delta <= 0) {
+      return;
+    }
+    container.scrollTo({ top: container.scrollTop + delta, behavior: 'smooth' });
   }
 
   render() {
