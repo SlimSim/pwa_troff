@@ -596,6 +596,7 @@ export class MediaParent extends LitElement {
 
   updated(changedProperties: PropertyValues) {
     if (changedProperties.has('visible') && !this.visible) {
+      this._onlineAddMode = false;
       this.dispatchEvent(
         new CustomEvent('song-list-closed', {
           bubbles: true,
@@ -1151,6 +1152,7 @@ export class MediaParent extends LitElement {
 
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
+    this._onlineAddMode = false;
     this.searchQuery = '';
     this._closeOpenDetailViews();
     this._clearContext();
@@ -2044,6 +2046,9 @@ export class MediaParent extends LitElement {
     // welcome empty state must not be shown.
     const isEmpty = songs.length === 0 && this.groups.length === 0 && !hasActiveQuery;
     const serverTab = this.currentFilter as ServerSongTab;
+    // In online add mode the header count must reflect the online list, using
+    // the exact same filter call as the rendered t-server-song-list below.
+    const onlineSongCount = filterServerSongs(getCachedServerSongList(), query, serverTab).length;
 
     // Tracks: filter by title, then sort.
     const visibleTracks = this._getVisibleTracks();
@@ -2124,13 +2129,15 @@ export class MediaParent extends LitElement {
         : html`
             <t-list-header
               title=${headerTitle}
-              count=${this.currentFilter === 'tracks'
-                ? songs.length
-                : this.currentFilter === 'artists'
-                  ? this._getUniqueArtists(songs).length
-                  : this.currentFilter === 'genre'
-                    ? this._getUniqueGenres(songs).length
-                    : this.groups.length}
+              count=${this._onlineAddMode
+                ? onlineSongCount
+                : this.currentFilter === 'tracks'
+                  ? songs.length
+                  : this.currentFilter === 'artists'
+                    ? this._getUniqueArtists(songs).length
+                    : this.currentFilter === 'genre'
+                      ? this._getUniqueGenres(songs).length
+                      : this.groups.length}
               ?isSearchFocused=${this.isSearchFocused}
             >
               ${this.currentFilter === 'tracks'
