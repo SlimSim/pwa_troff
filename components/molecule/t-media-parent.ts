@@ -35,6 +35,7 @@ import {
 import type { ServerSongTab } from '../../utils/server-song-list.js';
 import log from '../../utils/log.js';
 import { extractAlbumArt } from '../../utils/album-art.js';
+import { setActiveOnlineGroupAdd } from '../../utils/online-group-add.js';
 
 const ts = () => new Date().toLocaleTimeString();
 
@@ -597,6 +598,7 @@ export class MediaParent extends LitElement {
   updated(changedProperties: PropertyValues) {
     if (changedProperties.has('visible') && !this.visible) {
       this._onlineAddMode = false;
+      setActiveOnlineGroupAdd(null);
       this.dispatchEvent(
         new CustomEvent('song-list-closed', {
           bubbles: true,
@@ -1153,6 +1155,7 @@ export class MediaParent extends LitElement {
   private _handleFilterChanged(event: CustomEvent) {
     this.currentFilter = event.detail.filter;
     this._onlineAddMode = false;
+    setActiveOnlineGroupAdd(null);
     this.searchQuery = '';
     this._closeOpenDetailViews();
     this._clearContext();
@@ -1227,6 +1230,9 @@ export class MediaParent extends LitElement {
       this._handleAddSong();
     } else {
       this._onlineAddMode = true;
+      setActiveOnlineGroupAdd(
+        this._currentGroupKey || (this._contextType === 'group' ? this._contextKey : '') || null
+      );
       this.searchQuery = '';
       this._maybeRefreshServerSongs();
       this.requestUpdate();
@@ -1235,6 +1241,7 @@ export class MediaParent extends LitElement {
 
   private _exitOnlineAddMode() {
     this._onlineAddMode = false;
+    setActiveOnlineGroupAdd(null);
     this.requestUpdate();
   }
 
@@ -2046,6 +2053,12 @@ export class MediaParent extends LitElement {
     // welcome empty state must not be shown.
     const isEmpty = songs.length === 0 && this.groups.length === 0 && !hasActiveQuery;
     const serverTab = this.currentFilter as ServerSongTab;
+    // The online-add back bar names where the downloaded songs end up: the
+    // group when we are inside one, otherwise the user's own library.
+    const onlineAddTargetLabel =
+      this._currentGroupKey || (this._contextType === 'group' ? this._contextKey : '')
+        ? 'this group'
+        : 'your library';
     // In online add mode the header count must reflect the online list, using
     // the exact same filter call as the rendered t-server-song-list below.
     const onlineSongCount = filterServerSongs(getCachedServerSongList(), query, serverTab).length;
@@ -2300,7 +2313,7 @@ export class MediaParent extends LitElement {
           ? html`
               <div class="online-add-back">
                 <t-butt @click=${this._exitOnlineAddMode}>← Back to my songs</t-butt>
-                <span>Look online for new songs to add to your library</span>
+                <span>Look online for new songs to add to ${onlineAddTargetLabel}</span>
               </div>
               <t-server-song-list
                 .songs=${filterServerSongs(

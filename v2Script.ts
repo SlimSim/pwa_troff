@@ -3751,6 +3751,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
   // -------- Main hash download handler --------
   const handleHashDownload = async (hash: string) => {
     const { parseHash, downloadSongFromHash } = await import('./utils/hash-download.js');
+    const { createGroupSongAddedEvent } = await import('./utils/online-group-add.js');
     const parsed = parseHash(hash);
     if (!parsed) return;
 
@@ -3771,6 +3772,8 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
 
       showToast(`"${downloadedFileName}" downloaded successfully!`, 'success');
       await selectSongFromHash(downloadedFileName);
+      const groupSongAddedEvent = createGroupSongAddedEvent(downloadedFileName);
+      if (groupSongAddedEvent) document.dispatchEvent(groupSongAddedEvent);
       // Hash stays — song is now downloaded with serverId set
       return;
     }
@@ -3780,6 +3783,8 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     if (localServerId != null && String(localServerId) === String(hashServerId)) {
       // Same serverId — just select the song (no dialog needed)
       await selectSongFromHash(fileName);
+      const existingGroupSongAddedEvent = createGroupSongAddedEvent(fileName);
+      if (existingGroupSongAddedEvent) document.dispatchEvent(existingGroupSongAddedEvent);
       return;
     }
 

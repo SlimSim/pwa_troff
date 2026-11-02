@@ -5,7 +5,7 @@ export default defineConfig({
     environment: 'happy-dom',
     pool: 'forks',
 
-    include: ['tests/**/*.test.ts', 'components/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'components/**/*.test.ts', 'utils/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
     coverage: {
       reporter: ['text', 'html'],
