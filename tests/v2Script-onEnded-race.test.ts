@@ -283,36 +283,29 @@ describe('v2Script onEnded race condition with loop transition', () => {
     expect(clearTimeoutCalledDuringEnded).toBe(false);
   });
 
-  it('onEnded DOES call clearPendingPlaybackStart when isLoopTransitionPause is false (normal ended)', async () => {
+  it('onEnded DOES call clearPendingPlaybackStart when no loop seek happened (normal ended)', async () => {
     const { footer } = buildDom();
     const audioEl = makeAudioMock();
 
     await bootWithAudio(audioEl, footer);
 
+    // Start a pause-before countdown via the play button. This creates a
+    // pending playback WITHOUT seeking back from the stop marker, so the
+    // stale-ended guard is off.
+    (footer as any).pauseBefore = 0.5;
+    (footer as any).disablePauseBefore = false;
+    audioEl.paused = true;
+    footer.dispatchEvent(new CustomEvent('nav-click', { detail: { action: 'play' } }));
+
     const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
-
-    // ── Step 1: Create a pending playback via the loop transition, then ───
-    // let onPause reset isLoopTransitionPause to false.
-    audioEl.currentTime = 60;
-    audioEl.paused = false;
-    const onTimeUpdate = hooks.audioHandlers['timeupdate'];
-    onTimeUpdate(); // isLoopTransitionPause = true, pending created
-
-    // Simulate the pause event that the browser delivers after the loop
-    // transition.  onPause sees isLoopTransitionPause = true, resets it to
-    // false, and preserves the pending playback.
-    const onPause = hooks.audioHandlers['pause'];
-    onPause(); // isLoopTransitionPause = false, pending preserved
-
     const clearTimeoutBefore = clearTimeoutSpy.mock.calls.length;
 
-    // ── Step 2: Fire "ended" — isLoopTransitionPause is false, so the ────
+    // ── Step 2: Fire "ended" — no loop transition is in progress, so the ──
     // normal path should clear the pending playback.
     const onEnded = hooks.audioHandlers['ended'];
     onEnded();
 
     // ── Assertion ─────────────────────────────────────────────────────────
-    // This assertion is GREEN even before the fix (clearTimeout IS called).
     const clearTimeoutAfter = clearTimeoutSpy.mock.calls.length;
     expect(clearTimeoutAfter).toBe(clearTimeoutBefore + 1);
   });

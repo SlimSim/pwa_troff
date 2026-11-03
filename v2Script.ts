@@ -673,6 +673,11 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
   let pendingPlaybackStart: number | undefined;
   let playbackCountdownInterval: number | undefined;
   let isLoopTransitionPause = false;
+  // Set when the stop marker is reached and we seek back to the start marker.
+  // A queued native `ended` can arrive afterwards (the media had already
+  // reached its end before the seek) and must not be mistaken for a corrupt
+  // tail — otherwise it cancels the wait-between restart and resumes playback.
+  let ignoreEndedAfterLoopSeek = false;
   let lastTimeUpdateTime = 0;
   let configuredLoopTimes = 1;
   let loopTimesLeft = 1;
@@ -3138,6 +3143,9 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         return;
       }
       const playbackStart = markerSlider.getPlaybackStart();
+      // Any `ended` queued from the playback we are stopping belongs to the
+      // pre-seek position; ignore it in onEnded (see flag declaration).
+      ignoreEndedAfterLoopSeek = true;
       if (Number.isFinite(loopTimesLeft)) {
         if (loopTimesLeft <= 1) {
           media.pause();
@@ -3212,6 +3220,8 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     };
     const onPlay = () => {
       clearPlaybackCountdown();
+      // Playback is running again, so any future `ended` is a real one.
+      ignoreEndedAfterLoopSeek = false;
       if (footer) {
         footer.isPlaying = true;
       }
@@ -3234,18 +3244,38 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       updateHeaderCountdownDisplay();
     };
     const onEnded = () => {
-      // End-marker at duration: native `ended` must behave identically to
-      // timeupdate reaching the stop marker (same loop count / wait-between
-      // / seek-to-start logic). Same condition as onTimeUpdate.
       const endedMedia = getActiveMedia();
       const playbackStop = markerSlider ? markerSlider.getPlaybackStop() : NaN;
       const endedTime = Number(endedMedia.currentTime);
-      if (
-        markerSlider &&
+      const endedAtStop =
+        !!markerSlider &&
         Number.isFinite(playbackStop) &&
         Number.isFinite(endedTime) &&
-        endedTime >= playbackStop
-      ) {
+        endedTime >= playbackStop;
+
+      // A queued `ended` can fire right after the stop marker seeked playback
+      // back to the start. The loop restart / final stop is already handled:
+      // do not clear the pending wait-between restart and do not run the
+      // corrupt-tail recovery below (it would resume from the start marker and
+      // bypass both the countdown and the loop limit).
+      if (ignoreEndedAfterLoopSeek) {
+        ignoreEndedAfterLoopSeek = false;
+        if (!endedAtStop) {
+          // Leave isLoopTransitionPause alone: a `pause` event may still be
+          // queued from the pause() in handlePlaybackStopReached, and onPause
+          // must recognise it as a loop transition so it keeps the pending
+          // restart alive.
+          if (footer) {
+            footer.isPlaying = false;
+          }
+          updateHeaderCountdownDisplay();
+          return;
+        }
+      }
+      // End-marker at duration: native `ended` must behave identically to
+      // timeupdate reaching the stop marker (same loop count / wait-between
+      // / seek-to-start logic). Same condition as onTimeUpdate.
+      if (endedAtStop) {
         handlePlaybackStopReached();
         updateHeaderCountdownDisplay();
         return;
