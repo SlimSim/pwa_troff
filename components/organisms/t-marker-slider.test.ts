@@ -1561,24 +1561,29 @@ describe('t-marker-slider merged track + waveform column', () => {
   // reach the edges of the .playback-region background. This leaves a visible
   // strip of the region bg on left and right within the active playing area.
   //
-  // - 4px each side (mobile, base styles)
-  // - 8px each side (desktop, @media (min-width: 576px))
+  // - 2px each side (single value, used on all screen sizes)
+  // - the drawing tests below simulate 4px / 8px to verify the var is honoured
   //
   // Canvas itself stays full-width (100%) for hit-testing/clicks; only the
   // drawn rects / fillRect are inset. The padding value comes from the
-  // --waveform-padding CSS var (to be declared in variables.css).
+  // --waveform-padding CSS var (declared in variables.css).
   // ---------------------------------------------------------------------------
 
-  it('declares a mobile-first base --waveform-padding: 4px in stylesheets/variables.css', () => {
+  it('declares a mobile-first base --waveform-padding: 2px in stylesheets/variables.css', () => {
     const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
-    expect(/--waveform-padding:\s*4px\s*;/.exec(css)).not.toBeNull();
+    expect(/--waveform-padding:\s*2px\s*;/.exec(css)).not.toBeNull();
   });
 
-  it('sets --waveform-padding: 8px inside the @media (min-width: 576px) block in stylesheets/variables.css', () => {
+  it('keeps --waveform-padding unchanged inside the @media (min-width: 576px) block in stylesheets/variables.css', () => {
     const css = readFileSync(path.join(repoRoot, 'stylesheets', 'variables.css'), 'utf-8');
-    expect(
-      /@media\s*\(min-width:\s*576px\)\s*\{[\s\S]*?--waveform-padding:\s*8px\s*;/.exec(css)
-    ).not.toBeNull();
+    const mediaBlock = /@media\s*\(min-width:\s*576px\)\s*\{([\s\S]*?)\}/.exec(css)?.[1] ?? '';
+    expect(mediaBlock, 'the desktop media query should exist').not.toBe('');
+    expect(mediaBlock, 'the desktop media query widens the waveform').toMatch(
+      /--waveform-width:\s*42px\s*;/
+    );
+    expect(mediaBlock, 'padding stays at the mobile value (no desktop override)').not.toMatch(
+      /--waveform-padding\s*:/
+    );
   });
 
   it('draws waveform bars inset by the desktop padding (8px on each side) for the 42px rect', async () => {

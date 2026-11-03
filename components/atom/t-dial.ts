@@ -181,10 +181,8 @@ export class Dial extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 3px;
       width: 50px;
-      margin-left: 2px;
-      margin-right: -2px;
     }
 
     .value-content {

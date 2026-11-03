@@ -216,9 +216,7 @@ export class CurrentSongControls extends LitElement {
       }
 
       .settings-group {
-        padding-top: 14px;
-        padding-bottom: 8px;
-        margin: auto;
+        padding: 14px;
       }
     }
 
