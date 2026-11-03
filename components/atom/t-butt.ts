@@ -6,6 +6,7 @@ export class TButt extends LitElement {
   static styles = css`
     :host {
       display: inline-block;
+      font-size: 14px;
     }
 
     /* base styles for both <button> and link-mode <a> */
@@ -14,7 +15,7 @@ export class TButt extends LitElement {
       box-sizing: border-box;
       min-width: 42px;
       min-height: 35px;
-      font-size: 14px;
+      font-size: inherit;
       margin: 0;
       border-width: 0;
       border-radius: var(--button-border-radius);
