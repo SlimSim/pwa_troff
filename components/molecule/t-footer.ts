@@ -7,6 +7,7 @@ import './t-marker-dialog.js';
 import { audio } from '../../services/audio.js';
 import { nDB } from '../../assets/internal/db.js';
 import { TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN } from '../../constants/constants.js';
+import { isTablet } from '../../utils/browserEnv.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
@@ -42,6 +43,8 @@ export class BottomNav extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    // Tablets keep the larger, setting-driven play button size.
+    this.toggleAttribute('tablet', isTablet());
     this.fullScreenCountdownShow = nDB.get(TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN) !== false;
     window.addEventListener('troff-visibility-changed', this._onVisibilityChanged);
     document.addEventListener('keydown', this._onEscKeydown);
@@ -65,7 +68,8 @@ export class BottomNav extends LitElement {
     }
 
     @media (min-width: 768px) {
-      .play-button-wrapper {
+      /* Tablets keep the setting-driven size; only non-tablet hosts reset it. */
+      :host(:not([tablet])) .play-button-wrapper {
         --play-button-size: 3.2rem;
       }
     }
