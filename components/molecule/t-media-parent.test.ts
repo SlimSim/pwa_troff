@@ -1435,7 +1435,7 @@ describe('empty state (no songs, no groups)', () => {
     await element.updateComplete;
 
     const buttons = getActionButtons();
-    expect(buttons.length).toBe(3);
+    expect(buttons.length).toBe(4);
   });
 
   it('first action button links to the demo song hash URL', async () => {
@@ -1496,9 +1496,9 @@ describe('empty state (no songs, no groups)', () => {
     await element.updateComplete;
 
     const buttons = getActionButtons();
-    expect(buttons.length).toBe(3);
+    expect(buttons.length).toBe(4);
 
-    const signInBtn = buttons[2];
+    const signInBtn = buttons[3];
     expect(signInBtn.textContent?.trim()).toContain('Sign in');
 
     const signInIcon = signInBtn.querySelector('t-icon');

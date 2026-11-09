@@ -2357,6 +2357,13 @@ export class MediaParent extends LitElement {
                         <t-icon name="note-plus"></t-icon>
                         <span>Add songs from device</span>
                       </t-butt>
+                      <t-butt
+                        class="empty-action-btn"
+                        @click=${() => this._chooseAddOption('online')}
+                      >
+                        <t-icon name="note-search"></t-icon>
+                        <span>Download songs online</span>
+                      </t-butt>
                       ${!this.signedIn
                         ? html`
                             <p class="empty-state-sign-in-note">
