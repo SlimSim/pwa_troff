@@ -31,8 +31,9 @@ import {
   filterServerSongs,
   getCachedServerSongList,
   refreshServerSongList,
+  sortServerSongs,
 } from '../../utils/server-song-list.js';
-import type { ServerSongTab } from '../../utils/server-song-list.js';
+import type { ServerSongTab, ServerSongSortBy, ServerSongSortOrder } from '../../utils/server-song-list.js';
 import log from '../../utils/log.js';
 import { extractAlbumArt } from '../../utils/album-art.js';
 import { setActiveOnlineGroupAdd } from '../../utils/online-group-add.js';
@@ -398,6 +399,9 @@ export class MediaParent extends LitElement {
   @property({ type: String }) genreSortBy = 'name';
   @property({ type: String }) genreSortOrder = 'ascending';
   @property({ type: Boolean }) showGenreSortDropdown = false;
+  @property({ type: String }) serverSortBy: ServerSongSortBy = 'uploaded';
+  @property({ type: String }) serverSortOrder: ServerSongSortOrder = 'descending';
+  @property({ type: Boolean }) showServerSortDropdown = false;
   @property({ type: String }) searchQuery = '';
   @state() private _onlineAddMode = false;
   @property({ type: Boolean }) isDesktop = false;
@@ -1969,6 +1973,20 @@ export class MediaParent extends LitElement {
     this.genreSortOrder = order;
   }
 
+  private _handleServerSortDropdownToggled(event: CustomEvent) {
+    this.showServerSortDropdown = event.detail.open;
+  }
+
+  private _handleServerSortOption(by: ServerSongSortBy) {
+    this.serverSortBy = by;
+    // numeric fields default to descending (newest/largest first); fileName to ascending (A-Z)
+    this.serverSortOrder = by === 'fileName' ? 'ascending' : 'descending';
+  }
+
+  private _handleServerSortOrder(order: ServerSongSortOrder) {
+    this.serverSortOrder = order;
+  }
+
   private _getUniqueGenres(songs: any[]) {
     const genres = new Map();
     songs.forEach((song) => {
@@ -2041,6 +2059,44 @@ export class MediaParent extends LitElement {
         @click=${() => this._handleGenreSortOption('tracks')}
       >
         By Track Count
+      </div>
+    `;
+  }
+
+  private _renderServerSortDropdown() {
+    return html`
+      <div class="sort-order-container">
+        <div
+          class="sort-option-item ${this.serverSortOrder === 'ascending' ? 'active' : ''}"
+          @click=${() => this._handleServerSortOrder('ascending')}
+        >
+          ${this.serverSortOrder === 'ascending' ? '✓ ' : ''}Ascending
+        </div>
+        <div
+          class="sort-option-item ${this.serverSortOrder === 'descending' ? 'active' : ''}"
+          @click=${() => this._handleServerSortOrder('descending')}
+        >
+          ${this.serverSortOrder === 'descending' ? '✓ ' : ''}Descending
+        </div>
+      </div>
+      <div class="sort-divider"></div>
+      <div
+        class="sort-option-item ${this.serverSortBy === 'uploaded' ? 'active' : ''}"
+        @click=${() => this._handleServerSortOption('uploaded')}
+      >
+        By Upload Date
+      </div>
+      <div
+        class="sort-option-item ${this.serverSortBy === 'size' ? 'active' : ''}"
+        @click=${() => this._handleServerSortOption('size')}
+      >
+        By Size
+      </div>
+      <div
+        class="sort-option-item ${this.serverSortBy === 'fileName' ? 'active' : ''}"
+        @click=${() => this._handleServerSortOption('fileName')}
+      >
+        By Filename
       </div>
     `;
   }
@@ -2160,30 +2216,46 @@ export class MediaParent extends LitElement {
                       searchPlaceholder="Search tracks…"
                       searchValue=${this.searchQuery}
                       ?isSearchFocused=${this.isSearchFocused}
+                      ?hideMore=${this._onlineAddMode}
                       @search-input=${this._handleSearchInput}
                       @search-keydown=${this._handleSearchKeydown}
                       @search-focus=${this._handleSearchFocus}
                       @search-blur=${this._handleSearchBlur}
                     >
-                      <div slot="more" class="more-content">
-                        <t-butt @click=${() => this._chooseAddOption('device')}>
-                          <t-icon name="note-plus"></t-icon>
-                          <span>Add song from device</span>
-                        </t-butt>
-                        <t-butt @click=${() => this._chooseAddOption('online')}>
-                          <t-icon name="note-search"></t-icon>
-                          <span>Download songs online</span>
-                        </t-butt>
-                        <t-dropdown-button
-                          .open=${this.showSortDropdown}
-                          @dropdown-toggled=${this._handleSortDropdownToggled}
-                        >
-                          <t-butt icon slot="button" title="Sort options">
-                            <t-icon name="sort"></t-icon> Sort
-                          </t-butt>
-                          <div slot="dropdown">${this._renderSortDropdown()}</div>
-                        </t-dropdown-button>
-                      </div>
+                      ${this._onlineAddMode
+                        ? html`
+                            <t-dropdown-button
+                              slot="sort"
+                              .open=${this.showServerSortDropdown}
+                              @dropdown-toggled=${this._handleServerSortDropdownToggled}
+                            >
+                              <t-butt icon slot="button" title="Sort options">
+                                <t-icon name="sort"></t-icon>
+                              </t-butt>
+                              <div slot="dropdown">${this._renderServerSortDropdown()}</div>
+                            </t-dropdown-button>
+                          `
+                        : html`
+                            <div slot="more" class="more-content">
+                              <t-butt @click=${() => this._chooseAddOption('device')}>
+                                <t-icon name="note-plus"></t-icon>
+                                <span>Add song from device</span>
+                              </t-butt>
+                              <t-butt @click=${() => this._chooseAddOption('online')}>
+                                <t-icon name="note-search"></t-icon>
+                                <span>Download songs online</span>
+                              </t-butt>
+                              <t-dropdown-button
+                                .open=${this.showSortDropdown}
+                                @dropdown-toggled=${this._handleSortDropdownToggled}
+                              >
+                                <t-butt icon slot="button" title="Sort options">
+                                  <t-icon name="sort"></t-icon> Sort
+                                </t-butt>
+                                <div slot="dropdown">${this._renderSortDropdown()}</div>
+                              </t-dropdown-button>
+                            </div>
+                          `}
                     </t-header-actions>
                   `
                 : ''}
@@ -2194,30 +2266,46 @@ export class MediaParent extends LitElement {
                       searchPlaceholder="Search artists…"
                       searchValue=${this.searchQuery}
                       ?isSearchFocused=${this.isSearchFocused}
+                      ?hideMore=${this._onlineAddMode}
                       @search-input=${this._handleSearchInput}
                       @search-keydown=${this._handleSearchKeydown}
                       @search-focus=${this._handleSearchFocus}
                       @search-blur=${this._handleSearchBlur}
                     >
-                      <div slot="more" class="more-content">
-                        <t-butt @click=${() => this._chooseAddOption('device')}>
-                          <t-icon name="note-plus"></t-icon>
-                          <span>Add song from device</span>
-                        </t-butt>
-                        <t-butt @click=${() => this._chooseAddOption('online')}>
-                          <t-icon name="note-search"></t-icon>
-                          <span>Download songs online</span>
-                        </t-butt>
-                        <t-dropdown-button
-                          .open=${this.showArtistSortDropdown}
-                          @dropdown-toggled=${this._handleArtistSortDropdownToggled}
-                        >
-                          <t-butt icon slot="button" title="Sort options">
-                            <t-icon name="sort"></t-icon> Sort
-                          </t-butt>
-                          <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
-                        </t-dropdown-button>
-                      </div>
+                      ${this._onlineAddMode
+                        ? html`
+                            <t-dropdown-button
+                              slot="sort"
+                              .open=${this.showServerSortDropdown}
+                              @dropdown-toggled=${this._handleServerSortDropdownToggled}
+                            >
+                              <t-butt icon slot="button" title="Sort options">
+                                <t-icon name="sort"></t-icon>
+                              </t-butt>
+                              <div slot="dropdown">${this._renderServerSortDropdown()}</div>
+                            </t-dropdown-button>
+                          `
+                        : html`
+                            <div slot="more" class="more-content">
+                              <t-butt @click=${() => this._chooseAddOption('device')}>
+                                <t-icon name="note-plus"></t-icon>
+                                <span>Add song from device</span>
+                              </t-butt>
+                              <t-butt @click=${() => this._chooseAddOption('online')}>
+                                <t-icon name="note-search"></t-icon>
+                                <span>Download songs online</span>
+                              </t-butt>
+                              <t-dropdown-button
+                                .open=${this.showArtistSortDropdown}
+                                @dropdown-toggled=${this._handleArtistSortDropdownToggled}
+                              >
+                                <t-butt icon slot="button" title="Sort options">
+                                  <t-icon name="sort"></t-icon> Sort
+                                </t-butt>
+                                <div slot="dropdown">${this._renderArtistSortDropdown()}</div>
+                              </t-dropdown-button>
+                            </div>
+                          `}
                     </t-header-actions>
                   `
                 : ''}
@@ -2228,30 +2316,46 @@ export class MediaParent extends LitElement {
                       searchPlaceholder="Search genres…"
                       searchValue=${this.searchQuery}
                       ?isSearchFocused=${this.isSearchFocused}
+                      ?hideMore=${this._onlineAddMode}
                       @search-input=${this._handleSearchInput}
                       @search-keydown=${this._handleSearchKeydown}
                       @search-focus=${this._handleSearchFocus}
                       @search-blur=${this._handleSearchBlur}
                     >
-                      <div slot="more" class="more-content">
-                        <t-butt @click=${() => this._chooseAddOption('device')}>
-                          <t-icon name="note-plus"></t-icon>
-                          <span>Add song from device</span>
-                        </t-butt>
-                        <t-butt @click=${() => this._chooseAddOption('online')}>
-                          <t-icon name="note-search"></t-icon>
-                          <span>Download songs online</span>
-                        </t-butt>
-                        <t-dropdown-button
-                          .open=${this.showGenreSortDropdown}
-                          @dropdown-toggled=${this._handleGenreSortDropdownToggled}
-                        >
-                          <t-butt icon slot="button" title="Sort options">
-                            <t-icon name="sort"></t-icon> Sort
-                          </t-butt>
-                          <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
-                        </t-dropdown-button>
-                      </div>
+                      ${this._onlineAddMode
+                        ? html`
+                            <t-dropdown-button
+                              slot="sort"
+                              .open=${this.showServerSortDropdown}
+                              @dropdown-toggled=${this._handleServerSortDropdownToggled}
+                            >
+                              <t-butt icon slot="button" title="Sort options">
+                                <t-icon name="sort"></t-icon>
+                              </t-butt>
+                              <div slot="dropdown">${this._renderServerSortDropdown()}</div>
+                            </t-dropdown-button>
+                          `
+                        : html`
+                            <div slot="more" class="more-content">
+                              <t-butt @click=${() => this._chooseAddOption('device')}>
+                                <t-icon name="note-plus"></t-icon>
+                                <span>Add song from device</span>
+                              </t-butt>
+                              <t-butt @click=${() => this._chooseAddOption('online')}>
+                                <t-icon name="note-search"></t-icon>
+                                <span>Download songs online</span>
+                              </t-butt>
+                              <t-dropdown-button
+                                .open=${this.showGenreSortDropdown}
+                                @dropdown-toggled=${this._handleGenreSortDropdownToggled}
+                              >
+                                <t-butt icon slot="button" title="Sort options">
+                                  <t-icon name="sort"></t-icon> Sort
+                                </t-butt>
+                                <div slot="dropdown">${this._renderGenreSortDropdown()}</div>
+                              </t-dropdown-button>
+                            </div>
+                          `}
                     </t-header-actions>
                   `
                 : ''}
@@ -2265,34 +2369,50 @@ export class MediaParent extends LitElement {
                             searchPlaceholder="Search groups…"
                             searchValue=${this.searchQuery}
                             ?isSearchFocused=${this.isSearchFocused}
+                            ?hideMore=${this._onlineAddMode}
                             @search-input=${this._handleSearchInput}
                             @search-keydown=${this._handleSearchKeydown}
                             @search-focus=${this._handleSearchFocus}
                             @search-blur=${this._handleSearchBlur}
                           >
-                            <div slot="more" class="more-content">
-                              <t-butt @click=${this._handleAddGroup}>
-                                <t-icon name="group-plus"></t-icon>
-                                <span>Add group</span>
-                              </t-butt>
-                              <t-butt @click=${() => this._chooseAddOption('device')}>
-                                <t-icon name="note-plus"></t-icon>
-                                <span>Add song from device</span>
-                              </t-butt>
-                              <t-butt @click=${() => this._chooseAddOption('online')}>
-                                <t-icon name="note-search"></t-icon>
-                                <span>Download songs online</span>
-                              </t-butt>
-                              <t-dropdown-button
-                                .open=${this.showGroupSortDropdown}
-                                @dropdown-toggled=${this._handleGroupSortDropdownToggled}
-                              >
-                                <t-butt icon slot="button" title="Sort options">
-                                  <t-icon name="sort"></t-icon> Sort
-                                </t-butt>
-                                <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
-                              </t-dropdown-button>
-                            </div>
+                            ${this._onlineAddMode
+                              ? html`
+                                  <t-dropdown-button
+                                    slot="sort"
+                                    .open=${this.showServerSortDropdown}
+                                    @dropdown-toggled=${this._handleServerSortDropdownToggled}
+                                  >
+                                    <t-butt icon slot="button" title="Sort options">
+                                      <t-icon name="sort"></t-icon>
+                                    </t-butt>
+                                    <div slot="dropdown">${this._renderServerSortDropdown()}</div>
+                                  </t-dropdown-button>
+                                `
+                              : html`
+                                  <div slot="more" class="more-content">
+                                    <t-butt @click=${this._handleAddGroup}>
+                                      <t-icon name="group-plus"></t-icon>
+                                      <span>Add group</span>
+                                    </t-butt>
+                                    <t-butt @click=${() => this._chooseAddOption('device')}>
+                                      <t-icon name="note-plus"></t-icon>
+                                      <span>Add song from device</span>
+                                    </t-butt>
+                                    <t-butt @click=${() => this._chooseAddOption('online')}>
+                                      <t-icon name="note-search"></t-icon>
+                                      <span>Download songs online</span>
+                                    </t-butt>
+                                    <t-dropdown-button
+                                      .open=${this.showGroupSortDropdown}
+                                      @dropdown-toggled=${this._handleGroupSortDropdownToggled}
+                                    >
+                                      <t-butt icon slot="button" title="Sort options">
+                                        <t-icon name="sort"></t-icon> Sort
+                                      </t-butt>
+                                      <div slot="dropdown">${this._renderGroupSortDropdown()}</div>
+                                    </t-dropdown-button>
+                                  </div>
+                                `}
                           </t-header-actions>
                         `}
                   `
@@ -2316,10 +2436,14 @@ export class MediaParent extends LitElement {
                 <span>Look online for new songs to add to ${onlineAddTargetLabel}</span>
               </div>
               <t-server-song-list
-                .songs=${filterServerSongs(
-                  getCachedServerSongList(),
-                  this.searchQuery,
-                  this.currentFilter as ServerSongTab
+                .songs=${sortServerSongs(
+                  filterServerSongs(
+                    getCachedServerSongList(),
+                    this.searchQuery,
+                    this.currentFilter as ServerSongTab
+                  ),
+                  this.serverSortBy,
+                  this.serverSortOrder
                 )}
                 .query=${this.searchQuery}
                 .tab=${this.currentFilter as ServerSongTab}
@@ -2569,7 +2693,11 @@ export class MediaParent extends LitElement {
                 ${hasActiveQuery
                   ? html`
                       <t-server-song-list
-                        .songs=${filterServerSongs(getCachedServerSongList(), query, serverTab)}
+                        .songs=${sortServerSongs(
+                          filterServerSongs(getCachedServerSongList(), query, serverTab),
+                          this.serverSortBy,
+                          this.serverSortOrder
+                        )}
                         .query=${query}
                         .tab=${serverTab}
                         .loading=${this._serverSongsLoading}

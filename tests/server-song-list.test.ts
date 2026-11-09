@@ -94,6 +94,10 @@ vi.mock('../services/firebaseClient.js', () => ({
 // signatures are what the implementation must export).
 // ---------------------------------------------------------------------------
 
+// Supporting exports for server sort (in online "Download songs online" mode).
+type ServerSongSortBy = 'uploaded' | 'size' | 'fileName';
+type ServerSongSortOrder = 'ascending' | 'descending';
+
 interface ServerSongListApi {
   refreshServerSongList(): Promise<ServerSong[]>;
   getCachedServerSongList(): ServerSong[];
@@ -110,6 +114,11 @@ interface ServerSongListApi {
     tab: 'tracks' | 'groups' | 'artists' | 'genre'
   ): ServerSong[];
   resetServerSongListForTests(): void;
+  sortServerSongs(
+    songs: ServerSong[],
+    sortBy: ServerSongSortBy,
+    order: ServerSongSortOrder
+  ): ServerSong[];
 }
 
 let mod: ServerSongListApi;
@@ -868,5 +877,90 @@ describe('filterServerSongs', () => {
     const result = mod.filterServerSongs(all, '   swing   ', 'tracks');
 
     expect(result.map((song) => song.fileNameUri)).toEqual(['minor-swing.mp3']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sortServerSongs — new for online "Download songs online" standalone sort.
+// Must return NEW array (never mutate). Uses uploaded (num, desc newest first),
+// size (num), fileName (case-insens after safeDecodeURIComponent on fileNameUri).
+// ---------------------------------------------------------------------------
+
+describe('sortServerSongs', () => {
+  // Local fixtures for this describe (swing etc live only inside filterServerSongs describe).
+  // Include at least one with spaces encoded as %20.
+  const spaceSong = makeServerSong('my%20song%20with%20spaces.mp3', [
+    makeVersion(99, { title: 'Spaced Out' }),
+  ]);
+  const swing = makeServerSong('minor-swing.mp3', [
+    makeVersion(11, { artist: 'Django Reinhardt', genre: 'Jazz' }),
+  ]);
+  const piazzolla = makeServerSong('piazzolla-live.mp3', [
+    makeVersion(21, { artist: 'Someone Else', genre: 'Nuevo', title: 'Libertango' }),
+  ]);
+
+  it('returns a new array and never mutates the input', () => {
+    const input = [swing, spaceSong];
+    const snapshot = JSON.parse(JSON.stringify(input));
+
+    const result = mod.sortServerSongs(input, 'uploaded', 'descending');
+
+    expect(result).not.toBe(input);
+    expect(input).toEqual(snapshot);
+  });
+
+  it('sorts by uploaded descending (newest first) and ascending', () => {
+    const old = makeServerSong('old.mp3', [makeVersion(1)], { uploaded: 1000 });
+    const newer = makeServerSong('newer.mp3', [makeVersion(2)], { uploaded: 2000 });
+    const newest = makeServerSong('newest.mp3', [makeVersion(3)], { uploaded: 3000 });
+
+    const desc = mod.sortServerSongs([old, newer, newest], 'uploaded', 'descending');
+    expect(desc.map((s) => s.fileNameUri)).toEqual(['newest.mp3', 'newer.mp3', 'old.mp3']);
+
+    const asc = mod.sortServerSongs([old, newer, newest], 'uploaded', 'ascending');
+    expect(asc.map((s) => s.fileNameUri)).toEqual(['old.mp3', 'newer.mp3', 'newest.mp3']);
+  });
+
+  it('sorts by size descending and ascending', () => {
+    const small = makeServerSong('small.mp3', [makeVersion(1)], { size: 100 });
+    const med = makeServerSong('med.mp3', [makeVersion(2)], { size: 200 });
+    const big = makeServerSong('big.mp3', [makeVersion(3)], { size: 300 });
+
+    const desc = mod.sortServerSongs([small, med, big], 'size', 'descending');
+    expect(desc.map((s) => s.fileNameUri)).toEqual(['big.mp3', 'med.mp3', 'small.mp3']);
+
+    const asc = mod.sortServerSongs([small, med, big], 'size', 'ascending');
+    expect(asc.map((s) => s.fileNameUri)).toEqual(['small.mp3', 'med.mp3', 'big.mp3']);
+  });
+
+  it('sorts by fileName case-insensitively after decoding (includes %20 fixture)', () => {
+    const zUpper = makeServerSong('Z%20UPPER.mp3', [makeVersion(1)]);
+    const aLowerSpace = makeServerSong('a%20lower%20song.mp3', [makeVersion(2)]);
+    const mMid = makeServerSong('m-mid.mp3', [makeVersion(3)]);
+
+    const input = [zUpper, aLowerSpace, mMid];
+
+    const asc = mod.sortServerSongs(input, 'fileName', 'ascending');
+    expect(asc.map((s) => s.fileNameUri)).toEqual([
+      'a%20lower%20song.mp3',
+      'm-mid.mp3',
+      'Z%20UPPER.mp3',
+    ]);
+
+    const desc = mod.sortServerSongs(input, 'fileName', 'descending');
+    expect(desc.map((s) => s.fileNameUri)).toEqual([
+      'Z%20UPPER.mp3',
+      'm-mid.mp3',
+      'a%20lower%20song.mp3',
+    ]);
+  });
+
+  it('default sort (uploaded, descending) on mixed fixtures including encoded space', () => {
+    const mixed = [spaceSong, swing, piazzolla];
+    const result = mod.sortServerSongs(mixed, 'uploaded', 'descending');
+    // order depends on uploaded values in makeServerSong (all MODERN_MILLIS by default)
+    // but must be stable new array and preserve length
+    expect(result).toHaveLength(3);
+    expect(result).not.toBe(mixed);
   });
 });

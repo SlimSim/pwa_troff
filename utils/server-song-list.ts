@@ -36,6 +36,9 @@ import type {
 
 export type ServerSongTab = 'tracks' | 'groups' | 'artists' | 'genre';
 
+export type ServerSongSortBy = 'uploaded' | 'size' | 'fileName';
+export type ServerSongSortOrder = 'ascending' | 'descending';
+
 /** Upload millis older than this are treated as "missing" (legacy find.ts rule). */
 const UPLOAD_MILLIS_MIN = 162431283500;
 
@@ -247,6 +250,35 @@ export function filterServerSongs(
       return { ...song, troffDataIdObjectList: matchingVersions };
     })
     .filter((song): song is ServerSong => song !== undefined);
+}
+
+export function sortServerSongs(
+  songs: ServerSong[],
+  sortBy: ServerSongSortBy,
+  order: ServerSongSortOrder
+): ServerSong[] {
+  // Return a new array; never mutate the input (tests verify both reference and content snapshot).
+  const sorted = [...songs];
+  sorted.sort((a, b) => {
+    let aVal: number | string;
+    let bVal: number | string;
+    if (sortBy === 'uploaded') {
+      aVal = a.uploaded;
+      bVal = b.uploaded;
+    } else if (sortBy === 'size') {
+      aVal = a.size;
+      bVal = b.size;
+    } else {
+      // fileName: decode + lower for case-insensitive compare (matches spec + tests)
+      aVal = safeDecodeURIComponent(a.fileNameUri).toLowerCase();
+      bVal = safeDecodeURIComponent(b.fileNameUri).toLowerCase();
+    }
+    let comparison = 0;
+    if (aVal < bVal) comparison = -1;
+    if (aVal > bVal) comparison = 1;
+    return order === 'descending' ? -comparison : comparison;
+  });
+  return sorted;
 }
 
 // ---------------------------------------------------------------------------

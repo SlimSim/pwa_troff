@@ -194,6 +194,9 @@ export class HeaderActions extends LitElement {
 
   @property({ type: Boolean }) narrow = false;
 
+  /** When true, the combined "more" dropdown is hidden (used for online server sort mode). */
+  @property({ type: Boolean }) hideMore = false;
+
   render() {
     const hasSearchValue = !!(this.searchValue && this.searchValue.trim());
     const isExpanded = this.isSearchFocused || hasSearchValue;
@@ -238,27 +241,32 @@ export class HeaderActions extends LitElement {
           ></t-input>
         </div>
 
-        <!-- All other header buttons (add, sort, edit, add-from-online etc) are now in ONE combined dropdown -->
-        <t-dropdown-button class="header-more-dropdown">
-          <t-butt icon slot="button" title="More actions">
-            <t-icon name="more-vertical"></t-icon>
-          </t-butt>
-          <div
-            slot="dropdown"
-            class="more-menu"
-            @click=${(e: Event) => {
-              const target = e.target as HTMLElement;
-              const clickedButt = target.closest('t-butt');
-              // Only auto-close for the direct menu items (add/online), not when clicking inside nested sort dropdown's trigger
-              if (clickedButt && !clickedButt.closest('t-dropdown-button t-butt')) {
-                const dd = (e.currentTarget as HTMLElement).closest('t-dropdown-button') as any;
-                if (dd) dd.open = false;
-              }
-            }}
-          >
-            <slot name="more"></slot>
-          </div>
-        </t-dropdown-button>
+        <slot name="sort"></slot>
+        ${!this.hideMore
+          ? html`
+              <!-- All other header buttons (add, sort, edit, add-from-online etc) are now in ONE combined dropdown -->
+              <t-dropdown-button class="header-more-dropdown">
+                <t-butt icon slot="button" title="More actions">
+                  <t-icon name="more-vertical"></t-icon>
+                </t-butt>
+                <div
+                  slot="dropdown"
+                  class="more-menu"
+                  @click=${(e: Event) => {
+                    const target = e.target as HTMLElement;
+                    const clickedButt = target.closest('t-butt');
+                    // Only auto-close for the direct menu items (add/online), not when clicking inside nested sort dropdown's trigger
+                    if (clickedButt && !clickedButt.closest('t-dropdown-button t-butt')) {
+                      const dd = (e.currentTarget as HTMLElement).closest('t-dropdown-button') as any;
+                      if (dd) dd.open = false;
+                    }
+                  }}
+                >
+                  <slot name="more"></slot>
+                </div>
+              </t-dropdown-button>
+            `
+          : ''}
       </div>
     `;
   }
