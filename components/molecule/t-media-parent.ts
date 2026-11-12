@@ -346,6 +346,12 @@ export class MediaParent extends LitElement {
       justify-content: flex-start;
     }
 
+    /* Definite height so t-group-list :host(.managing) { height: 100% }
+       resolves against a real box instead of auto (manage-mode split pane). */
+    .local-songs-content {
+      height: 100%;
+    }
+
     .local-songs-content.hidden-in-online-mode {
       display: none;
     }
