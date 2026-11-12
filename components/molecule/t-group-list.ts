@@ -813,12 +813,7 @@ export class GroupList extends LitElement {
                 ${!this._songManagementOpen
                   ? html`
                       <div class="more-content">
-                        <t-butt
-                          @click=${() =>
-                            this.dispatchEvent(
-                              new CustomEvent('add-click', { bubbles: true, composed: true })
-                            )}
-                        >
+                        <t-butt @click=${() => this._handleAddSongToGroup()}>
                           <t-icon name="note-plus"></t-icon>
                           <span>Add song from device</span>
                         </t-butt>

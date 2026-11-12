@@ -321,12 +321,7 @@ export class ArtistList extends LitElement {
               @search-blur=${this._handleSearchBlur}
             >
               <div slot="more" class="more-content">
-                <t-butt
-                  @click=${() =>
-                    this.dispatchEvent(
-                      new CustomEvent('add-click', { bubbles: true, composed: true })
-                    )}
-                >
+                <t-butt @click=${() => this._handleAddSong()}>
                   <t-icon name="note-plus"></t-icon>
                   <span>Add song from device</span>
                 </t-butt>
