@@ -1,9 +1,23 @@
-export const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-export const isIphone: boolean = navigator.userAgent.indexOf('iPhone') !== -1;
-export const isIpad: boolean = navigator.userAgent.indexOf('iPad') !== -1;
-export const isAndroid: boolean = /Android/i.test(navigator.userAgent);
+/** UA string at import time; empty when navigator/userAgent is unavailable. */
+function readUserAgent(): string {
+  try {
+    if (typeof navigator === 'undefined' || typeof navigator.userAgent !== 'string') {
+      return '';
+    }
+    return navigator.userAgent;
+  } catch {
+    return '';
+  }
+}
 
-export const isPhone: boolean = /Android|iPhone|iPad/i.test(navigator.userAgent);
+const initialUserAgent = readUserAgent();
+
+export const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(initialUserAgent);
+export const isIphone: boolean = initialUserAgent.indexOf('iPhone') !== -1;
+export const isIpad: boolean = initialUserAgent.indexOf('iPad') !== -1;
+export const isAndroid: boolean = /Android/i.test(initialUserAgent);
+
+export const isPhone: boolean = /Android|iPhone|iPad/i.test(initialUserAgent);
 
 export const usePhoneLog = isPhone;
 
@@ -24,6 +38,28 @@ export function isTablet(): boolean {
       return true;
     }
     return /Android/i.test(ua) && !/Mobile/i.test(ua);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detects iOS-family browsers (iPhone, iPad, iPod, iPadOS desktop mode) at call
+ * time. Never throws when navigator is unavailable.
+ */
+export function isIOSFamily(): boolean {
+  try {
+    if (typeof navigator === 'undefined' || typeof navigator.userAgent !== 'string') {
+      return false;
+    }
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua)) {
+      return true;
+    }
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }

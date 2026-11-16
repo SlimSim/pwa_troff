@@ -1,4 +1,5 @@
 import { isAudioGraphEnabled } from '../utils/debug-flags.js';
+import { isIOSFamily } from '../utils/browserEnv.js';
 
 const audio = new Audio();
 
@@ -24,33 +25,12 @@ function detectElementVolumeWorks(): boolean {
 }
 
 /**
- * iOS-family UA check: the read-back probe sticks on newer iOS while changing
- * nothing audible, so the probe alone cannot detect broken element volume.
+ * The Web Audio volume graph is never built on iOS-family browsers: it causes
+ * audible playback skipping there, and element volume is a no-op anyway.
+ * Evaluated at call time so debug flags and UA stay in sync.
  */
-function isIOSFamily(): boolean {
-  try {
-    const scope = globalThis as unknown as {
-      navigator?: { userAgent?: unknown; maxTouchPoints?: unknown };
-    };
-    const nav = scope.navigator;
-    if (!nav || typeof nav.userAgent !== 'string') {
-      return false;
-    }
-    const ua = nav.userAgent;
-    if (/iPhone|iPad|iPod/.test(ua)) {
-      return true;
-    }
-    if (
-      /Macintosh/.test(ua) &&
-      typeof nav.maxTouchPoints === 'number' &&
-      nav.maxTouchPoints > 1
-    ) {
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
+export function isVolumeGraphAllowed(): boolean {
+  return isAudioGraphEnabled() && !isIOSFamily();
 }
 
 export const elementVolumeWorks = detectElementVolumeWorks() && !isIOSFamily();
@@ -64,6 +44,9 @@ export function volumePercentToElementVolume(percent: number): number {
 }
 
 export function volumePercentToGain(percent: number): number {
+  if (!isVolumeGraphAllowed()) {
+    return 1;
+  }
   const n = Number(percent);
   if (!Number.isFinite(n)) {
     return 1;
@@ -133,7 +116,7 @@ export function getAudioDebugState(): AudioDebugState {
     audioContextState,
     audioContextSampleRate,
     volumePercent: lastVolumePercent,
-    gainValue: graphEnabled ? volumePercentToGain(lastVolumePercent) : 1,
+    gainValue: isVolumeGraphAllowed() ? volumePercentToGain(lastVolumePercent) : 1,
   };
 }
 
@@ -171,7 +154,7 @@ function attachResumeHooks(context: AudioContext): void {
 }
 
 function getBoostGain(): GainNode | null {
-  if (!isAudioGraphEnabled()) {
+  if (!isVolumeGraphAllowed()) {
     return null;
   }
   try {
@@ -219,7 +202,7 @@ function getBoostGain(): GainNode | null {
 
 export function setVolumePercent(percent: number, targets?: VolumeTargets): void {
   try {
-    const graphEnabled = isAudioGraphEnabled();
+    const graphAllowed = isVolumeGraphAllowed();
     const numericPercent = Number(percent);
     if (Number.isFinite(numericPercent)) {
       lastVolumePercent = numericPercent;
@@ -229,8 +212,8 @@ export function setVolumePercent(percent: number, targets?: VolumeTargets): void
        of truth (avoids double-attenuation). With the debug kill switch the
        graph is disabled, so fall back to plain v1 element volume. */
     const elementVolume =
-      graphEnabled && !elementVolumeWorks ? 1 : volumePercentToElementVolume(percent);
-    const gainValue = graphEnabled ? volumePercentToGain(percent) : 1;
+      graphAllowed && !elementVolumeWorks ? 1 : volumePercentToElementVolume(percent);
+    const gainValue = graphAllowed ? volumePercentToGain(percent) : 1;
     if (targets !== undefined && targets !== null && typeof targets === 'object') {
       const maybe = targets as Partial<VolumeTargets>;
       try {
@@ -264,7 +247,7 @@ export function setVolumePercent(percent: number, targets?: VolumeTargets): void
     } catch {
       /* ignore gain update failure */
     }
-    if (gainValue > 1 || !elementVolumeWorks) {
+    if (graphAllowed && (gainValue > 1 || !elementVolumeWorks)) {
       try {
         const liveGain = getBoostGain();
         if (liveGain) {

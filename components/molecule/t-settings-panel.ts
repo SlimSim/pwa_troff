@@ -10,6 +10,7 @@ import { clearConsoleBuffer, copyConsoleBuffer } from '../../utils/console-buffe
 import { showToast } from '../../utils/notification.js';
 import type { PwaInstallState } from '../../utils/pwa.js';
 import { nDB } from '../../assets/internal/db.js';
+import { isIOSFamily } from '../../utils/browserEnv.js';
 import {
   TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
   TROFF_SETTING_UI_PLAY_FULL_SONG_BUTTONS_SHOW,
@@ -1114,20 +1115,22 @@ export class SettingsPanel extends LitElement {
                     this._handleSettingChange('defaultNrLoopsValue', event.detail.value);
                   }}
                 ></t-dial>
-                <t-dial
-                  label="Volume"
-                  unit="%"
-                  defaultValue="75"
-                  .value=${this.defaultVolumeValue}
-                  .disabled=${false}
-                  .min=${0}
-                  .max=${100}
-                  .step=${1}
-                  @value-changed=${(event: CustomEvent<{ value: number }>) => {
-                    this.defaultVolumeValue = event.detail.value;
-                    this._handleSettingChange('defaultVolumeValue', event.detail.value);
-                  }}
-                ></t-dial>
+                ${isIOSFamily()
+                  ? ''
+                  : html`<t-dial
+                      label="Volume"
+                      unit="%"
+                      defaultValue="75"
+                      .value=${this.defaultVolumeValue}
+                      .disabled=${false}
+                      .min=${0}
+                      .max=${100}
+                      .step=${1}
+                      @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                        this.defaultVolumeValue = event.detail.value;
+                        this._handleSettingChange('defaultVolumeValue', event.detail.value);
+                      }}
+                    ></t-dial>`}
                 <t-dial
                   label="Speed"
                   unit="%"

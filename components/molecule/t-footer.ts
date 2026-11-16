@@ -7,7 +7,7 @@ import './t-marker-dialog.js';
 import { audio } from '../../services/audio.js';
 import { nDB } from '../../assets/internal/db.js';
 import { TROFF_SETTING_UI_FULL_SCREEN_COUNTDOWN } from '../../constants/constants.js';
-import { isTablet } from '../../utils/browserEnv.js';
+import { isIOSFamily, isTablet } from '../../utils/browserEnv.js';
 
 @customElement('t-footer')
 export class BottomNav extends LitElement {
@@ -451,18 +451,20 @@ export class BottomNav extends LitElement {
                   </li>
                 </ul>
               </t-help-tip>
-              <t-dial
-                min="0"
-                max="420"
-                step="5"
-                label="Volume"
-                dangerWhenOver="100"
-                iconName="volume"
-                .defaultValue=${this.defaultVolumeValue}
-                .value=${this.volume}
-                unit=""
-                @value-changed=${this._handleVolumeChanged}
-              ></t-dial>
+              ${isIOSFamily()
+                ? ''
+                : html`<t-dial
+                    min="0"
+                    max="420"
+                    step="5"
+                    label="Volume"
+                    dangerWhenOver="100"
+                    iconName="volume"
+                    .defaultValue=${this.defaultVolumeValue}
+                    .value=${this.volume}
+                    unit=""
+                    @value-changed=${this._handleVolumeChanged}
+                  ></t-dial>`}
               <t-dial
                 min="50"
                 max="200"

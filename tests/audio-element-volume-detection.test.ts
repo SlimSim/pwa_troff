@@ -1,28 +1,39 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * FEATURE SPEC: gain-based volume attenuation when HTMLMediaElement.volume is
- * broken (iOS Safari / iPadOS silently ignores element volume writes, and on
- * newer iOS the probe read-back sticks while changing nothing audible).
+ * FEATURE SPEC: the Web Audio volume graph must NEVER be built on iOS.
  *
- * services/audio.ts detects this at module load and exports the result as
- * `elementVolumeWorks`, defined as (probe sticks) AND NOT (iOS-family UA).
- * iOS-family = navigator.userAgent matches /iPhone|iPad|iPod/, or
- * (/Macintosh/ in UA AND navigator.maxTouchPoints > 1, covering iPadOS
- * desktop-mode Safari). Missing/undefined navigator or missing userAgent
- * falls back to the probe alone (never throws).
+ * Building an AudioContext + MediaElementAudioSource + GainNode on iOS causes
+ * audible playback skipping, so iOS always falls back to the plain element
+ * volume path (a no-op there — loudness is hardware-buttons-only).
  *
- * - elementVolumeWorks === true (default / happy-dom, desktop Safari, Windows
- *   Chrome): behavior is UNCHANGED — gain is 1 at/below 100%, the boost
- *   AudioContext/GainNode graph is only created for gain > 1, and no resume
- *   hooks are attached. setVolumePercent writes percent/100 to the element.
- * - elementVolumeWorks === false (iOS-family, even when the probe sticks):
- *   volumePercentToGain maps the FULL 0–420% range onto the GainNode
- *   (attenuation below 100%), the boost graph is ensured for every percent,
- *   and best-effort resume hooks are attached once at graph creation ('play'
- *   on audio + 'statechange' on the context). In broken mode the element is
- *   pinned at unity (1) so the gain node is the single source of truth
- *   (avoids double-attenuation where WebKit plumbs element.volume into the
+ * services/audio.ts still probes HTMLMediaElement.volume at module load and
+ * exports the result as `elementVolumeWorks`, defined as (probe sticks) AND NOT
+ * (iOS-family UA). iOS-family = navigator.userAgent matches
+ * /iPhone|iPad|iPod/, or (/Macintosh/ in UA AND navigator.maxTouchPoints > 1,
+ * covering iPadOS desktop-mode Safari). Missing/undefined navigator or missing
+ * userAgent falls back to the probe alone (never throws).
+ *
+ * `isVolumeGraphAllowed()` is the call-time gate:
+ *   isAudioGraphEnabled() && !isIOSFamily()
+ *
+ * - Graph NOT allowed (iOS-family, or ?audiograph=off): NO AudioContext is ever
+ *   constructed and no resume hooks are attached. volumePercentToGain() is
+ *   exactly 1 for every percent, setVolumePercent writes percent/100 to the
+ *   element (clamped to 1) and leaves any GainNode at unity, and
+ *   getAudioDebugState() reports audioGraphCreated false / state 'none' /
+ *   gainValue 1 while volumePercent tracks the last percent.
+ * - Graph allowed + elementVolumeWorks === true (default / happy-dom, desktop
+ *   Safari, Windows Chrome): behavior is UNCHANGED — gain is 1 at/below 100%,
+ *   the boost graph is only created for gain > 1, and no resume hooks are
+ *   attached. setVolumePercent writes percent/100 to the element.
+ * - Graph allowed + elementVolumeWorks === false on a NON-iOS device: behavior
+ *   is UNCHANGED — volumePercentToGain maps the FULL 0–420% range onto the
+ *   GainNode (attenuation below 100%), the boost graph is ensured for every
+ *   percent, and best-effort resume hooks are attached once at graph creation
+ *   ('play' on audio + 'statechange' on the context). The element is pinned at
+ *   unity (1) so the gain node is the single source of truth (avoids
+ *   double-attenuation where WebKit plumbs element.volume into the
  *   MediaElementAudioSource input).
  *
  * Detection runs at import time, so modes are simulated by stubbing globals
@@ -33,7 +44,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 type AudioModule = typeof import('../services/audio.js');
 
-type AudioModuleWithDetection = AudioModule;
+/** `isVolumeGraphAllowed` is the new call-time gate (absent before the fix). */
+type AudioModuleWithDetection = AudioModule & {
+  isVolumeGraphAllowed?: () => boolean;
+};
+
+/**
+ * Read the call-time graph gate from the real module. Fails with an explicit
+ * message while the export is still missing (RED state).
+ */
+function graphAllowed(mod: AudioModuleWithDetection): boolean {
+  const fn = mod.isVolumeGraphAllowed;
+  if (typeof fn !== 'function') {
+    throw new Error('services/audio.ts must export isVolumeGraphAllowed(): boolean');
+  }
+  return fn();
+}
 
 /**
  * iOS-like Audio: extends the real Audio so addEventListener/dispatchEvent
@@ -138,6 +164,7 @@ async function importWithNavigator(
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.resetModules();
+  vi.restoreAllMocks();
   FakeAudioContext.reset();
 });
 
@@ -304,42 +331,121 @@ describe('broken mode (elementVolumeWorks === false) — gain-based attenuation'
   });
 });
 
-describe('iOS-family UA detection (probe sticks, UA forces broken mode)', () => {
-  it('iPhone UA with sticking Audio → elementVolumeWorks === false, gain attenuates, graph + play hook engage', async () => {
+describe('iOS-family UA detection — the volume graph is never built on iOS', () => {
+  it('iPhone UA with sticking Audio → elementVolumeWorks false, graph disallowed, gain pinned to 1', async () => {
     FakeAudioContext.reset();
     vi.stubGlobal('AudioContext', FakeAudioContext);
     const mod = await importWithNavigator(IPHONE_UA, 0);
     expect(mod.elementVolumeWorks).toBe(false);
-    expect(mod.volumePercentToGain(50)).toBeCloseTo(0.5, 5);
+    expect(
+      typeof mod.isVolumeGraphAllowed,
+      'services/audio.ts must export isVolumeGraphAllowed()'
+    ).toBe('function');
+    expect(graphAllowed(mod)).toBe(false);
+    expect(mod.volumePercentToGain(0)).toBe(1);
+    expect(mod.volumePercentToGain(50)).toBe(1);
+    expect(mod.volumePercentToGain(100)).toBe(1);
+    expect(mod.volumePercentToGain(150)).toBe(1);
+    expect(mod.volumePercentToGain(420)).toBe(1);
+  });
+
+  it('iPhone: setVolumePercent constructs ZERO AudioContexts and attaches no play resume hook', async () => {
+    FakeAudioContext.reset();
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    const mod = await importWithNavigator(IPHONE_UA, 0);
+    const addListener = vi.spyOn(mod.audio, 'addEventListener');
 
     mod.setVolumePercent(50);
-    expect(FakeAudioContext.instances).toHaveLength(1);
-    const ctx = FakeAudioContext.instances[0];
-    expect(ctx.gainNode.gain.value).toBeCloseTo(0.5, 5);
+    mod.setVolumePercent(150);
 
-    const callsAtCreation = ctx.resume.mock.calls.length;
-    mod.audio.dispatchEvent(new Event('play'));
-    expect(ctx.resume.mock.calls.length).toBeGreaterThan(callsAtCreation);
+    expect(FakeAudioContext.instances, 'iOS must never construct an AudioContext').toHaveLength(0);
+    const playHooks = addListener.mock.calls.filter(([type]) => type === 'play');
+    expect(playHooks, 'iOS must not attach a play resume hook').toHaveLength(0);
+    expect(() => mod.audio.dispatchEvent(new Event('play'))).not.toThrow();
+    expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  it('iPad UA with sticking Audio → elementVolumeWorks === false', async () => {
+  it('iPad UA with sticking Audio → graph disallowed, volumePercentToGain(50) === 1, zero contexts', async () => {
+    FakeAudioContext.reset();
+    vi.stubGlobal('AudioContext', FakeAudioContext);
     const mod = await importWithNavigator(IPAD_UA, 0);
     expect(mod.elementVolumeWorks).toBe(false);
+    expect(graphAllowed(mod)).toBe(false);
+    expect(mod.volumePercentToGain(50)).toBe(1);
+
+    mod.setVolumePercent(50);
+    expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  it('iPad desktop-mode UA (Macintosh + maxTouchPoints 5) → false', async () => {
+  it('iPad desktop-mode UA (Macintosh + maxTouchPoints 5) → graph disallowed, gain 1, zero contexts', async () => {
+    FakeAudioContext.reset();
+    vi.stubGlobal('AudioContext', FakeAudioContext);
     const mod = await importWithNavigator(IPAD_DESKTOP_UA, 5);
     expect(mod.elementVolumeWorks).toBe(false);
+    expect(graphAllowed(mod)).toBe(false);
+    expect(mod.volumePercentToGain(420)).toBe(1);
+
+    mod.setVolumePercent(420);
+    expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  it('same Macintosh UA with maxTouchPoints 0 → TRUE (desktop Safari pin)', async () => {
+  it('iOS injectable targets: 50% writes element 0.5 / gain 1 with no graph', async () => {
+    FakeAudioContext.reset();
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    const mod = await importWithNavigator(IPHONE_UA, 0);
+    const element = { volume: 0 };
+    const gainNode = { gain: { value: 1 } };
+
+    mod.setVolumePercent(50, { element, gainNode });
+
+    expect(element.volume).toBeCloseTo(0.5, 5);
+    expect(gainNode.gain.value).toBe(1);
+    expect(FakeAudioContext.instances).toHaveLength(0);
+  });
+
+  it('iOS injectable targets: 150% clamps element to 1 / gain 1 with no graph', async () => {
+    FakeAudioContext.reset();
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    const mod = await importWithNavigator(IPHONE_UA, 0);
+    const element = { volume: 0 };
+    const gainNode = { gain: { value: 1 } };
+
+    mod.setVolumePercent(150, { element, gainNode });
+
+    expect(element.volume).toBe(1);
+    expect(gainNode.gain.value).toBe(1);
+    expect(FakeAudioContext.instances).toHaveLength(0);
+  });
+
+  it('iOS getAudioDebugState: no graph, state none, gainValue 1, volumePercent tracks the last percent', async () => {
+    FakeAudioContext.reset();
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    const mod = await importWithNavigator(IPHONE_UA, 0);
+
+    mod.setVolumePercent(150);
+
+    const state = mod.getAudioDebugState();
+    expect(state.elementVolumeWorks).toBe(false);
+    expect(state.audioGraphCreated).toBe(false);
+    expect(state.audioContextState).toBe('none');
+    expect(state.gainValue).toBe(1);
+    expect(state.volumePercent).toBe(150);
+    expect(FakeAudioContext.instances).toHaveLength(0);
+  });
+
+  it('same Macintosh UA with maxTouchPoints 0 → graph allowed, element volume works (desktop Safari pin)', async () => {
     const mod = await importWithNavigator(IPAD_DESKTOP_UA, 0);
     expect(mod.elementVolumeWorks).toBe(true);
+    expect(graphAllowed(mod)).toBe(true);
+    expect(mod.volumePercentToGain(50)).toBe(1);
   });
 
-  it('Windows Chrome UA with sticking Audio → TRUE (pin)', async () => {
+  it('Windows Chrome UA with sticking Audio → graph allowed (pin)', async () => {
     const mod = await importWithNavigator(WINDOWS_CHROME_UA, 0);
     expect(mod.elementVolumeWorks).toBe(true);
+    expect(graphAllowed(mod)).toBe(true);
+    expect(mod.volumePercentToGain(50)).toBe(1);
+    expect(mod.volumePercentToGain(150)).toBeCloseTo(1.5, 5);
   });
 
   it('navigator without userAgent falls back to the probe alone (TRUE when it sticks)', async () => {
@@ -347,6 +453,7 @@ describe('iOS-family UA detection (probe sticks, UA forces broken mode)', () => 
     vi.resetModules();
     const mod = (await import('../services/audio.js')) as AudioModuleWithDetection;
     expect(mod.elementVolumeWorks).toBe(true);
+    expect(graphAllowed(mod)).toBe(true);
   });
 });
 

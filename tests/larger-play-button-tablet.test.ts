@@ -37,6 +37,7 @@ vi.mock('../services/firebaseClient.js', () => ({}));
 // components/organisms/t-video-player.test.ts uses for isAndroid).
 const mockBrowserEnv = vi.hoisted(() => ({ isTablet: false }));
 vi.mock('../utils/browserEnv.js', () => ({
+  isIOSFamily: () => false,
   isTablet: () => mockBrowserEnv.isTablet,
   isSafari: false,
   isIphone: false,

@@ -7,6 +7,7 @@ import '../atom/t-help-tip.js';
 import '../atom/t-icon.js';
 import { createTapTempoState, calculateTapTempo } from '../../utils/tap-tempo.js';
 import type { TapTempoState } from '../../utils/tap-tempo.js';
+import { isIOSFamily } from '../../utils/browserEnv.js';
 import { nDB } from '../../assets/internal/db.js';
 import {
   TROFF_SETTING_UI_LOOP_BUTTONS_SHOW,
@@ -653,30 +654,32 @@ export class CurrentSongControls extends LitElement {
             : ''}
 
           <!-- 11. Volume -->
-          <div class="settings-section playback-control-section">
-            <div class="settings-grid">
-              <div class="setting-item song-stepper-item">
-                <div class="song-stepper-grid">
-                  <t-dial
-                    .key=${this.noKeyboard ? '' : 'v'}
-                    min="0"
-                    max="420"
-                    step="5"
-                    label="Volume"
-                    dangerWhenOver="100"
-                    iconName="volume"
-                    unit=""
-                    .defaultValue=${this.defaultVolumeValue}
-                    .value=${this.volume}
-                    @value-changed=${(event: CustomEvent<{ value: number }>) => {
-                      this.volume = event.detail.value;
-                      this._handleSettingChange('volume', event.detail.value);
-                    }}
-                  ></t-dial>
+          ${isIOSFamily()
+            ? ''
+            : html`<div class="settings-section playback-control-section">
+                <div class="settings-grid">
+                  <div class="setting-item song-stepper-item">
+                    <div class="song-stepper-grid">
+                      <t-dial
+                        .key=${this.noKeyboard ? '' : 'v'}
+                        min="0"
+                        max="420"
+                        step="5"
+                        label="Volume"
+                        dangerWhenOver="100"
+                        iconName="volume"
+                        unit=""
+                        .defaultValue=${this.defaultVolumeValue}
+                        .value=${this.volume}
+                        @value-changed=${(event: CustomEvent<{ value: number }>) => {
+                          this.volume = event.detail.value;
+                          this._handleSettingChange('volume', event.detail.value);
+                        }}
+                      ></t-dial>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </div>`}
 
           <!-- 12. Speed -->
           <div class="settings-section playback-control-section">
