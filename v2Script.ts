@@ -40,7 +40,9 @@ import {
   loadSong,
   setVolumePercent,
   volumePercentToElementVolume,
+  getAudioDebugState,
 } from './services/audio.js';
+import type { AudioDebugState } from './services/audio.js';
 import { formatDuration, countLast30Days } from './utils/formatters.js';
 import {
   getSelectedMarkerRange,
@@ -61,7 +63,8 @@ import {
   ensureDefaultMarkers,
 } from './utils/troff-settings.js';
 import { extractAlbumArt } from './utils/album-art.js';
-import { generateWaveformPeaks } from './utils/waveform.js';
+import { generateWaveformPeaks, getWaveformDebugState } from './utils/waveform.js';
+import type { WaveformDebugState } from './utils/waveform.js';
 import { calculateIncrementUntilSpeed } from './utils/increment-until.js';
 import type {
   TroffMarker,
@@ -130,7 +133,11 @@ import {
   shouldTreatEndedAsGap,
   buildPlaybackErrorContext,
   isBenignPlayError,
+  detectPlaybackSkip,
+  buildPlaybackSkipContext,
 } from './utils/playback-resilience.js';
+import type { PlaybackSkipResult } from './utils/playback-resilience.js';
+import { isAudioGraphEnabled, isWaveformEnabled } from './utils/debug-flags.js';
 import { getManifest } from './utils/manifestHelper.js';
 import { updateWakeLockForPlayback } from './utils/phoneUtils.js';
 
@@ -207,6 +214,42 @@ maybeShowMessengerBrowserNotice();
 // a video song is loaded). Defaults to audio so audio-only playback is unchanged.
 let activeMedia: HTMLMediaElement = audio;
 const getActiveMedia = () => activeMedia;
+
+// Diagnostic exports are guarded: some tests (and older cached deployments)
+// mock services/audio.js or utils/waveform.js without the new debug helpers.
+const getSafeAudioDebugState = (): AudioDebugState => {
+  try {
+    if (typeof getAudioDebugState === 'function') {
+      return getAudioDebugState();
+    }
+  } catch {
+    /* diagnostics unavailable — fall back to documented defaults */
+  }
+  return {
+    elementVolumeWorks: true,
+    audioGraphEnabled: isAudioGraphEnabled(),
+    audioGraphCreated: false,
+    audioContextState: 'none',
+    audioContextSampleRate: 0,
+    volumePercent: 100,
+    gainValue: 1,
+  };
+};
+
+const getSafeWaveformDebugState = (): WaveformDebugState => {
+  try {
+    if (typeof getWaveformDebugState === 'function') {
+      return getWaveformDebugState();
+    }
+  } catch {
+    /* diagnostics unavailable — fall back to documented defaults */
+  }
+  return {
+    waveformEnabled: isWaveformEnabled(),
+    waveformInProgress: false,
+    waveformLastDurationMs: 0,
+  };
+};
 
 // Centralized volume helpers with fallback for test mocks that stub
 // services/audio.js with only { audio, loadSong }. In production the imports
@@ -685,6 +728,35 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
   // never overwrite the peaks of a song that loaded after it.
   let waveformRequestId = 0;
 
+  // iOS decoder-skip diagnostics: every timeupdate is compared against the
+  // wall clock so a large unexplained forward jump can be reported silently.
+  let skipSampleMedia: HTMLMediaElement | null = null;
+  let skipSampleTime = 0;
+  let skipSampleWallMs = 0;
+  let skipSamplePlaybackRate = 1;
+  let hasReportedSkip = false;
+  let lastSkipReportWallMs = 0;
+  let lastSeekWallMs = 0;
+  const SKIP_REPORT_COOLDOWN_MS = 60_000;
+  const SEEK_SUPPRESSION_MS = 1_500;
+  const resetSkipSample = () => {
+    skipSampleMedia = null;
+    skipSampleTime = 0;
+    skipSampleWallMs = 0;
+    skipSamplePlaybackRate = 1;
+  };
+  // Play/pause start a new comparison window at the current media position so
+  // the first following timeupdate is measured against it (instead of being
+  // discarded as an unrelated baseline).
+  const seedSkipSample = (media: HTMLMediaElement) => {
+    const time = Number(media.currentTime);
+    const rate = Number(media.playbackRate);
+    skipSampleMedia = media;
+    skipSampleTime = Number.isFinite(time) ? time : 0;
+    skipSampleWallMs = Date.now();
+    skipSamplePlaybackRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+  };
+
   // Current auth state, kept in sync by the onAuthStateChanged callback below
   let currentUserSignedIn = false;
   let currentUserEmail = '';
@@ -715,16 +787,26 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       if (videoElement) videoElement.pause();
     }
 
-    const requestId = ++waveformRequestId;
-    // Clear the previous song's waveform right away so it doesn't linger
-    // while the new song's peaks are generated (async audio decode).
-    markerSlider.waveformPeaks = [];
-    void generateWaveformPeaks(result.url).then((peaks) => {
-      if (requestId !== waveformRequestId || !peaks) return;
-      // Float32Array -> number[]; toFixed strips the float32 representation
-      // noise so the component gets clean values (0.2 instead of 0.200000003).
-      markerSlider.waveformPeaks = Array.from(peaks, (peak) => Number(peak.toFixed(6)));
-    });
+    // A new media source invalidates the previous song's skip baseline.
+    resetSkipSample();
+
+    if (isWaveformEnabled()) {
+      const requestId = ++waveformRequestId;
+      // Clear the previous song's waveform right away so it doesn't linger
+      // while the new song's peaks are generated (async audio decode).
+      markerSlider.waveformPeaks = [];
+      void generateWaveformPeaks(result.url).then((peaks) => {
+        if (requestId !== waveformRequestId || !peaks) return;
+        // Float32Array -> number[]; toFixed strips the float32 representation
+        // noise so the component gets clean values (0.2 instead of 0.200000003).
+        markerSlider.waveformPeaks = Array.from(peaks, (peak) => Number(peak.toFixed(6)));
+      });
+    } else {
+      // Bump the request id so any in-flight generation cannot repopulate the
+      // slider after the kill switch cleared it.
+      waveformRequestId += 1;
+      markerSlider.waveformPeaks = [];
+    }
 
     applyStoredVolumeAndSpeedToMedia();
   };
@@ -1908,6 +1990,96 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       networkState: Number(getActiveMedia().networkState),
       errorCode,
     });
+
+  // Numeric-only snapshot of a detected decoder skip (same no-PII rules as
+  // buildLivePlaybackContext, plus the live audio/waveform diagnostic state).
+  const buildLiveSkipContext = (
+    media: HTMLMediaElement,
+    previousTime: number,
+    result: PlaybackSkipResult
+  ) => {
+    const audioDebug = getSafeAudioDebugState();
+    const waveformDebug = getSafeWaveformDebugState();
+    return buildPlaybackSkipContext({
+      duration: Number(media.duration),
+      currentTime: Number(media.currentTime),
+      previousTime,
+      seekableEnd: getSeekableEnd(media),
+      playbackStart: markerSlider ? Number(markerSlider.getPlaybackStart()) : 0,
+      playbackStop: markerSlider ? Number(markerSlider.getPlaybackStop()) : 0,
+      markerSliderMax: markerSlider ? Number(markerSlider.max) : 0,
+      loopTimesLeft: Number(loopTimesLeft),
+      fileSize: 0,
+      readyState: Number(media.readyState),
+      networkState: Number(media.networkState),
+      errorCode: 0,
+      wallClockDeltaMs: result.wallClockDeltaMs,
+      forwardSkipSeconds: result.forwardSkipSeconds,
+      volumePercent: audioDebug.volumePercent,
+      gainValue: audioDebug.gainValue,
+      elementVolumeWorks: audioDebug.elementVolumeWorks,
+      audioGraphEnabled: audioDebug.audioGraphEnabled,
+      audioGraphCreated: audioDebug.audioGraphCreated,
+      audioContextState: audioDebug.audioContextState,
+      audioContextSampleRate: audioDebug.audioContextSampleRate,
+      waveformEnabled: waveformDebug.waveformEnabled,
+      waveformInProgress: waveformDebug.waveformInProgress,
+      waveformLastDurationMs: waveformDebug.waveformLastDurationMs,
+      mediaKind: media === videoElement ? 'video' : 'audio',
+      playbackRate: Number(media.playbackRate),
+      preservesPitch: Boolean(
+        (media as HTMLMediaElement & { preservesPitch?: boolean }).preservesPitch
+      ),
+    });
+  };
+
+  // Sample the media clock on every timeupdate. Paused playback, pending
+  // restarts and fresh seeks re-baseline instead of reporting. Reports are
+  // rate-limited so one broken file cannot flood Sentry.
+  const recordPlaybackSkipSample = (media: HTMLMediaElement, currentTime: number) => {
+    try {
+      const wallNow = Date.now();
+      const playbackRate = Number(media.playbackRate);
+      const suppressed =
+        media.paused ||
+        pendingPlaybackStart !== undefined ||
+        (lastSeekWallMs > 0 && wallNow - lastSeekWallMs < SEEK_SUPPRESSION_MS);
+      if (
+        suppressed ||
+        skipSampleMedia !== media ||
+        !Number.isFinite(currentTime) ||
+        playbackRate !== skipSamplePlaybackRate
+      ) {
+        skipSampleMedia = media;
+        skipSampleTime = Number.isFinite(currentTime) ? currentTime : 0;
+        skipSampleWallMs = wallNow;
+        skipSamplePlaybackRate = Number.isFinite(playbackRate) && playbackRate > 0 ? playbackRate : 1;
+        return;
+      }
+      const previousTime = skipSampleTime;
+      const wallClockDeltaMs = wallNow - skipSampleWallMs;
+      const result = detectPlaybackSkip({
+        previousTime,
+        currentTime,
+        wallClockDeltaMs,
+        playbackRate,
+      });
+      skipSampleMedia = media;
+      skipSampleTime = currentTime;
+      skipSampleWallMs = wallNow;
+      skipSamplePlaybackRate = playbackRate;
+      if (!result.skipped) return;
+      if (hasReportedSkip && wallNow - lastSkipReportWallMs < SKIP_REPORT_COOLDOWN_MS) return;
+      hasReportedSkip = true;
+      lastSkipReportWallMs = wallNow;
+      SentryCaptureException(
+        new Error('Playback skip detected'),
+        buildLiveSkipContext(media, previousTime, result)
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Silent playback-error reporting: real decode/network failures are captured
   // to Sentry with numeric-only context (no toast/alert; cookie consent is
@@ -3205,6 +3377,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         }
         if (Number.isFinite(now)) {
           lastTimeUpdateTime = now;
+          recordPlaybackSkipSample(media, now);
         }
         if (!markerSlider) {
           return;
@@ -3220,6 +3393,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     };
     const onPlay = () => {
       clearPlaybackCountdown();
+      seedSkipSample(getActiveMedia());
       // Playback is running again, so any future `ended` is a real one.
       ignoreEndedAfterLoopSeek = false;
       if (footer) {
@@ -3229,6 +3403,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       updateHeaderCountdownDisplay();
     };
     const onPause = () => {
+      seedSkipSample(getActiveMedia());
       const wasLoopTransition = isLoopTransitionPause;
       if (isLoopTransitionPause) {
         isLoopTransitionPause = false;
@@ -3331,6 +3506,10 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     const onDurationChange = () => {
       syncSliderMaxToLiveDuration();
     };
+    const onSeeking = () => {
+      lastSeekWallMs = Date.now();
+      resetSkipSample();
+    };
 
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
     audio.addEventListener('durationchange', onDurationChange);
@@ -3339,6 +3518,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnded);
     audio.addEventListener('error', onMediaError);
+    audio.addEventListener('seeking', onSeeking);
     if (videoElement) {
       videoElement.addEventListener('loadedmetadata', onLoadedMetadata);
       videoElement.addEventListener('durationchange', onDurationChange);
@@ -3347,6 +3527,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
       videoElement.addEventListener('pause', onPause);
       videoElement.addEventListener('ended', onEnded);
       videoElement.addEventListener('error', onMediaError);
+      videoElement.addEventListener('seeking', onSeeking);
     }
   }
 

@@ -1,5 +1,7 @@
 import log from './log.js';
-import type { PlaybackErrorContext } from './playback-resilience.js';
+import type { PlaybackErrorContext, PlaybackSkipContext } from './playback-resilience.js';
+
+export type SentryContext = PlaybackErrorContext | PlaybackSkipContext;
 
 interface SentryExceptionValue {
   type?: string;
@@ -25,6 +27,9 @@ declare global {
   const Sentry: {
     init: (options: SentryInitOptions) => void;
     captureException: (error: Error) => void;
+    withScope?: (
+      callback: (scope: { setExtra: (key: string, value: unknown) => void }) => void
+    ) => void;
     // Add other methods if needed, e.g., captureException, etc.
   };
 }
@@ -52,13 +57,21 @@ document.addEventListener('cookieConsentGiven', () => {
   addAndStartSentry();
 });
 
-export function SentryCaptureException(error: Error, context?: PlaybackErrorContext) {
-  if (typeof Sentry !== 'undefined') {
-    if (context !== undefined) {
-      (error as Error & { errorContext?: PlaybackErrorContext }).errorContext = context;
-    }
-    Sentry.captureException(error);
+export function SentryCaptureException(error: Error, context?: SentryContext) {
+  if (typeof Sentry === 'undefined') {
+    return;
   }
+  if (context !== undefined) {
+    if (typeof Sentry.withScope === 'function') {
+      Sentry.withScope((scope) => {
+        scope.setExtra('errorContext', context);
+        Sentry.captureException(error);
+      });
+      return;
+    }
+    (error as Error & { errorContext?: SentryContext }).errorContext = context;
+  }
+  Sentry.captureException(error);
 }
 
 export function setSentryVersion(v: string) {

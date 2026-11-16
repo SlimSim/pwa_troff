@@ -5,6 +5,8 @@
  * waveform never breaks song loading.
  */
 
+import { isWaveformEnabled } from './debug-flags.js';
+
 const getAudioContextConstructor = (): typeof AudioContext | null => {
   const scope = globalThis as unknown as {
     AudioContext?: typeof AudioContext;
@@ -81,10 +83,33 @@ const extractPeaks = (audioBuffer: AudioBuffer, numPeaks: number): Float32Array 
  */
 export const displayAmplitude = (peak: number): number => peak * peak;
 
+let waveformInProgressCount = 0;
+let waveformLastDurationMs = 0;
+
+export interface WaveformDebugState {
+  waveformEnabled: boolean;
+  waveformInProgress: boolean;
+  waveformLastDurationMs: number;
+}
+
+/** Numeric-only snapshot of the live waveform generation state. */
+export function getWaveformDebugState(): WaveformDebugState {
+  return {
+    waveformEnabled: isWaveformEnabled(),
+    waveformInProgress: waveformInProgressCount > 0,
+    waveformLastDurationMs,
+  };
+}
+
 export async function generateWaveformPeaks(
   audioUrl: string,
   numPeaks: number = 10000
 ): Promise<Float32Array | null> {
+  if (!isWaveformEnabled()) {
+    return null;
+  }
+  waveformInProgressCount += 1;
+  const startedAt = Date.now();
   try {
     const response = await fetch(audioUrl);
     if (!response.ok) {
@@ -106,5 +131,8 @@ export async function generateWaveformPeaks(
     }
   } catch {
     return null;
+  } finally {
+    waveformInProgressCount = Math.max(0, waveformInProgressCount - 1);
+    waveformLastDurationMs = Math.max(0, Math.round(Date.now() - startedAt));
   }
 }

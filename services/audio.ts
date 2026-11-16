@@ -1,3 +1,5 @@
+import { isAudioGraphEnabled } from '../utils/debug-flags.js';
+
 const audio = new Audio();
 
 export { audio };
@@ -90,6 +92,50 @@ export interface VolumeTargets {
 let boostContext: AudioContext | null = null;
 let boostGainNode: GainNode | null = null;
 let boostSourceCreated = false;
+let lastVolumePercent = 100;
+
+export interface AudioDebugState {
+  elementVolumeWorks: boolean;
+  audioGraphEnabled: boolean;
+  audioGraphCreated: boolean;
+  audioContextState: 'none' | 'running' | 'suspended' | 'closed' | 'interrupted';
+  audioContextSampleRate: number;
+  volumePercent: number;
+  gainValue: number;
+}
+
+/** Numeric-only snapshot of the live volume/graph state for silent diagnostics. */
+export function getAudioDebugState(): AudioDebugState {
+  const graphEnabled = isAudioGraphEnabled();
+  let audioContextState: AudioDebugState['audioContextState'] = 'none';
+  let audioContextSampleRate = 0;
+  try {
+    const state: string | undefined = boostContext?.state;
+    if (
+      state === 'running' ||
+      state === 'suspended' ||
+      state === 'closed' ||
+      state === 'interrupted'
+    ) {
+      audioContextState = state;
+    }
+    const sampleRate = Number(boostContext?.sampleRate);
+    if (Number.isFinite(sampleRate)) {
+      audioContextSampleRate = sampleRate;
+    }
+  } catch {
+    /* diagnostics must never throw */
+  }
+  return {
+    elementVolumeWorks,
+    audioGraphEnabled: graphEnabled,
+    audioGraphCreated: boostSourceCreated,
+    audioContextState,
+    audioContextSampleRate,
+    volumePercent: lastVolumePercent,
+    gainValue: graphEnabled ? volumePercentToGain(lastVolumePercent) : 1,
+  };
+}
 
 /**
  * When element volume is broken (iOS), the GainNode is the ONLY way to change
@@ -125,6 +171,9 @@ function attachResumeHooks(context: AudioContext): void {
 }
 
 function getBoostGain(): GainNode | null {
+  if (!isAudioGraphEnabled()) {
+    return null;
+  }
   try {
     if (boostGainNode) {
       return boostGainNode;
@@ -170,11 +219,18 @@ function getBoostGain(): GainNode | null {
 
 export function setVolumePercent(percent: number, targets?: VolumeTargets): void {
   try {
+    const graphEnabled = isAudioGraphEnabled();
+    const numericPercent = Number(percent);
+    if (Number.isFinite(numericPercent)) {
+      lastVolumePercent = numericPercent;
+    }
     /* Broken mode: pin element to unity — WebKit plumbs element.volume into
        MediaElementAudioSource input, so the gain node is the single source
-       of truth (avoids double-attenuation). */
-    const elementVolume = elementVolumeWorks ? volumePercentToElementVolume(percent) : 1;
-    const gainValue = volumePercentToGain(percent);
+       of truth (avoids double-attenuation). With the debug kill switch the
+       graph is disabled, so fall back to plain v1 element volume. */
+    const elementVolume =
+      graphEnabled && !elementVolumeWorks ? 1 : volumePercentToElementVolume(percent);
+    const gainValue = graphEnabled ? volumePercentToGain(percent) : 1;
     if (targets !== undefined && targets !== null && typeof targets === 'object') {
       const maybe = targets as Partial<VolumeTargets>;
       try {
