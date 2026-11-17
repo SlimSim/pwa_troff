@@ -2415,3 +2415,294 @@ describe('sort t-dropdown-button width inside nested more-content (artist/genre/
 afterEach(() => {
   nDB.delete('TROFF_SONG_LIST_NAVIGATION_STATE');
 });
+
+/*
+ * FEATURE SPEC (regression):
+ * "Ctrl/Cmd+F must focus the search field of the currently shown view —
+ *  including when the song list is inside a group detail, artist detail or
+ *  genre detail view."
+ *
+ * In a detail view the parent does not render its own <t-list-header> at all
+ * (see hideSongListHeader in MediaParent.render()). The visible search field
+ * then lives in the sub-list instead:
+ *   t-artist-list / t-genre-list / t-group-list → <t-detail-header> →
+ *   light-DOM <t-header-actions> → shadow <t-input.search-input>
+ *
+ * These tests assert the observable behaviour only (which REAL <t-input> host
+ * receives focus()/select()), never a private method name.
+ */
+
+/** A sub-list element (t-artist-list / t-genre-list / t-group-list). */
+type DetailListElement = HTMLElement & {
+  shadowRoot: ShadowRoot;
+  updateComplete: Promise<void>;
+};
+
+/** The t-input host — MediaParent calls focus()/select() on the host itself. */
+type SearchInputElement = HTMLElement & {
+  shadowRoot: ShadowRoot;
+  updateComplete: Promise<void>;
+  value: string;
+  focus: () => void;
+  select: () => void;
+};
+
+/** Private members of MediaParent these tests need, without `any`. */
+type MediaParentDetailViewInternals = {
+  songs: { songKey: string; title: string; artist?: string; genre?: string }[];
+  groups: {
+    id: number;
+    name: string;
+    icon: string;
+    info: string;
+    owners: string[];
+    songs: unknown[];
+    tracks: unknown[];
+  }[];
+};
+
+const detailInternals = (element: MediaParent): MediaParentDetailViewInternals =>
+  element as unknown as MediaParentDetailViewInternals;
+
+describe('Ctrl+F inside a detail view', () => {
+  let element: MediaParent;
+
+  beforeEach(() => {
+    // Isolate from nav state persisted by earlier tests in this file.
+    localStorage.clear();
+    // Same baseline as the sibling describe blocks: stub _loadSongs so
+    // connectedCallback doesn't touch localStorage / the Cache API.
+    vi.spyOn(
+      MediaParent.prototype as unknown as { _loadSongs: () => Promise<void> },
+      '_loadSongs'
+    ).mockResolvedValue(undefined);
+
+    element = new MediaParent();
+    document.body.appendChild(element);
+  });
+
+  afterEach(() => {
+    if (document.body.contains(element)) {
+      document.body.removeChild(element);
+    }
+    vi.restoreAllMocks();
+  });
+
+  // ---- helpers ----
+
+  /** Dispatch the Ctrl+F shortcut on window (that is where it is listened for). */
+  function pressCtrlF(): void {
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'f',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+  }
+
+  /** Flush pending Lit updates plus the microtask the focus call runs in. */
+  async function flush(): Promise<void> {
+    await element.updateComplete;
+    await element.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  /** The sub-list that the parent currently renders. */
+  function getList(tagName: string): DetailListElement {
+    const list = element.shadowRoot?.querySelector(tagName) as DetailListElement | null;
+    if (!list) {
+      throw new Error(`Expected <${tagName}> in t-media-parent shadow root`);
+    }
+    return list;
+  }
+
+  /**
+   * The search <t-input> inside a list's detail header:
+   * t-detail-header → light-DOM t-header-actions → shadow t-input.search-input
+   */
+  async function getDetailSearchInput(list: DetailListElement): Promise<SearchInputElement> {
+    const detailHeader = list.shadowRoot.querySelector('t-detail-header');
+    if (!detailHeader) {
+      throw new Error('Expected t-detail-header in the list detail view');
+    }
+    const headerActions = detailHeader.querySelector('t-header-actions') as
+      | DetailListElement
+      | null;
+    if (!headerActions) {
+      throw new Error('Expected t-header-actions inside t-detail-header');
+    }
+    await headerActions.updateComplete;
+    const tInput = headerActions.shadowRoot.querySelector('t-input.search-input') as
+      | SearchInputElement
+      | null;
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input inside the detail t-header-actions');
+    }
+    await tInput.updateComplete;
+    return tInput;
+  }
+
+  /** Render the artists tab and enter Alpha's detail view. */
+  async function openArtistDetailView(): Promise<DetailListElement> {
+    detailInternals(element).songs = [{ songKey: 'a', title: 'Tango', artist: 'Alpha' }];
+    detailInternals(element).groups = [];
+    element.currentFilter = 'artists';
+    await flush();
+
+    const list = getList('t-artist-list');
+    await list.updateComplete;
+
+    element.openArtistDetail('Alpha');
+    await flush();
+    await list.updateComplete;
+    await list.updateComplete;
+    return list;
+  }
+
+  /** Render the genres tab and enter Jazz's detail view. */
+  async function openGenreDetailView(): Promise<DetailListElement> {
+    detailInternals(element).songs = [{ songKey: 'a', title: 'Tango', genre: 'Jazz' }];
+    detailInternals(element).groups = [];
+    element.currentFilter = 'genre';
+    await flush();
+
+    const list = getList('t-genre-list');
+    await list.updateComplete;
+
+    element.openGenreDetail('Jazz');
+    await flush();
+    await list.updateComplete;
+    await list.updateComplete;
+    return list;
+  }
+
+  /** Render the groups tab and enter Jazz's (id 42) detail view. */
+  async function openGroupDetailView(): Promise<DetailListElement> {
+    detailInternals(element).groups = [
+      { id: 42, name: 'Jazz', icon: 'users', info: '', owners: [], songs: [], tracks: [] },
+    ];
+    detailInternals(element).songs = [{ songKey: 'a', title: 'Tango', artist: 'Alpha' }];
+    element.currentFilter = 'groups';
+    await flush();
+
+    const list = getList('t-group-list');
+    await list.updateComplete;
+
+    element.openGroupDetail('42');
+    await flush();
+    await list.updateComplete;
+    await list.updateComplete;
+    return list;
+  }
+
+  // ---- tests ----
+
+  it('focuses the artist detail search input on Ctrl+F', async () => {
+    const list = await openArtistDetailView();
+
+    const tInput = await getDetailSearchInput(list);
+    const focusSpy = vi.spyOn(tInput, 'focus').mockImplementation(() => {});
+
+    pressCtrlF();
+    await flush();
+
+    // Today _getSearchInput() only looks in t-list-header (which is not
+    // rendered in a detail view), so nothing gets focused (RED).
+    expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it('focuses the genre detail search input on Ctrl+F', async () => {
+    const list = await openGenreDetailView();
+
+    const tInput = await getDetailSearchInput(list);
+    const focusSpy = vi.spyOn(tInput, 'focus').mockImplementation(() => {});
+
+    pressCtrlF();
+    await flush();
+
+    expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it('focuses the group detail search input on Ctrl+F', async () => {
+    const list = await openGroupDetailView();
+
+    const tInput = await getDetailSearchInput(list);
+    const focusSpy = vi.spyOn(tInput, 'focus').mockImplementation(() => {});
+
+    pressCtrlF();
+    await flush();
+
+    expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it('selects all text of an existing detail query on Ctrl+F (artist detail)', async () => {
+    const list = await openArtistDetailView();
+
+    // Type 'tan' into the detail search so the detail list's own query state
+    // is non-empty (the parent's searchQuery stays empty — the detail view
+    // keeps its own query).
+    let tInput = await getDetailSearchInput(list);
+    const nativeInput = tInput.shadowRoot.querySelector('input') as HTMLInputElement | null;
+    if (!nativeInput) {
+      throw new Error('Expected inner native input in t-input shadow root');
+    }
+    nativeInput.value = 'tan';
+    // `composed: true` so the native event crosses t-input's shadow boundary
+    // (happy-dom defaults composed to false).
+    nativeInput.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+    await list.updateComplete;
+    await flush();
+
+    // Sanity: the detail input really holds the query now. If this fails the
+    // RED below would be for the wrong reason.
+    tInput = await getDetailSearchInput(list);
+    expect(tInput.value).toBe('tan');
+
+    const focusSpy = vi.spyOn(tInput, 'focus').mockImplementation(() => {});
+    const selectSpy = vi.spyOn(tInput, 'select').mockImplementation(() => {});
+
+    pressCtrlF();
+    await flush();
+
+    expect(focusSpy).toHaveBeenCalled();
+    expect(selectSpy).toHaveBeenCalled();
+  });
+
+  it('keeps focusing the header search input when no detail view is open (regression guard)', async () => {
+    detailInternals(element).songs = [{ songKey: 'a', title: 'Tango', artist: 'Alpha' }];
+    detailInternals(element).groups = [];
+    element.currentFilter = 'artists';
+    await flush();
+
+    const listHeader = element.shadowRoot?.querySelector('t-list-header');
+    if (!listHeader) {
+      throw new Error('Expected t-list-header outside a detail view');
+    }
+    const headerActions = listHeader.querySelector('t-header-actions') as DetailListElement | null;
+    if (!headerActions) {
+      throw new Error('Expected t-header-actions inside t-list-header');
+    }
+    await headerActions.updateComplete;
+    const tInput = headerActions.shadowRoot.querySelector('t-input.search-input') as
+      | SearchInputElement
+      | null;
+    if (!tInput) {
+      throw new Error('Expected t-input.search-input in the header');
+    }
+    await tInput.updateComplete;
+
+    const focusSpy = vi.spyOn(tInput, 'focus').mockImplementation(() => {});
+
+    pressCtrlF();
+    await flush();
+
+    // The working, non-detail path must keep working: the header input — not
+    // any (non-existent) detail input — gets the focus.
+    expect(focusSpy).toHaveBeenCalled();
+
+    const list = getList('t-artist-list');
+    expect(list.shadowRoot.querySelector('t-detail-header')).toBeNull();
+  });
+});

@@ -45,6 +45,14 @@ interface DetailViewListElement extends HTMLElement {
   closeDetail?: () => void;
 }
 
+/** Sub-list component rendered for each song-list filter. */
+const SUB_LIST_SELECTORS: Record<string, string> = {
+  tracks: 't-track-list',
+  artists: 't-artist-list',
+  genre: 't-genre-list',
+  groups: 't-group-list',
+};
+
 // Module-level diagnostic listener: registers at module load time to verify
 // whether the Esc keydown reaches the window at all. This bypasses any
 // component lifecycle issues with connectedCallback registration.
@@ -725,13 +733,7 @@ export class MediaParent extends LitElement {
    * inside whichever sub-list is currently rendered.
    */
   private _findActiveMediaElement(): HTMLElement | null {
-    const selectorMap: Record<string, string> = {
-      tracks: 't-track-list',
-      artists: 't-artist-list',
-      genre: 't-genre-list',
-      groups: 't-group-list',
-    };
-    const listSelector = selectorMap[this.currentFilter];
+    const listSelector = SUB_LIST_SELECTORS[this.currentFilter];
     if (!listSelector) return null;
 
     const listEl = this.shadowRoot?.querySelector<HTMLElement>(listSelector);
@@ -762,7 +764,7 @@ export class MediaParent extends LitElement {
         const tInput = this._getSearchInput();
         if (!tInput) return;
         tInput.focus();
-        if (this.searchQuery) {
+        if (this.searchQuery || tInput.value) {
           tInput.select();
         }
       });
@@ -1690,21 +1692,37 @@ export class MediaParent extends LitElement {
   };
 
   /**
-   * Find the search <t-input> inside the nested shadow DOMs.
+   * Find the search <t-input> that is visible in the current view.
    *
-   * Structure: t-media-parent → shadow DOM → t-list-header → light DOM (slot)
-   *          → t-header-actions → shadow DOM → t-input.search-input
+   * List view: t-media-parent → shadow DOM → t-list-header → light DOM (slot)
+   *            → t-header-actions → shadow DOM → t-input.search-input
+   *
+   * Detail view (the list header is hidden): t-media-parent → shadow DOM
+   *            → t-*-list → shadow DOM → t-detail-header → light DOM (slot)
+   *            → t-header-actions → shadow DOM → t-input.search-input
+   *
+   * Pass `includeDetailView = false` to look in the list header only (used by
+   * the Esc handler, whose behaviour stays header-only).
    */
-  private _getSearchInput(): TInput | null {
-    const listHeader = this.shadowRoot?.querySelector('t-list-header');
-    const headerActions = (listHeader as HTMLElement | null)?.querySelector(
-      't-header-actions'
-    ) as HTMLElement | null;
-    return headerActions?.shadowRoot?.querySelector<TInput>('t-input.search-input') ?? null;
+  private _getSearchInput(includeDetailView = true): TInput | null {
+    const listHeader = this.shadowRoot?.querySelector<HTMLElement>('t-list-header');
+    const headerActions = listHeader?.querySelector<HTMLElement>('t-header-actions');
+    const actions =
+      headerActions ?? (includeDetailView ? this._getDetailHeaderActions() : null);
+    return actions?.shadowRoot?.querySelector<TInput>('t-input.search-input') ?? null;
+  }
+
+  /** The `t-header-actions` of the mounted sub-list's detail header, if any. */
+  private _getDetailHeaderActions(): HTMLElement | null {
+    const listSelector = SUB_LIST_SELECTORS[this.currentFilter];
+    if (!listSelector) return null;
+    const subList = this.shadowRoot?.querySelector<HTMLElement>(listSelector);
+    const detailHeader = subList?.shadowRoot?.querySelector<HTMLElement>('t-detail-header');
+    return detailHeader?.querySelector<HTMLElement>('t-header-actions') ?? null;
   }
 
   private _blurSearchInput() {
-    const tInput = this._getSearchInput();
+    const tInput = this._getSearchInput(false);
     const innerInput = tInput?.shadowRoot?.querySelector<HTMLInputElement>('input');
     innerInput?.blur();
   }
