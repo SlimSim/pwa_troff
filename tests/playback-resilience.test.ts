@@ -23,6 +23,7 @@ import {
   clampSeekTime,
   isDiscontinuity,
   shouldTreatEndedAsGap,
+  isStopAtMediaEnd,
   buildPlaybackErrorContext,
   isBenignPlayError,
 } from '../utils/playback-resilience.js';
@@ -96,6 +97,33 @@ describe('shouldTreatEndedAsGap — ended fired while content remains', () => {
   it('honours a custom threshold', () => {
     expect(shouldTreatEndedAsGap(125, 132, 10)).toBe(false);
     expect(shouldTreatEndedAsGap(121, 132, 10)).toBe(true);
+  });
+});
+
+// ---- isStopAtMediaEnd ------------------------------------------------------
+
+describe('isStopAtMediaEnd — a stop marker at the end of the song', () => {
+  it('is true when the stop marker is at the media duration', () => {
+    expect(isStopAtMediaEnd(131.69, 131.69)).toBe(true);
+    expect(isStopAtMediaEnd(132, 132)).toBe(true);
+  });
+
+  it('is true when the marker/duration differ by decoder-skip noise', () => {
+    // Production shape: marker from a desktop parse (2:11) vs iOS duration
+    // (2:12), and iOS ends early after skipping a corrupt tail.
+    expect(isStopAtMediaEnd(131.69, 132)).toBe(true);
+    expect(isStopAtMediaEnd(121, 132, 11)).toBe(true);
+  });
+
+  it('is false for a mid-song stop marker', () => {
+    expect(isStopAtMediaEnd(60, 132)).toBe(false);
+    expect(isStopAtMediaEnd(90, 132)).toBe(false);
+  });
+
+  it('is false for non-finite or empty media', () => {
+    expect(isStopAtMediaEnd(Number.NaN, 132)).toBe(false);
+    expect(isStopAtMediaEnd(132, Number.NaN)).toBe(false);
+    expect(isStopAtMediaEnd(132, 0)).toBe(false);
   });
 });
 
