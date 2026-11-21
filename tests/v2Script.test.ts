@@ -153,6 +153,87 @@ describe('v2Script utilities and related functions', () => {
     }, 30000);
   });
 
+  // Regression: Ctrl+F inside t-media-parent opens the song list directly
+  // (it does not go through the header's `header-expand` event), so the
+  // app-level <t-header> kept `expanded = false` — wrong chevron direction
+  // and a two-click close. t-media-parent now announces `song-list-opened`
+  // and v2Script must mirror it onto the header, symmetric to the existing
+  // `song-list-closed` → `header.expanded = false` listener.
+  describe('song-list-opened keeps the header expanded state in sync', () => {
+    it('sets header.expanded = true when the song list announces song-list-opened', async () => {
+      const header = document.createElement('div');
+      header.id = 'header';
+      (header as any).expanded = false;
+      document.body.appendChild(header);
+
+      const songList = document.createElement('div');
+      songList.id = 'songList';
+      (songList as any).visible = false;
+      document.body.appendChild(songList);
+
+      const footer = document.createElement('div');
+      footer.id = 'footer';
+      document.body.appendChild(footer);
+
+      const settingsPanel = document.createElement('div');
+      settingsPanel.id = 'settingsPanel';
+      document.body.appendChild(settingsPanel);
+
+      const markerSlider = document.createElement('div');
+      markerSlider.id = 'markerSlider';
+      (markerSlider as any).getPlaybackStart = vi.fn(() => 0);
+      document.body.appendChild(markerSlider);
+
+      vi.doMock('../utils/current-song.js', () => ({
+        updateHeaderWithCurrentSong: vi.fn(),
+        setCurrentSong: vi.fn(),
+        getCurrentSongMetadata: vi.fn(() => ({ duration: 120 })),
+        getCurrentSongKey: vi.fn(() => null),
+        updateFooterWithCurrentSong: vi.fn(),
+      }));
+
+      vi.doMock('../assets/internal/db.js', () => ({
+        nDB: {
+          get: vi.fn(() => null),
+          set: vi.fn(),
+          setOnSong: vi.fn(),
+        },
+      }));
+
+      vi.doMock('../services/audio.js', () => ({
+        audio: {
+          currentTime: 0,
+          duration: 120,
+          playbackRate: 1,
+          volume: 1,
+          paused: true,
+          addEventListener: vi.fn(),
+        },
+        loadSong: vi.fn(),
+      }));
+
+      window.location.hash = '';
+
+      await import('../v2Script.js');
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      // Start from the buggy state: header collapsed, list hidden. The boot
+      // auto-open (no current song) runs synchronously via the stubbed rAF,
+      // so reset both after it to isolate the announcement behaviour.
+      (header as any).expanded = false;
+      (songList as any).visible = false;
+
+      songList.dispatchEvent(
+        new CustomEvent('song-list-opened', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+
+      expect((header as any).expanded).toBe(true);
+    }, 30000);
+  });
+
   describe('marker dialog defaults integration', () => {
     it('sets marker dialog initial time and suggested name on marker-dialog-opened', async () => {
       const footer = document.createElement('div');

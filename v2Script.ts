@@ -3201,6 +3201,12 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         header.expanded = false;
       });
 
+      // Keep the header in sync when the song list opens itself (e.g. Ctrl+F),
+      // so the chevron points the right way and one header click closes it.
+      songList.addEventListener('song-list-opened', () => {
+        header.expanded = true;
+      });
+
       // Listen for song selection
       songList.addEventListener('media-selected', (event: any) => {
         // Update current song in localStorage

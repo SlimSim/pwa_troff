@@ -187,6 +187,65 @@ describe('Ctrl+F global keyboard shortcut', () => {
     expect(element.visible).toBe(true);
   });
 
+  // ---- song-list-opened announcement ----
+  //
+  // Regression: when the list is closed and the user presses Ctrl+F, the
+  // panel opens (visible = true) but nothing tells the app-level <t-header>
+  // about it, so its chevron points the wrong way and it takes two header
+  // clicks to close. t-media-parent must announce the open so v2Script can
+  // sync `header.expanded = true`.
+
+  it('dispatches a bubbling, composed song-list-opened event when Ctrl+F opens the hidden view', async () => {
+    (element as any).visible = false;
+    await element.updateComplete;
+
+    const spy = vi.fn();
+    element.addEventListener('song-list-opened', spy);
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'f',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    await element.updateComplete;
+
+    expect(element.visible).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    const event = spy.mock.calls[0][0] as CustomEvent;
+    expect(event).toBeInstanceOf(CustomEvent);
+    // The app-level header lives outside t-media-parent, so the event must
+    // bubble and cross shadow boundaries to reach v2Script's listener.
+    expect(event.bubbles).toBe(true);
+    expect(event.composed).toBe(true);
+  });
+
+  it('does not dispatch a redundant song-list-opened when Ctrl+F is pressed while already visible', async () => {
+    // Open first (the implementation may announce on this transition), then
+    // attach the spy so only the *redundant* Ctrl+F press is observed.
+    element.visible = true;
+    await element.updateComplete;
+
+    const spy = vi.fn();
+    element.addEventListener('song-list-opened', spy);
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'f',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    await element.updateComplete;
+
+    expect(element.visible).toBe(true);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   /** Get the t-header-actions element (slotted light DOM child of t-list-header). */
   function getHeaderActions(): (HTMLElement & { shadowRoot: ShadowRoot }) | null {
     const listHeader = element.shadowRoot?.querySelector('t-list-header');

@@ -629,6 +629,12 @@ export class MediaParent extends LitElement {
       this._scrollActiveSongIntoView();
     }
     if (changedProperties.has('visible') && this.visible) {
+      this.dispatchEvent(
+        new CustomEvent('song-list-opened', {
+          bubbles: true,
+          composed: true,
+        })
+      );
       if (this._pendingNavState) {
         // First song-list expansion after load — restore saved nav state
         this._applyNavigationState(this._pendingNavState);
