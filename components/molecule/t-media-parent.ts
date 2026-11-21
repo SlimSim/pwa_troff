@@ -2720,6 +2720,17 @@ export class MediaParent extends LitElement {
                           : ''}
                       `
                   : ''}
+                ${this.currentFilter === 'groups' && !this._currentGroupKey && hasActiveQuery
+                  ? html`
+                      <t-track-list
+                        class="groups-local-songs"
+                        .tracks=${visibleTracks}
+                        .currentSongKey=${this.currentSongKey}
+                        .downloadProgressMap=${this._getDownloadProgressMap()}
+                        .uploadProgressMap=${this._getUploadProgressMap()}
+                      ></t-track-list>
+                    `
+                  : ''}
                 ${hasActiveQuery
                   ? html`
                       <t-server-song-list
