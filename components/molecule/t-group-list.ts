@@ -4,7 +4,7 @@ import '../atom/t-media.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-input.js';
-import './t-detail-header.js';
+import './t-list-header.js';
 import './t-header-actions.js';
 import { getBgColor } from '../../utils/colorHelpers.js';
 import { filterTracks } from '../../utils/media-search.js';
@@ -97,7 +97,22 @@ export class GroupList extends LitElement {
     }
 
     .detail-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
       padding: 0;
+    }
+
+    .detail-view > t-list-header {
+      flex-shrink: 0;
+    }
+
+    /* Songs scroll here; the header stays above this box. */
+    .detail-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
     }
 
     .no-results {
@@ -779,15 +794,14 @@ export class GroupList extends LitElement {
 
       return html`
         <div class="detail-view${this._songManagementOpen ? ' managing' : ''}">
-          <t-detail-header
-            entityName=${this._songManagementOpen
+          <t-list-header
+            title=${this._songManagementOpen
               ? `Add / remove songs to ${selectedGroup.name}`
               : selectedGroup.name}
             .syncing=${this._groupSyncing}
             icon=${this._songManagementOpen ? '' : (selectedGroup.icon ?? '').replace(/^fa-/, '')}
             infoText=${this._songManagementOpen ? '' : infoText}
             .sharedWithCount=${this._songManagementOpen ? 0 : (selectedGroup.owners?.length ?? 0)}
-            countLabel="songs"
             count=${selectedGroup.tracks.length}
             headerColor=${selectedGroup.color ? this._cssColor(selectedGroup.color) : ''}
             headerTextColor=${selectedGroup.color ? this._contrastColor(selectedGroup.color) : ''}
@@ -795,6 +809,7 @@ export class GroupList extends LitElement {
               ? `color-mix(in srgb, ${this._contrastColor(selectedGroup.color)} 15%, transparent)`
               : ''}
             ?isSearchFocused=${this._isGroupSearchFocused}
+            ?showBack=${true}
             @back=${this._handleBack}
           >
             <t-header-actions
@@ -840,12 +855,26 @@ export class GroupList extends LitElement {
                   : ''}
               </div>
             </t-header-actions>
-          </t-detail-header>
+          </t-list-header>
 
-          <!-- Current songs: with delete overlay when management is open -->
+          <!-- Current songs: with delete overlay when management is open.
+               Outside manage mode the songs (and the toggle) scroll under a fixed header. -->
           ${this._songManagementOpen
             ? html`<div class="manage-tracks">${inGroupContent}</div>`
-            : inGroupContent}
+            : html`<div class="detail-scroll">
+                ${inGroupContent}
+                <div class="manage-toggle-wrap">
+                  <t-butt
+                    @click=${() => {
+                      this._songManagementOpen = !this._songManagementOpen;
+                      this._addSongQuery = '';
+                      this._infoExpanded = false;
+                    }}
+                  >
+                    Add / Remove songs
+                  </t-butt>
+                </div>
+              </div>`}
 
           <!-- Add songs section + toggle at the bottom -->
           ${this._songManagementOpen
@@ -936,18 +965,22 @@ export class GroupList extends LitElement {
               `
             : ''}
 
-          <!-- Toggle button at the bottom -->
-          <div class="manage-toggle-wrap">
-            <t-butt
-              @click=${() => {
-                this._songManagementOpen = !this._songManagementOpen;
-                this._addSongQuery = '';
-                this._infoExpanded = false;
-              }}
-            >
-              ${this._songManagementOpen ? 'Done' : 'Add / Remove songs'}
-            </t-butt>
-          </div>
+          ${this._songManagementOpen
+            ? html`
+                <!-- Toggle stays pinned under the two panes while managing -->
+                <div class="manage-toggle-wrap">
+                  <t-butt
+                    @click=${() => {
+                      this._songManagementOpen = !this._songManagementOpen;
+                      this._addSongQuery = '';
+                      this._infoExpanded = false;
+                    }}
+                  >
+                    Done
+                  </t-butt>
+                </div>
+              `
+            : ''}
         </div>
       `;
     }

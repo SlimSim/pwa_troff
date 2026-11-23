@@ -147,8 +147,30 @@ export class MediaParent extends LitElement {
 
     .songs-container {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding: 0;
+    }
+
+    /* A group/artist/genre detail fills this box instead of scrolling with it,
+       so its t-list-header stays put and only the rows move. */
+    .songs-container.detail-open {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .songs-container.detail-open > .local-songs-content {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .songs-container.detail-open > .local-songs-content > * {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
     }
 
     .song-item {
@@ -1704,7 +1726,7 @@ export class MediaParent extends LitElement {
    *            → t-header-actions → shadow DOM → t-input.search-input
    *
    * Detail view (the list header is hidden): t-media-parent → shadow DOM
-   *            → t-*-list → shadow DOM → t-detail-header → light DOM (slot)
+   *            → t-*-list → shadow DOM → t-list-header → light DOM (slot)
    *            → t-header-actions → shadow DOM → t-input.search-input
    *
    * Pass `includeDetailView = false` to look in the list header only (used by
@@ -1723,7 +1745,7 @@ export class MediaParent extends LitElement {
     const listSelector = SUB_LIST_SELECTORS[this.currentFilter];
     if (!listSelector) return null;
     const subList = this.shadowRoot?.querySelector<HTMLElement>(listSelector);
-    const detailHeader = subList?.shadowRoot?.querySelector<HTMLElement>('t-detail-header');
+    const detailHeader = subList?.shadowRoot?.querySelector<HTMLElement>('t-list-header');
     return detailHeader?.querySelector<HTMLElement>('t-header-actions') ?? null;
   }
 
@@ -2207,7 +2229,7 @@ export class MediaParent extends LitElement {
     }
 
     // Hide the song-list-header entirely when inside a group/artist/genre detail view
-    // (controls moved to the detail-header of the respective list components).
+    // (controls moved to the t-list-header of the respective list components).
     const hideSongListHeader =
       (this.currentFilter === 'groups' && this._currentGroupKey) ||
       this._contextType === 'artist' ||
@@ -2458,7 +2480,9 @@ export class MediaParent extends LitElement {
         @change=${this._handleFilesSelected}
       />
 
-      <div class="songs-container">
+      <div
+        class="songs-container${hideSongListHeader && !this._onlineAddMode ? ' detail-open' : ''}"
+      >
         ${this._onlineAddMode
           ? html`
               <div class="online-add-back">

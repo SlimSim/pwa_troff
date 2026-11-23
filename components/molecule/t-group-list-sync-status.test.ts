@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { GroupList } from './t-group-list.js';
-import type { DetailHeader } from './t-detail-header.js';
+import type { ListHeader } from './t-list-header.js';
 
-/** Minimal group fixture so the group detail view (and its t-detail-header) renders. */
+/** Minimal group fixture so the group detail view (and its t-list-header) renders. */
 const detailViewGroups = [
   {
     id: 1,
@@ -15,7 +15,7 @@ const detailViewGroups = [
 /**
  * Wiring contract: t-group-list listens on `document` for the custom event
  * `group-sync-status` (detail: { syncing: boolean }) and forwards the flag to
- * the t-detail-header rendered in the group detail view, so the header's
+ * the t-list-header rendered in the group detail view, so the header's
  * syncing badge (t-loading + "syncing" text) toggles with the event.
  */
 describe('t-group-list group-sync-status → detail header badge', () => {
@@ -27,7 +27,7 @@ describe('t-group-list group-sync-status → detail header badge', () => {
 
     // Same detail-view setup as t-group-list.test.ts: one group whose key
     // (String(id) = '1') matches _selectedGroupKey, so the detail view with
-    // its t-detail-header renders.
+    // its t-list-header renders.
     (element as unknown as { groups: typeof detailViewGroups }).groups = detailViewGroups;
     (element as unknown as { tracks: unknown[] }).tracks = [];
     (element as unknown as { _selectedGroupKey: string })._selectedGroupKey = '1';
@@ -42,10 +42,10 @@ describe('t-group-list group-sync-status → detail header badge', () => {
     }
   });
 
-  function getHeader(): DetailHeader {
-    const header = element.shadowRoot?.querySelector('t-detail-header') as DetailHeader | null;
+  function getHeader(): ListHeader {
+    const header = element.shadowRoot?.querySelector('t-list-header') as ListHeader | null;
     if (!header) {
-      throw new Error('Expected t-detail-header in the group detail view');
+      throw new Error('Expected t-list-header in the group detail view');
     }
     return header;
   }
@@ -56,7 +56,7 @@ describe('t-group-list group-sync-status → detail header badge', () => {
     return {
       loading: shadow?.querySelector('t-loading') ?? null,
       hasSyncingText: /\bsyncing\b/i.test(shadow?.textContent ?? ''),
-      title: shadow?.querySelector('.detail-title')?.textContent ?? '',
+      title: (shadow?.querySelector('.song-list-title')?.textContent ?? '').trim(),
     };
   }
 

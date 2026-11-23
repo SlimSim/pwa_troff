@@ -4,7 +4,7 @@ import '../atom/t-media.js';
 import '../atom/t-butt.js';
 import '../atom/t-icon.js';
 import '../atom/t-input.js';
-import './t-detail-header.js';
+import './t-list-header.js';
 import './t-header-actions.js';
 
 interface ArtistGroup {
@@ -61,7 +61,22 @@ export class ArtistList extends LitElement {
     }
 
     .detail-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
       padding: 0;
+    }
+
+    .detail-view > t-list-header {
+      flex-shrink: 0;
+    }
+
+    /* Tracks scroll here; the header stays above this box. */
+    .detail-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
     }
 
     .no-results {
@@ -303,11 +318,11 @@ export class ArtistList extends LitElement {
 
       return html`
         <div class="detail-view">
-          <t-detail-header
-            entityName=${this.selectedArtist}
-            countLabel="songs"
+          <t-list-header
+            title=${this.selectedArtist}
             count=${selectedGroup.tracks.length}
             ?isSearchFocused=${this._isSearchFocused}
+            ?showBack=${true}
             @back=${this._handleBack}
           >
             <t-header-actions
@@ -338,7 +353,8 @@ export class ArtistList extends LitElement {
                 <slot name="sort-controls"></slot>
               </div>
             </t-header-actions>
-          </t-detail-header>
+          </t-list-header>
+          <div class="detail-scroll">
           ${filteredTracks.length === 0 && trackQuery
             ? html`
                 <div class="no-results">
@@ -391,6 +407,7 @@ export class ArtistList extends LitElement {
                     `
                   : ''}
               `}
+          </div>
         </div>
       `;
     }

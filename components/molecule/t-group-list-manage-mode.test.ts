@@ -1,5 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { GroupList } from './t-group-list.js';
+import type { ListHeader } from './t-list-header.js';
+
+/**
+ * Detail-view props the unified t-list-header gains (entity icon, info text,
+ * shared-with count). The intersection cast keeps this file valid both before
+ * (RED) and after the migration — no `any`.
+ */
+type ManagedListHeader = ListHeader & {
+  icon: string;
+  infoText: string;
+  sharedWithCount: number;
+};
 
 describe('t-group-list manage mode', () => {
   let element: GroupList;
@@ -76,9 +88,16 @@ describe('t-group-list manage mode', () => {
     return element.shadowRoot?.querySelector('.detail-view') as HTMLElement | null;
   }
 
-  function detailHeader(): HTMLElement | null {
-    return element.shadowRoot?.querySelector('t-detail-header') as HTMLElement | null;
+  function listHeader(): ListHeader {
+    const header = element.shadowRoot?.querySelector('t-list-header') as ListHeader | null;
+    if (!header) {
+      throw new Error('Expected t-list-header in the group detail view');
+    }
+    return header;
   }
+
+  const asManaged = (header: ListHeader): ManagedListHeader =>
+    header as unknown as ManagedListHeader;
 
   function headerActions(): HTMLElement | null {
     return element.shadowRoot?.querySelector('t-header-actions') as HTMLElement | null;
@@ -204,30 +223,30 @@ describe('t-group-list manage mode', () => {
     }
   });
 
-  // ---- compact detail header in manage mode ----
+  // ---- compact list header in manage mode ----
 
-  it('rewrites the detail header entityName to "Add / remove songs to <name>" in manage mode', async () => {
+  it('rewrites the list header title to "Add / remove songs to <name>" in manage mode', async () => {
     setupDetail(false);
     await element.updateComplete;
-    expect((detailHeader() as any)?.entityName).toBe('Jazz');
+    expect(listHeader().title).toBe('Jazz');
 
     setupDetail(true);
     await element.updateComplete;
-    expect((detailHeader() as any)?.entityName).toBe('Add / remove songs to Jazz');
+    expect(listHeader().title).toBe('Add / remove songs to Jazz');
   });
 
   it('hides header icon/info/shared in manage mode but keeps them in normal mode', async () => {
     setupDetail(false);
     await element.updateComplete;
-    expect((detailHeader() as any)?.icon).toBe('users');
-    expect((detailHeader() as any)?.infoText).toBe('info text');
-    expect((detailHeader() as any)?.sharedWithCount).toBe(1);
+    expect(asManaged(listHeader()).icon).toBe('users');
+    expect(asManaged(listHeader()).infoText).toBe('info text');
+    expect(asManaged(listHeader()).sharedWithCount).toBe(1);
 
     setupDetail(true);
     await element.updateComplete;
-    expect((detailHeader() as any)?.icon).toBe('');
-    expect((detailHeader() as any)?.infoText).toBe('');
-    expect((detailHeader() as any)?.sharedWithCount).toBe(0);
+    expect(asManaged(listHeader()).icon).toBe('');
+    expect(asManaged(listHeader()).infoText).toBe('');
+    expect(asManaged(listHeader()).sharedWithCount).toBe(0);
   });
 
   it('uses more menu in t-header-actions (with edit/add/sort) in normal mode, hides in manage', async () => {

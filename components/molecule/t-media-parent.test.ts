@@ -2409,7 +2409,7 @@ describe('sort t-dropdown-button width inside nested more-content (artist/genre/
     await element.updateComplete;
     await element.updateComplete;
 
-    // The more-content lives inside t-header-actions which is inside t-detail-header inside the artist-list shadow.
+    // The more-content lives inside t-header-actions which is inside t-list-header inside the artist-list shadow.
     // t-header-actions is rendered *inside* artist-list's shadow DOM (from its template).
     const headerActions = artistList.shadowRoot?.querySelector('t-header-actions') as any;
     expect(headerActions, 't-header-actions inside artist detail must exist').toBeTruthy();
@@ -2484,7 +2484,7 @@ afterEach(() => {
  * In a detail view the parent does not render its own <t-list-header> at all
  * (see hideSongListHeader in MediaParent.render()). The visible search field
  * then lives in the sub-list instead:
- *   t-artist-list / t-genre-list / t-group-list → <t-detail-header> →
+ *   t-artist-list / t-genre-list / t-group-list → <t-list-header> →
  *   light-DOM <t-header-actions> → shadow <t-input.search-input>
  *
  * These tests assert the observable behaviour only (which REAL <t-input> host
@@ -2579,18 +2579,18 @@ describe('Ctrl+F inside a detail view', () => {
 
   /**
    * The search <t-input> inside a list's detail header:
-   * t-detail-header → light-DOM t-header-actions → shadow t-input.search-input
+   * t-list-header → light-DOM t-header-actions → shadow t-input.search-input
    */
   async function getDetailSearchInput(list: DetailListElement): Promise<SearchInputElement> {
-    const detailHeader = list.shadowRoot.querySelector('t-detail-header');
-    if (!detailHeader) {
-      throw new Error('Expected t-detail-header in the list detail view');
+    const listHeader = list.shadowRoot.querySelector('t-list-header');
+    if (!listHeader) {
+      throw new Error('Expected t-list-header in the list detail view');
     }
-    const headerActions = detailHeader.querySelector('t-header-actions') as
+    const headerActions = listHeader.querySelector('t-header-actions') as
       | DetailListElement
       | null;
     if (!headerActions) {
-      throw new Error('Expected t-header-actions inside t-detail-header');
+      throw new Error('Expected t-header-actions inside t-list-header');
     }
     await headerActions.updateComplete;
     const tInput = headerActions.shadowRoot.querySelector('t-input.search-input') as
@@ -2762,6 +2762,6 @@ describe('Ctrl+F inside a detail view', () => {
     expect(focusSpy).toHaveBeenCalled();
 
     const list = getList('t-artist-list');
-    expect(list.shadowRoot.querySelector('t-detail-header')).toBeNull();
+    expect(list.shadowRoot.querySelector('t-list-header')).toBeNull();
   });
 });

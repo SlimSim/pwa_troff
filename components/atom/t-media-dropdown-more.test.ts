@@ -12,7 +12,7 @@ import type { DropdownButton } from './t-dropdown-button.js';
  * (b) the song's note (`TroffObjectLocal.info` — new `songInfo: string = ''` prop
  *     on `t-media`), hidden entirely when empty/whitespace-only, with
  *     single-line-ellipsis + click-to-expand behaviour mirroring
- *     `t-detail-header`'s `span.detail-info-text` / `.expanded` pattern
+ *     `t-list-header`'s `span.detail-info-text` / `.expanded` pattern
  *     (collapsed: ellipsis single line; click toggles expanded showing full
  *     text; needs its OWN toggle state separate from the existing `expanded`
  *     comment read-more),
@@ -52,7 +52,7 @@ function boxText(el: Element | null): string {
 
 /**
  * Find the song-info element inside the dropdown.
- * Preferred: explicit selectors mirroring the `t-detail-header`
+ * Preferred: explicit selectors mirroring the `t-list-header`
  * `span.detail-info-text` pattern. Fallback: leaf element whose text contains
  * the expected info string (excluding buttons / help-tips).
  */

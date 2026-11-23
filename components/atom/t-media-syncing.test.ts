@@ -5,7 +5,7 @@ import { MediaItem } from './t-media.js';
  * Type-safe view of the (not yet added) `syncing` property on t-media:
  * `@property({ type: Boolean }) syncing = false`. The intersection cast keeps
  * this test file valid both before (RED) and after the feature lands — no `any`,
- * same pattern as t-detail-header-syncing.test.ts.
+ * same pattern as t-list-header.test.ts.
  */
 type MediaItemSyncing = MediaItem & { syncing: boolean };
 
