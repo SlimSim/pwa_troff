@@ -50,6 +50,20 @@ export function shouldTreatEndedAsGap(
   return duration - currentTime > threshold;
 }
 
+/**
+ * True when the loop's stop point sits at (or within `threshold` of) the end of
+ * the media. A native `ended` then IS the loop end: iOS WebKit can stop before
+ * `currentTime` ever reaches a stop marker that is at the end of the song
+ * (decoder-skipped corrupt tail, or a live duration that differs from the
+ * stored marker position), so waiting for `currentTime >= stop` never happens.
+ */
+export function isStopAtMediaEnd(stop: number, duration: number, threshold = 2): boolean {
+  if (!Number.isFinite(stop) || !Number.isFinite(duration) || duration <= 0) {
+    return false;
+  }
+  return stop >= duration - threshold;
+}
+
 /** Build a numeric-only, PII-free context (time fields rounded to 0.1s). Extra fields are dropped. */
 export function buildPlaybackErrorContext(
   input: PlaybackErrorContextInput
