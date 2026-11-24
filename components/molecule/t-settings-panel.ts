@@ -31,6 +31,7 @@ type ToggleSetting =
   | 'darkMode'
   | 'bannerShow'
   | 'onSelectMarkerGoToMarker'
+  | 'clearSearchOnSelect'
   | 'largerPlayButtonMobile';
 
 type SongNumericSetting = 'startBefore' | 'stopAfter' | 'incrementUntill';
@@ -447,6 +448,7 @@ export class SettingsPanel extends LitElement {
   @property({ type: Boolean }) keepScreenOn = true;
   @property({ type: Boolean }) largerPlayButtonMobile = true;
   @property({ type: Boolean }) onSelectMarkerGoToMarker = true;
+  @property({ type: Boolean }) clearSearchOnSelect = true;
   @property({ type: Boolean }) darkMode = false;
   @property({ type: Boolean }) bannerShow = false;
   @property({ type: Boolean }) preferVersion2 = false;
@@ -719,6 +721,9 @@ export class SettingsPanel extends LitElement {
         break;
       case 'onSelectMarkerGoToMarker':
         this.onSelectMarkerGoToMarker = nextValue;
+        break;
+      case 'clearSearchOnSelect':
+        this.clearSearchOnSelect = nextValue;
         break;
       default:
         return;
@@ -1205,6 +1210,15 @@ export class SettingsPanel extends LitElement {
                     this._toggleSetting('largerPlayButtonMobile', this.largerPlayButtonMobile)}
                 >
                   Larger play button on mobile
+                </t-butt>
+                <t-butt
+                  toggle
+                  ellipsis
+                  .active=${this.clearSearchOnSelect}
+                  @click=${() =>
+                    this._toggleSetting('clearSearchOnSelect', this.clearSearchOnSelect)}
+                >
+                  Clear search on select
                 </t-butt>
                 <t-butt
                   toggle

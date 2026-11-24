@@ -37,12 +37,14 @@ import type { ServerSongTab, ServerSongSortBy, ServerSongSortOrder } from '../..
 import log from '../../utils/log.js';
 import { extractAlbumArt } from '../../utils/album-art.js';
 import { setActiveOnlineGroupAdd } from '../../utils/online-group-add.js';
+import { TROFF_SETTING_CLEAR_SEARCH_ON_SELECT } from '../../constants/constants.js';
 
 const ts = () => new Date().toLocaleTimeString();
 
 /** Minimal surface of the detail-view list components for closing details. */
 interface DetailViewListElement extends HTMLElement {
   closeDetail?: () => void;
+  clearDetailSearch?: () => void;
 }
 
 /** Sub-list component rendered for each song-list filter. */
@@ -541,6 +543,7 @@ export class MediaParent extends LitElement {
     this.addEventListener('media-selected', (e: any) => {
       this.currentSongKey = e.detail.songKey || '';
       this.visible = false; // close the song list when a song is selected
+      this._clearSearchOnSelect();
       this.requestUpdate(); // Force re-render to update active states
     });
 
@@ -1758,6 +1761,21 @@ export class MediaParent extends LitElement {
   /** Clear the search query (used by the no-results clear button). */
   private _clearSearch() {
     this.searchQuery = '';
+  }
+
+  /**
+   * Clear the active search field(s) when a song is selected, unless the user
+   * disabled "Clear search on select" in Advanced Settings. This covers both
+   * the main list search and the detail-view track search (artist/genre/group).
+   */
+  private _clearSearchOnSelect() {
+    if (nDB.get(TROFF_SETTING_CLEAR_SEARCH_ON_SELECT) === false) return;
+    if (this.searchQuery) this.searchQuery = '';
+    const listSelector = SUB_LIST_SELECTORS[this.currentFilter];
+    if (!listSelector) return;
+    this.shadowRoot
+      ?.querySelector<DetailViewListElement>(listSelector)
+      ?.clearDetailSearch?.();
   }
 
   private _selectTrackForEnter(track: any) {

@@ -94,6 +94,7 @@ import {
   TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
   TROFF_SETTING_KEEP_SCREEN_ON,
   TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER,
+  TROFF_SETTING_CLEAR_SEARCH_ON_SELECT,
   TROFF_SETTING_UI_LARGER_PLAY_BUTTON_MOBILE,
   TROFF_SETTING_DARK_MODE,
   TROFF_SETTING_THEME,
@@ -1672,6 +1673,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     settingsPanel.keepScreenOn = nDB.get(TROFF_SETTING_KEEP_SCREEN_ON) ?? true;
     settingsPanel.onSelectMarkerGoToMarker =
       nDB.get(TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER) ?? true;
+    settingsPanel.clearSearchOnSelect = nDB.get(TROFF_SETTING_CLEAR_SEARCH_ON_SELECT) ?? true;
     settingsPanel.largerPlayButtonMobile = nDB.get(TROFF_SETTING_UI_LARGER_PLAY_BUTTON_MOBILE) ?? true;
     void updateWakeLockForPlayback(false, false);
     settingsPanel.darkMode = nDB.get(TROFF_SETTING_DARK_MODE) ?? false;
@@ -2606,6 +2608,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
         extraExtendedMarkerColor: TROFF_SETTING_EXTRA_EXTENDED_MARKER_COLOR,
         keepScreenOn: TROFF_SETTING_KEEP_SCREEN_ON,
         onSelectMarkerGoToMarker: TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER,
+        clearSearchOnSelect: TROFF_SETTING_CLEAR_SEARCH_ON_SELECT,
         largerPlayButtonMobile: TROFF_SETTING_UI_LARGER_PLAY_BUTTON_MOBILE,
         darkMode: TROFF_SETTING_DARK_MODE,
         theme: TROFF_SETTING_THEME,
@@ -2887,6 +2890,7 @@ document.addEventListener('DOMContentLoaded', function handleV2Boot() {
     const defaultsIfUnset: [string, boolean][] = [
       [TROFF_SETTING_KEEP_SCREEN_ON, true],
       [TROFF_SETTING_ON_SELECT_MARKER_GO_TO_MARKER, true],
+      [TROFF_SETTING_CLEAR_SEARCH_ON_SELECT, true],
       [TROFF_SETTING_UI_LARGER_PLAY_BUTTON_MOBILE, true],
       [TROFF_SETTING_DARK_MODE, false],
     ];

@@ -646,8 +646,8 @@ export class GroupList extends LitElement {
     this._isGroupSearchFocused = false;
   }
 
-  /** Clear the detail track search (used by the no-results clear button). */
-  private _clearDetailSearch() {
+  /** Clear the detail track search (used by the no-results clear button and on song select). */
+  public clearDetailSearch() {
     this._groupTrackSearch = '';
     this._highlightedIndex = -1;
   }
@@ -772,7 +772,7 @@ export class GroupList extends LitElement {
                 <div class="no-results-text">
                   No songs match "${this._groupTrackSearch.trim()}".
                 </div>
-                <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                <t-butt class="no-results-clear" @click=${this.clearDetailSearch}>
                   Clear search
                 </t-butt>
               </div>
@@ -784,7 +784,7 @@ export class GroupList extends LitElement {
                 <div class="no-results-text">
                   showing ${filteredTracks.length} out of ${selectedGroup.tracks.length}
                 </div>
-                <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                <t-butt class="no-results-clear" @click=${this.clearDetailSearch}>
                   Show all
                 </t-butt>
               </div>

@@ -282,8 +282,8 @@ export class GenreList extends LitElement {
     this._isSearchFocused = false;
   }
 
-  /** Clear the detail track search (used by the no-results clear button). */
-  private _clearDetailSearch() {
+  /** Clear the detail track search (used by the no-results clear button and on song select). */
+  public clearDetailSearch() {
     this._genreTrackSearch = '';
     this._highlightedIndex = -1;
   }
@@ -361,7 +361,7 @@ export class GenreList extends LitElement {
                   <div class="no-results-text">
                     No tracks match "${this._genreTrackSearch.trim()}".
                   </div>
-                  <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                  <t-butt class="no-results-clear" @click=${this.clearDetailSearch}>
                     Clear search
                   </t-butt>
                 </div>
@@ -400,7 +400,7 @@ export class GenreList extends LitElement {
                         <div class="no-results-text">
                           showing ${filteredTracks.length} out of ${selectedGroup.tracks.length}
                         </div>
-                        <t-butt class="no-results-clear" @click=${this._clearDetailSearch}>
+                        <t-butt class="no-results-clear" @click=${this.clearDetailSearch}>
                           Show all
                         </t-butt>
                       </div>
